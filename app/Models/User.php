@@ -3,9 +3,13 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\URL;
 use Spatie\Permission\Traits\HasRoles;
 
 
@@ -22,6 +26,7 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'avatar'
     ];
 
     /**
@@ -46,4 +51,35 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
+
+    public function tenant_filials()
+    {
+        return $this->belongsTo(TenantFilial::class);
+    }
+
+    public function posts()
+    {
+        return $this->hasMany(Post::class);
+    }
+
+    public function filiais()
+    {
+        return $this->belongsToMany(TenantFilial::class, 'tenant_users', 'user_id', 'tenant_id');
+    }
+
+    public function getAvatarUrlAttribute()
+    {
+        if ($this->avatar) {
+            return route('avatar.show', [tenancy()->tenant->id, $this->avatar]);
+        }
+
+        return asset('path/to/default/avatar.jpg');
+    }
+
+
+        // Adicionar um acessor para `last_login_formatted`
+        public function getLastLoginFormattedAttribute()
+        {
+            return $this->last_login ? Carbon::parse($this->last_login)->diffForHumans() : 'Nunca';
+        }
 }

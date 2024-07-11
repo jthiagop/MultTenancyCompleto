@@ -16,9 +16,10 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         User::factory()->create([
-            'name' => 'José Thiago',
-            'email' => 'jthiagopereira@gmail.com',
-            'password' => '19931993'
+            'name'      => 'José Thiago',
+            'email'     => 'jthiagopereira@gmail.com',
+            'password'  => '19931993',
+            'avatar'    => 'perfis/1720669911_proneb.png'
         ]);
     }
 }

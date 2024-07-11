@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\Tenant\TenantFilesystems;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -20,7 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->group(base_path('routes/web.php'));
         }
 
-        Route::middleware('web')->group(base_path('routes/tenant.php'));
+        Route::middleware('web', 'tenant.filesystems')->group(base_path('routes/tenant.php'));
     }
 )
     ->withMiddleware(function (Middleware $middleware) {
@@ -28,6 +29,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
+            'tenant.filesystems' => TenantFilesystems::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

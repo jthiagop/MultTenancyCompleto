@@ -2,9 +2,15 @@
 
 namespace App\Http\Controllers\App;
 
+use Carbon\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\Tenant_user;
+use App\Models\TenantFilial;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules;
 use Spatie\Permission\Models\Role;
 
@@ -13,21 +19,37 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
+    public function showProfile()
+    {
+    }
+
     public function index()
     {
-        $users = User::with('roles')->get();
+        $users = User::all();
 
-        return view('app.users.index', ['users' => $users]);
+        $users = User::all()->map(function ($user) {
+            $user->last_login_formatted = $user->last_login ? Carbon::parse($user->last_login)->diffForHumans() : 'Nunca';
+            return $user;
+        });
+
+
+        return view(
+            'app.users.index',
+            [
+                'users' => $users,
+            ]
+        );
     }
 
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(TenantFilial $tenantFilial)
     {
 
-        return view('app.users.create');
+        $tenantFiliais = $tenantFilial->all();
 
+        return view('app.users.create', ['tenantFiliais' => $tenantFiliais]);
     }
 
     /**
@@ -35,36 +57,65 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $validateData = $request->validate([
+        // Obtendo o nome do banco de dados
+
+        $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Exemplo de regras para o campo avatar
+            'filiais' => 'array', // Certifique-se de que 'filiais' é um array
         ]);
 
 
-        User::create($validateData);
+        // Processar e salvar o avatar
+        if ($request->hasFile('avatar')) {
+            // Obtém o arquivo de avatar do request
+            $avatar = $request->file('avatar');
 
+            // Gera um nome único para o arquivo de avatar
+            $avatarName = time() . '_' . $avatar->getClientOriginalName();
+
+            // Salva o arquivo na pasta 'perfis' dentro da pasta de armazenamento (storage/app/public)
+            $avatarPath = Storage::put('perfis', $request->file('avatar'));
+
+            // Salva o nome do arquivo na coluna 'avatar' do usuário no banco de dados
+            $validatedData['avatar'] = $avatarPath;
+        }
+
+        $user = User::create($validatedData);
+
+        // Verifique se a chave 'filiais' existe no array de dados
+        if (isset($validatedData['filiais'])) {
+            $user->filiais()->sync($validatedData['filiais']);
+        }
 
         return redirect()->route('users.index');
     }
-
     /**
      * Display the specified resource.
      */
-    public function show(User $user)
+    public function show($path, User $user)
     {
-        //
+        // Formatar a data do último login
+        $lastLogin = $user->last_login ? Carbon::parse($user->last_login)->diffForHumans() : 'Nunca';
+
+        return view('app.profile.edit', ['lastLogin' => $lastLogin]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(User $user)
+    public function edit(User $user, TenantFilial $tenantFilial)
     {
+
+        $tenantFiliais = $tenantFilial->all();
+
         $roles = Role::get();
 
-        return view('app.users.edit', ['user' => $user, 'roles' => $roles]) ;
 
+
+        return view('app.users.edit', ['user' => $user, 'roles' => $roles, 'tenantFiliais' => $tenantFiliais]);
     }
 
     /**
@@ -75,14 +126,20 @@ class UserController extends Controller
 
         $validateData = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,'.$user->id,
+            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'roles' => 'required|array',
+            'filiais' => 'array', // Adicione esta linha para validar o campo 'filiais'
         ]);
 
         $user->update($validateData);
 
-        $user->roles()->sync($request->input('roles'));
-
+        if (isset($validateData['roles'])) {
+            $user->roles()->sync($request->input('roles'));
+        }
+        // Adicione o trecho abaixo para sincronizar as filiais
+        if (isset($validateData['filiais'])) {
+            $user->filiais()->sync($validateData['filiais']);
+        }
         return redirect()->route('users.index');
     }
 

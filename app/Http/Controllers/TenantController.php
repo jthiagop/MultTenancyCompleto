@@ -85,4 +85,9 @@ class TenantController extends Controller
     {
         //
     }
+
+    public function dashboard()
+    {
+
+    }
 }

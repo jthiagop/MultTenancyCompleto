@@ -13,6 +13,8 @@
                     <form method="POST" action="{{ route('users.update', $user->id) }}">
                         @csrf
                         @method('put')
+                        @include('__massage')
+
                         <!-- Name -->
                         <div>
                             <x-input-label for="name" :value="__('Name')" />
@@ -30,14 +32,28 @@
                         </div>
 
                         @foreach ($roles as $role)
-                        <div class="flex items-center mt-4">
-                            <input id="checkbox" name="roles[]" type="checkbox" value="{{ $role->id }}"
-                                class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
-                                {{ $role->selected ? 'checked' : '' }}>
-                            <label for="disabled-checkbox"
-                                class="ms-2 text-sm font-medium text-gray-400 dark:text-gray-500">{{ $role->name }}</label>
+                            <div class="flex items-center mt-4">
+                                <input id="checkbox" name="roles[]" type="checkbox" value="{{ $role->id }}"
+                                    class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600"
+                                    {{ $role->selected ? 'checked' : '' }}>
+                                <label for="disabled-checkbox"
+                                    class="ms-2 text-sm font-medium text-gray-400 dark:text-gray-500">{{ $role->name }}</label>
+                            </div>
+                        @endforeach
+
+                        <div class="mt-4 text-white">
+                            <label class="block mb-2 text-sm font-medium text-gray-900 dark:text-white">Selecione a(s)
+                                Filial(is)</label>
+                            @foreach ($tenantFiliais as $tenant_filial)
+                                <div class="flex items-center ps-4 border border-gray-200 rounded dark:border-gray-700">
+                                    <input checked id="bordered-checkbox-2" type="checkbox" name="filiais[]"
+                                        value="{{ $tenant_filial->id }}"
+                                        class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
+                                    <label for="bordered-checkbox-2"
+                                        class="w-full py-4 ms-2 text-sm font-medium text-gray-900 dark:text-gray-300">{{ $tenant_filial->name }}</label>
+                                </div>
+                            @endforeach
                         </div>
-                    @endforeach
 
 
                         <div class="flex items-center justify-end mt-4">

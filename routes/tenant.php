@@ -2,9 +2,14 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\App\DashboardController;
+use App\Http\Controllers\App\PostController;
 use App\Http\Controllers\App\ProfileController;
 use App\Http\Controllers\App\UserController;
+use App\Http\Controllers\App\TenantFilialController;
+use App\Models\TenantFilial;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
@@ -26,25 +31,37 @@ Route::middleware([
     PreventAccessFromCentralDomains::class,
 ])->group(function () {
     Route::get('/', function(){
-        return view('app.welcome');
+        return view('auth.login');
     });
 
 
-    Route::get('/dashboard', function () {
-        return view('app/dashboard');
-    })->middleware(['auth', 'verified'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'] )->middleware(['auth', 'verified'])->name('dashboard');
 
     Route::middleware('auth')->group(function () {
-        Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
-        Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+        Route::get('/app/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/app/profile', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/app/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
         Route::group(['middleware' => ['role:admin']], function ()
         {
             Route::resource('users', UserController::class );
+            Route::resource('filial', TenantFilialController::class);
+        });
+
+        Route::get('/file/{path}', function($path) {
+            return response()->file(Storage::path($path));
+        })->where('path', '.*')->name('file');
+
+
+        Route::group(['middleware' => ['role:user']], function ()
+        {
+            Route::resource('post', PostController::class);
         });
 
     });
 
     require __DIR__.'/tenant-auth.php';
 });
+
+

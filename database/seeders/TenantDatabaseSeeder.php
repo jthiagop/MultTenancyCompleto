@@ -14,9 +14,9 @@ class TenantDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Role::create(['name' => 'admin']);
-        Role::create(['name' => 'writer']);
-        Role::create(['name' => 'publisher']);
-        Role::create(['name' => 'hr']);
+        Role::create(['name' => 'global'], ['descript'=>'Acesso global à todos os recursos']);
+        Role::create(['name' => 'admin'], ['descript'=>'Acesso global à maioria dos recursos']);
+        Role::create(['name' => 'admin_user'], ['descript'=>'Acesso acessa a filial como um administrador local']);
+        Role::create(['name' => 'user'], ['descript'=> 'Eles podem visualizar suas próprias transações, gerar relatórios e acompanhar seu histórico financeiro.']);
     }
 }
