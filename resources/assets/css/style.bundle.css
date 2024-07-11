@@ -49530,3 +49530,11 @@ body,
     color: #ffffff !important;
   }
 }
+
+.card-hover-move {
+    transition: transform 0.3s ease;
+}
+
+.card-hover-move:hover {
+    transform: translateY(-10px);
+}
