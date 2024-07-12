@@ -103,7 +103,7 @@
                                                 </span>
                                                 <!--end::Svg Icon-->
                                             </span>
-                                            <span class="menu-title">Claro</span>
+                                            <span class="menu-title">Light</span>
                                         </a>
                                     </div>
                                     <!--end::Menu item-->
@@ -132,7 +132,7 @@
                                                 </span>
                                                 <!--end::Svg Icon-->
                                             </span>
-                                            <span class="menu-title">Escuro</span>
+                                            <span class="menu-title">Dark</span>
                                         </a>
                                     </div>
                                     <!--end::Menu item-->
@@ -152,7 +152,7 @@
                                                 </span>
                                                 <!--end::Svg Icon-->
                                             </span>
-                                            <span class="menu-title">Systema</span>
+                                            <span class="menu-title">System</span>
                                         </a>
                                     </div>
                                     <!--end::Menu item-->

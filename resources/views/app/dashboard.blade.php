@@ -11,7 +11,7 @@
                     <!--begin::Toolbar-->
                     <div class="d-flex flex-wrap flex-stack my-5">
                         <!--begin::Heading-->
-                        <h2 class="fs-2 fw-semibold my-2">Projects
+                        <h2 class="fs-2 fw-semibold my-2">{{ $user->company->branches }}
                             <span class="fs-6 text-gray-400 ms-1">by Status</span>
                         </h2>
                         <!--end::Heading-->

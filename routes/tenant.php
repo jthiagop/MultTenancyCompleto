@@ -37,7 +37,7 @@ Route::middleware([
 
     Route::get('/dashboard', [DashboardController::class, 'index'] )->middleware(['auth', 'verified'])->name('dashboard');
 
-    Route::middleware('auth')->group(function () {
+    Route::middleware('auth', 'ensureUserHasAccess')->group(function () {
 
         Route::get('/app/profile', [ProfileController::class, 'edit'])->name('profile.edit');
         Route::patch('/app/profile', [ProfileController::class, 'update'])->name('profile.update');

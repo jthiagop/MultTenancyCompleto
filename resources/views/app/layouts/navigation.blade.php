@@ -4,14 +4,12 @@
         id="kt_app_header_container">
         <!--begin::sidebar mobile toggle-->
         <div class="d-flex align-items-center d-lg-none ms-n2 me-2" title="Show sidebar menu">
-            <div class="btn btn-icon btn-active-color-primary w-35px h-35px"
-                id="kt_app_sidebar_mobile_toggle">
+            <div class="btn btn-icon btn-active-color-primary w-35px h-35px" id="kt_app_sidebar_mobile_toggle">
                 <!--begin::Svg Icon | path: icons/duotune/abstract/abs015.svg-->
                 <span class="svg-icon svg-icon-1">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                         xmlns="http://www.w3.org/2000/svg">
-                        <path
-                            d="M21 7H3C2.4 7 2 6.6 2 6V4C2 3.4 2.4 3 3 3H21C21.6 3 22 3.4 22 4V6C22 6.6 21.6 7 21 7Z"
+                        <path d="M21 7H3C2.4 7 2 6.6 2 6V4C2 3.4 2.4 3 3 3H21C21.6 3 22 3.4 22 4V6C22 6.6 21.6 7 21 7Z"
                             fill="currentColor" />
                         <path opacity="0.3"
                             d="M21 14H3C2.4 14 2 13.6 2 13V11C2 10.4 2.4 10 3 10H21C21.6 10 22 10.4 22 11V13C22 13.6 21.6 14 21 14ZM22 20V18C22 17.4 21.6 17 21 17H3C2.4 17 2 17.4 2 18V20C2 20.6 2.4 21 3 21H21C21.6 21 22 20.6 22 20Z"
@@ -25,15 +23,13 @@
         <!--begin::Mobile logo-->
         <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
             <a href="../../demo1/dist/index.html" class="d-lg-none">
-                    class="theme-light-show h-30px" />
-                <img alt="Logo" src="/assets/media/logos/default-small-dark.svg"
-                    class="theme-dark-show h-30px" />
+                class="theme-light-show h-30px" />
+                <img alt="Logo" src="/assets/media/logos/default-small-dark.svg" class="theme-dark-show h-30px" />
             </a>
         </div>
         <!--end::Mobile logo-->
         <!--begin::Header wrapper-->
-        <div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1"
-            id="kt_app_header_wrapper">
+        <div class="d-flex align-items-stretch justify-content-between flex-lg-grow-1" id="kt_app_header_wrapper">
             <!--begin::Menu wrapper-->
             <div class="app-header-menu app-header-mobile-drawer align-items-stretch" data-kt-drawer="true"
                 data-kt-drawer-name="app-header-menu" data-kt-drawer-activate="{default: true, lg: false}"
@@ -45,8 +41,7 @@
                 <div class="menu menu-rounded menu-column menu-lg-row my-5 my-lg-0 align-items-stretch fw-semibold px-2 px-lg-0"
                     id="kt_app_header_menu" data-kt-menu="true">
                     <!--begin:Menu item-->
-                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
-                        data-kt-menu-placement="bottom-start"
+                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
                         class="menu-item here show menu-here-bg menu-lg-down-accordion me-0 me-lg-2">
                         <!--begin:Menu link-->
                         <span class="menu-link">
@@ -55,8 +50,7 @@
                         </span>
                         <!--end:Menu link-->
                         <!--begin:Menu sub-->
-                        <div
-                            class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown p-0 w-100 w-lg-600px">
+                        <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown p-0 w-100 w-lg-600px">
                             <!--begin:Dashboards menu-->
                             <div class="menu-state-bg menu-extended overflow-hidden overflow-lg-visible py-6"
                                 data-kt-menu-dismiss="true">
@@ -67,15 +61,13 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/index.html"
-                                                class="menu-link active">
+                                            <a href="../../demo1/dist/index.html" class="menu-link active">
                                                 <span
                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                     <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm002.svg-->
                                                     <span class="svg-icon svg-icon-primary svg-icon-1">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path
                                                                 d="M21 10H13V11C13 11.6 12.6 12 12 12C11.4 12 11 11.6 11 11V10H3C2.4 10 2 10.4 2 11V13H22V11C22 10.4 21.6 10 21 10Z"
                                                                 fill="currentColor" />
@@ -90,8 +82,7 @@
                                                     <!--end::Svg Icon-->
                                                 </span>
                                                 <span class="d-flex flex-column">
-                                                    <span
-                                                        class="fs-6 fw-semibold text-gray-800">Default</span>
+                                                    <span class="fs-6 fw-semibold text-gray-800">Default</span>
                                                     <span class="fs-7 fw-semibold text-muted">Reports &
                                                         statistics</span>
                                                 </span>
@@ -106,15 +97,13 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/dashboards/projects.html"
-                                                class="menu-link">
+                                            <a href="../../demo1/dist/dashboards/projects.html" class="menu-link">
                                                 <span
                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                     <!--begin::Svg Icon | path: icons/duotune/abstract/abs045.svg-->
                                                     <span class="svg-icon svg-icon-info svg-icon-1">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path
                                                                 d="M2 11.7127L10 14.1127L22 11.7127L14 9.31274L2 11.7127Z"
                                                                 fill="currentColor" />
@@ -126,8 +115,7 @@
                                                     <!--end::Svg Icon-->
                                                 </span>
                                                 <span class="d-flex flex-column">
-                                                    <span
-                                                        class="fs-6 fw-semibold text-gray-800">Projects</span>
+                                                    <span class="fs-6 fw-semibold text-gray-800">Projects</span>
                                                     <span class="fs-7 fw-semibold text-muted">Tasts, graphs
                                                         & charts</span>
                                                 </span>
@@ -142,34 +130,27 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/dashboards/ecommerce.html"
-                                                class="menu-link">
+                                            <a href="../../demo1/dist/dashboards/ecommerce.html" class="menu-link">
                                                 <span
                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                     <!--begin::Svg Icon | path: icons/duotune/general/gen025.svg-->
                                                     <span class="svg-icon svg-icon-danger svg-icon-1">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
-                                                            <rect x="2" y="2" width="9"
-                                                                height="9" rx="2"
-                                                                fill="currentColor" />
-                                                            <rect opacity="0.3" x="13" y="2"
-                                                                width="9" height="9"
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <rect x="2" y="2" width="9" height="9"
                                                                 rx="2" fill="currentColor" />
-                                                            <rect opacity="0.3" x="13" y="13"
-                                                                width="9" height="9"
-                                                                rx="2" fill="currentColor" />
-                                                            <rect opacity="0.3" x="2" y="13"
-                                                                width="9" height="9"
-                                                                rx="2" fill="currentColor" />
+                                                            <rect opacity="0.3" x="13" y="2" width="9"
+                                                                height="9" rx="2" fill="currentColor" />
+                                                            <rect opacity="0.3" x="13" y="13" width="9"
+                                                                height="9" rx="2" fill="currentColor" />
+                                                            <rect opacity="0.3" x="2" y="13" width="9"
+                                                                height="9" rx="2" fill="currentColor" />
                                                         </svg>
                                                     </span>
                                                     <!--end::Svg Icon-->
                                                 </span>
                                                 <span class="d-flex flex-column">
-                                                    <span
-                                                        class="fs-6 fw-semibold text-gray-800">eCommerce</span>
+                                                    <span class="fs-6 fw-semibold text-gray-800">eCommerce</span>
                                                     <span class="fs-7 fw-semibold text-muted">Sales
                                                         reports</span>
                                                 </span>
@@ -184,15 +165,13 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/dashboards/marketing.html"
-                                                class="menu-link">
+                                            <a href="../../demo1/dist/dashboards/marketing.html" class="menu-link">
                                                 <span
                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                     <!--begin::Svg Icon | path: icons/duotune/graphs/gra001.svg-->
                                                     <span class="svg-icon svg-icon-dark svg-icon-1">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M14 3V21H10V3C10 2.4 10.4 2 11 2H13C13.6 2 14 2.4 14 3ZM7 14H5C4.4 14 4 14.4 4 15V21H8V15C8 14.4 7.6 14 7 14Z"
                                                                 fill="currentColor" />
@@ -204,8 +183,7 @@
                                                     <!--end::Svg Icon-->
                                                 </span>
                                                 <span class="d-flex flex-column">
-                                                    <span
-                                                        class="fs-6 fw-semibold text-gray-800">Marketing</span>
+                                                    <span class="fs-6 fw-semibold text-gray-800">Marketing</span>
                                                     <span class="fs-7 fw-semibold text-muted">Campaings &
                                                         conversions</span>
                                                 </span>
@@ -220,15 +198,13 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/dashboards/social.html"
-                                                class="menu-link">
+                                            <a href="../../demo1/dist/dashboards/social.html" class="menu-link">
                                                 <span
                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                     <!--begin::Svg Icon | path: icons/duotune/communication/com001.svg-->
                                                     <span class="svg-icon svg-icon-success svg-icon-1">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
                                                                 fill="currentColor" />
@@ -243,8 +219,7 @@
                                                     <!--end::Svg Icon-->
                                                 </span>
                                                 <span class="d-flex flex-column">
-                                                    <span
-                                                        class="fs-6 fw-semibold text-gray-800">Social</span>
+                                                    <span class="fs-6 fw-semibold text-gray-800">Social</span>
                                                     <span class="fs-7 fw-semibold text-muted">Feeds &
                                                         Activities</span>
                                                 </span>
@@ -259,15 +234,13 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/dashboards/bidding.html"
-                                                class="menu-link">
+                                            <a href="../../demo1/dist/dashboards/bidding.html" class="menu-link">
                                                 <span
                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                     <!--begin::Svg Icon | path: icons/duotune/general/gen019.svg-->
                                                     <span class="svg-icon svg-icon-warning svg-icon-1">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path
                                                                 d="M17.5 11H6.5C4 11 2 9 2 6.5C2 4 4 2 6.5 2H17.5C20 2 22 4 22 6.5C22 9 20 11 17.5 11ZM15 6.5C15 7.9 16.1 9 17.5 9C18.9 9 20 7.9 20 6.5C20 5.1 18.9 4 17.5 4C16.1 4 15 5.1 15 6.5Z"
                                                                 fill="currentColor" />
@@ -279,8 +252,7 @@
                                                     <!--end::Svg Icon-->
                                                 </span>
                                                 <span class="d-flex flex-column">
-                                                    <span
-                                                        class="fs-6 fw-semibold text-gray-800">Bidding</span>
+                                                    <span class="fs-6 fw-semibold text-gray-800">Bidding</span>
                                                     <span class="fs-7 fw-semibold text-muted">Deals & stock
                                                         exchange</span>
                                                 </span>
@@ -301,9 +273,8 @@
                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                     <!--begin::Svg Icon | path: icons/duotune/art/art002.svg-->
                                                     <span class="svg-icon svg-icon-success svg-icon-1">
-                                                        <svg width="24" height="25"
-                                                            viewBox="0 0 24 25" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="25" viewBox="0 0 24 25"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M8.9 21L7.19999 22.6999C6.79999 23.0999 6.2 23.0999 5.8 22.6999L4.1 21H8.9ZM4 16.0999L2.3 17.8C1.9 18.2 1.9 18.7999 2.3 19.1999L4 20.9V16.0999ZM19.3 9.1999L15.8 5.6999C15.4 5.2999 14.8 5.2999 14.4 5.6999L9 11.0999V21L19.3 10.6999C19.7 10.2999 19.7 9.5999 19.3 9.1999Z"
                                                                 fill="currentColor" />
@@ -331,15 +302,13 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/dashboards/logistics.html"
-                                                class="menu-link">
+                                            <a href="../../demo1/dist/dashboards/logistics.html" class="menu-link">
                                                 <span
                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                     <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm006.svg-->
                                                     <span class="svg-icon svg-icon-info svg-icon-1">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path
                                                                 d="M20 8H16C15.4 8 15 8.4 15 9V16H10V17C10 17.6 10.4 18 11 18H16C16 16.9 16.9 16 18 16C19.1 16 20 16.9 20 18H21C21.6 18 22 17.6 22 17V13L20 8Z"
                                                                 fill="currentColor" />
@@ -351,8 +320,7 @@
                                                     <!--end::Svg Icon-->
                                                 </span>
                                                 <span class="d-flex flex-column">
-                                                    <span
-                                                        class="fs-6 fw-semibold text-gray-800">Logistics</span>
+                                                    <span class="fs-6 fw-semibold text-gray-800">Logistics</span>
                                                     <span class="fs-7 fw-semibold text-muted">Shipments and
                                                         delivery</span>
                                                 </span>
@@ -371,8 +339,7 @@
                     </div>
                     <!--end:Menu item-->
                     <!--begin:Menu item-->
-                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
-                        data-kt-menu-placement="bottom-start"
+                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
                         class="menu-item menu-lg-down-accordion me-0 me-lg-2">
                         <!--begin:Menu link-->
                         <span class="menu-link">
@@ -390,29 +357,29 @@
                                         class="nav nav-stretch nav-line-tabs fw-semibold fs-6 p-0 p-lg-10 flex-nowrap flex-grow-1">
                                         <!--begin:Nav item-->
                                         <li class="nav-item mx-lg-1">
-                                            <a class="nav-link py-3 py-lg-6 active text-active-primary"
-                                                href="#" data-bs-toggle="tab"
+                                            <a class="nav-link py-3 py-lg-6 active text-active-primary" href="#"
+                                                data-bs-toggle="tab"
                                                 data-bs-target="#kt_app_header_menu_pages_pages">General</a>
                                         </li>
                                         <!--end:Nav item-->
                                         <!--begin:Nav item-->
                                         <li class="nav-item mx-lg-1">
-                                            <a class="nav-link py-3 py-lg-6 text-active-primary"
-                                                href="#" data-bs-toggle="tab"
+                                            <a class="nav-link py-3 py-lg-6 text-active-primary" href="#"
+                                                data-bs-toggle="tab"
                                                 data-bs-target="#kt_app_header_menu_pages_account">Account</a>
                                         </li>
                                         <!--end:Nav item-->
                                         <!--begin:Nav item-->
                                         <li class="nav-item mx-lg-1">
-                                            <a class="nav-link py-3 py-lg-6 text-active-primary"
-                                                href="#" data-bs-toggle="tab"
+                                            <a class="nav-link py-3 py-lg-6 text-active-primary" href="#"
+                                                data-bs-toggle="tab"
                                                 data-bs-target="#kt_app_header_menu_pages_authentication">Authentication</a>
                                         </li>
                                         <!--end:Nav item-->
                                         <!--begin:Nav item-->
                                         <li class="nav-item mx-lg-1">
-                                            <a class="nav-link py-3 py-lg-6 text-active-primary"
-                                                href="#" data-bs-toggle="tab"
+                                            <a class="nav-link py-3 py-lg-6 text-active-primary" href="#"
+                                                data-bs-toggle="tab"
                                                 data-bs-target="#kt_app_header_menu_pages_utilities">Utilities</a>
                                         </li>
                                         <!--end:Nav item-->
@@ -422,8 +389,7 @@
                                 <!--begin:Tab content-->
                                 <div class="tab-content py-4 py-lg-8 px-lg-7">
                                     <!--begin:Tab pane-->
-                                    <div class="tab-pane active w-lg-1000px"
-                                        id="kt_app_header_menu_pages_pages">
+                                    <div class="tab-pane active w-lg-1000px" id="kt_app_header_menu_pages_pages">
                                         <!--begin:Row-->
                                         <div class="row">
                                             <!--begin:Col-->
@@ -563,8 +529,7 @@
                                                                 <!--begin:Menu link-->
                                                                 <a href="../../demo1/dist/pages/licenses.html"
                                                                     class="menu-link">
-                                                                    <span
-                                                                        class="menu-title">Licenses</span>
+                                                                    <span class="menu-title">Licenses</span>
                                                                 </a>
                                                                 <!--end:Menu link-->
                                                             </div>
@@ -680,8 +645,7 @@
                                                                 <!--begin:Menu link-->
                                                                 <a href="../../demo1/dist/pages/social/followers.html"
                                                                     class="menu-link">
-                                                                    <span
-                                                                        class="menu-title">Followers</span>
+                                                                    <span class="menu-title">Followers</span>
                                                                 </a>
                                                                 <!--end:Menu link-->
                                                             </div>
@@ -691,8 +655,7 @@
                                                                 <!--begin:Menu link-->
                                                                 <a href="../../demo1/dist/pages/social/settings.html"
                                                                     class="menu-link">
-                                                                    <span
-                                                                        class="menu-title">Settings</span>
+                                                                    <span class="menu-title">Settings</span>
                                                                 </a>
                                                                 <!--end:Menu link-->
                                                             </div>
@@ -716,8 +679,7 @@
                                     </div>
                                     <!--end:Tab pane-->
                                     <!--begin:Tab pane-->
-                                    <div class="tab-pane w-lg-600px"
-                                        id="kt_app_header_menu_pages_account">
+                                    <div class="tab-pane w-lg-600px" id="kt_app_header_menu_pages_account">
                                         <!--begin:Row-->
                                         <div class="row">
                                             <!--begin:Col-->
@@ -828,8 +790,8 @@
                                             <!--end:Col-->
                                             <!--begin:Col-->
                                             <div class="col-lg-7">
-                                                <img src="assets/media/stock/900x600/46.jpg"
-                                                    class="rounded mw-100" alt="" />
+                                                <img src="assets/media/stock/900x600/46.jpg" class="rounded mw-100"
+                                                    alt="" />
                                             </div>
                                             <!--end:Col-->
                                         </div>
@@ -837,8 +799,7 @@
                                     </div>
                                     <!--end:Tab pane-->
                                     <!--begin:Tab pane-->
-                                    <div class="tab-pane w-lg-600px"
-                                        id="kt_app_header_menu_pages_authentication">
+                                    <div class="tab-pane w-lg-600px" id="kt_app_header_menu_pages_authentication">
                                         <!--begin:Row-->
                                         <div class="row">
                                             <!--begin:Col-->
@@ -1107,8 +1068,7 @@
                                     </div>
                                     <!--end:Tab pane-->
                                     <!--begin:Tab pane-->
-                                    <div class="tab-pane w-lg-1000px"
-                                        id="kt_app_header_menu_pages_utilities">
+                                    <div class="tab-pane w-lg-1000px" id="kt_app_header_menu_pages_utilities">
                                         <!--begin:Row-->
                                         <div class="row">
                                             <!--begin:Col-->
@@ -1334,8 +1294,7 @@
                                                                 <!--begin:Menu link-->
                                                                 <a href="../../demo1/dist/utilities/search/horizontal.html"
                                                                     class="menu-link">
-                                                                    <span
-                                                                        class="menu-title">Horizontal</span>
+                                                                    <span class="menu-title">Horizontal</span>
                                                                 </a>
                                                                 <!--end:Menu link-->
                                                             </div>
@@ -1345,8 +1304,7 @@
                                                                 <!--begin:Menu link-->
                                                                 <a href="../../demo1/dist/utilities/search/vertical.html"
                                                                     class="menu-link">
-                                                                    <span
-                                                                        class="menu-title">Vertical</span>
+                                                                    <span class="menu-title">Vertical</span>
                                                                 </a>
                                                                 <!--end:Menu link-->
                                                             </div>
@@ -1389,8 +1347,7 @@
                                                                 <!--begin:Menu link-->
                                                                 <a href="../../demo1/dist/utilities/wizards/horizontal.html"
                                                                     class="menu-link">
-                                                                    <span
-                                                                        class="menu-title">Horizontal</span>
+                                                                    <span class="menu-title">Horizontal</span>
                                                                 </a>
                                                                 <!--end:Menu link-->
                                                             </div>
@@ -1400,8 +1357,7 @@
                                                                 <!--begin:Menu link-->
                                                                 <a href="../../demo1/dist/utilities/wizards/vertical.html"
                                                                     class="menu-link">
-                                                                    <span
-                                                                        class="menu-title">Vertical</span>
+                                                                    <span class="menu-title">Vertical</span>
                                                                 </a>
                                                                 <!--end:Menu link-->
                                                             </div>
@@ -1510,8 +1466,7 @@
                     </div>
                     <!--end:Menu item-->
                     <!--begin:Menu item-->
-                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
-                        data-kt-menu-placement="bottom-start"
+                    <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="bottom-start"
                         class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
                         <!--begin:Menu link-->
                         <span class="menu-link">
@@ -1524,15 +1479,14 @@
                             class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown px-lg-2 py-lg-4 w-lg-250px">
                             <!--begin:Menu item-->
                             <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                data-kt-menu-placement="right-start"
-                                class="menu-item menu-lg-down-accordion">
+                                data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                 <!--begin:Menu link-->
                                 <span class="menu-link">
                                     <span class="menu-icon">
                                         <!--begin::Svg Icon | path: icons/duotune/general/gen002.svg-->
                                         <span class="svg-icon svg-icon-3">
-                                            <svg width="24" height="24" viewBox="0 0 24 24"
-                                                fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
                                                 <path opacity="0.3"
                                                     d="M4.05424 15.1982C8.34524 7.76818 13.5782 3.26318 20.9282 2.01418C21.0729 1.98837 21.2216 1.99789 21.3618 2.04193C21.502 2.08597 21.6294 2.16323 21.7333 2.26712C21.8372 2.37101 21.9144 2.49846 21.9585 2.63863C22.0025 2.7788 22.012 2.92754 21.9862 3.07218C20.7372 10.4222 16.2322 15.6552 8.80224 19.9462L4.05424 15.1982ZM3.81924 17.3372L2.63324 20.4482C2.58427 20.5765 2.5735 20.7163 2.6022 20.8507C2.63091 20.9851 2.69788 21.1082 2.79503 21.2054C2.89218 21.3025 3.01536 21.3695 3.14972 21.3982C3.28408 21.4269 3.42387 21.4161 3.55224 21.3672L6.66524 20.1802L3.81924 17.3372ZM16.5002 5.99818C16.2036 5.99818 15.9136 6.08615 15.6669 6.25097C15.4202 6.41579 15.228 6.65006 15.1144 6.92415C15.0009 7.19824 14.9712 7.49984 15.0291 7.79081C15.0869 8.08178 15.2298 8.34906 15.4396 8.55884C15.6494 8.76862 15.9166 8.91148 16.2076 8.96935C16.4986 9.02723 16.8002 8.99753 17.0743 8.884C17.3484 8.77046 17.5826 8.5782 17.7474 8.33153C17.9123 8.08486 18.0002 7.79485 18.0002 7.49818C18.0002 7.10035 17.8422 6.71882 17.5609 6.43752C17.2796 6.15621 16.8981 5.99818 16.5002 5.99818Z"
                                                     fill="currentColor" />
@@ -1553,8 +1507,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/projects/list.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/projects/list.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -1566,8 +1519,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/projects/project.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/projects/project.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -1579,8 +1531,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/projects/targets.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/projects/targets.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -1592,8 +1543,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/projects/budget.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/projects/budget.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -1605,8 +1555,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/projects/users.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/projects/users.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -1618,8 +1567,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/projects/files.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/projects/files.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -1631,8 +1579,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/projects/activity.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/projects/activity.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -1644,8 +1591,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/projects/settings.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/projects/settings.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -1660,15 +1606,14 @@
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
                             <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                data-kt-menu-placement="right-start"
-                                class="menu-item menu-lg-down-accordion">
+                                data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                 <!--begin:Menu link-->
                                 <span class="menu-link">
                                     <span class="menu-icon">
                                         <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm001.svg-->
                                         <span class="svg-icon svg-icon-3">
-                                            <svg width="24" height="24" viewBox="0 0 24 24"
-                                                fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
                                                 <path opacity="0.3"
                                                     d="M18.041 22.041C18.5932 22.041 19.041 21.5932 19.041 21.041C19.041 20.4887 18.5932 20.041 18.041 20.041C17.4887 20.041 17.041 20.4887 17.041 21.041C17.041 21.5932 17.4887 22.041 18.041 22.041Z"
                                                     fill="currentColor" />
@@ -1694,8 +1639,7 @@
                                     class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
                                     <!--begin:Menu item-->
                                     <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                        data-kt-menu-placement="right-start"
-                                        class="menu-item menu-lg-down-accordion">
+                                        data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                         <!--begin:Menu link-->
                                         <span class="menu-link">
                                             <span class="menu-bullet">
@@ -1990,8 +1934,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/ecommerce/settings.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/ecommerce/settings.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2006,15 +1949,14 @@
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
                             <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                data-kt-menu-placement="right-start"
-                                class="menu-item menu-lg-down-accordion">
+                                data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                 <!--begin:Menu link-->
                                 <span class="menu-link">
                                     <span class="menu-icon">
                                         <!--begin::Svg Icon | path: icons/duotune/graphs/gra006.svg-->
                                         <span class="svg-icon svg-icon-3">
-                                            <svg width="24" height="24" viewBox="0 0 24 24"
-                                                fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
                                                 <path
                                                     d="M13 5.91517C15.8 6.41517 18 8.81519 18 11.8152C18 12.5152 17.9 13.2152 17.6 13.9152L20.1 15.3152C20.6 15.6152 21.4 15.4152 21.6 14.8152C21.9 13.9152 22.1 12.9152 22.1 11.8152C22.1 7.01519 18.8 3.11521 14.3 2.01521C13.7 1.91521 13.1 2.31521 13.1 3.01521V5.91517H13Z"
                                                     fill="currentColor" />
@@ -2047,8 +1989,7 @@
                                     <!--end:Menu item-->
                                     <!--begin:Menu item-->
                                     <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                        data-kt-menu-placement="right-start"
-                                        class="menu-item menu-lg-down-accordion">
+                                        data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                         <!--begin:Menu link-->
                                         <span class="menu-link">
                                             <span class="menu-bullet">
@@ -2093,8 +2034,7 @@
                                     <!--end:Menu item-->
                                     <!--begin:Menu item-->
                                     <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                        data-kt-menu-placement="right-start"
-                                        class="menu-item menu-lg-down-accordion">
+                                        data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                         <!--begin:Menu link-->
                                         <span class="menu-link">
                                             <span class="menu-bullet">
@@ -2140,8 +2080,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/support-center/faq.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/support-center/faq.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2166,8 +2105,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/support-center/contact.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/support-center/contact.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2182,15 +2120,14 @@
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
                             <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                data-kt-menu-placement="right-start"
-                                class="menu-item menu-lg-down-accordion">
+                                data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                 <!--begin:Menu link-->
                                 <span class="menu-link">
                                     <span class="menu-icon">
                                         <!--begin::Svg Icon | path: icons/duotune/general/gen051.svg-->
                                         <span class="svg-icon svg-icon-3">
-                                            <svg width="24" height="24" viewBox="0 0 24 24"
-                                                fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
                                                 <path opacity="0.3"
                                                     d="M20.5543 4.37824L12.1798 2.02473C12.0626 1.99176 11.9376 1.99176 11.8203 2.02473L3.44572 4.37824C3.18118 4.45258 3 4.6807 3 4.93945V13.569C3 14.6914 3.48509 15.8404 4.4417 16.984C5.17231 17.8575 6.18314 18.7345 7.446 19.5909C9.56752 21.0295 11.6566 21.912 11.7445 21.9488C11.8258 21.9829 11.9129 22 12.0001 22C12.0872 22 12.1744 21.983 12.2557 21.9488C12.3435 21.912 14.4326 21.0295 16.5541 19.5909C17.8169 18.7345 18.8277 17.8575 19.5584 16.984C20.515 15.8404 21 14.6914 21 13.569V4.93945C21 4.6807 20.8189 4.45258 20.5543 4.37824Z"
                                                     fill="currentColor" />
@@ -2210,8 +2147,7 @@
                                     class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
                                     <!--begin:Menu item-->
                                     <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                        data-kt-menu-placement="right-start"
-                                        class="menu-item menu-lg-down-accordion">
+                                        data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                         <!--begin:Menu link-->
                                         <span class="menu-link">
                                             <span class="menu-bullet">
@@ -2256,8 +2192,7 @@
                                     <!--end:Menu item-->
                                     <!--begin:Menu item-->
                                     <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                        data-kt-menu-placement="right-start"
-                                        class="menu-item menu-lg-down-accordion">
+                                        data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                         <!--begin:Menu link-->
                                         <span class="menu-link">
                                             <span class="menu-bullet">
@@ -2319,8 +2254,7 @@
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
                             <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                data-kt-menu-placement="right-start"
-                                class="menu-item menu-lg-down-accordion">
+                                data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                 <!--begin:Menu link-->
                                 <span class="menu-link">
                                     <span class="menu-icon">
@@ -2328,14 +2262,12 @@
                                         <span class="svg-icon svg-icon-3">
                                             <svg width="24" height="24" viewBox="0 0 24 24"
                                                 fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <path
-                                                    d="M6 21C6 21.6 6.4 22 7 22H17C17.6 22 18 21.6 18 21V20H6V21Z"
+                                                <path d="M6 21C6 21.6 6.4 22 7 22H17C17.6 22 18 21.6 18 21V20H6V21Z"
                                                     fill="currentColor" />
                                                 <path opacity="0.3"
                                                     d="M17 2H7C6.4 2 6 2.4 6 3V20H18V3C18 2.4 17.6 2 17 2Z"
                                                     fill="currentColor" />
-                                                <path
-                                                    d="M12 4C11.4 4 11 3.6 11 3V2H13V3C13 3.6 12.6 4 12 4Z"
+                                                <path d="M12 4C11.4 4 11 3.6 11 3V2H13V3C13 3.6 12.6 4 12 4Z"
                                                     fill="currentColor" />
                                             </svg>
                                         </span>
@@ -2364,8 +2296,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/contacts/add-contact.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/contacts/add-contact.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2406,8 +2337,7 @@
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
                             <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                data-kt-menu-placement="right-start"
-                                class="menu-item menu-lg-down-accordion">
+                                data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                 <!--begin:Menu link-->
                                 <span class="menu-link">
                                     <span class="menu-icon">
@@ -2451,8 +2381,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/subscriptions/list.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/subscriptions/list.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2464,8 +2393,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/subscriptions/add.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/subscriptions/add.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2477,8 +2405,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/subscriptions/view.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/subscriptions/view.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2493,8 +2420,7 @@
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
                             <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                data-kt-menu-placement="right-start"
-                                class="menu-item menu-lg-down-accordion">
+                                data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                 <!--begin:Menu link-->
                                 <span class="menu-link">
                                     <span class="menu-icon">
@@ -2535,8 +2461,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/customers/list.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/customers/list.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2548,8 +2473,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/customers/view.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/customers/view.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2564,8 +2488,7 @@
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
                             <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                data-kt-menu-placement="right-start"
-                                class="menu-item menu-lg-down-accordion">
+                                data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                 <!--begin:Menu link-->
                                 <span class="menu-link">
                                     <span class="menu-icon">
@@ -2650,8 +2573,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/invoices/create.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/invoices/create.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2666,8 +2588,7 @@
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
                             <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                data-kt-menu-placement="right-start"
-                                class="menu-item menu-lg-down-accordion">
+                                data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                 <!--begin:Menu link-->
                                 <span class="menu-link">
                                     <span class="menu-icon">
@@ -2697,8 +2618,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/file-manager/folders.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/file-manager/folders.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2710,8 +2630,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/file-manager/files.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/file-manager/files.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2723,8 +2642,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/file-manager/blank.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/file-manager/blank.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2752,8 +2670,7 @@
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
                             <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                data-kt-menu-placement="right-start"
-                                class="menu-item menu-lg-down-accordion">
+                                data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                 <!--begin:Menu link-->
                                 <span class="menu-link">
                                     <span class="menu-icon">
@@ -2781,8 +2698,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/inbox/listing.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/inbox/listing.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2797,8 +2713,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/inbox/compose.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/inbox/compose.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2810,8 +2725,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/inbox/reply.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/inbox/reply.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2826,8 +2740,7 @@
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
                             <div data-kt-menu-trigger="{default:'click', lg: 'hover'}"
-                                data-kt-menu-placement="right-start"
-                                class="menu-item menu-lg-down-accordion">
+                                data-kt-menu-placement="right-start" class="menu-item menu-lg-down-accordion">
                                 <!--begin:Menu link-->
                                 <span class="menu-link">
                                     <span class="menu-icon">
@@ -2838,10 +2751,10 @@
                                                 <path opacity="0.3"
                                                     d="M20 3H4C2.89543 3 2 3.89543 2 5V16C2 17.1046 2.89543 18 4 18H4.5C5.05228 18 5.5 18.4477 5.5 19V21.5052C5.5 22.1441 6.21212 22.5253 6.74376 22.1708L11.4885 19.0077C12.4741 18.3506 13.6321 18 14.8167 18H20C21.1046 18 22 17.1046 22 16V5C22 3.89543 21.1046 3 20 3Z"
                                                     fill="currentColor" />
-                                                <rect x="6" y="12" width="7" height="2"
-                                                    rx="1" fill="currentColor" />
-                                                <rect x="6" y="7" width="12" height="2"
-                                                    rx="1" fill="currentColor" />
+                                                <rect x="6" y="12" width="7" height="2" rx="1"
+                                                    fill="currentColor" />
+                                                <rect x="6" y="7" width="12" height="2" rx="1"
+                                                    fill="currentColor" />
                                             </svg>
                                         </span>
                                         <!--end::Svg Icon-->
@@ -2856,8 +2769,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/chat/private.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/chat/private.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2869,8 +2781,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/chat/group.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/chat/group.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2882,8 +2793,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/apps/chat/drawer.html">
+                                        <a class="menu-link" href="../../demo1/dist/apps/chat/drawer.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -2929,8 +2839,7 @@
                     <!--end:Menu item-->
                     <!--begin:Menu item-->
                     <div data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
-                        data-kt-menu-placement="bottom-start"
-                        class="menu-item menu-lg-down-accordion me-0 me-lg-2">
+                        data-kt-menu-placement="bottom-start" class="menu-item menu-lg-down-accordion me-0 me-lg-2">
                         <!--begin:Menu link-->
                         <span class="menu-link">
                             <span class="menu-title">Layouts</span>
@@ -2938,11 +2847,9 @@
                         </span>
                         <!--end:Menu link-->
                         <!--begin:Menu sub-->
-                        <div
-                            class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown p-0 w-100 w-lg-500px">
+                        <div class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown p-0 w-100 w-lg-500px">
                             <!--begin:Dashboards menu-->
-                            <div class="menu-state-bg pt-1 pb-3 px-3 py-lg-6 px-lg-6"
-                                data-kt-menu-dismiss="true">
+                            <div class="menu-state-bg pt-1 pb-3 px-3 py-lg-6 px-lg-6" data-kt-menu-dismiss="true">
                                 <!--begin:Row-->
                                 <div class="row">
                                     <!--begin:Col-->
@@ -2950,8 +2857,7 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/layouts/light-sidebar.html"
-                                                class="menu-link">
+                                            <a href="../../demo1/dist/layouts/light-sidebar.html" class="menu-link">
                                                 <span class="menu-bullet">
                                                     <span class="bullet bullet-dot h-6px w-6px"></span>
                                                 </span>
@@ -2963,8 +2869,7 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/layouts/dark-sidebar.html"
-                                                class="menu-link">
+                                            <a href="../../demo1/dist/layouts/dark-sidebar.html" class="menu-link">
                                                 <span class="menu-bullet">
                                                     <span class="bullet bullet-dot h-6px w-6px"></span>
                                                 </span>
@@ -2976,8 +2881,7 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/layouts/light-header.html"
-                                                class="menu-link">
+                                            <a href="../../demo1/dist/layouts/light-header.html" class="menu-link">
                                                 <span class="menu-bullet">
                                                     <span class="bullet bullet-dot h-6px w-6px"></span>
                                                 </span>
@@ -2989,8 +2893,7 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/layouts/dark-header.html"
-                                                class="menu-link">
+                                            <a href="../../demo1/dist/layouts/dark-header.html" class="menu-link">
                                                 <span class="menu-bullet">
                                                     <span class="bullet bullet-dot h-6px w-6px"></span>
                                                 </span>
@@ -3003,8 +2906,8 @@
                                     <!--end:Col-->
                                     <!--begin:Col-->
                                     <div class="col-lg-7 mb-3 pt-2 pe-lg-8">
-                                        <img src="assets/media/stock/900x600/74.jpg"
-                                            class="rounded mw-100" alt="" />
+                                        <img src="assets/media/stock/900x600/74.jpg" class="rounded mw-100"
+                                            alt="" />
                                     </div>
                                     <!--end:Col-->
                                 </div>
@@ -3047,8 +2950,8 @@
                                     href="https://preview.keenthemes.com/html/keen/docs/base/utilities"
                                     target="_blank"
                                     title="Check out over 200 in-house components, plugins and ready for use solutions"
-                                    data-bs-toggle="tooltip" data-bs-trigger="hover"
-                                    data-bs-dismiss="click" data-bs-placement="right">
+                                    data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click"
+                                    data-bs-placement="right">
                                     <span class="menu-icon">
                                         <!--begin::Svg Icon | path: icons/duotune/general/gen002.svg-->
                                         <span class="svg-icon svg-icon-3">
@@ -3072,11 +2975,10 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="https://preview.keenthemes.com/html/keen/docs" target="_blank"
-                                    title="Check out the complete documentation"
-                                    data-bs-toggle="tooltip" data-bs-trigger="hover"
-                                    data-bs-dismiss="click" data-bs-placement="right">
+                                <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs"
+                                    target="_blank" title="Check out the complete documentation"
+                                    data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss="click"
+                                    data-bs-placement="right">
                                     <span class="menu-icon">
                                         <!--begin::Svg Icon | path: icons/duotune/abstract/abs027.svg-->
                                         <span class="svg-icon svg-icon-3">
@@ -3137,9 +3039,8 @@
                 <div class="app-navbar-item align-items-stretch ms-1 ms-lg-3">
                     <!--begin::Search-->
                     <div id="kt_header_search" class="header-search d-flex align-items-stretch"
-                        data-kt-search-keypress="true" data-kt-search-min-length="2"
-                        data-kt-search-enter="enter" data-kt-search-layout="menu"
-                        data-kt-menu-trigger="auto" data-kt-menu-overflow="false"
+                        data-kt-search-keypress="true" data-kt-search-min-length="2" data-kt-search-enter="enter"
+                        data-kt-search-layout="menu" data-kt-menu-trigger="auto" data-kt-menu-overflow="false"
                         data-kt-menu-permanent="true" data-kt-menu-placement="bottom-end">
                         <!--begin::Search toggle-->
                         <div class="d-flex align-items-center" data-kt-search-element="toggle"
@@ -3148,11 +3049,10 @@
                                 class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-primary w-35px h-35px w-md-40px h-md-40px">
                                 <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
                                 <span class="svg-icon svg-icon-1">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546"
-                                            height="2" rx="1"
-                                            transform="rotate(45 17.0365 15.1223)"
+                                            height="2" rx="1" transform="rotate(45 17.0365 15.1223)"
                                             fill="currentColor" />
                                         <path
                                             d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
@@ -3175,12 +3075,11 @@
                                     <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
                                     <span
                                         class="svg-icon svg-icon-2 svg-icon-lg-1 svg-icon-gray-500 position-absolute top-50 translate-middle-y ms-0">
-                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                            fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                            xmlns="http://www.w3.org/2000/svg">
                                             <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546"
                                                 height="2" rx="1"
-                                                transform="rotate(45 17.0365 15.1223)"
-                                                fill="currentColor" />
+                                                transform="rotate(45 17.0365 15.1223)" fill="currentColor" />
                                             <path
                                                 d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
                                                 fill="currentColor" />
@@ -3189,8 +3088,7 @@
                                     <!--end::Svg Icon-->
                                     <!--end::Icon-->
                                     <!--begin::Input-->
-                                    <input type="text"
-                                        class="search-input form-control form-control-flush ps-10"
+                                    <input type="text" class="search-input form-control form-control-flush ps-10"
                                         name="search" value="" placeholder="Buscar..."
                                         data-kt-search-element="input" />
                                     <!--end::Input-->
@@ -3198,8 +3096,7 @@
                                     <span
                                         class="search-spinner position-absolute top-50 end-0 translate-middle-y lh-0 d-none me-1"
                                         data-kt-search-element="spinner">
-                                        <span
-                                            class="spinner-border h-15px w-15px align-middle text-gray-400"></span>
+                                        <span class="spinner-border h-15px w-15px align-middle text-gray-400"></span>
                                     </span>
                                     <!--end::Spinner-->
                                     <!--begin::Reset-->
@@ -3212,8 +3109,7 @@
                                                 fill="none" xmlns="http://www.w3.org/2000/svg">
                                                 <rect opacity="0.5" x="6" y="17.3137" width="16"
                                                     height="2" rx="1"
-                                                    transform="rotate(-45 6 17.3137)"
-                                                    fill="currentColor" />
+                                                    transform="rotate(-45 6 17.3137)" fill="currentColor" />
                                                 <rect x="7.41422" y="6" width="16" height="2"
                                                     rx="1" transform="rotate(45 7.41422 6)"
                                                     fill="currentColor" />
@@ -3280,13 +3176,11 @@
                                             class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                             <!--begin::Symbol-->
                                             <div class="symbol symbol-40px me-4">
-                                                <img src="assets/media/avatars/300-6.jpg"
-                                                    alt="" />
+                                                <img src="assets/media/avatars/300-6.jpg" alt="" />
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
-                                            <div
-                                                class="d-flex flex-column justify-content-start fw-semibold">
+                                            <div class="d-flex flex-column justify-content-start fw-semibold">
                                                 <span class="fs-6 fw-semibold">Karina Clark</span>
                                                 <span class="fs-7 fw-semibold text-muted">Marketing
                                                     Manager</span>
@@ -3299,13 +3193,11 @@
                                             class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                             <!--begin::Symbol-->
                                             <div class="symbol symbol-40px me-4">
-                                                <img src="assets/media/avatars/300-2.jpg"
-                                                    alt="" />
+                                                <img src="assets/media/avatars/300-2.jpg" alt="" />
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
-                                            <div
-                                                class="d-flex flex-column justify-content-start fw-semibold">
+                                            <div class="d-flex flex-column justify-content-start fw-semibold">
                                                 <span class="fs-6 fw-semibold">Olivia Bold</span>
                                                 <span class="fs-7 fw-semibold text-muted">Software
                                                     Engineer</span>
@@ -3318,13 +3210,11 @@
                                             class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                             <!--begin::Symbol-->
                                             <div class="symbol symbol-40px me-4">
-                                                <img src="assets/media/avatars/300-9.jpg"
-                                                    alt="" />
+                                                <img src="assets/media/avatars/300-9.jpg" alt="" />
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
-                                            <div
-                                                class="d-flex flex-column justify-content-start fw-semibold">
+                                            <div class="d-flex flex-column justify-content-start fw-semibold">
                                                 <span class="fs-6 fw-semibold">Ana Clark</span>
                                                 <span class="fs-7 fw-semibold text-muted">UI/UX
                                                     Designer</span>
@@ -3337,13 +3227,11 @@
                                             class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                             <!--begin::Symbol-->
                                             <div class="symbol symbol-40px me-4">
-                                                <img src="assets/media/avatars/300-14.jpg"
-                                                    alt="" />
+                                                <img src="assets/media/avatars/300-14.jpg" alt="" />
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
-                                            <div
-                                                class="d-flex flex-column justify-content-start fw-semibold">
+                                            <div class="d-flex flex-column justify-content-start fw-semibold">
                                                 <span class="fs-6 fw-semibold">Nick Pitola</span>
                                                 <span class="fs-7 fw-semibold text-muted">Art
                                                     Director</span>
@@ -3356,13 +3244,11 @@
                                             class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                             <!--begin::Symbol-->
                                             <div class="symbol symbol-40px me-4">
-                                                <img src="assets/media/avatars/300-11.jpg"
-                                                    alt="" />
+                                                <img src="assets/media/avatars/300-11.jpg" alt="" />
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
-                                            <div
-                                                class="d-flex flex-column justify-content-start fw-semibold">
+                                            <div class="d-flex flex-column justify-content-start fw-semibold">
                                                 <span class="fs-6 fw-semibold">Edward Kulnic</span>
                                                 <span class="fs-7 fw-semibold text-muted">System
                                                     Administrator</span>
@@ -3388,8 +3274,7 @@
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
-                                            <div
-                                                class="d-flex flex-column justify-content-start fw-semibold">
+                                            <div class="d-flex flex-column justify-content-start fw-semibold">
                                                 <span class="fs-6 fw-semibold">Company Rbranding</span>
                                                 <span class="fs-7 fw-semibold text-muted">UI Design</span>
                                             </div>
@@ -3409,8 +3294,7 @@
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
-                                            <div
-                                                class="d-flex flex-column justify-content-start fw-semibold">
+                                            <div class="d-flex flex-column justify-content-start fw-semibold">
                                                 <span class="fs-6 fw-semibold">Company Re-branding</span>
                                                 <span class="fs-7 fw-semibold text-muted">Web
                                                     Development</span>
@@ -3425,18 +3309,15 @@
                                             <div class="symbol symbol-40px me-4">
                                                 <span class="symbol-label bg-light">
                                                     <img class="w-20px h-20px"
-                                                        src="assets/media/svg/misc/infography.svg"
-                                                        alt="" />
+                                                        src="assets/media/svg/misc/infography.svg" alt="" />
                                                 </span>
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
-                                            <div
-                                                class="d-flex flex-column justify-content-start fw-semibold">
+                                            <div class="d-flex flex-column justify-content-start fw-semibold">
                                                 <span class="fs-6 fw-semibold">Business Analytics
                                                     App</span>
-                                                <span
-                                                    class="fs-7 fw-semibold text-muted">Administration</span>
+                                                <span class="fs-7 fw-semibold text-muted">Administration</span>
                                             </div>
                                             <!--end::Title-->
                                         </a>
@@ -3454,8 +3335,7 @@
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
-                                            <div
-                                                class="d-flex flex-column justify-content-start fw-semibold">
+                                            <div class="d-flex flex-column justify-content-start fw-semibold">
                                                 <span class="fs-6 fw-semibold">EcoLeaf App Launch</span>
                                                 <span class="fs-7 fw-semibold text-muted">Marketing</span>
                                             </div>
@@ -3475,8 +3355,7 @@
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
-                                            <div
-                                                class="d-flex flex-column justify-content-start fw-semibold">
+                                            <div class="d-flex flex-column justify-content-start fw-semibold">
                                                 <span class="fs-6 fw-semibold">Tower Group Website</span>
                                                 <span class="fs-7 fw-semibold text-muted">Google
                                                     Adwords</span>
@@ -3497,21 +3376,17 @@
                                                 <span class="symbol-label bg-light">
                                                     <!--begin::Svg Icon | path: icons/duotune/general/gen005.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M19 22H5C4.4 22 4 21.6 4 21V3C4 2.4 4.4 2 5 2H14L20 8V21C20 21.6 19.6 22 19 22ZM12.5 18C12.5 17.4 12.6 17.5 12 17.5H8.5C7.9 17.5 8 17.4 8 18C8 18.6 7.9 18.5 8.5 18.5L12 18C12.6 18 12.5 18.6 12.5 18ZM16.5 13C16.5 12.4 16.6 12.5 16 12.5H8.5C7.9 12.5 8 12.4 8 13C8 13.6 7.9 13.5 8.5 13.5H15.5C16.1 13.5 16.5 13.6 16.5 13ZM12.5 8C12.5 7.4 12.6 7.5 12 7.5H8C7.4 7.5 7.5 7.4 7.5 8C7.5 8.6 7.4 8.5 8 8.5H12C12.6 8.5 12.5 8.6 12.5 8Z"
                                                                 fill="currentColor" />
-                                                            <rect x="7" y="17" width="6"
-                                                                height="2" rx="1"
-                                                                fill="currentColor" />
-                                                            <rect x="7" y="12" width="10"
-                                                                height="2" rx="1"
-                                                                fill="currentColor" />
-                                                            <rect x="7" y="7" width="6"
-                                                                height="2" rx="1"
-                                                                fill="currentColor" />
+                                                            <rect x="7" y="17" width="6" height="2"
+                                                                rx="1" fill="currentColor" />
+                                                            <rect x="7" y="12" width="10" height="2"
+                                                                rx="1" fill="currentColor" />
+                                                            <rect x="7" y="7" width="6" height="2"
+                                                                rx="1" fill="currentColor" />
                                                             <path d="M15 8H20L14 2V7C14 7.6 14.4 8 15 8Z"
                                                                 fill="currentColor" />
                                                         </svg>
@@ -3537,21 +3412,17 @@
                                                 <span class="symbol-label bg-light">
                                                     <!--begin::Svg Icon | path: icons/duotune/general/gen032.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
-                                                            <rect x="8" y="9" width="3"
-                                                                height="10" rx="1.5"
-                                                                fill="currentColor" />
-                                                            <rect opacity="0.5" x="13" y="5"
-                                                                width="3" height="14"
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <rect x="8" y="9" width="3" height="10"
                                                                 rx="1.5" fill="currentColor" />
-                                                            <rect x="18" y="11" width="3"
-                                                                height="8" rx="1.5"
+                                                            <rect opacity="0.5" x="13" y="5" width="3"
+                                                                height="14" rx="1.5"
                                                                 fill="currentColor" />
-                                                            <rect x="3" y="13" width="3"
-                                                                height="6" rx="1.5"
-                                                                fill="currentColor" />
+                                                            <rect x="18" y="11" width="3" height="8"
+                                                                rx="1.5" fill="currentColor" />
+                                                            <rect x="3" y="13" width="3" height="6"
+                                                                rx="1.5" fill="currentColor" />
                                                         </svg>
                                                     </span>
                                                     <!--end::Svg Icon-->
@@ -3575,18 +3446,15 @@
                                                 <span class="symbol-label bg-light">
                                                     <!--begin::Svg Icon | path: icons/duotune/communication/com012.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M20 3H4C2.89543 3 2 3.89543 2 5V16C2 17.1046 2.89543 18 4 18H4.5C5.05228 18 5.5 18.4477 5.5 19V21.5052C5.5 22.1441 6.21212 22.5253 6.74376 22.1708L11.4885 19.0077C12.4741 18.3506 13.6321 18 14.8167 18H20C21.1046 18 22 17.1046 22 16V5C22 3.89543 21.1046 3 20 3Z"
                                                                 fill="currentColor" />
-                                                            <rect x="6" y="12" width="7"
-                                                                height="2" rx="1"
-                                                                fill="currentColor" />
-                                                            <rect x="6" y="7" width="12"
-                                                                height="2" rx="1"
-                                                                fill="currentColor" />
+                                                            <rect x="6" y="12" width="7" height="2"
+                                                                rx="1" fill="currentColor" />
+                                                            <rect x="6" y="7" width="12" height="2"
+                                                                rx="1" fill="currentColor" />
                                                         </svg>
                                                     </span>
                                                     <!--end::Svg Icon-->
@@ -3610,18 +3478,16 @@
                                                 <span class="symbol-label bg-light">
                                                     <!--begin::Svg Icon | path: icons/duotune/communication/com006.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="18" height="18"
-                                                            viewBox="0 0 18 18" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="18" height="18" viewBox="0 0 18 18"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M16.5 9C16.5 13.125 13.125 16.5 9 16.5C4.875 16.5 1.5 13.125 1.5 9C1.5 4.875 4.875 1.5 9 1.5C13.125 1.5 16.5 4.875 16.5 9Z"
                                                                 fill="currentColor" />
                                                             <path
                                                                 d="M9 16.5C10.95 16.5 12.75 15.75 14.025 14.55C13.425 12.675 11.4 11.25 9 11.25C6.6 11.25 4.57499 12.675 3.97499 14.55C5.24999 15.75 7.05 16.5 9 16.5Z"
                                                                 fill="currentColor" />
-                                                            <rect x="7" y="6" width="4"
-                                                                height="4" rx="2"
-                                                                fill="currentColor" />
+                                                            <rect x="7" y="6" width="4" height="4"
+                                                                rx="2" fill="currentColor" />
                                                         </svg>
                                                     </span>
                                                     <!--end::Svg Icon-->
@@ -3659,9 +3525,8 @@
                                                 <span class="symbol-label bg-light">
                                                     <!--begin::Svg Icon | path: icons/duotune/electronics/elc004.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path
                                                                 d="M2 16C2 16.6 2.4 17 3 17H21C21.6 17 22 16.6 22 16V15H2V16Z"
                                                                 fill="currentColor" />
@@ -3694,9 +3559,8 @@
                                                 <span class="symbol-label bg-light">
                                                     <!--begin::Svg Icon | path: icons/duotune/graphs/gra001.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M14 3V21H10V3C10 2.4 10.4 2 11 2H13C13.6 2 14 2.4 14 3ZM7 14H5C4.4 14 4 14.4 4 15V21H8V15C8 14.4 7.6 14 7 14Z"
                                                                 fill="currentColor" />
@@ -3727,9 +3591,8 @@
                                                 <span class="symbol-label bg-light">
                                                     <!--begin::Svg Icon | path: icons/duotune/graphs/gra006.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path
                                                                 d="M13 5.91517C15.8 6.41517 18 8.81519 18 11.8152C18 12.5152 17.9 13.2152 17.6 13.9152L20.1 15.3152C20.6 15.6152 21.4 15.4152 21.6 14.8152C21.9 13.9152 22.1 12.9152 22.1 11.8152C22.1 7.01519 18.8 3.11521 14.3 2.01521C13.7 1.91521 13.1 2.31521 13.1 3.01521V5.91517H13Z"
                                                                 fill="currentColor" />
@@ -3760,11 +3623,9 @@
                                                 <span class="symbol-label bg-light">
                                                     <!--begin::Svg Icon | path: icons/duotune/graphs/gra002.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
-                                                            <path opacity="0.3"
-                                                                d="M20 8L12.5 5L5 14V19H20V8Z"
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path opacity="0.3" d="M20 8L12.5 5L5 14V19H20V8Z"
                                                                 fill="currentColor" />
                                                             <path
                                                                 d="M21 18H6V3C6 2.4 5.6 2 5 2C4.4 2 4 2.4 4 3V18H3C2.4 18 2 18.4 2 19C2 19.6 2.4 20 3 20H4V21C4 21.6 4.4 22 5 22C5.6 22 6 21.6 6 21V20H21C21.6 20 22 19.6 22 19C22 18.4 21.6 18 21 18Z"
@@ -3793,9 +3654,8 @@
                                                 <span class="symbol-label bg-light">
                                                     <!--begin::Svg Icon | path: icons/duotune/communication/com010.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path
                                                                 d="M6 8.725C6 8.125 6.4 7.725 7 7.725H14L18 11.725V12.925L22 9.725L12.6 2.225C12.2 1.925 11.7 1.925 11.4 2.225L2 9.725L6 12.925V8.725Z"
                                                                 fill="currentColor" />
@@ -3826,9 +3686,8 @@
                                                 <span class="symbol-label bg-light">
                                                     <!--begin::Svg Icon | path: icons/duotune/finance/fin001.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path
                                                                 d="M20 19.725V18.725C20 18.125 19.6 17.725 19 17.725H5C4.4 17.725 4 18.125 4 18.725V19.725H3C2.4 19.725 2 20.125 2 20.725V21.725H22V20.725C22 20.125 21.6 19.725 21 19.725H20Z"
                                                                 fill="currentColor" />
@@ -3859,11 +3718,9 @@
                                                 <span class="symbol-label bg-light">
                                                     <!--begin::Svg Icon | path: icons/duotune/graphs/gra002.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
-                                                            <path opacity="0.3"
-                                                                d="M20 8L12.5 5L5 14V19H20V8Z"
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path opacity="0.3" d="M20 8L12.5 5L5 14V19H20V8Z"
                                                                 fill="currentColor" />
                                                             <path
                                                                 d="M21 18H6V3C6 2.4 5.6 2 5 2C4.4 2 4 2.4 4 3V18H3C2.4 18 2 18.4 2 19C2 19.6 2.4 20 3 20H4V21C4 21.6 4.4 22 5 22C5.6 22 6 21.6 6 21V20H21C21.6 20 22 19.6 22 19C22 18.4 21.6 18 21 18Z"
@@ -3902,9 +3759,8 @@
                                                     fill="currentColor" />
                                                 <path d="M20 8L14 2V6C14 7.10457 14.8954 8 16 8H20Z"
                                                     fill="currentColor" />
-                                                <rect x="13.6993" y="13.6656" width="4.42828"
-                                                    height="1.73089" rx="0.865447"
-                                                    transform="rotate(45 13.6993 13.6656)"
+                                                <rect x="13.6993" y="13.6656" width="4.42828" height="1.73089"
+                                                    rx="0.865447" transform="rotate(45 13.6993 13.6656)"
                                                     fill="currentColor" />
                                                 <path
                                                     d="M15 12C15 14.2 13.2 16 11 16C8.8 16 7 14.2 7 12C7 9.8 8.8 8 11 8C13.2 8 15 9.8 15 12ZM11 9.6C9.68 9.6 8.6 10.68 8.6 12C8.6 13.32 9.68 14.4 11 14.4C12.32 14.4 13.4 13.32 13.4 12C13.4 10.68 12.32 9.6 11 9.6Z"
@@ -3932,8 +3788,7 @@
                                 <!--end::Heading-->
                                 <!--begin::Input group-->
                                 <div class="mb-5">
-                                    <input type="text"
-                                        class="form-control form-control-sm form-control-solid"
+                                    <input type="text" class="form-control form-control-sm form-control-solid"
                                         placeholder="Contains the word" name="query" />
                                 </div>
                                 <!--end::Input group-->
@@ -3999,8 +3854,7 @@
                                         <label>
                                             <input type="radio" class="btn-check" name="attachment"
                                                 value="has" checked="checked" />
-                                            <span
-                                                class="btn btn-sm btn-color-muted btn-active btn-active-primary">Has
+                                            <span class="btn btn-sm btn-color-muted btn-active btn-active-primary">Has
                                                 attachment</span>
                                         </label>
                                         <!--end::Option-->
@@ -4018,8 +3872,8 @@
                                 <!--end::Input group-->
                                 <!--begin::Input group-->
                                 <div class="mb-5">
-                                    <select name="timezone" aria-label="Select a Timezone"
-                                        data-control="select2" data-placeholder="date_period"
+                                    <select name="timezone" aria-label="Select a Timezone" data-control="select2"
+                                        data-placeholder="date_period"
                                         class="form-select form-select-sm form-select-solid">
                                         <option value="next">Within the next</option>
                                         <option value="last">Within the last</option>
@@ -4097,8 +3951,7 @@
                                         <span
                                             class="form-check-label text-gray-700 fs-6 fw-semibold ms-0 me-2">Affiliate
                                             Programs</span>
-                                        <input class="form-check-input" type="checkbox"
-                                            value="1" />
+                                        <input class="form-check-input" type="checkbox" value="1" />
                                     </label>
                                 </div>
                                 <!--end::Input group-->
@@ -4119,8 +3972,7 @@
                                         class="form-check form-switch form-switch-sm form-check-custom form-check-solid flex-stack">
                                         <span
                                             class="form-check-label text-gray-700 fs-6 fw-semibold ms-0 me-2">Users</span>
-                                        <input class="form-check-input" type="checkbox"
-                                            value="1" />
+                                        <input class="form-check-input" type="checkbox" value="1" />
                                     </label>
                                 </div>
                                 <!--end::Input group-->
@@ -4152,8 +4004,8 @@
                                 xmlns="http://www.w3.org/2000/svg">
                                 <rect x="8" y="9" width="3" height="10" rx="1.5"
                                     fill="currentColor" />
-                                <rect opacity="0.5" x="13" y="5" width="3" height="14"
-                                    rx="1.5" fill="currentColor" />
+                                <rect opacity="0.5" x="13" y="5" width="3" height="14" rx="1.5"
+                                    fill="currentColor" />
                                 <rect x="18" y="11" width="3" height="8" rx="1.5"
                                     fill="currentColor" />
                                 <rect x="3" y="13" width="3" height="6" rx="1.5"
@@ -4169,8 +4021,8 @@
                 <div class="app-navbar-item ms-1 ms-lg-3">
                     <!--begin::Menu- wrapper-->
                     <div class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-primary w-35px h-35px w-md-40px h-md-40px"
-                        data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
-                        data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
+                        data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent"
+                        data-kt-menu-placement="bottom-end">
                         <!--begin::Svg Icon | path: icons/duotune/general/gen022.svg-->
                         <span class="svg-icon svg-icon-1">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -4192,8 +4044,7 @@
                         <!--end::Svg Icon-->
                     </div>
                     <!--begin::Menu-->
-                    <div class="menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px"
-                        data-kt-menu="true">
+                    <div class="menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px" data-kt-menu="true">
                         <!--begin::Heading-->
                         <div class="d-flex flex-column bgi-no-repeat rounded-top"
                             style="background-image:url('assets/media/misc/menu-header-bg.jpg')">
@@ -4206,13 +4057,11 @@
                             <ul class="nav nav-line-tabs nav-line-tabs-2x nav-stretch fw-semibold px-9">
                                 <li class="nav-item">
                                     <a class="nav-link text-white opacity-75 opacity-state-100 pb-4"
-                                        data-bs-toggle="tab"
-                                        href="#kt_topbar_notifications_1">Alerts</a>
+                                        data-bs-toggle="tab" href="#kt_topbar_notifications_1">Alerts</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link text-white opacity-75 opacity-state-100 pb-4 active"
-                                        data-bs-toggle="tab"
-                                        href="#kt_topbar_notifications_2">Updates</a>
+                                        data-bs-toggle="tab" href="#kt_topbar_notifications_2">Updates</a>
                                 </li>
                                 <li class="nav-item">
                                     <a class="nav-link text-white opacity-75 opacity-state-100 pb-4"
@@ -4237,9 +4086,8 @@
                                                 <span class="symbol-label bg-light-primary">
                                                     <!--begin::Svg Icon | path: icons/duotune/technology/teh008.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M11 6.5C11 9 9 11 6.5 11C4 11 2 9 2 6.5C2 4 4 2 6.5 2C9 2 11 4 11 6.5ZM17.5 2C15 2 13 4 13 6.5C13 9 15 11 17.5 11C20 11 22 9 22 6.5C22 4 20 2 17.5 2ZM6.5 13C4 13 2 15 2 17.5C2 20 4 22 6.5 22C9 22 11 20 11 17.5C11 15 9 13 6.5 13ZM17.5 13C15 13 13 15 13 17.5C13 20 15 22 17.5 22C20 22 22 20 22 17.5C22 15 20 13 17.5 13Z"
                                                                 fill="currentColor" />
@@ -4276,19 +4124,16 @@
                                                 <span class="symbol-label bg-light-danger">
                                                     <!--begin::Svg Icon | path: icons/duotune/general/gen044.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-danger">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
-                                                            <rect opacity="0.3" x="2" y="2"
-                                                                width="20" height="20"
-                                                                rx="10" fill="currentColor" />
-                                                            <rect x="11" y="14" width="7"
-                                                                height="2" rx="1"
-                                                                transform="rotate(-90 11 14)"
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <rect opacity="0.3" x="2" y="2" width="20"
+                                                                height="20" rx="10"
                                                                 fill="currentColor" />
-                                                            <rect x="11" y="17" width="2"
-                                                                height="2" rx="1"
-                                                                transform="rotate(-90 11 17)"
+                                                            <rect x="11" y="14" width="7" height="2"
+                                                                rx="1" transform="rotate(-90 11 14)"
+                                                                fill="currentColor" />
+                                                            <rect x="11" y="17" width="2" height="2"
+                                                                rx="1" transform="rotate(-90 11 17)"
                                                                 fill="currentColor" />
                                                         </svg>
                                                     </span>
@@ -4321,9 +4166,8 @@
                                                 <span class="symbol-label bg-light-warning">
                                                     <!--begin::Svg Icon | path: icons/duotune/finance/fin006.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-warning">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M20 15H4C2.9 15 2 14.1 2 13V7C2 6.4 2.4 6 3 6H21C21.6 6 22 6.4 22 7V13C22 14.1 21.1 15 20 15ZM13 12H11C10.5 12 10 12.4 10 13V16C10 16.5 10.4 17 11 17H13C13.6 17 14 16.6 14 16V13C14 12.4 13.6 12 13 12Z"
                                                                 fill="currentColor" />
@@ -4361,9 +4205,8 @@
                                                 <span class="symbol-label bg-light-success">
                                                     <!--begin::Svg Icon | path: icons/duotune/files/fil023.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-success">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M5 15C3.3 15 2 13.7 2 12C2 10.3 3.3 9 5 9H5.10001C5.00001 8.7 5 8.3 5 8C5 5.2 7.2 3 10 3C11.9 3 13.5 4 14.3 5.5C14.8 5.2 15.4 5 16 5C17.7 5 19 6.3 19 8C19 8.4 18.9 8.7 18.8 9C18.9 9 18.9 9 19 9C20.7 9 22 10.3 22 12C22 13.7 20.7 15 19 15H5ZM5 12.6H13L9.7 9.29999C9.3 8.89999 8.7 8.89999 8.3 9.29999L5 12.6Z"
                                                                 fill="currentColor" />
@@ -4407,9 +4250,8 @@
                                                 <span class="symbol-label bg-light-primary">
                                                     <!--begin::Svg Icon | path: icons/duotune/maps/map001.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-primary">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M6 22H4V3C4 2.4 4.4 2 5 2C5.6 2 6 2.4 6 3V22Z"
                                                                 fill="currentColor" />
@@ -4447,9 +4289,8 @@
                                                 <span class="symbol-label bg-light-info">
                                                     <!--begin::Svg Icon | path: icons/duotune/general/gen006.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-info">
-                                                        <svg width="24" height="24"
-                                                            viewBox="0 0 24 24" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M22 5V19C22 19.6 21.6 20 21 20H19.5L11.9 12.4C11.5 12 10.9 12 10.5 12.4L3 20C2.5 20 2 19.5 2 19V5C2 4.4 2.4 4 3 4H21C21.6 4 22 4.4 22 5ZM7.5 7C6.7 7 6 7.7 6 8.5C6 9.3 6.7 10 7.5 10C8.3 10 9 9.3 9 8.5C9 7.7 8.3 7 7.5 7Z"
                                                                 fill="currentColor" />
@@ -4487,9 +4328,8 @@
                                                 <span class="symbol-label bg-light-warning">
                                                     <!--begin::Svg Icon | path: icons/duotune/art/art002.svg-->
                                                     <span class="svg-icon svg-icon-2 svg-icon-warning">
-                                                        <svg width="24" height="25"
-                                                            viewBox="0 0 24 25" fill="none"
-                                                            xmlns="http://www.w3.org/2000/svg">
+                                                        <svg width="24" height="25" viewBox="0 0 24 25"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
                                                             <path opacity="0.3"
                                                                 d="M8.9 21L7.19999 22.6999C6.79999 23.0999 6.2 23.0999 5.8 22.6999L4.1 21H8.9ZM4 16.0999L2.3 17.8C1.9 18.2 1.9 18.7999 2.3 19.1999L4 20.9V16.0999ZM19.3 9.1999L15.8 5.6999C15.4 5.2999 14.8 5.2999 14.4 5.6999L9 11.0999V21L19.3 10.6999C19.7 10.2999 19.7 9.5999 19.3 9.1999Z"
                                                                 fill="currentColor" />
@@ -4528,9 +4368,8 @@
                                         <span class="svg-icon svg-icon-5">
                                             <svg width="24" height="24" viewBox="0 0 24 24"
                                                 fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <rect opacity="0.5" x="18" y="13" width="13"
-                                                    height="2" rx="1"
-                                                    transform="rotate(-180 18 13)"
+                                                <rect opacity="0.5" x="18" y="13" width="13" height="2"
+                                                    rx="1" transform="rotate(-180 18 13)"
                                                     fill="currentColor" />
                                                 <path
                                                     d="M15.4343 12.5657L11.25 16.75C10.8358 17.1642 10.8358 17.8358 11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25L18.2929 12.7071C18.6834 12.3166 18.6834 11.6834 18.2929 11.2929L12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75C10.8358 6.16421 10.8358 6.83579 11.25 7.25L15.4343 11.4343C15.7467 11.7467 15.7467 12.2533 15.4343 12.5657Z"
@@ -4543,8 +4382,7 @@
                             </div>
                             <!--end::Tab panel-->
                             <!--begin::Tab panel-->
-                            <div class="tab-pane fade show active" id="kt_topbar_notifications_2"
-                                role="tabpanel">
+                            <div class="tab-pane fade show active" id="kt_topbar_notifications_2" role="tabpanel">
                                 <!--begin::Wrapper-->
                                 <div class="d-flex flex-column px-9">
                                     <!--begin::Section-->
@@ -4830,9 +4668,8 @@
                                         <span class="svg-icon svg-icon-5">
                                             <svg width="24" height="24" viewBox="0 0 24 24"
                                                 fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <rect opacity="0.5" x="18" y="13" width="13"
-                                                    height="2" rx="1"
-                                                    transform="rotate(-180 18 13)"
+                                                <rect opacity="0.5" x="18" y="13" width="13" height="2"
+                                                    rx="1" transform="rotate(-180 18 13)"
                                                     fill="currentColor" />
                                                 <path
                                                     d="M15.4343 12.5657L11.25 16.75C10.8358 17.1642 10.8358 17.8358 11.25 18.25C11.6642 18.6642 12.3358 18.6642 12.75 18.25L18.2929 12.7071C18.6834 12.3166 18.6834 11.6834 18.2929 11.2929L12.75 5.75C12.3358 5.33579 11.6642 5.33579 11.25 5.75C10.8358 6.16421 10.8358 6.83579 11.25 7.25L15.4343 11.4343C15.7467 11.7467 15.7467 12.2533 15.4343 12.5657Z"
@@ -4880,15 +4717,14 @@
                 {{-- @include('layouts.indioma') --}}
                 <!--end::Languages-->
                 <!--begin::Theme mode-->
-                @include('layouts.dack')
+                @include('app.layouts.dack')
                 <!--end::Theme mode-->
                 <!--begin::User menu-->
                 @include('layouts.userMenu')
                 <!--end::User menu-->
                 <!--begin::Header menu toggle-->
                 <div class="app-navbar-item d-lg-none ms-2 me-n3" title="Show header menu">
-                    <div class="btn btn-icon btn-active-color-primary w-35px h-35px"
-                        id="kt_app_header_menu_toggle">
+                    <div class="btn btn-icon btn-active-color-primary w-35px h-35px" id="kt_app_header_menu_toggle">
                         <!--begin::Svg Icon | path: icons/duotune/text/txt001.svg-->
                         <span class="svg-icon svg-icon-1">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -4927,8 +4763,7 @@
 
             <!--end::Logo image-->
             <!--begin::Sidebar toggle-->
-            <div id="kt_app_sidebar_toggle"
-                class="app-sidebar-toggle btn btn-icon btn-sm h-30px w-30px rotate"
+            <div id="kt_app_sidebar_toggle" class="app-sidebar-toggle btn btn-icon btn-sm h-30px w-30px rotate"
                 data-kt-toggle="true" data-kt-toggle-state="active" data-kt-toggle-target="body"
                 data-kt-toggle-name="app-sidebar-minimize">
                 <!--begin::Svg Icon | path: icons/duotune/arrows/arr079.svg-->
@@ -4951,9 +4786,8 @@
         <!--begin::sidebar menu-->
         <div class="app-sidebar-menu overflow-hidden flex-column-fluid">
             <!--begin::Menu wrapper-->
-            <div id="kt_app_sidebar_menu_wrapper"
-                class="app-sidebar-wrapper hover-scroll-overlay-y my-5" data-kt-scroll="true"
-                data-kt-scroll-activate="true" data-kt-scroll-height="auto"
+            <div id="kt_app_sidebar_menu_wrapper" class="app-sidebar-wrapper hover-scroll-overlay-y my-5"
+                data-kt-scroll="true" data-kt-scroll-activate="true" data-kt-scroll-height="auto"
                 data-kt-scroll-dependencies="#kt_app_sidebar_logo, #kt_app_sidebar_footer"
                 data-kt-scroll-wrappers="#kt_app_sidebar_menu" data-kt-scroll-offset="5px">
                 <!--begin::Menu-->
@@ -4966,16 +4800,16 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/general/gen025.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <rect x="2" y="2" width="9" height="9" rx="2"
                                             fill="currentColor" />
-                                        <rect opacity="0.3" x="13" y="2" width="9"
-                                            height="9" rx="2" fill="currentColor" />
-                                        <rect opacity="0.3" x="13" y="13" width="9"
-                                            height="9" rx="2" fill="currentColor" />
-                                        <rect opacity="0.3" x="2" y="13" width="9"
-                                            height="9" rx="2" fill="currentColor" />
+                                        <rect opacity="0.3" x="13" y="2" width="9" height="9"
+                                            rx="2" fill="currentColor" />
+                                        <rect opacity="0.3" x="13" y="13" width="9" height="9"
+                                            rx="2" fill="currentColor" />
+                                        <rect opacity="0.3" x="2" y="13" width="9" height="9"
+                                            rx="2" fill="currentColor" />
                                     </svg>
                                 </span>
                                 <!--end::Svg Icon-->
@@ -4989,11 +4823,11 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link active" href="{{ route('users.index') }}">
+                                <a class="menu-link active" href="{{ route('dashboard') }}">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
-                                    <span class="menu-title">Usuários</span>
+                                    <span class="menu-title">Dashboard</span>
                                 </a>
                                 <!--end:Menu link-->
                             </div>
@@ -5001,11 +4835,11 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link" href="../../demo1/dist/dashboards/projects.html">
+                                <a class="menu-link" href="#">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
-                                    <span class="menu-title">Projects</span>
+                                    <span class="menu-title">Patrimônio</span>
                                 </a>
                                 <!--end:Menu link-->
                             </div>
@@ -5013,23 +4847,11 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link" href="../../demo1/dist/dashboards/ecommerce.html">
+                                <a class="menu-link" href="#">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
-                                    <span class="menu-title">eCommerce</span>
-                                </a>
-                                <!--end:Menu link-->
-                            </div>
-                            <!--end:Menu item-->
-                            <!--begin:Menu item-->
-                            <div class="menu-item">
-                                <!--begin:Menu link-->
-                                <a class="menu-link" href="../../demo1/dist/dashboards/marketing.html">
-                                    <span class="menu-bullet">
-                                        <span class="bullet bullet-dot"></span>
-                                    </span>
-                                    <span class="menu-title">Marketing</span>
+                                    <span class="menu-title">Controle Veícular</span>
                                 </a>
                                 <!--end:Menu link-->
                             </div>
@@ -5051,8 +4873,7 @@
                                 <!--begin:Menu item-->
                                 <div class="menu-item">
                                     <!--begin:Menu link-->
-                                    <a class="menu-link"
-                                        href="../../demo1/dist/dashboards/bidding.html">
+                                    <a class="menu-link" href="../../demo1/dist/dashboards/bidding.html">
                                         <span class="menu-bullet">
                                             <span class="bullet bullet-dot"></span>
                                         </span>
@@ -5064,8 +4885,7 @@
                                 <!--begin:Menu item-->
                                 <div class="menu-item">
                                     <!--begin:Menu link-->
-                                    <a class="menu-link"
-                                        href="../../demo1/dist/dashboards/online-courses.html">
+                                    <a class="menu-link" href="../../demo1/dist/dashboards/online-courses.html">
                                         <span class="menu-bullet">
                                             <span class="bullet bullet-dot"></span>
                                         </span>
@@ -5077,8 +4897,7 @@
                                 <!--begin:Menu item-->
                                 <div class="menu-item">
                                     <!--begin:Menu link-->
-                                    <a class="menu-link"
-                                        href="../../demo1/dist/dashboards/logistics.html">
+                                    <a class="menu-link" href="../../demo1/dist/dashboards/logistics.html">
                                         <span class="menu-bullet">
                                             <span class="bullet bullet-dot"></span>
                                         </span>
@@ -5109,8 +4928,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/communication/com005.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M20 14H18V10H20C20.6 10 21 10.4 21 11V13C21 13.6 20.6 14 20 14ZM21 19V17C21 16.4 20.6 16 20 16H18V20H20C20.6 20 21 19.6 21 19ZM21 7V5C21 4.4 20.6 4 20 4H18V8H20C20.6 8 21 7.6 21 7Z"
                                             fill="currentColor" />
@@ -5130,12 +4949,11 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/pages/user-profile/overview.html">
+                                <a class="menu-link" href="{{ route('users.index') }}">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
-                                    <span class="menu-title">Overview</span>
+                                    <span class="menu-title">Usuários</span>
                                 </a>
                                 <!--end:Menu link-->
                             </div>
@@ -5143,8 +4961,19 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/pages/user-profile/projects.html">
+                                <a class="menu-link" href="{{ route('filial.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Organismos</span>
+                                </a>
+                                <!--end:Menu link-->
+                            </div>
+                            <!--end:Menu item-->
+                            <!--begin:Menu item-->
+                            <div class="menu-item">
+                                <!--begin:Menu link-->
+                                <a class="menu-link" href="../../demo1/dist/pages/user-profile/projects.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -5156,8 +4985,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/pages/user-profile/campaigns.html">
+                                <a class="menu-link" href="../../demo1/dist/pages/user-profile/campaigns.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -5169,8 +4997,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/pages/user-profile/documents.html">
+                                <a class="menu-link" href="../../demo1/dist/pages/user-profile/documents.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -5182,8 +5009,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/pages/user-profile/followers.html">
+                                <a class="menu-link" href="../../demo1/dist/pages/user-profile/followers.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -5195,8 +5021,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/pages/user-profile/activity.html">
+                                <a class="menu-link" href="../../demo1/dist/pages/user-profile/activity.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -5216,8 +5041,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/general/gen022.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M11.2929 2.70711C11.6834 2.31658 12.3166 2.31658 12.7071 2.70711L15.2929 5.29289C15.6834 5.68342 15.6834 6.31658 15.2929 6.70711L12.7071 9.29289C12.3166 9.68342 11.6834 9.68342 11.2929 9.29289L8.70711 6.70711C8.31658 6.31658 8.31658 5.68342 8.70711 5.29289L11.2929 2.70711Z"
                                             fill="currentColor" />
@@ -5359,8 +5184,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/communication/com013.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M6.28548 15.0861C7.34369 13.1814 9.35142 12 11.5304 12H12.4696C14.6486 12 16.6563 13.1814 17.7145 15.0861L19.3493 18.0287C20.0899 19.3618 19.1259 21 17.601 21H6.39903C4.87406 21 3.91012 19.3618 4.65071 18.0287L6.28548 15.0861Z"
                                             fill="currentColor" />
@@ -5595,8 +5420,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/authentication/general/welcome.html">
+                                <a class="menu-link" href="../../demo1/dist/authentication/general/welcome.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -5660,8 +5484,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/authentication/general/error-404.html">
+                                <a class="menu-link" href="../../demo1/dist/authentication/general/error-404.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -5673,8 +5496,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/authentication/general/error-500.html">
+                                <a class="menu-link" href="../../demo1/dist/authentication/general/error-500.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -5707,13 +5529,12 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/files/fil003.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path opacity="0.3"
                                             d="M19 22H5C4.4 22 4 21.6 4 21V3C4 2.4 4.4 2 5 2H14L20 8V21C20 21.6 19.6 22 19 22Z"
                                             fill="currentColor" />
-                                        <path d="M15 8H20L14 2V7C14 7.6 14.4 8 15 8Z"
-                                            fill="currentColor" />
+                                        <path d="M15 8H20L14 2V7C14 7.6 14.4 8 15 8Z" fill="currentColor" />
                                     </svg>
                                 </span>
                                 <!--end::Svg Icon-->
@@ -5819,8 +5640,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/abstract/abs048.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path opacity="0.3"
                                             d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
                                             fill="currentColor" />
@@ -5864,8 +5685,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/pages/social/followers.html">
+                                <a class="menu-link" href="../../demo1/dist/pages/social/followers.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -5897,8 +5717,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/finance/fin001.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M20 19.725V18.725C20 18.125 19.6 17.725 19 17.725H5C4.4 17.725 4 18.125 4 18.725V19.725H3C2.4 19.725 2 20.125 2 20.725V21.725H22V20.725C22 20.125 21.6 19.725 21 19.725H20Z"
                                             fill="currentColor" />
@@ -5950,8 +5770,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/communication/com004.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path opacity="0.3"
                                             d="M14 3V20H2V3C2 2.4 2.4 2 3 2H13C13.6 2 14 2.4 14 3ZM11 13V11C11 9.7 10.2 8.59995 9 8.19995V7C9 6.4 8.6 6 8 6C7.4 6 7 6.4 7 7V8.19995C5.8 8.59995 5 9.7 5 11V13C5 13.6 4.6 14 4 14V15C4 15.6 4.4 16 5 16H11C11.6 16 12 15.6 12 15V14C11.4 14 11 13.6 11 13Z"
                                             fill="currentColor" />
@@ -6003,8 +5823,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/art/art002.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="25" viewBox="0 0 24 25"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="25" viewBox="0 0 24 25" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path opacity="0.3"
                                             d="M8.9 21L7.19999 22.6999C6.79999 23.0999 6.2 23.0999 5.8 22.6999L4.1 21H8.9ZM4 16.0999L2.3 17.8C1.9 18.2 1.9 18.7999 2.3 19.1999L4 20.9V16.0999ZM19.3 9.1999L15.8 5.6999C15.4 5.2999 14.8 5.2999 14.4 5.6999L9 11.0999V21L19.3 10.6999C19.7 10.2999 19.7 9.5999 19.3 9.1999Z"
                                             fill="currentColor" />
@@ -6382,8 +6202,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/utilities/search/vertical.html">
+                                        <a class="menu-link" href="../../demo1/dist/utilities/search/vertical.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -6395,8 +6214,7 @@
                                     <!--begin:Menu item-->
                                     <div class="menu-item">
                                         <!--begin:Menu link-->
-                                        <a class="menu-link"
-                                            href="../../demo1/dist/utilities/search/users.html">
+                                        <a class="menu-link" href="../../demo1/dist/utilities/search/users.html">
                                             <span class="menu-bullet">
                                                 <span class="bullet bullet-dot"></span>
                                             </span>
@@ -6576,8 +6394,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/abstract/abs042.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M18 21.6C16.6 20.4 9.1 20.3 6.3 21.2C5.7 21.4 5.1 21.2 4.7 20.8L2 18C4.2 15.8 10.8 15.1 15.8 15.8C16.2 18.3 17 20.5 18 21.6ZM18.8 2.8C18.4 2.4 17.8 2.20001 17.2 2.40001C14.4 3.30001 6.9 3.2 5.5 2C6.8 3.3 7.4 5.5 7.7 7.7C9 7.9 10.3 8 11.7 8C15.8 8 19.8 7.2 21.5 5.5L18.8 2.8Z"
                                             fill="currentColor" />
@@ -6669,8 +6487,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/projects/activity.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/projects/activity.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -6682,8 +6499,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/projects/settings.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/projects/settings.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -6703,8 +6519,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm002.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M21 10H13V11C13 11.6 12.6 12 12 12C11.4 12 11 11.6 11 11V10H3C2.4 10 2 10.4 2 11V13H22V11C22 10.4 21.6 10 21 10Z"
                                             fill="currentColor" />
@@ -7016,8 +6832,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/ecommerce/settings.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/ecommerce/settings.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7037,13 +6852,12 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/abstract/abs026.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path opacity="0.3"
                                             d="M7 20.5L2 17.6V11.8L7 8.90002L12 11.8V17.6L7 20.5ZM21 20.8V18.5L19 17.3L17 18.5V20.8L19 22L21 20.8Z"
                                             fill="currentColor" />
-                                        <path d="M22 14.1V6L15 2L8 6V14.1L15 18.2L22 14.1Z"
-                                            fill="currentColor" />
+                                        <path d="M22 14.1V6L15 2L8 6V14.1L15 18.2L22 14.1Z" fill="currentColor" />
                                     </svg>
                                 </span>
                                 <!--end::Svg Icon-->
@@ -7057,8 +6871,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/contacts/getting-started.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/contacts/getting-started.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7070,8 +6883,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/contacts/add-contact.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/contacts/add-contact.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7083,8 +6895,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/contacts/edit-contact.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/contacts/edit-contact.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7096,8 +6907,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/contacts/view-contact.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/contacts/view-contact.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7117,8 +6927,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/graphs/gra006.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M13 5.91517C15.8 6.41517 18 8.81519 18 11.8152C18 12.5152 17.9 13.2152 17.6 13.9152L20.1 15.3152C20.6 15.6152 21.4 15.4152 21.6 14.8152C21.9 13.9152 22.1 12.9152 22.1 11.8152C22.1 7.01519 18.8 3.11521 14.3 2.01521C13.7 1.91521 13.1 2.31521 13.1 3.01521V5.91517H13Z"
                                             fill="currentColor" />
@@ -7138,8 +6948,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/support-center/overview.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/support-center/overview.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7237,8 +7046,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/support-center/faq.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/support-center/faq.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7250,8 +7058,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/support-center/licenses.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/support-center/licenses.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7263,8 +7070,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/support-center/contact.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/support-center/contact.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7284,8 +7090,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/abstract/abs029.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M6.5 11C8.98528 11 11 8.98528 11 6.5C11 4.01472 8.98528 2 6.5 2C4.01472 2 2 4.01472 2 6.5C2 8.98528 4.01472 11 6.5 11Z"
                                             fill="currentColor" />
@@ -7391,8 +7197,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/user-management/permissions.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/user-management/permissions.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7412,8 +7217,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/abstract/abs040.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M11.7 8L7.49998 15.3L4.59999 20.3C3.49999 18.4 3.1 17.7 2.3 16.3C1.9 15.7 1.9 14.9 2.3 14.3L8.8 3L11.7 8Z"
                                             fill="currentColor" />
@@ -7433,8 +7238,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/customers/getting-started.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/customers/getting-started.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7478,22 +7282,20 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/maps/map002.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M8.7 4.19995L4 6.30005V18.8999L8.7 16.8V19L3.1 21.5C2.6 21.7 2 21.4 2 20.8V6C2 5.4 2.3 4.89995 2.9 4.69995L8.7 2.09998V4.19995Z"
                                             fill="currentColor" />
                                         <path
                                             d="M15.3 19.8L20 17.6999V5.09992L15.3 7.19989V4.99994L20.9 2.49994C21.4 2.29994 22 2.59989 22 3.19989V17.9999C22 18.5999 21.7 19.1 21.1 19.3L15.3 21.8998V19.8Z"
                                             fill="currentColor" />
-                                        <path opacity="0.3"
-                                            d="M15.3 7.19995L20 5.09998V17.7L15.3 19.8V7.19995Z"
+                                        <path opacity="0.3" d="M15.3 7.19995L20 5.09998V17.7L15.3 19.8V7.19995Z"
                                             fill="currentColor" />
                                         <path opacity="0.3"
                                             d="M8.70001 4.19995V2L15.4 5V7.19995L8.70001 4.19995ZM8.70001 16.8V19L15.4 22V19.8L8.70001 16.8Z"
                                             fill="currentColor" />
-                                        <path opacity="0.3"
-                                            d="M8.7 16.8L4 18.8999V6.30005L8.7 4.19995V16.8Z"
+                                        <path opacity="0.3" d="M8.7 16.8L4 18.8999V6.30005L8.7 4.19995V16.8Z"
                                             fill="currentColor" />
                                     </svg>
                                 </span>
@@ -7521,8 +7323,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/subscriptions/list.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/subscriptions/list.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7534,8 +7335,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/subscriptions/add.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/subscriptions/add.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7547,8 +7347,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/subscriptions/view.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/subscriptions/view.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7568,8 +7367,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/finance/fin002.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path d="M22 7H2V11H22V7Z" fill="currentColor" />
                                         <path opacity="0.3"
                                             d="M21 19H3C2.4 19 2 18.6 2 18V6C2 5.4 2.4 5 3 5H21C21.6 5 22 5.4 22 6V18C22 18.6 21.6 19 21 19ZM14 14C14 13.4 13.6 13 13 13H5C4.4 13 4 13.4 4 14C4 14.6 4.4 15 5 15H13C13.6 15 14 14.6 14 14ZM16 15.5C16 16.3 16.7 17 17.5 17H18.5C19.3 17 20 16.3 20 15.5C20 14.7 19.3 14 18.5 14H17.5C16.7 14 16 14.7 16 15.5Z"
@@ -7663,8 +7462,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/general/gen019.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M17.5 11H6.5C4 11 2 9 2 6.5C2 4 4 2 6.5 2H17.5C20 2 22 4 22 6.5C22 9 20 11 17.5 11ZM15 6.5C15 7.9 16.1 9 17.5 9C18.9 9 20 7.9 20 6.5C20 5.1 18.9 4 17.5 4C16.1 4 15 5.1 15 6.5Z"
                                             fill="currentColor" />
@@ -7684,8 +7483,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/file-manager/folders.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/file-manager/folders.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7697,8 +7495,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/file-manager/files.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/file-manager/files.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7710,8 +7507,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/file-manager/blank.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/file-manager/blank.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7723,8 +7519,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link"
-                                    href="../../demo1/dist/apps/file-manager/settings.html">
+                                <a class="menu-link" href="../../demo1/dist/apps/file-manager/settings.html">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -7744,8 +7539,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/communication/com011.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path opacity="0.3"
                                             d="M21 19H3C2.4 19 2 18.6 2 18V6C2 5.4 2.4 5 3 5H21C21.6 5 22 5.4 22 6V18C22 18.6 21.6 19 21 19Z"
                                             fill="currentColor" />
@@ -7812,13 +7607,13 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/communication/com012.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path opacity="0.3"
                                             d="M20 3H4C2.89543 3 2 3.89543 2 5V16C2 17.1046 2.89543 18 4 18H4.5C5.05228 18 5.5 18.4477 5.5 19V21.5052C5.5 22.1441 6.21212 22.5253 6.74376 22.1708L11.4885 19.0077C12.4741 18.3506 13.6321 18 14.8167 18H20C21.1046 18 22 17.1046 22 16V5C22 3.89543 21.1046 3 20 3Z"
                                             fill="currentColor" />
-                                        <rect x="6" y="12" width="7" height="2"
-                                            rx="1" fill="currentColor" />
+                                        <rect x="6" y="12" width="7" height="2" rx="1"
+                                            fill="currentColor" />
                                         <rect x="6" y="7" width="12" height="2" rx="1"
                                             fill="currentColor" />
                                     </svg>
@@ -7878,8 +7673,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/general/gen014.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path opacity="0.3"
                                             d="M21 22H3C2.4 22 2 21.6 2 21V5C2 4.4 2.4 4 3 4H21C21.6 4 22 4.4 22 5V21C22 21.6 21.6 22 21 22Z"
                                             fill="currentColor" />
@@ -7914,8 +7709,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/layouts/lay008.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M20 7H3C2.4 7 2 6.6 2 6V3C2 2.4 2.4 2 3 2H20C20.6 2 21 2.4 21 3V6C21 6.6 20.6 7 20 7ZM7 9H3C2.4 9 2 9.4 2 10V20C2 20.6 2.4 21 3 21H7C7.6 21 8 20.6 8 20V10C8 9.4 7.6 9 7 9Z"
                                             fill="currentColor" />
@@ -7987,18 +7782,16 @@
                     <!--begin:Menu item-->
                     <div class="menu-item">
                         <!--begin:Menu link-->
-                        <a class="menu-link"
-                            href="https://preview.keenthemes.com/keen/demo1/layout-builder.html">
+                        <a class="menu-link" href="https://preview.keenthemes.com/keen/demo1/layout-builder.html">
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/abstract/abs014.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path opacity="0.3"
                                             d="M11.8 5.2L17.7 8.6V15.4L11.8 18.8L5.90001 15.4V8.6L11.8 5.2ZM11.8 2C11.5 2 11.2 2.1 11 2.2L3.8 6.4C3.3 6.7 3 7.3 3 7.9V16.2C3 16.8 3.3 17.4 3.8 17.7L11 21.9C11.3 22 11.5 22.1 11.8 22.1C12.1 22.1 12.4 22 12.6 21.9L19.8 17.7C20.3 17.4 20.6 16.8 20.6 16.2V7.9C20.6 7.3 20.3 6.7 19.8 6.4L12.6 2.2C12.4 2.1 12.1 2 11.8 2Z"
                                             fill="currentColor" />
-                                        <path
-                                            d="M11.8 8.69995L8.90001 10.3V13.7L11.8 15.3L14.7 13.7V10.3L11.8 8.69995Z"
+                                        <path d="M11.8 8.69995L8.90001 10.3V13.7L11.8 15.3L14.7 13.7V10.3L11.8 8.69995Z"
                                             fill="currentColor" />
                                     </svg>
                                 </span>
@@ -8021,14 +7814,13 @@
                     <!--begin:Menu item-->
                     <div class="menu-item">
                         <!--begin:Menu link-->
-                        <a class="menu-link"
-                            href="https://preview.keenthemes.com/html/keen/docs/base/utilities"
+                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs/base/utilities"
                             target="_blank">
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/general/gen002.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path opacity="0.3"
                                             d="M4.05424 15.1982C8.34524 7.76818 13.5782 3.26318 20.9282 2.01418C21.0729 1.98837 21.2216 1.99789 21.3618 2.04193C21.502 2.08597 21.6294 2.16323 21.7333 2.26712C21.8372 2.37101 21.9144 2.49846 21.9585 2.63863C22.0025 2.7788 22.012 2.92754 21.9862 3.07218C20.7372 10.4222 16.2322 15.6552 8.80224 19.9462L4.05424 15.1982ZM3.81924 17.3372L2.63324 20.4482C2.58427 20.5765 2.5735 20.7163 2.6022 20.8507C2.63091 20.9851 2.69788 21.1082 2.79503 21.2054C2.89218 21.3025 3.01536 21.3695 3.14972 21.3982C3.28408 21.4269 3.42387 21.4161 3.55224 21.3672L6.66524 20.1802L3.81924 17.3372ZM16.5002 5.99818C16.2036 5.99818 15.9136 6.08615 15.6669 6.25097C15.4202 6.41579 15.228 6.65006 15.1144 6.92415C15.0009 7.19824 14.9712 7.49984 15.0291 7.79081C15.0869 8.08178 15.2298 8.34906 15.4396 8.55884C15.6494 8.76862 15.9166 8.91148 16.2076 8.96935C16.4986 9.02723 16.8002 8.99753 17.0743 8.884C17.3484 8.77046 17.5826 8.5782 17.7474 8.33153C17.9123 8.08486 18.0002 7.79485 18.0002 7.49818C18.0002 7.10035 17.8422 6.71882 17.5609 6.43752C17.2796 6.15621 16.8981 5.99818 16.5002 5.99818Z"
                                             fill="currentColor" />
@@ -8047,13 +7839,12 @@
                     <!--begin:Menu item-->
                     <div class="menu-item">
                         <!--begin:Menu link-->
-                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs"
-                            target="_blank">
+                        <a class="menu-link" href="https://preview.keenthemes.com/html/keen/docs" target="_blank">
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/abstract/abs027.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path opacity="0.3"
                                             d="M21.25 18.525L13.05 21.825C12.35 22.125 11.65 22.125 10.95 21.825L2.75 18.525C1.75 18.125 1.75 16.725 2.75 16.325L4.04999 15.825L10.25 18.325C10.85 18.525 11.45 18.625 12.05 18.625C12.65 18.625 13.25 18.525 13.85 18.325L20.05 15.825L21.35 16.325C22.35 16.725 22.35 18.125 21.25 18.525ZM13.05 16.425L21.25 13.125C22.25 12.725 22.25 11.325 21.25 10.925L13.05 7.62502C12.35 7.32502 11.65 7.32502 10.95 7.62502L2.75 10.925C1.75 11.325 1.75 12.725 2.75 13.125L10.95 16.425C11.65 16.725 12.45 16.725 13.05 16.425Z"
                                             fill="currentColor" />
@@ -8078,8 +7869,8 @@
                             <span class="menu-icon">
                                 <!--begin::Svg Icon | path: icons/duotune/coding/cod003.svg-->
                                 <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
                                         <path
                                             d="M16.95 18.9688C16.75 18.9688 16.55 18.8688 16.35 18.7688C15.85 18.4688 15.75 17.8688 16.05 17.3688L19.65 11.9688L16.05 6.56876C15.75 6.06876 15.85 5.46873 16.35 5.16873C16.85 4.86873 17.45 4.96878 17.75 5.46878L21.75 11.4688C21.95 11.7688 21.95 12.2688 21.75 12.5688L17.75 18.5688C17.55 18.7688 17.25 18.9688 16.95 18.9688ZM7.55001 18.7688C8.05001 18.4688 8.15 17.8688 7.85 17.3688L4.25001 11.9688L7.85 6.56876C8.15 6.06876 8.05001 5.46873 7.55001 5.16873C7.05001 4.86873 6.45 4.96878 6.15 5.46878L2.15 11.4688C1.95 11.7688 1.95 12.2688 2.15 12.5688L6.15 18.5688C6.35 18.8688 6.65 18.9688 6.95 18.9688C7.15 18.9688 7.35001 18.8688 7.55001 18.7688Z"
                                             fill="currentColor" />
@@ -8115,12 +7906,9 @@
                         <path opacity="0.3"
                             d="M19 22H5C4.4 22 4 21.6 4 21V3C4 2.4 4.4 2 5 2H14L20 8V21C20 21.6 19.6 22 19 22ZM12.5 18C12.5 17.4 12.6 17.5 12 17.5H8.5C7.9 17.5 8 17.4 8 18C8 18.6 7.9 18.5 8.5 18.5L12 18C12.6 18 12.5 18.6 12.5 18ZM16.5 13C16.5 12.4 16.6 12.5 16 12.5H8.5C7.9 12.5 8 12.4 8 13C8 13.6 7.9 13.5 8.5 13.5H15.5C16.1 13.5 16.5 13.6 16.5 13ZM12.5 8C12.5 7.4 12.6 7.5 12 7.5H8C7.4 7.5 7.5 7.4 7.5 8C7.5 8.6 7.4 8.5 8 8.5H12C12.6 8.5 12.5 8.6 12.5 8Z"
                             fill="currentColor" />
-                        <rect x="7" y="17" width="6" height="2" rx="1"
-                            fill="currentColor" />
-                        <rect x="7" y="12" width="10" height="2" rx="1"
-                            fill="currentColor" />
-                        <rect x="7" y="7" width="6" height="2" rx="1"
-                            fill="currentColor" />
+                        <rect x="7" y="17" width="6" height="2" rx="1" fill="currentColor" />
+                        <rect x="7" y="12" width="10" height="2" rx="1" fill="currentColor" />
+                        <rect x="7" y="7" width="6" height="2" rx="1" fill="currentColor" />
                         <path d="M15 8H20L14 2V7C14 7.6 14.4 8 15 8Z" fill="currentColor" />
                     </svg>
                 </span>
@@ -8167,7 +7955,7 @@
         </div>
         <!--end::Content wrapper-->
         <!--begin::Footer-->
-            @include('components.footer')
+        @include('components.footer')
         <!--end::Footer-->
     </div>
     <!--end:::Main-->

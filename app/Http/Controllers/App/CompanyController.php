@@ -3,22 +3,17 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
-use App\Models\TenantFilial;
-use App\Models\User;
+use App\Models\Company;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
-class DashboardController extends Controller
+class CompanyController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $user = User::all();
-
-        return view('app.dashboard', ['user' => $user]);
+        //
     }
 
     /**
@@ -40,9 +35,10 @@ class DashboardController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show($companyId)
     {
-        //
+        $company = Company::with('users')->findOrFail($companyId);
+        return view('company.show', compact('company'));
     }
 
     /**

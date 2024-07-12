@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\SeedTenantJob;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rules;
@@ -50,6 +51,9 @@ class TenantController extends Controller
         $tenant->domains()->create([
             'domain' => $validateData['domain_name'].'.'.config('app.domain')
         ]);
+
+            // Dispara o job para seed do tenant
+            SeedTenantJob::dispatch($tenant);
 
         return redirect()->route('tenants.index');
     }
