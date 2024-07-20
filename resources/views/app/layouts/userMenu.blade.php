@@ -4,7 +4,7 @@
                                 <div class="cursor-pointer symbol symbol-35px symbol-md-40px"
                                     data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
                                     data-kt-menu-attach="parent" data-kt-menu-placement="bottom-end">
-                                    <img src="                                                        @if ($user->avatar && !empty($user->avatar))
+                                    <img src="@if ($user->avatar && !empty($user->avatar))
                                                             <img src="{{ route('file', ['path' => $user->avatar]) }}
                                                                 alt="{{ $user->name }}" class="w-100">
                                                         @else
@@ -20,7 +20,8 @@
                                         <div class="menu-content d-flex align-items-center px-3">
                                             <!--begin::Avatar-->
                                             <div class="symbol symbol-50px me-5">
-                                                <img alt="Logo" src="                                                        @if ($user->avatar && !empty($user->avatar))
+                                                <img alt="Logo" src="
+                                                        @if ($user->avatar && !empty($user->avatar))
                                                             <img src="{{ route('file', ['path' => $user->avatar]) }}
                                                                 alt="{{ $user->name }}" class="w-100">
                                                         @else
@@ -73,25 +74,25 @@
                                         <div class="menu-sub menu-sub-dropdown w-175px py-4">
                                             <!--begin::Menu item-->
                                             <div class="menu-item px-3">
-                                                <a href="../../demo1/dist/account/referrals.html"
+                                                <a href="/../../demo1/dist/account/referrals.html"
                                                     class="menu-link px-5">Referrals</a>
                                             </div>
                                             <!--end::Menu item-->
                                             <!--begin::Menu item-->
                                             <div class="menu-item px-3">
-                                                <a href="../../demo1/dist/account/billing.html"
+                                                <a href="/../../demo1/dist/account/billing.html"
                                                     class="menu-link px-5">Billing</a>
                                             </div>
                                             <!--end::Menu item-->
                                             <!--begin::Menu item-->
                                             <div class="menu-item px-3">
-                                                <a href="../../demo1/dist/account/statements.html"
+                                                <a href="/../../demo1/dist/account/statements.html"
                                                     class="menu-link px-5">Payments</a>
                                             </div>
                                             <!--end::Menu item-->
                                             <!--begin::Menu item-->
                                             <div class="menu-item px-3">
-                                                <a href="../../demo1/dist/account/statements.html"
+                                                <a href="/../../demo1/dist/account/statements.html"
                                                     class="menu-link d-flex flex-stack px-5">Statements
                                                     <i class="fas fa-exclamation-circle ms-2 fs-7"
                                                         data-bs-toggle="tooltip"

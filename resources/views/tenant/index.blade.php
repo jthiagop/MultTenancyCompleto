@@ -569,10 +569,10 @@
 <!--end::Vendors Javascript-->
 
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="{{ asset('assets/js/custom/apps/customers/list/export.js') }}"></script>
-<script src="{{ asset('assets/js/custom/apps/customers/list/list.js') }}"></script>
-<script src="{{ asset('assets/js/custom/apps/customers/add.js') }}"></script>
-<script src="{{ asset('assets/js/custom/apps/chat/chat.js')}}"></script>
-<script src="{{ asset('assets/js/custom/utilities/modals/upgrade-plan.js')}}"></script>
-<script src="{{ asset('assets/js/custom/utilities/modals/create-campaign.js')}}"></script>
-<script src="{{ asset('assets/js/custom/utilities/modals/users-search.js')}}"></script>
+<script src="/assets/js/custom/apps/customers/list/export.js"></script>
+<script src="/assets/js/custom/apps/customers/list/list.js"></script>
+<script src="/assets/js/custom/apps/customers/add.js"></script>
+<script src="/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/assets/js/custom/utilities/modals/users-search.js"></script>

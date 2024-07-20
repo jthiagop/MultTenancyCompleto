@@ -40,6 +40,7 @@ class TenantController extends Controller
             'email' => 'required|email|max:255|unique:tenants,email',
             'domain_name' => 'required|string|max:255|unique:domains,domain',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+
         ]);
 
         // Aqui você define o suffix com o nome de domínio

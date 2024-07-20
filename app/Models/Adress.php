@@ -25,4 +25,9 @@ class Adress extends Model
     {
         return $this->hasOne( TenantFilial::class);
     }
+
+    public function company()
+    {
+        return $this->hasOne( Company::class);
+    }
 }

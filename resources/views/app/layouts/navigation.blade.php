@@ -22,7 +22,7 @@
         <!--end::sidebar mobile toggle-->
         <!--begin::Mobile logo-->
         <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
-            <a href="../../demo1/dist/index.html" class="d-lg-none">
+            <a href="{{ route('dashboard') }}" class="d-lg-none">
                 class="theme-light-show h-30px" />
                 <img alt="Logo" src="/assets/media/logos/default-small-dark.svg" class="theme-dark-show h-30px" />
             </a>
@@ -45,7 +45,7 @@
                         class="menu-item here show menu-here-bg menu-lg-down-accordion me-0 me-lg-2">
                         <!--begin:Menu link-->
                         <span class="menu-link">
-                            <span class="menu-title">Dashboards</span>
+                            <span class="menu-title">Modulos Principais</span>
                             <span class="menu-arrow d-lg-none"></span>
                         </span>
                         <!--end:Menu link-->
@@ -56,6 +56,74 @@
                                 data-kt-menu-dismiss="true">
                                 <!--begin:Row-->
                                 <div class="row px-5">
+                                    <!--begin:Col-->
+                                    <div class="col-lg-6 py-1">
+                                        <!--begin:Menu item-->
+                                        <div class="menu-item p-0 m-0">
+                                            <!--begin:Menu link-->
+                                            <a href="../../demo1/dist/dashboards/ecommerce.html" class="menu-link">
+                                                <span
+                                                    class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
+                                                    <!--begin::Svg Icon | path: icons/duotune/general/gen025.svg-->
+                                                    <span class="svg-icon svg-icon-danger svg-icon-1">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <rect x="2" y="2" width="9" height="9"
+                                                                rx="2" fill="currentColor" />
+                                                            <rect opacity="0.3" x="13" y="2" width="9"
+                                                                height="9" rx="2" fill="currentColor" />
+                                                            <rect opacity="0.3" x="13" y="13" width="9"
+                                                                height="9" rx="2" fill="currentColor" />
+                                                            <rect opacity="0.3" x="2" y="13" width="9"
+                                                                height="9" rx="2" fill="currentColor" />
+                                                        </svg>
+                                                    </span>
+                                                    <!--end::Svg Icon-->
+                                                </span>
+                                                <span class="d-flex flex-column">
+                                                    <span class="fs-6 fw-semibold text-gray-800">Tela Inicial</span>
+                                                    <span class="fs-7 fw-semibold text-muted">Modulos principais</span>
+                                                </span>
+                                            </a>
+                                            <!--end:Menu link-->
+                                        </div>
+                                        <!--end:Menu item-->
+                                    </div>
+                                    <!--end:Col-->
+
+
+                                    <!--begin:Col-->
+                                    <div class="col-lg-6 py-1">
+                                        <!--begin:Menu item-->
+                                        <div class="menu-item p-0 m-0">
+                                            <!--begin:Menu link-->
+                                            <a href="{{ route('caixa.index') }}" class="menu-link">
+                                                <span
+                                                    class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
+                                                    <!--begin::Svg Icon | path: icons/duotune/graphs/gra001.svg-->
+                                                    <span class="svg-icon svg-icon-dark svg-icon-1">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path opacity="0.3"
+                                                                d="M14 3V21H10V3C10 2.4 10.4 2 11 2H13C13.6 2 14 2.4 14 3ZM7 14H5C4.4 14 4 14.4 4 15V21H8V15C8 14.4 7.6 14 7 14Z"
+                                                                fill="currentColor" />
+                                                            <path
+                                                                d="M21 20H20V8C20 7.4 19.6 7 19 7H17C16.4 7 16 7.4 16 8V20H3C2.4 20 2 20.4 2 21C2 21.6 2.4 22 3 22H21C21.6 22 22 21.6 22 21C22 20.4 21.6 20 21 20Z"
+                                                                fill="currentColor" />
+                                                        </svg>
+                                                    </span>
+                                                    <!--end::Svg Icon-->
+                                                </span>
+                                                <span class="d-flex flex-column">
+                                                    <span class="fs-6 fw-semibold text-gray-800">Financeiro</span>
+                                                    <span class="fs-7 fw-semibold text-muted">Controle de gastos</span>
+                                                </span>
+                                            </a>
+                                            <!--end:Menu link-->
+                                        </div>
+                                        <!--end:Menu item-->
+                                    </div>
+                                    <!--end:Col-->
                                     <!--begin:Col-->
                                     <div class="col-lg-6 py-1">
                                         <!--begin:Menu item-->
@@ -92,6 +160,7 @@
                                         <!--end:Menu item-->
                                     </div>
                                     <!--end:Col-->
+                                    
                                     <!--begin:Col-->
                                     <div class="col-lg-6 py-1">
                                         <!--begin:Menu item-->
@@ -125,74 +194,8 @@
                                         <!--end:Menu item-->
                                     </div>
                                     <!--end:Col-->
-                                    <!--begin:Col-->
-                                    <div class="col-lg-6 py-1">
-                                        <!--begin:Menu item-->
-                                        <div class="menu-item p-0 m-0">
-                                            <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/dashboards/ecommerce.html" class="menu-link">
-                                                <span
-                                                    class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
-                                                    <!--begin::Svg Icon | path: icons/duotune/general/gen025.svg-->
-                                                    <span class="svg-icon svg-icon-danger svg-icon-1">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <rect x="2" y="2" width="9" height="9"
-                                                                rx="2" fill="currentColor" />
-                                                            <rect opacity="0.3" x="13" y="2" width="9"
-                                                                height="9" rx="2" fill="currentColor" />
-                                                            <rect opacity="0.3" x="13" y="13" width="9"
-                                                                height="9" rx="2" fill="currentColor" />
-                                                            <rect opacity="0.3" x="2" y="13" width="9"
-                                                                height="9" rx="2" fill="currentColor" />
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                </span>
-                                                <span class="d-flex flex-column">
-                                                    <span class="fs-6 fw-semibold text-gray-800">eCommerce</span>
-                                                    <span class="fs-7 fw-semibold text-muted">Sales
-                                                        reports</span>
-                                                </span>
-                                            </a>
-                                            <!--end:Menu link-->
-                                        </div>
-                                        <!--end:Menu item-->
-                                    </div>
-                                    <!--end:Col-->
-                                    <!--begin:Col-->
-                                    <div class="col-lg-6 py-1">
-                                        <!--begin:Menu item-->
-                                        <div class="menu-item p-0 m-0">
-                                            <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/dashboards/marketing.html" class="menu-link">
-                                                <span
-                                                    class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
-                                                    <!--begin::Svg Icon | path: icons/duotune/graphs/gra001.svg-->
-                                                    <span class="svg-icon svg-icon-dark svg-icon-1">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path opacity="0.3"
-                                                                d="M14 3V21H10V3C10 2.4 10.4 2 11 2H13C13.6 2 14 2.4 14 3ZM7 14H5C4.4 14 4 14.4 4 15V21H8V15C8 14.4 7.6 14 7 14Z"
-                                                                fill="currentColor" />
-                                                            <path
-                                                                d="M21 20H20V8C20 7.4 19.6 7 19 7H17C16.4 7 16 7.4 16 8V20H3C2.4 20 2 20.4 2 21C2 21.6 2.4 22 3 22H21C21.6 22 22 21.6 22 21C22 20.4 21.6 20 21 20Z"
-                                                                fill="currentColor" />
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                </span>
-                                                <span class="d-flex flex-column">
-                                                    <span class="fs-6 fw-semibold text-gray-800">Marketing</span>
-                                                    <span class="fs-7 fw-semibold text-muted">Campaings &
-                                                        conversions</span>
-                                                </span>
-                                            </a>
-                                            <!--end:Menu link-->
-                                        </div>
-                                        <!--end:Menu item-->
-                                    </div>
-                                    <!--end:Col-->
+
+
                                     <!--begin:Col-->
                                     <div class="col-lg-6 py-1">
                                         <!--begin:Menu item-->
@@ -4947,6 +4950,7 @@
                         <!--begin:Menu sub-->
                         <div class="menu-sub menu-sub-accordion">
                             <!--begin:Menu item-->
+                            @role('global|admin')
                             <div class="menu-item">
                                 <!--begin:Menu link-->
                                 <a class="menu-link" href="{{ route('users.index') }}">
@@ -4957,11 +4961,14 @@
                                 </a>
                                 <!--end:Menu link-->
                             </div>
+                            @endrole
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
+                            @role('global')
+
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link" href="{{ route('filial.index') }}">
+                                <a class="menu-link" href="{{ route('company.index') }}">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -4969,6 +4976,7 @@
                                 </a>
                                 <!--end:Menu link-->
                             </div>
+                            @endrole
                             <!--end:Menu item-->
                             <!--begin:Menu item-->
                             <div class="menu-item">
@@ -7928,9 +7936,6 @@
             <!--begin::Content-->
             <div id="kt_app_content" class="app-content flex-column-fluid">
                 <!--begin::Content container-->
-                <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
-
-
                     <!-- Page Heading -->
                     @isset($header)
                         <header class="bg-white dark:bg-gray-800 shadow">
@@ -7944,10 +7949,6 @@
                     <main>
                         {{ $slot }}
                     </main>
-                </div>
-
-
-
 
                 <!--end::Content container-->
             </div>

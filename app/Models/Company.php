@@ -16,6 +16,12 @@ class Company extends Model
      */
     protected $fillable = [
         'name',
+        'cnpj',
+        'email',
+        'avatar',
+        'data_cnpj',
+        'data_fundacao',
+        'details',
         'type',
         'parent_id',
         'status',
@@ -36,9 +42,22 @@ class Company extends Model
     /**
      * Get the parent company if this company is a branch.
      */
+    // Relação de filiais
+    public function filials()
+    {
+        return $this->hasMany(Company::class, 'parent_id');
+    }
+
+    // Relação de matriz
     public function parent()
     {
         return $this->belongsTo(Company::class, 'parent_id');
+    }
+
+    // Relação com os usuários
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
     }
 
     /**
@@ -63,5 +82,10 @@ class Company extends Model
     public function updater()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+    public function addresses()
+    {
+        return $this->hasOne(Adress::class, 'company_id');
     }
 }

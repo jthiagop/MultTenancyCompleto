@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('adresses', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('tenant_id')->nullable();
+            $table->unsignedBigInteger('company_id')->nullable();
             $table->string('cep')->nullable();
             $table->string('rua')->nullable();
             $table->string('numero')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('uf')->nullable();
             $table->timestamps();
 
-            $table->foreign('tenant_id')->references('id')->on('tenant_filials')->onUpdate('cascade')->onDelete('cascade');
+            $table->foreign('company_id')->references('id')->on('companies')->onUpdate('cascade')->onDelete('cascade');
 
         });
     }

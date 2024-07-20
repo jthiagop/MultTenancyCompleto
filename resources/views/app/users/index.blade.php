@@ -358,9 +358,12 @@
                                         <!--begin::Modal body-->
                                         <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
                                             <!--begin::Form-->
-                                            <form method="POST" action="{{ route('users.store') }}"
-                                                enctype="multipart/form-data">
+                                            <form method="POST"
+                                                action="{{ route('users.store') }}"enctype="multipart/form-data">
                                                 @csrf
+                                                <!-- ID Oculto -->
+                                                <input type="hidden" name="user_id" id="user_id" value="">
+
                                                 <!--begin::Scroll-->
                                                 <div class="d-flex flex-column scroll-y me-n7 pe-7"
                                                     id="kt_modal_add_user_scroll" data-kt-scroll="true"
@@ -430,6 +433,11 @@
                                                         <!--end::Hint-->
                                                     </div>
                                                     <!--end::Input group-->
+                                                    @foreach ($errors->all() as $error)
+                                                    <div class="alert alert-danger mt-2">
+                                                        {{ $error }}
+                                                    </div>
+                                                @endforeach
                                                     <!--begin::Input group-->
                                                     <div class="fv-row mb-7">
                                                         <!--begin::Label-->
@@ -494,6 +502,19 @@
 
                                                     </div>
 
+                                                    <div class="fv-row mb-7">
+                                                        <select class="form-select form-select-solid"
+                                                            data-control="select2" name="company_id"
+                                                            data-placeholder="Selecione um organismo">
+                                                            <option value="" disabled selected>Selecione um
+                                                                organismo</option>
+                                                            @foreach ($companies as $company)
+                                                                <option value="{{ $company->id }}">
+                                                                    {{ $company->name }}</option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+
                                                     <!--end::Input group-->
 
                                                     <!--begin::Input group-->
@@ -504,36 +525,34 @@
                                                         <!--begin::Roles-->
                                                         <!--begin::Input row-->
                                                         <div class="d-flex fv-row">
-                                                            <!--begin::Radio-->
+                                                            <!--begin::Checkbox-->
                                                             <div class="form-check form-check-custom form-check-solid">
                                                                 <!--begin::Input-->
-                                                                <input class="form-check-input me-3" name="user_role"
-                                                                    type="radio" value="global"
-                                                                    id="kt_modal_update_role_option_0"
-                                                                    checked='checked' />
+                                                                <input class="form-check-input me-3" name="roles[]"
+                                                                    type="checkbox" value="1"
+                                                                    id="kt_modal_update_role_option_0" />
                                                                 <!--end::Input-->
                                                                 <!--begin::Label-->
                                                                 <label class="form-check-label"
                                                                     for="kt_modal_update_role_option_0">
-                                                                    <div class="fw-bold text-gray-800">Global
-                                                                    </div>
+                                                                    <div class="fw-bold text-gray-800">Global</div>
                                                                     <div class="text-gray-600">Melhor para
                                                                         desenvolvedores ou pessoas que usam
                                                                         principalmente a API</div>
                                                                 </label>
                                                                 <!--end::Label-->
                                                             </div>
-                                                            <!--end::Radio-->
+                                                            <!--end::Checkbox-->
                                                         </div>
                                                         <!--end::Input row-->
                                                         <div class='separator separator-dashed my-5'></div>
                                                         <!--begin::Input row-->
                                                         <div class="d-flex fv-row">
-                                                            <!--begin::Radio-->
+                                                            <!--begin::Checkbox-->
                                                             <div class="form-check form-check-custom form-check-solid">
                                                                 <!--begin::Input-->
-                                                                <input class="form-check-input me-3" name="user_role"
-                                                                    type="radio" value="1"
+                                                                <input class="form-check-input me-3" name="roles[]"
+                                                                    type="checkbox" value="2"
                                                                     id="kt_modal_update_role_option_1" />
                                                                 <!--end::Input-->
                                                                 <!--begin::Label-->
@@ -547,17 +566,17 @@
                                                                 </label>
                                                                 <!--end::Label-->
                                                             </div>
-                                                            <!--end::Radio-->
+                                                            <!--end::Checkbox-->
                                                         </div>
                                                         <!--end::Input row-->
                                                         <div class='separator separator-dashed my-5'></div>
                                                         <!--begin::Input row-->
                                                         <div class="d-flex fv-row">
-                                                            <!--begin::Radio-->
+                                                            <!--begin::Checkbox-->
                                                             <div class="form-check form-check-custom form-check-solid">
                                                                 <!--begin::Input-->
-                                                                <input class="form-check-input me-3" name="user_role"
-                                                                    type="radio" value="2"
+                                                                <input class="form-check-input me-3" name="roles[]"
+                                                                    type="checkbox" value="3"
                                                                     id="kt_modal_update_role_option_2" />
                                                                 <!--end::Input-->
                                                                 <!--begin::Label-->
@@ -569,17 +588,17 @@
                                                                 </label>
                                                                 <!--end::Label-->
                                                             </div>
-                                                            <!--end::Radio-->
+                                                            <!--end::Checkbox-->
                                                         </div>
                                                         <!--end::Input row-->
                                                         <div class='separator separator-dashed my-5'></div>
                                                         <!--begin::Input row-->
                                                         <div class="d-flex fv-row">
-                                                            <!--begin::Radio-->
+                                                            <!--begin::Checkbox-->
                                                             <div class="form-check form-check-custom form-check-solid">
                                                                 <!--begin::Input-->
-                                                                <input class="form-check-input me-3" name="user_role"
-                                                                    type="radio" value="3"
+                                                                <input class="form-check-input me-3" name="roles[]"
+                                                                    type="checkbox" value="4"
                                                                     id="kt_modal_update_role_option_3" />
                                                                 <!--end::Input-->
                                                                 <!--begin::Label-->
@@ -587,22 +606,22 @@
                                                                     for="kt_modal_update_role_option_3">
                                                                     <div class="fw-bold text-gray-800">Usuários Comuns
                                                                     </div>
-                                                                    <div class="text-gray-600">Para usuários que trada
+                                                                    <div class="text-gray-600">Para usuários que tratam
                                                                         dos dados da organização</div>
                                                                 </label>
                                                                 <!--end::Label-->
                                                             </div>
-                                                            <!--end::Radio-->
+                                                            <!--end::Checkbox-->
                                                         </div>
                                                         <!--end::Input row-->
                                                         <div class='separator separator-dashed my-5'></div>
                                                         <!--begin::Input row-->
                                                         <div class="d-flex fv-row">
-                                                            <!--begin::Radio-->
+                                                            <!--begin::Checkbox-->
                                                             <div class="form-check form-check-custom form-check-solid">
                                                                 <!--begin::Input-->
-                                                                <input class="form-check-input me-3" name="user_role"
-                                                                    type="radio" value="4"
+                                                                <input class="form-check-input me-3" name="roles[]"
+                                                                    type="checkbox" value="5"
                                                                     id="kt_modal_update_role_option_4" />
                                                                 <!--end::Input-->
                                                                 <!--begin::Label-->
@@ -612,15 +631,16 @@
                                                                     </div>
                                                                     <div class="text-gray-600">Ideal para pessoas que
                                                                         precisam visualizar dados de conteúdo, mas não
-                                                                        precisa fazer Quaisquer atualizações</div>
+                                                                        precisa fazer quaisquer atualizações</div>
                                                                 </label>
                                                                 <!--end::Label-->
                                                             </div>
-                                                            <!--end::Radio-->
+                                                            <!--end::Checkbox-->
                                                         </div>
                                                         <!--end::Input row-->
                                                         <!--end::Roles-->
                                                     </div>
+
                                                     <!--end::Input group-->
                                                 </div>
                                                 <!--end::Scroll-->
@@ -633,6 +653,8 @@
                                                 <!--end::Actions-->
                                             </form>
                                             <!--end::Form-->
+                                            <!-- Exibir erros de validação por campo -->
+
                                         </div>
                                         <!--end::Modal body-->
                                     </div>
@@ -709,11 +731,17 @@
                                         </td>
                                         <!--end::User=-->
                                         <!--begin::Role=-->
-                                        <td>Administrator</td>
+                                        <td>
+                                            @foreach ($user->roles as $role)
+                                                <span
+                                                    class="badge {{ $roleColors[$role->name] ?? 'badge-secondary' }}">{{ $role->name }}</span>
+                                            @endforeach
+                                        </td>
                                         <!--end::Role=-->
                                         <!--begin::Last login=-->
                                         <td>
-                                            <div class="badge badge-light fw-bold">{{ $user->last_login_formatted }}</div>
+                                            <div class="badge badge-light fw-bold">{{ $user->last_login_formatted }}
+                                            </div>
                                         </td>
                                         <!--end::Last login=-->
                                         <!--begin::Two step=-->
@@ -743,6 +771,11 @@
                                                 <!--begin::Menu item-->
                                                 <div class="menu-item px-3">
                                                     <a href="{{ route('profile.edit') }}"
+                                                        class="menu-link px-3">Editar</a>
+                                                </div>
+
+                                                <div class="menu-item px-3">
+                                                    <a href="{{ route('users.edit', $user->id) }}"
                                                         class="menu-link px-3">Editar</a>
                                                 </div>
                                                 <!--end::Menu item-->
@@ -776,20 +809,20 @@
     </div>
     <!--end::Content wrapper-->
 
-
+    @push('scripts')
+        <!--begin::Vendors Javascript(used for this page only)-->
+        <script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
+        <!--end::Vendors Javascript-->
+        <!--begin::Custom Javascript(used for this page only)-->
+        <script src="assets/js/custom/apps/user-management/users/list/table.js"></script>
+        <script src="assets/js/custom/apps/user-management/users/list/export-users.js"></script>
+        <script src="assets/js/custom/apps/user-management/users/list/add.js"></script>
+        <script src="assets/js/widgets.bundle.js"></script>
+        <script src="assets/js/custom/apps/chat/chat.js"></script>
+        <script src="assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+        <script src="assets/js/custom/utilities/modals/create-campaign.js"></script>
+        <script src="assets/js/custom/utilities/modals/users-search.js"></script>
+    @endpush
+    <!--end::Custom Javascript-->
+    <!--end::Javascript-->
 </x-tenant-app-layout>
-
-<!--begin::Vendors Javascript(used for this page only)-->
-<script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
-<!--end::Vendors Javascript-->
-<!--begin::Custom Javascript(used for this page only)-->
-<script src="assets/js/custom/apps/user-management/users/list/table.js"></script>
-<script src="assets/js/custom/apps/user-management/users/list/export-users.js"></script>
-<script src="assets/js/custom/apps/user-management/users/list/add.js"></script>
-<script src="assets/js/widgets.bundle.js"></script>
-<script src="assets/js/custom/apps/chat/chat.js"></script>
-<script src="assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="assets/js/custom/utilities/modals/users-search.js"></script>
-<!--end::Custom Javascript-->
-<!--end::Javascript-->

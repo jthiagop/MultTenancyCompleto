@@ -3,7 +3,7 @@
 
 <head>
     <base href="../../../" />
-    <title>{{ config('app.name', 'Laravel') }}</title>
+    <title>{{ config('app.name', 'Dominus - Sistema Eclesiástico') }}</title>
     <meta charset="utf-8" />
     <meta name="description"
         content="The most advanced Bootstrap Admin Theme on Bootstrap Market trusted by over 4,000 beginners and professionals. Multi-demo, Dark Mode, RTL support. Grab your copy now and get life-time updates for free." />
@@ -61,7 +61,7 @@
                 <div class="d-flex flex-column flex-center p-6 p-lg-10 w-100">
                     <!--begin::Logo-->
                     <a href="../../demo1/dist/index.html" class="mb-0 mb-lg-20">
-                        <img alt="Logo" src="assets/media/logos/deskapp-logo-white.svg" class="h-40px h-lg-50px" />
+                        <img alt="Logo" src="assets/media/logos/default.svg" class="h-40px h-lg-50px" />
                     </a>
                     <!--end::Logo-->
                     <!--begin::Image-->
@@ -90,6 +90,10 @@
             <div class="d-flex flex-column flex-lg-row-fluid w-lg-50 p-10">
                 <!--begin::Form-->
                 <div class="d-flex flex-center flex-column flex-lg-row-fluid">
+                        <!--begin::Logo-->
+                        <a href="../../demo1/dist/index.html" class="mb-0 mb-lg-20">
+                            <img alt="Logo" src="assets/media/logos/default.svg" class="h-40px h-lg-50px" />
+                        </a>
                     <!--begin::Wrapper-->
                     <div class="w-lg-500px p-10">
                         <!--begin::Form-->

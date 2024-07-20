@@ -273,7 +273,7 @@ Inputmask({
 // Phone
 Inputmask({
     "mask" : "99.999.999/999.9-99"
-}).mask("#cnpj");
+}).mask("#kt_inputmask_cnpj");
 
 // Placeholder
 Inputmask({

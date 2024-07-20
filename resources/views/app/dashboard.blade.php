@@ -1,5 +1,4 @@
 <x-tenant-app-layout>
-
     <!--begin::Main-->
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -11,7 +10,7 @@
                     <!--begin::Toolbar-->
                     <div class="d-flex flex-wrap flex-stack my-5">
                         <!--begin::Heading-->
-                        <h2 class="fs-2 fw-semibold my-2">{{ $user->company->branches }}
+                        <h2 class="fs-2 fw-semibold my-2">
                             <span class="fs-6 text-gray-400 ms-1">by Status</span>
                         </h2>
                         <!--end::Heading-->
@@ -39,7 +38,7 @@
                         <!--begin::Col-->
                         <div class="col-md-6 col-xl-4">
                             <!--begin::Card-->
-                            <a href="../../demo1/dist/apps/projects/project.html" class="card border-hover-primary">
+                            <a href="{{ route('caixa.index') }}" class="card border-hover-primary">
                                 <!--begin::Card header-->
                                 <div class="card-header border-0 pt-9">
                                     <!--begin::Card Title-->

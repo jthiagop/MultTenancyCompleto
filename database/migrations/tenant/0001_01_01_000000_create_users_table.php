@@ -27,6 +27,7 @@ return new class extends Migration
             $table->foreign('tenant_id')->references('id')->on('tenant_filials')->onUpdate('cascade')->onDelete('cascade');
 
         });
+        
 
         Schema::create('password_reset_tokens', function (Blueprint $table) {
             $table->string('email')->primary();

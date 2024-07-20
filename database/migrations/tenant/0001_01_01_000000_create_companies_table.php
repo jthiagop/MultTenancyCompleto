@@ -11,6 +11,12 @@ class CreateCompaniesTable extends Migration
         Schema::create('companies', function (Blueprint $table) {
             $table->id();
             $table->string('name');
+            $table->string('cnpj')->nullable()->unique();
+            $table->string('email')->nullable();
+            $table->string('avatar')->nullable();
+            $table->date('data_cnpj')->nullable();
+            $table->date('data_fundacao')->nullable();
+            $table->text('details')->nullable();
             $table->enum('type', ['matriz', 'filial']);
             $table->unsignedBigInteger('parent_id')->nullable();
             $table->string('status')->default('active');

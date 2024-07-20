@@ -4,6 +4,7 @@ namespace App\Http\Controllers\App;
 
 use Carbon\Carbon;
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use App\Models\Tenant_user;
 use App\Models\TenantFilial;
 use App\Models\User;
@@ -25,7 +26,17 @@ class UserController extends Controller
 
     public function index()
     {
-        $users = User::all();
+        $users = User::with('roles')->get();
+
+        $roleColors = [
+            'global' => 'badge-danger',
+            'admin' => 'badge-primary',
+            'admin_user' => 'badge-warning',
+            'user' => 'badge-info',
+            // Adicione mais papéis e cores conforme necessário
+        ];
+
+        $companies = Company::all();
 
         $users = User::all()->map(function ($user) {
             $user->last_login_formatted = $user->last_login ? Carbon::parse($user->last_login)->diffForHumans() : 'Nunca';
@@ -37,6 +48,8 @@ class UserController extends Controller
             'app.users.index',
             [
                 'users' => $users,
+                'roleColors' => $roleColors,
+                'companies' => $companies,
             ]
         );
     }
@@ -58,15 +71,15 @@ class UserController extends Controller
     public function store(Request $request)
     {
         // Obtendo o nome do banco de dados
-
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email',
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Exemplo de regras para o campo avatar
+            'roles' => 'required|array',
+            'company_id' => 'required',
             'filiais' => 'array', // Certifique-se de que 'filiais' é um array
         ]);
-
 
         // Processar e salvar o avatar
         if ($request->hasFile('avatar')) {
@@ -81,14 +94,27 @@ class UserController extends Controller
 
             // Salva o nome do arquivo na coluna 'avatar' do usuário no banco de dados
             $validatedData['avatar'] = $avatarPath;
+        } else {
+            // Define uma imagem padrão caso nenhum arquivo tenha sido enviado
+            $validatedData['avatar'] = 'tenant/blank.png'; // Ajuste o caminho conforme necessário
         }
 
         $user = User::create($validatedData);
 
+        // Sincronizar permissões (roles) se estiverem presentes
+        if (isset($validatedData['roles'])) {
+            $user->roles()->sync($request->input('roles'));
+        }
         // Verifique se a chave 'filiais' existe no array de dados
         if (isset($validatedData['filiais'])) {
             $user->filiais()->sync($validatedData['filiais']);
         }
+
+        // Relacionar o usuário à empresa na tabela pivot company_user
+        $user->companies()->attach($validatedData['company_id'], [
+            'created_at' => now(),
+            'updated_at' => now()
+        ]);
 
         return redirect()->route('users.index');
     }
@@ -140,7 +166,7 @@ class UserController extends Controller
         if (isset($validateData['filiais'])) {
             $user->filiais()->sync($validateData['filiais']);
         }
-        return redirect()->route('users.index');
+        return redirect()->route('users.index')->with('success', ' Usuário cadastrodo com Sucesso!');;
     }
 
     /**

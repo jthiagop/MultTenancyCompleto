@@ -30,7 +30,7 @@ var KTModalNewTarget = function () {
 		var dueDate = $(form.querySelector('[name="due_date"]'));
 		dueDate.flatpickr({
 			enableTime: true,
-			dateFormat: "d, M Y, H:i",
+			dateFormat: "d, M Y",
 		});
 
 		// Team assign. For more info, plase visit the official plugin site: https://select2.org/
@@ -108,7 +108,7 @@ var KTModalNewTarget = function () {
 					if (status == 'Valid') {
 						submitButton.setAttribute('data-kt-indicator', 'on');
 
-						// Disable button to avoid multiple click 
+						// Disable button to avoid multiple click
 						submitButton.disabled = true;
 
 						setTimeout(function() {
@@ -116,7 +116,7 @@ var KTModalNewTarget = function () {
 
 							// Enable button
 							submitButton.disabled = false;
-							
+
 							// Show success message. For more info check the plugin's official documentation: https://sweetalert2.github.io/
 							Swal.fire({
 								text: "Form has been successfully submitted!",
@@ -133,7 +133,7 @@ var KTModalNewTarget = function () {
 							});
 
 							//form.submit(); // Submit form
-						}, 2000);   						
+						}, 2000);
 					} else {
 						// Show error message.
 						Swal.fire({
@@ -166,8 +166,8 @@ var KTModalNewTarget = function () {
 				}
 			}).then(function (result) {
 				if (result.value) {
-					form.reset(); // Reset form	
-					modal.hide(); // Hide modal				
+					form.reset(); // Reset form
+					modal.hide(); // Hide modal
 				} else if (result.dismiss === 'cancel') {
 					Swal.fire({
 						text: "Your form has not been cancelled!.",

@@ -42,7 +42,14 @@ class DashboardController extends Controller
      */
     public function show(string $id)
     {
-        //
+        // Obter o usuário pelo ID
+        $user = User::findOrFail($id);
+
+        // Carregar a empresa relacionada
+        $company = $user->company;
+
+        // Retornar a visão com os dados do usuário e da empresa
+        return view('app.dashboard', compact('user', 'company'));
     }
 
     /**

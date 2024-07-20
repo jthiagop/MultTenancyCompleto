@@ -29,16 +29,20 @@ class SeedTenantJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->tenant->run(function() {
+        $this->tenant->run(function () {
+
             // Criar o usuário
             $user = User::create([
                 'name' => $this->tenant->name,
                 'email' => $this->tenant->email,
                 'password' => $this->tenant->password,
+                'avatar' => '1253525'
+
+
             ]);
 
             // Atribuir o papel de administrador ao usuário
-            $user->assignRole('admin');
+            $user->assignRole(['global', 'admin']);
 
             // Criar a empresa
             $company = Company::create([
@@ -49,6 +53,12 @@ class SeedTenantJob implements ShouldQueue
                 'tags' => json_encode(['tag1', 'tag2']), // ou qualquer outra tag desejada
                 'created_by' => null, // Deixe null ou defina conforme necessário
                 'updated_by' => null, // Deixe null ou defina conforme necessário
+            ]);
+
+            // Relacionar a empresa ao usuário na tabela pivot company_user
+            $user->companies()->attach($company->id, [
+                'created_at' => now(),
+                'updated_at' => now()
             ]);
 
             // Relacionar a empresa ao usuário, se necessário

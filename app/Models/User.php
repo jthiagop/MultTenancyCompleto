@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
 use Spatie\Permission\Traits\HasRoles;
@@ -26,7 +27,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
-        'avatar'
+        'avatar',
+        'company_id',
     ];
 
     /**
@@ -74,8 +76,26 @@ class User extends Authenticatable
             return $this->last_login ? Carbon::parse($this->last_login)->diffForHumans() : 'Nunca';
         }
 
-        public function company()
+        public function companies()
         {
-            return $this->belongsTo(Company::class);
+            return $this->belongsToMany(Company::class, 'company_user');
+        }
+
+
+
+        static public function getCompany()
+        {
+            // Recupere o usuário logado
+            $user = auth()->user();
+
+            $subsidiaryId = DB::table('users')
+            ->join('company_user', 'users.id', '=', 'company_user.user_id')
+            ->join('companies', 'company_user.company_id', '=', 'companies.id')
+            ->where('users.id', $user->id) // Filtra pelo usuário logado
+            ->select('company_user.company_id')
+            ->first();
+
+            return $subsidiaryId;
+
         }
 }

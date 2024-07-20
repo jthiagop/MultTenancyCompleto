@@ -57,6 +57,12 @@
                             <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                         </div>
 
+                        <div class="mt-4">
+                            <x-input-label for="avatar" :value="__('Avatar')" />
+                            <input id="avatar" type="file" name="avatar" class="block mt-1 w-full">
+                            <x-input-error :messages="$errors->get('avatar')" class="mt-2" />
+                        </div>
+
                         <div class="flex items-center justify-end mt-4">
 
                             <x-primary-button class="ms-4">
