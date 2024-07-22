@@ -13,13 +13,13 @@ return new class extends Migration
     {
         Schema::create('tenant_users', function (Blueprint $table) {
             $table->unsignedBigInteger('user_id')
-                ->nullable()
+                ->unsigned()->nullable(false)
                 ->constrained()
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
 
             $table->unsignedBigInteger('tenant_id')
-                ->nullable()
+                ->unsigned()->nullable(false)
                 ->constrained()
                 ->cascadeOnUpdate()
                 ->cascadeOnDelete();
