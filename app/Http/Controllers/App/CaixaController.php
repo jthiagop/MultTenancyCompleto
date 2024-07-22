@@ -38,7 +38,6 @@ class CaixaController extends Controller
     public function store(Request $request)
     {
 
-        dd($request->all());
         $subsidiaryId = User::getCompany();
 
         $validator = Validator::make($request->all(), [
@@ -119,7 +118,6 @@ class CaixaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        dd($request->all());
         $subsidiaryId = User::getCompany();
 
         $validator = Validator::make($request->all(), [
@@ -151,9 +149,9 @@ class CaixaController extends Controller
     $caixa->update($validatedData);
 
     // Verifica se há arquivos anexos
-    if ($request->hasFile('inputptbr')) {
+    if ($request->hasFile('anexos')) {
         // Itera sobre cada arquivo anexo
-        foreach ($request->file('inputptbr') as $anexo) {
+        foreach ($request->file('anexos') as $anexo) {
             // Gera um nome único para o arquivo anexo
             $anexoName = time() . '_' . $anexo->getClientOriginalName();
 
