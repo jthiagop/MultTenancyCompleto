@@ -3,7 +3,7 @@
 
 <head>
     <base href="../../../" />
-    <title>{{ config('app.name', 'Dominus - Sistema Eclesiástico') }}</title>
+    <title>{{ config('app.name', 'Dominus') }}</title>
     <meta charset="utf-8" />
     <meta name="description"
         content="The most advanced Bootstrap Admin Theme on Bootstrap Market trusted by over 4,000 beginners and professionals. Multi-demo, Dark Mode, RTL support. Grab your copy now and get life-time updates for free." />
@@ -21,13 +21,12 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <!--end::Fonts-->
     <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
-    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="../assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="../assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
     <!--end::Global Stylesheets Bundle-->
 </head>
 <!--end::Head-->
 <!--begin::Body-->
-
 <body id="kt_body" class="app-blank app-blank">
     <!--begin::Theme mode setup on page load-->
     <script>
@@ -56,12 +55,12 @@
         <div class="d-flex flex-column flex-lg-row flex-column-fluid">
             <!--begin::Aside-->
             <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                style="background-image: url(assets/media/misc/penha.png)">
+                style="background-image: url(assets/media/misc/auth-bg.png)">
                 <!--begin::Content-->
                 <div class="d-flex flex-column flex-center p-6 p-lg-10 w-100">
                     <!--begin::Logo-->
                     <a href="../../demo1/dist/index.html" class="mb-0 mb-lg-20">
-                        <img alt="Logo" src="assets/media/logos/default.svg" class="h-40px h-lg-50px" />
+                        <img alt="Logo" src="/assets/media/logos/default.svg" class="h-40px h-lg-50px" />
                     </a>
                     <!--end::Logo-->
                     <!--begin::Image-->
@@ -69,17 +68,15 @@
                         src="assets/media/misc/auth-screens.png" alt="" />
                     <!--end::Image-->
                     <!--begin::Title-->
-                    <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">Fast, Efficient and
-                        Productive</h1>
+                    <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">
+                        Dominus: Rápido, Eficiente e Produtivo
+                    </h1>
                     <!--end::Title-->
                     <!--begin::Text-->
-                    <div class="d-none d-lg-block text-white fs-base text-center">In this kind of post,
-                        <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">the
-                            blogger</a>introduces a person they’ve interviewed
-                        <br />and provides some background information about
-                        <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">the interviewee</a>and
-                        their
-                        <br />work following this is a transcript of the interview.
+                    <div class="d-none d-lg-block text-white fs-base text-center">
+                        No contexto da gestão eclesial, <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a> é um sistema
+                        que permite gerenciar de forma eficiente os campos de <br />pastorais, patrimônio e financeiro. Com <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a>,
+                        a administração de sua paróquia se torna mais organizada e <br />produtiva, facilitando a gestão de recursos e atividades eclesiais.
                     </div>
                     <!--end::Text-->
                 </div>

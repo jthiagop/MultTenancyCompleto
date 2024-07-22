@@ -37,7 +37,7 @@ Route::middleware([
 
     // Rota para a página de login
     Route::get('/', function () {
-        return view('auth.login');
+        return view('app.auth.login');
     });
 
     // Rota para o dashboard, acessível apenas por usuários autenticados e verificados
