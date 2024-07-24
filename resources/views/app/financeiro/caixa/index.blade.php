@@ -940,34 +940,3 @@
 <script src="assets/js/custom/apps/user-management/users/list/add.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->
-<!--end::Javascript-->
-<!-- Modal -->
-<div class="modal fade" id="staticBackdrop" data-bs-backdrop="static" tabindex="-1" role="dialog"
-    aria-labelledby="staticBackdropLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content modal-danger">
-            <form action="{{ route('caixa.destroy', $caixa->id) }}" method="post">
-                <?php echo csrf_field(); ?>
-                <?php echo method_field('delete'); ?>
-                <div class="modal-body modal-center">
-                    <h3 class="text-danger mb-5">
-                        <i class="fa fa-exclamation-triangle"></i> ATENÇÂO
-                    </h3>
-                    <p>
-                        Você está preste a excluir uma lançamento! Deseja realmente excluir este registro?
-                    </p>
-
-                    <small>
-                        <div id="mensagem-excluir"></div>
-                    </small>
-
-                    <input type="hidden" class="form-control" name="id-excluir" id="id-excluir" value="97">
-                </div>
-                <div class="modal-footer"><button class="btn btn-success" type="button"
-                        data-bs-dismiss="modal">Não</button><button class="btn btn-danger"
-                        type='submit'>Sim</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
