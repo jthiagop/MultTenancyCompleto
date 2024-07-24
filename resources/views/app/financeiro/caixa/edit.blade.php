@@ -1,22 +1,6 @@
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/css/bootstrap.min.css"
-    crossorigin="anonymous">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.5.0/font/bootstrap-icons.min.css"
-    crossorigin="anonymous">
-<link href="/assets/fileinput/css/fileinput.css" media="all" rel="stylesheet" type="text/css" />
-<script src="https://code.jquery.com/jquery-3.6.0.min.js" crossorigin="anonymous"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.0/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous">
-</script>
-<script src="/assets/fileinput/js/plugins/buffer.min.js" type="text/javascript"></script>
-<script src="/assets/fileinput/js/plugins/filetype.min.js" type="text/javascript"></script>
-<script src="/assets/fileinput/js/plugins/piexif.js" type="text/javascript"></script>
-<script src="/assets/fileinput/js/plugins/sortable.js" type="text/javascript"></script>
-<script src="/assets/fileinput/js/fileinput.js" type="text/javascript"></script>
-<script src="/assets/fileinput/js/locales/pt-BR.js" type="text/javascript"></script>
-<script src="/assets/fileinput/themes/fa5/theme.js" type="text/javascript"></script>
-<script src="/assets/fileinput/themes/explorer-fa5/theme.js" type="text/javascript"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.10.377/pdf.worker.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Icons+Outlined">
+<link rel="stylesheet" href="/assets/js/fileUpload/fileUpload.css">
 
 <x-tenant-app-layout>
 
@@ -314,54 +298,9 @@
                                                     @enderror
                                                 </div>
                                                 <div class="tab-pane fade" id="kt_tab_pane_2" role="tabpanel">
-                                                    <label class="control-label">Selecione O Arquivo</label>
-                                                    <div class="file-loading">
-                                                        <meta name="csrf-token" content="{{ csrf_token() }}" />
-                                                        <input id="file-input" name="anexos[]" type="file"
-                                                            multiple>
+                                                    <div class="parent-div">
+                                                        <div id="fileUpload"></div>
                                                     </div>
-                                                    <script>
-                                                        $("#file-input").fileinput({
-                                                            
-                                                            language: "pt-BR",
-                                                            uploadUrl: "/file-upload-batch/2",
-                                                            allowedFileExtensions: ["jpg", "png", "gif", "svg", "pdf"],
-                                                            initialPreviewAsData: true,
-                                                            initialPreview: [
-                                                                @foreach ($files as $file)
-                                                                    "{{ route('file', ['path' => $file->caminho_arquivo] )}}",
-                                                                @endforeach
-                                                            ],
-                                                            initialPreviewFileType: 'object', // Permitir tanto imagens quanto PDFs
-                                                            initialPreviewConfig: [
-                                                                @foreach ($files as $file)
-                                                                    {
-                                                                        type: "{{ pathinfo($file->caminho_arquivo, PATHINFO_EXTENSION) === 'pdf' ? 'pdf' : 'image' }}",
-                                                                        caption: "{{ $file->nome_arquivo }}",
-                                                                        size: {{ Storage::size($file->caminho_arquivo) }},
-                                                                        url: "{{ route('caixas.destroySelected', ['id' => $file->id]) }}", // URL para excluir o arquivo
-                                                                        key: {{ $file->id }}
-                                                                    },
-                                                                @endforeach
-                                                            ],
-                                                            deleteUrl: "", // Deixe essa linha vazia, a URL será definida dinamicamente no initialPreviewConfig
-                                                            overwriteInitial: false,
-                                                            maxFileSize: 2000,
-                                                            fileActionSettings: {
-                                                                showZoom: true,
-                                                                showRemove: true
-                                                            },
-                                                            ajaxDeleteSettings: {
-                                                                method: 'DELETE',
-                                                                headers: {
-                                                                    'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') // Adiciona o token CSRF
-                                                                },
-                                                                
-                                                            }
-                                                        });
-                                                    </script>
-                                                    
-                                                    
                                                 </div>
                                             </div>
                                         </div>
@@ -379,8 +318,6 @@
                             </div>
                         </div>
                     </form>
-
-
                 </div>
                 <!--end::Content container-->
             </div>
@@ -389,38 +326,15 @@
         <!--end::Content wrapper-->
     </div>
     <!--end:::Main-->
-    <!-- Modal -->
-    <div class="modal fade" id="fileModal" tabindex="-1" aria-labelledby="fileModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="fileModalLabel">Visualizar Arquivo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <iframe id="fileViewer" style="width: 100%; height: 500px;" frameborder="0"></iframe>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal -->
-    <div class="modal fade" id="fileModal" tabindex="-1" aria-labelledby="fileModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="fileModalLabel">Visualizar Arquivo</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <iframe id="fileViewer" style="width: 100%; height: 500px;" frameborder="0"></iframe>
-                </div>
-            </div>
-        </div>
-    </div>
 
 </x-tenant-app-layout>
 
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<script src="/assets/js/fileUpload/fileUpload.js"></script>
 
+<script>
+    $(document).ready(function () {
+        $("#fileUpload").fileUpload();
+
+    });
+</script>

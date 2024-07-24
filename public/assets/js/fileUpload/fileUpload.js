@@ -12,10 +12,10 @@
                     <div>
                         <i class="material-icons-outlined">cloud_upload</i>
                         <p>Arraste e solte arquivos aqui</p>
-                        <span>OR</span>
+                        <span>OU</span>
                         <div>Procurar arquivos</div>
                     </div>
-                    <input type="file" id="${fileUploadId}" name=anexos[] multiple hidden />
+                    <input type="file" id="${fileUploadId}" name="anexos[]" multiple hidden />
                 </label>
             `;
 
@@ -23,17 +23,17 @@
 
             var table = null;
             var tableBody = null;
-            // Creates a table containing file information.
+
             function createTable() {
                 table = $(`
                     <table>
                         <thead>
                             <tr>
                                 <th></th>
-                                <th style="width: 30%;">File Name</th>
-                                <th>Preview</th>
-                                <th style="width: 20%;">Size</th>
-                                <th>Type</th>
+                                <th style="width: 30%;">Nome do Arquivo</th>
+                                <th>Pré-visualização</th>
+                                <th style="width: 20%;">Tamanho</th>
+                                <th>Tipo</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -46,7 +46,6 @@
                 fileUploadDiv.append(table);
             }
 
-            // Adds the information of uploaded files to table.
             function handleFiles(files) {
                 if (!table) {
                     createTable();
@@ -78,13 +77,12 @@
                         $(this).closest("tr").remove();
 
                         if (tableBody.find("tr").length === 0) {
-                            tableBody.append('<tr><td colspan="6" class="no-file">No files selected!</td></tr>');
+                            tableBody.append('<tr><td colspan="6" class="no-file">Nenhum arquivo selecionado!</td></tr>');
                         }
                     });
                 }
             }
 
-            // Events triggered after dragging files.
             fileUploadDiv.on({
                 dragover: function (e) {
                     e.preventDefault();
@@ -97,10 +95,14 @@
                 },
             });
 
-            // Event triggered when file is selected.
             fileUploadDiv.find(`#${fileUploadId}`).change(function () {
                 handleFiles(this.files);
             });
         });
     };
 })(jQuery);
+
+// Inicializa o plugin de upload de arquivos
+$(document).ready(function() {
+    $('#file-upload-area').fileUpload();
+});

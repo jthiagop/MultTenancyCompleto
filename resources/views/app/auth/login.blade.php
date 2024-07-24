@@ -102,81 +102,83 @@
                 <!--begin::Form-->
                 <div class="d-flex flex-center flex-column flex-lg-row-fluid">
                         <!--begin::Logo-->
-                        <a href="../../demo1/dist/index.html" class="mb-0">
+                        <a href="../../demo1/dist/index.html" class="mb-0 mb-lg-10">
                             <img alt="Logo" src="assets/media/logos/apple-touch-icon.svg" class="h-140px h-lg-150px" />
                         </a>
                     <!--begin::Wrapper-->
                     <div class="w-lg-500px p-10">
                         <!--begin::Form-->
                         <form method="POST" action="{{ route('login') }}">
-                            @csrf <!--begin::Heading-->
+                            @csrf
+                            <!--begin::Heading-->
                             <div class="text-center mb-11">
                                 <!--begin::Title-->
                                 <h1 class="text-dark fw-bolder mb-3">Entre no Dominus</h1>
                                 <!--end::Title-->
                                 <!--begin::Subtitle-->
                                 <div class="text-gray-500 fw-semibold fs-6">Faça seu login</div>
-                                <!--end::Subtitle=-->
+                                <!--end::Subtitle-->
                             </div>
-                            <!--begin::Heading-->
+                            <!--end::Heading-->
 
-                        <!--begin::Input group=-->
-                        <div class="fv-row mb-8">
-                            <!--begin::Email-->
-                            <input id="email" type="email" name="email"
-                                        :value="old('email')" required autofocus autocomplete="username"
-                                        class="form-control bg-transparent" placeholder="Email" />
-                            <!--end::Email-->
-                        </div>
-                        <!--end::Input group=-->
-                        <div class="fv-row mb-3">
-                            <!--begin::Password-->
-                            <input id="password" type="password" name="password"
-                                        required autocomplete="current-password"
-                                        class="form-control bg-transparent" placeholder="********" />
-                            <!--end::Password-->
-                        </div>
-                        <!--end::Input group=-->
-                        <!--begin::Wrapper-->
-                        <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-8">
-                            <div></div>
-                            <!--begin::Link-->
-                            <label for="remember_me" class="inline-flex items-center">
-                                <input id="remember_me" type="checkbox" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800" name="remember">
-                                <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Lembre-me') }}</span>
-                            </label>
-                            <!--end::Link-->
-                        </div>
-                        <!--begin::Separator-->
+                            <!--begin::Input group-->
+                            @if ($errors->any())
+                                <div class="alert alert-danger">
+                                    <ul>
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <div class="fv-row mb-8">
+                                <!--begin::Email-->
+                                <input id="email" type="email" name="email" value="{{ old('email') }}" required autofocus autocomplete="username" class="form-control bg-transparent" placeholder="Email" />
+                                <!--end::Email-->
+                            </div>
+                            <!--end::Input group-->
+
+                            <div class="fv-row mb-3">
+                                <!--begin::Password-->
+                                <input id="password" type="password" name="password" required autocomplete="current-password" class="form-control bg-transparent" placeholder="Senha" />
+                                <!--end::Password-->
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Wrapper-->
+                            <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-8">
+                                <div></div>
+                                <!--begin::Link-->
+                                <label for="remember_me" class="inline-flex items-center">
+                                    <input id="remember_me" type="checkbox" class="rounded dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-indigo-600 shadow-sm focus:ring-indigo-500 dark:focus:ring-indigo-600 dark:focus:ring-offset-gray-800" name="remember">
+                                    <span class="ms-2 text-sm text-gray-600 dark:text-gray-400">{{ __('Lembre-me') }}</span>
+                                </label>
+                                <!--end::Link-->
+                            </div>
+                            <!--begin::Separator-->
                             <div class="separator separator-content my-14">
                                 <span class="w-125px text-gray-500 fw-semibold fs-7">Bem-vindo</span>
                             </div>
-                        <!--end::Separator-->
-                        <!--end::Wrapper-->
-                        <div class="block mt-4">
+                            <!--end::Separator-->
 
-                        </div>
-                        <!--begin::Submit button-->
-                        <div class="d-grid mb-10">
-                            <button type="submit" id="kt_sign_in_submit" class="btn btn-primary">
-                                <!--begin::Indicator label-->
-                                <span class="indicator-label">Entrar</span>
-                                <!--end::Indicator label-->
-                                <!--begin::Indicator progress-->
-                                <span class="indicator-progress">Please wait...
-                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                                <!--end::Indicator progress-->
-                            </button>
-                        </div>
-                        <!--end::Submit button-->
-                        <!--begin::Sign up-->
-                        {{-- <div class="text-gray-500 text-center fw-semibold fs-6">Not a Member yet?
-                            <a href="../../demo1/dist/authentication/layouts/corporate/sign-up.html"
-                                class="link-primary">Sign up</a>
-                        </div> --}}
-                        <!--end::Sign up-->
+                            <!--begin::Submit button-->
+                            <div class="d-grid mb-10">
+                                <button type="submit" id="kt_sign_in_submit" class="btn btn-primary">
+                                    <!--begin::Indicator label-->
+                                    <span class="indicator-label">Entrar</span>
+                                    <!--end::Indicator label-->
+                                    <!--begin::Indicator progress-->
+                                    <span class="indicator-progress">Por favor, espere...
+                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                    </span>
+                                    <!--end::Indicator progress-->
+                                </button>
+                            </div>
+                            <!--end::Submit button-->
                         </form>
                         <!--end::Form-->
+
                     </div>
                     <!--end::Wrapper-->
                 </div>
