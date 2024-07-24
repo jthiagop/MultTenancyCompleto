@@ -23,7 +23,7 @@
         <!--begin::Mobile logo-->
         <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
             <a href="{{ route('dashboard') }}" class="d-lg-none">
-                class="theme-light-show h-30px" />
+                <img alt="Logo" src="/assets/media/logos/default-small.svg" class="theme-light-show h-30px" />
                 <img alt="Logo" src="/assets/media/logos/default-small-dark.svg" class="theme-dark-show h-30px" />
             </a>
         </div>
