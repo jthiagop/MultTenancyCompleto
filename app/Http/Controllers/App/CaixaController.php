@@ -38,6 +38,7 @@ class CaixaController extends Controller
     public function store(Request $request)
     {
 
+        dd($request->all());
         $subsidiaryId = User::getCompany();
 
         $validator = Validator::make($request->all(), [
@@ -118,6 +119,7 @@ class CaixaController extends Controller
      */
     public function update(Request $request, $id)
     {
+        dd($request->all());
         $subsidiaryId = User::getCompany();
 
         $validator = Validator::make($request->all(), [

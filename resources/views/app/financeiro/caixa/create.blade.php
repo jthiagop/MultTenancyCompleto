@@ -1,9 +1,10 @@
+<link href="https://kendo.cdn.telerik.com/themes/8.0.1/default/default-main.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Material+Icons+Outlined">
-<link rel="stylesheet" href="/assets/js/fileUpload/fileUpload.css">
+<script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
 
 <x-tenant-app-layout>
+
     <!--begin::Main-->
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -294,9 +295,31 @@
                                                     @enderror
                                                 </div>
                                                 <div class="tab-pane fade" id="kt_tab_pane_2" role="tabpanel">
-                                                    <div class="parent-div">
-                                                        <div id="fileUpload"></div>
-                                                    </div>
+                                                    <input type="file" name="files[]" id="photos" />
+                                                    <script>
+                                                        $("#photos").kendoUpload({
+                                                            async: {
+                                                                removeUrl: "{{ url('/remove') }}",
+                                                                removeField: "path",
+                                                                withCredentials: false
+                                                            },
+                                                            multiple: true, // Permite a seleção de múltiplos arquivos
+                                                            validation: {
+                                                                allowedExtensions: ["jpg", "jpeg", "png", "pdf"], // Extensões permitidas
+                                                                maxFileSize: 5242880, // Tamanho máximo do arquivo (5 MB)
+                                                                minFileSize: 1024 // Tamanho mínimo do arquivo (1 KB)
+                                                            },
+                                                            localization: {
+                                                                uploadSuccess: "Upload bem-sucedido!",
+                                                                uploadFail: "Falha no upload",
+                                                                invalidFileExtension: "Tipo de arquivo não permitido",
+                                                                invalidMaxFileSize: "O arquivo é muito grande",
+                                                                invalidMinFileSize: "O arquivo é muito pequeno",
+                                                                select: "Anexar Arquivos"
+
+                                                            }
+                                                        });
+                                                    </script>
                                                 </div>
                                             </div>
                                         </div>
@@ -323,15 +346,4 @@
         <!--end::Content wrapper-->
     </div>
     <!--end:::Main-->
-
-
 </x-tenant-app-layout>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="/assets/js/fileUpload/fileUpload.js"></script>
-
-<script>
-    $(document).ready(function () {
-        $("#fileUpload").fileUpload();
-
-    });
-</script>
