@@ -82,12 +82,13 @@
                             <div class="row">
                                 <!--begin::Col-->
                                 <div class="col">
-                                    <div
-                                        class="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
-                                        <span class="fs-4 fw-semibold text-info pb-1 px-2">Net Earnings</span>
-                                        <span class="fs-lg-2tx fw-bold d-flex justify-content-center">$
-                                            <span data-kt-countup="true"
-                                                data-kt-countup-value="63,240.00">0</span></span>
+                                    <div class="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
+                                        <span class="fs-4 fw-semibold text-success pb-1 px-2">Entradas</span>
+                                        <span class="fs-lg-2tx fw-bold d-flex justify-content-center">R$
+                                            <span data-kt-countup="true" data-kt-countup-value="{{ $valorEntrada }}">
+                                                0
+                                            </span>
+                                        </span>
                                     </div>
                                 </div>
                                 <!--end::Col-->
@@ -95,18 +96,19 @@
                                 <div class="col">
                                     <div
                                         class="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
-                                        <span class="fs-4 fw-semibold text-success pb-1 px-2">Balance</span>
-                                        <span class="fs-lg-2tx fw-bold d-flex justify-content-center">$
+                                        <span class="fs-4 fw-semibold text-danger pb-1 px-2">Saídas</span>
+                                        <span class="fs-lg-2tx fw-bold d-flex justify-content-center">R$
                                             <span data-kt-countup="true"
-                                                data-kt-countup-value="8,530.00">0</span></span>
+                                                data-kt-countup-value="{{ $ValorSaidas }}">0</span></span>
                                     </div>
                                 </div>
                                 <!--end::Col-->
+
                                 <!--begin::Col-->
                                 <div class="col">
                                     <div
                                         class="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
-                                        <span class="fs-4 fw-semibold text-danger d-block">Failed Attempts</span>
+                                        <span class="fs-4 fw-semibold text-success d-block">Entradas</span>
                                         <span class="fs-2hx fw-bold text-gray-900" data-kt-countup="true"
                                             data-kt-countup-value="291">0</span>
                                     </div>
@@ -116,7 +118,7 @@
                                 <div class="col">
                                     <div
                                         class="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
-                                        <span class="fs-4 fw-semibold text-primary pb-1 px-2">Referral Signups</span>
+                                        <span class="fs-4 fw-semibold text-danger pb-1 px-2">Saídas</span>
                                         <span class="fs-lg-2tx fw-bold d-flex justify-content-center">$
                                             <span data-kt-countup="true"
                                                 data-kt-countup-value="783&quot;">0</span></span>
@@ -199,22 +201,6 @@
                                     <li class="breadcrumb-item text-muted">
                                         Caixa local e bancarios
                                     </li>
-                                    <!--end::Item-->
-                                    <!--begin::Item-->
-                                    <li class="breadcrumb-item">
-                                        <span class="bullet bg-gray-400 w-5px h-2px"></span>
-                                    </li>
-                                    <!--end::Item-->
-                                    <!--begin::Item-->
-                                    <li class="breadcrumb-item text-muted">User Management</li>
-                                    <!--end::Item-->
-                                    <!--begin::Item-->
-                                    <li class="breadcrumb-item">
-                                        <span class="bullet bg-gray-400 w-5px h-2px"></span>
-                                    </li>
-                                    <!--end::Item-->
-                                    <!--begin::Item-->
-                                    <li class="breadcrumb-item text-muted">Users</li>
                                     <!--end::Item-->
                                 </ul>
                                 <!--end::Breadcrumb-->
@@ -803,7 +789,7 @@
                                             <div
                                                 class="form-check form-check-sm form-check-custom form-check-solid me-3">
                                                 <input class="form-check-input" type="checkbox" data-kt-check="true"
-                                                    data-kt-check-target="#kt_table_users .form-check-input"
+                                                    data-kt-check-target="#kt_table_lancamento .form-check-input"
                                                     value="1" />
                                             </div>
                                         </th>
@@ -837,11 +823,10 @@
                                             <td>{{ $caixa->id }}</td>
                                             <!--end::User=-->
                                             <!--begin::Role=-->
-                                            <td>{{ $caixa->data_competencia }}</td>
+                                            <td>{{ date(' d-m-Y', strtotime($caixa->data_competencia)) }}</td>
                                             <!--end::Role=-->
                                             <!--begin::Last login=-->
-                                            <td>{{ $caixa->tipo_documento }}
-                                            </td>
+                                            <td>{{ $caixa->tipo_documento }}</td>
                                             <!--end::Last login=-->
                                             <!--begin::Two step=-->
                                             <td>{{ $caixa->lancamento_padrao }}</td>
@@ -879,13 +864,6 @@
                                                     <div class="menu-item px-3">
                                                         <a href="{{ route('caixa.edit', $caixa->id) }}"
                                                             class="menu-link px-3">Editar</a>
-                                                    </div>
-                                                    <!--end::Menu item-->
-                                                    <!--begin::Menu item-->
-                                                    <div class="menu-item px-3">
-                                                        <a class="dropdown-item" data-bs-toggle="modal"
-                                                            href="#staticBackdrop" data-bs-target="#staticBackdrop"><i
-                                                                class="fa-regular fa-trash-can px-1"></i> Excluir</a>
                                                     </div>
                                                     <!--end::Menu item-->
                                                 </div>

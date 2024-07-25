@@ -10,6 +10,7 @@ use App\Http\Controllers\App\ProfileController;
 use App\Http\Controllers\App\UserController;
 use App\Http\Controllers\App\TenantFilialController;
 use App\Http\Controllers\App\CaixaController;
+use App\Http\Controllers\App\LancamentoPadraoController;
 use App\Models\TenantFilial;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -59,6 +60,7 @@ Route::middleware([
         Route::group(['middleware' => ['role:global']], function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
+            Route::resource('users', UserController::class);
 
             Route::resource('company', CompanyController::class);
         });
@@ -67,7 +69,15 @@ Route::middleware([
         Route::group(['middleware' => ['role:admin']], function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
+            Route::resource('users', UserController::class);
 
+        });
+
+        // Grupo de rotas acessíveis apenas para administradores
+        Route::group(['middleware' => ['role:admin_user']], function () {
+            Route::resource('filial', TenantFilialController::class);
+            Route::resource('caixa', CaixaController::class);
+            Route::resource('lancamentoPadrao', LancamentoPadraoController::class);
 
             Route::resource('users', UserController::class);
 

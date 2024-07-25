@@ -173,18 +173,21 @@
                                                     <div class="text-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="col-md-4 fv-row">
+                                            <div class="col-md-6 fv-row">
                                                 <label class="required fs-5 fw-semibold mb-2">Lançamento Padrão</label>
                                                 <div class="input-group">
-                                                    <input type="text" class="form-control" placeholder=""
-                                                        name="lancamento_padrao"
-                                                        value="{{ old('lancamento_padrao') }}" />
+                                                    <select name="lancamento_padrao" aria-label="Select a Country" data-control="select2" data-placeholder="Escolha um Lançamento..." class="form-select  fw-bold">
+                                                        <option value=""></option>
+                                                        @foreach ($lps as $lp)
+                                                            <option value="{{ $lp->description }}">{{ $lp->description }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                                 @error('lancamento_padrao')
                                                     <div class="text-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="col-md-6 fv-row">
+                                            <div class="col-md-4 fv-row">
                                                 <label class="fs-5 fw-semibold mb-2">Centro de Custo</label>
                                                 <div class="input-group">
                                                     <input type="text" name="centro" class="form-control"

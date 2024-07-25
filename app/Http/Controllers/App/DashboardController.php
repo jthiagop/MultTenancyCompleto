@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\App;
 
+use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\TenantFilial;
 use App\Models\User;
@@ -16,9 +17,21 @@ class DashboardController extends Controller
      */
     public function index()
     {
-        $user = User::all();
+        $dateHelper = new DateHelper();
 
-        return view('app.dashboard', ['user' => $user]);
+        // Recupere o usuário logado
+        $user = auth()->user();
+
+        // Filtrar os usuários pelo usuário logado
+        $company = DB::table('users')
+            ->join('company_user', 'users.id', '=', 'company_user.user_id')
+            ->join('companies', 'company_user.company_id', '=', 'companies.id')
+            ->where('users.id', $user->id) // Filtra pelo usuário logado
+            ->select('users.*', 'company_user.company_id', 'companies.name as companies_name')
+            ->get();
+
+
+        return view('app.dashboard', ['company' => $company]);
     }
 
     /**

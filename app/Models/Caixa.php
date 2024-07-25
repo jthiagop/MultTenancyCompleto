@@ -2,9 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-
+use Illuminate\Support\Facades\DB;
 use OwenIt\Auditing\Contracts\Auditable;
 
 
@@ -40,5 +41,49 @@ class Caixa extends Model implements Auditable
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
+    }
+
+
+    static public function getCaixaEntrada()
+    {
+        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+
+        $currentYear = Carbon::now()->year;
+        $currentMonth = Carbon::now()->month;
+
+        $entradas = DB::table('caixas')
+            ->join('company_user', 'caixas.company_id', '=', 'company_user.company_id')
+            ->where('company_user.user_id', $userId)
+            ->where('caixas.tipo', 'entrada') // Filtra apenas as entradas
+            ->whereYear('caixas.data_competencia', $currentYear) // Filtra pelo ano vigente
+            ->whereMonth('caixas.data_competencia', $currentMonth) // Filtra pelo mês vigente
+            ->select('caixas.*') // Selecione todas as colunas da tabela 'caixa'
+            ->get();
+
+        $somaEntradas = $entradas->sum('valor'); //soma os valores de entrada
+
+        return $somaEntradas;
+    }
+
+    static public function getCaixaSaida()
+    {
+
+        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+
+        $currentYear = Carbon::now()->year;
+        $currentMonth = Carbon::now()->month;
+
+        $saidas = DB::table('caixas')
+            ->join('company_user', 'caixas.company_id', '=', 'company_user.company_id')
+            ->where('company_user.user_id', $userId)
+            ->where('caixas.tipo', 'saida') // Filtra apenas as entradas
+            ->whereYear('caixas.data_competencia', $currentYear) // Filtra pelo ano vigente
+            ->whereMonth('caixas.data_competencia', $currentMonth) // Filtra pelo mês vigente
+            ->select('caixas.*') // Selecione todas as colunas da tabela 'caixa'
+            ->get();
+
+        $SomaSaidas = $saidas->sum('valor'); //soma os valores de entrada
+
+        return $SomaSaidas;
     }
 }

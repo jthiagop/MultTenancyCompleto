@@ -5,6 +5,7 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Models\Anexo;
 use App\Models\Caixa;
+use App\Models\LancamentoPadrao;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
@@ -20,8 +21,17 @@ class CaixaController extends Controller
      */
     public function index()
     {
+
+        $valorEntrada = caixa::getCaixaEntrada();
+        $ValorSaidas = caixa::getCaixaSaida();
+
         $caixas = Caixa::all();
-        return view('app.financeiro.caixa.index', ['caixas' => $caixas]);
+
+        return view('app.financeiro.caixa.index', [
+                'caixas' => $caixas,
+                'valorEntrada' => $valorEntrada,
+                'ValorSaidas' => $ValorSaidas
+            ]);
     }
 
     /**
@@ -29,7 +39,9 @@ class CaixaController extends Controller
      */
     public function create()
     {
-        return view('app.financeiro.caixa.create');
+        $lps = LancamentoPadrao::all();
+
+        return view('app.financeiro.caixa.create', compact('lps'));
     }
 
     /**
@@ -38,15 +50,16 @@ class CaixaController extends Controller
     public function store(Request $request)
     {
 
-        dd($request->all());
         $subsidiaryId = User::getCompany();
+
+        dd($request->all());
 
         $validator = Validator::make($request->all(), [
             'data_competencia' => 'required|date',
             'descricao' => 'required|string',
             'valor' => 'required',
             'tipo' => 'required|in:entrada,saida',
-            'lancamento_padrao' => 'required|string',
+            'lancamento_padrao' => 'required',
             'centro' => 'required|string',
             'tipo_documento' => 'required|string',
             'numero_documento' => 'nullable|string',
@@ -109,9 +122,11 @@ class CaixaController extends Controller
      */
     public function edit( $id)
     {
+        $lps = LancamentoPadrao::all();
+
         $caixa = Caixa::findOrFail($id);
         $files = Anexo::where('caixa_id', $caixa->id)->get();
-        return view('app.financeiro.caixa.edit', compact('caixa', 'files'));
+        return view('app.financeiro.caixa.edit', compact('caixa', 'files', 'lps'));
     }
 
     /**
@@ -119,7 +134,6 @@ class CaixaController extends Controller
      */
     public function update(Request $request, $id)
     {
-        dd($request->all());
         $subsidiaryId = User::getCompany();
 
         $validator = Validator::make($request->all(), [
@@ -133,7 +147,6 @@ class CaixaController extends Controller
             'numero_documento' => 'nullable|string',
             'historico_complementar' => 'nullable|string|max:500',
         ]);
-
 
     if ($validator->fails()) {
         return redirect()->back()->withErrors($validator)->withInput();

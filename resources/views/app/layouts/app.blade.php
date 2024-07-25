@@ -7,8 +7,18 @@
     <title>{{ config('app.name', 'Dominus') }}</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:type" content="article" />
+    <meta name="description"
+        content="No contexto da gestão eclesial, Dominus é um sistema que permite gerenciar de forma eficiente os campos de pastorais, patrimônio e financeiro. Com Dominus,
+    a administração de sua paróquia se torna mais organizada e produtiva, facilitando a gestão de recursos e atividades eclesiais." />
+    <meta name="keywords"
+        content="gestão eclesial, sistema Dominus, campos de pastorais, gestão de patrimônio, gestão financeira eclesial, administração paroquial, gestão de recursos eclesiais, atividades eclesiais, eficiência na gestão eclesial, produtividade paroquial" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Dominus - Sistema Eclesiais" />
+    <meta property="og:url" content="https://dominusbr.com/" />
+    <meta property="og:site_name" content="Dominus | Dominus Sistema Eclesial" />
+    <link rel="canonical" href="https://dominusbr.com/login" />
     <link rel="shortcut icon" href="/assets/media/logos/favicon.ico" />
     <!--begin::Fonts(mandatory for all pages)-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
@@ -16,10 +26,8 @@
 
     <!--end::Fonts-->
     <!--begin::Vendor Stylesheets(used for this page only)-->
-    <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet"
-        type="text/css" />
-    <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet"
-        type="text/css" />
+    <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
     <!--end::Vendor Stylesheets-->
     <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
     <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />

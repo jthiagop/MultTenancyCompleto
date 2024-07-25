@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('descricao');
             $table->decimal('valor', 15, 2);
             $table->enum('tipo', ['entrada', 'saida']);
-            $table->boolean('lancamento_padrao')->default(false);
+            $table->string('lancamento_padrao');
             $table->string('centro')->nullable();
             $table->string('tipo_documento')->nullable();
             $table->string('numero_documento')->nullable();
