@@ -42,7 +42,7 @@ class SeedTenantJob implements ShouldQueue
             ]);
 
             // Atribuir o papel de administrador ao usuário
-            $user->assignRole(['global', 'admin']);
+            $user->assignRole(['global', 'admin', 'admin_user', 'user']);
 
             // Criar a empresa
             $company = Company::create([

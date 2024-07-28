@@ -52,7 +52,6 @@ class CaixaController extends Controller
 
         $subsidiaryId = User::getCompany();
 
-        dd($request->all());
 
         $validator = Validator::make($request->all(), [
             'data_competencia' => 'required|date',
@@ -63,7 +62,7 @@ class CaixaController extends Controller
             'centro' => 'required|string',
             'tipo_documento' => 'required|string',
             'numero_documento' => 'nullable|string',
-            'anexos.*' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+            'files.*' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'historico_complementar' => 'nullable|string|max:500',
         ]);
 
@@ -85,9 +84,9 @@ class CaixaController extends Controller
 
 
         // Verifica se há arquivos anexos
-        if ($request->hasFile('anexos')) {
+        if ($request->hasFile('files')) {
             // Itera sobre cada arquivo anexo
-            foreach ($request->file('anexos') as $anexo) {
+            foreach ($request->file('files') as $anexo) {
                 // Gera um nome único para o arquivo anexo
                 $anexoName = time() . '_' . $anexo->getClientOriginalName();
 
@@ -124,9 +123,8 @@ class CaixaController extends Controller
     {
         $lps = LancamentoPadrao::all();
 
-        $caixa = Caixa::findOrFail($id);
-        $files = Anexo::where('caixa_id', $caixa->id)->get();
-        return view('app.financeiro.caixa.edit', compact('caixa', 'files', 'lps'));
+        $caixa = Caixa::with('anexos')->findOrFail($id);
+        return view('app.financeiro.caixa.edit', compact('caixa', 'lps'));
     }
 
     /**
@@ -193,8 +191,6 @@ class CaixaController extends Controller
      */
     public function destroy(Caixa $caixa)
     {
-        $caixa->delete();
-
         return redirect()->route('caixa.index');
     }
 

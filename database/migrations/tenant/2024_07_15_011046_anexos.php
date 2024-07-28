@@ -16,11 +16,11 @@ return new class extends Migration
             $table->foreignId('caixa_id');
             $table->string('nome_arquivo');
             $table->string('caminho_arquivo');
+            $table->unsignedBigInteger('size'); // Coluna para o tamanho do arquivo
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('cascade');
             $table->timestamps();
             $table->foreign('caixa_id')->references('id')->on('caixas')->onDelete('cascade')->onUpdate('cascade');
-
         });
     }
 

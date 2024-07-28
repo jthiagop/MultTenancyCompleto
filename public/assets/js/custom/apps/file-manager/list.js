@@ -49,7 +49,7 @@ var KTFileManagerList = function () {
             'language': {
                 emptyTable: `<div class="d-flex flex-column flex-center">
                     <img src="${hostUrl}media/illustrations/sketchy-1/5.png" class="mw-400px" />
-                    <div class="fs-1 fw-bolder text-dark">No items found.</div>
+                    <div class="fs-1 fw-bolder text-dark">nenhum item encontrado.</div>
                     <div class="fs-6">Start creating new folders or uploading a new file!</div>
                 </div>`
             }
@@ -71,8 +71,8 @@ var KTFileManagerList = function () {
             'language': {
                 emptyTable: `<div class="d-flex flex-column flex-center">
                     <img src="${hostUrl}media/illustrations/sketchy-1/5.png" class="mw-400px" />
-                    <div class="fs-1 fw-bolder text-dark mb-4">No items found.</div>
-                    <div class="fs-6">Start creating new folders or uploading a new file!</div>
+                    <div class="fs-1 fw-bolder text-dark mb-4">nenhum item encontrado.</div>
+                    <div class="fs-6">Comece criando um novo arquivo!!</div>
                 </div>`
             },
             conditionalPaging: true
@@ -110,63 +110,81 @@ var KTFileManagerList = function () {
         });
     }
 
-    // Delete customer
-    const handleDeleteRows = () => {
-        // Select all delete buttons
-        const deleteButtons = table.querySelectorAll('[data-kt-filemanager-table-filter="delete_row"]');
+    document.addEventListener('DOMContentLoaded', function() {
+        const table = document.querySelector('#kt_file_manager_list');
 
-        deleteButtons.forEach(d => {
-            // Delete button on click
-            d.addEventListener('click', function (e) {
-                e.preventDefault();
+        const handleDeleteRows = () => {
+            const deleteButtons = table.querySelectorAll('[data-kt-filemanager-table-filter="delete_row"]');
 
-                // Select parent row
-                const parent = e.target.closest('tr');
+            deleteButtons.forEach(d => {
+                d.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    const parent = e.target.closest('tr');
+                    const fileId = parent.dataset.fileId;
 
-                // Get customer name
-                const fileName = parent.querySelectorAll('td')[1].innerText;
-
-                // SweetAlert2 pop up --- official docs reference: https://sweetalert2.github.io/
-                Swal.fire({
-                    text: "Are you sure you want to delete " + fileName + "?",
-                    icon: "warning",
-                    showCancelButton: true,
-                    buttonsStyling: false,
-                    confirmButtonText: "Yes, delete!",
-                    cancelButtonText: "No, cancel",
-                    customClass: {
-                        confirmButton: "btn fw-bold btn-danger",
-                        cancelButton: "btn fw-bold btn-active-light-primary"
-                    }
-                }).then(function (result) {
-                    if (result.value) {
-                        Swal.fire({
-                            text: "You have deleted " + fileName + "!.",
-                            icon: "success",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
-                            customClass: {
-                                confirmButton: "btn fw-bold btn-primary",
-                            }
-                        }).then(function () {
-                            // Remove current row
-                            datatable.row($(parent)).remove().draw();
-                        });
-                    } else if (result.dismiss === 'cancel') {
-                        Swal.fire({
-                            text: customerName + " was not deleted.",
-                            icon: "error",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
-                            customClass: {
-                                confirmButton: "btn fw-bold btn-primary",
-                            }
-                        });
-                    }
+                    Swal.fire({
+                        text: "Tem certeza de que deseja excluir este arquivo?",
+                        icon: "warning",
+                        showCancelButton: true,
+                        buttonsStyling: false,
+                        confirmButtonText: "Sim, exclua!",
+                        cancelButtonText: "Não, cancele",
+                        customClass: {
+                            confirmButton: "btn fw-bold btn-danger",
+                            cancelButton: "btn fw-bold btn-active-light-primary"
+                        }
+                    }).then(function (result) {
+                        if (result.value) {
+                            fetch(`/anexos/${fileId}`, {
+                                method: 'DELETE',
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                    'Content-Type': 'application/json'
+                                }
+                            }).then(response => response.json())
+                            .then(data => {
+                                if (data.message === 'File deleted successfully') {
+                                    Swal.fire({
+                                        text: "Você excluiu o arquivo!",
+                                        icon: "success",
+                                        buttonsStyling: false,
+                                        confirmButtonText: "Ok, entendi!",
+                                        customClass: {
+                                            confirmButton: "btn fw-bold btn-primary",
+                                        }
+                                    }).then(function () {
+                                        datatable.row($(parent)).remove().draw();
+                                    });
+                                } else {
+                                    Swal.fire({
+                                        text: data.message,
+                                        icon: "error",
+                                        buttonsStyling: false,
+                                        confirmButtonText: "Ok, entendi!",
+                                        customClass: {
+                                            confirmButton: "btn fw-bold btn-primary",
+                                        }
+                                    });
+                                }
+                            });
+                        } else if (result.dismiss === 'cancel') {
+                            Swal.fire({
+                                text: "O arquivo não foi excluído.",
+                                icon: "error",
+                                buttonsStyling: false,
+                                confirmButtonText: "Ok, entendi!",
+                                customClass: {
+                                    confirmButton: "btn fw-bold btn-primary",
+                                }
+                            });
+                        }
+                    });
                 });
-            })
-        });
-    }
+            });
+        }
+
+        handleDeleteRows();
+    });
 
     // Init toggle toolbar
     const initToggleToolbar = () => {
@@ -195,12 +213,12 @@ var KTFileManagerList = function () {
         deleteSelected.addEventListener('click', function () {
             // SweetAlert2 pop up --- official docs reference: https://sweetalert2.github.io/
             Swal.fire({
-                text: "Are you sure you want to delete selected files or folders?",
+                text: "Tem certeza de que deseja excluir os arquivos?",
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, delete!",
-                cancelButtonText: "No, cancel",
+                confirmButtonText: "Sim, excluir!",
+                cancelButtonText: "Não, cancele",
                 customClass: {
                     confirmButton: "btn fw-bold btn-danger",
                     cancelButton: "btn fw-bold btn-active-light-primary"
@@ -208,10 +226,10 @@ var KTFileManagerList = function () {
             }).then(function (result) {
                 if (result.value) {
                     Swal.fire({
-                        text: "You have deleted all selected  files or folders!.",
+                        text: "Arquivo excluido com sucesso!.",
                         icon: "success",
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
+                        confirmButtonText: "OK, obrigado!",
                         customClass: {
                             confirmButton: "btn fw-bold btn-primary",
                         }
@@ -249,7 +267,7 @@ var KTFileManagerList = function () {
         const toolbarSelected = document.querySelector('[data-kt-filemanager-table-toolbar="selected"]');
         const selectedCount = document.querySelector('[data-kt-filemanager-table-select="selected_count"]');
 
-        // Select refreshed checkbox DOM elements 
+        // Select refreshed checkbox DOM elements
         const allCheckboxes = table.querySelectorAll('tbody [type="checkbox"]');
 
         // Detect checkboxes state & count
@@ -453,7 +471,7 @@ var KTFileManagerList = function () {
 
     // Handle rename file or folder
     const handleRename = () => {
-        const renameButton = table.querySelectorAll('[data-kt-filemanager-table="rename"]');     
+        const renameButton = table.querySelectorAll('[data-kt-filemanager-table="rename"]');
 
         renameButton.forEach(button => {
             button.addEventListener('click', renameCallback);
@@ -854,8 +872,8 @@ var KTFileManagerList = function () {
                                 }
                             }).then(function (result) {
                                 if (result.isConfirmed) {
-                                    form.reset(); // Reset form	
-                                    moveModal.hide(); // Hide modal			
+                                    form.reset(); // Reset form
+                                    moveModal.hide(); // Hide modal
 
                                     toastr.options = {
                                         "closeButton": true,

@@ -4,6 +4,9 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\Anexo;
+use App\Models\Caixa;
+use Illuminate\Support\Facades\Validator;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -30,25 +33,51 @@ class AnexoController extends Controller
      */
     public function store(Request $request)
     {
+        dd($request->all());
+
         $data = $request->all();
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
 
         Anexo::create($data);
 
-        // Suas outras lógicas...
+        return redirect()->route('caixa.index');
+
     }
 
     public function update(Request $request, $id)
     {
-        $anexo = Anexo::findOrFail($id);
-        $data = $request->all();
-        $data['updated_by'] = Auth::id();
+        $validator = Validator::make($request->all(), [
+            'files.*' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+        ]);
 
-        $anexo->update($data);
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
 
-        // Suas outras lógicas...
+        $user = auth()->user();
+        $caixa = Caixa::findOrFail($id);
+
+        // Processa os novos arquivos anexos, se houver
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $anexo) {
+                $anexoName = time() . '_' . $anexo->getClientOriginalName();
+                $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
+
+                Anexo::create([
+                    'caixa_id' => $caixa->id,
+                    'nome_arquivo' => $anexoName,
+                    'caminho_arquivo' => $anexoPath,
+                    'created_by' => $user->id,
+                    'updated_by' => $user->id,
+                ]);
+            }
+        }
+
+        return response()->json(['success' => 'Arquivos enviados com sucesso!']);
     }
+
+
 
 
     /**
