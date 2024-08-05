@@ -9,11 +9,16 @@ class Anexo extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['caixa_id', 'nome_arquivo', 'caminho_arquivo', 'created_by', 'updated_by'];
+    protected $fillable = ['caixa_id','banco_id', 'nome_arquivo', 'caminho_arquivo', 'created_by', 'updated_by'];
 
     public function caixa()
     {
         return $this->belongsTo(Caixa::class);
+    }
+
+    public function banco()
+    {
+        return $this->belongsTo(Banco::class);
     }
 
     public function createdBy()

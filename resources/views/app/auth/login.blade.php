@@ -26,17 +26,6 @@
     <!--end::Global Stylesheets Bundle-->
 </head>
 <!--end::Head-->
-<style>
-            .glass-effect {
-            background: rgba(255, 255, 255, 0.1); /* Cor de fundo com opacidade para efeito de vidro */
-            border-radius: 15px;
-            padding: 50px;
-            backdrop-filter: blur(5px); /* Efeito de desfoque */
-            -webkit-backdrop-filter: blur(5px); /* Efeito de desfoque para navegadores WebKit */
-            color: white;
-            text-align: center;
-        }
-    </style>
 <!--begin::Body-->
 <body id="kt_body" class="app-blank app-blank">
     <!--begin::Theme mode setup on page load-->

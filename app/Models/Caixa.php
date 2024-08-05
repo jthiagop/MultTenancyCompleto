@@ -26,6 +26,11 @@ class Caixa extends Model implements Auditable
         'tipo_documento',
         'numero_documento',
         'historico_complementar',
+        'origem',
+        'created_by',
+        'updated_by',
+
+
     ];
 
     public function anexos()
@@ -85,5 +90,32 @@ class Caixa extends Model implements Auditable
         $SomaSaidas = $saidas->sum('valor'); //soma os valores de entrada
 
         return $SomaSaidas;
+    }
+
+    static public function getCaixa()
+    {
+
+        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+
+        $entradas = DB::table('caixas')
+            ->join('company_user', 'caixas.company_id', '=', 'company_user.company_id')
+            ->where('company_user.user_id', $userId)
+            ->where('caixas.tipo', 'entrada') // Filtra apenas as entradas
+            ->select('caixas.*') // Selecione todas as colunas da tabela 'caixa'
+            ->get();
+
+        $somaEntradas = $entradas->sum('valor'); //soma os valores de entrada
+
+        $saida = DB::table('caixas')
+            ->join('company_user', 'caixas.company_id', '=', 'company_user.company_id')
+            ->where('company_user.user_id', $userId)
+            ->where('caixas.tipo', 'saida') // Filtra apenas as entradas
+            ->select('caixas.*') // Selecione todas as colunas da tabela 'caixa'
+            ->get();
+
+        $somaSaida = $saida->sum('valor'); //soma os valores de entrada
+
+        return ([$somaEntradas, $somaSaida]); // Retorna o valor para o controlador
+
     }
 }

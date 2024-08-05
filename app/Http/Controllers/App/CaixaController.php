@@ -4,6 +4,7 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\Anexo;
+use App\Models\Banco;
 use App\Models\Caixa;
 use App\Models\LancamentoPadrao;
 use App\Models\User;
@@ -21,17 +22,21 @@ class CaixaController extends Controller
      */
     public function index()
     {
+        $valorEntradaBanco = Banco::getBancoEntrada();
+        $ValorSaidasBanco = Banco::getBancoSaida();
 
         $valorEntrada = caixa::getCaixaEntrada();
         $ValorSaidas = caixa::getCaixaSaida();
 
         $caixas = Caixa::all();
 
-        return view('app.financeiro.caixa.index', [
-                'caixas' => $caixas,
-                'valorEntrada' => $valorEntrada,
-                'ValorSaidas' => $ValorSaidas
-            ]);
+        return view('app.financeiro.index', [
+            'caixas' => $caixas,
+            'valorEntrada' => $valorEntrada,
+            'ValorSaidas' => $ValorSaidas,
+            'valorEntradaBanco' => $valorEntradaBanco,
+            'ValorSaidasBanco' => $ValorSaidasBanco
+        ]);
     }
 
     /**
@@ -41,7 +46,20 @@ class CaixaController extends Controller
     {
         $lps = LancamentoPadrao::all();
 
-        return view('app.financeiro.caixa.create', compact('lps'));
+        $company = User::getCompanyName();
+
+        list($somaEntradas, $somaSaida) = caixa::getCaixa();
+
+        $total = $somaEntradas - $somaSaida;
+
+        return view(
+            'app.financeiro.caixa.create',
+            [
+                'company' => $company,
+                'lps' => $lps,
+                'total' => $total,
+            ]
+        );
     }
 
     /**
@@ -76,8 +94,12 @@ class CaixaController extends Controller
 
         $validatedData = $validator->validated();
         $validatedData['company_id'] = $subsidiaryId->company_id;
-        $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
+        $validatedData['origem'] = 'CX';
 
+        $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
+        // Adiciona os campos de auditoria
+        $validatedData['created_by'] = $user->id;
+        $validatedData['updated_by'] = $user->id;
 
 
         $caixa = Caixa::create($validatedData);
@@ -113,17 +135,37 @@ class CaixaController extends Controller
      */
     public function show(Caixa $caixa)
     {
-        //
+        return view('app.financeiro.caixa.show');
+    }
+
+    public function list()
+    {
+        list($somaEntradas, $somaSaida) = caixa::getCaixa();
+
+        $total = $somaEntradas - $somaSaida;
+
+        $caixas = Caixa::all();
+        $valorEntrada = caixa::getCaixaEntrada();
+        $ValorSaidas = caixa::getCaixaSaida();
+
+        return view('app.financeiro.caixa.list', [
+            'caixas' => $caixas,
+            'valorEntrada' => $valorEntrada,
+            'ValorSaidas' => $ValorSaidas,
+            'total' => $total,
+        ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit( $id)
+    public function edit($id)
     {
         $lps = LancamentoPadrao::all();
 
         $caixa = Caixa::with('anexos')->findOrFail($id);
+
+
         return view('app.financeiro.caixa.edit', compact('caixa', 'lps'));
     }
 
@@ -146,51 +188,57 @@ class CaixaController extends Controller
             'historico_complementar' => 'nullable|string|max:500',
         ]);
 
-    if ($validator->fails()) {
-        return redirect()->back()->withErrors($validator)->withInput();
-    }
-
-    $user = auth()->user(); // Usuário autenticado
-
-    $caixa = Caixa::findOrFail($id); // Encontra o registro existente
-
-    $validatedData = $validator->validated();
-    $validatedData['company_id'] = $subsidiaryId->company_id;
-    $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
-
-    // Atualiza o registro existente
-    $caixa->update($validatedData);
-
-    // Verifica se há arquivos anexos
-    if ($request->hasFile('anexos')) {
-        // Itera sobre cada arquivo anexo
-        foreach ($request->file('anexos') as $anexo) {
-            // Gera um nome único para o arquivo anexo
-            $anexoName = time() . '_' . $anexo->getClientOriginalName();
-
-            // Salva o arquivo na pasta 'anexos' dentro da pasta de armazenamento (storage/app/public)
-            $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
-
-            // Cria um registro no banco de dados para o anexo
-            Anexo::create([
-                'caixa_id' => $caixa->id,
-                'nome_arquivo' => $anexoName,
-                'caminho_arquivo' => $anexoPath,
-                'created_by' => $user->id,
-                'updated_by' => $user->id,
-            ]);
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
         }
-    }
 
-    return redirect()->route('caixa.index')->with('success', 'Lançamento Atualizado com Sucesso!');
-}
+        $user = auth()->user(); // Usuário autenticado
+
+        $caixa = Caixa::findOrFail($id); // Encontra o registro existente
+
+        $validatedData = $validator->validated();
+        $validatedData['company_id'] = $subsidiaryId->company_id;
+        $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
+
+        // Atualiza o registro existente
+        $caixa->update($validatedData);
+
+        // Verifica se há arquivos anexos
+        if ($request->hasFile('anexos')) {
+            // Itera sobre cada arquivo anexo
+            foreach ($request->file('anexos') as $anexo) {
+                // Gera um nome único para o arquivo anexo
+                $anexoName = time() . '_' . $anexo->getClientOriginalName();
+
+                // Salva o arquivo na pasta 'anexos' dentro da pasta de armazenamento (storage/app/public)
+                $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
+
+                // Cria um registro no banco de dados para o anexo
+                Anexo::create([
+                    'caixa_id' => $caixa->id,
+                    'nome_arquivo' => $anexoName,
+                    'caminho_arquivo' => $anexoPath,
+                    'created_by' => $user->id,
+                    'updated_by' => $user->id,
+                ]);
+            }
+        }
+
+        return redirect()->route('caixa.index')->with('success', 'Lançamento Atualizado com Sucesso!');
+    }
 
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(Caixa $caixa)
+    public function destroy(string $id)
     {
+        // Localize o registro com base no ID fornecido
+        $banco = Caixa::findOrFail($id);
+
+        // Exclua o registro
+        $banco->delete();
+
         return redirect()->route('caixa.index');
     }
 

@@ -78,63 +78,84 @@ var KTCustomersList = function () {
         });
     }
 
-    // Delete customer
-    var handleDeleteRows = () => {
-        // Select all delete buttons
-        const deleteButtons = table.querySelectorAll('[data-kt-customer-table-filter="delete_row"]');
+// Delete customer
+var handleDeleteRows = () => {
+    // Select all delete buttons
+    const deleteButtons = document.querySelectorAll('[data-kt-customer-table-filter="delete_row"]');
 
-        deleteButtons.forEach(d => {
-            // Delete button on click
-            d.addEventListener('click', function (e) {
-                e.preventDefault();
+    deleteButtons.forEach(button => {
+        // Delete button on click
+        button.addEventListener('click', function (e) {
+            e.preventDefault();
 
-                // Select parent row
-                const parent = e.target.closest('tr');
+            // Select parent row
+            const parent = e.target.closest('tr');
 
-                // Get customer name
-                const customerName = parent.querySelectorAll('td')[1].innerText;
+            // Get bank ID and name
+            const bancoId = button.getAttribute('data-id'); // Use data-id directly from the button
+            const customerName = parent.querySelector('td[data-banco-code]').innerText.trim(); // Nome do banco
 
-                // SweetAlert2 pop up --- official docs reference: https://sweetalert2.github.io/
-                Swal.fire({
-                    text: "Are you sure you want to delete " + customerName + "?",
-                    icon: "warning",
-                    showCancelButton: true,
-                    buttonsStyling: false,
-                    confirmButtonText: "Yes, delete!",
-                    cancelButtonText: "No, cancel",
-                    customClass: {
-                        confirmButton: "btn fw-bold btn-danger",
-                        cancelButton: "btn fw-bold btn-active-light-primary"
-                    }
-                }).then(function (result) {
-                    if (result.value) {
-                        Swal.fire({
-                            text: "You have deleted " + customerName + "!.",
-                            icon: "success",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
-                            customClass: {
-                                confirmButton: "btn fw-bold btn-primary",
-                            }
-                        }).then(function () {
-                            // Remove current row
-                            datatable.row($(parent)).remove().draw();
+            // SweetAlert2 pop up
+            Swal.fire({
+                text: "Tem certeza de que deseja excluir " + customerName + "?",
+                icon: "warning",
+                showCancelButton: true,
+                buttonsStyling: false,
+                confirmButtonText: "Sim, Exclua!",
+                cancelButtonText: "Não, Cancelell",
+                customClass: {
+                    confirmButton: "btn fw-bold btn-danger",
+                    cancelButton: "btn fw-bold btn-active-light-primary"
+                }
+            }).then(function (result) {
+                if (result.value) {
+                    // Perform AJAX request to delete the record
+                    axios.delete(`/cadastroBancos/${bancoId}`)
+                        .then(function (response) {
+                            Swal.fire({
+                                text: "Você excluiu " + customerName + "!",
+                                icon: "success",
+                                buttonsStyling: false,
+                                confirmButtonText: "OK, entendi!",
+                                customClass: {
+                                    confirmButton: "btn fw-bold btn-primary",
+                                }
+                            }).then(function () {
+                                // Remove current row from table
+                                parent.remove(); // Remover a linha diretamente
+                            });
+                        })
+                        .catch(function (error) {
+                            Swal.fire({
+                                text: "Houve um erro ao excluir " + customerName + ".",
+                                icon: "error",
+                                buttonsStyling: false,
+                                confirmButtonText: "OK, entendi!",
+                                customClass: {
+                                    confirmButton: "btn fw-bold btn-primary",
+                                }
+                            });
                         });
-                    } else if (result.dismiss === 'cancel') {
-                        Swal.fire({
-                            text: customerName + " was not deleted.",
-                            icon: "error",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
-                            customClass: {
-                                confirmButton: "btn fw-bold btn-primary",
-                            }
-                        });
-                    }
-                });
-            })
+                } else if (result.dismiss === 'cancel') {
+                    Swal.fire({
+                        text: customerName + " não foi excluído.",
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok, obrigado!",
+                        customClass: {
+                            confirmButton: "btn fw-bold btn-primary",
+                        }
+                    });
+                }
+            });
         });
-    }
+    });
+};
+
+// Initialize the delete functionality
+handleDeleteRows();
+
+
 
     // Reset Filter
     var handleResetForm = () => {
@@ -193,7 +214,7 @@ var KTCustomersList = function () {
                         text: "You have deleted all selected customers!.",
                         icon: "success",
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
+                        confirmButtonText: "OK, entendi!",
                         customClass: {
                             confirmButton: "btn fw-bold btn-primary",
                         }
@@ -214,7 +235,7 @@ var KTCustomersList = function () {
                         text: "Selected customers was not deleted.",
                         icon: "error",
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
+                        confirmButtonText: "OK, entendi!",
                         customClass: {
                             confirmButton: "btn fw-bold btn-primary",
                         }
@@ -231,7 +252,7 @@ var KTCustomersList = function () {
         const toolbarSelected = document.querySelector('[data-kt-customer-table-toolbar="selected"]');
         const selectedCount = document.querySelector('[data-kt-customer-table-select="selected_count"]');
 
-        // Select refreshed checkbox DOM elements 
+        // Select refreshed checkbox DOM elements
         const allCheckboxes = table.querySelectorAll('tbody [type="checkbox"]');
 
         // Detect checkboxes state & count
@@ -261,7 +282,7 @@ var KTCustomersList = function () {
     return {
         init: function () {
             table = document.querySelector('#kt_customers_table');
-            
+
             if (!table) {
                 return;
             }

@@ -15,7 +15,7 @@ var KTModalAdjustBalance = function () {
     // Init form inputs
     var initForm = function () {
         // Init inputmask plugin --- For more info please refer to the official documentation here: https://github.com/RobinHerbots/Inputmask
-        Inputmask("US$ 9,999,999.99", {
+        Inputmask("R$ 9,999,999.99", {
             "numericInput": true
         }).mask("#kt_modal_inputmask");
     }
@@ -29,7 +29,7 @@ var KTModalAdjustBalance = function () {
         // Get current balance value
         const isNegative = currentBalance.innerHTML.includes('-');
         let currentValue = parseFloat(currentBalance.innerHTML.replace(/[^0-9.]/g, '').replace(',', ''));
-        currentValue = isNegative ? currentValue * -1 : currentValue; 
+        currentValue = isNegative ? currentValue * -1 : currentValue;
 
         // On change event for inputmask
         let maskValue;
@@ -111,7 +111,7 @@ var KTModalAdjustBalance = function () {
                             // Simulate form submission
                             submitButton.removeAttribute('data-kt-indicator');
 
-                            // Show popup confirmation 
+                            // Show popup confirmation
                             Swal.fire({
                                 text: "Form has been successfully submitted!",
                                 icon: "success",
@@ -136,7 +136,7 @@ var KTModalAdjustBalance = function () {
                             //form.submit(); // Submit form
                         }, 2000);
                     } else {
-                        // Show popup warning 
+                        // Show popup warning
                         Swal.fire({
                             text: "Sorry, looks like there are some errors detected, please try again.",
                             icon: "error",
@@ -167,8 +167,8 @@ var KTModalAdjustBalance = function () {
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form	
-                    modal.hide(); // Hide modal				
+                    form.reset(); // Reset form
+                    modal.hide(); // Hide modal
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
                         text: "Your form has not been cancelled!.",
@@ -199,8 +199,8 @@ var KTModalAdjustBalance = function () {
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form	
-                    modal.hide(); // Hide modal				
+                    form.reset(); // Reset form
+                    modal.hide(); // Hide modal
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
                         text: "Your form has not been cancelled!.",
@@ -215,7 +215,7 @@ var KTModalAdjustBalance = function () {
             });
         });
     }
-    
+
     return {
         // Public functions
         init: function () {

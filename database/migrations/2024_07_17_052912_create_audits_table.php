@@ -34,6 +34,7 @@ class CreateAuditsTable extends Migration
             $table->timestamps();
 
             $table->index([$morphPrefix . '_id', $morphPrefix . '_type']);
+
         });
     }
 

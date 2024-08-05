@@ -437,7 +437,7 @@
                                                     <div class="alert alert-danger mt-2">
                                                         {{ $error }}
                                                     </div>
-                                                @endforeach
+                                                    @endforeach
                                                     <!--begin::Input group-->
                                                     <div class="fv-row mb-7">
                                                         <!--begin::Label-->

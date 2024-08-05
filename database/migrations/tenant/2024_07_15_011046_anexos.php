@@ -13,7 +13,8 @@ return new class extends Migration
     {
         Schema::create('anexos', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('caixa_id');
+            $table->foreignId('caixa_id')->nullable();
+            $table->foreignId('banco_id')->nullable();
             $table->string('nome_arquivo');
             $table->string('caminho_arquivo');
             $table->unsignedBigInteger('size'); // Coluna para o tamanho do arquivo
@@ -21,6 +22,7 @@ return new class extends Migration
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('cascade');
             $table->timestamps();
             $table->foreign('caixa_id')->references('id')->on('caixas')->onDelete('cascade')->onUpdate('cascade');
+            $table->foreign('banco_id')->references('id')->on('bancos')->onDelete('cascade')->onUpdate('cascade');
         });
     }
 

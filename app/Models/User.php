@@ -82,6 +82,10 @@ class User extends Authenticatable
         }
 
 
+    public function bancos()
+    {
+        return $this->hasMany(CadastroBanco::class, 'created_by');
+    }
 
         static public function getCompany()
         {
@@ -97,5 +101,21 @@ class User extends Authenticatable
 
             return $subsidiaryId;
 
+        }
+
+        static public function getCompanyName()
+        {
+                    // Recupere o usuário logado
+        $user = auth()->user();
+
+        // Filtrar os usuários pelo usuário logado
+        $company = DB::table('users')
+            ->join('company_user', 'users.id', '=', 'company_user.user_id')
+            ->join('companies', 'company_user.company_id', '=', 'companies.id')
+            ->where('users.id', $user->id) // Filtra pelo usuário logado
+            ->select('users.*', 'company_user.company_id', 'companies.name as companies_name')
+            ->get();
+
+            return $company;
         }
 }

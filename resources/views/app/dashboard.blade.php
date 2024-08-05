@@ -204,7 +204,7 @@
                             </div>
                             <!--end::Col-->
                             <!--begin::Col-->
-                            <div class="col-lg-4 hover-elevate-up parent-hover">
+                            <div class="col-lg-4 hover-elevate-up parent-hover ">
                                 <!--begin::Option-->
                                 <input type="radio" class="btn-check" name="account_type" value="corporate"
                                     id="kt_create_account_form_account_type_corporate" />
