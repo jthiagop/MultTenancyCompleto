@@ -18,7 +18,7 @@
                     <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
                         <!--begin::Title-->
                         <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
-                            Resulmo do Caixa</h1>
+                            Resumo do Caixa</h1>
                         <!--end::Title-->
                         <!--begin::Breadcrumb-->
                         <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
@@ -34,7 +34,7 @@
                             <!--end::Item-->
                             <!--begin::Item-->
                             <li class="breadcrumb-item text-muted">
-                                <a href="{{ route('dashboard') }}" class="text-muted text-hover-primary">Financeiro</a>
+                                <a href="{{ route('caixa.index') }}" class="text-muted text-hover-primary">Financeiro</a>
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
@@ -45,6 +45,16 @@
                             <!--begin::Item-->
                             <li class="breadcrumb-item text-muted">
                                 <a href="{{ route('caixa.create') }}" class="text-muted text-hover-primary">Lançamento caixa</a>
+                            </li>
+                            <!--end::Item-->
+                            <!--begin::Item-->
+                            <li class="breadcrumb-item">
+                                <span class="bullet bg-gray-400 w-5px h-2px"></span>
+                            </li>
+                            <!--end::Item-->
+                            <!--begin::Item-->
+                            <li class="breadcrumb-item text-muted">
+                                <aspan class="text-muted text-hover-primary">Movimentações do Caixa</aspan>
                             </li>
                             <!--end::Item-->
                         </ul>
@@ -208,7 +218,7 @@
                                                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                                                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
                                                   </svg>
-                                                Lanaçamento</a>
+                                                  Lançamento</a>
                                             <!--begin::Menu-->
                                             <div class="me-0">
                                                 <button

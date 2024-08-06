@@ -87,7 +87,7 @@
             <div id="kt_app_content" class="app-content flex-column-fluid">
                 <!--begin::Content container-->
                 <div id="kt_app_content_container" class="app-container container-xxl">
-                    <form method="POST" action="{{ route('caixa.update', $caixa->id) }}" enctype="multipart/form-data">
+                    <form method="POST" action="{{ route('banco.update', $banco->id) }}" enctype="multipart/form-data">
                         @csrf
                         @method('PUT')
                         <div class="d-flex flex-column flex-row-fluid gap-7 gap-lg-10">
@@ -111,14 +111,14 @@
                                         data-kt-scroll-wrappers="#kt_modal_new_address_scroll"
                                         data-kt-scroll-offset="300px">
                                         <div class="row mb-5">
-                                            <div class="col-md-3 fv-row">
+                                            <div class="col-md-2 fv-row">
                                                 <label class="required fs-5 fw-semibold mb-2">Data de
                                                     Competência</label>
                                                 <div class="input-group" id="kt_td_picker_date_only"
                                                     data-td-target-input="nearest" data-td-target-toggle="nearest">
                                                     <input class="form-control" name="data_competencia" required
                                                         type="date" placeholder="Pick a date" id="kt_datepicker_1"
-                                                        value="{{ old('data_competencia', $caixa->data_competencia) }}" />
+                                                        value="{{ old('data_competencia', $banco->data_competencia) }}" />
                                                     <span class="input-group-text"
                                                         data-td-target="#kt_td_picker_date_only"
                                                         data-td-toggle="datetimepicker">
@@ -130,12 +130,27 @@
                                                     <div class="text-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="col-md-6 fv-row">
+                                            <div class="col-md-3 fv-row">
+                                                <label class="required fs-5 fw-semibold mb-2">Banco</label>
+                                                <div class="input-group">
+                                                    <select id="bancoSelect" name="banco_id" aria-label="Select a Banco" data-control="select2" data-placeholder="Escolha um banco..." class="form-select fw-bold" >
+                                                        <option value=""></option>
+                                                        @foreach ($bancosCadastro as $banco)
+                                                            <option value="{{ $banco->id }}">{{ $banco->banco }}</option>
+                                                        @endforeach
+                                                    </select>
+                                                </div>
+
+                                                @error('banco_id')
+                                                    <div class="text-danger">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <div class="col-md-5 fv-row">
                                                 <label class="required fs-5 fw-semibold mb-2">Descrição</label>
                                                 <div class="input-group">
                                                     <input type="text" class="form-control" placeholder=""
                                                         name="descricao"
-                                                        value="{{ old('descricao', $caixa->descricao) }}" />
+                                                        value="{{ old('descricao', $banco->descricao) }}" />
                                                 </div>
                                                 @error('descricao')
                                                     <div class="text-danger">{{ $message }}</div>
@@ -148,7 +163,7 @@
                                                     <input class="form-control money" placeholder="Valor"
                                                         aria-label="Valor" aria-describedby="basic-addon1"
                                                         id="valor" name="valor" required
-                                                        value="{{ old('valor', number_format($caixa->valor, 2, ',', '.')) }}" />
+                                                        value="{{ old('valor', number_format($banco->valor, 2, ',', '.')) }}" />
                                                 </div>
                                                 @error('valor')
                                                     <div class="text-danger">{{ $message }}</div>
@@ -169,27 +184,28 @@
                                                     data-hide-search="true">
                                                     <option></option>
                                                     <option value="entrada"
-                                                        {{ old('tipo', $caixa->tipo) == 'entrada' ? 'selected' : '' }}>
+                                                        {{ old('tipo', $banco->tipo) == 'entrada' ? 'selected' : '' }}>
                                                         Entrada</option>
                                                     <option value="saida"
-                                                        {{ old('tipo', $caixa->tipo) == 'saida' ? 'selected' : '' }}>
+                                                        {{ old('tipo', $banco->tipo) == 'saida' ? 'selected' : '' }}>
                                                         Saída</option>
                                                 </select>
                                                 @error('tipo')
                                                     <div class="text-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="col-md-6 fv-row">
+                                            <div class="col-md-2 fv-row">
                                                 <label class="required fs-5 fw-semibold mb-2">Lançamento Padrão</label>
                                                 <div class="input-group">
-                                                    <select name="lancamento_padrao" aria-label="Select a Country"
-                                                        data-control="select2"
-                                                        data-placeholder="Escolha um Lançamento..."
-                                                        class="form-select  fw-bold">
+                                                    <select name="lancamento_padrao" aria-label="Select a Country" data-control="select2"
+                                                        data-placeholder="Escolha um Lançamento..." class="form-select fw-bold" id="lancamento_padrao">
                                                         <option value=""></option>
                                                         @foreach ($lps as $lp)
-                                                            <option value="{{ $lp->description }}">
-                                                                {{ $lp->description }}</option>
+                                                            <option value="{{ $lp->description }}"
+                                                                data-type="{{ $lp->type }}"
+                                                                {{ $banco->lancamento_padrao == $lp->description ? 'selected' : '' }}>
+                                                                {{ $lp->description }}
+                                                            </option>
                                                         @endforeach
                                                     </select>
                                                 </div>
@@ -201,7 +217,7 @@
                                                 <label class="fs-5 fw-semibold mb-2">Centro de Custo</label>
                                                 <div class="input-group">
                                                     <input type="text" name="centro" class="form-control"
-                                                        placeholder="" value="{{ old('centro', $caixa->centro) }}" />
+                                                        placeholder="" value="{{ old('centro', $banco->centro) }}" />
                                                 </div>
                                                 @error('centro')
                                                     <div class="text-danger">{{ $message }}</div>
@@ -219,52 +235,52 @@
                                                 <select class="form-control" name="tipo_documento"
                                                     id="tipo_documento">
                                                     <option value="Pix"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'Pix' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'Pix' ? 'selected' : '' }}>
                                                         Pix</option>
                                                     <option value="OUTR - Dafe"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'OUTR - Dafe' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'OUTR - Dafe' ? 'selected' : '' }}>
                                                         OUTR - Dafe</option>
                                                     <option value="NF - Nota Fiscal"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'NF - Nota Fiscal' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'NF - Nota Fiscal' ? 'selected' : '' }}>
                                                         NF - Nota Fiscal</option>
                                                     <option value="DANF - Danfe"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'DANF - Danfe' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'DANF - Danfe' ? 'selected' : '' }}>
                                                         DANF - Danfe</option>
                                                     <option value="BOL - Boleto"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'BOL - Boleto' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'BOL - Boleto' ? 'selected' : '' }}>
                                                         BOL - Boleto</option>
                                                     <option value="REP - Repasse"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'REP - Repasse' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'REP - Repasse' ? 'selected' : '' }}>
                                                         REP - Repasse</option>
                                                     <option value="CCRD - Cartão de Credito"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'CCRD - Cartão de Credito' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'CCRD - Cartão de Credito' ? 'selected' : '' }}>
                                                         CCRD - Cartão de Credito</option>
                                                     <option value="CTRB - Cartão de Débito"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'CTRB - Cartão de Débito' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'CTRB - Cartão de Débito' ? 'selected' : '' }}>
                                                         CTRB - Cartão de Débito</option>
                                                     <option value="REC - Recibo"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'REC - Recibo' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'REC - Recibo' ? 'selected' : '' }}>
                                                         REC - Recibo</option>
                                                     <option value="CARN - Carnê"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'CARN - Carnê' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'CARN - Carnê' ? 'selected' : '' }}>
                                                         CARN - Carnê</option>
                                                     <option value="FAT - Fatura"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'FAT - Fatura' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'FAT - Fatura' ? 'selected' : '' }}>
                                                         FAT - Fatura</option>
                                                     <option value="APOL - Apólice"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'APOL - Apólice' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'APOL - Apólice' ? 'selected' : '' }}>
                                                         APOL - Apólice</option>
                                                     <option value="DUPL - Duplicata"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'DUPL - Duplicata' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'DUPL - Duplicata' ? 'selected' : '' }}>
                                                         DUPL - Duplicata</option>
                                                     <option value="TRIB - Tribunal"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'TRIB - Tribunal' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'TRIB - Tribunal' ? 'selected' : '' }}>
                                                         TRIB - Tribunal</option>
                                                     <option value="Outros"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'Outros' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'Outros' ? 'selected' : '' }}>
                                                         Outros</option>
                                                     <option value="T Banc - Transferência Bancaria"
-                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'T Banc - Transferência Bancaria' ? 'selected' : '' }}>
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'T Banc - Transferência Bancaria' ? 'selected' : '' }}>
                                                         T Banc - Transferência Bancaria</option>
                                                 </select>
                                                 @error('tipo_documento')
@@ -276,7 +292,7 @@
                                                 <div class="input-group">
                                                     <input type="text" class="form-control" placeholder=""
                                                         name="numero_documento"
-                                                        value="{{ old('numero_documento', $caixa->numero_documento) }}" />
+                                                        value="{{ old('numero_documento', $banco->numero_documento) }}" />
                                                 </div>
                                                 @error('numero_documento')
                                                     <div class="text-danger">{{ $message }}</div>
@@ -297,7 +313,7 @@
                                             <div class="tab-content" id="myTabContent">
                                                 <div class="tab-pane fade show active" id="kt_tab_pane_1"
                                                     role="tabpanel">
-                                                    <textarea class="form-control" name="historico_complementar" id="complemento" cols="20" rows="3">{{ old('historico_complementar', $caixa->historico_complementar) }}</textarea>
+                                                    <textarea class="form-control" name="historico_complementar" id="complemento" cols="20" rows="3">{{ old('historico_complementar', $banco->historico_complementar) }}</textarea>
                                                     <p class="mensagem-vermelha">Descreva observações relevantes sobre
                                                         esse lançamento financeiro</p>
                                                     @error('historico_complementar')
@@ -415,7 +431,7 @@
                                                                     <!--end::Table head-->
                                                                     <!--begin::Table body-->
                                                                     <tbody class="fw-semibold text-gray-600">
-                                                                        @foreach ($caixa->anexos as $file)
+                                                                        @foreach ($banco->anexos as $file)
                                                                             <tr data-file-id="{{ $file->id }}">
                                                                                 <!--begin::Checkbox-->
                                                                                 <td>
@@ -525,7 +541,7 @@
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end">
-                                <a href="{{ route('caixa.index') }}" id="kt_ecommerce_add_product_cancel"
+                                <a href="{{ route('banco.index') }}" id="kt_ecommerce_add_product_cancel"
                                     class="btn btn-light me-5">Voltar</a>
                                 <button type="submit" class="btn btn-primary">
                                     <span class="indicator-label">Atualizar</span>
@@ -671,7 +687,7 @@
 
             let formData = new FormData(this);
             $.ajax({
-                url: "{{ route('anexos.update', $caixa->id) }}",
+                url: "{{ route('anexos.update', $banco->id) }}",
                 type: 'POST',
                 data: formData,
                 contentType: false,
@@ -728,4 +744,34 @@
     });
 });
 
+</script>
+
+
+<script>
+    $(document).ready(function() {
+        $('#lancamento_padrao').select2({
+            templateResult: formatOption,
+            templateSelection: formatOption,
+            escapeMarkup: function(markup) {
+                return markup;
+            }
+        });
+    });
+
+    function formatOption(option) {
+        if (!option.id) {
+            return option.text;
+        }
+
+        var type = $(option.element).data('type');
+        var badge = '';
+
+        if (type === 'entrada') {
+            badge = '<span class="badge badge-light-success fw-bold fs-8 opacity-75 ps-3 ">Entrada</span>';
+        } else if (type === 'saida') {
+            badge = '<span class="badge badge-light-danger fw-bold fs-8 opacity-75 ps-3">Saída</span>';
+        }
+
+        return badge + ' ' + option.text;
+    }
 </script>

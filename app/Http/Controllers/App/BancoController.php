@@ -132,19 +132,35 @@ class BancoController extends Controller
 
     public function list()
     {
+        list($somaEntradas, $somaSaida) = banco::getBanco();
+
+        $total = $somaEntradas - $somaSaida;
+
+        $valorEntrada = banco::getBancoEntrada();
+        $ValorSaidas = banco::getBancoSaida();
+
         $bancos = Banco::all();
 
-        return view('app.financeiro.caixa.list', [
+        return view('app.financeiro.banco.list', [
             'bancos' => $bancos,
+            'valorEntrada' => $valorEntrada,
+            'ValorSaidas' => $ValorSaidas,
+            'total' => $total,
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Banco $banco)
+    public function edit( $id)
     {
-        //
+        $bancosCadastro = CadastroBanco::geCadastroBanco(); // Chama o método para obter os bancos
+
+        $lps = LancamentoPadrao::all();
+
+        $banco = Banco::with('anexos')->findOrFail($id);
+
+        return view('app.financeiro.banco.edit', compact('banco', 'lps', 'bancosCadastro'));
     }
 
     /**

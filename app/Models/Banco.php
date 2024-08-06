@@ -33,6 +33,11 @@ class Banco extends Model
         return $this->hasMany(Anexo::class);
     }
 
+    public function bancos()
+    {
+        return $this->hasMany(CadastroBanco::class, 'id');
+    }
+
     static public function getBancoEntrada()
     {
         $userId = auth()->user()->id; // Recupere o ID do usuário logado
@@ -74,5 +79,32 @@ class Banco extends Model
         $SomaSaidas = $saidas->sum('valor'); //soma os valores de entrada
 
         return $SomaSaidas;
+    }
+
+    static public function getBanco()
+    {
+
+        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+
+        $entradas = DB::table('bancos')
+            ->join('company_user', 'bancos.company_id', '=', 'company_user.company_id')
+            ->where('company_user.user_id', $userId)
+            ->where('bancos.tipo', 'entrada') // Filtra apenas as entradas
+            ->select('bancos.*') // Selecione todas as colunas da tabela 'caixa'
+            ->get();
+
+        $somaEntradas = $entradas->sum('valor'); //soma os valores de entrada
+
+        $saida = DB::table('bancos')
+            ->join('company_user', 'bancos.company_id', '=', 'company_user.company_id')
+            ->where('company_user.user_id', $userId)
+            ->where('bancos.tipo', 'saida') // Filtra apenas as entradas
+            ->select('bancos.*') // Selecione todas as colunas da tabela 'caixa'
+            ->get();
+
+        $somaSaida = $saida->sum('valor'); //soma os valores de entrada
+
+        return ([$somaEntradas, $somaSaida]); // Retorna o valor para o controlador
+
     }
 }

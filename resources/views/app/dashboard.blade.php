@@ -670,7 +670,7 @@
                                     <!--end::Svg Icon-->
                                     <!--begin::Info-->
                                     <span class="d-block fw-semibold text-start">
-                                        <span class="text-dark fw-bold d-block fs-4 mb-2">Controle Veícular</span>
+                                        <span class="text-dark fw-bold d-block fs-4 mb-2">Veículos</span>
                                         <span class="text-muted fw-semibold fs-6">Gestão dos seguros, frota veícular.</span>
                                     </span>
                                     <!--end::Info-->

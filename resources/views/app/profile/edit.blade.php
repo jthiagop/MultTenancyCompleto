@@ -4148,7 +4148,7 @@
                                 <!--begin::Modal header-->
                                 <div class="modal-header">
                                     <!--begin::Modal title-->
-                                    <h2 class="fw-bold">Update Password</h2>
+                                    <h2 class="fw-bold">Atualizar Senha</h2>
                                     <!--end::Modal title-->
                                     <!--begin::Close-->
                                     <div class="btn btn-icon btn-sm btn-active-icon-primary"
@@ -4173,7 +4173,9 @@
                                 <!--begin::Modal body-->
                                 <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
                                     <!--begin::Form-->
-                                    <form id="kt_modal_update_password_form" class="form" action="#">
+                                    <form method="post" action="{{ route('password.update') }}" class="mt-6 space-y-6">
+                                        @csrf
+                                        @method('put')
                                         <!--begin::Input group=-->
                                         <div class="fv-row mb-10">
                                             <x-input-label class="required form-label fs-6 mb-2"
