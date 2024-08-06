@@ -134,10 +134,10 @@
                                             <div class="col-md-3 fv-row">
                                                 <label class="required fs-5 fw-semibold mb-2">Banco</label>
                                                 <div class="input-group">
-                                                    <select id="bancoSelect" name="banco_id" aria-label="Select a Banco" data-control="select2" data-placeholder="Escolha um banco..." class="form-select fw-bold" >
+                                                    <select id="bancoSelect" name="banco_id" aria-label="Select a Banco" data-control="select2" data-placeholder="Escolha um banco..." class="form-select fw-bold" required>
                                                         <option value=""></option>
                                                         @foreach ($bancos as $banco)
-                                                            <option value="{{ $banco->id }}">{{ $banco->banco }}</option>
+                                                        <option value="{{ $banco->id }}">{{ $banco->banco }} - {{ $banco->name }}/{{ $banco->conta }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>

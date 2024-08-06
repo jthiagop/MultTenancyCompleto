@@ -30,10 +30,10 @@ class Banco extends Model
 
     public function anexos()
     {
-        return $this->hasMany(Anexo::class);
+        return $this->hasMany(Anexo::class, 'banco_id');
     }
 
-    public function bancos()
+    public function bancosCadastrados()
     {
         return $this->hasMany(CadastroBanco::class, 'id');
     }
@@ -105,6 +105,22 @@ class Banco extends Model
         $somaSaida = $saida->sum('valor'); //soma os valores de entrada
 
         return ([$somaEntradas, $somaSaida]); // Retorna o valor para o controlador
-
     }
+
+
+    static public function geCadastroBanco()
+    {
+        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+
+        $saidas = DB::table('cadastro_bancos')
+            ->join('company_user', 'cadastro_bancos.company_id', '=', 'company_user.company_id')
+            ->where('company_user.user_id', $userId)
+            ->select('cadastro_bancos.*') // Selecione todas as colunas da tabela 'cadastro_bancos'
+            ->get();
+
+        return $saidas;
+
+        dd($saidas);
+    }
+
 }

@@ -581,7 +581,7 @@
                                         <td>{{ $banco->tipo_documento }}</td>
                                         <!--end::Last login=-->
                                         <!--begin::Last login=-->
-                                        <td>{{  $banco->bancos->first()->banco ?? 'N/A' }}</td>
+                                        <td>{{  $banco->bancosCadastrados->first()->banco ?? 'N/A' }}</td>
                                         <!--end::Last login=-->
                                         <!--begin::Two step=-->
                                         <td>{{ $banco->lancamento_padrao }}</td>

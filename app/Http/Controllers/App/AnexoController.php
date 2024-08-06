@@ -4,6 +4,7 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\Anexo;
+use App\Models\Banco;
 use App\Models\Caixa;
 use Illuminate\Support\Facades\Validator;
 
@@ -57,7 +58,7 @@ class AnexoController extends Controller
 
         $user = auth()->user();
         $caixa = Caixa::findOrFail($id);
-
+        $banco = Banco::findOrFail($id);
         // Processa os novos arquivos anexos, se houver
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $anexo) {
@@ -66,6 +67,7 @@ class AnexoController extends Controller
 
                 Anexo::create([
                     'caixa_id' => $caixa->id,
+                    'banco_id' => $banco->id,
                     'nome_arquivo' => $anexoName,
                     'caminho_arquivo' => $anexoPath,
                     'created_by' => $user->id,

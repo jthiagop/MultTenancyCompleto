@@ -31,23 +31,15 @@ class CadastroBanco extends Model
     static public function geCadastroBanco()
     {
     // Recupere o usuário logado
-    $user = auth()->user();
+    $userId = auth()->user()->id; // Recupere o ID do usuário logado
 
     // Recupera o ID da companhia associada ao usuário logado
-    $subsidiary = DB::table('users')
-        ->join('company_user', 'users.id', '=', 'company_user.user_id')
-        ->join('companies', 'company_user.company_id', '=', 'companies.id')
-        ->where('users.id', $user->id) // Filtra pelo usuário logado
-        ->select('company_user.company_id')
-        ->first();
+    $saidas = DB::table('cadastro_bancos')
+    ->join('company_user', 'cadastro_bancos.company_id', '=', 'company_user.company_id')
+    ->where('company_user.user_id', $userId)
+    ->select('cadastro_bancos.*') // Selecione todas as colunas da tabela 'cadastro_bancos'
+    ->get();
 
-    // Se a companhia foi encontrada, busca os bancos relacionados a ela
-    if ($subsidiary) {
-        return CadastroBanco::where('company_id', $subsidiary->company_id)->get();
-    }
-
-    // Retorna uma coleção vazia se não houver companhias
-    return collect();
-
+return $saidas;
     }
 }

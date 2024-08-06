@@ -31,7 +31,8 @@
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
-                            <li class="breadcrumb-item text-muted">Financeiro</li>
+                            <li class="breadcrumb-item text-muted">
+                                <a href="{{ route('caixa.index') }}" class="text-muted text-hover-primary">Financeiro</a></li>
                             <!--end::Item-->
                             <!--begin::Item-->
                             <li class="breadcrumb-item">
@@ -133,19 +134,23 @@
                                             <div class="col-md-3 fv-row">
                                                 <label class="required fs-5 fw-semibold mb-2">Banco</label>
                                                 <div class="input-group">
-                                                    <select id="bancoSelect" name="banco_id" aria-label="Select a Banco" data-control="select2" data-placeholder="Escolha um banco..." class="form-select fw-bold" >
-                                                        <option value=""></option>
-                                                        @foreach ($bancosCadastro as $banco)
-                                                            <option value="{{ $banco->id }}">{{ $banco->banco }}</option>
+                                                    <select id="bancoSelect" name="banco_id" aria-label="Select a Banco" data-control="select2" data-placeholder="Escolha um banco..." class="form-select fw-bold" required>
+                                                        <option value="" disabled selected>Escolha um banco...</option>
+                                                        @foreach ($bancosCadastro as $bancoCadastro)
+                                                            <option value="{{ $bancoCadastro->banco }}"
+                                                                {{ $banco->banco_id == $bancoCadastro->id ? 'selected' : '' }}>
+                                                                {{ $bancoCadastro->banco }} - {{ $bancoCadastro->name }}
+                                                            </option>
                                                         @endforeach
                                                     </select>
                                                 </div>
+
 
                                                 @error('banco_id')
                                                     <div class="text-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="col-md-5 fv-row">
+                                            <div class="col-md-4 fv-row">
                                                 <label class="required fs-5 fw-semibold mb-2">Descrição</label>
                                                 <div class="input-group">
                                                     <input type="text" class="form-control" placeholder=""
@@ -157,7 +162,7 @@
                                                 @enderror
                                             </div>
                                             <div class="col-md-3 fv-row">
-                                                <label class="required fs-5 fw-semibold mb-2">Valor</label>
+                                                <label class="required fs-3 fw-semibold mb-2">Valor</label>
                                                 <div class="input-group">
                                                     <span class="input-group-text" id="basic-addon1">R$</span>
                                                     <input class="form-control money" placeholder="Valor"
@@ -194,8 +199,8 @@
                                                     <div class="text-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="col-md-2 fv-row">
-                                                <label class="required fs-5 fw-semibold mb-2">Lançamento Padrão</label>
+                                            <div class="col-md-6 fv-row">
+                                                <label class="required fs-6 fw-semibold mb-2">Lançamento Padrão</label>
                                                 <div class="input-group">
                                                     <select name="lancamento_padrao" aria-label="Select a Country" data-control="select2"
                                                         data-placeholder="Escolha um Lançamento..." class="form-select fw-bold" id="lancamento_padrao">
@@ -594,7 +599,7 @@
                     <!--begin::Modal header-->
                     <div class="modal-header">
                         <!--begin::Modal title-->
-                        <h2 class="fw-bold">Upload files</h2>
+                        <h2 class="fw-bold">Anexar Arquivos</h2>
                         <!--end::Modal title-->
                         <!--begin::Close-->
                         <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">

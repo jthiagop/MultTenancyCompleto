@@ -18,7 +18,7 @@ class Anexo extends Model
 
     public function banco()
     {
-        return $this->belongsTo(Banco::class);
+        return $this->belongsTo(Banco::class, 'id');
     }
 
     public function createdBy()

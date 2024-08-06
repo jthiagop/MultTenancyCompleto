@@ -114,12 +114,65 @@ class BancoController extends Controller
         }
 
         // Redireciona para a página de índice com uma mensagem de sucesso
-        return redirect()->route('caixa.index')->with('success', 'Banco registrado com sucesso!');
+        return redirect()->route('banco.list')->with('success', 'Banco registrado com sucesso!');
     }
 
     public function update(Request $request, $id)
     {
+        $subsidiaryId = User::getCompany();
 
+        $validator = Validator::make($request->all(), [
+            'data_competencia' => 'required|date',
+            'banco_id' => 'required',
+            'descricao' => 'required|string',
+            'valor' => 'required',
+            'tipo' => 'required|in:entrada,saida',
+            'lancamento_padrao' => 'required|string',
+            'centro' => 'required|string',
+            'tipo_documento' => 'required|string',
+            'numero_documento' => 'nullable|string',
+            'historico_complementar' => 'nullable|string|max:500',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
+
+        $user = auth()->user(); // Usuário autenticado
+
+        $caixa = Banco::findOrFail($id); // Encontra o registro existente
+        $banco = Banco::findOrFail($id);
+
+        $validatedData = $validator->validated();
+        $validatedData['company_id'] = $subsidiaryId->company_id;
+        $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
+
+        // Atualiza o registro existente
+        $banco->update($validatedData);
+
+        // Verifica se há arquivos anexos
+        if ($request->hasFile('anexos')) {
+            // Itera sobre cada arquivo anexo
+            foreach ($request->file('anexos') as $anexo) {
+                // Gera um nome único para o arquivo anexo
+                $anexoName = time() . '_' . $anexo->getClientOriginalName();
+
+                // Salva o arquivo na pasta 'anexos' dentro da pasta de armazenamento (storage/app/public)
+                $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
+
+                // Cria um registro no banco de dados para o anexo
+                Anexo::create([
+                    'caixa_id' => $caixa->id,
+                    'banco_id' => $banco->id,
+                    'nome_arquivo' => $anexoName,
+                    'caminho_arquivo' => $anexoPath,
+                    'created_by' => $user->id,
+                    'updated_by' => $user->id,
+                ]);
+            }
+        }
+
+        return redirect()->route('banco.list')->with('success', 'Lançamento Atualizado com Sucesso!');
     }
 
     /**
@@ -160,7 +213,15 @@ class BancoController extends Controller
 
         $banco = Banco::with('anexos')->findOrFail($id);
 
-        return view('app.financeiro.banco.edit', compact('banco', 'lps', 'bancosCadastro'));
+        $banco->anexos = $banco->anexos ?? collect();
+
+
+        return view('app.financeiro.banco.edit', [
+            'banco' => $banco,
+            'lps'   => $lps,
+            'bancosCadastro' => $bancosCadastro
+            ]
+        );
     }
 
     /**

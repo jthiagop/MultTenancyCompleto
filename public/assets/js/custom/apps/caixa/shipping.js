@@ -104,7 +104,39 @@ var KTAppEcommerceReportShipping = function () {
                 },
                 {
                     extend: 'pdfHtml5',
-                    title: documentTitle
+                    extend: 'pdfHtml5',
+                    title: documentTitle,
+                text: 'Exportar para PDF',
+                orientation: 'landscape', // ou 'portrait'
+                pageSize: 'A4', // ou 'LETTER', 'LEGAL', etc.
+                customize: function (doc) {
+                    doc.content[1].table.widths = [
+                        '5%', '10%', '20%', '5%', '30%','5%', '10%','10%', '5%',
+                    ];
+                    doc.styles.tableHeader.fillColor = 'blue';
+                    doc.styles.tableHeader.color = 'white';
+                    doc.styles.tableHeader.alignment = 'center';
+                    doc.styles.tableHeader.fontSize = 12;
+                    doc.styles.title.fontSize = 14;
+                    doc.styles.title.alignment = 'center';
+                    doc.content[0].text = doc.content[0].text.toUpperCase();
+                    doc.footer = function(page, pages) {
+                        return {
+                            columns: [
+                                'Este é um rodapé personalizado',
+                                {
+                                    alignment: 'right',
+                                    text: [
+                                        { text: page.toString(), italics: true },
+                                        ' de ',
+                                        { text: pages.toString(), italics: true }
+                                    ]
+                                }
+                            ],
+                            margin: [10, 0]
+                        };
+                    };
+                }
                 }
             ]
         }).container().appendTo($('#kt_ecommerce_report_shipping_export'));
