@@ -111,7 +111,7 @@ var KTAppEcommerceReportShipping = function () {
                 pageSize: 'A4', // ou 'LETTER', 'LEGAL', etc.
                 customize: function (doc) {
                     doc.content[1].table.widths = [
-                        '5%', '10%', '20%', '5%', '30%','5%', '10%','10%', '5%',
+                        '5%', '10%', '20%', '30%', '5%','10%', '10%','5%', '0',
                     ];
                     doc.styles.tableHeader.fillColor = 'blue';
                     doc.styles.tableHeader.color = 'white';

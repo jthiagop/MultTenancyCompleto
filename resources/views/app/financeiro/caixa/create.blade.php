@@ -188,10 +188,10 @@
                                                 style="border: 1px dashed rgba(65, 124, 53, 0.979)">
                                                 <!--begin::Number-->
                                                 <div class="d-flex align-items-center">
-                                                    <div class="fs-4 fw-bold" data-kt-countup="true"
+                                                    <div class="text-black fs-2 fw-bold" data-kt-countup="true"
                                                         data-kt-countup-value="{{ $total }}"
-                                                        data-kt-countup-prefix="R$">
-                                                        0</div>
+                                                        data-kt-countup-prefix="R$">0
+                                                    </div>
                                                 </div>
                                                 <!--end::Number-->
                                                 <!--begin::Label-->
@@ -304,7 +304,7 @@
                                             <div class="col-md-4 fv-row">
                                                 <label class="fs-5 fw-semibold mb-2">Centro de Custo</label>
                                                 <div class="input-group">
-                                                    <input type="text" name="centro" readonly
+                                                    <input type="text" name="centro" disabled
                                                         class="form-control" placeholder=""
                                                         value="{{ $company->first()->companies_name }}" />
                                                 </div>
@@ -449,7 +449,7 @@
                                 <div class="d-flex justify-content-end">
                                     <a href="{{ route('caixa.index') }}" id="kt_ecommerce_add_product_cancel"
                                         class="btn btn-secondary me-2 mb-2">Voltar</a>
-                                    <a href="{{ route('caixa.list') }}" class="btn btn-warning me-2 mb-2">
+                                    <a href="#" class="btn btn-warning me-2 mb-2">
                                         <i class="bi bi-search fs-1"></i>
                                         Pesquisar
                                     </a>
