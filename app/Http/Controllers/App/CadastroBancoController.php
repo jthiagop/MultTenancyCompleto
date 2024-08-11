@@ -17,7 +17,9 @@ class CadastroBancoController extends Controller
      */
     public function index()
     {
-        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
+        $companyId = auth()->user()->company_id; // ou $companyId = 1; se o ID for fixo
+
+        $bancos = CadastroBanco::where('company_id', $companyId)->get(); // Chama o método para obter os bancos
 
         return view('app.cadastros.bancos.index', [
             'bancos' => $bancos,
