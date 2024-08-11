@@ -33,9 +33,20 @@ class Banco extends Model
         return $this->hasMany(Anexo::class, 'banco_id');
     }
 
-    public function bancosCadastrados()
+    public function bancoCadastrado()
     {
-        return $this->hasMany(CadastroBanco::class, 'id');
+        return $this->belongsTo(CadastroBanco::class, 'banco_id');
+    }
+    static public function getBancoList()
+    {
+        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+
+        $entradas = DB::table('bancos')
+            ->join('company_user', 'bancos.company_id', '=', 'company_user.company_id')
+            ->where('company_user.user_id', $userId)
+            ->get();
+
+        return $entradas;
     }
 
     static public function getBancoEntrada()
@@ -108,19 +119,16 @@ class Banco extends Model
     }
 
 
-    static public function geCadastroBanco()
+    static public function getCadastroBanco()
     {
         $userId = auth()->user()->id; // Recupere o ID do usuário logado
 
-        $saidas = DB::table('cadastro_bancos')
-            ->join('company_user', 'cadastro_bancos.company_id', '=', 'company_user.company_id')
+        $entradas = Banco::join('company_user', 'bancos.company_id', '=', 'company_user.company_id')
             ->where('company_user.user_id', $userId)
-            ->select('cadastro_bancos.*') // Selecione todas as colunas da tabela 'cadastro_bancos'
             ->get();
 
-        return $saidas;
-
-        dd($saidas);
+        return $entradas;
     }
+
 
 }

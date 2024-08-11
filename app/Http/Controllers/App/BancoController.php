@@ -35,7 +35,7 @@ class BancoController extends Controller
     {
         $company = User::getCompanyName();
         $lps = LancamentoPadrao::all();
-        $bancos = CadastroBanco::geCadastroBanco(); // Chama o método para obter os bancos
+        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
 
         return view('app.financeiro.banco.create', [
             'lps' => $lps,
@@ -185,14 +185,20 @@ class BancoController extends Controller
 
     public function list()
     {
-        list($somaEntradas, $somaSaida) = banco::getBanco();
+        // Suponha que você já tenha o ID da empresa disponível
+        $companyId = auth()->user()->company_id; // ou $companyId = 1; se o ID for fixo
 
-        $total = $somaEntradas - $somaSaida;
 
-        $valorEntrada = banco::getBancoEntrada();
-        $ValorSaidas = banco::getBancoSaida();
+        // Filtrar as entradas e saídas pelos bancos relacionados à empresa
+    list($somaEntradas, $somaSaida) = Banco::getBanco();
 
-        $bancos = Banco::all();
+    $total = $somaEntradas - $somaSaida;
+
+    $valorEntrada = Banco::getBancoEntrada();
+    $ValorSaidas = Banco::getBancoSaida();
+
+    // Filtrar os bancos pela empresa
+    $bancos = Banco::where('company_id', $companyId)->get();
 
         return view('app.financeiro.banco.list', [
             'bancos' => $bancos,
@@ -207,7 +213,7 @@ class BancoController extends Controller
      */
     public function edit( $id)
     {
-        $bancosCadastro = CadastroBanco::geCadastroBanco(); // Chama o método para obter os bancos
+        $bancosCadastro = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
 
         $lps = LancamentoPadrao::all();
 

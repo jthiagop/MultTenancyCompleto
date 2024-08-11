@@ -137,7 +137,7 @@
                                                     <select id="bancoSelect" name="banco_id" aria-label="Select a Banco" data-control="select2" data-placeholder="Escolha um banco..." class="form-select fw-bold" required>
                                                         <option value=""></option>
                                                         @foreach ($bancos as $banco)
-                                                        <option value="{{ $banco->id }}">{{ $banco->banco }} - {{ $banco->name }}/{{ $banco->conta }}</option>
+                                                        <option data-banco-code="{{ $banco->banco }}" value="{{ $banco->id }}"><span class="banco-name"></span>{{ $banco->banco }} - {{ $banco->name }}/{{ $banco->conta }}</option>
                                                         @endforeach
                                                     </select>
                                                 </div>
@@ -381,6 +381,7 @@
 
 </x-tenant-app-layout>
 
+<script src="assets/js/custom/apps/bancos/bancos.js"></script>
 
 
 <script>

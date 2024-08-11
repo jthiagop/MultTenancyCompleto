@@ -17,7 +17,7 @@ class CadastroBancoController extends Controller
      */
     public function index()
     {
-        $bancos = CadastroBanco::geCadastroBanco(); // Chama o método para obter os bancos
+        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
 
         return view('app.cadastros.bancos.index', [
             'bancos' => $bancos,

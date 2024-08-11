@@ -28,7 +28,7 @@ class CadastroBanco extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    static public function geCadastroBanco()
+    static public function getCadastroBanco()
     {
     // Recupere o usuário logado
     $userId = auth()->user()->id; // Recupere o ID do usuário logado
@@ -40,6 +40,6 @@ class CadastroBanco extends Model
     ->select('cadastro_bancos.*') // Selecione todas as colunas da tabela 'cadastro_bancos'
     ->get();
 
-return $saidas;
+        return $saidas;
     }
 }

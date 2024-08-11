@@ -28,7 +28,7 @@ class CaixaController extends Controller
         $valorEntrada = caixa::getCaixaEntrada();
         $ValorSaidas = caixa::getCaixaSaida();
 
-        $caixas = Caixa::all();
+        $caixas = Caixa::getCaixaList();
 
         return view('app.financeiro.index', [
             'caixas' => $caixas,
@@ -144,7 +144,7 @@ class CaixaController extends Controller
 
         $total = $somaEntradas - $somaSaida;
 
-        $caixas = Caixa::all();
+        $caixas = Caixa::getCaixaList();
         $valorEntrada = caixa::getCaixaEntrada();
         $ValorSaidas = caixa::getCaixaSaida();
 

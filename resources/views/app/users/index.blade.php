@@ -393,7 +393,7 @@
                                                             data-kt-image-input="true">
                                                             <!--begin::Preview existing avatar-->
                                                             <div class="image-input-wrapper w-125px h-125px"
-                                                                style="background-image: url(assets/media/avatars/300-6.jpg);">
+                                                                style="background-image: url(assets/media/avatars/300-31.png);">
                                                             </div>
                                                             <!--end::Preview existing avatar-->
                                                             <!--begin::Label-->

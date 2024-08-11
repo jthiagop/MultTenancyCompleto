@@ -434,15 +434,18 @@
                                                     </option>
                                                     <option value="403" data-logo="mercadopago.svg">Mercado Pago
                                                     </option>
-                                                    <option value="260" data-logo="nubank.svg">Nu Pagamentos S.A (Nubank)</option>
+                                                    <option value="260" data-logo="nubank.svg">Nu Pagamentos S.A
+                                                        (Nubank)</option>
                                                     <option value="136" data-logo="unicred.svg">Unicred</option>
-                                                    <option value="290" data-logo="pagseguro.svg">PagSeguro Internet S.A</option>
+                                                    <option value="290" data-logo="pagseguro.svg">PagSeguro
+                                                        Internet S.A</option>
                                                     <option value="748" data-logo="sicredi.svg">Sicredi</option>
                                                     <option value="197" data-logo="stone.svg">Stone Pagamentos S.A
                                                     </option>
                                                     <option value="065" data-logo="ailos.svg">Ailos</option>
                                                     <option value="756" data-logo="sicoob.svg">Sicoob</option>
-                                                    <option value="000" data-logo="quality-digital-bank.svg"> Quality Digital Bank - temporária</option>
+                                                    <option value="000" data-logo="quality-digital-bank.svg">
+                                                        Quality Digital Bank - temporária</option>
                                                     <option value="364" data-logo="asaas.svg">Asaas IP S.A</option>
                                                     <option value="070" data-logo="brb.svg">BRB - Banco de Brasília
                                                     </option>
@@ -797,9 +800,8 @@
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="assets/js/custom/apps/customers/list/export.js"></script>
-<script src="assets/js/custom/apps/bancos/excluirBancos.js"></script>
-<script src="assets/js/custom/apps/customers/add.js"></script>
 <script src="assets/js/custom/apps/bancos/bancos.js"></script>
+<script src="assets/js/custom/apps/customers/add.js"></script>
 <script src="assets/js/widgets.bundle.js"></script>
 <script src="assets/js/custom/apps/chat/chat.js"></script>
 <script src="assets/js/custom/utilities/modals/upgrade-plan.js"></script>

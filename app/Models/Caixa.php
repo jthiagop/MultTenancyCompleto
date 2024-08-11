@@ -48,6 +48,18 @@ class Caixa extends Model implements Auditable
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    static public function getCaixaList()
+    {
+        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+
+        $lista = DB::table('caixas')
+            ->join('company_user', 'caixas.company_id', '=', 'company_user.company_id')
+            ->where('company_user.user_id', $userId)
+            ->get();
+
+        return $lista;
+    }
+
 
     static public function getCaixaEntrada()
     {
