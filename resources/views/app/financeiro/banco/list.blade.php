@@ -637,7 +637,7 @@
                                                         @method('DELETE')
                                                     </form>
                                                 </div>
-                                                <!--end::Menu item-->
+                                                <!--end::Menu item-->>
                                             </div>
                                             <!--end::Menu-->
                                         </td>

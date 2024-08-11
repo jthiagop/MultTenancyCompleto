@@ -16,7 +16,7 @@
                     <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
                         <!--begin::Title-->
                         <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
-                            Lançamento de Caixa</h1>
+                            Lançamento Bancário</h1>
                         <!--end::Title-->
                         <!--begin::Breadcrumb-->
                         <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
@@ -40,7 +40,7 @@
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
-                            <li class="breadcrumb-item text-muted">Lançamento Caixa</li>
+                            <li class="breadcrumb-item text-muted">Lançamento Bancário</li>
                             <!--end::Item-->
                         </ul>
                         <!--end::Breadcrumb-->
@@ -137,7 +137,7 @@
                                                     <select id="bancoSelect" name="banco_id" aria-label="Select a Banco" data-control="select2" data-placeholder="Escolha um banco..." class="form-select fw-bold" required>
                                                         <option value="" disabled selected>Escolha um banco...</option>
                                                         @foreach ($bancosCadastro as $bancoCadastro)
-                                                            <option value="{{ $bancoCadastro->banco }}"
+                                                            <option value="{{ $bancoCadastro->id }}"
                                                                 {{ $banco->banco_id == $bancoCadastro->id ? 'selected' : '' }}>
                                                                 {{ $bancoCadastro->banco }} - {{ $bancoCadastro->name }}
                                                             </option>
@@ -546,9 +546,18 @@
                                 </div>
                             </div>
                             <div class="d-flex justify-content-end">
-                                <a href="{{ route('banco.index') }}" id="kt_ecommerce_add_product_cancel"
-                                    class="btn btn-light me-5">Voltar</a>
-                                <button type="submit" class="btn btn-primary">
+                                <a href="{{ route('caixa.index') }}" id="kt_ecommerce_add_product_cancel"
+                                    class="btn btn-secondary me-2 mb-2">Voltar</a>
+                                <a href="{{ route('banco.list') }}" class="btn btn-warning me-2 mb-2">
+                                    <i class="bi bi-search fs-1"></i>
+                                    Pesquisar
+                                </a>
+                                <button type="submit" class="btn btn-primary me-2 mb-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                        fill="currentColor" class="bi bi-floppy2 fs-1" viewBox="0 0 16 16">
+                                        <path
+                                            d="M1.5 0h11.586a1.5 1.5 0 0 1 1.06.44l1.415 1.414A1.5 1.5 0 0 1 16 2.914V14.5a1.5 1.5 0 0 1-1.5 1.5h-13A1.5 1.5 0 0 1 0 14.5v-13A1.5 1.5 0 0 1 1.5 0M1 1.5v13a.5.5 0 0 0 .5.5H2v-4.5A1.5 1.5 0 0 1 3.5 9h9a1.5 1.5 0 0 1 1.5 1.5V15h.5a.5.5 0 0 0 .5-.5V2.914a.5.5 0 0 0-.146-.353l-1.415-1.415A.5.5 0 0 0 13.086 1H13v3.5A1.5 1.5 0 0 1 11.5 6h-7A1.5 1.5 0 0 1 3 4.5V1H1.5a.5.5 0 0 0-.5.5m9.5-.5a.5.5 0 0 0-.5.5v3a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-3a.5.5 0 0 0-.5-.5z" />
+                                    </svg>
                                     <span class="indicator-label">Atualizar</span>
                                 </button>
                             </div>

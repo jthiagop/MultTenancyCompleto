@@ -114,7 +114,7 @@ class BancoController extends Controller
         }
 
         // Redireciona para a página de índice com uma mensagem de sucesso
-        return redirect()->route('banco.list')->with('success', 'Banco registrado com sucesso!');
+        return redirect()->route('banco.create')->with('success', 'Lançamento registrado com sucesso!');
     }
 
     public function update(Request $request, $id)
@@ -235,6 +235,13 @@ class BancoController extends Controller
      */
     public function destroy($id)
     {
+                // Localize o registro com base no ID fornecido
+                $banco = Banco::findOrFail($id);
+
+                // Exclua o registro
+                $banco->delete();
+
+                return redirect()->route('banco.list');
     }
 
 }
