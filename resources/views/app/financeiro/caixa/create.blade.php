@@ -113,19 +113,12 @@
                                         data-kt-scroll-offset="300px">
                                         <div class="row mb-5">
                                             <div class="col-md-2 fv-row">
-                                                <label class="required fs-5 fw-semibold mb-2">Data de
-                                                    Competência</label>
+                                                <label class="required fs-5 fw-semibold mb-2">Data</label>
                                                 <div class="input-group" id="kt_td_picker_date_only"
                                                     data-td-target-input="nearest" data-td-target-toggle="nearest">
                                                     <input class="form-control" name="data_competencia" type="date"
                                                         placeholder="Pick a date" id="kt_datepicker_1"
                                                         value="{{ old('data_competencia', now()->format('Y-m-d')) }}" />
-                                                    <span class="input-group-text"
-                                                        data-td-target="#kt_td_picker_date_only"
-                                                        data-td-toggle="datetimepicker">
-                                                        <i class="ki-duotone ki-calendar fs-2"><span
-                                                                class="path1"></span><span class="path2"></span></i>
-                                                    </span>
                                                 </div>
                                                 @error('data_competencia')
                                                     <div class="text-danger">{{ $message }}</div>
@@ -159,30 +152,27 @@
                                             <div class="col-md-2 fv-row">
                                                 <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
                                                     <span class="required">Entrada/Saída</span>
-                                                    <i class="fas fa-exclamation-circle ms-2 fs-7"
-                                                        data-bs-toggle="tooltip"
+                                                    <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
                                                         title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
                                                 </label>
-                                                <select class="form-select" data-control="select"
-                                                    data-dropdown-css-class="w-200px"
-                                                    data-placeholder="Selecione o tipo" name="tipo" required
-                                                    data-hide-search="true">
-                                                    <option value="entrada"
-                                                        {{ old('tipo') == 'entrada' ? 'selected' : '' }}>Entrada
-                                                    </option>
-                                                    <option value="saida"
-                                                        {{ old('tipo') == 'saida' ? 'selected' : '' }}>Saída</option>
+                                                <select class="form-select" data-control="select" data-dropdown-css-class="w-200px"
+                                                        data-placeholder="Selecione o tipo" name="tipo" required data-hide-search="true" id="tipo_select">
+                                                        <option value="" disabled selected>Selecione o tipo</option>
+                                                    <option value="entrada" {{ old('tipo') == 'entrada' ? 'selected' : '' }}>Entrada</option>
+                                                    <option value="saida" {{ old('tipo') == 'saida' ? 'selected' : '' }}>Saída</option>
                                                 </select>
                                                 @error('tipo')
-                                                    <div class="text-danger">{{ $message }}</div>
+                                                <div class="text-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
+
                                             <div class="col-md-6 fv-row">
                                                 <label class="required fs-5 fw-semibold mb-2">Lançamento Padrão</label>
                                                 <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
                                                     title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
                                                 <div class="input-group">
-                                                    <select name="lancamento_padrao" aria-label="Select a Country" data-control="select2" data-placeholder="Escolha um Lançamento..." class="form-select  fw-bold" id="lancamento_padrao">
+                                                    <select name="lancamento_padrao" aria-label="Select a Country" data-control="select2"
+                                                            data-placeholder="Escolha um Lançamento..." class="form-select fw-bold" id="lancamento_padrao">
                                                         <option value=""></option>
                                                         @foreach ($lps as $lp)
                                                             <option value="{{ $lp->description }}" data-type="{{ $lp->type }}">{{ $lp->description }} </option>
@@ -190,7 +180,7 @@
                                                     </select>
                                                 </div>
                                                 @error('lancamento_padrao')
-                                                    <div class="text-danger">{{ $message }}</div>
+                                                <div class="text-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
                                             <div class="col-md-4 fv-row">
@@ -223,6 +213,9 @@
                                                     <option value="NF - Nota Fiscal"
                                                         {{ old('tipo_documento') == 'NF - Nota Fiscal' ? 'selected' : '' }}>
                                                         NF - Nota Fiscal</option>
+                                                    <option value="CF - Cupom Fiscal"
+                                                        {{ old('tipo_documento') == 'CF - Cupom Fiscal' ? 'selected' : '' }}>
+                                                        CF - Cupom Fiscal</option>
                                                     <option value="DANF - Danfe"
                                                         {{ old('tipo_documento') == 'DANF - Danfe' ? 'selected' : '' }}>
                                                         DANF - Danfe</option>
@@ -412,6 +405,36 @@ $(document).ready(function() {
         } else {
             $('#banco-deposito').hide(); // Esconde o campo do banco de depósito
         }
+    });
+});
+</script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelect = document.getElementById('tipo_select');
+    const lancamentoPadraoSelect = document.getElementById('lancamento_padrao');
+
+    tipoSelect.addEventListener('change', function() {
+        const selectedTipo = tipoSelect.value;
+
+        // Limpa todas as opções do select de Lançamento Padrão
+        lancamentoPadraoSelect.innerHTML = '';
+
+        // Adiciona a opção vazia
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.text = 'Escolha um Lançamento...';
+        lancamentoPadraoSelect.appendChild(emptyOption);
+
+        // Filtra e adiciona as opções de acordo com o tipo selecionado
+        @foreach ($lps as $lp)
+            if ('{{ $lp->type }}' === selectedTipo) {
+                const option = document.createElement('option');
+                option.value = '{{ $lp->description }}';
+                option.text = '{{ $lp->description }}';
+                lancamentoPadraoSelect.appendChild(option);
+            }
+        @endforeach
     });
 });
 </script>

@@ -42192,8 +42192,16 @@ code:not([class*=language-]) {
   width: 4.75rem !important;
 }
 .svg-icon.svg-icon-5x svg {
-  height: 5rem !important;
-  width: 5rem !important;
+    height: 5rem !important;
+    width: 5rem !important;
+  }
+.svg-icon.svg-icon-6x svg {
+    height: 6rem !important;
+    width: 6rem !important;
+}
+.svg-icon.svg-icon-7x svg {
+    height: 7rem !important;
+    width: 7rem !important;
 }
 .svg-icon.svg-icon-5qx svg {
   height: 5.25rem !important;

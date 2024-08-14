@@ -31,7 +31,9 @@
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
-                            <li class="breadcrumb-item text-muted">Financeiro</li>
+                            <li class="breadcrumb-item text-muted">
+                                <a href="{{ route('caixa.index') }}" class="text-muted text-hover-primary">Financeiro</a>
+                            </li>
                             <!--end::Item-->
                             <!--begin::Item-->
                             <li class="breadcrumb-item">
@@ -112,8 +114,7 @@
                                         data-kt-scroll-offset="300px">
                                         <div class="row mb-5">
                                             <div class="col-md-3 fv-row">
-                                                <label class="required fs-5 fw-semibold mb-2">Data de
-                                                    Competência</label>
+                                                <label class="required fs-5 fw-semibold mb-2">Data</label>
                                                 <div class="input-group" id="kt_td_picker_date_only"
                                                     data-td-target-input="nearest" data-td-target-toggle="nearest">
                                                     <input class="form-control" name="data_competencia" required
@@ -163,11 +164,11 @@
                                                         data-bs-toggle="tooltip"
                                                         title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
                                                 </label>
-                                                <select class="form-select" data-control="select2"
+                                                <select class="form-select" data-control="select"
                                                     data-dropdown-css-class="w-200px"
                                                     data-placeholder="Select an option" name="tipo" required
                                                     data-hide-search="true">
-                                                    <option></option>
+                                                    <option value="" disabled selected>Selecione o tipo</option>
                                                     <option value="entrada"
                                                         {{ old('tipo', $caixa->tipo) == 'entrada' ? 'selected' : '' }}>
                                                         Entrada</option>
@@ -180,22 +181,20 @@
                                                 @enderror
                                             </div>
                                             <div class="col-md-6 fv-row">
-                                                <label class="required fs-5 fw-semibold mb-2">Lançamento Padrão</label>
+                                                <label class="required fs-6 fw-semibold mb-2">Lançamento Padrão</label>
+                                                <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                                    title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
                                                 <div class="input-group">
                                                     <select name="lancamento_padrao" aria-label="Select a Country" data-control="select2"
-                                                        data-placeholder="Escolha um Lançamento..." class="form-select fw-bold" id="lancamento_padrao">
+                                                            data-placeholder="Escolha um Lançamento..." class="form-select fw-bold" id="lancamento_padrao">
                                                         <option value=""></option>
                                                         @foreach ($lps as $lp)
-                                                            <option value="{{ $lp->description }}"
-                                                                data-type="{{ $lp->type }}"
-                                                                {{ $caixa->lancamento_padrao == $lp->description ? 'selected' : '' }}>
-                                                                {{ $lp->description }}
-                                                            </option>
+                                                            <option value="{{ $lp->description }}" data-type="{{ $lp->type }}" {{ $caixa->lancamento_padrao == $lp->description ? 'selected' : '' }}>{{ $lp->description }} </option>
                                                         @endforeach
                                                     </select>
                                                 </div>
                                                 @error('lancamento_padrao')
-                                                    <div class="text-danger">{{ $message }}</div>
+                                                <div class="text-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
 
@@ -229,6 +228,9 @@
                                                     <option value="NF - Nota Fiscal"
                                                         {{ old('tipo_documento', $caixa->tipo_documento) == 'NF - Nota Fiscal' ? 'selected' : '' }}>
                                                         NF - Nota Fiscal</option>
+                                                    <option value="CF - Cupom Fiscal"
+                                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'CF - Cupom Fiscal' ? 'selected' : '' }}>
+                                                        CF - Cupom Fiscal</option>
                                                     <option value="DANF - Danfe"
                                                         {{ old('tipo_documento', $caixa->tipo_documento) == 'DANF - Danfe' ? 'selected' : '' }}>
                                                         DANF - Danfe</option>
@@ -273,7 +275,7 @@
                                                     <div class="text-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="col-md-6 fv-row">
+                                            <div class="col-md-4 fv-row">
                                                 <label class="fs-5 fw-semibold mb-2">Número do Documento</label>
                                                 <div class="input-group">
                                                     <input type="text" class="form-control" placeholder=""
@@ -283,6 +285,16 @@
                                                 @error('numero_documento')
                                                     <div class="text-danger">{{ $message }}</div>
                                                 @enderror
+                                            </div>
+                                            <!-- Novo campo de entrada para o banco de depósito -->
+                                            <div class="col-md-4 fv-row" id="banco-deposito" style="display:none;">
+                                                <label class="required fs-5 fw-semibold mb-2">Selecione o Banco de Depósito</label>
+                                                <select id="bancoSelect" name="banco_id" aria-label="Select a Banco" data-control="select2" data-placeholder="Escolha um banco..." class="form-select fw-bold" required>
+                                                    <option value=""></option>
+                                                    @foreach ($bancos as $banco)
+                                                    <option data-banco-code="{{ $banco->banco }}" value="{{ $banco->id }}"><span class="banco-name"></span>{{ $banco->banco }} - {{ $banco->name }}/{{ $banco->conta }}</option>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                         </div>
                                         <div class="d-flex flex-column mb-5 fv-row">
@@ -663,17 +675,6 @@
 </x-tenant-app-layout>
 
 
-<!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
-<!--end::Vendors Javascript-->
-<!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/file-manager/list.js"></script>
-<script src="/assets/js/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
-
 <!--end::Custom Javascript-->
 <script>
     $(document).ready(function() {
@@ -769,3 +770,46 @@
         return badge + ' ' + option.text;
     }
 </script>
+
+<script>
+    $(document).ready(function() {
+        $('#lancamento_padrao').on('change', function() {
+            var selectedValue = $(this).val();
+            if (selectedValue === 'Deposito Bancário') {
+                $('#banco-deposito').show(); // Mostra o campo do banco de depósito
+            } else {
+                $('#banco-deposito').hide(); // Esconde o campo do banco de depósito
+            }
+        });
+    });
+    </script>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoSelect = document.getElementById('tipo_select');
+        const lancamentoPadraoSelect = document.getElementById('lancamento_padrao');
+
+        tipoSelect.addEventListener('change', function() {
+            const selectedTipo = tipoSelect.value;
+
+            // Limpa todas as opções do select de Lançamento Padrão
+            lancamentoPadraoSelect.innerHTML = '';
+
+            // Adiciona a opção vazia
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.text = 'Escolha um Lançamento...';
+            lancamentoPadraoSelect.appendChild(emptyOption);
+
+            // Filtra e adiciona as opções de acordo com o tipo selecionado
+            @foreach ($lps as $lp)
+                if ('{{ $lp->type }}' === selectedTipo) {
+                    const option = document.createElement('option');
+                    option.value = '{{ $lp->description }}';
+                    option.text = '{{ $lp->description }}';
+                    lancamentoPadraoSelect.appendChild(option);
+                }
+            @endforeach
+        });
+    });
+    </script>

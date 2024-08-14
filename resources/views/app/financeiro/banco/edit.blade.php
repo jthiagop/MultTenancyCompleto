@@ -248,6 +248,9 @@
                                                     <option value="NF - Nota Fiscal"
                                                         {{ old('tipo_documento', $banco->tipo_documento) == 'NF - Nota Fiscal' ? 'selected' : '' }}>
                                                         NF - Nota Fiscal</option>
+                                                    <option value="CF - Cupom Fiscal"
+                                                        {{ old('tipo_documento', $banco->tipo_documento) == 'CF - Cupom Fiscal' ? 'selected' : '' }}>
+                                                        CF - Cupom Fiscal</option>
                                                     <option value="DANF - Danfe"
                                                         {{ old('tipo_documento', $banco->tipo_documento) == 'DANF - Danfe' ? 'selected' : '' }}>
                                                         DANF - Danfe</option>

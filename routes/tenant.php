@@ -51,6 +51,8 @@ Route::middleware([
     Route::get('/app/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/app/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/app/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::match(['put', 'patch'], '/app/profile', [ProfileController::class, 'update'])->name('profile.update');
+
 
     Route::get('/file/{path}', function ($path) {
         return response()->file(Storage::path($path));

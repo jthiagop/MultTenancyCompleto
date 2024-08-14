@@ -3503,9 +3503,9 @@
                             <!--begin::Modal content-->
                             <div class="modal-content">
                                 <!--begin::Form-->
-                                <form method="POST" action="{{ route('profile.update', $user->id) }}">
+                                <form method="POST" action="{{ route('profile.update', $user->id) }}" enctype="multipart/form-data">
                                     @csrf
-                                    @method('PUT')
+                                    @method('PATCH') <!-- Especifica que o método é PATCH -->
                                     @include('__massage')
                                     <!--begin::Modal header-->
                                     <div class="modal-header" id="">
@@ -3572,7 +3572,7 @@
                                                             data-kt-image-input="true">
                                                             <!--begin::Preview existing avatar-->
                                                             <div class="image-input-wrapper w-125px h-125px"
-                                                                style="background-image: url(assets/media/avatars/300-6.jpg);">
+                                                                style="background-image: url({{ route('file', ['path' => $user->avatar]) }});">
                                                             </div>
                                                             <!--end::Preview existing avatar-->
                                                             <!--begin::Label-->
@@ -3584,7 +3584,7 @@
                                                                 <!--begin::Inputs-->
                                                                 <input type="file" name="avatar"
                                                                     accept=".png, .jpg, .jpeg" />
-                                                                <input type="hidden" name="photo" />
+                                                                <input type="hidden" name="avatar" />
                                                                 <!--end::Inputs-->
                                                             </label>
                                                             <!--end::Label-->
@@ -3631,6 +3631,36 @@
                                                         <div class="text-danger">{{ $errors->first('name') }}</div>
                                                     @endif
                                                 </div>
+
+                                                <div class="fv-row mb-7">
+                                                    <!--end::Input-->
+                                                    <x-input-label for="email" class="fs-6 fw-semibold form-label mb-2"
+                                                        :value="__('Email')" />
+                                                    <x-text-input id="email" name="email" type="email"
+                                                        class="form-control form-control-solid" :value="old('email', $user->email)" required
+                                                        autocomplete="username" />
+                                                    <x-input-error class="mt-2" :messages="$errors->get('email')" />
+
+                                                    @if ($user instanceof \Illuminate\Contracts\Auth\MustVerifyEmail && !$user->hasVerifiedEmail())
+                                                        <div>
+                                                            <p class="text-sm mt-2 text-gray-800 dark:text-gray-200">
+                                                                {{ __('Your email address is unverified.') }}
+
+                                                                <button form="send-verification"
+                                                                    class="underline text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 dark:focus:ring-offset-gray-800">
+                                                                    {{ __('Click here to re-send the verification email.') }}
+                                                                </button>
+                                                            </p>
+
+                                                            @if (session('status') === 'verification-link-sent')
+                                                                <p
+                                                                    class="mt-2 font-medium text-sm text-green-600 dark:text-green-400">
+                                                                    {{ __('A new verification link has been sent to your email address.') }}
+                                                                </p>
+                                                            @endif
+                                                        </div>
+                                                    @endif
+                                                </div>
                                                 <!--end::Input group-->
                                                 <!--begin::Input group-->
                                             </div>
@@ -3653,7 +3683,7 @@
                                                 <!--begin::Input group-->
                                                 <div class="d-flex flex-column mb-7 fv-row">
                                                     <!--begin::Label-->
-                                                    <label class="fs-6 fw-semibold mb-2">Endereço Linha 1</label>
+                                                    <label class="fs-6 fw-semibold mb-2">Endereço</label>
                                                     <!--end::Label-->
                                                     <!--begin::Input-->
                                                     <input class="form-control form-control-solid" placeholder="" name="address1" value="{{ old('address1', $user->address1) }}" />
@@ -3664,37 +3694,11 @@
                                                 </div>
                                                 <!--end::Input group-->
                                                 <!--begin::Input group-->
-                                                <div class="d-flex flex-column mb-7 fv-row">
-                                                    <!--begin::Label-->
-                                                    <label class="fs-6 fw-semibold mb-2">Endereço Linha 2</label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Input-->
-                                                    <input class="form-control form-control-solid" placeholder="" name="address2" value="{{ old('address2', $user->address2) }}" />
-                                                    <!--end::Input-->
-                                                    @if ($errors->has('address2'))
-                                                        <div class="text-danger">{{ $errors->first('address2') }}</div>
-                                                    @endif
-                                                </div>
-                                                <!--end::Input group-->
-                                                <!--begin::Input group-->
-                                                <div class="d-flex flex-column mb-7 fv-row">
-                                                    <!--begin::Label-->
-                                                    <label class="fs-6 fw-semibold mb-2">Cidade</label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Input-->
-                                                    <input class="form-control form-control-solid" placeholder="" name="city" value="{{ old('city', $user->city) }}" />
-                                                    <!--end::Input-->
-                                                    @if ($errors->has('city'))
-                                                        <div class="text-danger">{{ $errors->first('city') }}</div>
-                                                    @endif
-                                                </div>
-                                                <!--end::Input group-->
-                                                <!--begin::Input group-->
                                                 <div class="row g-9 mb-7">
                                                     <!--begin::Col-->
                                                     <div class="col-md-6 fv-row">
                                                         <!--begin::Label-->
-                                                        <label class="fs-6 fw-semibold mb-2">Estado</label>
+                                                        <label class="fs-6 fw-semibold mb-2">Rua</label>
                                                         <!--end::Label-->
                                                         <!--begin::Input-->
                                                         <input class="form-control form-control-solid" placeholder="" name="state" value="{{ old('state', $user->state) }}" />
@@ -3710,15 +3714,29 @@
                                                         <label class="fs-6 fw-semibold mb-2">CEP</label>
                                                         <!--end::Label-->
                                                         <!--begin::Input-->
-                                                        <input class="form-control form-control-solid" placeholder="" name="postcode" value="{{ old('postcode', $user->postcode) }}" />
+                                                        <input class="form-control form-control-solid" placeholder="" name="cep" value="{{ old('cep', $user->cep) }}" />
                                                         <!--end::Input-->
-                                                        @if ($errors->has('postcode'))
-                                                            <div class="text-danger">{{ $errors->first('postcode') }}</div>
+                                                        @if ($errors->has('cep'))
+                                                            <div class="text-danger">{{ $errors->first('cep') }}</div>
                                                         @endif
                                                     </div>
                                                     <!--end::Col-->
                                                 </div>
                                                 <!--end::Input group-->
+                                                <!--begin::Input group-->
+                                                <div class="d-flex flex-column mb-7 fv-row">
+                                                    <!--begin::Label-->
+                                                    <label class="fs-6 fw-semibold mb-2">Cidade</label>
+                                                    <!--end::Label-->
+                                                    <!--begin::Input-->
+                                                    <input class="form-control form-control-solid" placeholder="" name="city" value="{{ old('city', $user->city) }}" />
+                                                    <!--end::Input-->
+                                                    @if ($errors->has('city'))
+                                                        <div class="text-danger">{{ $errors->first('city') }}</div>
+                                                    @endif
+                                                </div>
+                                                <!--end::Input group-->
+
                                                 <!--begin::Input group-->
                                                 <div class="d-flex flex-column mb-7 fv-row">
                                                     <!--begin::Label-->
@@ -3728,39 +3746,39 @@
                                                     </label>
                                                     <!--end::Label-->
                                                     <!--begin::Input-->
-                                                    <select name="estado" aria-label="Select a State" data-control="select2" data-placeholder="Select a State..." class="form-select form-select-solid" data-dropdown-parent="#kt_modal_update_details">
+                                                    <select name="uf" aria-label="Select a State" data-control="select2" data-placeholder="Select a State..." class="form-select form-select-solid" >
                                                         <option></option>
-                                                        <option value="AC" {{ old('estado', $user->estado) == 'AC' ? 'selected' : '' }}>Acre</option>
-                                                        <option value="AL" {{ old('estado', $user->estado) == 'AL' ? 'selected' : '' }}>Alagoas</option>
-                                                        <option value="AP" {{ old('estado', $user->estado) == 'AP' ? 'selected' : '' }}>Amapá</option>
-                                                        <option value="AM" {{ old('estado', $user->estado) == 'AM' ? 'selected' : '' }}>Amazonas</option>
-                                                        <option value="BA" {{ old('estado', $user->estado) == 'BA' ? 'selected' : '' }}>Bahia</option>
-                                                        <option value="CE" {{ old('estado', $user->estado) == 'CE' ? 'selected' : '' }}>Ceará</option>
-                                                        <option value="DF" {{ old('estado', $user->estado) == 'DF' ? 'selected' : '' }}>Distrito Federal</option>
-                                                        <option value="ES" {{ old('estado', $user->estado) == 'ES' ? 'selected' : '' }}>Espírito Santo</option>
-                                                        <option value="GO" {{ old('estado', $user->estado) == 'GO' ? 'selected' : '' }}>Goiás</option>
-                                                        <option value="MA" {{ old('estado', $user->estado) == 'MA' ? 'selected' : '' }}>Maranhão</option>
-                                                        <option value="MT" {{ old('estado', $user->estado) == 'MT' ? 'selected' : '' }}>Mato Grosso</option>
-                                                        <option value="MS" {{ old('estado', $user->estado) == 'MS' ? 'selected' : '' }}>Mato Grosso do Sul</option>
-                                                        <option value="MG" {{ old('estado', $user->estado) == 'MG' ? 'selected' : '' }}>Minas Gerais</option>
-                                                        <option value="PA" {{ old('estado', $user->estado) == 'PA' ? 'selected' : '' }}>Pará</option>
-                                                        <option value="PB" {{ old('estado', $user->estado) == 'PB' ? 'selected' : '' }}>Paraíba</option>
-                                                        <option value="PR" {{ old('estado', $user->estado) == 'PR' ? 'selected' : '' }}>Paraná</option>
-                                                        <option value="PE" {{ old('estado', $user->estado) == 'PE' ? 'selected' : '' }}>Pernambuco</option>
-                                                        <option value="PI" {{ old('estado', $user->estado) == 'PI' ? 'selected' : '' }}>Piauí</option>
-                                                        <option value="RJ" {{ old('estado', $user->estado) == 'RJ' ? 'selected' : '' }}>Rio de Janeiro</option>
-                                                        <option value="RN" {{ old('estado', $user->estado) == 'RN' ? 'selected' : '' }}>Rio Grande do Norte</option>
-                                                        <option value="RS" {{ old('estado', $user->estado) == 'RS' ? 'selected' : '' }}>Rio Grande do Sul</option>
-                                                        <option value="RO" {{ old('estado', $user->estado) == 'RO' ? 'selected' : '' }}>Rondônia</option>
-                                                        <option value="RR" {{ old('estado', $user->estado) == 'RR' ? 'selected' : '' }}>Roraima</option>
-                                                        <option value="SC" {{ old('estado', $user->estado) == 'SC' ? 'selected' : '' }}>Santa Catarina</option>
-                                                        <option value="SP" {{ old('estado', $user->estado) == 'SP' ? 'selected' : '' }}>São Paulo</option>
-                                                        <option value="SE" {{ old('estado', $user->estado) == 'SE' ? 'selected' : '' }}>Sergipe</option>
-                                                        <option value="TO" {{ old('estado', $user->estado) == 'TO' ? 'selected' : '' }}>Tocantins</option>
+                                                        <option value="AC" {{ old('uf', $user->uf) == 'AC' ? 'selected' : '' }}>Acre</option>
+                                                        <option value="AL" {{ old('uf', $user->uf) == 'AL' ? 'selected' : '' }}>Alagoas</option>
+                                                        <option value="AP" {{ old('uf', $user->uf) == 'AP' ? 'selected' : '' }}>Amapá</option>
+                                                        <option value="AM" {{ old('uf', $user->uf) == 'AM' ? 'selected' : '' }}>Amazonas</option>
+                                                        <option value="BA" {{ old('uf', $user->uf) == 'BA' ? 'selected' : '' }}>Bahia</option>
+                                                        <option value="CE" {{ old('uf', $user->uf) == 'CE' ? 'selected' : '' }}>Ceará</option>
+                                                        <option value="DF" {{ old('uf', $user->uf) == 'DF' ? 'selected' : '' }}>Distrito Federal</option>
+                                                        <option value="ES" {{ old('uf', $user->uf) == 'ES' ? 'selected' : '' }}>Espírito Santo</option>
+                                                        <option value="GO" {{ old('uf', $user->uf) == 'GO' ? 'selected' : '' }}>Goiás</option>
+                                                        <option value="MA" {{ old('uf', $user->uf) == 'MA' ? 'selected' : '' }}>Maranhão</option>
+                                                        <option value="MT" {{ old('uf', $user->uf) == 'MT' ? 'selected' : '' }}>Mato Grosso</option>
+                                                        <option value="MS" {{ old('uf', $user->uf) == 'MS' ? 'selected' : '' }}>Mato Grosso do Sul</option>
+                                                        <option value="MG" {{ old('uf', $user->uf) == 'MG' ? 'selected' : '' }}>Minas Gerais</option>
+                                                        <option value="PA" {{ old('uf', $user->uf) == 'PA' ? 'selected' : '' }}>Pará</option>
+                                                        <option value="PB" {{ old('uf', $user->uf) == 'PB' ? 'selected' : '' }}>Paraíba</option>
+                                                        <option value="PR" {{ old('uf', $user->uf) == 'PR' ? 'selected' : '' }}>Paraná</option>
+                                                        <option value="PE" {{ old('uf', $user->uf) == 'PE' ? 'selected' : '' }}>Pernambuco</option>
+                                                        <option value="PI" {{ old('uf', $user->uf) == 'PI' ? 'selected' : '' }}>Piauí</option>
+                                                        <option value="RJ" {{ old('uf', $user->uf) == 'RJ' ? 'selected' : '' }}>Rio de Janeiro</option>
+                                                        <option value="RN" {{ old('uf', $user->uf) == 'RN' ? 'selected' : '' }}>Rio Grande do Norte</option>
+                                                        <option value="RS" {{ old('uf', $user->uf) == 'RS' ? 'selected' : '' }}>Rio Grande do Sul</option>
+                                                        <option value="RO" {{ old('uf', $user->uf) == 'RO' ? 'selected' : '' }}>Rondônia</option>
+                                                        <option value="RR" {{ old('uf', $user->uf) == 'RR' ? 'selected' : '' }}>Roraima</option>
+                                                        <option value="SC" {{ old('uf', $user->uf) == 'SC' ? 'selected' : '' }}>Santa Catarina</option>
+                                                        <option value="SP" {{ old('uf', $user->uf) == 'SP' ? 'selected' : '' }}>São Paulo</option>
+                                                        <option value="SE" {{ old('uf', $user->uf) == 'SE' ? 'selected' : '' }}>Sergipe</option>
+                                                        <option value="TO" {{ old('uf', $user->uf) == 'TO' ? 'selected' : '' }}>Tocantins</option>
                                                     </select>
                                                     <!--end::Input-->
-                                                    @if ($errors->has('estado'))
-                                                        <div class="text-danger">{{ $errors->first('estado') }}</div>
+                                                    @if ($errors->has('uf'))
+                                                        <div class="text-danger">{{ $errors->first('uf') }}</div>
                                                     @endif
                                                 </div>
                                                 <!--end::Input group-->

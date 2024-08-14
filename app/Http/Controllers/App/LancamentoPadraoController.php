@@ -15,6 +15,8 @@ class LancamentoPadraoController extends Controller
     {
 
         $lps = LancamentoPadrao::all();
+        $lancamentoPadrao = LancamentoPadrao::all();
+
 
         // Mapeia categorias para classes de cor
         $categoryColors = [
@@ -33,7 +35,7 @@ class LancamentoPadraoController extends Controller
             // Adicione outras categorias e cores conforme necessário
         ];
 
-        return view('app.cadastros.lancamentoPadrao.index', compact('lps', 'categoryColors'));
+        return view('app.cadastros.lancamentoPadrao.index', compact('lps', 'categoryColors', 'lancamentoPadrao'));
     }
 
     /**
@@ -65,10 +67,10 @@ class LancamentoPadraoController extends Controller
             'description' => $request->input('description'),
             'date' => $request->input('date'),
             'category' => $request->input('category'),
-            'user_id' => $request->input($user),
+            'user_id' => $user->id, // Pegando o ID do usuário autenticado
         ]);
 
-        return ;
+        return redirect()->route('lancamentoPadrao.index') ;
     }
 
 
@@ -85,8 +87,8 @@ class LancamentoPadraoController extends Controller
      */
     public function edit(string $id)
     {
-        $lancamento = LancamentoPadrao::findOrFail($id);
-        return response()->json($lancamento);
+        $lp = LancamentoPadrao::find($id);
+        return response()->json($lp);
     }
 
     /**

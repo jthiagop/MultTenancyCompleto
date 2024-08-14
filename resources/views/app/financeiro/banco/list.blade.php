@@ -62,7 +62,7 @@
                     </div>
                     <!--end::Page title-->
                     <!--begin::Actions-->
-                    <div class="d-flex align-items-center gap-2 gap-lg-3">
+                    {{-- <div class="d-flex align-items-center gap-2 gap-lg-3">
                         <!--begin::Filter menu-->
                         <div class="d-flex">
                             <select name="campaign-type" data-control="select2" data-hide-search="true"
@@ -93,7 +93,7 @@
                         <!--end::Secondary button-->
                         <!--begin::Primary button-->
                         <!--end::Primary button-->
-                    </div>
+                    </div> --}}
                     <!--end::Actions-->
                 </div>
                 <!--end::Toolbar container-->
@@ -111,7 +111,7 @@
                                 <!--begin::Image-->
                                 <div
                                     class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-                                    <span class="svg-icon svg-icon-3x me-5">
+                                    <span class="svg-icon svg-icon-7x ">
                                         <svg version="1.1" id="_x34_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512.00 512.00" xml:space="preserve" width="512px" height="512px" fill="#000000" stroke="#000000" stroke-width="4.096">
                                             <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
                                             <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round" stroke="#CCCCCC" stroke-width="1.024"></g>

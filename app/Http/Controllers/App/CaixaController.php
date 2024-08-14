@@ -204,8 +204,10 @@ class CaixaController extends Controller
 
         $caixa = Caixa::with('anexos')->findOrFail($id);
 
+        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
 
-        return view('app.financeiro.caixa.edit', compact('caixa', 'lps'));
+
+        return view('app.financeiro.caixa.edit', compact('caixa', 'bancos', 'lps'));
     }
 
     /**

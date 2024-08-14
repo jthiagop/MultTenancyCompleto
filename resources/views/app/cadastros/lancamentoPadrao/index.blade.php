@@ -187,11 +187,11 @@
                                             </div>
                                         </th>
                                         <th class="min-w-20px">id</th>
-                                        <th class="min-w-125px">Drescrição</th>
+                                        <th class="min-w-500px">Drescrição</th>
                                         <th class="min-w-125px">Categoria</th>
                                         <th class="min-w-125px">Tipo</th>
-                                        <th class="min-w-125px">data</th>
                                         <th class="min-w-125px">Usuário</th>
+                                        <th class="min-w-125px">data</th>
                                         <th class="text-end min-w-70px">Ação</th>
                                     </tr>
                                     <!--end::Table row-->
@@ -235,10 +235,10 @@
                                             </td>
                                             <!--end::Status=-->
                                             <!--begin::IP Address=-->
-                                            <td>{{ date(' d-m-Y', strtotime($lp->date)) }}</td>
+                                            <td>{{ $lp->user->name }}</td>
                                             <!--end::IP Address=-->
                                             <!--begin::Date=-->
-                                            <td>{{ $lp->user->name }}</td>
+                                            <td>{{ date(' d-m-Y', strtotime($lp->date)) }}</td>
                                             <!--end::Date=-->
                                             <!--begin::Action=-->
                                             <td class="text-end">
@@ -261,8 +261,13 @@
                                                     data-kt-menu="true">
                                                     <!--begin::Menu item-->
                                                     <div class="menu-item px-3">
-                                                        <a href="#" class="btn btn-sm btn-light btn-active-light-primary edit-button" data-id="{{ $lp->id }}">Editar</a>
-
+                                                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#kt_modal_edit_customer"
+                                                            data-id="{{ $lp->id }}"
+                                                            data-type="{{ $lp->type }}"
+                                                            data-description="{{ $lp->description }}"
+                                                            data-date="{{ $lp->date }}">
+                                                            Editar
+                                                        </button>
                                                     </div>
                                                     <!--end::Menu item-->
                                                     <!--begin::Menu item-->
@@ -296,8 +301,8 @@
                                 <!--begin::Form-->
                                 <form class="form" method="POST" action="{{ route('lancamentoPadrao.store') }}" id="kt_modal_add_customer_form">
                                     @csrf
-                                    <input type="hidden" name="_method" value="POST" id="form_method">
-                                    <input type="hidden" name="id" id="form_id">
+                                    @method('POST') <!-- Ou PUT, DELETE para edição e exclusão -->
+                                    <input type="hidden" name="id" id="lancamento_padrao_id">
 
                                     <!--begin::Modal header-->
                                     <div class="modal-header" id="kt_modal_add_customer_header">
@@ -440,6 +445,76 @@
                         </div>
                     </div>
                     <!--end::Modal - Customers - Add-->
+
+                    <!--begin::Modal - Customers - Edit-->
+                    <div class="modal fade" id="kt_modal_edit_customer" tabindex="-1" aria-hidden="true">
+                        <!--begin::Modal dialog-->
+                        <div class="modal-dialog modal-dialog-centered mw-650px">
+                            <!--begin::Modal content-->
+                            <div class="modal-content">
+                                <!--begin::Form-->
+                                <form class="form" method="POST" action="{{ route('lancamentoPadrao.update', ['lancamentoPadrao' => $lp->id ?? null]) }}" id="kt_modal_edit_customer_form">
+                                    @csrf
+                                    @method('PUT')
+                                    <!--begin::Modal header-->
+                                    <div class="modal-header" id="kt_modal_edit_customer_header">
+                                        <!--begin::Modal title-->
+                                        <h2 class="fw-bold">Editar Lançamento Padrão</h2>
+                                        <!--end::Modal title-->
+                                        <!--begin::Close-->
+                                        <div id="kt_modal_edit_customer_close" class="btn btn-icon btn-sm btn-active-icon-primary">
+                                            <span class="svg-icon svg-icon-1">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                                    <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
+                                                    <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                        <!--end::Close-->
+                                    </div>
+                                    <!--end::Modal header-->
+                                    <!--begin::Modal body-->
+                                    <div class="modal-body py-10 px-lg-17">
+                                        <!--begin::Input group-->
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Tipo</label>
+                                            <select class="form-select form-select-solid" name="type" data-control="select2">
+                                                <option value="entrada" {{ $lp->type == 'entrada' ? 'selected' : '' }}>Entrada</option>
+                                                <option value="saida" {{ $lp->type == 'saida' ? 'selected' : '' }}>Saída</option>
+                                            </select>
+                                        </div>
+                                        <div class="fv-row mb-15">
+                                            <label class="required fs-6 fw-semibold mb-2">Descrição</label>
+                                            <textarea class="form-control form-control-solid" rows="3" name="description">{{ $lp->description }}</textarea>
+                                        </div>
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Data</label>
+                                            <input type="date" class="form-control form-control-solid" name="date" value="{{ $lp->date }}" />
+                                        </div>
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Categoria</label>
+                                            <select class="form-select form-select-solid" name="category" data-control="select2">
+                                                <!-- Suas opções de categoria aqui -->
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <!--end::Modal body-->
+                                    <!--begin::Modal footer-->
+                                    <div class="modal-footer flex-center">
+                                        <button type="reset" id="kt_modal_edit_customer_cancel" class="btn btn-light me-3">Cancelar</button>
+                                        <button type="submit" id="kt_modal_edit_customer_submit" class="btn btn-primary">
+                                            <span class="indicator-label">Atualizar</span>
+                                            <span class="indicator-progress">Por favor, aguarde...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                        </button>
+                                    </div>
+                                    <!--end::Modal footer-->
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!--end::Modal - Customers - Edit-->
+
                     <!--begin::Modal - Adjust Balance-->
                     <div class="modal fade" id="kt_customers_export_modal" tabindex="-1" aria-hidden="true">
                         <!--begin::Modal dialog-->
@@ -581,7 +656,6 @@
     </div>
     <!--end:::Main-->
 
-    <!-- MODAL -->
 
 </x-tenant-app-layout>
 
@@ -622,7 +696,8 @@
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="assets/js/custom/apps/ecommerce/customers/listing/listing.js"></script>
-<script src="assets/js/custom/apps/ecommerce/customers/listing/add.js"></script>
+<script src="assets/js/custom/apps/cadastros/lancamentoPadrao/add.js"></script>
+<script src="assets/js/custom/apps/cadastros/lancamentoPadrao/edit.js"></script>
 <script src="assets/js/custom/apps/ecommerce/customers/listing/export.js"></script>
 <script src="assets/js/widgets.bundle.js"></script>
 <script src="assets/js/custom/apps/chat/chat.js"></script>
@@ -632,54 +707,36 @@
 <!--end::Custom Javascript-->
 <!--end::Javascript-->
 
+
+
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-    var modalElement = document.querySelector('#kt_modal_add_customer');
-    var modal = new bootstrap.Modal(modalElement);
+    function openModalForEditing(lancamentoPadrao) {
+    // Preencher os campos do modal com os dados do lançamento existente
+    document.querySelector('#lancamento_padrao_id').value = lancamentoPadrao.id;
+    document.querySelector('[name="type"]').value = lancamentoPadrao.type;
+    document.querySelector('[name="description"]').value = lancamentoPadrao.description;
+    document.querySelector('[name="date"]').value = lancamentoPadrao.date;
+    document.querySelector('[name="category"]').value = lancamentoPadrao.category;
 
-    var form = document.querySelector('#kt_modal_add_customer_form');
-    var title = document.querySelector('#modal_title');
-    var submitButton = document.querySelector('#kt_modal_add_customer_submit');
-    var methodInput = document.querySelector('#form_method');
-    var idInput = document.querySelector('#form_id');
+    // Atualizar a ação do formulário para usar o método PUT e a rota de update
+    form.action = `/lancamentoPadrao/${lancamentoPadrao.id}`;
+    document.querySelector('input[name="_method"]').value = 'PUT';
 
-    // Evento para abrir o modal em modo de criação
-    document.querySelector('#add_new_record_button').addEventListener('click', function () {
-        form.reset();
-        title.textContent = 'Add Lançamento Padrão';
-        methodInput.value = 'POST';
-        form.action = "{{ route('lancamentoPadrao.store') }}";
-        submitButton.textContent = 'Salvar';
-        idInput.value = '';
+    // Abrir o modal
+    modal.show();
+}
 
-        modal.show();
-    });
+function openModalForCreating() {
+    // Limpar os campos do modal
+    form.reset();
+    document.querySelector('#lancamento_padrao_id').value = '';
 
-    // Evento para abrir o modal em modo de edição
-    document.querySelectorAll('.edit-button').forEach(function (button) {
-        button.addEventListener('click', function () {
-            var id = this.getAttribute('data-id');
+    // Atualizar a ação do formulário para usar o método POST e a rota de store
+    form.action = `{{ route('lancamentoPadrao.store') }}`;
+    document.querySelector('input[name="_method"]').value = 'POST';
 
-            // AJAX para obter os dados do registro
-            fetch(`/lancamentoPadrao/${id}/edit`)
-                .then(response => response.json())
-                .then(data => {
-                    title.textContent = 'Edit Lançamento Padrão';
-                    methodInput.value = 'PUT';
-                    form.action = `/lancamentoPadrao/${id}`;
-                    submitButton.textContent = 'Atualizar';
-                    idInput.value = id;
-
-                    // Preencher o formulário com os dados do registro
-                    document.querySelector('[name="type"]').value = data.type;
-                    document.querySelector('[name="description"]').value = data.description;
-                    document.querySelector('[name="date"]').value = data.date;
-                    document.querySelector('[name="category"]').value = data.category;
-
-                    modal.show();
-                });
-        });
-    });
-});
+    // Abrir o modal
+    modal.show();
+}
 
 </script>
