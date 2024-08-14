@@ -51,7 +51,7 @@ var KTUsersList = function () {
         // Inicialize o datatable --- mais informações em datatables: https://datatables.net/manual/
         datatable = $(table).DataTable({
             "info": false,
-            'order': [[1, 'desc']], // Ordena pela primeira coluna (índice 0) em ordem decrescente
+            "order": [[1, 'desc']], // Ordena pela primeira coluna (índice 0) em ordem decrescente
             "pageLength": 10,
             "lengthChange": false,
             'columnDefs': [

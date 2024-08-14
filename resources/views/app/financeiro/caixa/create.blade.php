@@ -179,14 +179,13 @@
                                             </div>
                                             <div class="col-md-6 fv-row">
                                                 <label class="required fs-5 fw-semibold mb-2">Lançamento Padrão</label>
-                                                <i class="fas fa-exclamation-circle ms-2 fs-7"
-                                                        data-bs-toggle="tooltip"
-                                                        title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
+                                                <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                                    title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
                                                 <div class="input-group">
                                                     <select name="lancamento_padrao" aria-label="Select a Country" data-control="select2" data-placeholder="Escolha um Lançamento..." class="form-select  fw-bold" id="lancamento_padrao">
                                                         <option value=""></option>
                                                         @foreach ($lps as $lp)
-                                                        <option value="{{ $lp->description }}" data-type="{{ $lp->type }}">{{ $lp->description }} </option>
+                                                            <option value="{{ $lp->description }}" data-type="{{ $lp->type }}">{{ $lp->description }} </option>
                                                         @endforeach
                                                     </select>
                                                 </div>
@@ -271,7 +270,7 @@
                                                     <div class="text-danger">{{ $message }}</div>
                                                 @enderror
                                             </div>
-                                            <div class="col-md-6 fv-row">
+                                            <div class="col-md-4 fv-row">
                                                 <label class="fs-5 fw-semibold mb-2">Número do Documento</label>
                                                 <div class="input-group">
                                                     <input type="text" class="form-control" placeholder=""
@@ -281,6 +280,16 @@
                                                 @error('numero_documento')
                                                     <div class="text-danger">{{ $message }}</div>
                                                 @enderror
+                                            </div>
+                                            <!-- Novo campo de entrada para o banco de depósito -->
+                                            <div class="col-md-4 fv-row" id="banco-deposito" style="display:none;">
+                                                <label class="required fs-5 fw-semibold mb-2">Selecione o Banco de Depósito</label>
+                                                <select id="bancoSelect" name="banco_id" aria-label="Select a Banco" data-control="select2" data-placeholder="Escolha um banco..." class="form-select fw-bold" required>
+                                                    <option value=""></option>
+                                                    @foreach ($bancos as $banco)
+                                                    <option data-banco-code="{{ $banco->banco }}" value="{{ $banco->id }}"><span class="banco-name"></span>{{ $banco->banco }} - {{ $banco->name }}/{{ $banco->conta }}</option>
+                                                    @endforeach
+                                                </select>
                                             </div>
                                         </div>
                                         <div class="d-flex flex-column mb-5 fv-row">
@@ -392,4 +401,17 @@ function formatOption(option) {
 
     return badge + ' ' + option.text;
 }
+</script>
+
+<script>
+$(document).ready(function() {
+    $('#lancamento_padrao').on('change', function() {
+        var selectedValue = $(this).val();
+        if (selectedValue === 'Deposito Bancário') {
+            $('#banco-deposito').show(); // Mostra o campo do banco de depósito
+        } else {
+            $('#banco-deposito').hide(); // Esconde o campo do banco de depósito
+        }
+    });
+});
 </script>

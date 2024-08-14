@@ -49,8 +49,29 @@ class LancamentoPadraoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        // Validação dos dados
+        $request->validate([
+            'type' => 'required|string',
+            'description' => 'required|string',
+            'date' => 'required|date',
+            'category' => 'required|string',
+        ]);
+
+        $user = auth()->user(); // Usuário autenticado
+
+        // Criação do lançamento
+        LancamentoPadrao::create([
+            'type' => $request->input('type'),
+            'description' => $request->input('description'),
+            'date' => $request->input('date'),
+            'category' => $request->input('category'),
+            'user_id' => $request->input($user),
+        ]);
+
+        return ;
     }
+
+
 
     /**
      * Display the specified resource.
@@ -64,7 +85,8 @@ class LancamentoPadraoController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $lancamento = LancamentoPadrao::findOrFail($id);
+        return response()->json($lancamento);
     }
 
     /**
@@ -72,7 +94,16 @@ class LancamentoPadraoController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $data = $request->validate([
+            'type' => 'required|string',
+            'description' => 'required|string',
+            // Validações adicionais...
+        ]);
+
+        $lancamento = LancamentoPadrao::findOrFail($id);
+        $lancamento->update($data);
+
+        return redirect()->route('lancamentoPadrao.index')->with('success', 'Lançamento Padrão atualizado com sucesso!');
     }
 
     /**

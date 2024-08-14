@@ -123,8 +123,8 @@
                                             data-kt-ecommerce-order-filter="status">
                                             <option></option>
                                             <option value="all">Todos</option>
-                                            <option value="active">Active</option>
-                                            <option value="locked">Locked</option>
+                                            <option value="entrada">Entrada</option>
+                                            <option value="saida">Saída</option>
                                         </select>
                                         <!--end::Select2-->
                                     </div>
@@ -147,7 +147,7 @@
                                                     fill="currentColor" />
                                             </svg>
                                         </span>
-                                        <!--end::Svg Icon-->Export</button>
+                                        <!--end::Svg Icon-->Exportar</button>
                                     <!--end::Export-->
                                     <!--begin::Add customer-->
                                     <button type="button" class="btn btn-primary" data-bs-toggle="modal"
@@ -186,6 +186,7 @@
                                                     value="1" />
                                             </div>
                                         </th>
+                                        <th class="min-w-20px">id</th>
                                         <th class="min-w-125px">Drescrição</th>
                                         <th class="min-w-125px">Categoria</th>
                                         <th class="min-w-125px">Tipo</th>
@@ -208,6 +209,7 @@
                                                 </div>
                                             </td>
                                             <!--end::Checkbox-->
+                                            <td>{{ $lp->id }}</td>
                                             <!--begin::Name=-->
                                             <td>
                                                 <a href="../../demo1/dist/apps/ecommerce/customers/details.html"
@@ -243,7 +245,7 @@
                                                 <a href="#"
                                                     class="btn btn-sm btn-light btn-active-light-primary"
                                                     data-kt-menu-trigger="click"
-                                                    data-kt-menu-placement="bottom-end">Actions
+                                                    data-kt-menu-placement="bottom-end">Ações
                                                     <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
                                                     <span class="svg-icon svg-icon-5 m-0">
                                                         <svg width="24" height="24" viewBox="0 0 24 24"
@@ -259,8 +261,8 @@
                                                     data-kt-menu="true">
                                                     <!--begin::Menu item-->
                                                     <div class="menu-item px-3">
-                                                        <a type="button" class="menu-link px-3 edit-button"
-                                                            data-id="{{ $lp->id }}">Editar</a>
+                                                        <a href="#" class="btn btn-sm btn-light btn-active-light-primary edit-button" data-id="{{ $lp->id }}">Editar</a>
+
                                                     </div>
                                                     <!--end::Menu item-->
                                                     <!--begin::Menu item-->
@@ -292,7 +294,11 @@
                             <!--begin::Modal content-->
                             <div class="modal-content">
                                 <!--begin::Form-->
-                                <form class="form" action="#" id="kt_modal_add_customer_form">
+                                <form class="form" method="POST" action="{{ route('lancamentoPadrao.store') }}" id="kt_modal_add_customer_form">
+                                    @csrf
+                                    <input type="hidden" name="_method" value="POST" id="form_method">
+                                    <input type="hidden" name="id" id="form_id">
+
                                     <!--begin::Modal header-->
                                     <div class="modal-header" id="kt_modal_add_customer_header">
                                         <!--begin::Modal title-->
@@ -392,13 +398,13 @@
                                                     <option value="Eventos">Eventos</option>
                                                     <option value="Liturgia">Liturgia</option>
                                                     <option value="Manutenção">Manutenção</option>
-                                                    <option value="Material de escritório">Material de escritório
-                                                    </option>
+                                                    <option value="Material de escritório">Material de escritório</option>
                                                     <option value="Pessoal">Pessoal</option>
                                                     <option value="Rendimentos">Rendimentos</option>
                                                     <option value="Saúde">Saúde</option>
                                                     <option value="Serviços essenciais">Serviços essenciais</option>
                                                     <option value="Suprimentos">Suprimentos</option>
+                                                    <option value="Financeiro">Financeiro</option>
                                                     <option value="Transporte">Transporte</option>
                                                     <!-- ... -->
                                                 </select>
@@ -471,8 +477,7 @@
                                         <!--begin::Input group-->
                                         <div class="fv-row mb-10">
                                             <!--begin::Label-->
-                                            <label class="fs-5 fw-semibold form-label mb-5">Select Export
-                                                Format:</label>
+                                            <label class="fs-5 fw-semibold form-label mb-5">Selecione formato:</label>
                                             <!--end::Label-->
                                             <!--begin::Input-->
                                             <select data-control="select2" data-placeholder="Select a format"
@@ -626,3 +631,55 @@
 <script src="assets/js/custom/utilities/modals/users-search.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    var modalElement = document.querySelector('#kt_modal_add_customer');
+    var modal = new bootstrap.Modal(modalElement);
+
+    var form = document.querySelector('#kt_modal_add_customer_form');
+    var title = document.querySelector('#modal_title');
+    var submitButton = document.querySelector('#kt_modal_add_customer_submit');
+    var methodInput = document.querySelector('#form_method');
+    var idInput = document.querySelector('#form_id');
+
+    // Evento para abrir o modal em modo de criação
+    document.querySelector('#add_new_record_button').addEventListener('click', function () {
+        form.reset();
+        title.textContent = 'Add Lançamento Padrão';
+        methodInput.value = 'POST';
+        form.action = "{{ route('lancamentoPadrao.store') }}";
+        submitButton.textContent = 'Salvar';
+        idInput.value = '';
+
+        modal.show();
+    });
+
+    // Evento para abrir o modal em modo de edição
+    document.querySelectorAll('.edit-button').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var id = this.getAttribute('data-id');
+
+            // AJAX para obter os dados do registro
+            fetch(`/lancamentoPadrao/${id}/edit`)
+                .then(response => response.json())
+                .then(data => {
+                    title.textContent = 'Edit Lançamento Padrão';
+                    methodInput.value = 'PUT';
+                    form.action = `/lancamentoPadrao/${id}`;
+                    submitButton.textContent = 'Atualizar';
+                    idInput.value = id;
+
+                    // Preencher o formulário com os dados do registro
+                    document.querySelector('[name="type"]').value = data.type;
+                    document.querySelector('[name="description"]').value = data.description;
+                    document.querySelector('[name="date"]').value = data.date;
+                    document.querySelector('[name="category"]').value = data.category;
+
+                    modal.show();
+                });
+        });
+    });
+});
+
+</script>

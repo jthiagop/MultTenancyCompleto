@@ -20,7 +20,7 @@ var KTAppEcommerceReportShipping = function () {
         // Init datatable --- more info on datatables: https://datatables.net/manual/
         datatable = $(table).DataTable({
             "info": false,
-            'order': [],
+            'order': [0, 'desc'],
             'pageLength': 10,
         });
     }

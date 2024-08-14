@@ -5,6 +5,7 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Models\Anexo;
 use App\Models\Banco;
+use App\Models\CadastroBanco;
 use App\Models\Caixa;
 use App\Models\LancamentoPadrao;
 use App\Models\User;
@@ -52,11 +53,16 @@ class CaixaController extends Controller
 
         $total = $somaEntradas - $somaSaida;
 
+        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
+
+
         return view(
             'app.financeiro.caixa.create',
             [
                 'company' => $company,
                 'lps' => $lps,
+                'bancos' => $bancos,
+
                 'total' => $total,
             ]
         );
@@ -82,6 +88,8 @@ class CaixaController extends Controller
             'numero_documento' => 'nullable|string',
             'files.*' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'historico_complementar' => 'nullable|string|max:500',
+                    // Campos adicionais
+            'banco_id' => 'nullable|exists:cadastro_bancos,id',
         ]);
 
         if ($validator->fails()) {
@@ -125,6 +133,37 @@ class CaixaController extends Controller
                 ]);
             }
         }
+
+            // Verificação para criar lançamento no banco
+    if ($validatedData['lancamento_padrao'] === 'Deposito Bancário') {
+        // Aqui você pode ajustar para a lógica do seu sistema de criação de lançamentos no banco
+        $validatedData['origem'] = 'BC';
+        $validatedData['tipo'] = 'entrada';
+
+
+        $banco = Banco::create($validatedData);
+
+        // Verifica se há arquivos anexos
+        if ($request->hasFile('files')) {
+            // Itera sobre cada arquivo anexo
+            foreach ($request->file('files') as $anexo) {
+                // Gera um nome único para o arquivo anexo
+                $anexoName = time() . '_' . $anexo->getClientOriginalName();
+
+                // Salva o arquivo na pasta 'anexos' dentro da pasta de armazenamento (storage/app/public)
+                $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
+
+                // Cria um registro no banco de dados para o anexo
+                Anexo::create([
+                    'banco_id' => $banco->id,
+                    'nome_arquivo' => $anexoName,
+                    'caminho_arquivo' => $anexoPath,
+                    'created_by' => $user->id,
+                    'updated_by' => $user->id,
+                ]);
+            }
+        }
+    }
 
 
         return redirect()->route('caixa.index')->with('success', ' Lançamento Realizado com Sucesso!');

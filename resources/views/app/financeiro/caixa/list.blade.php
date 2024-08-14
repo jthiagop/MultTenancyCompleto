@@ -671,6 +671,8 @@
 <script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
 <script src="/assets/js/custom/utilities/modals/users-search.js"></script>
 <!--end::Custom Javascript-->
+<script src="assets/js/custom/apps/user-management/users/list/table.js"></script>
+
 <!--end::Javascript-->
 
 <!-- jQuery -->

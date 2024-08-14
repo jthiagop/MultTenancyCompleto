@@ -5,7 +5,7 @@
 
 <head>
     <base href="" />
-    <title>{{ config('app.name', 'Dominus') }}</title>
+    <title>{{ config('app.name', 'Laravel') }}</title>
     <meta charset="utf-8" />
     <meta name="description"
         content="No contexto da gestão eclesial, Dominus é um sistema que permite gerenciar de forma eficiente os campos de pastorais, patrimônio e financeiro. Com Dominus,

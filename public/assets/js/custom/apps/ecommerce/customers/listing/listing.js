@@ -111,7 +111,7 @@ var KTCustomersList = function () {
             if (value === 'all') {
                 value = '';
             }
-            datatable.column(3).search(value).draw();
+            datatable.column(4).search(value).draw();
         });
     }
 
@@ -192,7 +192,7 @@ var KTCustomersList = function () {
         const toolbarSelected = document.querySelector('[data-kt-customer-table-toolbar="selected"]');
         const selectedCount = document.querySelector('[data-kt-customer-table-select="selected_count"]');
 
-        // Select refreshed checkbox DOM elements 
+        // Select refreshed checkbox DOM elements
         const allCheckboxes = table.querySelectorAll('tbody [type="checkbox"]');
 
         // Detect checkboxes state & count
