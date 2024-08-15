@@ -113,8 +113,7 @@
                                         data-kt-scroll-offset="300px">
                                         <div class="row mb-5">
                                             <div class="col-md-2 fv-row">
-                                                <label class="required fs-5 fw-semibold mb-2">Data de
-                                                    Competência</label>
+                                                <label class="required fs-5 fw-semibold mb-2">Data</label>
                                                 <div class="input-group" id="kt_td_picker_date_only"
                                                     data-td-target-input="nearest" data-td-target-toggle="nearest">
                                                     <input class="form-control" name="data_competencia" required

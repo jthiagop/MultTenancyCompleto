@@ -276,8 +276,8 @@
                                             </div>
                                             <!-- Novo campo de entrada para o banco de depósito -->
                                             <div class="col-md-4 fv-row" id="banco-deposito" style="display:none;">
-                                                <label class="required fs-5 fw-semibold mb-2">Selecione o Banco de Depósito</label>
-                                                <select id="bancoSelect" name="banco_id" aria-label="Select a Banco" data-control="select2" data-placeholder="Escolha um banco..." class="form-select fw-bold" required>
+                                                <label class=" fs-5 fw-semibold mb-2">Selecione o Banco de Depósito</label>
+                                                <select id="bancoSelect" name="banco_id" aria-label="Select a Banco" data-control="select2" data-placeholder="Escolha um banco..." class="form-select fw-bold">
                                                     <option value=""></option>
                                                     @foreach ($bancos as $banco)
                                                     <option data-banco-code="{{ $banco->banco }}" value="{{ $banco->id }}"><span class="banco-name"></span>{{ $banco->banco }} - {{ $banco->name }}/{{ $banco->conta }}</option>
