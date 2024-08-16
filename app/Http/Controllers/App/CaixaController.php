@@ -139,8 +139,6 @@ class CaixaController extends Controller
         // Aqui você pode ajustar para a lógica do seu sistema de criação de lançamentos no banco
         $validatedData['origem'] = 'BC';
         $validatedData['tipo'] = 'entrada';
-
-
         $banco = Banco::create($validatedData);
 
         // Verifica se há arquivos anexos

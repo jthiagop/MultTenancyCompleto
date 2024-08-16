@@ -636,7 +636,7 @@
                                         },
                                         multiple: true, // Permite a seleção de múltiplos arquivos
                                         validation: {
-                                            allowedExtensions: ["jpg", "jpeg", "png", "pdf"], // Extensões permitidas
+                                            allowedExtensions: ["jpg", "jpeg", "png", "pdf", "page"], // Extensões permitidas
                                             maxFileSize: 5242880, // Tamanho máximo do arquivo (5 MB)
                                             minFileSize: 1024 // Tamanho mínimo do arquivo (1 KB)
                                         },
