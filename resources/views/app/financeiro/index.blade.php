@@ -179,7 +179,7 @@
                                             <div
                                                 class="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
                                                 <span class="fs-4 fw-semibold text-success pb-1 px-2">Entradas</span>
-                                                <span class="fs-lg-2tx fw-bold d-flex justify-content-center">R$
+                                                <span class="fs-lg-1 fw-bold d-flex justify-content-center">R$
                                                     <span data-kt-countup="true"
                                                         data-kt-countup-value="{{ $valorEntrada }}">
                                                         0
@@ -193,7 +193,7 @@
                                             <div
                                                 class="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
                                                 <span class="fs-4 fw-semibold text-danger pb-1 px-2">Saídas</span>
-                                                <span class="fs-lg-2tx fw-bold d-flex justify-content-center">R$
+                                                <span class="fs-lg-1 fw-bold d-flex justify-content-center">R$
                                                     <span data-kt-countup="true"
                                                         data-kt-countup-value="{{ $ValorSaidas }}">0</span></span>
                                             </div>
@@ -301,7 +301,7 @@
                                             <div
                                                 class="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
                                                 <span class="fs-4 fw-semibold text-success d-block">Entradas</span>
-                                                <span class="fs-lg-2tx fw-bold d-flex justify-content-center">R$
+                                                <span class="fs-lg-1 fw-bold d-flex justify-content-center">R$
                                                 <span data-kt-countup="true"
                                                     data-kt-countup-value="{{ $valorEntradaBanco }}">0</span>
                                             </div>
@@ -312,7 +312,7 @@
                                             <div
                                                 class="border border-dashed border-gray-300 text-center min-w-125px rounded pt-4 pb-2 my-3">
                                                 <span class="fs-4 fw-semibold text-danger pb-1 px-2">Saídas</span>
-                                                <span class="fs-lg-2tx fw-bold d-flex justify-content-center">R$
+                                                <span class="fs-lg-1 fw-bold d-flex justify-content-center">R$
                                                     <span data-kt-countup="true"
                                                         data-kt-countup-value="{{ $ValorSaidasBanco }}">0</span></span>
                                             </div>
