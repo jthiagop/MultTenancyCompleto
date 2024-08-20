@@ -212,7 +212,7 @@
                                                 <label class="fs-5 fw-semibold mb-2">Centro de Custo</label>
                                                 <div class="input-group">
                                                     <input type="text" name="centro" readonly class="form-control"
-                                                        placeholder="" value="{{ $company->first()->companies_name }}"  />
+                                                        placeholder="" value="{{ $company->name  }}"  />
                                                 </div>
                                                 @error('centro')
                                                     <div class="text-danger">{{ $message }}</div>
