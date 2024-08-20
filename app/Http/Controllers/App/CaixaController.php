@@ -7,10 +7,12 @@ use App\Models\Anexo;
 use App\Models\Banco;
 use App\Models\CadastroBanco;
 use App\Models\Caixa;
+use App\Models\Company;
 use App\Models\LancamentoPadrao;
 use App\Models\User;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Facades\Activity; // Importe a facade Activity
@@ -177,6 +179,8 @@ class CaixaController extends Controller
 
     public function list()
     {
+        $user = Auth::user();
+
         list($somaEntradas, $somaSaida) = caixa::getCaixa();
 
         $total = $somaEntradas - $somaSaida;
@@ -184,12 +188,15 @@ class CaixaController extends Controller
         $caixas = Caixa::getCaixaList();
         $valorEntrada = caixa::getCaixaEntrada();
         $ValorSaidas = caixa::getCaixaSaida();
+        $company = $user->companies;
+
 
         return view('app.financeiro.caixa.list', [
             'caixas' => $caixas,
             'valorEntrada' => $valorEntrada,
             'ValorSaidas' => $ValorSaidas,
             'total' => $total,
+            'company' => $company
         ]);
     }
 

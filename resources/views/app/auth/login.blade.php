@@ -57,9 +57,9 @@
             <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
                 style="background-image: url(assets/media/misc/penha.png)">
                 <!--begin::Content-->
-                <div class="d-flex flex-column flex-center p-6 p-lg-10 w-100">
+                <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100">
                     <!--begin::Logo-->
-                    <a href="../../demo1/dist/index.html" class="mb-0 mb-lg-20">
+                    <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20">
                         <img alt="Logo" src="/assets/media/logos/default.svg" class="h-40px h-lg-50px" />
                     </a>
                     <!--end::Logo-->

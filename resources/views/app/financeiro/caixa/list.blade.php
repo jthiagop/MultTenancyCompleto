@@ -659,6 +659,11 @@
 <!--begin::Vendors Javascript(used for this page only)-->
 <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
+<script>
+    var companyName = @json($company->name);
+    var companyCnpj = @json($company->cnpj);
+    var companyLogoUrl = @json(route('file', ['path' => $company->avatar]));
+</script>
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="/assets/js/custom/apps/caixa/shipping.js"></script>
 <script src="/assets/js/widgets.bundle.js"></script>
@@ -667,7 +672,7 @@
 <script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
 <script src="/assets/js/custom/utilities/modals/users-search.js"></script>
 <!--end::Custom Javascript-->
-<script src="assets/js/custom/apps/user-management/users/list/table.js"></script>
+<script src="/assets/js/custom/apps/user-management/users/list/table.js"></script>
 
 <!--end::Javascript-->
 
@@ -680,7 +685,7 @@
 <!-- DateRangePicker -->
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <!-- Custom Script -->
-<script src="{{ asset('js/custom_script.js') }}"></script>
+<script src="/assets/js/custom_script.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

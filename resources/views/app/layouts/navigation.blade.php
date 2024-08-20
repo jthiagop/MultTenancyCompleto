@@ -493,7 +493,7 @@
                                             class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                             <!--begin::Symbol-->
                                             <div class="symbol symbol-40px me-4">
-                                                <img src="assets/media/avatars/300-6.jpg" alt="" />
+                                                <img src="/assets/media/avatars/300-6.jpg" alt="" />
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
@@ -510,7 +510,7 @@
                                             class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                             <!--begin::Symbol-->
                                             <div class="symbol symbol-40px me-4">
-                                                <img src="assets/media/avatars/300-2.jpg" alt="" />
+                                                <img src="/assets/media/avatars/300-2.jpg" alt="" />
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
@@ -527,7 +527,7 @@
                                             class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                             <!--begin::Symbol-->
                                             <div class="symbol symbol-40px me-4">
-                                                <img src="assets/media/avatars/300-9.jpg" alt="" />
+                                                <img src="/assets/media/avatars/300-9.jpg" alt="" />
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
@@ -544,7 +544,7 @@
                                             class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                             <!--begin::Symbol-->
                                             <div class="symbol symbol-40px me-4">
-                                                <img src="assets/media/avatars/300-14.jpg" alt="" />
+                                                <img src="/assets/media/avatars/300-14.jpg" alt="" />
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
@@ -561,7 +561,7 @@
                                             class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                             <!--begin::Symbol-->
                                             <div class="symbol symbol-40px me-4">
-                                                <img src="assets/media/avatars/300-11.jpg" alt="" />
+                                                <img src="/assets/media/avatars/300-11.jpg" alt="" />
                                             </div>
                                             <!--end::Symbol-->
                                             <!--begin::Title-->
@@ -585,7 +585,7 @@
                                             <div class="symbol symbol-40px me-4">
                                                 <span class="symbol-label bg-light">
                                                     <img class="w-20px h-20px"
-                                                        src="assets/media/svg/brand-logos/volicity-9.svg"
+                                                        src="/assets/media/svg/brand-logos/volicity-9.svg"
                                                         alt="" />
                                                 </span>
                                             </div>
@@ -605,7 +605,7 @@
                                             <div class="symbol symbol-40px me-4">
                                                 <span class="symbol-label bg-light">
                                                     <img class="w-20px h-20px"
-                                                        src="assets/media/svg/brand-logos/tvit.svg" alt="" />
+                                                        src="/assets/media/svg/brand-logos/tvit.svg" alt="" />
                                                 </span>
                                             </div>
                                             <!--end::Symbol-->
@@ -625,7 +625,7 @@
                                             <div class="symbol symbol-40px me-4">
                                                 <span class="symbol-label bg-light">
                                                     <img class="w-20px h-20px"
-                                                        src="assets/media/svg/misc/infography.svg" alt="" />
+                                                        src="/assets/media/svg/misc/infography.svg" alt="" />
                                                 </span>
                                             </div>
                                             <!--end::Symbol-->
@@ -645,7 +645,7 @@
                                             <div class="symbol symbol-40px me-4">
                                                 <span class="symbol-label bg-light">
                                                     <img class="w-20px h-20px"
-                                                        src="assets/media/svg/brand-logos/leaf.svg" alt="" />
+                                                        src="/assets/media/svg/brand-logos/leaf.svg" alt="" />
                                                 </span>
                                             </div>
                                             <!--end::Symbol-->
@@ -664,7 +664,7 @@
                                             <div class="symbol symbol-40px me-4">
                                                 <span class="symbol-label bg-light">
                                                     <img class="w-20px h-20px"
-                                                        src="assets/media/svg/brand-logos/tower.svg" alt="" />
+                                                        src="/assets/media/svg/brand-logos/tower.svg" alt="" />
                                                 </span>
                                             </div>
                                             <!--end::Symbol-->
@@ -1358,7 +1358,7 @@
                     <div class="menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px" data-kt-menu="true">
                         <!--begin::Heading-->
                         <div class="d-flex flex-column bgi-no-repeat rounded-top"
-                            style="background-image:url('assets/media/misc/menu-header-bg.jpg')">
+                            style="background-image:url('/assets/media/misc/menu-header-bg.jpg')">
                             <!--begin::Title-->
                             <h3 class="text-white fw-semibold px-9 mt-10 mb-6">Notifications
                                 <span class="fs-8 opacity-75 ps-3">24 reports</span>
@@ -1717,7 +1717,7 @@
                                     <!--begin::Illustration-->
                                     <div class="text-center px-4">
                                         <img class="mw-100 mh-200px" alt="image"
-                                            src="assets/media/illustrations/sketchy-1/1.png" />
+                                            src="/assets/media/illustrations/sketchy-1/1.png" />
                                     </div>
                                     <!--end::Illustration-->
                                 </div>

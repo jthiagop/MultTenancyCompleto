@@ -85,7 +85,25 @@ var KTAppEcommerceReportShipping = function () {
         });
     }
 
-    // Hook export buttons
+// Hook export buttons
+// Função para converter uma imagem em Base64
+function getBase64Image(imgUrl, callback) {
+    var img = new Image();
+    img.setAttribute('crossOrigin', 'anonymous'); // Necessário para evitar problemas de CORS
+    img.onload = function () {
+        var canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        var ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0);
+        var dataURL = canvas.toDataURL("image/png"); // Converte a imagem para Base64
+        callback(dataURL);
+    };
+    img.src = imgUrl;
+}
+
+
+getBase64Image(companyLogoUrl, function(base64Image) {
     var exportButtons = () => {
         const documentTitle = 'Shipping Report';
         var buttons = new $.fn.dataTable.Buttons(table, {
@@ -104,58 +122,174 @@ var KTAppEcommerceReportShipping = function () {
                 },
                 {
                     extend: 'pdfHtml5',
-                    extend: 'pdfHtml5',
-                    title: documentTitle,
-                text: 'Exportar para PDF',
-                orientation: 'landscape', // ou 'portrait'
-                pageSize: 'A4', // ou 'LETTER', 'LEGAL', etc.
-                customize: function (doc) {
-                    doc.content[1].table.widths = [
-                        '5%', '10%', '20%', '30%', '5%','10%', '10%','5%', '0',
-                    ];
-                    doc.styles.tableHeader.fillColor = 'blue';
-                    doc.styles.tableHeader.color = 'white';
-                    doc.styles.tableHeader.alignment = 'center';
-                    doc.styles.tableHeader.fontSize = 12;
-                    doc.styles.title.fontSize = 14;
-                    doc.styles.title.alignment = 'center';
-                    doc.content[0].text = doc.content[0].text.toUpperCase();
-                    doc.footer = function(page, pages) {
-                        return {
+                    text: 'Exportar para PDF',
+                    orientation: 'landscape',
+                    pageSize: 'A4',
+                    exportOptions: {
+                        columns: [0, 1, 2, 3, 4, 6, 5],
+                        alignment: 'center',
+                    },
+                    customize: function (doc) {
+                        // Insere o logotipo, nome da diocese e outros detalhes no cabeçalho
+                        doc.content.unshift({
                             columns: [
-                                'Este é um rodapé personalizado',
                                 {
-                                    alignment: 'right',
-                                    text: [
-                                        { text: page.toString(), italics: true },
-                                        ' de ',
-                                        { text: pages.toString(), italics: true }
-                                    ]
+                                    image: base64Image, // Usa a imagem convertida em Base64
+                                    width: 60
+                                },
+                                {
+                                    stack: [
+                                        {
+                                            text: 'Proneb - Província Nossa Senhora da Penha do Brasil ',
+                                            alignment: 'center',
+                                            margin: [0, 0, 0, 5],
+                                            fontSize: 14,
+                                            bold: true
+                                        },
+                                        {
+                                            text: companyName,
+                                            alignment: 'center',
+                                            fontSize: 12,
+                                            bold: true
+                                        },
+                                        {
+                                            text: 'CNPJ: ' + companyCnpj,
+                                            alignment: 'center',
+                                            fontSize: 10
+                                        },
+                                        {
+                                            text: 'E-mail: paroquiafatimacaruaru@gmail.com / Home-page:',
+                                            alignment: 'center',
+                                            fontSize: 10
+                                        },
+                                        {
+                                            text: 'Fone: 81 2161-2590',
+                                            alignment: 'center',
+                                            fontSize: 10
+                                        }
+                                    ],
+                                    margin: [0, 0, 0, 10]
                                 }
                             ],
-                            margin: [10, 0]
+                            margin: [0, 0, 0, 20] // Margem abaixo do cabeçalho
+                        })
+
+                        // Ajusta as larguras das colunas conforme necessário
+                        if (doc.content[1] && doc.content[1].table) {
+                            doc.content[1].table.widths = [
+                                '5%', '10%', '20%', '35%', '5%', '5%', '20%'
+                            ];
+                        }
+
+                        // Estilização do cabeçalho da tabela
+                        doc.styles.tableHeader.fillColor = 'blue';
+                        doc.styles.tableHeader.color = 'white';
+                        doc.styles.tableHeader.alignment = 'center';
+                        doc.styles.tableHeader.fontSize = 12;
+                        doc.styles.title.fontSize = 14;
+                        doc.styles.title.alignment = 'center';
+
+                        if (doc.content[1] && doc.content[1].text) {
+                            doc.content[1].text = doc.content[1].text.toUpperCase();
+                        }
+
+                        // Alinhamento de texto para cada célula da tabela
+                        if (doc.content[2] && doc.content[2].table) {
+                            doc.content[2].table.body.forEach(function(row, rowIndex) {
+                                row.forEach(function(cell, cellIndex) {
+                                    if (cellIndex === 0 || cellIndex === 1) {
+                                        cell.alignment = 'left';
+                                    } else if (cellIndex === 5) {
+                                        cell.alignment = 'right';
+                                    } else {
+                                        cell.alignment = 'center';
+                                    }
+                                });
+                            });
+
+                            // Calcula a soma das entradas e saídas
+                            var totalEntradas = 0;
+                            var totalSaidas = 0;
+                            doc.content[2].table.body.forEach(function(row, index) {
+                                if (index > 0) { // Exclui a linha do cabeçalho da soma
+                                    var valor = parseFloat(row[6].text.replace(/[^0-9.-]+/g,"")) || 0;
+                                    if (row[4].text === 'entrada') {
+                                        totalEntradas += valor;
+                                    } else if (row[4].text === 'saida') {
+                                        totalSaidas += valor;
+                                    }
+                                }
+                            });
+
+                            // Calcula o saldo
+                            var saldo = totalEntradas - totalSaidas;
+
+                            // Formata os totais no estilo brasileiro
+                            var formattedTotalEntradas = totalEntradas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            var formattedTotalSaidas = totalSaidas.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            var formattedSaldo = saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+                            // Adiciona as somas formatadas e o saldo ao final do documento
+                            doc.content.push({
+                                text: 'Total Entradas: R$ ' + formattedTotalEntradas,
+                                alignment: 'right',
+                                margin: [0, 10, 20, 0],
+                                fontSize: 12,
+                                bold: true
+                            });
+                            doc.content.push({
+                                text: 'Total Saídas: R$ ' + formattedTotalSaidas,
+                                alignment: 'right',
+                                margin: [0, 10, 20, 0],
+                                fontSize: 12,
+                                bold: true
+                            });
+                            doc.content.push({
+                                text: 'Saldo: R$ ' + formattedSaldo,
+                                alignment: 'right',
+                                margin: [0, 10, 20, 0],
+                                fontSize: 12,
+                                bold: true
+                            });
+                        }
+
+                        // Rodapé personalizado
+                        doc.footer = function(page, pages) {
+                            return {
+                                columns: [
+                                    'Proneb - Província Nossa Senhora da Penha do Brasil',
+                                    {
+                                        alignment: 'right',
+                                        text: [
+                                            { text: page.toString(), italics: true },
+                                            ' de ',
+                                            { text: pages.toString(), italics: true }
+                                        ]
+                                    }
+                                ],
+                                margin: [10, 0, 10, 0]
+                            };
                         };
-                    };
-                }
+                    }
                 }
             ]
         }).container().appendTo($('#kt_ecommerce_report_shipping_export'));
 
-        // Hook dropdown menu click event to datatable export buttons
-        const exportButtons = document.querySelectorAll('#kt_ecommerce_report_shipping_export_menu [data-kt-ecommerce-export]');
-        exportButtons.forEach(exportButton => {
+        const exportMenuButtons = document.querySelectorAll('#kt_ecommerce_report_shipping_export_menu [data-kt-ecommerce-export]');
+        exportMenuButtons.forEach(exportButton => {
             exportButton.addEventListener('click', e => {
                 e.preventDefault();
-
-                // Get clicked export value
                 const exportValue = e.target.getAttribute('data-kt-ecommerce-export');
                 const target = document.querySelector('.dt-buttons .buttons-' + exportValue);
-
-                // Trigger click event on hidden datatable export buttons
-                target.click();
+                if (target) target.click();
             });
         });
-    }
+    };
+
+    // Execute a função exportButtons após a imagem ser carregada e convertida
+    exportButtons();
+});
+
 
     // Search Datatable --- official docs reference: https://datatables.net/reference/api/search/
     var handleSearchDatatable = () => {
