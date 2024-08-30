@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Models\Company;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -33,15 +34,20 @@ class GlobalVariablesServiceProvider extends ServiceProvider
             });
 
                     // Compartilhar a variável company com todas as views
-        View::composer('*', function ($view) {
-            if (Auth::check()) {
-                // Busca a company associada ao usuário logado
-                $company = Company::first();
-
-                // Compartilha a variável com todas as views
-                $view->with('company', $company);
-            }
-        });
+                    View::composer('*', function ($view) {
+                        if (Auth::check()) {
+                            // Verifica se a tabela 'companies' existe antes de tentar buscar dados
+                            if (Schema::hasTable('companies')) {
+                                // Busca a empresa associada ao usuário logado
+                                $company = Company::first();
+                                // Compartilha a variável com todas as views
+                                $view->with('company', $company);
+                            } else {
+                                // Caso a tabela não exista, você pode definir um valor padrão ou deixar a variável como null
+                                $view->with('company', null);
+                            }
+                        }
+                    });
         }
     }
 

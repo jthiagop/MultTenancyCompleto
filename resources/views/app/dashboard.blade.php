@@ -208,7 +208,7 @@
                                 <!--begin::Option-->
                                 <input type="radio" class="btn-check" name="account_type" value="corporate"
                                     id="kt_create_account_form_account_type_corporate" />
-                                <a href="{{ route('caixa.create') }}"
+                                <a href="{{ route('patrimonio.index') }}"
                                     class="btn btn-outline btn-outline-dashed btn-outline-danger p-7 d-flex align-items-center"
                                     for="kt_create_account_form_account_type_corporate">
                                     <!--begin::Svg Icon | path: icons/duotune/finance/fin006.svg-->

@@ -101,16 +101,11 @@
                                                 <span
                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                     <!--begin::Svg Icon | path: icons/duotune/graphs/gra001.svg-->
-                                                    <span class="svg-icon svg-icon-dark svg-icon-1">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path opacity="0.3"
-                                                                d="M14 3V21H10V3C10 2.4 10.4 2 11 2H13C13.6 2 14 2.4 14 3ZM7 14H5C4.4 14 4 14.4 4 15V21H8V15C8 14.4 7.6 14 7 14Z"
-                                                                fill="currentColor" />
-                                                            <path
-                                                                d="M21 20H20V8C20 7.4 19.6 7 19 7H17C16.4 7 16 7.4 16 8V20H3C2.4 20 2 20.4 2 21C2 21.6 2.4 22 3 22H21C21.6 22 22 21.6 22 21C22 20.4 21.6 20 21 20Z"
-                                                                fill="currentColor" />
-                                                        </svg>
+                                                    <!--begin::Svg Icon | path: /var/www/preview.keenthemes.com/keenthemes/keen/docs/core/html/src/media/icons/duotune/finance/fin003.svg-->
+                                                    <span class="svg-icon svg-icon-dark svg-icon-1"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path opacity="0.3" d="M20 18H4C3.4 18 3 17.6 3 17V7C3 6.4 3.4 6 4 6H20C20.6 6 21 6.4 21 7V17C21 17.6 20.6 18 20 18ZM12 8C10.3 8 9 9.8 9 12C9 14.2 10.3 16 12 16C13.7 16 15 14.2 15 12C15 9.8 13.7 8 12 8Z" fill="currentColor"/>
+                                                    <path d="M18 6H20C20.6 6 21 6.4 21 7V9C19.3 9 18 7.7 18 6ZM6 6H4C3.4 6 3 6.4 3 7V9C4.7 9 6 7.7 6 6ZM21 17V15C19.3 15 18 16.3 18 18H20C20.6 18 21 17.6 21 17ZM3 15V17C3 17.6 3.4 18 4 18H6C6 16.3 4.7 15 3 15Z" fill="currentColor"/>
+                                                    </svg>
                                                     </span>
                                                     <!--end::Svg Icon-->
                                                 </span>
@@ -129,30 +124,21 @@
                                         <!--begin:Menu item-->
                                         <div class="menu-item p-0 m-0">
                                             <!--begin:Menu link-->
-                                            <a href="../../demo1/dist/index.html" class="menu-link active">
+                                            <a href="{{ route('patrimonio.index') }}" class="menu-link active">
                                                 <span
                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                     <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm002.svg-->
-                                                    <span class="svg-icon svg-icon-primary svg-icon-1">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path
-                                                                d="M21 10H13V11C13 11.6 12.6 12 12 12C11.4 12 11 11.6 11 11V10H3C2.4 10 2 10.4 2 11V13H22V11C22 10.4 21.6 10 21 10Z"
-                                                                fill="currentColor" />
-                                                            <path opacity="0.3"
-                                                                d="M12 12C11.4 12 11 11.6 11 11V3C11 2.4 11.4 2 12 2C12.6 2 13 2.4 13 3V11C13 11.6 12.6 12 12 12Z"
-                                                                fill="currentColor" />
-                                                            <path opacity="0.3"
-                                                                d="M18.1 21H5.9C5.4 21 4.9 20.6 4.8 20.1L3 13H21L19.2 20.1C19.1 20.6 18.6 21 18.1 21ZM13 18V15C13 14.4 12.6 14 12 14C11.4 14 11 14.4 11 15V18C11 18.6 11.4 19 12 19C12.6 19 13 18.6 13 18ZM17 18V15C17 14.4 16.6 14 16 14C15.4 14 15 14.4 15 15V18C15 18.6 15.4 19 16 19C16.6 19 17 18.6 17 18ZM9 18V15C9 14.4 8.6 14 8 14C7.4 14 7 14.4 7 15V18C7 18.6 7.4 19 8 19C8.6 19 9 18.6 9 18Z"
-                                                                fill="currentColor" />
+                                                    <span class="svg-icon svg-icon-primary svg-icon-1"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <path opacity="0.3" d="M13.625 22H9.625V3C9.625 2.4 10.025 2 10.625 2H12.625C13.225 2 13.625 2.4 13.625 3V22Z" fill="currentColor"/>
+                                                        <path d="M19.625 10H12.625V4H19.625L21.025 6.09998C21.325 6.59998 21.325 7.30005 21.025 7.80005L19.625 10Z" fill="currentColor"/>
+                                                        <path d="M3.62499 16H10.625V10H3.62499L2.225 12.1001C1.925 12.6001 1.925 13.3 2.225 13.8L3.62499 16Z" fill="currentColor"/>
                                                         </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
+                                                        </span>
+                                                        <!--end::Svg Icon-->
                                                 </span>
                                                 <span class="d-flex flex-column">
-                                                    <span class="fs-6 fw-semibold text-gray-800">Default</span>
-                                                    <span class="fs-7 fw-semibold text-muted">Reports &
-                                                        statistics</span>
+                                                    <span class="fs-6 fw-semibold text-gray-800">Patrimônio</span>
+                                                    <span class="fs-7 fw-semibold text-muted">Foro e Laudêmio</span>
                                                 </span>
                                             </a>
                                             <!--end:Menu link-->
@@ -2159,7 +2145,7 @@
                             <!--begin:Menu item-->
                             <div class="menu-item">
                                 <!--begin:Menu link-->
-                                <a class="menu-link" href="#">
+                                <a class="menu-link" href="{{ route('patrimonio.index') }}">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>

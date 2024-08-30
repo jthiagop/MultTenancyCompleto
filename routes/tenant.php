@@ -13,6 +13,8 @@ use App\Http\Controllers\App\TenantFilialController;
 use App\Http\Controllers\App\CaixaController;
 use App\Http\Controllers\App\LancamentoPadraoController;
 use App\Http\Controllers\App\CadastroBancoController;
+use App\Http\Controllers\App\NamePatrimonioController;
+use App\Http\Controllers\App\PatrimonioController;
 use App\Http\Controllers\App\ReportController;
 use App\Models\TenantFilial;
 use Illuminate\Support\Facades\Route;
@@ -102,9 +104,12 @@ Route::middleware([
             Route::resource('anexos', AnexoController::class);
             Route::resource('post', PostController::class);
 
+            Route::resource('patrimonio', PatrimonioController::class);
+            Route::resource('namePatrimonio', NamePatrimonioController::class);
+
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
             Route::get('app/financeiro/banco/list', [BancoController::class, 'list'])->name('banco.list');
-
+            Route::get('/patrimonios/search', [PatrimonioController::class, 'search'])->name('patrimonios.search');
 
             Route::get('/report/shipping', [ReportController::class, 'shippingReport'])->name('report.shipping');
             Route::get('/report/shipping/data', [ReportController::class, 'shippingReportData'])->name('report.shipping.data');

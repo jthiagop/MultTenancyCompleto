@@ -7638,165 +7638,104 @@ KTUtil.onDOMContentLoaded(function() {
 
 // Class definition
 var KTLayoutSearch = function() {
-    // Private variables
     var element;
     var formElement;
-    var mainElement;
+    var inputElement;
     var resultsElement;
-    var wrapperElement;
     var emptyElement;
-
-    var preferencesElement;
-    var preferencesShowElement;
-    var preferencesDismissElement;
-
-    var advancedOptionsFormElement;
-    var advancedOptionsFormShowElement;
-    var advancedOptionsFormCancelElement;
-    var advancedOptionsFormSearchElement;
+    var suggestionsElement;
 
     var searchObject;
 
-    // Private functions
-    var processs = function(search) {
-        var timeout = setTimeout(function() {
-            var number = KTUtil.getRandomInt(1, 3);
-
-            // Hide recently viewed
-            mainElement.classList.add('d-none');
-
-            if (number === 3) {
-                // Hide results
-                resultsElement.classList.add('d-none');
-                // Show empty message
-                emptyElement.classList.remove('d-none');
-            } else {
-                // Show results
-                resultsElement.classList.remove('d-none');
-                // Hide empty message
-                emptyElement.classList.add('d-none');
-            }
-
-            // Complete search
-            search.complete();
-        }, 1500);
-    }
-
     var processsAjax = function(search) {
-        // Hide recently viewed
-        mainElement.classList.add('d-none');
+        var query = inputElement.value.trim().toLowerCase();
 
-        // Learn more: https://axios-http.com/docs/intro
-        axios.post('/search.php', {
-            query: searchObject.getQuery()
+        if (query.length < 2) {
+            clearSearch();
+            return;
+        }
+
+        axios.get('/patrimonios/search', {
+            params: {
+                query: query
+            }
         })
         .then(function (response) {
-            // Populate results
-            resultsElement.innerHTML = response;
-            // Show results
-            resultsElement.classList.remove('d-none');
-            // Hide empty message
-            emptyElement.classList.add('d-none');
+            var patrimonios = response.data;
+
+            if (patrimonios.length > 0) {
+                var resultsHtml = '';
+                patrimonios.forEach(function(patrimonio) {
+                    resultsHtml += `
+                        <div class="rounded d-flex flex-stack bg-active-lighten p-4" data-user-id="${patrimonio.id}">
+                            <div class="d-flex align-items-center">
+                                <label class="form-check form-check-custom form-check-solid me-5">
+                                    <input class="form-check-input" type="checkbox" name="users"
+                                        value="${patrimonio.id}" />
+                                </label>
+                                <div class="ms-5">
+                                    <a href="#" class="fs-5 fw-bold text-gray-900 text-hover-primary mb-2">${patrimonio.codigo_rid}</a>
+                                    <div class="fw-semibold text-muted">${patrimonio.patrimonio}</div>
+                                </div>
+                            </div>
+                            <div class="ms-2 w-100px">
+                                <a href="/patrimonio/${patrimonio.id}" class="btn btn-light btn-sm"><span><i class="ki-solid ki-eye"></i>Ver</span></a>
+                            </div>
+                        </div>
+                        <div class="border-bottom border-gray-300 border-bottom-dashed"></div>`;
+                });
+                resultsElement.innerHTML = resultsHtml;
+                resultsElement.classList.remove('d-none');
+                emptyElement.classList.add('d-none');
+            } else {
+                resultsElement.classList.add('d-none');
+                emptyElement.classList.remove('d-none');
+            }
 
             // Complete search
             search.complete();
         })
         .catch(function (error) {
-            // Hide results
+            console.error(error);
             resultsElement.classList.add('d-none');
-            // Show empty message
             emptyElement.classList.remove('d-none');
 
             // Complete search
             search.complete();
         });
-    }
+    };
 
-    var clear = function(search) {
-        // Show recently viewed
-        mainElement.classList.remove('d-none');
-        // Hide results
+    var clearSearch = function() {
+        suggestionsElement.classList.remove('d-none');
         resultsElement.classList.add('d-none');
-        // Hide empty message
         emptyElement.classList.add('d-none');
-    }
+    };
 
-    var handlePreferences = function() {
-        // Preference show handler
-        preferencesShowElement.addEventListener('click', function() {
-            wrapperElement.classList.add('d-none');
-            preferencesElement.classList.remove('d-none');
-        });
-
-        // Preference dismiss handler
-        preferencesDismissElement.addEventListener('click', function() {
-            wrapperElement.classList.remove('d-none');
-            preferencesElement.classList.add('d-none');
-        });
-    }
-
-    var handleAdvancedOptionsForm = function() {
-        // Show
-        advancedOptionsFormShowElement.addEventListener('click', function() {
-            wrapperElement.classList.add('d-none');
-            advancedOptionsFormElement.classList.remove('d-none');
-        });
-
-        // Cancel
-        advancedOptionsFormCancelElement.addEventListener('click', function() {
-            wrapperElement.classList.remove('d-none');
-            advancedOptionsFormElement.classList.add('d-none');
-        });
-
-        // Search
-        advancedOptionsFormSearchElement.addEventListener('click', function() {
-
-        });
-    }
-
-    // Public methods
-	return {
-		init: function() {
-            // Elements
-            element = document.querySelector('#kt_header_search');
-
-            if (!element) {
-                return;
-            }
-
-            wrapperElement = element.querySelector('[data-kt-search-element="wrapper"]');
+    return {
+        init: function() {
+            element = document.querySelector('#kt_modal_users_search_handler');
             formElement = element.querySelector('[data-kt-search-element="form"]');
-            mainElement = element.querySelector('[data-kt-search-element="main"]');
+            inputElement = element.querySelector('[data-kt-search-element="input"]');
             resultsElement = element.querySelector('[data-kt-search-element="results"]');
             emptyElement = element.querySelector('[data-kt-search-element="empty"]');
-
-            preferencesElement = element.querySelector('[data-kt-search-element="preferences"]');
-            preferencesShowElement = element.querySelector('[data-kt-search-element="preferences-show"]');
-            preferencesDismissElement = element.querySelector('[data-kt-search-element="preferences-dismiss"]');
-
-            advancedOptionsFormElement = element.querySelector('[data-kt-search-element="advanced-options-form"]');
-            advancedOptionsFormShowElement = element.querySelector('[data-kt-search-element="advanced-options-form-show"]');
-            advancedOptionsFormCancelElement = element.querySelector('[data-kt-search-element="advanced-options-form-cancel"]');
-            advancedOptionsFormSearchElement = element.querySelector('[data-kt-search-element="advanced-options-form-search"]');
+            suggestionsElement = element.querySelector('[data-kt-search-element="suggestions"]');
 
             // Initialize search handler
             searchObject = new KTSearch(element);
 
-            // Demo search handler
-            searchObject.on('kt.search.process', processs);
-
             // Ajax search handler
-            //searchObject.on('kt.search.process', processsAjax);
+            searchObject.on('kt.search.process', processsAjax);
 
             // Clear handler
-            searchObject.on('kt.search.clear', clear);
-
-            // Custom handlers
-            handlePreferences();
-            handleAdvancedOptionsForm();
-		}
-	};
+            searchObject.on('kt.search.clear', clearSearch);
+        }
+    };
 }();
+
+KTUtil.onDOMContentLoaded(function() {
+    KTLayoutSearch.init();
+});
+
 
 // On document ready
 KTUtil.onDOMContentLoaded(function() {

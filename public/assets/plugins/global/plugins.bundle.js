@@ -32078,6 +32078,24 @@ Inputmask({
     "mask" : "99.999.999/999.9-99"
 }).mask("#cnpj");
 
+Inputmask({
+    "mask": "999.999.999,99 m²",
+    "numericInput": true,
+    "placeholder": "0"
+}).mask("#area_total");
+
+Inputmask({
+    "mask": "999.999.999,99 m²",
+    "numericInput": true,
+    "placeholder": "0"
+}).mask("#area_privativa");
+
+// CEP
+Inputmask({
+    "mask" : "99999-999"
+}).mask("#cep");
+
+
 // Phone
 Inputmask({
     "mask" : "(999) 999-9999"

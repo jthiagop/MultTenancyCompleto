@@ -4,7 +4,7 @@
 var KTFileManagerList = function () {
     // Define shared variables
     var datatable;
-    var table
+    var table;
 
     // Define template element variables
     var uploadTemplate;
@@ -12,14 +12,83 @@ var KTFileManagerList = function () {
     var actionTemplate;
     var checkboxTemplate;
 
-
     // Private functions
     const initTemplates = () => {
         uploadTemplate = document.querySelector('[data-kt-filemanager-template="upload"]');
         renameTemplate = document.querySelector('[data-kt-filemanager-template="rename"]');
         actionTemplate = document.querySelector('[data-kt-filemanager-template="action"]');
         checkboxTemplate = document.querySelector('[data-kt-filemanager-template="checkbox"]');
-    }
+    };
+
+    const handleDeleteRows = () => {
+        const deleteButtons = table.querySelectorAll('[data-kt-filemanager-table-filter="delete_row"]');
+
+        deleteButtons.forEach(d => {
+            d.addEventListener('click', function (e) {
+                e.preventDefault();
+                const parent = e.target.closest('tr');
+                const fileId = parent.dataset.fileId;
+
+                Swal.fire({
+                    text: "Tem certeza de que deseja excluir este arquivo?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    buttonsStyling: false,
+                    confirmButtonText: "Sim, exclua!",
+                    cancelButtonText: "Não, cancele",
+                    customClass: {
+                        confirmButton: "btn fw-bold btn-danger",
+                        cancelButton: "btn fw-bold btn-active-light-primary"
+                    }
+                }).then(function (result) {
+                    if (result.value) {
+                        fetch(`/anexos/${fileId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Content-Type': 'application/json'
+                            }
+                        }).then(response => response.json())
+                        .then(data => {
+                            if (data.message === 'File deleted successfully') {
+                                Swal.fire({
+                                    text: "Você excluiu o arquivo!",
+                                    icon: "success",
+                                    buttonsStyling: false,
+                                    confirmButtonText: "Ok, entendi!",
+                                    customClass: {
+                                        confirmButton: "btn fw-bold btn-primary",
+                                    }
+                                }).then(function () {
+                                    datatable.row($(parent)).remove().draw();
+                                });
+                            } else {
+                                Swal.fire({
+                                    text: data.message,
+                                    icon: "error",
+                                    buttonsStyling: false,
+                                    confirmButtonText: "Ok, entendi!",
+                                    customClass: {
+                                        confirmButton: "btn fw-bold btn-primary",
+                                    }
+                                });
+                            }
+                        });
+                    } else if (result.dismiss === 'cancel') {
+                        Swal.fire({
+                            text: "O arquivo não foi excluído.",
+                            icon: "error",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok, entendi!",
+                            customClass: {
+                                confirmButton: "btn fw-bold btn-primary",
+                            }
+                        });
+                    }
+                });
+            });
+        });
+    };
 
     const initDatatable = () => {
         // Set date data order
@@ -100,91 +169,15 @@ var KTFileManagerList = function () {
             countTotalItems();
             handleRename();
         });
-    }
+    };
 
-    // Search Datatable --- official docs reference: https://datatables.net/reference/api/search()
+    // Search Datatable --- official docs reference: https://datatables.net/reference/api/search/
     const handleSearchDatatable = () => {
         const filterSearch = document.querySelector('[data-kt-filemanager-table-filter="search"]');
         filterSearch.addEventListener('keyup', function (e) {
             datatable.search(e.target.value).draw();
         });
-    }
-
-    document.addEventListener('DOMContentLoaded', function() {
-        const table = document.querySelector('#kt_file_manager_list');
-
-        const handleDeleteRows = () => {
-            const deleteButtons = table.querySelectorAll('[data-kt-filemanager-table-filter="delete_row"]');
-
-            deleteButtons.forEach(d => {
-                d.addEventListener('click', function (e) {
-                    e.preventDefault();
-                    const parent = e.target.closest('tr');
-                    const fileId = parent.dataset.fileId;
-
-                    Swal.fire({
-                        text: "Tem certeza de que deseja excluir este arquivo?",
-                        icon: "warning",
-                        showCancelButton: true,
-                        buttonsStyling: false,
-                        confirmButtonText: "Sim, exclua!",
-                        cancelButtonText: "Não, cancele",
-                        customClass: {
-                            confirmButton: "btn fw-bold btn-danger",
-                            cancelButton: "btn fw-bold btn-active-light-primary"
-                        }
-                    }).then(function (result) {
-                        if (result.value) {
-                            fetch(`/anexos/${fileId}`, {
-                                method: 'DELETE',
-                                headers: {
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                                    'Content-Type': 'application/json'
-                                }
-                            }).then(response => response.json())
-                            .then(data => {
-                                if (data.message === 'File deleted successfully') {
-                                    Swal.fire({
-                                        text: "Você excluiu o arquivo!",
-                                        icon: "success",
-                                        buttonsStyling: false,
-                                        confirmButtonText: "Ok, entendi!",
-                                        customClass: {
-                                            confirmButton: "btn fw-bold btn-primary",
-                                        }
-                                    }).then(function () {
-                                        datatable.row($(parent)).remove().draw();
-                                    });
-                                } else {
-                                    Swal.fire({
-                                        text: data.message,
-                                        icon: "error",
-                                        buttonsStyling: false,
-                                        confirmButtonText: "Ok, entendi!",
-                                        customClass: {
-                                            confirmButton: "btn fw-bold btn-primary",
-                                        }
-                                    });
-                                }
-                            });
-                        } else if (result.dismiss === 'cancel') {
-                            Swal.fire({
-                                text: "O arquivo não foi excluído.",
-                                icon: "error",
-                                buttonsStyling: false,
-                                confirmButtonText: "Ok, entendi!",
-                                customClass: {
-                                    confirmButton: "btn fw-bold btn-primary",
-                                }
-                            });
-                        }
-                    });
-                });
-            });
-        }
-
-        handleDeleteRows();
-    });
+    };
 
     // Init toggle toolbar
     const initToggleToolbar = () => {
@@ -258,7 +251,7 @@ var KTFileManagerList = function () {
                 }
             });
         });
-    }
+    };
 
     // Toggle toolbars
     const toggleToolbars = () => {
@@ -291,7 +284,7 @@ var KTFileManagerList = function () {
             toolbarBase.classList.remove('d-none');
             toolbarSelected.classList.add('d-none');
         }
-    }
+    };
 
     // Handle new folder
     const handleNewFolder = () => {
@@ -458,7 +451,7 @@ var KTFileManagerList = function () {
                 }, 1000);
             });
         });
-    }
+    };
 
     // Reset add new folder input
     const resetNewFolder = () => {
@@ -467,7 +460,7 @@ var KTFileManagerList = function () {
         if (newFolderRow) {
             newFolderRow.parentNode.removeChild(newFolderRow);
         }
-    }
+    };
 
     // Handle rename file or folder
     const handleRename = () => {
@@ -476,7 +469,7 @@ var KTFileManagerList = function () {
         renameButton.forEach(button => {
             button.addEventListener('click', renameCallback);
         });
-    }
+    };
 
     // Rename callback
     const renameCallback = (e) => {
@@ -646,7 +639,7 @@ var KTFileManagerList = function () {
                 toastr.error('Cancelled rename function');
             }, 1000);
         });
-    }
+    };
 
     // Init dropzone
     const initDropzone = () => {
@@ -781,7 +774,7 @@ var KTFileManagerList = function () {
                 dropzone.querySelector('.dropzone-remove-all').style.display = "none";
             }
         });
-    }
+    };
 
     // Init copy link
     const initCopyLink = () => {
@@ -812,7 +805,7 @@ var KTFileManagerList = function () {
                 }, 2000);
             });
         });
-    }
+    };
 
     // Handle move to folder
     const handleMoveToFolder = () => {
@@ -916,15 +909,15 @@ var KTFileManagerList = function () {
                 });
             }
         });
-    }
+    };
 
     // Count total number of items
     const countTotalItems = () => {
         const counter = document.getElementById('kt_file_manager_items_counter');
 
-        // Count total number of elements in datatable --- more info: https://datatables.net/reference/api/count()
+        // Count total number of elements in datatable --- more info: https://datatables.net/reference/api/count/
         counter.innerText = datatable.rows().count() + ' items';
-    }
+    };
 
     // Public methods
     return {
@@ -948,7 +941,7 @@ var KTFileManagerList = function () {
             countTotalItems();
             KTMenu.createInstances();
         }
-    }
+    };
 }();
 
 // On document ready
