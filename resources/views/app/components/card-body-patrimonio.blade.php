@@ -19,8 +19,7 @@
                                  <!--begin::Status-->
                                  <div class="d-flex align-items-center mb-1">
                                      <a href="#"
-                                         class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">Cadastro de
-                                         Imoveis</a>
+                                         class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">Patrimônio</a>
                                      <span class="badge badge-light-success me-auto">Em Desenvolvimento</span>
                                  </div>
                                  <!--end::Status-->
@@ -32,26 +31,44 @@
                              <!--end::Details-->
                              <!--begin::Actions-->
                              <div class="d-flex mb-4">
-                                 <a href="#" class="btn btn-sm btn-bg-light btn-active-color-primary me-3"
-                                     data-bs-toggle="modal" data-bs-target="#kt_modal_users_search">Pesquisar...</a>
-                                 <a href="#" class="btn btn-sm btn-primary me-3" data-bs-toggle="modal"
-                                     data-bs-target="#kt_modal_new_foro">
-                                     <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm002.svg-->
-                                     <span class="svg-icon svg-icon-primary svg-icon-1"><svg width="12"
-                                             height="12" viewBox="0 0 24 24" fill="none"
-                                             xmlns="http://www.w3.org/2000/svg">
-                                             <path opacity="0.3"
-                                                 d="M13.625 22H9.625V3C9.625 2.4 10.025 2 10.625 2H12.625C13.225 2 13.625 2.4 13.625 3V22Z"
-                                                 fill="currentColor" />
-                                             <path
-                                                 d="M19.625 10H12.625V4H19.625L21.025 6.09998C21.325 6.59998 21.325 7.30005 21.025 7.80005L19.625 10Z"
-                                                 fill="currentColor" />
-                                             <path
-                                                 d="M3.62499 16H10.625V10H3.62499L2.225 12.1001C1.925 12.6001 1.925 13.3 2.225 13.8L3.62499 16Z"
-                                                 fill="currentColor" />
-                                         </svg>
-                                     </span>
-                                     <!--end::Svg Icon--> Novo Foro</a>
+                                     @if (Request::is('patrimonios/imoveis'))
+                                     <a href="#" class="btn btn-sm btn-bg-light btn-active-color-primary me-3"
+                                     data-bs-toggle="modal" data-bs-target="#kt_modal_users_search">
+                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search me-2" viewBox="0 0 16 16" style="vertical-align: middle;">
+                                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                                      </svg>
+                                      Pesquisar...</a>
+                                     <a href="#" class="btn btn-sm btn-primary me-3" data-bs-toggle="modal" data-bs-target="#kt_modal_new_foro">
+                                        <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm002.svg-->
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-house-add-fill me-2" viewBox="0 0 16 16" style="vertical-align: middle;">
+                                            <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 1 1-1 0v-1h-1a.5.5 0 1 1 0-1h1v-1a.5.5 0 0 1 1 0"/>
+                                            <path d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z"/>
+                                            <path d="m8 3.293 4.712 4.712A4.5 4.5 0 0 0 8.758 15H3.5A1.5 1.5 0 0 1 2 13.5V9.293z"/>
+                                        </svg>
+                                        <!--end::Svg Icon-->
+                                        Novo Ímovel
+                                    </a>
+                                    @elseif (Request::is('patrimonio'))
+                                    <a href="#" class="btn btn-sm btn-bg-light btn-active-color-primary me-3"
+                                    data-bs-toggle="modal" data-bs-target="#kt_modal_users_search">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-search me-2" viewBox="0 0 16 16" style="vertical-align: middle;">
+                                        <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0"/>
+                                      </svg>
+                                    Pesquisar...</a>
+                                    <a href="#" class="btn btn-sm btn-primary me-3" data-bs-toggle="modal"
+                                    data-bs-target="#kt_modal_new_foro">
+                                    <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm002.svg-->
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-building-add me-2" viewBox="0 0 16 16" style="vertical-align: middle;">
+                                        <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0"/>
+                                        <path d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6.5a.5.5 0 0 1-1 0V1H3v14h3v-2.5a.5.5 0 0 1 .5-.5H8v4H3a1 1 0 0 1-1-1z"/>
+                                        <path d="M4.5 2a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z"/>
+                                      </svg>
+                                    <!--end::Svg Icon-->
+                                     Novo Foro</a>
+                                     @else
+
+                                     @endif
+
                                  <!--begin::Menu-->
                                  <div class="me-0">
                                      <button class="btn btn-sm btn-icon btn-bg-light btn-active-color-primary"
@@ -307,8 +324,8 @@
 
                      <!--begin::Nav item-->
                      <li class="nav-item">
-                         <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('apps/projects/budget*') ? 'active' : '' }}"
-                             href="../../demo1/dist/apps/projects/budget.html">Budget</a>
+                         <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('patrimonios/imoveis') ? 'active' : '' }}"
+                             href="{{ route('patrimonio.imoveis') }}">Imóveis</a>
                      </li>
                      <!--end::Nav item-->
 

@@ -226,4 +226,16 @@ private function calcularDV($ridBase)
 
         return response()->json($patrimonios);
     }
+
+    public function imoveis()
+    {
+        $nameForos = NamePatrimonio::all();
+        $patrimonios = Patrimonio::all();
+
+        return view('app.patrimonios.imoveis',
+            [
+                'nameForos' => $nameForos,
+                'patrimonios' => $patrimonios,
+            ]);
+    }
 }

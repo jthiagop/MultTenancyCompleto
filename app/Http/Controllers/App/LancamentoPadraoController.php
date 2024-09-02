@@ -87,8 +87,8 @@ class LancamentoPadraoController extends Controller
      */
     public function edit(string $id)
     {
-        $lp = LancamentoPadrao::find($id);
-        return response()->json($lp);
+        $lps = LancamentoPadrao::find($id);
+        return response()->json($lps);
     }
 
     /**
