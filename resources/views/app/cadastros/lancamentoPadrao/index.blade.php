@@ -447,71 +447,109 @@
                     <!--end::Modal - Customers - Add-->
 
                     <!--begin::Modal - Customers - Edit-->
-                    <div class="modal fade" id="kt_modal_edit_customer" tabindex="-1" aria-hidden="true">
-                        <!--begin::Modal dialog-->
-                        <div class="modal-dialog modal-dialog-centered mw-650px">
-                            <!--begin::Modal content-->
-                            <div class="modal-content">
-                                <!--begin::Form-->
-                                <form class="form" method="POST" action="{{ route('lancamentoPadrao.update', ['lancamentoPadrao' => $lp->id ?? null]) }}" id="kt_modal_edit_customer_form">
-                                    @csrf
-                                    @method('PUT')
-                                    <!--begin::Modal header-->
-                                    <div class="modal-header" id="kt_modal_edit_customer_header">
-                                        <!--begin::Modal title-->
-                                        <h2 class="fw-bold">Editar Lançamento Padrão</h2>
-                                        <!--end::Modal title-->
-                                        <!--begin::Close-->
-                                        <div id="kt_modal_edit_customer_close" class="btn btn-icon btn-sm btn-active-icon-primary">
-                                            <span class="svg-icon svg-icon-1">
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                                    <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
-                                                    <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor" />
-                                                </svg>
-                                            </span>
-                                        </div>
-                                        <!--end::Close-->
-                                    </div>
-                                    <!--end::Modal header-->
-                                    <!--begin::Modal body-->
-                                    <div class="modal-body py-10 px-lg-17">
-                                        <!--begin::Input group-->
-                                        <div class="fv-row mb-7">
-                                            <label class="required fs-6 fw-semibold mb-2">Tipo</label>
-                                            <select class="form-select form-select-solid" name="type" data-control="select2">
-                                                <option value="entrada" {{ $lp->type == 'entrada' ? 'selected' : '' }}>Entrada</option>
-                                                <option value="saida" {{ $lp->type == 'saida' ? 'selected' : '' }}>Saída</option>
-                                            </select>
-                                        </div>
-                                        <div class="fv-row mb-15">
-                                            <label class="required fs-6 fw-semibold mb-2">Descrição</label>
-                                            <textarea class="form-control form-control-solid" rows="3" name="description">{{ $lp->description }}</textarea>
-                                        </div>
-                                        <div class="fv-row mb-7">
-                                            <label class="required fs-6 fw-semibold mb-2">Data</label>
-                                            <input type="date" class="form-control form-control-solid" name="date" value="{{ $lp->date }}" />
-                                        </div>
-                                        <div class="fv-row mb-7">
-                                            <label class="required fs-6 fw-semibold mb-2">Categoria</label>
-                                            <select class="form-select form-select-solid" name="category" data-control="select2">
-                                                <!-- Suas opções de categoria aqui -->
-                                            </select>
-                                        </div>
-                                    </div>
-                                    <!--end::Modal body-->
-                                    <!--begin::Modal footer-->
-                                    <div class="modal-footer flex-center">
-                                        <button type="reset" id="kt_modal_edit_customer_cancel" class="btn btn-light me-3">Cancelar</button>
-                                        <button type="submit" id="kt_modal_edit_customer_submit" class="btn btn-primary">
-                                            <span class="indicator-label">Atualizar</span>
-                                            <span class="indicator-progress">Por favor, aguarde...<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                                        </button>
-                                    </div>
-                                    <!--end::Modal footer-->
-                                </form>
-                            </div>
-                        </div>
+<!-- Modal de Edição -->
+<div class="modal fade" id="kt_modal_edit_customer" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered mw-650px">
+        <div class="modal-content">
+            <form class="form" method="POST" id="kt_modal_edit_customer_form">
+                @csrf
+                @method('PUT')
+                <input type="hidden" name="id" id="lancamento_padrao_id">
+
+                <div class="modal-header" id="kt_modal_edit_customer_header">
+                    <h2 class="fw-bold">Editar Lançamento Padrão</h2>
+                    <div id="kt_modal_edit_customer_close" class="btn btn-icon btn-sm btn-active-icon-primary">
+                        <span class="svg-icon svg-icon-1">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
+                                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor" />
+                            </svg>
+                        </span>
                     </div>
+                </div>
+
+                <div class="modal-body py-10 px-lg-17">
+                    <div class="fv-row mb-7">
+                        <label class="required fs-6 fw-semibold mb-2">Tipo</label>
+                        <select class="form-select form-select-solid" name="type" data-control="select2">
+                            <option value="entrada">Entrada</option>
+                            <option value="saida">Saída</option>
+                        </select>
+                    </div>
+                    <div class="fv-row mb-15">
+                        <label class="required fs-6 fw-semibold mb-2">Descrição</label>
+                        <textarea class="form-control form-control-solid" rows="3" name="description"></textarea>
+                    </div>
+                    <div class="fv-row mb-7">
+                        <label class="required fs-6 fw-semibold mb-2">Data</label>
+                        <input type="date" class="form-control form-control-solid" name="date" />
+                    </div>
+                    <div class="fv-row mb-7">
+                        <label class="required fs-6 fw-semibold mb-2">Categoria</label>
+                        <select class="form-select form-select-solid" name="category" data-control="select2">
+                            <!-- Adicione as opções de categoria -->
+                        </select>
+                    </div>
+                </div>
+
+                <div class="modal-footer flex-center">
+                    <button type="reset" id="kt_modal_edit_customer_cancel" class="btn btn-light me-3">Cancelar</button>
+                    <button type="submit" id="kt_modal_edit_customer_submit" class="btn btn-primary">
+                        <span class="indicator-label">Atualizar</span>
+                        <span class="indicator-progress">Por favor, aguarde...
+                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                        </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    $(document).ready(function() {
+        // Inicializar Select2
+        $('[data-control="select2"]').select2();
+
+        // Função para abrir o modal de edição
+        function openModalForEditing(lancamentoPadrao) {
+            // Preencher os campos do modal com os dados do lançamento existente
+            $('#lancamento_padrao_id').val(lancamentoPadrao.id);
+            $('[name="type"]').val(lancamentoPadrao.type).trigger('change');
+            $('[name="description"]').val(lancamentoPadrao.description);
+            $('[name="date"]').val(lancamentoPadrao.date);
+            $('[name="category"]').val(lancamentoPadrao.category).trigger('change');
+
+            // Atualizar a ação do formulário para usar o método PUT e a rota de update
+            $('#kt_modal_edit_customer_form').attr('action', `/lancamentoPadrao/${lancamentoPadrao.id}`);
+            $('#kt_modal_edit_customer_form').find('input[name="_method"]').val('PUT');
+
+            // Abrir o modal
+            $('#kt_modal_edit_customer').modal('show');
+        }
+
+        // Listener para abrir o modal de edição
+        $('.edit-button').on('click', function() {
+            var lancamentoPadrao = $(this).data('lancamentopadrao'); // Supondo que você passe os dados do lançamento via data-attributes
+            openModalForEditing(lancamentoPadrao);
+        });
+
+        // Função para abrir o modal de criação
+        function openModalForCreating() {
+            // Limpar os campos do modal
+            $('#kt_modal_edit_customer_form').trigger('reset');
+            $('#lancamento_padrao_id').val('');
+
+            // Atualizar a ação do formulário para usar o método POST e a rota de store
+            $('#kt_modal_edit_customer_form').attr('action', `{{ route('lancamentoPadrao.store') }}`);
+            $('#kt_modal_edit_customer_form').find('input[name="_method"]').val('POST');
+
+            // Abrir o modal
+            $('#kt_modal_edit_customer').modal('show');
+        }
+    });
+</script>
+
 
                     <!--end::Modal - Customers - Edit-->
 
@@ -659,37 +697,7 @@
 
 </x-tenant-app-layout>
 
-<script>
-    $(document).ready(function() {
-    // Inicializar Select2
-    $('[data-control="select2"]').select2();
 
-    // Abrir modal para edição
-    $('.edit-button').on('click', function() {
-        var id = $(this).data('id');
-
-        // Fazer uma solicitação AJAX para obter os dados do lançamento
-        $.ajax({
-            url: '/lancamento/' + id,
-            method: 'GET',
-            success: function(data) {
-                // Preencher os campos do modal com os dados obtidos
-                $('#type').val(data.type).trigger('change');
-                $('#description').val(data.description);
-                $('#date').val(data.date);
-                $('#category').val(data.category).trigger('change');
-
-                // Atualizar a ação do formulário com o ID correto
-                $('#kt_modal_add_customer_form').attr('action', '/lancamento/update/' + id);
-
-                // Abrir o modal
-                $('#kt_modal_add_customer').modal('show');
-            }
-        });
-    });
-});
-
-</script>
 
 <!--begin::Vendors Javascript(used for this page only)-->
 <script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
@@ -708,35 +716,3 @@
 <!--end::Javascript-->
 
 
-
-<script>
-    function openModalForEditing(lancamentoPadrao) {
-    // Preencher os campos do modal com os dados do lançamento existente
-    document.querySelector('#lancamento_padrao_id').value = lancamentoPadrao.id;
-    document.querySelector('[name="type"]').value = lancamentoPadrao.type;
-    document.querySelector('[name="description"]').value = lancamentoPadrao.description;
-    document.querySelector('[name="date"]').value = lancamentoPadrao.date;
-    document.querySelector('[name="category"]').value = lancamentoPadrao.category;
-
-    // Atualizar a ação do formulário para usar o método PUT e a rota de update
-    form.action = `/lancamentoPadrao/${lancamentoPadrao.id}`;
-    document.querySelector('input[name="_method"]').value = 'PUT';
-
-    // Abrir o modal
-    modal.show();
-}
-
-function openModalForCreating() {
-    // Limpar os campos do modal
-    form.reset();
-    document.querySelector('#lancamento_padrao_id').value = '';
-
-    // Atualizar a ação do formulário para usar o método POST e a rota de store
-    form.action = `{{ route('lancamentoPadrao.store') }}`;
-    document.querySelector('input[name="_method"]').value = 'POST';
-
-    // Abrir o modal
-    modal.show();
-}
-
-</script>
