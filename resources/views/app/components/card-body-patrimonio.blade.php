@@ -353,7 +353,7 @@
                      <!--begin::Nav item-->
                      <li class="nav-item">
                          <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('patrimonio/create') ? 'active' : '' }}"
-                             href="{{ route('patrimonio.create') }}">Cadastro</a>
+                             href="{{ route('patrimonio.create') }}">Acessórios</a>
                      </li>
                      <!--end::Nav item-->
                  </ul>

@@ -19,7 +19,7 @@ var KTModalNewAddress = function () {
             form,
             {
                 fields: {
-                    'name': {
+                    'descricao': {
                         validators: {
                             notEmpty: {
                                 message: 'O nome do foro é obrigatório'

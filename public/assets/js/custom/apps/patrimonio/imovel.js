@@ -322,7 +322,7 @@ $('#kt_docs_maxlength_always_show').maxlength({
     limitReachedClass: "badge badge-success"
 });
 
-$('#complemento').maxlength({
+$('#complemento, #informacoes').maxlength({
     alwaysShow: true,
     threshold: 250,
     warningClass: "badge badge-primary",
