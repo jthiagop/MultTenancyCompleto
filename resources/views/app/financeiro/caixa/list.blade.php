@@ -659,11 +659,6 @@
 <!--begin::Vendors Javascript(used for this page only)-->
 <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
-<script>
-    var companyName = @json($company->name);
-    var companyCnpj = @json($company->cnpj);
-    var companyLogoUrl = @json(route('file', ['path' => $company->avatar]));
-</script>
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="/assets/js/custom/apps/caixa/shipping.js"></script>
 <script src="/assets/js/widgets.bundle.js"></script>

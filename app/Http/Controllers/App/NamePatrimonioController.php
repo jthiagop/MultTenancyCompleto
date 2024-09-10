@@ -49,6 +49,7 @@ class NamePatrimonioController extends Controller
             'complemento' => 'nullable|string|max:255', // Torne o campo opcional e defina um limite de caracteres
             'numForo' => 'nullable|string|max:10', // Torne o campo opcional e defina um limite de caracteres
         ]);
+
         $validatedData['company_id'] = $subsidiaryId->company_id;
         $validatedData['created_by'] = $user->id;
         $validatedData['updated_by'] = $user->id;
@@ -109,4 +110,16 @@ class NamePatrimonioController extends Controller
     {
         //
     }
+
+    public function validarNumForo(Request $request)
+{
+    $numForo = $request->input('numForo');
+
+    // Verifica se o número do foro já existe no banco de dados
+    $exists = NamePatrimonio::where('numForo', $numForo)->exists();
+
+    // Retorna resposta JSON
+    return response()->json(['valid' => !$exists]);
+}
+
 }

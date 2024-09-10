@@ -2772,7 +2772,7 @@
 
 						<div class="modal-header" id="kt_modal_new_address_header">
 							<!--begin::Modal title-->
-							<h2>Add New Address</h2>
+							<h2>Novo Território Foreiro</h2>
 							<!--end::Modal title-->
 							<!--begin::Close-->
 							<div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
@@ -2810,9 +2810,8 @@
 									<div class="d-flex flex-stack flex-grow-1">
 										<!--begin::Content-->
 										<div class="fw-semibold">
-											<h4 class="text-gray-900 fw-bold">Warning</h4>
-											<div class="fs-6 text-gray-700">Updating address may affter to your
-											<a href="#">Tax Location</a></div>
+											<h4 class="text-gray-900 fw-bold">Aviso</h4>
+											<div class="fs-6 text-gray-700">A atualização do endereço pode afetar o <a href="#">código do Município</a></div>
 										</div>
 										<!--end::Content-->
 									</div>
@@ -2835,7 +2834,7 @@
 									<!--begin::Col-->
 									<div class="col-md-3 fv-row">
 										<!--begin::Label-->
-										<label class="fs-5 fw-semibold mb-2">CEP</label>
+										<label class="required fs-5 fw-semibold mb-2">CEP</label>
 										<!--end::Label-->
 										<!--begin::Input-->
 										<input class="form-control form-control-solid" placeholder="" id="cep" name="cep" />
@@ -2845,7 +2844,7 @@
 									<!--begin::Col-->
 									<div class="col-md-9 fv-row">
 										<!--begin::Label-->
-										<label class="fs-5 fw-semibold mb-2">Rua</label>
+										<label class="required fs-5 fw-semibold mb-2">Rua</label>
 										<!--end::Label-->
 										<!--begin::Input-->
 										<input class="form-control form-control-solid" placeholder="" id="logradouro" name="logradouro" />
@@ -2960,12 +2959,12 @@
 						<!--begin::Modal footer-->
 						<div class="modal-footer flex-center">
 							<!--begin::Button-->
-							<button type="reset" id="kt_modal_new_address_cancel" class="btn btn-light me-3">Discard</button>
+							<button type="reset" id="kt_modal_new_address_cancel" class="btn btn-light me-3">Sair</button>
 							<!--end::Button-->
 							<!--begin::Button-->
 							<button type="submit" id="kt_modal_new_address_submit" class="btn btn-primary">
-								<span class="indicator-label">Submit</span>
-								<span class="indicator-progress">Please wait...
+								<span class="indicator-label">Salvar</span>
+								<span class="indicator-progress">Por favor, espere ...
 								<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
 							</button>
 							<!--end::Button-->

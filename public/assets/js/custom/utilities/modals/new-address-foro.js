@@ -14,6 +14,52 @@ var KTModalNewAddress = function () {
         });
     }
 
+    var initForm = function() {
+        $(form.querySelector('[name="uf"]')).select2().on('change', function() {
+            validator.revalidateField('uf');
+        });
+
+        // Validação AJAX para o campo 'numForo'
+        form.querySelector('[name="numForo"]').addEventListener('blur', function() {
+            var numForo = this.value;
+
+            // Verifica se o campo 'numForo' não está vazio antes de fazer a requisição
+            if (numForo !== '') {
+                fetch('/validar-num-foro', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        numForo: numForo
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.valid) {
+                        validator.updateFieldStatus('numForo', 'Invalid', 'notUnique');
+                        Swal.fire({
+                            text: "O número do foro já existe. Por favor, escolha outro.",
+                            icon: "error",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok, entendi!",
+                            customClass: {
+                                confirmButton: "btn btn-primary"
+                            }
+                        });
+                    } else {
+                        validator.updateFieldStatus('numForo', 'Valid');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro na validação AJAX:', error);
+                });
+            }
+        });
+    }
+
+
     var handleForm = function() {
         validator = FormValidation.formValidation(
             form,
@@ -72,9 +118,21 @@ var KTModalNewAddress = function () {
                         validators: {
                             notEmpty: {
                                 message: 'O número do foro é obrigatório'
+                            },
+                            remote: {
+                                message: 'O número do foro já existe',
+                                method: 'POST',
+                                url: '/validar-num-foro',
+                                data: function() {
+                                    return {
+                                        numForo: form.querySelector('[name="numForo"]').value,
+                                        _token: document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                    };
+                                },
+                                delay: 1000 // Atraso de 1 segundo antes de validar
                             }
                         }
-                    }
+                    },
                 },
                 plugins: {
                     trigger: new FormValidation.plugins.Trigger(),

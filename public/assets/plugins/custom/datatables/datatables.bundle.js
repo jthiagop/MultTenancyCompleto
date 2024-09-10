@@ -15838,10 +15838,10 @@ return DataTable;
 
 var defaults = {
 	"language": {
-		"info": "Showing _START_ to _END_ of _TOTAL_ records",
-    	"infoEmpty": "Showing no records",
+		"info": "Mostrando _START_ a _END_ de _TOTAL_ registros",
+    	"infoEmpty": "Nenhum registro disponível",
 		"lengthMenu": "_MENU_",
-		"processing": '<span class="spinner-border w-15px h-15px text-muted align-middle me-2"></span> <span class="text-gray-600">Loading...</span>',
+		"processing": '<span class="spinner-border w-15px h-15px text-muted align-middle me-2"></span> <span class="text-gray-600">Carregando...</span>',
 		"paginate": {
 			"first": '<i class="first"></i>',
 			"last": '<i class="last"></i>',
@@ -15850,6 +15850,7 @@ var defaults = {
 		}
 	}
 };
+
 
 $.extend(true, $.fn.dataTable.defaults, defaults);
 

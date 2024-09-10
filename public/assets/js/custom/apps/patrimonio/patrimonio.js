@@ -216,14 +216,16 @@ var KTProjectOverview = function () {
 
         tableRows.forEach(row => {
             const dateRow = row.querySelectorAll('td');
-            const realDate = moment(dateRow[1].innerHTML, "MMM D, YYYY").format();
-            dateRow[1].setAttribute('data-order', realDate);
+            const realDate = moment(dateRow[4].innerHTML, "D, M, Y").format();
+            dateRow[4].setAttribute('data-order', realDate);
         });
 
         // Init datatable --- more info on datatables: https://datatables.net/manual/
         const datatable = $(table).DataTable({
-            "info": false,
-            'order': []
+            "info": true,
+            'order': [[0, 'desc']],
+            "searching": true // Certifique-se de que a pesquisa esteja habilitada
+
         });
 
         // Filter dropdown elements
@@ -232,7 +234,7 @@ var KTProjectOverview = function () {
 
         // Filter by order status --- official docs reference: https://datatables.net/reference/api/search()
         filterOrders.addEventListener('change', function (e) {
-            datatable.column(3).search(e.target.value).draw();
+            datatable.column(1).search(e.target.value).draw();
         });
 
         // Filter by date --- official docs reference: https://momentjs.com/docs/
@@ -292,10 +294,10 @@ var KTProjectOverview = function () {
             }
         );
 
-        // Search --- official docs reference: https://datatables.net/reference/api/search()
+        // Filtro de pesquisa
         var filterSearch = document.getElementById('kt_filter_search');
         filterSearch.addEventListener('keyup', function (e) {
-            datatable.search(e.target.value).draw();
+            table.search(e.target.value).draw(); // Filtra a tabela com base no valor do campo de pesquisa
         });
     }
 

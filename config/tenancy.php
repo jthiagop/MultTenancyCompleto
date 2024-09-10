@@ -19,7 +19,7 @@ return [
     'central_domains' => [
         env('CENTRAL_DOMAIN_1', '127.0.0.1'),
         env('CENTRAL_DOMAIN_2', 'localhost'),
-        env('CENTRAL_DOMAIN_3', 'dominusbr.com'),
+        //env('CENTRAL_DOMAIN_3', 'dominusbr.com'),
     ],
 
     /**

@@ -27,11 +27,15 @@ var KTModalNewTarget = function () {
 		});
 
 		// Due date. For more info, please visit the official plugin site: https://flatpickr.js.org/
-		var dueDate = $(form.querySelector('[name="data"]'));
-		dueDate.flatpickr({
-			enableTime: true,
-			dateFormat: "d, M Y",
-		});
+        var dueDates = document.querySelectorAll('[name="data"], [name="dataAquisicao"]');
+
+        dueDates.forEach(function(dueDate) {
+            flatpickr(dueDate, {
+                enableTime: true,
+                dateFormat: "d/m/Y", // Formato pt-BR para exibição
+                locale: "pt", // Define a localidade como português do Brasil
+            });
+        });
 
 		// Team assign. For more info, plase visit the official plugin site: https://select2.org/
         $(form.querySelector('[name="team_assign"]')).on('change', function() {
@@ -49,38 +53,25 @@ var KTModalNewTarget = function () {
 			form,
 			{
 				fields: {
-                    target_title: {
+                    "descricao": {
                         validators: {
                             notEmpty: {
                                 message: 'Descrição do patrimônio é obrigatória'
                             }
                         }
                     },
-                    patrimonio: {
+                    'patrimonio': {
                         validators: {
                             notEmpty: {
-                                message: 'Patrimônio é obrigatório'
+                                message: 'O território foreiro é obrigatório.'
                             }
                         }
                     },
+
                     data: {
                         validators: {
                             notEmpty: {
                                 message: 'Data é obrigatória'
-                            }
-                        }
-                    },
-                    livro: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Livro é obrigatório'
-                            }
-                        }
-                    },
-                    folha: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Folha é obrigatória'
                             }
                         }
                     },
@@ -95,6 +86,13 @@ var KTModalNewTarget = function () {
                         validators: {
                             notEmpty: {
                                 message: 'O bairro é obrigatória'
+                            }
+                        }
+                    },
+                    logradouro: {
+                        validators: {
+                            notEmpty: {
+                                message: 'O logradouro é obrigatória'
                             }
                         }
                     },

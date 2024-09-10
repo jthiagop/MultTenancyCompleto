@@ -20,7 +20,7 @@ return new class extends Migration
             $table->string('localidade');
             $table->string('uf', 2);
             $table->string('ibge', 7);
-            $table->string('numForo', 10);
+            $table->string('numForo', 10)->unique(); // Adiciona restrição de unicidade;
             $table->text('complemento')->nullable();
             $table->foreignId('company_id')->constrained('companies')->onDelete('cascade');
             $table->foreignId('created_by')->constrained('users')->onDelete('cascade');

@@ -16,6 +16,7 @@ use App\Http\Controllers\App\CadastroBancoController;
 use App\Http\Controllers\App\NamePatrimonioController;
 use App\Http\Controllers\App\PatrimonioController;
 use App\Http\Controllers\App\ReportController;
+use App\Http\Controllers\App\PatrimonioAnexoController;
 use App\Http\Controllers\PatrimonioController as ControllersPatrimonioController;
 use App\Models\TenantFilial;
 use Illuminate\Support\Facades\Route;
@@ -106,8 +107,14 @@ Route::middleware([
             Route::resource('post', PostController::class);
 
             Route::resource('patrimonio', PatrimonioController::class);
+            Route::resource('patrimonioAnexo', PatrimonioAnexoController::class);
+
             Route::get('patrimonios/imoveis', [PatrimonioController::class, 'imoveis'])->name('patrimonio.imoveis');
+
+            //Nome do Patrimonio
             Route::resource('namePatrimonio', NamePatrimonioController::class);
+            Route::post('/validar-num-foro', [NamePatrimonioController::class, 'validarNumForo']);
+
 
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
             Route::get('app/financeiro/banco/list', [BancoController::class, 'list'])->name('banco.list');

@@ -247,19 +247,6 @@
                                         </select>
                                     </div> --}}
                                 <!--end::Select-->
-                                <!--begin::Select-->
-                                <div class="me-4 my-1">
-                                    <select id="kt_filter_orders" name="orders" data-control="select2"
-                                        data-hide-search="true"
-                                        class="w-125px form-select form-select-solid form-select-sm">
-                                        <option value="All" selected="selected">All Orders</option>
-                                        <option value="Approved">Approved</option>
-                                        <option value="Declined">Declined</option>
-                                        <option value="In Progress">In Progress</option>
-                                        <option value="In Transit">In Transit</option>
-                                    </select>
-                                </div>
-                                <!--end::Select-->
                                 <!--begin::Search-->
                                 <div class="d-flex align-items-center position-relative my-1">
                                     <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
@@ -298,7 +285,7 @@
                                             <th class="min-w-150px">Manager</th>
                                             <th class="min-w-90px">Cidade</th>
                                             <th class="min-w-90px">Bairro</th>
-                                            <th class="min-w-150px">Date</th>
+                                            <th class="min-w-150px">Data</th>
                                             <th class="min-w-50px text-end">Details</th>
                                         </tr>
                                     </thead>
@@ -329,7 +316,7 @@
                                                 <td>{{ $foreiro->bairro }}</td>
                                                 <td>
                                                     <span
-                                                        class="badge badge-light-success fw-bold px-4 py-3">Approved</span>
+                                                        class="badge badge-light-success fw-bold px-4 py-3">{{ date(' d-m-Y', strtotime($foreiro->data)) }}</span>
                                                 </td>
                                                 <td class="text-end">
                                                     <!-- Botão de visualização -->
@@ -687,7 +674,7 @@
                                 </label>
                                 <select class="form-select form-select-solid" data-control="select2"
                                     data-hide-search="true" id="patrimonio" data-placeholder="Selecione o patrimônio"
-                                    name="patrimonios">
+                                    name="patrimonio">
                                     <option value="">Selecione o patrimônio...</option>
                                     @foreach ($nameForos as $nameForo)
                                         <option value="{{ $nameForo->name }}"
@@ -800,6 +787,10 @@
                             </div>
                             <!--end::Input group--> --}}
                         <!--begin::Titulo do Endereco-->
+
+                        <div class="separator separator-dashed my-10"></div>
+
+
                         <div class="row">
                             <div class="fw-bold fs-3 rotate collapsible mb-7" data-bs-toggle="collapse"
                                 href="#kt_modal_add_customer_billing_info" role="button" aria-expanded="false"
@@ -864,7 +855,7 @@
                                     <!--begin::Col-->
                                     <div class="col-md-6 fv-row">
                                         <!--begin::Label-->
-                                        <label class="required fs-6 fw-semibold mb-2">cidade</label>
+                                        <label class=" fs-6 fw-semibold mb-2">Cidade</label>
                                         <!--end::Label-->
                                         <!--begin::Input-->
                                         <input class="form-control form-control-solid" placeholder=""id="localidade"
@@ -876,7 +867,7 @@
                                     <div class="col-md-6 fv-row">
                                         <!--begin::Label-->
                                         <label class="fs-6 fw-semibold mb-2">
-                                            <span class="required">Estado</span>
+                                            <span class="">Estado</span>
                                             <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
                                                 title="Estado de origem"></i>
                                         </label>
@@ -929,6 +920,7 @@
                                 <!--end::Input group-->
                             </div>
                             <!--end::Billing form-->
+                            <div class="separator separator-dashed my-10"></div>
 
                             <!--begin::Titulo do Endereco-->
                             <div class="fw-bold fs-3 rotate collapsible mb-7" data-bs-toggle="collapse"
@@ -955,7 +947,7 @@
                             <div class="d-flex flex-column mb-8 fv-row">
                                 <!--begin::Label-->
                                 <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
-                                    <span class="required">Outorgante</span>
+                                    <span class="">Outorgante</span>
                                     <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
                                         title="Especifique aqui os detalhes do patrimônios"></i>
                                 </label>
@@ -969,7 +961,7 @@
                                 <!--begin::Col-->
                                 <div class="col-md-6 fv-row">
                                     <!--begin::Label-->
-                                    <label class="required fs-6 fw-semibold mb-2">Número da Matrícula</label>
+                                    <label class=" fs-6 fw-semibold mb-2">Número da Matrícula</label>
                                     <!--end::Label-->
                                     <!--begin::Input-->
                                     <input class="form-control form-control-solid" placeholder="" name="matricula"
@@ -980,7 +972,7 @@
                                 <!--begin::Col-->
                                 <div class="col-md-6 fv-row">
                                     <!--begin::Label-->
-                                    <label class="required fs-6 fw-semibold mb-2">Data da Aquisição</label>
+                                    <label class=" fs-6 fw-semibold mb-2">Data da Aquisição</label>
                                     <!--end::Label-->
                                     <!--begin::Input-->
                                     <input class="form-control form-control-solid" type="date" placeholder="" id="aquisicao"
@@ -995,7 +987,7 @@
                             <div class="d-flex flex-column mb-8 fv-row">
                                 <!--begin::Label-->
                                 <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
-                                    <span class="required">Outorgado</span>
+                                    <span class="">Outorgado</span>
                                     <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
                                         title="Especifique aqui os detalhes do patrimônios"></i>
                                 </label>
@@ -1009,7 +1001,7 @@
                                 <!--begin::Col-->
                                 <div class="col-md-4 fv-row">
                                     <!--begin::Label-->
-                                    <label class="required fs-6 fw-semibold mb-2">Valor Aquisição</label>
+                                    <label class=" fs-6 fw-semibold mb-2">Valor Aquisição</label>
                                     <!--end::Label-->
                                     <!--begin::Input-->
                                     <!--begin::Input-->
@@ -1031,7 +1023,7 @@
                                 <!--begin::Col-->
                                 <div class="col-md-4 fv-row">
                                     <!--begin::Label-->
-                                    <label class="required fs-6 fw-semibold mb-2">Área Total</label>
+                                    <label class=" fs-6 fw-semibold mb-2">Área Total</label>
                                     <!--end::Label-->
                                     <!--begin::Input-->
                                     <input class="form-control form-control-solid" placeholder="" id="area_total"
@@ -1042,7 +1034,7 @@
                                 <!--begin::Col-->
                                 <div class="col-md-4 fv-row">
                                     <!--begin::Label-->
-                                    <label class="required fs-6 fw-semibold mb-2">Área Privativa</label>
+                                    <label class=" fs-6 fw-semibold mb-2">Área Privativa</label>
                                     <!--end::Label-->
                                     <!--begin::Input-->
                                     <input class="form-control form-control-solid" placeholder="" id="area_privativa"

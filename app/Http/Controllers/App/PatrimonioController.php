@@ -6,7 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\Escritura;
 use App\Models\NamePatrimonio;
 use App\Models\Patrimonio;
+use App\Models\PatrimonioAnexo;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class PatrimonioController extends Controller
@@ -43,13 +45,16 @@ class PatrimonioController extends Controller
      */
     public function store(Request $request)
     {
-
         try {
+
+                    // Convertendo a data para o formato Y-m-d antes de salvar
+        $dataConvertida = Carbon::createFromFormat('d/m/Y', $request->input('data'))->format('Y-m-d');
+
             // Criação de um novo patrimônio
             $patrimonio = new Patrimonio();
             $patrimonio->descricao = $request->input('descricao');
-            $patrimonio->patrimonio = $request->input('patrimonios');
-            $patrimonio->data = $request->input('data');
+            $patrimonio->patrimonio = $request->input('patrimonio');
+            $patrimonio->data = $dataConvertida; // Usa a data convertida
             $patrimonio->livro = $request->input('livro');
             $patrimonio->folha = $request->input('folha');
             $patrimonio->registro = $request->input('registro');
@@ -82,7 +87,7 @@ class PatrimonioController extends Controller
                 $escritura->matricula = $request->input('matricula');
                 $escritura->aquisicao = $request->input('aquisicao');
                 $escritura->outorgado = $request->input('outorgado');
-                $escritura->valor = $request->input('valor');
+                $escritura['valor'] = str_replace(',', '.', str_replace('.', '', $request['valor']));
                 $escritura->area_total = $request->input('area_total');
                 $escritura->area_privativa = $request->input('area_privativa');
                 $escritura->informacoes = $request->input('informacoes');
@@ -177,10 +182,11 @@ private function calcularDV($ridBase)
             $patrimonio = Patrimonio::findOrFail($id);
             $nameForos = NamePatrimonio::all();
             $escrituras = Escritura::where('patrimonio_id', $id)->get();
+            $anexos = PatrimonioAnexo::where('patrimonio_id', $id)->get();
 
 
             // Retorna a view padrão 'patrimonios.show' com os detalhes do patrimônio
-            return view('app.patrimonios.show', compact('patrimonio', 'nameForos','escrituras'));
+            return view('app.patrimonios.show', compact('patrimonio', 'nameForos','escrituras', 'anexos'));
         } catch (\Exception $e) {
             // Retorna uma view de erro caso o patrimônio não seja encontrado
             return redirect()->route('app.patrimonios.index')->with('error', 'Patrimônio não encontrado.');
