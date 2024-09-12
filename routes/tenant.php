@@ -59,8 +59,9 @@ Route::middleware([
 
 
     Route::get('/file/{path}', function ($path) {
-        return response()->file(Storage::path($path));
+        return response()->file(Storage::disk('public')->path($path));
     })->where('path', '.*')->name('file');
+
 
 
     // Grupo de rotas protegido pelo middleware 'auth' e 'ensureUserHasAccess'
