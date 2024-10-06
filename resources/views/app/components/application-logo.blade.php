@@ -1,4 +1,4 @@
 <a href="{{ route('dashboard') }}">
-    <img alt="Logo" src="/assets/media/logos/deskapp-logo-white.svg"
-        class="h-30px app-sidebar-logo-default" />
+    <img alt="Logo" src="/assets/media/logos/default.svg" class="h-20px h-lg-40px app-sidebar-logo-default theme-light-show" />
+    <img alt="Logo" src="/assets/media/logos/default-dark.svg" class="h-20px h-lg-40px app-sidebar-logo-default theme-dark-show" />
 </a>

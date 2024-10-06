@@ -13,7 +13,8 @@
                             <!--begin::Page title-->
                             <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
                                 <!--begin::Title-->
-                                <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
+                                <h1
+                                    class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
                                     {{ $company->name }}</h1>
                                 <!--end::Title-->
                                 <!--begin::Breadcrumb-->
@@ -75,8 +76,6 @@
                         <!--end::Toolbar container-->
                     </div>
                     <!--end::Toolbar-->
-
-
                     <!--begin::Input group-->
                     <div id="kt_app_toolbar" class="">
                         <!--begin::Row-->
@@ -671,7 +670,8 @@
                                     <!--begin::Info-->
                                     <span class="d-block fw-semibold text-start">
                                         <span class="text-dark fw-bold d-block fs-4 mb-2">Veículos</span>
-                                        <span class="text-muted fw-semibold fs-6">Gestão dos seguros, frota veícular.</span>
+                                        <span class="text-muted fw-semibold fs-6">Gestão dos seguros, frota
+                                            veícular.</span>
                                     </span>
                                     <!--end::Info-->
                                 </a>
@@ -687,7 +687,6 @@
             </div>
 
         </div>
-    </div>
     </div>
 
 </x-tenant-app-layout>

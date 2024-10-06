@@ -10,6 +10,7 @@ use App\Models\Caixa;
 use App\Models\Company;
 use App\Models\LancamentoPadrao;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -33,12 +34,24 @@ class CaixaController extends Controller
 
         $caixas = Caixa::getCaixaList();
 
+        $lps = LancamentoPadrao::all();
+        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
+
+        list($somaEntradas, $somaSaida) = caixa::getCaixa();
+        $total = $somaEntradas - $somaSaida;
+
+
+
         return view('app.financeiro.index', [
             'caixas' => $caixas,
             'valorEntrada' => $valorEntrada,
             'ValorSaidas' => $ValorSaidas,
             'valorEntradaBanco' => $valorEntradaBanco,
-            'ValorSaidasBanco' => $ValorSaidasBanco
+            'ValorSaidasBanco' => $ValorSaidasBanco,
+            'lps' => $lps,
+            'bancos' => $bancos,
+            'total' => $total,
+
         ]);
     }
 
@@ -78,6 +91,8 @@ class CaixaController extends Controller
 
         $subsidiaryId = User::getCompany();
 
+        // Converte a data do formato 'd-m-Y' para 'Y-m-d'
+        $dataCompetencia = Carbon::createFromFormat('d-m-Y', $request->input('data_competencia'))->format('Y-m-d');
 
         $validator = Validator::make($request->all(), [
             'data_competencia' => 'required|date',
@@ -90,19 +105,15 @@ class CaixaController extends Controller
             'numero_documento' => 'nullable|string',
             'files.*' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'historico_complementar' => 'nullable|string|max:500',
-                    // Campos adicionais
+            // Campos adicionais
             'banco_id' => 'nullable|exists:cadastro_bancos,id',
         ]);
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
         $user = auth()->user(); // Usuário autenticado
 
-
-
         $validatedData = $validator->validated();
+        // Adiciona a data convertida ao array de dados validados
+        $validatedData['data_competencia'] = $dataCompetencia;
         $validatedData['company_id'] = $subsidiaryId->company_id;
         $validatedData['origem'] = 'CX';
 
@@ -136,34 +147,34 @@ class CaixaController extends Controller
             }
         }
 
-            // Verificação para criar lançamento no banco
-    if ($validatedData['lancamento_padrao'] === 'Deposito Bancário') {
-        // Aqui você pode ajustar para a lógica do seu sistema de criação de lançamentos no banco
-        $validatedData['origem'] = 'BC';
-        $validatedData['tipo'] = 'entrada';
-        $banco = Banco::create($validatedData);
+        // Verificação para criar lançamento no banco
+        if ($validatedData['lancamento_padrao'] === 'Deposito Bancário') {
+            // Aqui você pode ajustar para a lógica do seu sistema de criação de lançamentos no banco
+            $validatedData['origem'] = 'BC';
+            $validatedData['tipo'] = 'entrada';
+            $banco = Banco::create($validatedData);
 
-        // Verifica se há arquivos anexos
-        if ($request->hasFile('files')) {
-            // Itera sobre cada arquivo anexo
-            foreach ($request->file('files') as $anexo) {
-                // Gera um nome único para o arquivo anexo
-                $anexoName = time() . '_' . $anexo->getClientOriginalName();
+            // Verifica se há arquivos anexos
+            if ($request->hasFile('files')) {
+                // Itera sobre cada arquivo anexo
+                foreach ($request->file('files') as $anexo) {
+                    // Gera um nome único para o arquivo anexo
+                    $anexoName = time() . '_' . $anexo->getClientOriginalName();
 
-                // Salva o arquivo na pasta 'anexos' dentro da pasta de armazenamento (storage/app/public)
-                $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
+                    // Salva o arquivo na pasta 'anexos' dentro da pasta de armazenamento (storage/app/public)
+                    $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
 
-                // Cria um registro no banco de dados para o anexo
-                Anexo::create([
-                    'banco_id' => $banco->id,
-                    'nome_arquivo' => $anexoName,
-                    'caminho_arquivo' => $anexoPath,
-                    'created_by' => $user->id,
-                    'updated_by' => $user->id,
-                ]);
+                    // Cria um registro no banco de dados para o anexo
+                    Anexo::create([
+                        'banco_id' => $banco->id,
+                        'nome_arquivo' => $anexoName,
+                        'caminho_arquivo' => $anexoPath,
+                        'created_by' => $user->id,
+                        'updated_by' => $user->id,
+                    ]);
+                }
             }
         }
-    }
 
 
         return redirect()->route('caixa.index')->with('success', ' Lançamento Realizado com Sucesso!');
