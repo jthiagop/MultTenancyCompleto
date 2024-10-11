@@ -380,11 +380,11 @@
                                                         <!--begin::Image placeholder-->
                                                         <style>
                                                             .image-input-placeholder {
-                                                                background-image: url('assets/media/svg/files/blank-image.svg');
+                                                                background-image: url('/assets/media/svg/files/blank-image.svg');
                                                             }
 
                                                             [data-bs-theme="dark"] .image-input-placeholder {
-                                                                background-image: url('assets/media/svg/files/blank-image-dark.svg');
+                                                                background-image: url('/assets/media/svg/files/blank-image-dark.svg');
                                                             }
                                                         </style>
                                                         <!--end::Image placeholder-->
@@ -393,7 +393,7 @@
                                                             data-kt-image-input="true">
                                                             <!--begin::Preview existing avatar-->
                                                             <div class="image-input-wrapper w-125px h-125px"
-                                                                style="background-image: url(assets/media/avatars/300-31.png);">
+                                                                style="background-image: url(/assets/media/avatars/300-31.png);">
                                                             </div>
                                                             <!--end::Preview existing avatar-->
                                                             <!--begin::Label-->
@@ -714,7 +714,7 @@
                                                             <img src="{{ route('file', ['path' => $user->avatar]) }}"
                                                                 alt="{{ $user->name }}" class="w-100">
                                                         @else
-                                                            <img src="assets/media/avatars/300-6.jpg"
+                                                            <img src="/assets/media/avatars/300-6.jpg"
                                                                 alt="{{ $user->name }}" class="w-100">
                                                         @endif
                                                     </div>
@@ -811,17 +811,17 @@
 
     @push('scripts')
         <!--begin::Vendors Javascript(used for this page only)-->
-        <script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
+        <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
         <!--end::Vendors Javascript-->
         <!--begin::Custom Javascript(used for this page only)-->
-        <script src="assets/js/custom/apps/user-management/users/list/table.js"></script>
-        <script src="assets/js/custom/apps/user-management/users/list/export-users.js"></script>
-        <script src="assets/js/custom/apps/user-management/users/list/add.js"></script>
-        <script src="assets/js/widgets.bundle.js"></script>
-        <script src="assets/js/custom/apps/chat/chat.js"></script>
-        <script src="assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-        <script src="assets/js/custom/utilities/modals/create-campaign.js"></script>
-        <script src="assets/js/custom/utilities/modals/users-search.js"></script>
+        <script src="/assets/js/custom/apps/user-management/users/list/table.js"></script>
+        <script src="/assets/js/custom/apps/user-management/users/list/export-users.js"></script>
+        <script src="/assets/js/custom/apps/user-management/users/list/add.js"></script>
+        <script src="/assets/js/widgets.bundle.js"></script>
+        <script src="/assets/js/custom/apps/chat/chat.js"></script>
+        <script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+        <script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
+        <script src="/assets/js/custom/utilities/modals/users-search.js"></script>
     @endpush
     <!--end::Custom Javascript-->
     <!--end::Javascript-->

@@ -305,7 +305,7 @@
                                         <!--begin::Item-->
                                         <div class="d-flex flex-stack">
                                             <div class="d-flex">
-                                                <img src="assets/media/svg/brand-logos/google-icon.svg"
+                                                <img src="/assets/media/svg/brand-logos/google-icon.svg"
                                                     class="w-30px me-6" alt="" />
                                                 <div class="d-flex flex-column">
                                                     <a href="#"
@@ -336,7 +336,7 @@
                                         <!--begin::Item-->
                                         <div class="d-flex flex-stack">
                                             <div class="d-flex">
-                                                <img src="assets/media/svg/brand-logos/github.svg" class="w-30px me-6"
+                                                <img src="/assets/media/svg/brand-logos/github.svg" class="w-30px me-6"
                                                     alt="" />
                                                 <div class="d-flex flex-column">
                                                     <a href="#"
@@ -367,7 +367,7 @@
                                         <!--begin::Item-->
                                         <div class="d-flex flex-stack">
                                             <div class="d-flex">
-                                                <img src="assets/media/svg/brand-logos/slack-icon.svg"
+                                                <img src="/assets/media/svg/brand-logos/slack-icon.svg"
                                                     class="w-30px me-6" alt="" />
                                                 <div class="d-flex flex-column">
                                                     <a href="#"
@@ -3559,11 +3559,11 @@
                                                         <!--begin::Image placeholder-->
                                                         <style>
                                                             .image-input-placeholder {
-                                                                background-image: url('assets/media/svg/files/blank-image.svg');
+                                                                background-image: url('/assets/media/svg/files/blank-image.svg');
                                                             }
 
                                                             [data-bs-theme="dark"] .image-input-placeholder {
-                                                                background-image: url('assets/media/svg/files/blank-image-dark.svg');
+                                                                background-image: url('/assets/media/svg/files/blank-image-dark.svg');
                                                             }
                                                         </style>
                                                         <!--end::Image placeholder-->
@@ -4534,7 +4534,7 @@
                                         <!--end::Label-->
                                         <!--begin::QR code-->
                                         <div class="d-flex flex-center" data-kt-add-auth-action="qr-code">
-                                            <img src="assets/media/misc/qr.png" alt="Scan this QR code" />
+                                            <img src="/assets/media/misc/qr.png" alt="Scan this QR code" />
                                         </div>
                                         <!--end::QR code-->
                                         <!--begin::Text code-->
@@ -4683,22 +4683,24 @@
 </x-tenant-app-layout>
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="{{ url('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
 <!--end::Vendors Javascript-->
+
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="assets/js/custom/apps/user-management/users/view/view.js"></script>
-<script src="assets/js/custom/apps/user-management/users/view/update-details.js"></script>
-<script src="assets/js/custom/apps/user-management/users/view/add-schedule.js"></script>
-<script src="assets/js/custom/apps/user-management/users/view/add-task.js"></script>
-<script src="assets/js/custom/apps/user-management/users/view/update-email.js"></script>
-<script src="assets/js/custom/apps/user-management/users/view/update-password.js"></script>
-<script src="assets/js/custom/apps/user-management/users/view/update-role.js"></script>
-<script src="assets/js/custom/apps/user-management/users/view/add-auth-app.js"></script>
-<script src="assets/js/custom/apps/user-management/users/view/add-one-time-password.js"></script>
-<script src="assets/js/widgets.bundle.js"></script>
-<script src="assets/js/custom/apps/chat/chat.js"></script>
-<script src="assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="{{ url('assets/js/custom/apps/user-management/users/view/view.js') }}"></script>
+<script src="{{ url('assets/js/custom/apps/user-management/users/view/update-details.js') }}"></script>
+<script src="{{ url('assets/js/custom/apps/user-management/users/view/add-schedule.js') }}"></script>
+<script src="{{ url('assets/js/custom/apps/user-management/users/view/add-task.js') }}"></script>
+<script src="{{ url('assets/js/custom/apps/user-management/users/view/update-email.js') }}"></script>
+<script src="{{ url('assets/js/custom/apps/user-management/users/view/update-password.js') }}"></script>
+<script src="{{ url('assets/js/custom/apps/user-management/users/view/update-role.js') }}"></script>
+<script src="{{ url('assets/js/custom/apps/user-management/users/view/add-auth-app.js') }}"></script>
+<script src="{{ url('assets/js/custom/apps/user-management/users/view/add-one-time-password.js') }}"></script>
+<script src="{{ url('assets/js/widgets.bundle.js') }}"></script>
+<script src="{{ url('assets/js/custom/apps/chat/chat.js') }}"></script>
+<script src="{{ url('assets/js/custom/utilities/modals/upgrade-plan.js') }}"></script>
+<script src="{{ url('assets/js/custom/utilities/modals/create-campaign.js') }}"></script>
+<script src="{{ url('assets/js/custom/utilities/modals/users-search.js') }}"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->
+

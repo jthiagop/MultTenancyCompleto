@@ -173,6 +173,11 @@
                     </div>
                     <!--end::Wrapper-->
                 </div>
+                @if (session('status'))
+    <div class="alert alert-warning">
+        {{ session('status') }}
+    </div>
+@endif
                 <!--end::Form-->
                 <!--begin::Footer-->
                 <div class="d-flex flex-center flex-wrap px-5">

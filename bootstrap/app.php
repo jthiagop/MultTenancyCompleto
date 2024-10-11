@@ -31,6 +31,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'tenant.filesystems' => TenantFilesystems::class,
             'ensureUserHasAccess' => \App\Http\Middleware\EnsureUserHasAccess::class,
+            'CheckSessionExpiration' => \App\Http\Middleware\CheckSessionExpiration::class,
+
 
         ]);
     })
