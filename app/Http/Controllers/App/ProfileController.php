@@ -37,12 +37,13 @@ class ProfileController extends Controller
             $user->email_verified_at = null;
         }
 
-        // Processar e salvar o avatar
+        // Processar e salvar o avatar se um novo arquivo for enviado
         if ($request->hasFile('avatar')) {
             if ($user->avatar && $user->avatar !== 'tenant/blank.png') {
                 // Deletar o avatar anterior do armazenamento
                 Storage::delete($user->avatar);
             }
+
             // Obtém o arquivo de avatar do request
             $avatar = $request->file('avatar');
 
@@ -54,9 +55,6 @@ class ProfileController extends Controller
 
             // Salva o caminho do arquivo na coluna 'avatar' do usuário
             $user->avatar = $avatarPath;
-        } else {
-            // Define uma imagem padrão caso nenhum arquivo tenha sido enviado
-            $user->avatar = 'tenant/blank.png';
         }
 
         // Salvar as mudanças no modelo do usuário
@@ -65,6 +63,7 @@ class ProfileController extends Controller
         // Redirecionar para a rota de edição de perfil com uma mensagem de sucesso
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
+
 
 
     /**

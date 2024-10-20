@@ -3546,32 +3546,24 @@
                                             <!--begin::User form-->
                                             <div id="kt_modal_update_user_user_info" class="collapse show">
                                                 <!--begin::Input group-->
-                                                <div class="mb-7">
+                                                <div class="mb-7 card-body text-center pt-0">
                                                     <!--begin::Label-->
                                                     <label class="fs-6 fw-semibold mb-2">
                                                         <span>Atualizar Avatar</span>
-                                                        <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip" title="Allowed file types: png, jpg, jpeg."></i>
+                                                        <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip" title="Arquivos permitidos: png, jpg, jpeg."></i>
                                                     </label>
                                                     <!--end::Label-->
                                                     <!--begin::Input group-->
                                                     <div class="fv-row mb-7">
                                                         <!--begin::Label-->
                                                         <!--begin::Image placeholder-->
-                                                        <style>
-                                                            .image-input-placeholder {
-                                                                background-image: url('/assets/media/svg/files/blank-image.svg');
-                                                            }
-
-                                                            [data-bs-theme="dark"] .image-input-placeholder {
-                                                                background-image: url('/assets/media/svg/files/blank-image-dark.svg');
-                                                            }
-                                                        </style>
+                                                        <style>.image-input-placeholder { background-image: url('/assets/media/svg/files/blank-image.svg'); } [data-bs-theme="dark"] .image-input-placeholder { background-image: url('/assets/media/svg/files/blank-image-dark.svg'); }</style>
                                                         <!--end::Image placeholder-->
                                                         <!--begin::Image input-->
                                                         <div class="image-input image-input-outline image-input-placeholder"
                                                             data-kt-image-input="true">
                                                             <!--begin::Preview existing avatar-->
-                                                            <div class="image-input-wrapper w-125px h-125px"
+                                                            <div class="image-input-wrapper w-150px h-150px"
                                                                 style="background-image: url({{ route('file', ['path' => $user->avatar]) }});">
                                                             </div>
                                                             <!--end::Preview existing avatar-->
@@ -3584,7 +3576,6 @@
                                                                 <!--begin::Inputs-->
                                                                 <input type="file" name="avatar"
                                                                     accept=".png, .jpg, .jpeg" />
-                                                                <input type="hidden" name="avatar" />
                                                                 <!--end::Inputs-->
                                                             </label>
                                                             <!--end::Label-->
@@ -3607,8 +3598,7 @@
                                                         </div>
                                                         <!--end::Image input-->
                                                         <!--begin::Hint-->
-                                                        <div class="form-text">Arquivos permitidos: png, jpg, jpeg.
-                                                        </div>
+                                                        <div class="text-muted fs-7">Somente arquivos de imagem nos formatos *.png, *.jpg e *.jpeg são aceitos.</div>
                                                         <!--end::Hint-->
                                                     </div>
                                                     <!--end::Input group-->
@@ -3794,7 +3784,7 @@
                                         <button type="reset" class="btn btn-light me-3" data-kt-users-modal-action="cancel">Descartar</button>
                                         <!--end::Button-->
                                         <!--begin::Button-->
-                                        <button type="submit" class="btn btn-primary" data-kt-users-modal-action="submit">
+                                        <button type="submit" class="btn btn-primary">
                                             <span class="indicator-label">Salvar</span>
                                         </button>
                                         <!--end::Button-->

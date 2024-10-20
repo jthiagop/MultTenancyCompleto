@@ -7,35 +7,34 @@ var KTUsersUpdateDetails = function () {
     const form = element.querySelector('#kt_modal_update_user_form');
     const modal = new bootstrap.Modal(element);
 
-    // Init add schedule modal
+    // Init update details modal
     var initUpdateDetails = () => {
-
         // Close button handler
         const closeButton = element.querySelector('[data-kt-users-modal-action="close"]');
         closeButton.addEventListener('click', e => {
             e.preventDefault();
 
             Swal.fire({
-                text: "Are you sure you would like to cancel?",
+                text: "Tem certeza de que deseja cancelar?",
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, cancel it!",
-                cancelButtonText: "No, return",
+                confirmButtonText: "Sim, cancelar!",
+                cancelButtonText: "Não, voltar",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form	
-                    modal.hide(); // Hide modal				
+                    form.reset(); // Reset form
+                    modal.hide(); // Hide modal
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
-                        text: "Your form has not been cancelled!.",
+                        text: "Seu formulário não foi cancelado!",
                         icon: "error",
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
+                        confirmButtonText: "Ok, entendi!",
                         customClass: {
                             confirmButton: "btn btn-primary",
                         }
@@ -50,26 +49,26 @@ var KTUsersUpdateDetails = function () {
             e.preventDefault();
 
             Swal.fire({
-                text: "Are you sure you would like to cancel?",
+                text: "Tem certeza de que deseja cancelar?",
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, cancel it!",
-                cancelButtonText: "No, return",
+                confirmButtonText: "Sim, cancelar!",
+                cancelButtonText: "Não, voltar",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form	
-                    modal.hide(); // Hide modal				
+                    form.reset(); // Reset form
+                    modal.hide(); // Hide modal
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
-                        text: "Your form has not been cancelled!.",
+                        text: "Seu formulário não foi cancelado!",
                         icon: "error",
                         buttonsStyling: false,
-                        confirmButtonText: "Ok, got it!",
+                        confirmButtonText: "Ok, entendi!",
                         customClass: {
                             confirmButton: "btn btn-primary",
                         }
@@ -87,10 +86,10 @@ var KTUsersUpdateDetails = function () {
             // Show loading indication
             submitButton.setAttribute('data-kt-indicator', 'on');
 
-            // Disable button to avoid multiple click 
+            // Disable button to avoid multiple clicks
             submitButton.disabled = true;
 
-            // Simulate form submission. For more info check the plugin's official documentation: https://sweetalert2.github.io/
+            // Simulate form submission
             setTimeout(function () {
                 // Remove loading indication
                 submitButton.removeAttribute('data-kt-indicator');
@@ -98,22 +97,22 @@ var KTUsersUpdateDetails = function () {
                 // Enable button
                 submitButton.disabled = false;
 
-                // Show popup confirmation 
+                // Show popup confirmation
                 Swal.fire({
-                    text: "Form has been successfully submitted!",
+                    text: "Formulário enviado com sucesso!",
                     icon: "success",
                     buttonsStyling: false,
-                    confirmButtonText: "Ok, got it!",
+                    confirmButtonText: "Ok, entendi!",
                     customClass: {
                         confirmButton: "btn btn-primary"
                     }
                 }).then(function (result) {
                     if (result.isConfirmed) {
                         modal.hide();
+                        form.submit(); // Submeter o formulário após confirmação
                     }
                 });
 
-                //form.submit(); // Submit form
             }, 2000);
         });
     }
@@ -127,6 +126,6 @@ var KTUsersUpdateDetails = function () {
 }();
 
 // On document ready
-KTUtil.onDOMContentLoaded(function () {
+document.addEventListener('DOMContentLoaded', function () {
     KTUsersUpdateDetails.init();
 });
