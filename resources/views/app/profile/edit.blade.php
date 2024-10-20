@@ -97,7 +97,12 @@
                                     <div class="d-flex flex-center flex-column py-5">
                                         <!--begin::Avatar-->
                                         <div class="symbol symbol-100px symbol-circle mb-7">
-                                            <img src="{{ route('file', ['path' => $user->avatar]) }}" alt="image" />
+                                            @if (Auth::check() && Auth::user()->avatar)
+                                            <img src="{{ route('file', ['path' => Auth::user()->avatar]) }}" alt="image" />
+                                        @else
+                                            <img src="{{ asset('path/to/default/avatar.png') }}" alt="default image" />
+                                        @endif
+
                                         </div>
                                         <!--end::Avatar-->
                                         <!--begin::Name-->

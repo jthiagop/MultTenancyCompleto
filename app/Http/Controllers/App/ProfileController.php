@@ -50,8 +50,8 @@ class ProfileController extends Controller
             // Gera um nome único para o arquivo de avatar
             $avatarName = time() . '_' . $avatar->getClientOriginalName();
 
-            // Salva o arquivo na pasta 'perfis' dentro da pasta de armazenamento (storage/app/public)
-            $avatarPath = Storage::put('perfis', $avatar);
+// Salva o arquivo na pasta 'perfis' dentro da pasta de armazenamento (storage/app/public)
+$avatarPath = Storage::putFileAs('perfis', $avatar, $avatarName);
 
             // Salva o caminho do arquivo na coluna 'avatar' do usuário
             $user->avatar = $avatarPath;

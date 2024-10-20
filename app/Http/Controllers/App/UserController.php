@@ -89,8 +89,13 @@ class UserController extends Controller
             // Gera um nome único para o arquivo de avatar
             $avatarName = time() . '_' . $avatar->getClientOriginalName();
 
+                    // Verificar se o diretório 'perfis' existe, e criar se necessário
+        if (!Storage::exists('perfis')) {
+            Storage::makeDirectory('perfis');
+        }
+
             // Salva o arquivo na pasta 'perfis' dentro da pasta de armazenamento (storage/app/public)
-            $avatarPath = Storage::put('perfis', $request->file('avatar'));
+            $avatarPath = Storage::putFileAs('perfis', $avatar, $avatarName);
 
             // Salva o nome do arquivo na coluna 'avatar' do usuário no banco de dados
             $validatedData['avatar'] = $avatarPath;
