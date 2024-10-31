@@ -61,7 +61,7 @@ var KTAppCalendar = function () {
         // Init calendar --- more info: https://fullcalendar.io/docs/initialize-globals
         calendar = new FullCalendar.Calendar(calendarEl, {
             //locale: 'es', // Set local --- more info: https://fullcalendar.io/docs/locale
-            locale: 'pt-br', // Define o calendário para exibir em português
+            locale: 'pt_BR', // Define o calendário para exibir em português
             headerToolbar: {
                 left: 'prev,next today',
                 center: 'title',
@@ -287,27 +287,27 @@ var KTAppCalendar = function () {
         startFlatpickr = flatpickr(startDatepicker, {
             enableTime: false,
             dateFormat: "d/m/Y", // Formato de data brasileiro
-            locale: "pt" // Define a localidade para português
+            locale: "pt_BR" // Define a localidade para português
         });
 
         endFlatpickr = flatpickr(endDatepicker, {
             enableTime: false,
             dateFormat: "d/m/Y",
-            locale: "pt"
+            locale: "pt_BR"
         });
 
         startTimeFlatpickr = flatpickr(startTimepicker, {
             enableTime: true,
             noCalendar: true,
             dateFormat: "H:i",
-            locale: "pt"
+            locale: "pt_BR"
         });
 
         endTimeFlatpickr = flatpickr(endTimepicker, {
             enableTime: true,
             noCalendar: true,
             dateFormat: "H:i",
-            locale: "pt"
+            locale: "pt_BR"
         });
     }
 

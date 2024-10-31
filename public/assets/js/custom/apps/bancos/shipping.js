@@ -32,7 +32,11 @@ var KTAppEcommerceReportShipping = function () {
         var input = $("#kt_ecommerce_report_shipping_daterangepicker");
 
         function cb(start, end) {
-            input.val(start.format("MMMM D, YYYY") + " - " + end.format("MMMM D, YYYY"));
+            //input.val(start.format("MMMM D, YYYY") + " - " + end.format("MMMM D, YYYY"));
+            input.html(inicio.format("DD/MM/YYYY") + " - " + fim.format("DD/MM/YYYY"));
+            //input.html(inicio.format("D [de] MMMM [de] YYYY") + " - " + fim.format("D [de] MMMM [de] YYYY"));
+
+
             filterByDateRange(start, end);
         }
 

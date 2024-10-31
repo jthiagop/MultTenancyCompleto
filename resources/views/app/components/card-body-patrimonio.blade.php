@@ -6,8 +6,9 @@
                      <!--begin::Image-->
                      <div
                          class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-                         <img class="mw-50px mw-lg-75px" src="/assets/media/svg/icons/patrimonio-home.svg"
-                             alt="image" />
+                         {{-- <img class="mw-50px mw-lg-75px" src="/assets/media/svg/icons/patrimonio-home.svg" alt="image" /> --}}
+                        <img class="mw-75px mw-lg-150px mh-75px mh-lg-150px" src="/assets/media/png/house3d.png" alt="image" />
+
                      </div>
                      <!--end::Image-->
                      <!--begin::Wrapper-->

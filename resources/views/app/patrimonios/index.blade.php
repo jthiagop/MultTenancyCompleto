@@ -282,11 +282,11 @@
                                     <thead class="fs-7 text-gray-400 text-uppercase">
                                         <tr>
                                             <th class="min-w-50px">RID</th>
-                                            <th class="min-w-150px">Manager</th>
+                                            <th class="min-w-150px">Descrição</th>
                                             <th class="min-w-90px">Cidade</th>
                                             <th class="min-w-90px">Bairro</th>
                                             <th class="min-w-150px">Data</th>
-                                            <th class="min-w-50px text-end">Details</th>
+                                            <th class="min-w-50px text-end">Detalhes</th>
                                         </tr>
                                     </thead>
                                     <!--end::Head-->
@@ -316,7 +316,7 @@
                                                 <td>{{ $foreiro->bairro }}</td>
                                                 <td>
                                                     <span
-                                                        class="badge badge-light-success fw-bold px-4 py-3">{{ date(' d-m-Y', strtotime($foreiro->data)) }}</span>
+                                                        class="badge badge-light-success fw-bold px-4 py-3">{{ date(' d/m/Y', strtotime($foreiro->data)) }}</span>
                                                 </td>
                                                 <td class="text-end">
                                                     <!-- Botão de visualização -->
@@ -370,14 +370,20 @@
                     <!--end::Close-->
                 </div>
                 <!--begin::Modal header-->
+
                 <!--begin::Modal body-->
                 <div class="modal-body scroll-y mx-5 mx-xl-18 pt-0 pb-15">
                     <!--begin::Content-->
-                    <div class="text-center mb-13">
+                    <div class="text-center mb-13 position-relative">
+                        <!-- Título e texto descritivo -->
+                                                <!-- Ajuste da imagem para centralização e tamanho apropriado -->
+                        <span class="d-block mb-4">
+                            <img src="/assets/media/png/search.png" alt="Ícone de Pesquisa" class="img-fluid" style="width: 80px; max-width: 100px;">
+                        </span>
                         <h1 class="mb-3">Consulta de Patrimônio</h1>
-                        <div class="text-muted fw-semibold fs-5">Insira o RID para localizar o patrimônio desejado
-                        </div>
+                        <div class="text-muted fw-semibold fs-5">Insira o RID para localizar o patrimônio desejado</div>
                     </div>
+
                     <!--end::Content-->
                     <!--begin::Search-->
                     <div id="kt_modal_users_search_handler" data-kt-search-keypress="true"
@@ -545,7 +551,7 @@
                                             <div class="ms-5">
                                                 <a href="#"
                                                     class="fs-5 fw-bold text-gray-900 text-hover-primary mb-2">{{$patrimonioSearch->codigo_rid}}</a>
-                                                <div class="fw-semibold text-muted">{{ $patrimonioSearch->patrimonio }}</div>
+                                                <div class="fw-semibold text-muted">{{ $patrimonioSearch->patrimonio, $patrimonioSearch->logradouro }}</div>
                                             </div>
                                             <!--end::Details-->
                                         </div>
@@ -587,7 +593,7 @@
                                 <!--end::Message-->
                                 <!--begin::Illustration-->
                                 <div class="text-center px-5">
-                                    <img src="/assets/media/illustrations/sketchy-1/1.png" alt=""
+                                    <img src="/assets/media/illustrations/sketchy-1/seo-1-33.svg" alt=""
                                         class="w-100 h-200px h-sm-325px" />
                                 </div>
                                 <!--end::Illustration-->

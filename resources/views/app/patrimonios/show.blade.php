@@ -100,8 +100,8 @@
                                 <div class="d-flex flex-stack align-items-end pb-4 mt-n19">
                                     <div
                                         class="symbol symbol-125px symbol-lg-150px symbol-fixed position-relative mt-n3">
-                                        <img src="/assets/media/svg/icons/patrimonio-home.svg" alt="image"
-                                            style="border-radius: 1px; box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.3);" />
+                                        <img class="me-5" width="75px" height="75px" src="/assets/media/png/house3d.png" alt=""
+                                            />
                                         <div
                                             class="position-absolute translate-middle bottom-0 start-100 ms-n1 mb-9 bg-success rounded-circle h-15px w-15px">
                                         </div>

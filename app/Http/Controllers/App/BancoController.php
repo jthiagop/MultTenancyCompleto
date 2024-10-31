@@ -8,6 +8,7 @@ use App\Models\Banco;
 use App\Models\CadastroBanco;
 use App\Models\LancamentoPadrao;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -22,9 +23,14 @@ class BancoController extends Controller
         $valorEntradaBanco = Banco::getBancoEntrada();
         $ValorSaidasBanco = Banco::getBancoSaida();
 
+        $lps = LancamentoPadrao::all();
+        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
+
         return view('app.financeiro.index', [
             'valorEntradaBanco' => $valorEntradaBanco,
-            'ValorSaidasBanco' => $ValorSaidasBanco
+            'ValorSaidasBanco' => $ValorSaidasBanco,
+            'lps' => $lps,
+            'bancos' => $bancos,
         ]);
     }
 
@@ -50,8 +56,11 @@ class BancoController extends Controller
      */
     public function store(Request $request)
     {
+
         // Recupera a companhia associada ao usuário autenticado
         $subsidiaryId = User::getCompany();
+
+        $dataCompetencia = Carbon::createFromFormat('d-m-Y', $request->input('data_competencia'))->format('Y-m-d');
 
         // Validação dos dados do request
         $validator = Validator::make($request->all(), [
@@ -77,8 +86,11 @@ class BancoController extends Controller
         // Usuário autenticado
         $user = auth()->user();
 
-        // Dados validados
+
         $validatedData = $validator->validated();
+        // Adiciona a data convertida ao array de dados validados
+        $validatedData['data_competencia'] = $dataCompetencia;
+
         $validatedData['company_id'] = $subsidiaryId->company_id;
         $validatedData['origem'] = 'BC';
 
@@ -114,7 +126,7 @@ class BancoController extends Controller
         }
 
         // Redireciona para a página de índice com uma mensagem de sucesso
-        return redirect()->route('banco.create')->with('success', 'Lançamento registrado com sucesso!');
+        return redirect()->route('caixa.index')->with('success', 'Lançamento registrado com sucesso!');
     }
 
     public function update(Request $request, $id)
@@ -188,30 +200,34 @@ class BancoController extends Controller
         // Suponha que você já tenha o ID da empresa disponível
         $companyId = auth()->user()->company_id; // ou $companyId = 1; se o ID for fixo
 
+        $lps = LancamentoPadrao::all();
+        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
 
         // Filtrar as entradas e saídas pelos bancos relacionados à empresa
-    list($somaEntradas, $somaSaida) = Banco::getBanco();
+        list($somaEntradas, $somaSaida) = Banco::getBanco();
 
-    $total = $somaEntradas - $somaSaida;
+        $total = $somaEntradas - $somaSaida;
 
-    $valorEntrada = Banco::getBancoEntrada();
-    $ValorSaidas = Banco::getBancoSaida();
+        $valorEntrada = Banco::getBancoEntrada();
+        $ValorSaidas = Banco::getBancoSaida();
 
-    // Filtrar os bancos pela empresa
-    $bancos = Banco::where('company_id', $companyId)->get();
+        // Filtrar os bancos pela empresa
+        $bancos = Banco::where('company_id', $companyId)->get();
 
         return view('app.financeiro.banco.list', [
             'bancos' => $bancos,
             'valorEntrada' => $valorEntrada,
             'ValorSaidas' => $ValorSaidas,
             'total' => $total,
+            'lps' => $lps,
+            'bancos' => $bancos,
         ]);
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit( $id)
+    public function edit($id)
     {
         $bancosCadastro = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
 
@@ -222,10 +238,12 @@ class BancoController extends Controller
         $banco->anexos = $banco->anexos ?? collect();
 
 
-        return view('app.financeiro.banco.edit', [
-            'banco' => $banco,
-            'lps'   => $lps,
-            'bancosCadastro' => $bancosCadastro
+        return view(
+            'app.financeiro.banco.edit',
+            [
+                'banco' => $banco,
+                'lps'   => $lps,
+                'bancosCadastro' => $bancosCadastro
             ]
         );
     }
@@ -235,14 +253,12 @@ class BancoController extends Controller
      */
     public function destroy($id)
     {
-                // Localize o registro com base no ID fornecido
-                $banco = Banco::findOrFail($id);
+        // Localize o registro com base no ID fornecido
+        $banco = Banco::findOrFail($id);
 
-                // Exclua o registro
-                $banco->delete();
+        // Exclua o registro
+        $banco->delete();
 
-                return redirect()->route('banco.list');
+        return redirect()->route('banco.list');
     }
-
 }
-

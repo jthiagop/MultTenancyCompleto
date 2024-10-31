@@ -41,9 +41,15 @@ class LancamentoPadraoController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create()
+    public function create(Request $request)
     {
-        //
+        // Obtém o tipo selecionado do request
+        $tipo = $request->input('tipo');
+
+        // Se um tipo foi selecionado, busque os lançamentos correspondentes
+        $lancamentos = $tipo ? LancamentoPadrao::where('tipo', $tipo)->get() : collect();
+
+        return view('sua_view', compact('lancamentos', 'tipo'));
     }
 
     /**
@@ -115,4 +121,7 @@ class LancamentoPadraoController extends Controller
     {
         //
     }
+
+
+
 }

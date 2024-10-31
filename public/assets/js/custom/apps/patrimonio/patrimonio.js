@@ -78,131 +78,145 @@ var KTProjectOverview = function () {
             return;
         }
 
-        var options = {
-            series: [{
-                name: 'Incomplete',
-                data: [70, 70, 80, 80, 75, 75, 75]
-            }, {
-                name: 'Complete',
-                data: [55, 55, 60, 60, 55, 55, 60]
-            }],
-            chart: {
-                type: 'area',
-                height: height,
-                toolbar: {
-                    show: false
-                }
-            },
-            plotOptions: {
+        // Fetch data from the server
+        axios.get('/patrimonios/grafico')
+            .then(function (response) {
+                var data = response.data;
 
-            },
-            legend: {
-                show: false
-            },
-            dataLabels: {
-                enabled: false
-            },
-            fill: {
-                type: 'solid',
-                opacity: 1
-            },
-            stroke: {
-                curve: 'smooth',
-                show: true,
-                width: 3,
-                colors: [primary, success]
-            },
-            xaxis: {
-                categories: ['Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug'],
-                axisBorder: {
-                    show: false,
-                },
-                axisTicks: {
-                    show: false
-                },
-                labels: {
-                    style: {
-                        colors: gray500,
-                        fontSize: '12px'
-                    }
-                },
-                crosshairs: {
-                    position: 'front',
+                // Setup options with dynamic data from response
+                var options = {
+                    series: [{
+                        name: 'Incomplete',
+                        data: data.incomplete // Use data from the server
+                    }, {
+                        name: 'Complete',
+                        data: data.complete // Use data from the server
+                    }],
+                    chart: {
+                        type: 'area',
+                        height: height,
+                        toolbar: {
+                            show: false
+                        }
+                    },
+                    plotOptions: {
+
+                    },
+                    legend: {
+                        show: false
+                    },
+                    dataLabels: {
+                        enabled: false
+                    },
+                    fill: {
+                        type: 'solid',
+                        opacity: 1
+                    },
                     stroke: {
-                        color: primary,
-                        width: 1,
-                        dashArray: 3
-                    }
-                },
-                tooltip: {
-                    enabled: true,
-                    formatter: undefined,
-                    offsetY: 0,
-                    style: {
-                        fontSize: '12px'
-                    }
-                }
-            },
-            yaxis: {
-                labels: {
-                    style: {
-                        colors: gray500,
-                        fontSize: '12px',
-                    }
-                }
-            },
-            states: {
-                normal: {
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                },
-                hover: {
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                },
-                active: {
-                    allowMultipleDataPointsSelection: false,
-                    filter: {
-                        type: 'none',
-                        value: 0
-                    }
-                }
-            },
-            tooltip: {
-                style: {
-                    fontSize: '12px',
-                },
-                y: {
-                    formatter: function (val) {
-                        return val + " tasks"
-                    }
-                }
-            },
-            colors: [lightPrimary, lightSuccess],
-            grid: {
-                borderColor: gray200,
-                strokeDashArray: 4,
-                yaxis: {
-                    lines: {
-                        show: true
-                    }
-                }
-            },
-            markers: {
-                //size: 5,
-                colors: [lightPrimary, lightSuccess],
-                strokeColor: [primary, success],
-                strokeWidth: 3
-            }
-        };
+                        curve: 'smooth',
+                        show: true,
+                        width: 3,
+                        colors: [primary, success]
+                    },
+                    xaxis: {
+                        categories: ['Jan','Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+                        axisBorder: {
+                            show: false,
+                        },
+                        axisTicks: {
+                            show: false
+                        },
+                        labels: {
+                            style: {
+                                colors: gray500,
+                                fontSize: '12px'
+                            }
+                        },
+                        crosshairs: {
+                            position: 'front',
+                            stroke: {
+                                color: primary,
+                                width: 1,
+                                dashArray: 3
+                            }
+                        },
+                        tooltip: {
+                            enabled: true,
+                            formatter: undefined,
+                            offsetY: 0,
+                            style: {
+                                fontSize: '12px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            style: {
+                                colors: gray500,
+                                fontSize: '12px',
+                            }
+                        }
+                    },
+                    states: {
+                        normal: {
+                            filter: {
+                                type: 'none',
+                                value: 0
+                            }
+                        },
+                        hover: {
+                            filter: {
+                                type: 'none',
+                                value: 0
+                            }
+                        },
+                        active: {
+                            allowMultipleDataPointsSelection: false,
+                            filter: {
+                                type: 'none',
+                                value: 0
+                            }
+                        }
+                    },
+                    tooltip: {
+                        style: {
+                            fontSize: '12px',
+                        },
+                        y: {
+                            formatter: function (val) {
+                                return val + " tasks"
+                            }
+                        }
+                    },
+                    colors: [lightPrimary, lightSuccess],
+                    grid: {
+                        borderColor: gray200,
+                        strokeDashArray: 4,
+                        yaxis: {
+                            lines: {
+                                show: true
+                            }
+                        }
+                    },
+                    markers: {
+                        //size: 5,
+                        colors: [lightPrimary, lightSuccess],
+                        strokeColor: [primary, success],
+                        strokeWidth: 3
+                    },
+                    // O restante das opções do gráfico
+                    // ...
+                };
 
-        var chart = new ApexCharts(element, options);
-        chart.render();
-    }
+                // Initialize the chart with fetched data
+                var chart = new ApexCharts(element, options);
+                chart.render();
+            })
+            .catch(function (error) {
+                console.error("Erro ao carregar os dados do gráfico:", error);
+            });
+    };
+
 
     var initTable = function () {
         var table = document.querySelector('#kt_profile_overview_table');

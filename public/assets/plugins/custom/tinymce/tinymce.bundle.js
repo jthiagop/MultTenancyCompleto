@@ -58783,10 +58783,10 @@ tinymce.IconManager.add('default', {
       return editor.getParam('insertdatetime_element', false);
     };
 
-    var daysShort = 'Sun Mon Tue Wed Thu Fri Sat Sun'.split(' ');
-    var daysLong = 'Sunday Monday Tuesday Wednesday Thursday Friday Saturday Sunday'.split(' ');
-    var monthsShort = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ');
-    var monthsLong = 'January February March April May June July August September October November December'.split(' ');
+    var daysShort = 'Dom Seg Ter Qua Qui Sex Sáb Dom'.split(' ');
+    var daysLong = 'Domingo Segunda Terça Quarta Quinta Sexta Sábado Domingo'.split(' ');
+    var monthsShort = 'Jan Fev Mar Abr Mai Jun Jul Ago Set Out Nov Dez'.split(' ');
+    var monthsLong = 'Janeiro Fevereiro Março Abril Maio Junho Julho Agosto Setembro Outubro Novembro Dezembro'.split(' ');
     var addZeros = function (value, len) {
       value = '' + value;
       if (value.length < len) {
@@ -69157,10 +69157,10 @@ tinymce.IconManager.add('default', {
       if (date === void 0) {
         date = new Date();
       }
-      var daysShort = 'Sun Mon Tue Wed Thu Fri Sat Sun'.split(' ');
-      var daysLong = 'Sunday Monday Tuesday Wednesday Thursday Friday Saturday Sunday'.split(' ');
-      var monthsShort = 'Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec'.split(' ');
-      var monthsLong = 'January February March April May June July August September October November December'.split(' ');
+      var daysShort = 'Dom Seg Ter Qua Qui Sex Sáb Dom'.split(' ');
+      var daysLong = 'Domingo Segunda Terça Quarta Quinta Sexta Sábado Domingo'.split(' ');
+      var monthsShort = 'Jan Fev Mar Abr Mai Jun Jul Ago Set Out Nov Dez'.split(' ');
+      var monthsLong = 'Janeiro Fevereiro Março Abril Maio Junho Julho Agosto Setembro Outubro Novembro Dezembro'.split(' ');
       fmt = fmt.replace('%D', '%m/%d/%Y');
       fmt = fmt.replace('%r', '%I:%M:%S %p');
       fmt = fmt.replace('%Y', '' + date.getFullYear());

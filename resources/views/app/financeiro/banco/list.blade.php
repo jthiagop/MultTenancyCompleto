@@ -555,7 +555,7 @@
                                     <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
                                         <th class="min-w-75px">ID</th>
                                         <th class="min-w-100px">Data</th>
-                                        <th class="min-w-150px">Tipo Docuemnto</th>
+                                        <th class="min-w-250px">Tipo Docuemnto</th>
                                         <th class="min-w-150px">Banco</th>
                                         <th class="min-w-500px">Documento</th>
                                         <th class="min-w-125px">Tipo</th>
@@ -581,7 +581,7 @@
                                         <td>{{ $banco->tipo_documento }}</td>
                                         <!--end::Last login=-->
                                         <!--begin::Last login=-->
-                                        <td>{{ $banco->bancoCadastrado->name }}</td>
+                                        <td>{{ $banco->bancoCadastrado->conta }}</td>
                                         <!--end::Last login=-->
                                         <!--begin::Two step=-->
                                         <td>{{ $banco->lancamento_padrao }}</td>
@@ -663,6 +663,9 @@
 
 </x-tenant-app-layout>
 
+@include('app.components.modals.lancar-banco')
+
+<script src="assets/js/custom/utilities/modals/financeiro/new-banco.js"></script>
 
 <!--begin::Vendors Javascript(used for this page only)-->
 <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>

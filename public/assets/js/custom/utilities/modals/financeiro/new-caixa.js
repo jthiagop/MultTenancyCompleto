@@ -1,7 +1,7 @@
 "use strict";
 
 // Class definition
-var KTModalNewTarget = function () {
+var DMModalNewCaixa = function () {
 	var submitButton;
 	var cancelButton;
 	var validator;
@@ -214,12 +214,12 @@ var KTModalNewTarget = function () {
 
 // On document ready
 KTUtil.onDOMContentLoaded(function () {
-	KTModalNewTarget.init();
+	DMModalNewCaixa.init();
 });
 
 
 $(document).ready(function() {
-    $('#lancamento_padrao').on('change', function() {
+    $('#lancamento_padrao_caixa').on('change', function() {
         var selectedValue = $(this).val();
         if (selectedValue === 'Deposito Bancário') {
             $('#banco-deposito').show(); // Mostra o campo do banco de depósito
@@ -228,3 +228,72 @@ $(document).ready(function() {
         }
     });
 });
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelectBanco = document.getElementById('tipo_select_banco');
+    const tipoSelectCaixa = document.getElementById('tipo_select_caixa');
+    const lancamentoPadraoBanco = document.getElementById('lancamento_padrao_banco');
+    const lancamentoPadraoCaixa = document.getElementById('lancamento_padrao_caixa');
+
+    tipoSelectCaixa.addEventListener('change', function() {
+        const selectedTipo = tipoSelectCaixa.value;
+
+        // Função para atualizar opções do select com base no tipo
+        const updateOptions = (selectElement) => {
+            // Limpa todas as opções do select de Lançamento Padrão
+            selectElement.innerHTML = '';
+
+            // Adiciona a opção vazia
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.text = 'Escolha um Lançamento...';
+            selectElement.appendChild(emptyOption);
+
+            // Filtra e adiciona as opções de acordo com o tipo selecionado
+            lpsData.forEach(function(lp) {
+                if (lp.type === selectedTipo) {
+                    const option = document.createElement('option');
+                    option.value = lp.description;
+                    option.text = lp.description;
+                    selectElement.appendChild(option);
+                }
+            });
+        };
+
+        // Atualizar ambos os selects, se eles existirem na página
+        if (lancamentoPadraoBanco) updateOptions(lancamentoPadraoBanco);
+        if (lancamentoPadraoCaixa) updateOptions(lancamentoPadraoCaixa);
+    });
+
+    tipoSelectBanco.addEventListener('change', function() {
+        const selectedTipo = tipoSelectBanco.value;
+
+        // Função para atualizar opções do select com base no tipo
+        const updateOptions = (selectElement) => {
+            // Limpa todas as opções do select de Lançamento Padrão
+            selectElement.innerHTML = '';
+
+            // Adiciona a opção vazia
+            const emptyOption = document.createElement('option');
+            emptyOption.value = '';
+            emptyOption.text = 'Escolha um Lançamento...';
+            selectElement.appendChild(emptyOption);
+
+            // Filtra e adiciona as opções de acordo com o tipo selecionado
+            lpsData.forEach(function(lp) {
+                if (lp.type === selectedTipo) {
+                    const option = document.createElement('option');
+                    option.value = lp.description;
+                    option.text = lp.description;
+                    selectElement.appendChild(option);
+                }
+            });
+        };
+
+        // Atualizar ambos os selects, se eles existirem na página
+        if (lancamentoPadraoBanco) updateOptions(lancamentoPadraoBanco);
+        if (lancamentoPadraoCaixa) updateOptions(lancamentoPadraoCaixa);
+    });
+});
+

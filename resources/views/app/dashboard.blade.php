@@ -3,7 +3,6 @@
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
         <div class="d-flex flex-column flex-column-fluid">
-            <div id="kt_app_content" class="app-content flex-column-fluid">
                 <!--begin::Content container-->
                 <div id="kt_app_content_container" class="app-container container-xxl">
                     <!--begin::Toolbar-->
@@ -13,8 +12,7 @@
                             <!--begin::Page title-->
                             <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
                                 <!--begin::Title-->
-                                <h1
-                                    class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
+                                <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
                                     {{ $company->name }}</h1>
                                 <!--end::Title-->
                                 <!--begin::Breadcrumb-->
@@ -77,120 +75,21 @@
                     </div>
                     <!--end::Toolbar-->
                     <!--begin::Input group-->
-                    <div id="kt_app_toolbar" class="">
+                    <div id="kt_app_content" class="app-content flex-column-fluid">
                         <!--begin::Row-->
-                        <div class="row">
+                        <div class="row mb-xxl-5">
                             <!--begin::Col-->
-                            <div class="col-lg-4 hover-elevate-up parent-hover">
+                            <div class="col-lg-4 hover-elevate-up parent-hover ">
                                 <!--begin::Option-->
                                 <input type="radio" class="btn-check" name="account_type" value="personal"
                                     checked="checked" id="kt_create_account_form_account_type_personal" />
                                 <a href="{{ route('caixa.index') }}"
-                                    class="btn btn-outline btn-outline-dashed btn-active-light-primary p-7 d-flex align-items-center mb-10"
+                                    class="btn btn-outline btn-outline-dashed btn-active-light-primary p-4 d-flex align-items-center mb-10"
                                     for="kt_create_account_form_account_type_personal">
 
                                     <!--begin::Svg Icon | path: icons/duotune/communication/com005.svg-->
-                                    <span class="svg-icon svg-icon-3x me-5">
-                                        <svg version="1.1" id="_x34_" width="35" height="35" version="1.1"
-                                            id="Layer_1" xmlns="http://www.w3.org/2000/svg"
-                                            xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512"
-                                            xml:space="preserve" fill="#000000">
-                                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round"
-                                                stroke-linejoin="round"></g>
-                                            <g id="SVGRepo_iconCarrier">
-                                                <path style="fill:#F2F2F2;"
-                                                    d="M509.653,113.512l-85.511-85.511c-1.505-1.503-3.543-2.347-5.669-2.347H93.528 c-4.428,0-8.017,3.588-8.017,8.017v470.313c0,4.428,3.588,8.017,8.017,8.017h410.455c4.428,0,8.017-3.588,8.017-8.017V119.182 C512,117.056,511.156,115.017,509.653,113.512z">
-                                                </path>
-                                                <g>
-                                                    <path style="fill:#E5E5E5;"
-                                                        d="M511.982,118.826c-0.089-1.996-0.912-3.893-2.33-5.312L424.14,28.002 c-1.504-1.504-3.542-2.348-5.668-2.348h-0.356v85.156c0,4.427,3.589,8.017,8.017,8.017H511.982z">
-                                                    </path>
-                                                    <path style="fill:#E5E5E5;"
-                                                        d="M93.528,25.653c-4.428,0-8.017,3.588-8.017,8.017v470.313c0,4.428,3.588,8.017,8.017,8.017h375.888 L136.144,25.653H93.528z">
-                                                    </path>
-                                                </g>
-                                                <path style="fill:#666666;"
-                                                    d="M214.313,0H24.05C10.789,0,0,10.789,0,24.05v258.672c0,13.261,10.789,24.05,24.05,24.05h190.263 c13.261,0,24.05-10.789,24.05-24.05V24.05C238.363,10.789,227.574,0,214.313,0z">
-                                                </path>
-                                                <path style="fill:#F7D04A;"
-                                                    d="M358.614,247.983c-65.717,0-119.182,53.465-119.182,119.182s53.465,119.182,119.182,119.182 s119.182-53.465,119.182-119.182S424.33,247.983,358.614,247.983z">
-                                                </path>
-                                                <path style="fill:#F3B41B;"
-                                                    d="M382.129,462.831c-65.717,0-119.182-53.465-119.182-119.182c0-26.875,8.946-51.698,24.009-71.656 c-28.845,21.772-47.525,56.331-47.525,95.172c0,65.717,53.465,119.182,119.182,119.182c38.841,0,73.4-18.68,95.172-47.525 C433.828,453.885,409.005,462.831,382.129,462.831z">
-                                                </path>
-                                                <path style="fill:#EB6836;"
-                                                    d="M376.915,360.217l-12.423-0.366v-44.528h28.326c4.428,0,8.017-3.588,8.017-8.017 c0-4.428-3.588-8.017-8.017-8.017h-28.326v-9.086c0-4.428-3.588-8.017-8.017-8.017c-4.428,0-8.017,3.588-8.017,8.017v9.086h-8.017 c-13.261,0-24.05,10.789-24.05,24.05v27.791c0,13.217,10.719,23.98,23.92,24.05l8.147,0.239v43.585h-24.05 c-4.428,0-8.017,3.588-8.017,8.017s3.588,8.017,8.017,8.017h24.05v9.086c0,4.428,3.588,8.017,8.017,8.017 c4.428,0,8.017-3.588,8.017-8.017v-9.086h12.292c13.261,0,24.05-10.789,24.05-24.05v-26.722 C400.835,371.05,390.116,360.288,376.915,360.217z M340.679,359.151c-0.078-0.002-0.157-0.003-0.236-0.003 c-4.421,0-8.017-3.596-8.017-8.017V323.34c0-4.421,3.596-8.017,8.017-8.017h8.017v44.057L340.679,359.151z M384.802,410.99 c0,4.421-3.596,8.017-8.017,8.017h-12.292v-43.114l12.056,0.355c0.078,0.002,0.157,0.003,0.236,0.003 c4.421,0,8.017,3.596,8.017,8.017V410.99z">
-                                                </path>
-                                                <path style="fill:#F2F2F2;"
-                                                    d="M204.693,25.653H33.67c-4.428,0-8.017,3.588-8.017,8.017v42.756c0,4.428,3.588,8.017,8.017,8.017 h171.023c4.428,0,8.017-3.588,8.017-8.017V33.67C212.71,29.242,209.122,25.653,204.693,25.653z">
-                                                </path>
-                                                <g>
-                                                    <path style="fill:#62C9CC;"
-                                                        d="M33.67,25.653c-4.428,0-8.017,3.588-8.017,8.017v42.756c0,4.428,3.588,8.017,8.017,8.017h34.739 l58.789-58.789H33.67z">
-                                                    </path>
-                                                    <path style="fill:#62C9CC;"
-                                                        d="M204.693,25.653h-29.929l-58.789,58.789h88.718c4.428,0,8.017-3.588,8.017-8.017V33.67 C212.71,29.242,209.122,25.653,204.693,25.653z">
-                                                    </path>
-                                                </g>
-                                                <g>
-                                                    <path style="fill:#EF9D3C;"
-                                                        d="M67.875,94.063H33.67c-4.428,0-8.017,3.588-8.017,8.017v34.205c0,4.428,3.588,8.017,8.017,8.017 h34.205c4.428,0,8.017-3.588,8.017-8.017v-34.205C75.891,97.651,72.303,94.063,67.875,94.063z">
-                                                    </path>
-                                                    <path style="fill:#EF9D3C;"
-                                                        d="M135.749,94.063h-34.205c-4.428,0-8.017,3.588-8.017,8.017v34.205c0,4.428,3.588,8.017,8.017,8.017 h34.205c4.428,0,8.017-3.588,8.017-8.017v-34.205C143.766,97.651,140.178,94.063,135.749,94.063z">
-                                                    </path>
-                                                    <path style="fill:#EF9D3C;"
-                                                        d="M67.875,162.472H33.67c-4.428,0-8.017,3.588-8.017,8.017v34.205c0,4.428,3.588,8.017,8.017,8.017 h34.205c4.428,0,8.017-3.588,8.017-8.017v-34.205C75.891,166.06,72.303,162.472,67.875,162.472z">
-                                                    </path>
-                                                    <path style="fill:#EF9D3C;"
-                                                        d="M135.749,162.472h-34.205c-4.428,0-8.017,3.588-8.017,8.017v34.205c0,4.428,3.588,8.017,8.017,8.017 h34.205c4.428,0,8.017-3.588,8.017-8.017v-34.205C143.766,166.06,140.178,162.472,135.749,162.472z">
-                                                    </path>
-                                                    <path style="fill:#EF9D3C;"
-                                                        d="M67.875,230.881H33.67c-4.428,0-8.017,3.588-8.017,8.017v34.205c0,4.428,3.588,8.017,8.017,8.017 h34.205c4.428,0,8.017-3.588,8.017-8.017v-34.205C75.891,234.469,72.303,230.881,67.875,230.881z">
-                                                    </path>
-                                                    <path style="fill:#EF9D3C;"
-                                                        d="M135.749,230.881h-34.205c-4.428,0-8.017,3.588-8.017,8.017v34.205c0,4.428,3.588,8.017,8.017,8.017 h34.205c4.428,0,8.017-3.588,8.017-8.017v-34.205C143.766,234.469,140.178,230.881,135.749,230.881z">
-                                                    </path>
-                                                    <path style="fill:#EF9D3C;"
-                                                        d="M204.159,94.063h-34.205c-4.428,0-8.017,3.588-8.017,8.017v34.205c0,4.428,3.588,8.017,8.017,8.017 h34.205c4.428,0,8.017-3.588,8.017-8.017v-34.205C212.175,97.651,208.587,94.063,204.159,94.063z">
-                                                    </path>
-                                                </g>
-                                                <path style="fill:#F7D04A;"
-                                                    d="M204.693,162.472h-34.205c-4.428,0-8.017,3.588-8.017,8.017v102.614c0,4.428,3.588,8.017,8.017,8.017 h34.205c4.428,0,8.017-3.588,8.017-8.017V170.489C212.71,166.06,209.122,162.472,204.693,162.472z">
-                                                </path>
-                                                <path style="fill:#666666;"
-                                                    d="M297.846,92.994c-2.183,0-4.358-0.886-5.941-2.632l-15.51-17.102 c-2.974-3.279-2.727-8.35,0.554-11.324c3.276-2.976,8.349-2.729,11.324,0.554l15.51,17.102c2.974,3.279,2.727,8.35-0.554,11.324 C301.695,92.308,299.767,92.994,297.846,92.994z">
-                                                </path>
-                                                <g>
-                                                    <path style="fill:#62C9CC;"
-                                                        d="M464.11,214.126L336.377,86.391c-1.12-1.119-2.545-1.882-4.097-2.192l-30.233-6.046 c-2.627-0.522-5.344,0.297-7.241,2.192c-1.894,1.895-2.717,4.612-2.192,7.241l6.046,30.233c0.31,1.552,1.073,2.977,2.192,4.097 l127.735,127.735c5.116,5.116,12.417,7.67,19.607,6.89c6.428-0.697,11.449-3.932,15.917-8.402 C473.488,238.761,473.488,223.505,464.11,214.126z">
-                                                    </path>
-                                                    <rect x="300.46" y="122.86"
-                                                        transform="matrix(-0.7071 -0.7071 0.7071 -0.7071 514.0678 508.8909)"
-                                                        style="fill:#62C9CC;" width="123.937" height="50.238"></rect>
-                                                </g>
-                                                <path style="fill:#F7D04A;"
-                                                    d="M302.047,78.153c-5.513-1.096-10.535,3.916-9.433,9.433l6.046,30.233 c0.31,1.552,1.073,2.977,2.192,4.097l35.525-35.525c-1.12-1.119-2.545-1.882-4.097-2.192L302.047,78.153z">
-                                                </path>
-                                                <path style="fill:#50A9A9;"
-                                                    d="M464.11,214.126l-40.095-40.095l-35.525,35.525l40.095,40.095c5.021,5.021,12.2,7.479,19.248,6.84 c6.562-0.595,11.719-3.795,16.276-8.351C473.488,238.761,473.488,223.505,464.11,214.126z">
-                                                </path>
-                                                <path style="fill:#666666;"
-                                                    d="M451.639,221.01c-2.051,0-4.103-0.782-5.669-2.347c-3.131-3.132-3.131-8.207,0-11.338l12.323-12.322 l-37.701-35.802c-3.211-3.05-3.342-8.124-0.293-11.333c3.051-3.211,8.125-3.342,11.333-0.293l43.668,41.467 c1.568,1.489,2.469,3.548,2.496,5.71c0.028,2.161-0.819,4.243-2.346,5.772l-18.14,18.14 C455.742,220.226,453.69,221.01,451.639,221.01z">
-                                                </path>
-                                                <g>
-                                                    <path style="fill:#808080;"
-                                                        d="M198.28,383.733h-53.445c-4.428,0-8.017-3.588-8.017-8.017c0-4.428,3.588-8.017,8.017-8.017h53.445 c4.428,0,8.017,3.588,8.017,8.017C206.296,380.145,202.708,383.733,198.28,383.733z">
-                                                    </path>
-                                                    <path style="fill:#808080;"
-                                                        d="M198.28,426.489h-53.445c-4.428,0-8.017-3.588-8.017-8.017s3.588-8.017,8.017-8.017h53.445 c4.428,0,8.017,3.588,8.017,8.017S202.708,426.489,198.28,426.489z">
-                                                    </path>
-                                                </g>
-                                            </g>
-                                        </svg>
-                                    </span>
-                                    <!--end::Svg Icon-->
+                                    <img class="me-5" width="80px" height="80px" src="/assets/media/png/financeiro.svg" alt="">
+
                                     <!--begin::Info-->
                                     <span class="d-block fw-semibold text-start">
                                         <span class="text-dark fw-bold d-block fs-4 mb-2">Financeiro</span>
@@ -203,84 +102,38 @@
                             </div>
                             <!--end::Col-->
                             <!--begin::Col-->
-                            <div class="col-lg-4 hover-elevate-up parent-hover ">
+                            <div class="col-lg-4 hover-elevate-up parent-hover mb-5  ">
                                 <!--begin::Option-->
                                 <input type="radio" class="btn-check" name="account_type" value="corporate"
                                     id="kt_create_account_form_account_type_corporate" />
                                 <a href="{{ route('patrimonio.index') }}"
-                                    class="btn btn-outline btn-outline-dashed btn-outline-danger p-7 d-flex align-items-center"
+                                    class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
                                     for="kt_create_account_form_account_type_corporate">
+                                    <div class="row">
+                                        <div class="col-sm-3">
                                     <!--begin::Svg Icon | path: icons/duotune/finance/fin006.svg-->
-                                    <span class="svg-icon svg-icon-3x me-5">
-                                        <svg height="200px" width="200px" version="1.1" id="Layer_1"
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512"
-                                            xml:space="preserve" fill="#000000">
-                                            <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round"
-                                                stroke-linejoin="round"></g>
-                                            <g id="SVGRepo_iconCarrier">
-                                                <path style="fill:#F2F2F2;"
-                                                    d="M501.971,65.452H75.48c-4.374,0-7.918,3.545-7.918,7.918v430.713c0,4.373,3.544,7.918,7.918,7.918 h426.491c4.374,0,7.918-3.545,7.918-7.918V73.369C509.889,68.996,506.345,65.452,501.971,65.452z">
-                                                </path>
-                                                <path style="fill:#E5E5E5;"
-                                                    d="M75.48,65.452c-4.374,0-7.918,3.545-7.918,7.918v430.713c0,4.373,3.544,7.918,7.918,7.918h89.732 V65.452H75.48z">
-                                                </path>
-                                                <path style="fill:#EF9D3C;"
-                                                    d="M140.404,64.924c0-0.77-0.11-1.512-0.315-2.215C136.821,27.408,106.908,0,71.258,0 S5.694,27.408,2.426,62.709c-0.205,0.703-0.315,1.445-0.315,2.215v373.707c0,1.405,0,2.812,0,4.223 c0,38.128,138.293,38.128,138.293,0c0-1.41,0-2.818,0-4.223V64.924z">
-                                                </path>
-                                                <path style="fill:#E2771E;"
-                                                    d="M2.426,62.709c-0.205,0.703-0.315,1.445-0.315,2.215c0,0,0.024,380.042,0.074,381.038 c1.123,22.797,35.291,21.72,35.291-1.104V8.87C18.239,19.71,4.574,39.503,2.426,62.709z">
-                                                </path>
-                                                <path style="fill:#CCCCCC;"
-                                                    d="M71.258,373.707c-38.128,0-69.146,31.019-69.146,69.146S33.13,512,71.258,512 s69.146-31.019,69.146-69.146S109.385,373.707,71.258,373.707z">
-                                                </path>
-                                                <path style="fill:#E2771E;"
-                                                    d="M71.258,405.377c-20.665,0-37.476,16.812-37.476,37.476c0,20.665,16.812,37.476,37.476,37.476 s37.476-16.812,37.476-37.476C108.734,422.189,91.922,405.377,71.258,405.377z">
-                                                </path>
-                                                <path style="fill:#EB6836;"
-                                                    d="M229.608,450.243h203.007v-31.885c0-1.339-1.085-2.424-2.424-2.424H229.647 c-0.948-0.013-1.934,0.171-2.82,0.505l-1.042,0.326v32.716l2.192,0.592C228.504,450.183,229.049,450.243,229.608,450.243z">
-                                                </path>
-                                                <path style="fill:#C74B38;"
-                                                    d="M432.616,458.904v-8.661H229.608c-0.56,0-1.104-0.06-1.631-0.17l-2.192-0.592v11.085l2.192,0.592 c0.527,0.11,1.072,0.17,1.631,0.17h200.583C431.529,461.328,432.616,460.243,432.616,458.904z">
-                                                </path>
-                                                <path style="fill:#E5E5E5;"
-                                                    d="M455.522,415.934h-29.559v45.394h29.559c4.374,0,7.918-3.545,7.918-7.918v-29.559 C463.439,419.479,459.895,415.934,455.522,415.934z">
-                                                </path>
-                                                <path style="fill:#F7D04A;"
-                                                    d="M229.647,415.934c-0.948-0.013-1.934,0.171-2.82,0.505l-50.672,15.858 c-3.299,1.237-5.384,4.507-5.114,8.02c0.269,3.513,2.829,6.426,6.279,7.145l50.655,13.696c0.527,0.11,1.072,0.17,1.631,0.17h3.871 v-45.394H229.647z">
-                                                </path>
-                                                <path style="fill:#CCCCCC;"
-                                                    d="M425.963,461.328h29.559c4.374,0,7.918-3.545,7.918-7.918v-3.167h-37.476V461.328z">
-                                                </path>
-                                                <path style="fill:#F3B41B;"
-                                                    d="M227.977,450.073l-50.655-13.696c-1.57-0.327-2.939-1.124-4.008-2.21 c-1.571,1.595-2.45,3.811-2.271,6.149c0.269,3.513,2.829,6.426,6.279,7.145l50.655,13.696c0.527,0.11,1.072,0.17,1.631,0.17h3.871 v-11.085h-3.871C229.049,450.243,228.504,450.183,227.977,450.073z">
-                                                </path>
-                                                <g>
-                                                    <path style="fill:#666666;"
-                                                        d="M438.087,229.285c-0.084-2.009-0.935-3.95-2.383-5.355L322.748,114.14 c-3.072-2.986-7.965-2.986-11.037,0L198.754,223.93c-1.518,1.473-2.398,3.564-2.398,5.677v154.128c0,4.373,3.544,7.918,7.918,7.918 h225.913c4.374,0,7.918-3.545,7.918-7.918V229.607C438.103,229.5,438.092,229.393,438.087,229.285z M317.229,130.86l93.451,90.831 H223.778L317.229,130.86z M292.421,375.819v-74.953h49.617v74.953H292.421z M422.268,375.819h-64.396v-82.87 c0-4.373-3.544-7.918-7.918-7.918h-65.452c-4.374,0-7.918,3.545-7.918,7.918v82.87H212.19V237.526h210.078V375.819z">
-                                                    </path>
-                                                    <path style="fill:#666666;"
-                                                        d="M317.229,160.462c-14.844,0-26.92,12.076-26.92,26.92s12.076,26.92,26.92,26.92 s26.92-12.076,26.92-26.92S332.073,160.462,317.229,160.462z M317.229,198.466c-6.112,0-11.085-4.972-11.085-11.085 s4.972-11.085,11.085-11.085s11.085,4.972,11.085,11.085S323.341,198.466,317.229,198.466z">
-                                                    </path>
-                                                </g>
-                                            </g>
-                                        </svg>
-                                    </span>
-                                    <!--end::Svg Icon-->
+
+                                    <img class="me-5" width="75px" height="75px" src="/assets/media/png/house3d.png" alt="">
+
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-9">
+                                        <div class="row">
                                     <!--begin::Info-->
                                     <span class="d-block fw-semibold text-start">
                                         <span class="text-dark fw-bold d-block fs-4 mb-2">Patrimônio</span>
-                                        <span class="text-muted fw-semibold fs-6">Gestão patrimonioal, foro e
+                                        <span class="text-muted fw-semibold fs-6 ">Gestão patrimonioal, foro e
                                             laudêmio.</span>
                                     </span>
                                     <!--end::Info-->
+                                        </div>
+                                    </div>
                                 </a>
                                 <!--end::Option-->
                             </div>
                             <!--end::Col-->
                             <!--begin::Col-->
-                            <div class="col-lg-4 hover-elevate-up parent-hover">
+                            <div class="col-lg-4 hover-elevate-up parent-hover mb-5 ">
                                 <!--begin::Option-->
                                 <input type="radio" class="btn-check" name="account_type" value="corporate"
                                     id="kt_create_account_form_account_type_corporate" />
@@ -288,7 +141,7 @@
                                     class="btn btn-outline btn-outline-dashed btn-outline-danger p-7 d-flex align-items-center"
                                     for="kt_create_account_form_account_type_corporate">
                                     <!--begin::Svg Icon | path: icons/duotune/finance/fin006.svg-->
-                                    <span class="svg-icon svg-icon-3x me-5">
+                                    <span class="svg-icon svg-icon-4x me-5">
                                         <svg viewBox="0 -21.61 399.278 399.278" xmlns="http://www.w3.org/2000/svg"
                                             fill="#000000">
                                             <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
@@ -684,8 +537,6 @@
                     <!--end::Input group-->
                 </div>
                 <!--end::Content container-->
-            </div>
-
         </div>
     </div>
 

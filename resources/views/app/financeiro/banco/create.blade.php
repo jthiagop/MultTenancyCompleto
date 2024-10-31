@@ -32,7 +32,7 @@
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
-                            <li class="breadcrumb-item text-muted">Financeiro</li>
+                            <li class="breadcrumb-item text-muted"> <a class="text-muted text-hover-primary" href="{{ route('caixa.index') }}"> Financeiro</a></li>
                             <!--end::Item-->
                             <!--begin::Item-->
                             <li class="breadcrumb-item">
@@ -191,7 +191,6 @@
                                                 @enderror
                                             </div>
                                             <div class="col-md-6 fv-row">
-
                                                 <label class="required fs-5 fw-semibold mb-2">Lançamento Padrão</label>
                                                 <i class="fas fa-exclamation-circle ms-2 fs-7"
                                                         data-bs-toggle="tooltip"

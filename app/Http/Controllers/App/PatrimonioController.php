@@ -225,13 +225,30 @@ private function calcularDV($ridBase)
         $patrimonios = Patrimonio::where('codigo_rid', 'like', "%{$query}%")
             ->orWhere('descricao', 'like', "%{$query}%")
             ->orWhere('patrimonio', 'like', "%{$query}%")
+            ->orWhere('logradouro', 'like', "%{$query}%")
             ->orWhere('bairro', 'like', "%{$query}%")
             ->orWhere('localidade', 'like', "%{$query}%")
             ->orWhere('uf', 'like', "%{$query}%")
-            ->get();
+            ->distinct()
+            ->take(20) // Limita a 20 resultados
+            ->orderBy('created_at', 'desc') // Ordena por data de criação, ajuste conforme necessário
+            ->get(['id', 'codigo_rid', 'descricao', 'patrimonio', 'logradouro', 'bairro', 'localidade', 'uf']);
 
         return response()->json($patrimonios);
     }
+
+    public function grafico()
+    {
+    $incompleteData = [70, 70, 80, 80, 75, 75, 75, 75, 75, 75, 94, 150]; // Substitua com dados reais da consulta
+    $completeData = [55, 55, 60, 60, 55, 55, 60, 16, 20, 39, 75, 75]; // Substitua com dados reais da consulta
+
+    return response()->json([
+        'incomplete' => $incompleteData,
+        'complete' => $completeData,
+        'categories' => ['Jan','Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'] // Mude conforme necessário
+    ]);
+    }
+
 
     public function imoveis()
     {

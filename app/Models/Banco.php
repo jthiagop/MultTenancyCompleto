@@ -37,6 +37,7 @@ class Banco extends Model
     {
         return $this->belongsTo(CadastroBanco::class, 'banco_id');
     }
+
     static public function getBancoList()
     {
         $userId = auth()->user()->id; // Recupere o ID do usuário logado

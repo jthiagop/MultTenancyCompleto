@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\App\PrestacaoDeContaController;
 use App\Http\Controllers\App\AnexoController;
 use App\Http\Controllers\App\BancoController;
 use App\Http\Controllers\App\CompanyController;
@@ -17,7 +18,6 @@ use App\Http\Controllers\App\NamePatrimonioController;
 use App\Http\Controllers\App\PatrimonioController;
 use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\App\PatrimonioAnexoController;
-use App\Http\Controllers\PatrimonioController as ControllersPatrimonioController;
 use App\Models\TenantFilial;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -107,6 +107,9 @@ Route::middleware([
             Route::resource('anexos', AnexoController::class);
             Route::resource('post', PostController::class);
 
+            Route::get('/lancamento_padrao/tipo/{tipo}', [LancamentoPadraoController::class, 'getLancamentosByTipo']);
+
+
             Route::resource('patrimonio', PatrimonioController::class);
             Route::resource('patrimonioAnexo', PatrimonioAnexoController::class);
 
@@ -119,10 +122,17 @@ Route::middleware([
 
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
             Route::get('app/financeiro/banco/list', [BancoController::class, 'list'])->name('banco.list');
+
             Route::get('/patrimonios/search', [PatrimonioController::class, 'search'])->name('patrimonios.search');
+            Route::get('/patrimonios/grafico', [PatrimonioController::class, 'grafico']);
+
 
             Route::get('/report/shipping', [ReportController::class, 'shippingReport'])->name('report.shipping');
             Route::get('/report/shipping/data', [ReportController::class, 'shippingReportData'])->name('report.shipping.data');
+
+            Route::prefix('relatorios')->group(function () {
+                Route::get('/prestacao-de-contas', [PrestacaoDeContaController::class, 'index'])->name('relatorios.prestacao.de.contas');
+            });
         });
     });
 

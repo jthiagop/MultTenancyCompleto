@@ -7676,10 +7676,11 @@ var KTLayoutSearch = function() {
                                 <div class="ms-5">
                                     <a href="#" class="fs-5 fw-bold text-gray-900 text-hover-primary mb-2">${patrimonio.codigo_rid}</a>
                                     <div class="fw-semibold text-muted">${patrimonio.patrimonio}</div>
+                                    <div class="fw-semibold text-muted">${patrimonio.logradouro}</div>
                                 </div>
                             </div>
                             <div class="ms-2 w-100px">
-                                <a href="/patrimonio/${patrimonio.id}" class="btn btn-light btn-sm"><span><i class="ki-solid ki-eye"></i>Ver</span></a>
+                                <a href="/patrimonio/${patrimonio.id}" class="btn btn-light btn-sm"><span><i class="bi bi-eye"></i></span>Ver</a>
                             </div>
                         </div>
                         <div class="border-bottom border-gray-300 border-bottom-dashed"></div>`;
@@ -8100,15 +8101,31 @@ num_documento.addEventListener('input', function(){
 
 });
 
+$(document).ready(function() {
+    // Adiciona o evento `shown.bs.modal` para inicializar o select2 no modal
+    $('#dm_modal_novo_lancamento_banco').on('shown.bs.modal', function () {
+        $('#lancamento_padrao_banco').select2({
+            theme: "bootstrap-5",
+            placeholder: "Escolha um Lançamento...",
+            width: '100%',
+            closeOnSelect: true,
+            dropdownParent: $('#dm_modal_novo_lancamento_banco') // Define o modal como parent
+        });
 
-$(document).ready(function(){
-    $('.select2').select2({
-        theme: "bootstrap-5",
-        width: $(this).data('width') ? $(this).data('width') : $(this).hasClass('w-100') ? '100%' : 'style',
-        placeholder: $(this).data('placeholder'),
-        closeOnSelect: false,
-    }).on('select2:select', function (e) {
-        var data = e.params.data;
-        console.log(data.id); // exibe o ID do item selecionado no console
+        $('#bancoSelect').select2({
+            theme: "bootstrap-5",
+            placeholder: "Selecione o Banco",
+            width: '100%',
+            closeOnSelect: true,
+            dropdownParent: $('#dm_modal_novo_lancamento_banco')
+        });
+
+        $('#tipo_documento').select2({
+            theme: "bootstrap-5",
+            placeholder: "Selecione o Tipo de Documento",
+            width: '100%',
+            closeOnSelect: true,
+            dropdownParent: $('#dm_modal_novo_lancamento_banco')
+        });
     });
 });
