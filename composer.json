@@ -7,14 +7,16 @@
     "require": {
         "php": "^8.2",
         "caouecs/laravel-lang": "*",
+        "doctrine/dbal": "*",
         "guzzlehttp/guzzle": "^7.8",
         "laravel/framework": "^11.9",
         "laravel/tinker": "^2.9",
+        "mckenziearts/laravel-notify": "*",
         "owen-it/laravel-auditing": "^13.6",
         "php-flasher/flasher-toastr-laravel": "^2.0",
         "sopamo/laravel-filepond": "^1.4",
         "spatie/laravel-permission": "^6.9",
-        "stancl/tenancy": "^3.8",
+        "stancl/tenancy": "*",
         "webpatser/laravel-uuid": "^4.0"
     },
     "require-dev": {

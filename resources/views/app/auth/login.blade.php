@@ -1,3 +1,8 @@
+@php
+    // Recupera a última imagem de fundo ativa ou define uma padrão
+    $backgroundImage = \App\Models\TelaDeLogin::where('status', 'ativo')->latest()->value('imagem_caminho');
+@endphp
+
 <html lang="pt_BR">
 <!--begin::Head-->
 
@@ -57,8 +62,9 @@
         <div class="d-flex flex-column flex-lg-row flex-column-fluid">
             <!--begin::Aside-->
             <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                style="background-image: url(assets/media/misc/penha.png)">
-                <!--begin::Content-->
+            style="background-image: url('{{ $backgroundImage ? route('file', ['path' => $backgroundImage]) : asset('/assets/media/misc/penha.png') }}');">
+
+            <!--begin::Content-->
                 <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100">
                     <!--begin::Logo-->
                     <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20">

@@ -13,10 +13,11 @@
                                     <div class="menu-item px-3">
                                         <div class="menu-content d-flex align-items-center px-3">
                                             <!--begin::Avatar-->
-                                            <div class="symbol symbol-50px me-5">
-                                                <img alt="Logo" src="assets/media/avatars/300-3.jpg" />
+                                            <div class="symbol symbol-50px symbol-circle">
+                                                <div class="symbol-label" style="background-image: url('{{ route('file', ['path' => $currentUser->avatar]) }}'); background-size: cover; background-position: center;"></div>
                                             </div>
                                             <!--end::Avatar-->
+
                                             <!--begin::Username-->
                                             <div class="d-flex flex-column">
                                                 <div class="fw-bold d-flex align-items-center fs-5">{{ Auth::user()->name }}

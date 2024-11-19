@@ -32075,19 +32075,26 @@ Inputmask({
 
 // Phone
 Inputmask({
-    "mask" : "99.999.999/999.9-99"
+    "mask" : "99.999.999/9999-99"
 }).mask("#cnpj");
 
 Inputmask({
-    "mask": "999.999.999,99 m²",
+    "mask" : "99.999.999-9"
+}).mask("#rg");
+
+Inputmask({
+    "mask": "9{1,3}.999.999,99 m²", // permite de 1 a 3 dígitos antes do primeiro ponto
     "numericInput": true,
-    "placeholder": "0"
+    "autoUnmask": true,
+    "removeMaskOnSubmit": true,
+    "placeholder": "", // remove o preenchimento com zeros
 }).mask("#area_total");
 
 Inputmask({
-    "mask": "999.999.999,99 m²",
+    "mask": "9{1,3}.999.999,99 m²", // permite de 1 a 3 dígitos antes do primeiro ponto
     "numericInput": true,
-    "placeholder": "0"
+    "autoUnmask": true,
+    "placeholder": "", // remove o preenchimento com zeros
 }).mask("#area_privativa");
 
 // CEP
@@ -32098,8 +32105,8 @@ Inputmask({
 
 // Phone
 Inputmask({
-    "mask" : "(999) 999-9999"
-}).mask("#kt_inputmask_2");
+    "mask" : "(99) 9.9999-9999"
+}).mask("#telefone");
 
 // Placeholder
 Inputmask({

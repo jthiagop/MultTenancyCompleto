@@ -99,7 +99,7 @@ class CaixaController extends Controller
             'descricao' => 'required|string',
             'valor' => 'required',
             'tipo' => 'required|in:entrada,saida',
-            'lancamento_padrao' => 'required',
+            'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
             'centro' => 'required|string',
             'tipo_documento' => 'required|string',
             'numero_documento' => 'nullable|string',
@@ -110,6 +110,11 @@ class CaixaController extends Controller
         ]);
 
         $user = auth()->user(); // Usuário autenticado
+
+        // Verificar se a validação falhou
+        if ($validator->fails()) {
+            return redirect()->back()->withErrors($validator)->withInput();
+        }
 
         $validatedData = $validator->validated();
         // Adiciona a data convertida ao array de dados validados
@@ -147,8 +152,10 @@ class CaixaController extends Controller
             }
         }
 
-        // Verificação para criar lançamento no banco
-        if ($validatedData['lancamento_padrao'] === 'Deposito Bancário') {
+        // Buscar o lançamento padrão pelo ID
+        $lancamentoPadrao = LancamentoPadrao::find($validatedData['lancamento_padrao_id']);
+
+        if ($lancamentoPadrao && $lancamentoPadrao->description === 'Deposito Bancário') {
             // Aqui você pode ajustar para a lógica do seu sistema de criação de lançamentos no banco
             $validatedData['origem'] = 'BC';
             $validatedData['tipo'] = 'entrada';
@@ -177,7 +184,7 @@ class CaixaController extends Controller
         }
 
 
-        return redirect()->route('caixa.index')->with('success', ' Lançamento Realizado com Sucesso!');
+        return response()->json(['success' => true, 'message' => 'Atualizado com sucesso!']);
     }
 
     /**
@@ -191,25 +198,49 @@ class CaixaController extends Controller
     public function list()
     {
         $user = Auth::user();
+        $lps = LancamentoPadrao::all();
+        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
 
-        list($somaEntradas, $somaSaida) = caixa::getCaixa();
+        // Verifica se o usuário está autenticado
+        if (!$user) {
+            return redirect()->route('login')->with('error', 'Usuário não autenticado');
+        }
 
-        $total = $somaEntradas - $somaSaida;
+        // Obter o ID da empresa associada ao usuário autenticado
+        $companyId = $user->company_id;
 
-        $caixas = Caixa::getCaixaList();
-        $valorEntrada = caixa::getCaixaEntrada();
-        $ValorSaidas = caixa::getCaixaSaida();
-        $company = $user->companies;
+        // Verifica se a empresa foi encontrada
+        if (!$companyId) {
+            return redirect()->back()->with('error', 'Empresa não encontrada para o usuário autenticado.');
+        }
 
+        // Obter as somas de entradas e saídas utilizando métodos no modelo Caixa
+        list($somaEntradas, $somaSaidas) = Caixa::getCaixa($companyId);
+
+        // Calcular o total (entradas - saídas)
+        $total = $somaEntradas - $somaSaidas;
+
+        // Listar todos os registros de caixa para a empresa do usuário
+        $caixas = Caixa::getCaixaList($companyId);
+
+        // Obter os valores de entrada e saída de caixa para a empresa
+        $valorEntrada = Caixa::getCaixaEntrada($companyId);
+        $valorSaidas = Caixa::getCaixaSaida($companyId);
+
+        // Obter informações da empresa associada ao usuário (ajustando para relacionamento)
+        $company = $user->company;
 
         return view('app.financeiro.caixa.list', [
             'caixas' => $caixas,
             'valorEntrada' => $valorEntrada,
-            'ValorSaidas' => $ValorSaidas,
+            'valorSaidas' => $valorSaidas,
             'total' => $total,
+            'lps' => $lps,
+            'bancos' => $bancos,
             'company' => $company
         ]);
     }
+
 
     /**
      * Show the form for editing the specified resource.
@@ -233,12 +264,14 @@ class CaixaController extends Controller
     {
         $subsidiaryId = User::getCompany();
 
+        dd($request->all());
+
         $validator = Validator::make($request->all(), [
             'data_competencia' => 'required|date',
             'descricao' => 'required|string',
             'valor' => 'required',
             'tipo' => 'required|in:entrada,saida',
-            'lancamento_padrao' => 'required|string',
+            'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
             'centro' => 'required|string',
             'tipo_documento' => 'required|string',
             'numero_documento' => 'nullable|string',
@@ -281,7 +314,7 @@ class CaixaController extends Controller
             }
         }
 
-        return redirect()->route('caixa.index')->with('success', 'Lançamento Atualizado com Sucesso!');
+        return response()->json(['success' => true, 'message' => 'Atualizado com sucesso!']);
     }
 
 
@@ -301,6 +334,9 @@ class CaixaController extends Controller
 
     public function destroySelected($id)
     {
+
+        dd($id);
+
         $file = Anexo::findOrFail($id);
 
         // Excluir o arquivo do sistema de arquivos

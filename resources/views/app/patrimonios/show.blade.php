@@ -452,7 +452,7 @@
                                         <!--begin::Col-->
                                         <div class="col-lg-8">
                                             <a href="#"
-                                                class="fw-semibold fs-6 text-gray-800 text-hover-primary">{{ $patrimonio->localidade }}</a>
+                                                class="fw-semibold fs-6 text-gray-800 text-hover-primary">{{ $patrimonio->localidade }} - {{$patrimonio->uf  }}</a>
                                         </div>
                                         <!--end::Col-->
                                     </div>
@@ -491,6 +491,18 @@
                                         <div class="col-lg-8">
                                             <span
                                                 class="fw-semibold fs-6 text-gray-800">{{ $patrimonio->bairro }}</span>
+                                        </div>
+                                        <!--begin::Label-->
+                                    </div>
+                                    <!--begin::Input group-->
+                                    <div class="row mb-10">
+                                        <!--begin::Label-->
+                                        <label class="col-lg-4 fw-semibold text-muted">Complemento</label>
+                                        <!--begin::Label-->
+                                        <!--begin::Label-->
+                                        <div class="col-lg-8">
+                                            <span
+                                                class="fw-semibold fs-6 text-gray-800">{{ $patrimonio->complemento }}</span>
                                         </div>
                                         <!--begin::Label-->
                                     </div>
@@ -978,10 +990,11 @@
                                                             </td>
                                                             <!--end::Item-->
                                                             <!--begin::Product ID-->
-                                                            <td class="text-end">#XGY-356</td>
+                                                            <td class="text-end">{{ $escritura->aquisicao }}</td>
                                                             <!--end::Product ID-->
                                                             <!--begin::Date added-->
-                                                            <td class="text-end">02 Apr, 2023</td>
+                                                            <td class="text-end">{{ \Carbon\Carbon::parse($escritura->aquisicao)->format('d M, Y') }}
+                                                            </td>
                                                             <!--end::Date added-->
                                                             <!--begin::Price-->
                                                             <td class="text-end">$1,230</td>

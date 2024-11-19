@@ -225,60 +225,69 @@ KTUtil.onDOMContentLoaded(function () {
 });
 
 
-document.addEventListener('DOMContentLoaded', function() {
-    const tipoSelect = document.getElementById('tipo_select');
-    const lancamentoPadraoBanco = document.getElementById('lancamento_padrao_banco');
-    const lancamentoPadraoCaixa = document.getElementById('lancamento_padrao_caixa');
+$(document).ready(function() {
+    $('#lancamento_padrao').on('change', function() {
+        var selectedValue = $(this).val();
+        if (selectedValue === 'Deposito Bancário') {
+            $('#banco-deposito').show(); // Mostra o campo do banco de depósito
+        } else {
+            $('#banco-deposito').hide(); // Esconde o campo do banco de depósito
+        }
+    });
+});
 
-    tipoSelect.addEventListener('change', function() {
-        const selectedTipo = tipoSelect.value;
-
-        // Função para atualizar opções do select com base no tipo
-        const updateOptions = (selectElement) => {
-            // Limpa todas as opções do select de Lançamento Padrão
-            selectElement.innerHTML = '';
-
-            // Adiciona a opção vazia
-            const emptyOption = document.createElement('option');
-            emptyOption.value = '';
-            emptyOption.text = 'Escolha um Lançamento...';
-            selectElement.appendChild(emptyOption);
-
-            // Filtra e adiciona as opções de acordo com o tipo selecionado
-            lpsData.forEach(function(lp) {
-                if (lp.type === selectedTipo) {
-                    const option = document.createElement('option');
-                    option.value = lp.description;
-                    option.text = lp.description;
-                    selectElement.appendChild(option);
-                }
-            });
-        };
-
-        // Atualizar ambos os selects, se eles existirem na página
-        if (lancamentoPadraoBanco) updateOptions(lancamentoPadraoBanco);
-        if (lancamentoPadraoCaixa) updateOptions(lancamentoPadraoCaixa);
+$(document).ready(function() {
+    $('#lancamento_padrao_banco').on('change', function() {
+        var selectedValue = $(this).val();
+        if (selectedValue === 'Deposito Bancário') {
+            $('#banco-deposito').show(); // Mostra o campo do banco de depósito
+        } else {
+            $('#banco-deposito').hide(); // Esconde o campo do banco de depósito
+        }
     });
 });
 
 
-$(document).ready(function () {
-    $('#dm_modal_novo_lancamento_banco').on('shown.bs.modal', function () {
-      $('#lancamento_padrao_banco').select2({
-        placeholder: "Escolha um Lançamento...",
-        width: '100%',
-        closeOnSelect: true,
-        dropdownParent: $('#dm_modal_novo_lancamento_banco'),
-        language: 'pt' // Define o idioma para português personalizado
-      });
 
-      $('#bancoSelect').select2({
-        placeholder: "Selecione o Banco",
-        width: '100%',
-        closeOnSelect: true,
-        dropdownParent: $('#dm_modal_novo_lancamento_banco'),
-        language: 'pt'
-      });
+document.addEventListener('DOMContentLoaded', function() {
+    const tipoSelect = document.getElementById('tipo_select_banco');
+    const lancamentoPadraoSelect = document.getElementById('lancamento_padrao_banco');
 
+    // Função para inicializar o Select2 com dropdownParent
+    const initializeSelect2 = () => {
+        $('#lancamento_padrao_banco').select2({
+            dropdownParent: $('#dm_modal_novo_lancamento_banco'),
+            placeholder: 'Escolha um Lançamento...',
+            width: '100%'
+        });
+    };
+
+    tipoSelect.addEventListener('change', function() {
+        const selectedTipo = tipoSelect.value;
+
+        // Limpa todas as opções do select de Lançamento Padrão
+        lancamentoPadraoSelect.innerHTML = '';
+
+        // Adiciona a opção vazia
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.text = 'Escolha um Lançamento...';
+        lancamentoPadraoSelect.appendChild(emptyOption);
+
+        // Filtra e adiciona as opções de acordo com o tipo selecionado
+        lpsData.forEach(function(lp) {
+            if (lp.type === selectedTipo) {
+                const option = document.createElement('option');
+                option.value = lp.id;
+                option.text = lp.description;
+                lancamentoPadraoSelect.appendChild(option);
+            }
+        });
+
+        // Recarrega o Select2 após atualizar as opções
+        initializeSelect2();
     });
-  });
+
+    // Inicializa o Select2 ao carregar a página
+    initializeSelect2();
+});

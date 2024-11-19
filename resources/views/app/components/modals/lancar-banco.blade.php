@@ -13,8 +13,8 @@
                             <span class="svg-icon svg-icon-1">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                                     xmlns="http://www.w3.org/2000/svg">
-                                    <rect opacity="0.5" x="6" y="17.3137" width="16" height="2"
-                                        rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
+                                    <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
+                                        transform="rotate(-45 6 17.3137)" fill="currentColor" />
                                     <rect x="7.41422" y="6" width="16" height="2" rx="1"
                                         transform="rotate(45 7.41422 6)" fill="currentColor" />
                                 </svg>
@@ -36,8 +36,8 @@
                                             xml:space="preserve" width="256px" height="256px" fill="#000000"
                                             stroke="#000000" stroke-width="4.096">
                                             <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round"
-                                                stroke-linejoin="round" stroke="#CCCCCC" stroke-width="1.024">
+                                            <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"
+                                                stroke="#CCCCCC" stroke-width="1.024">
                                             </g>
                                             <g id="SVGRepo_iconCarrier">
                                                 <g>
@@ -125,7 +125,8 @@
                             <div class="row mt-10">
                                 <!--begin::Col-->
                                 <!--begin:Form-->
-                                <form method="POST" id="dm_modal_novo_lancamento_banco_form" action="{{ route('banco.store') }}" enctype="multipart/form-data">
+                                <form method="POST" id="dm_modal_novo_lancamento_banco_form"
+                                    action="{{ route('banco.store') }}" enctype="multipart/form-data">
                                     @csrf <!-- Token CSRF para Laravel -->
                                     <!--begin::Input group-->
                                     <div class="row g-9 mb-8">
@@ -161,14 +162,20 @@
                                         </div>
                                         <!--end::Col-->
                                         <div class="col-md-3 fv-row">
-                                            <label class="required d-flex align-items-center fs-5 fw-semibold mb-2">Banco</label>
+                                            <label
+                                                class="required d-flex align-items-center fs-5 fw-semibold mb-2">Banco</label>
                                             <div class="input-group">
-                                                <select id="bancoSelect" name="banco_id" class="form-select form-select-solid" data-control="select"
-                                                    data-dropdown-css-class="w-200px" data-placeholder="Selecione o Banco" required>
-                                                    <option value="" disabled selected>Selecione o Banco</option> <!-- Placeholder configurado aqui -->
+                                                <select id="bancoSelect" name="banco_id"
+                                                    class="form-select form-select-solid" data-control="select"
+                                                    data-dropdown-css-class="w-200px"
+                                                    data-placeholder="Selecione o Banco" required>
+                                                    <option value="" disabled selected>Selecione o Banco</option>
+                                                    <!-- Placeholder configurado aqui -->
                                                     @foreach ($bancos as $banco)
-                                                        <option data-banco-code="{{ $banco->banco }}" value="{{ $banco->id }}">
-                                                            {{ $banco->banco }} - {{ $banco->name }}/{{ $banco->conta }}
+                                                        <option data-banco-code="{{ $banco->banco }}"
+                                                            value="{{ $banco->id }}">
+                                                            {{ $banco->banco }} -
+                                                            {{ $banco->name }}/{{ $banco->conta }}
                                                         </option>
                                                     @endforeach
                                                 </select>
@@ -233,7 +240,8 @@
                                             </label>
                                             <select class="form-select form-select-solid" data-control="select"
                                                 data-dropdown-css-class="w-200px" data-placeholder="Selecione o tipo"
-                                                name="tipo" required data-hide-search="true" id="tipo_select_banco">
+                                                name="tipo" required data-hide-search="true"
+                                                id="tipo_select_banco">
                                                 <option value="" disabled selected>Defina o tipo</option>
                                                 <option value="entrada"
                                                     {{ old('tipo') == 'entrada' ? 'selected' : '' }}>Entrada</option>
@@ -357,6 +365,25 @@
                                     </div>
                                     <!--end::Input group-->
                                     <!--begin::Input group-->
+                                    <div class="d-flex flex-stack w-lg-50 g-9 mb-5">
+                                        <!--begin::Label-->
+                                        <div class="me-5">
+                                            <label class="fs-6 fw-semibold form-label">Existe comprovação
+                                                fiscal?</label>
+                                            <div class="fs-7 fw-semibold text-muted">Documentos que comprovam
+                                                transações financeiras</div>
+                                        </div>
+                                        <!--end::Label-->
+                                        <!--begin::Switch-->
+                                        <label class="form-check form-switch form-check-custom form-check-solid">
+                                            <input class="form-check-input" type="checkbox" checked="checked" />
+                                            <span class="form-check-label fw-semibold text-muted">
+                                            </span>
+                                        </label>
+                                        <!--end::Switch-->
+                                    </div>
+                                    <!--end::Input group-->
+                                    <!--begin::Input group-->
                                     <div class="d-flex flex-column mb-8">
                                         <div class="d-flex flex-column mb-5 fv-row">
                                             <ul class="nav nav-tabs nav-line-tabs mb-5 fs-6">
@@ -372,7 +399,8 @@
                                             <div class="tab-content" id="myTabContent">
                                                 <div class="tab-pane fade show active" id="kt_tab_pane_5"
                                                     role="tabpanel">
-                                                    <textarea class="form-control" name="historico_complementar" id="complemento" cmaxlength="250" rows="3" name="target_details" placeholder="Mais detalhes sobre o foro"></textarea>
+                                                    <textarea class="form-control" name="historico_complementar" id="complemento" cmaxlength="250" rows="3"
+                                                        name="target_details" placeholder="Mais detalhes sobre o foro"></textarea>
                                                     <span class="fs-6 text-muted">Insira no máximo 250
                                                         caracteres</span>
                                                 </div>

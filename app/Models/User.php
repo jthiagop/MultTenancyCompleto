@@ -82,10 +82,10 @@ class User extends Authenticatable
         }
 
 
-    public function bancos()
-    {
-        return $this->hasMany(CadastroBanco::class, 'created_by');
-    }
+        public function bancos()
+        {
+            return $this->hasMany(CadastroBanco::class, 'created_by');
+        }
 
         static public function getCompany()
         {

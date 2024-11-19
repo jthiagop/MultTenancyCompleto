@@ -328,6 +328,7 @@ $('#complemento, #informacoes').maxlength({
     warningClass: "badge badge-primary",
     limitReachedClass: "badge badge-danger"
 });
+
 $(document).ready(function() {
     // Quando o campo CEP perde o foco
     $('#cep').on('blur', function() {

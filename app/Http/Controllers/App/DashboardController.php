@@ -15,23 +15,95 @@ class DashboardController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         $dateHelper = new DateHelper();
 
         // Recupere o usuário logado
         $user = auth()->user();
 
-        // Filtrar os usuários pelo usuário logado
+        // Define o ano selecionado, com o ano atual como padrão
+        $selectedYear = $request->input('year', now()->year);
+
+        // Recupera a empresa do usuário logado
         $company = DB::table('users')
             ->join('company_user', 'users.id', '=', 'company_user.user_id')
             ->join('companies', 'company_user.company_id', '=', 'companies.id')
-            ->where('users.id', $user->id) // Filtra pelo usuário logado
+            ->where('users.id', $user->id)
             ->select('users.*', 'company_user.company_id', 'companies.name as companies_name')
+            ->first(); // Usando first() para obter um único registro
+
+        // Define as categorias de lançamento que queremos filtrar
+        $categoriasLancamento = ['Doações', 'Coletas', 'Intenções'];
+
+        // Consulta para lançamentos na tabela caixas
+        $lancamentosCaixas = DB::table('caixas')
+            ->join('lancamento_padraos', 'caixas.lancamento_padrao_id', '=', 'lancamento_padraos.id')
+            ->where('caixas.company_id', $company->company_id)
+            ->whereIn('lancamento_padraos.category', $categoriasLancamento)
+            ->whereYear('caixas.data_competencia', $selectedYear)
+            ->select(
+                DB::raw('MONTH(caixas.data_competencia) as mes'),
+                'lancamento_padraos.category as lancamento_padrao_id',
+                DB::raw('SUM(caixas.valor) as total_valor')
+            )
+            ->groupBy('mes', 'lancamento_padrao_id');
+
+        // Consulta para lançamentos na tabela bancos
+        $lancamentosBancos = DB::table('bancos')
+            ->join('lancamento_padraos', 'bancos.lancamento_padrao_id', '=', 'lancamento_padraos.id')
+            ->where('bancos.company_id', $company->company_id)
+            ->whereIn('lancamento_padraos.category', $categoriasLancamento)
+            ->whereYear('bancos.data_competencia', $selectedYear)
+            ->select(
+                DB::raw('MONTH(bancos.data_competencia) as mes'),
+                'lancamento_padraos.category as lancamento_padrao_id',
+                DB::raw('SUM(bancos.valor) as total_valor')
+            )
+            ->groupBy('mes', 'lancamento_padrao_id');
+
+        // Combina os resultados das duas consultas com union
+        $lancamentos = $lancamentosCaixas->union($lancamentosBancos)
+            ->orderBy('mes')
             ->get();
 
 
-        return view('app.dashboard', ['company' => $company]);
+        // Organiza os dados para o gráfico
+        $areaChartData = [
+            'series' => [
+                ['name' => 'Doações', 'data' => []],
+                ['name' => 'Coletas', 'data' => []],
+                ['name' => 'Intenções', 'data' => []]
+            ],
+            'categories' => []
+        ];
+        // Definir meses do ano
+        $meses = ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
+
+        foreach ($meses as $index => $mes) {
+            $mesNumero = $index + 1;
+
+            // Adiciona o nome do mês na categoria
+            $areaChartData['categories'][] = $mes;
+
+            // Filtra lançamentos por mês e tipo
+            foreach (['Doações', 'Coletas', 'Intenções'] as $i => $tipo) {
+                $valor = $lancamentos
+                    ->where('mes', $mesNumero)
+                    ->where('lancamento_padrao_id', $tipo)
+                    ->sum('total_valor'); // Calcula o total para o mês e tipo
+                $areaChartData['series'][$i]['data'][] = $valor ?: 0; // Insere 0 se não houver valor
+            }
+        }
+
+
+
+        // Retorna para a view
+        return view('app.dashboard', [
+            'company' => $company,
+            'areaChartData' => $areaChartData,
+            'selectedYear' => $selectedYear
+        ]);
     }
 
     /**

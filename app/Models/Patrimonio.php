@@ -26,11 +26,11 @@ class Patrimonio extends Model
         'complemento',
         'latitude',
         'longitude',
+
     ];
 
     public function escrituras()
     {
         return $this->hasMany(Escritura::class, 'patrimonio_id');
     }
-
 }

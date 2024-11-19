@@ -175,7 +175,7 @@
                                         <div class="d-flex mb-4">
                                             <a href="{{ route('caixa.index') }}"
                                                 class="btn btn-sm btn-bg-light btn-active-color-primary me-3">Financeiro</a>
-                                            <a href="{{ route('caixa.create') }}" class="btn btn-sm btn-success me-3">
+                                            <a href="" data-bs-toggle="modal" data-bs-target="#kt_modal_new_target" class="btn btn-sm btn-success me-3">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
                                                     <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
                                                     <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
@@ -320,7 +320,7 @@
                                                     </span>
                                                     <!--end::Svg Icon-->
                                                     <div class="fs-4 fw-bold" data-kt-countup="true"
-                                                        data-kt-countup-value="{{ $ValorSaidas }} "data-kt-countup-prefix="R$ ">0</div>
+                                                        data-kt-countup-value="{{ $valorSaidas }} "data-kt-countup-prefix="R$ ">0</div>
                                                 </div>
                                                 <!--end::Number-->
                                                 <!--begin::Label-->
@@ -576,7 +576,7 @@
                                         <td>{{ $caixa->tipo_documento }}</td>
                                         <!--end::Last login=-->
                                         <!--begin::Two step=-->
-                                        <td>{{ $caixa->lancamento_padrao }}</td>
+                                        <td>{{ $caixa->lancamentoPadrao->caixas ? $caixa->lancamentoPadrao->description : 'N/A' }}</td>
                                         <!--end::Two step=-->
                                         <!--begin::Joined-->
                                         <td>
@@ -652,6 +652,7 @@
         </div>
         <!--end::Content wrapper-->
 
+        @include('app.components.modals.lancar-caixa')
 
 </x-tenant-app-layout>
 
@@ -661,6 +662,7 @@
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="/assets/js/custom/apps/caixa/shipping.js"></script>
+<script src="/assets/js/custom/utilities/modals/financeiro/new-caixa.js"></script>
 
 <script src="/assets/js/widgets.bundle.js"></script>
 <script src="/assets/js/custom/apps/chat/chat.js"></script>
@@ -715,3 +717,4 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 });
 </script>
+

@@ -14,10 +14,12 @@ use App\Http\Controllers\App\TenantFilialController;
 use App\Http\Controllers\App\CaixaController;
 use App\Http\Controllers\App\LancamentoPadraoController;
 use App\Http\Controllers\App\CadastroBancoController;
+use App\Http\Controllers\App\FielController;
 use App\Http\Controllers\App\NamePatrimonioController;
 use App\Http\Controllers\App\PatrimonioController;
 use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\App\PatrimonioAnexoController;
+use App\Http\Controllers\App\TelaDeLoginController;
 use App\Models\TenantFilial;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -43,9 +45,15 @@ Route::middleware([
     PreventAccessFromCentralDomains::class,
 ])->group(function () {
 
+    Route::get('/tenant-not-found', function () {
+        return view('errors.tenant_not_found');
+    })->name('tenant.not.found');
+
+
     // Rota para a página de login
     Route::get('/', function () {
         return view('app.auth.login');
+
     });
 
     // Rota para o dashboard, acessível apenas por usuários autenticados e verificados
@@ -75,6 +83,8 @@ Route::middleware([
             Route::resource('users', UserController::class);
 
             Route::resource('company', CompanyController::class);
+
+            Route::resource('telaLogin', TelaDeLoginController::class);
         });
 
         // Grupo de rotas acessíveis apenas para administradores
@@ -131,7 +141,10 @@ Route::middleware([
             Route::get('/report/shipping/data', [ReportController::class, 'shippingReportData'])->name('report.shipping.data');
 
             Route::prefix('relatorios')->group(function () {
-                Route::get('/prestacao-de-contas', [PrestacaoDeContaController::class, 'index'])->name('relatorios.prestacao.de.contas');
+            Route::get('/prestacao-de-contas', [PrestacaoDeContaController::class, 'index'])->name('relatorios.prestacao.de.contas');
+
+            Route::resource('fieis', FielController::class);
+
             });
         });
     });

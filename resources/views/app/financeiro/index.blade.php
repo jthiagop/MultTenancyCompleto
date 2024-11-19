@@ -1058,7 +1058,7 @@
                                             <td>{{ $caixa->tipo_documento }}</td>
                                             <!--end::Last login=-->
                                             <!--begin::Two step=-->
-                                            <td>{{ $caixa->lancamento_padrao }}</td>
+                                            <td>{{ $caixa->lancamentoPadrao->caixas ? $caixa->lancamentoPadrao->description : 'N/A'}}</td>
                                             <!--end::Two step=-->
                                             <!--begin::Joined-->
                                             <td>
@@ -1203,6 +1203,4 @@
 <script>
     var lpsData = @json($lps);
 </script>
-
-<!-- JavaScript to initialize select2 in modal -->
 

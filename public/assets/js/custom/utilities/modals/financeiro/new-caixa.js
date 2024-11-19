@@ -221,7 +221,7 @@ KTUtil.onDOMContentLoaded(function () {
 $(document).ready(function() {
     $('#lancamento_padrao_caixa').on('change', function() {
         var selectedValue = $(this).val();
-        if (selectedValue === 'Deposito Bancário') {
+        if (selectedValue === '4') {
             $('#banco-deposito').show(); // Mostra o campo do banco de depósito
         } else {
             $('#banco-deposito').hide(); // Esconde o campo do banco de depósito
@@ -229,71 +229,47 @@ $(document).ready(function() {
     });
 });
 
-
 document.addEventListener('DOMContentLoaded', function() {
-    const tipoSelectBanco = document.getElementById('tipo_select_banco');
-    const tipoSelectCaixa = document.getElementById('tipo_select_caixa');
-    const lancamentoPadraoBanco = document.getElementById('lancamento_padrao_banco');
-    const lancamentoPadraoCaixa = document.getElementById('lancamento_padrao_caixa');
+    const tipoSelect = document.getElementById('tipo_select_caixa');
+    const lancamentoPadraoSelect = document.getElementById('lancamento_padrao_caixa');
 
-    tipoSelectCaixa.addEventListener('change', function() {
-        const selectedTipo = tipoSelectCaixa.value;
+    // Função para inicializar o Select2 com dropdownParent
+    const initializeSelect2 = () => {
+        $('#lancamento_padrao_caixa').select2({
+            dropdownParent: $('#kt_modal_new_target'),
+            placeholder: 'Escolha um Lançamento...',
+            width: '100%'
+        });
+    };
 
-        // Função para atualizar opções do select com base no tipo
-        const updateOptions = (selectElement) => {
-            // Limpa todas as opções do select de Lançamento Padrão
-            selectElement.innerHTML = '';
+    tipoSelect.addEventListener('change', function() {
+        const selectedTipo = tipoSelect.value;
 
-            // Adiciona a opção vazia
-            const emptyOption = document.createElement('option');
-            emptyOption.value = '';
-            emptyOption.text = 'Escolha um Lançamento...';
-            selectElement.appendChild(emptyOption);
+        // Limpa todas as opções do select de Lançamento Padrão
+        lancamentoPadraoSelect.innerHTML = '';
 
-            // Filtra e adiciona as opções de acordo com o tipo selecionado
-            lpsData.forEach(function(lp) {
-                if (lp.type === selectedTipo) {
-                    const option = document.createElement('option');
-                    option.value = lp.description;
-                    option.text = lp.description;
-                    selectElement.appendChild(option);
-                }
-            });
-        };
+        // Adiciona a opção vazia
+        const emptyOption = document.createElement('option');
+        emptyOption.value = '';
+        emptyOption.text = 'Escolha um Lançamento...';
+        lancamentoPadraoSelect.appendChild(emptyOption);
 
-        // Atualizar ambos os selects, se eles existirem na página
-        if (lancamentoPadraoBanco) updateOptions(lancamentoPadraoBanco);
-        if (lancamentoPadraoCaixa) updateOptions(lancamentoPadraoCaixa);
+        // Filtra e adiciona as opções de acordo com o tipo selecionado
+        lpsData.forEach(function(lp) {
+            if (lp.type === selectedTipo) {
+                const option = document.createElement('option');
+                option.value = lp.id;
+                option.text = lp.description;
+                lancamentoPadraoSelect.appendChild(option);
+            }
+        });
+
+        // Recarrega o Select2 após atualizar as opções
+        initializeSelect2();
     });
 
-    tipoSelectBanco.addEventListener('change', function() {
-        const selectedTipo = tipoSelectBanco.value;
-
-        // Função para atualizar opções do select com base no tipo
-        const updateOptions = (selectElement) => {
-            // Limpa todas as opções do select de Lançamento Padrão
-            selectElement.innerHTML = '';
-
-            // Adiciona a opção vazia
-            const emptyOption = document.createElement('option');
-            emptyOption.value = '';
-            emptyOption.text = 'Escolha um Lançamento...';
-            selectElement.appendChild(emptyOption);
-
-            // Filtra e adiciona as opções de acordo com o tipo selecionado
-            lpsData.forEach(function(lp) {
-                if (lp.type === selectedTipo) {
-                    const option = document.createElement('option');
-                    option.value = lp.description;
-                    option.text = lp.description;
-                    selectElement.appendChild(option);
-                }
-            });
-        };
-
-        // Atualizar ambos os selects, se eles existirem na página
-        if (lancamentoPadraoBanco) updateOptions(lancamentoPadraoBanco);
-        if (lancamentoPadraoCaixa) updateOptions(lancamentoPadraoCaixa);
-    });
+    // Inicializa o Select2 ao carregar a página
+    initializeSelect2();
 });
+
 

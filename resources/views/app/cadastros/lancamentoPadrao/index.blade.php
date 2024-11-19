@@ -395,12 +395,14 @@
                                                     <option value="Alimentação">Alimentação</option>
                                                     <option value="Cerimônias">Cerimônias</option>
                                                     <option value="Comércio">Comércio</option>
+                                                    <option value="Coletas">Coletas</option>
                                                     <option value="Comunicação">Comunicação</option>
                                                     <option value="Contribuições">Contribuições</option>
                                                     <option value="Doações">Doações</option>
                                                     <option value="Educação">Educação</option>
                                                     <option value="Equipamentos">Equipamentos</option>
                                                     <option value="Eventos">Eventos</option>
+                                                    <option value="Intenções">Intenções</option>
                                                     <option value="Liturgia">Liturgia</option>
                                                     <option value="Manutenção">Manutenção</option>
                                                     <option value="Material de escritório">Material de escritório</option>

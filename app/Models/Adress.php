@@ -11,7 +11,7 @@ class Adress extends Model
 
     protected $fillable =
     [
-        'tenant_id',
+        'company_id',
         'cep',
         'rua',
         'complemento',

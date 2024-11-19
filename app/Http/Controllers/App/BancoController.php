@@ -60,7 +60,8 @@ class BancoController extends Controller
         // Recupera a companhia associada ao usuário autenticado
         $subsidiaryId = User::getCompany();
 
-        $dataCompetencia = Carbon::createFromFormat('d-m-Y', $request->input('data_competencia'))->format('Y-m-d');
+
+        $dataCompetencia = Carbon::parse($request->input('data_competencia'))->format('Y-m-d');
 
         // Validação dos dados do request
         $validator = Validator::make($request->all(), [
@@ -68,7 +69,7 @@ class BancoController extends Controller
             'descricao' => 'nullable|string',
             'valor' => 'required',
             'tipo' => 'required|in:entrada,saida',
-            'lancamento_padrao' => 'required',
+            'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
             'centro' => 'nullable|string',
             'tipo_documento' => 'nullable|string',
             'numero_documento' => 'nullable|string',

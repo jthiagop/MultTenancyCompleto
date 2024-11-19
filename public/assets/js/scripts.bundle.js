@@ -7674,13 +7674,21 @@ var KTLayoutSearch = function() {
                                         value="${patrimonio.id}" />
                                 </label>
                                 <div class="ms-5">
-                                    <a href="#" class="fs-5 fw-bold text-gray-900 text-hover-primary mb-2">${patrimonio.codigo_rid}</a>
-                                    <div class="fw-semibold text-muted">${patrimonio.patrimonio}</div>
-                                    <div class="fw-semibold text-muted">${patrimonio.logradouro}</div>
+                                <a href="#" class="fs-5 fw-bold text-gray-900 text-hover-primary mb-1 d-block">
+                                Cód. RID: <span class="text-primary">${patrimonio.codigo_rid}</span>
+                            </a>
+                            <div class="fw-semibold text-muted mb-1">
+                                <i class="fa-solid fa-building me-2 text-secondary"></i>
+                                Patrimônio: ${patrimonio.patrimonio}
+                            </div>
+                            <div class="fw-semibold text-muted">
+                                <i class="fa-solid fa-map-marker-alt me-2 text-secondary"></i>
+                                Logradouro: ${patrimonio.logradouro}
+                            </div>
                                 </div>
                             </div>
                             <div class="ms-2 w-100px">
-                                <a href="/patrimonio/${patrimonio.id}" class="btn btn-light btn-sm"><span><i class="bi bi-eye"></i></span>Ver</a>
+                                <a href="/patrimonio/${patrimonio.id}" class="btn btn-light btn-sm"><span><i class="fa-solid fa-eye"></i>Exibir</span></a>
                             </div>
                         </div>
                         <div class="border-bottom border-gray-300 border-bottom-dashed"></div>`;
@@ -8129,3 +8137,5 @@ $(document).ready(function() {
         });
     });
 });
+
+

@@ -21,11 +21,13 @@ class PatrimonioController extends Controller
         $nameForos = NamePatrimonio::all();
         $patrimonios = Patrimonio::all();
 
-        return view('app.patrimonios.index',
+        return view(
+            'app.patrimonios.index',
             [
                 'nameForos' => $nameForos,
                 'patrimonios' => $patrimonios,
-            ]);
+            ]
+        );
     }
 
     /**
@@ -47,8 +49,8 @@ class PatrimonioController extends Controller
     {
         try {
 
-                    // Convertendo a data para o formato Y-m-d antes de salvar
-        $dataConvertida = Carbon::createFromFormat('d/m/Y', $request->input('data'))->format('Y-m-d');
+            // Convertendo a data para o formato Y-m-d antes de salvar
+            $dataConvertida = Carbon::createFromFormat('d/m/Y', $request->input('data'))->format('Y-m-d');
 
             // Criação de um novo patrimônio
             $patrimonio = new Patrimonio();
@@ -68,6 +70,7 @@ class PatrimonioController extends Controller
             $patrimonio['company_id'] = User::getCompany()->company_id;
             $patrimonio['updated_by'] = auth()->user()->id;
             $patrimonio['created_by'] = auth()->user()->id;
+
 
             // Salvando o patrimônio no banco de dados
             $patrimonio->save();
@@ -95,6 +98,13 @@ class PatrimonioController extends Controller
                 $escritura['created_by'] = auth()->user()->id;
                 $escritura['updated_by'] = auth()->user()->id;
 
+
+            // Adicionando os novos campos de contato para o outorgante e outorgado
+            $escritura->outorgante_telefone = $request->input('outorgante_telefone');
+            $escritura->outorgante_email = $request->input('outorgante_email');
+            $escritura->outorgado_telefone = $request->input('outorgado_telefone');
+            $escritura->outorgado_email = $request->input('outorgado_email');
+
                 // Salvando a escritura no banco de dados
                 $escritura->save();
             }
@@ -115,61 +125,61 @@ class PatrimonioController extends Controller
 
 
 
-/**
- * Função para gerar o código RID.
- */
-private function gerarRID($numIbge, $numForo, $sequencial)
-{
-    // Código do município
-    $codigoMunicipio = str_pad($numIbge, 4, '0', STR_PAD_LEFT);
+    /**
+     * Função para gerar o código RID.
+     */
+    private function gerarRID($numIbge, $numForo, $sequencial)
+    {
+        // Código do município
+        $codigoMunicipio = str_pad($numIbge, 4, '0', STR_PAD_LEFT);
 
-    // Sequencial dentro do município
-    $sequencial = str_pad($sequencial, 4, '0', STR_PAD_LEFT);
+        // Sequencial dentro do município
+        $sequencial = str_pad($sequencial, 4, '0', STR_PAD_LEFT);
 
-    // Formando o número base do RID
-    $ridBase = $codigoMunicipio . $sequencial . $numForo;
+        // Formando o número base do RID
+        $ridBase = $codigoMunicipio . $sequencial . $numForo;
 
-    // Calculando o dígito verificador
-    $digitoVerificador = $this->calcularDV($ridBase);
+        // Calculando o dígito verificador
+        $digitoVerificador = $this->calcularDV($ridBase);
 
-    // Formando o RID completo
-    $rid = $codigoMunicipio . ' ' . $sequencial . '.' . $numForo . '-' . $digitoVerificador;
+        // Formando o RID completo
+        $rid = $codigoMunicipio . ' ' . $sequencial . '.' . $numForo . '-' . $digitoVerificador;
 
-    return $rid;
-}
+        return $rid;
+    }
 
-/**
- * Função para calcular o dígito verificador.
- */
-private function calcularDV($ridBase)
-{
-    // Lógica do módulo 11 para cálculo do dígito verificador
-    $soma = 0;
-    $peso = 2;
+    /**
+     * Função para calcular o dígito verificador.
+     */
+    private function calcularDV($ridBase)
+    {
+        // Lógica do módulo 11 para cálculo do dígito verificador
+        $soma = 0;
+        $peso = 2;
 
-    // Iterar sobre os dígitos do RID base (de trás para frente)
-    for ($i = strlen($ridBase) - 1; $i >= 0; $i--) {
-        $soma += $ridBase[$i] * $peso;
-        $peso++;
+        // Iterar sobre os dígitos do RID base (de trás para frente)
+        for ($i = strlen($ridBase) - 1; $i >= 0; $i--) {
+            $soma += $ridBase[$i] * $peso;
+            $peso++;
 
-        // Reinicia o peso se ultrapassar 9
-        if ($peso > 9) {
-            $peso = 2;
+            // Reinicia o peso se ultrapassar 9
+            if ($peso > 9) {
+                $peso = 2;
+            }
         }
+
+        // Obter o módulo 11
+        $resto = $soma % 11;
+
+        // Verificar as regras para o dígito verificador
+        if ($resto == 0 || $resto == 1) {
+            $dv = 0;
+        } else {
+            $dv = 11 - $resto;
+        }
+
+        return $dv;
     }
-
-    // Obter o módulo 11
-    $resto = $soma % 11;
-
-    // Verificar as regras para o dígito verificador
-    if ($resto == 0 || $resto == 1) {
-        $dv = 0;
-    } else {
-        $dv = 11 - $resto;
-    }
-
-    return $dv;
-}
 
 
     /**
@@ -186,7 +196,7 @@ private function calcularDV($ridBase)
 
 
             // Retorna a view padrão 'patrimonios.show' com os detalhes do patrimônio
-            return view('app.patrimonios.show', compact('patrimonio', 'nameForos','escrituras', 'anexos'));
+            return view('app.patrimonios.show', compact('patrimonio', 'nameForos', 'escrituras', 'anexos'));
         } catch (\Exception $e) {
             // Retorna uma view de erro caso o patrimônio não seja encontrado
             return redirect()->route('app.patrimonios.index')->with('error', 'Patrimônio não encontrado.');
@@ -239,14 +249,14 @@ private function calcularDV($ridBase)
 
     public function grafico()
     {
-    $incompleteData = [70, 70, 80, 80, 75, 75, 75, 75, 75, 75, 94, 150]; // Substitua com dados reais da consulta
-    $completeData = [55, 55, 60, 60, 55, 55, 60, 16, 20, 39, 75, 75]; // Substitua com dados reais da consulta
+        $incompleteData = [70, 70, 80, 80, 75, 75, 75, 75, 75, 75, 94, 150]; // Substitua com dados reais da consulta
+        $completeData = [55, 55, 60, 60, 55, 55, 60, 16, 20, 39, 75, 75]; // Substitua com dados reais da consulta
 
-    return response()->json([
-        'incomplete' => $incompleteData,
-        'complete' => $completeData,
-        'categories' => ['Jan','Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'] // Mude conforme necessário
-    ]);
+        return response()->json([
+            'incomplete' => $incompleteData,
+            'complete' => $completeData,
+            'categories' => ['Jan', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'] // Mude conforme necessário
+        ]);
     }
 
 
@@ -255,10 +265,12 @@ private function calcularDV($ridBase)
         $nameForos = NamePatrimonio::all();
         $patrimonios = Patrimonio::all();
 
-        return view('app.patrimonios.imoveis',
+        return view(
+            'app.patrimonios.imoveis',
             [
                 'nameForos' => $nameForos,
                 'patrimonios' => $patrimonios,
-            ]);
+            ]
+        );
     }
 }

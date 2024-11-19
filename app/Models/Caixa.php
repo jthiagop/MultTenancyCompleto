@@ -20,45 +20,58 @@ class Caixa extends Model implements Auditable
         'data_competencia',
         'descricao',
         'valor',
-        'tipo', // assume que tipo só pode ser "entrada" ou "saida"
-        'lancamento_padrao',
+        'tipo', // Tipo de transação (entrada/saida)
+        'lancamento_padrao_id',
         'centro',
         'tipo_documento',
         'numero_documento',
         'historico_complementar',
         'origem',
         'created_by',
-        'updated_by',
-
-
+        'updated_by'
     ];
 
+    // Relacionamento com anexos
     public function anexos()
     {
         return $this->hasMany(Anexo::class);
     }
 
+    // Relacionamento com o usuário que criou o registro
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    // Relacionamento com o usuário que atualizou o registro
     public function updatedBy()
     {
         return $this->belongsTo(User::class, 'updated_by');
     }
 
+    // Relacionamento com o lançamento padrão
+    public function lancamentoPadrao()
+    {
+        return $this->belongsTo(LancamentoPadrao::class, 'lancamento_padrao_id');
+    }
+
+
     static public function getCaixaList()
     {
         $userId = auth()->user()->id; // Recupere o ID do usuário logado
 
-        $lista = DB::table('caixas')
+        // Use Eloquent para carregar caixas com o relacionamento lancamentoPadrao
+        return Caixa::with('lancamentoPadrao')
             ->join('company_user', 'caixas.company_id', '=', 'company_user.company_id')
             ->where('company_user.user_id', $userId)
+            ->select('caixas.*')
             ->get();
-
-        return $lista;
     }
+
+    /**
+     * Relacionamento com Caixa.
+     */
+
 
 
     static public function getCaixaEntrada()
@@ -130,4 +143,6 @@ class Caixa extends Model implements Auditable
         return ([$somaEntradas, $somaSaida]); // Retorna o valor para o controlador
 
     }
+
+
 }

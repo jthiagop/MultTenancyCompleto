@@ -34,8 +34,6 @@ class AnexoController extends Controller
      */
     public function store(Request $request)
     {
-        dd($request->all());
-
         $data = $request->all();
         $data['created_by'] = Auth::id();
         $data['updated_by'] = Auth::id();
@@ -47,37 +45,48 @@ class AnexoController extends Controller
     }
 
     public function update(Request $request, $id)
-    {
-        $validator = Validator::make($request->all(), [
-            'files.*' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
-        ]);
+{
+    dd($request);
+    // Validação do arquivo
+    $validator = Validator::make($request->all(), [
+        'files.*' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
+    ]);
 
-        if ($validator->fails()) {
-            return response()->json(['errors' => $validator->errors()], 422);
-        }
-
-        $user = auth()->user();
-        $caixa = Caixa::findOrFail($id);
-        $banco = Banco::findOrFail($id);
-        // Processa os novos arquivos anexos, se houver
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $anexo) {
-                $anexoName = time() . '_' . $anexo->getClientOriginalName();
-                $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
-
-                Anexo::create([
-                    'caixa_id' => $caixa->id,
-                    'banco_id' => $banco->id,
-                    'nome_arquivo' => $anexoName,
-                    'caminho_arquivo' => $anexoPath,
-                    'created_by' => $user->id,
-                    'updated_by' => $user->id,
-                ]);
-            }
-        }
-
-        return response()->json(['success' => 'Arquivos enviados com sucesso!']);
+    if ($validator->fails()) {
+        return response()->json(['errors' => $validator->errors()], 422);
     }
+
+    // Obtém o usuário autenticado
+    $user = auth()->user();
+
+    // Tenta encontrar o registro `Caixa` e `Banco`
+    $caixa = Caixa::find($id);
+    $banco = Banco::find($id);
+
+    if (!$caixa || !$banco) {
+        return response()->json(['error' => 'Registro não encontrado'], 404);
+    }
+
+    // Processa os novos arquivos anexos, se houver
+    if ($request->hasFile('files')) {
+        foreach ($request->file('files') as $anexo) {
+            $anexoName = time() . '_' . $anexo->getClientOriginalName();
+            $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
+
+            Anexo::create([
+                'caixa_id' => $caixa->id,
+                'banco_id' => $banco->id,
+                'nome_arquivo' => $anexoName,
+                'caminho_arquivo' => $anexoPath,
+                'created_by' => $user->id,
+                'updated_by' => $user->id,
+            ]);
+        }
+    }
+
+    return response()->json(['success' => 'Arquivos enviados com sucesso!'], 200);
+}
+
 
 
 
@@ -105,14 +114,15 @@ class AnexoController extends Controller
     {
         $anexo = Anexo::findOrFail($id);
 
-        // Delete the file from storage if necessary
+        // Verifica se o arquivo existe no armazenamento e exclui
         if (file_exists(storage_path('app/public/' . $anexo->caminho_arquivo))) {
             unlink(storage_path('app/public/' . $anexo->caminho_arquivo));
         }
 
-        // Delete the database record
+        // Exclui o registro do banco de dados
         $anexo->delete();
 
-        return redirect()->back()->with('success', 'Anexo excluído com sucesso!');
+        return response()->json(['message' => 'File deleted successfully'], 200);
     }
+
 }

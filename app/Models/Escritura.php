@@ -21,6 +21,12 @@ class Escritura extends Model
         'patrimonio_id',
         'created_by',
         'updated_by',
+
+        // Novos campos para contato
+        'outorgante_telefone',
+        'outorgante_email',
+        'outorgado_telefone',
+        'outorgado_email',
     ];
 
     /**

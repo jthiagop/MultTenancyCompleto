@@ -11,39 +11,11 @@ class LancamentoPadrao extends Model
 {
     use HasFactory;
 
-    /**
-     * The table associated with the model.
-     *
-     * @var string
-     */
     protected $table = 'lancamento_padraos';
-
-    /**
-     * The primary key associated with the table.
-     *
-     * @var string
-     */
     protected $primaryKey = 'id';
-
-    /**
-     * Indicates if the IDs are auto-incrementing.
-     *
-     * @var bool
-     */
     public $incrementing = true;
-
-    /**
-     * The "type" of the auto-incrementing ID.
-     *
-     * @var string
-     */
     protected $keyType = 'int';
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
     protected $fillable = [
         'type',
         'description',
@@ -53,21 +25,20 @@ class LancamentoPadrao extends Model
         'created_at'
     ];
 
-    /**
-     * The attributes that should be cast to native types.
-     *
-     * @var array
-     */
     protected $casts = [
         'date' => 'datetime',
         'created_at' => 'datetime'
     ];
 
-    /**
-     * Get the user that owns the despesa.
-     */
+    // Relacionamento com o usuário que criou o lançamento padrão
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    // Relacionamento com caixas que utilizam este lançamento padrão
+    public function caixas()
+    {
+        return $this->hasMany(Caixa::class, 'lancamento_padrao_id');
     }
 }
