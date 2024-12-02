@@ -12,14 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('caixas', function (Blueprint $table) {
-            $table->bigInteger('lancamento_padrao_id')->nullable();
-            $table->foreign('lancamento_padrao_id')->references('id')->on('lancamento_padraos')->onDelete('set null');
+            $table->unsignedBigInteger('lancamento_padrao_id')->nullable(); // Tipo compatível
+            $table->foreign('lancamento_padrao_id')
+                ->references('id')
+                ->on('lancamento_padraos')
+                ->onDelete('set null');
         });
 
         Schema::table('bancos', function (Blueprint $table) {
-            $table->bigInteger('lancamento_padrao_id')->nullable();
-            $table->foreign('lancamento_padrao_id')->references('id')->on('lancamento_padraos')->onDelete('set null');
+            $table->unsignedBigInteger('lancamento_padrao_id')->nullable();
+            $table->foreign('lancamento_padrao_id')
+                ->references('id')
+                ->on('lancamento_padraos')
+                ->onDelete('set null');
         });
+
     }
 
     /**
