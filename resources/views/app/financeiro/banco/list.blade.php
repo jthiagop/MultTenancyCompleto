@@ -641,7 +641,7 @@
                                                     <td>{{ $IfBanco->movimentacao->entidade->nome ?? 'Sem entidade associada' }}</td> <!-- Nome da entidade --></td>
                                                     <!--end::Last login=-->
                                                     <!--begin::Two step=-->
-                                                    <td>{{ $IfBanco->lancamentoPadrao->bancos ? $IfBanco->lancamentoPadrao->description : 'N/A' }}</td>
+                                                    <td>{{ optional($IfBanco->lancamentoPadrao)->bancos ? optional($IfBanco->lancamentoPadrao)->description : 'N/A' }}</td>
                                                     <!--end::Two step=-->
                                                     <!--begin::Joined-->
                                                     <td>

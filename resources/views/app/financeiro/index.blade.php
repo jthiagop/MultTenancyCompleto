@@ -1058,7 +1058,7 @@
                                             <td>{{ $caixa->tipo_documento }}</td>
                                             <!--end::Last login=-->
                                             <!--begin::Two step=-->
-                                            <td>{{ $caixa->lancamentoPadrao->caixas ? $caixa->lancamentoPadrao->description : 'N/A'}}</td>
+                                            <td>{{ optional($caixa->lancamentoPadrao)->caixas ? optional($caixa->lancamentoPadrao)->description : 'N/A' }}</td>
                                             <!--end::Two step=-->
                                             <!--begin::Joined-->
                                             <td>
