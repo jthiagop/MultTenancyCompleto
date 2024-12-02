@@ -28,7 +28,9 @@ class Caixa extends Model implements Auditable
         'historico_complementar',
         'origem',
         'created_by',
-        'updated_by'
+        'updated_by',
+        'comprovacao_fiscal',
+        'movimentacao_id'
     ];
 
     // Relacionamento com anexos
@@ -55,6 +57,12 @@ class Caixa extends Model implements Auditable
         return $this->belongsTo(LancamentoPadrao::class, 'lancamento_padrao_id');
     }
 
+    public function movimentacao()
+{
+    return $this->belongsTo(Movimentacao::class, 'movimentacao_id');
+}
+
+
 
     static public function getCaixaList()
     {
@@ -65,6 +73,25 @@ class Caixa extends Model implements Auditable
             ->join('company_user', 'caixas.company_id', '=', 'company_user.company_id')
             ->where('company_user.user_id', $userId)
             ->select('caixas.*')
+            ->get();
+    }
+
+
+    static public function getEntidadesCaixa()
+    {
+        $companyId = auth()->user()->company_id; // Recupere a empresa do usuário logado
+
+        return EntidadeFinanceira::where('tipo', 'caixa') // Filtra apenas pelo tipo banco
+            ->where('company_id', $companyId) // Filtra pela empresa do usuário
+            ->get();
+    }
+
+    static public function getEntidadesBanco()
+    {
+        $companyId = auth()->user()->company_id; // Recupere a empresa do usuário logado
+
+        return EntidadeFinanceira::where('tipo', 'banco') // Filtra apenas pelo tipo banco
+            ->where('company_id', $companyId) // Filtra pela empresa do usuário
             ->get();
     }
 

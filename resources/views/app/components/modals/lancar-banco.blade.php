@@ -128,6 +128,16 @@
                                 <form method="POST" id="dm_modal_novo_lancamento_banco_form"
                                     action="{{ route('banco.store') }}" enctype="multipart/form-data">
                                     @csrf <!-- Token CSRF para Laravel -->
+                                    <!-- Mensagens de Erro Gerais -->
+                                    @if ($errors->any())
+                                        <div class="alert alert-danger">
+                                            <ul>
+                                                @foreach ($errors->all() as $error)
+                                                    <li>{{ $error }}</li>
+                                                @endforeach
+                                            </ul>
+                                        </div>
+                                    @endif
                                     <!--begin::Input group-->
                                     <div class="row g-9 mb-8">
                                         <!--begin::Col-->
@@ -165,18 +175,15 @@
                                             <label
                                                 class="required d-flex align-items-center fs-5 fw-semibold mb-2">Banco</label>
                                             <div class="input-group">
-                                                <select id="bancoSelect" name="banco_id"
+                                                <select name="entidade_id" id="banco_id"
                                                     class="form-select form-select-solid" data-control="select"
                                                     data-dropdown-css-class="w-200px"
                                                     data-placeholder="Selecione o Banco" required>
                                                     <option value="" disabled selected>Selecione o Banco</option>
                                                     <!-- Placeholder configurado aqui -->
-                                                    @foreach ($bancos as $banco)
-                                                        <option data-banco-code="{{ $banco->banco }}"
-                                                            value="{{ $banco->id }}">
-                                                            {{ $banco->banco }} -
-                                                            {{ $banco->name }}/{{ $banco->conta }}
-                                                        </option>
+                                                    @foreach ($entidadesBanco as $entidade)
+                                                        <option value="{{ $entidade->id }}">{{ $entidade->nome }}
+                                                            ({{ ucfirst($entidade->tipo) }})</option>
                                                     @endforeach
                                                 </select>
                                             </div>
@@ -258,13 +265,13 @@
                                             <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
                                                 title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
                                             <div class="input-group">
-                                                <select name="lancamento_padrao" aria-label="Escolha um Lançamento"
+                                                <select name="lancamento_padrao_id" aria-label="Escolha um Lançamento"
                                                     data-control="select2" data-placeholder="Escolha um Lançamento..."
                                                     class="form-select form-select-solid fw-bold"
                                                     id="lancamento_padrao_banco">
                                                     <option value=""></option>
                                                     @foreach ($lps as $lp)
-                                                        <option value="{{ $lp->description }}"
+                                                        <option value="{{ $lp->id }}"
                                                             data-type="{{ $lp->type }}">{{ $lp->description }}
                                                         </option>
                                                     @endforeach
@@ -351,7 +358,7 @@
                                             </select>
                                         </div>
                                         <!--end::Col-->
-                                        <div class="col-md-4 fv-row">
+                                        <div class="col-md-4 fv-row ">
                                             <label class="fs-5 fw-semibold mb-2">Número do Documento</label>
                                             <div class="input-group">
                                                 <input type="text" class="form-control form-control-solid"
@@ -374,11 +381,14 @@
                                                 transações financeiras</div>
                                         </div>
                                         <!--end::Label-->
+                                        <!-- Input Hidden para garantir o envio de "0" quando desmarcado -->
+                                        <input type="hidden" name="comprovacao_fiscal" value="0">
                                         <!--begin::Switch-->
                                         <label class="form-check form-switch form-check-custom form-check-solid">
-                                            <input class="form-check-input" type="checkbox" checked="checked" />
-                                            <span class="form-check-label fw-semibold text-muted">
-                                            </span>
+                                            <!-- Checkbox para enviar 1 quando marcado -->
+                                            <input class="form-check-input" type="checkbox" name="comprovacao_fiscal"
+                                                value="1" />
+                                            <span class="form-check-label fw-semibold text-muted">Possui Nota</span>
                                         </label>
                                         <!--end::Switch-->
                                     </div>
@@ -470,3 +480,6 @@
 
         </div>
         <!--end::Modal - Upgrade plan-->
+        <script>
+            var lpsData = @json($lps);
+        </script>

@@ -38,7 +38,7 @@
 
     <!-- Toastr JS -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
-
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.css" integrity="sha512-wJgJNTBBkLit7ymC6vvzM1EcSWeM9mmOu+1USHaRBbHkm6W9EgM0HY27+UtUaprntaYQJF75rc8gjxllKs5OIQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     <!--end::Global Stylesheets Bundle-->
 </head>
@@ -47,7 +47,8 @@
 
 	<!--begin::Body-->
 	<body id="kt_app_body" data-kt-app-layout="light-header" data-kt-app-header-fixed="true" data-kt-app-toolbar-enabled="true" class="app-default">
-		<!--begin::Theme mode setup on page load-->
+        @flasher_render
+        <!--begin::Theme mode setup on page load-->
 		<script>var defaultThemeMode = "light"; var themeMode; if ( document.documentElement ) { if ( document.documentElement.hasAttribute("data-bs-theme-mode")) { themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); } else { if ( localStorage.getItem("data-bs-theme") !== null ) { themeMode = localStorage.getItem("data-bs-theme"); } else { themeMode = defaultThemeMode; } } if (themeMode === "system") { themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } document.documentElement.setAttribute("data-bs-theme", themeMode); }</script>
 		<!--end::Theme mode setup on page load-->
 		<!--begin::App-->
@@ -67,15 +68,46 @@
         var hostUrl = "{{ url('') }}/assets/";
     </script>
 
-    <script>
-    var hostUrl = "{{ url('') }}assets/";
-</script>
-
 <!--begin::Global Javascript Bundle(mandatory for all pages)-->
 <script src="{{ url('assets/plugins/global/plugins.bundle.js') }}"></script>
 <script src="{{ url('assets/js/scripts.bundle.js') }}"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js" integrity="sha512-zlWWyZq71UMApAjih4WkaRpikgY9Bz1oXIW5G0fED4vk14JjGlQ1UmkGM392jEULP8jbNMiwLWdM8Z87Hu88Fw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 <!--end::Global Javascript Bundle-->
+
+@if (Session::has('message') || Session::has('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            toastr.options = {
+                "closeButton": true,
+                "debug": false,
+                "newestOnTop": true,
+                "progressBar": true,
+                "positionClass": "toast-top-right", // Posição no canto superior direito
+                "preventDuplicates": true,
+                "onclick": null,
+                "showDuration": "300",
+                "hideDuration": "1000",
+                "timeOut": "5000", // Tempo que a mensagem fica visível
+                "extendedTimeOut": "1000",
+                "showEasing": "swing",
+                "hideEasing": "linear",
+                "showMethod": "fadeIn",
+                "hideMethod": "fadeOut",
+            };
+
+            // Exibe a mensagem de erro, se existir
+            @if(Session::has('error'))
+                toastr.error("{{ Session::get('error') }}");
+            @endif
+
+            // Exibe a mensagem de sucesso, se existir
+            @if(Session::has('message'))
+                toastr.success("{{ Session::get('message') }}");
+            @endif
+        });
+    </script>
+@endif
+
 </body>
 <!--end::Body-->
-
 </html>

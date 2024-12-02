@@ -28,9 +28,12 @@
             <!--begin::Modal body-->
             <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
                 <!--begin::Form-->
-                <form method="POST" action="{{ route('caixa.update', $caixa->id) }}" enctype="multipart/form-data" id="kt_modal_new_card_form">
-                    <meta name="csrf-token" content="{{ csrf_token() }}">
-                    @method('PUT') <!-- Inclua o método PUT, já que você está atualizando um registro -->
+                <form method="POST" action="{{ route('caixa.update', $caixa->id) }}" enctype="multipart/form-data">
+                    @csrf
+                    @method('PUT')
+                    <!-- Campo oculto para entidade_id -->
+                    <input type="hidden" name="entidade_id" value="{{ $caixa->movimentacao->entidade->id ?? '' }}">
+
                     <!--begin::Input group-->
                     <div class="d-flex flex-column mb-7 fv-row">
                         <!--begin::Label-->
@@ -103,212 +106,220 @@
                                 <!--begin::Datepicker-->
                                 <input class="form-control form-control-solid ps-12" name="data_competencia" required
                                     type="text" placeholder="Pick a date" id="kt_datepicker_1"
-                                    value="{{ old('data_competencia', $caixa->data_competencia) }}" />
+                                    value="{{ old('data_competencia', \Carbon\Carbon::parse($caixa->data_competencia)->format('d/m/Y')) }}" />
+
                                 <!--end::Datepicker-->
                             </div>
                             <!--end::Input-->
                         </div>
                         <!--end::Col-->
                         <!-- Entrada/Saída -->
-                            <div class="col-md-4 fv-row">
-                                <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
-                                    <span class="required">Entrada/Saída</span>
-                                    <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
-                                        title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
-                                </label>
-                                <select class="form-select form-select-solid" data-control="select2"
-                                        data-dropdown-css-class="w-200px" data-placeholder="Selecione o tipo"
-                                        name="tipo" required data-hide-search="true" id="tipo_select_caixa">
-                                    <option value="" disabled selected>Defina o tipo</option>
-                                    <option value="entrada" {{ old('tipo', $caixa->tipo) == 'entrada' ? 'selected' : '' }}>Entrada</option>
-                                    <option value="saida" {{ old('tipo', $caixa->tipo) == 'saida' ? 'selected' : '' }}>Saída</option>
-                                </select>
-                            </div>
-
-                            <!-- Lançamento Padrão -->
-                            <div class="d-flex flex-column mb-7 fv-row">
-                                <label class="required fs-6 fw-semibold form-label mb-2">Lançamento Padrão</label>
-                                <select name="lancamento_padrao_id" aria-label="Escolha um Lançamento"
-                                        data-control="select2" data-placeholder="Escolha um Lançamento..."
-                                        class="form-select form-select-solid fw-bold"
-                                        id="lancamento_padrao_caixa">
-                                    <option value="">Escolha um Lançamento...</option>
-                                    @foreach ($lps as $lp)
-                                        <option value="{{ $lp->id }}" data-type="{{ $lp->type }}" data-description="{{ $lp->description }}"
-                                            {{ $caixa->lancamento_padrao_id == $lp->id ? 'selected' : '' }}>
-                                            {{ $lp->description }}
-                                        </option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                    <!--end::Input group-->
-                    <!--begin::Input group-->
-                    <div class="row mb-10">
-                        <div class="col-md-6 fv-row">
+                        <div class="col-md-4 fv-row">
                             <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
-                                <span class="required">Tipo de Documento</span>
+                                <span class="required">Entrada/Saída</span>
                                 <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
                                     title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
                             </label>
-                            <select class="form-control form-control-solid" data-control="select"
-                                name="tipo_documento" id="tipo_documento">
-                                <option value="Pix"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'Pix' ? 'selected' : '' }}>
-                                    Pix</option>
-                                <option value="OUTR - Dafe"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'OUTR - Dafe' ? 'selected' : '' }}>
-                                    OUTR - Dafe</option>
-                                <option value="NF - Nota Fiscal"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'NF - Nota Fiscal' ? 'selected' : '' }}>
-                                    NF - Nota Fiscal</option>
-                                <option value="CF - Cupom Fiscal"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'CF - Cupom Fiscal' ? 'selected' : '' }}>
-                                    CF - Cupom Fiscal</option>
-                                <option value="DANF - Danfe"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'DANF - Danfe' ? 'selected' : '' }}>
-                                    DANF - Danfe</option>
-                                <option value="BOL - Boleto"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'BOL - Boleto' ? 'selected' : '' }}>
-                                    BOL - Boleto</option>
-                                <option value="REP - Repasse"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'REP - Repasse' ? 'selected' : '' }}>
-                                    REP - Repasse</option>
-                                <option value="CCRD - Cartão de Credito"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'CCRD - Cartão de Credito' ? 'selected' : '' }}>
-                                    CCRD - Cartão de Credito</option>
-                                <option value="CTRB - Cartão de Débito"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'CTRB - Cartão de Débito' ? 'selected' : '' }}>
-                                    CTRB - Cartão de Débito</option>
-                                <option value="REC - Recibo"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'REC - Recibo' ? 'selected' : '' }}>
-                                    REC - Recibo</option>
-                                <option value="CARN - Carnê"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'CARN - Carnê' ? 'selected' : '' }}>
-                                    CARN - Carnê</option>
-                                <option value="FAT - Fatura"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'FAT - Fatura' ? 'selected' : '' }}>
-                                    FAT - Fatura</option>
-                                <option value="APOL - Apólice"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'APOL - Apólice' ? 'selected' : '' }}>
-                                    APOL - Apólice</option>
-                                <option value="DUPL - Duplicata"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'DUPL - Duplicata' ? 'selected' : '' }}>
-                                    DUPL - Duplicata</option>
-                                <option value="TRIB - Tribunal"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'TRIB - Tribunal' ? 'selected' : '' }}>
-                                    TRIB - Tribunal</option>
-                                <option value="Outros"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'Outros' ? 'selected' : '' }}>
-                                    Outros</option>
-                                <option value="T Banc - Transferência Bancaria"
-                                    {{ old('tipo_documento', $caixa->tipo_documento) == 'T Banc - Transferência Bancaria' ? 'selected' : '' }}>
-                                    T Banc - Transferência Bancaria</option>
+                            <select class="form-select form-select-solid" data-control="select2"
+                                data-dropdown-css-class="w-200px" data-placeholder="Selecione o tipo" name="tipo"
+                                required data-hide-search="true" id="tipo_select_caixa">
+                                <option value="" disabled selected>Defina o tipo</option>
+                                <option value="entrada" {{ old('tipo', $caixa->tipo) == 'entrada' ? 'selected' : '' }}>
+                                    Entrada</option>
+                                <option value="saida" {{ old('tipo', $caixa->tipo) == 'saida' ? 'selected' : '' }}>
+                                    Saída</option>
                             </select>
-                            @error('tipo_documento')
-                                <div class="text-danger">{{ $message }}</div>
-                            @enderror
                         </div>
-                        <div class="col-md-6 fv-row">
-                            <label class="fs-5 fw-semibold mb-2">Número do Documento</label>
-                            <div class="input-group">
-                                <input type="text" class="form-control form-control-solid ps-12" placeholder=""
-                                    name="numero_documento"
-                                    value="{{ old('numero_documento', $caixa->numero_documento) }}" />
-                            </div>
-                            @error('numero_documento')
-                                <div class="text-danger">{{ $message }}</div>
-                            @enderror
-                        </div>
-                        <!-- Novo campo de entrada para o banco de depósito -->
-                        <div class="col-md-6 fv-row" id="banco-deposito" style="display:none;">
-                            <label class="required fs-5 fw-semibold mb-2">Selecione o Banco de
-                                Depósito</label>
-                            <select id="bancoSelect" name="banco_id" aria-label="Select a Banco"
-                                data-control="select2" data-placeholder="Escolha um banco..."
-                                class="form-select fw-bold">
-                                <option value=""></option>
-                                @foreach ($bancos as $banco)
-                                    <option data-banco-code="{{ $banco->banco }}" value="{{ $banco->id }}"><span
-                                            class="banco-name"></span>{{ $banco->banco }} -
-                                        {{ $banco->name }}/{{ $banco->conta }}</option>
+
+                        <!-- Lançamento Padrão -->
+                        <div class="d-flex flex-column mb-7 fv-row">
+                            <label class="required fs-6 fw-semibold form-label mb-2">Lançamento Padrão</label>
+                            <select name="lancamento_padrao_id" aria-label="Escolha um Lançamento"
+                                data-control="select2" data-placeholder="Escolha um Lançamento..."
+                                class="form-select form-select-solid fw-bold" id="lancamento_padrao_caixa">
+                                <option value="">Escolha um Lançamento...</option>
+                                @foreach ($lps as $lp)
+                                    <option value="{{ $lp->id }}" data-type="{{ $lp->type }}"
+                                        data-description="{{ $lp->description }}"
+                                        {{ $caixa->lancamento_padrao_id == $lp->id ? 'selected' : '' }}>
+                                        {{ $lp->description }}
+                                    </option>
                                 @endforeach
                             </select>
                         </div>
-                    </div>
 
-                    <div class="row mb-10">
-                        <div class="col-md-12 fv-row">
-                            <label class="required fs-5 fw-semibold mb-2">Centro de Custo</label>
-                            <div class="input-group">
-                                <input type="text" name="centro" readonly class="form-control form-control-solid ps-12"
-                                    placeholder="" value="{{ old('centro', $caixa->centro) }}" />
+                        <!--end::Input group-->
+                        <!--begin::Input group-->
+                        <div class="row mb-10">
+                            <div class="col-md-6 fv-row">
+                                <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
+                                    <span class="required">Tipo de Documento</span>
+                                    <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                        title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
+                                </label>
+                                <select class="form-control form-control-solid" data-control="select"
+                                    name="tipo_documento" id="tipo_documento">
+                                    <option value="Pix"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'Pix' ? 'selected' : '' }}>
+                                        Pix</option>
+                                    <option value="OUTR - Dafe"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'OUTR - Dafe' ? 'selected' : '' }}>
+                                        OUTR - Dafe</option>
+                                    <option value="NF - Nota Fiscal"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'NF - Nota Fiscal' ? 'selected' : '' }}>
+                                        NF - Nota Fiscal</option>
+                                    <option value="CF - Cupom Fiscal"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'CF - Cupom Fiscal' ? 'selected' : '' }}>
+                                        CF - Cupom Fiscal</option>
+                                    <option value="DANF - Danfe"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'DANF - Danfe' ? 'selected' : '' }}>
+                                        DANF - Danfe</option>
+                                    <option value="BOL - Boleto"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'BOL - Boleto' ? 'selected' : '' }}>
+                                        BOL - Boleto</option>
+                                    <option value="REP - Repasse"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'REP - Repasse' ? 'selected' : '' }}>
+                                        REP - Repasse</option>
+                                    <option value="CCRD - Cartão de Credito"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'CCRD - Cartão de Credito' ? 'selected' : '' }}>
+                                        CCRD - Cartão de Credito</option>
+                                    <option value="CTRB - Cartão de Débito"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'CTRB - Cartão de Débito' ? 'selected' : '' }}>
+                                        CTRB - Cartão de Débito</option>
+                                    <option value="REC - Recibo"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'REC - Recibo' ? 'selected' : '' }}>
+                                        REC - Recibo</option>
+                                    <option value="CARN - Carnê"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'CARN - Carnê' ? 'selected' : '' }}>
+                                        CARN - Carnê</option>
+                                    <option value="FAT - Fatura"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'FAT - Fatura' ? 'selected' : '' }}>
+                                        FAT - Fatura</option>
+                                    <option value="APOL - Apólice"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'APOL - Apólice' ? 'selected' : '' }}>
+                                        APOL - Apólice</option>
+                                    <option value="DUPL - Duplicata"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'DUPL - Duplicata' ? 'selected' : '' }}>
+                                        DUPL - Duplicata</option>
+                                    <option value="TRIB - Tribunal"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'TRIB - Tribunal' ? 'selected' : '' }}>
+                                        TRIB - Tribunal</option>
+                                    <option value="Outros"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'Outros' ? 'selected' : '' }}>
+                                        Outros</option>
+                                    <option value="T Banc - Transferência Bancaria"
+                                        {{ old('tipo_documento', $caixa->tipo_documento) == 'T Banc - Transferência Bancaria' ? 'selected' : '' }}>
+                                        T Banc - Transferência Bancaria</option>
+                                </select>
+                                @error('tipo_documento')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
                             </div>
-                            @error('centro')
-                                <div class="text-danger">{{ $message }}</div>
-                            @enderror
+                            <div class="col-md-6 fv-row">
+                                <label class="fs-5 fw-semibold mb-2">Número do Documento</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control form-control-solid ps-12"
+                                        placeholder="" name="numero_documento"
+                                        value="{{ old('numero_documento', $caixa->numero_documento) }}" />
+                                </div>
+                                @error('numero_documento')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
+                            <!-- Novo campo de entrada para o banco de depósito -->
+                            <div class="col-md-6 fv-row" id="banco-deposito" style="display:none;">
+                                <label class="required fs-5 fw-semibold mb-2">Selecione o Banco de
+                                    Depósito</label>
+                                <select id="bancoSelect" name="banco_id" aria-label="Select a Banco"
+                                    data-control="select2" data-placeholder="Escolha um banco..."
+                                    class="form-select fw-bold">
+                                    <option value=""></option>
+                                    @foreach ($bancos as $banco)
+                                        <option data-banco-code="{{ $banco->banco }}" value="{{ $banco->id }}">
+                                            <span class="banco-name"></span>{{ $banco->banco }} -
+                                            {{ $banco->name }}/{{ $banco->conta }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
                         </div>
-                    </div>
 
-                    <div class="mb-0">
-                        <!--begin::Title-->
-                        <h5 class="mb-4">Historico Homplementar:</h5>
-                        <!--end::Title-->
-                        <!--begin::Product table-->
-                        <div class="table-responsive">
-                            <tr>
-                                <td class="text-gray-800">
-                                    <textarea class="form-control" name="historico_complementar" id="complemento" cols="20"
-                                        rows="3">{{ old('historico_complementar', $caixa->historico_complementar) }}</textarea>
-                                    <p class="text-gray-400">Descreva observações relevantes sobre
-                                        esse lançamento financeiro</p>
-                                    @error('historico_complementar')
-                                        <div class="text-danger">{{ $message }}</div>
-                                    @enderror
-                                </td>
-                            </tr>
+                        <div class="row mb-10">
+                            <div class="col-md-12 fv-row">
+                                <label class="required fs-5 fw-semibold mb-2">Centro de Custo</label>
+                                <div class="input-group">
+                                    <input type="text" name="centro" readonly
+                                        class="form-control form-control-solid ps-12" placeholder=""
+                                        value="{{ old('centro', $caixa->centro) }}" />
+                                </div>
+                                @error('centro')
+                                    <div class="text-danger">{{ $message }}</div>
+                                @enderror
+                            </div>
                         </div>
-                        <!--end::Product table-->
-                    </div>
-                    <!--end::Section-->
 
-                    <!--end::Input group-->
-                    <!--begin::Input group-->
-                    <div class="d-flex flex-stack">
-                        <!--begin::Label-->
-                        <div class="me-5">
-                            <label class="fs-6 fw-semibold form-label">Possui Nota Fiscal?</label>
-                            <div class="fs-7 fw-semibold text-muted">Marque esta opção se o lançamento tiver uma nota
-                                fiscal como comprovante.</div>
+                        <div class="mb-0">
+                            <!--begin::Title-->
+                            <h5 class="mb-4">Historico Homplementar:</h5>
+                            <!--end::Title-->
+                            <!--begin::Product table-->
+                            <div class="table-responsive">
+                                <tr>
+                                    <td class="text-gray-800">
+                                        <textarea class="form-control" name="historico_complementar" id="complemento" cols="20" rows="3">{{ old('historico_complementar', $caixa->historico_complementar) }}</textarea>
+                                        <p class="text-gray-400">Descreva observações relevantes sobre
+                                            esse lançamento financeiro</p>
+                                        @error('historico_complementar')
+                                            <div class="text-danger">{{ $message }}</div>
+                                        @enderror
+                                    </td>
+                                </tr>
+                            </div>
+                            <!--end::Product table-->
                         </div>
-                        <!--end::Label-->
-                        <!--begin::Switch-->
-                        <label class="form-check form-switch form-check-custom form-check-solid">
-                            <input class="form-check-input" type="checkbox" name="comprovacao_fiscal" value="1"
-                                {{ old('comprovacao_fiscal', $caixa->comprovacao_fiscal) ? 'checked' : '' }} />
-                            <span class="form-check-label fw-semibold text-muted">Possui Nota</span>
-                        </label>
-                        <!--end::Switch-->
-                    </div>
-                    <!--end::Input group-->
-                    <!--begin::Actions-->
-                    <div class="text-center pt-15">
-                        <!-- Botão de Cancelar -->
-                        <button type="reset" id="kt_modal_new_card_cancel" class="btn btn-light me-3">
-                            <i class="fas fa-times-circle me-2"></i> Cancelar
-                        </button>
+                        <!--end::Section-->
 
-                        <!-- Botão de Enviar -->
-                        <button type="submit" id="kt_modal_new_card_submit" class="btn btn-primary">
-                            <i class="fas fa-sync-alt me-2"></i>
-                            <span class="indicator-label">Atualizar</span>
-                            <span class="indicator-progress">
-                                Enviando...
-                                <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                            </span>
-                        </button>
-                    </div>
-                    <!--end::Actions-->
+                        <!--end::Input group-->
+                        <!--begin::Input group-->
+                        <div class="d-flex flex-stack">
+                            <!--begin::Label-->
+                            <div class="me-5">
+                                <label class="fs-6 fw-semibold form-label">Possui Nota Fiscal?</label>
+                                <div class="fs-7 fw-semibold text-muted">Marque esta opção se o lançamento tiver uma
+                                    nota
+                                    fiscal como comprovante.</div>
+                            </div>
+                            <!--end::Label-->
+                            <!--begin::Switch-->
+                            <label class="form-check form-switch form-check-custom form-check-solid">
+                                <!-- Campo hidden para garantir que 0 seja enviado caso o checkbox esteja desmarcado -->
+                                <input type="hidden" name="comprovacao_fiscal" value="0">
+                                <!-- Checkbox para enviar 1 quando marcado -->
+                                <input class="form-check-input" type="checkbox" name="comprovacao_fiscal"
+                                    value="1"
+                                    {{ old('comprovacao_fiscal', $caixa->comprovacao_fiscal) ? 'checked' : '' }} />
+                                <span class="form-check-label fw-semibold text-muted">Possui Nota</span>
+                            </label>
+                            <!--end::Switch-->
+                        </div>
+                        <!--end::Input group-->
+                        <!--begin::Actions-->
+                        <div class="text-center pt-15">
+                            <!-- Botão de Cancelar -->
+                            <button type="reset" id="kt_modal_new_card_cancel" class="btn btn-light me-3">
+                                <i class="fas fa-times-circle me-2"></i> Cancelar
+                            </button>
+
+                            <!-- Botão de Enviar -->
+                            <button type="submit" id="kt_modal_new_card_submit" class="btn btn-primary">
+                                <i class="fas fa-sync-alt me-2"></i>
+                                <span class="indicator-label">Atualizar</span>
+                                <span class="indicator-progress">
+                                    Enviando...
+                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                </span>
+                            </button>
+                        </div>
+                        <!--end::Actions-->
                 </form>
                 <!--end::Form-->
             </div>

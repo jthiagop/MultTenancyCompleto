@@ -41,4 +41,10 @@ class LancamentoPadrao extends Model
     {
         return $this->hasMany(Caixa::class, 'lancamento_padrao_id');
     }
+
+    // Relacionamento com bancos que utilizam este lançamento padrão
+    public function bancos()
+    {
+        return $this->hasMany(Banco::class, 'lancamento_padrao_id');
+    }
 }

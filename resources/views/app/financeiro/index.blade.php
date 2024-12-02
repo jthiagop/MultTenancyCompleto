@@ -1140,34 +1140,33 @@
 
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
-<link href="assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
-<script src="assets/js/scripts.bundle.js"></script>
+<link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+<script src="/assets/js/scripts.bundle.js"></script>
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="assets/js/custom/pages/user-profile/general.js"></script>
-<script src="assets/js/custom/account/settings/signin-methods.js"></script>
-<script src="assets/js/custom/account/security/security-summary.js"></script>
-<script src="assets/js/custom/account/security/license-usage.js"></script>
-<script src="assets/js/custom/account/settings/deactivate-account.js"></script>
-<script src="assets/js/widgets.bundle.js"></script>
-<script src="assets/js/custom/apps/chat/chat.js"></script>
+<script src="/assets/js/custom/pages/user-profile/general.js"></script>
+<script src="/assets/js/custom/account/settings/signin-methods.js"></script>
+<script src="/assets/js/custom/account/security/security-summary.js"></script>
+<script src="/assets/js/custom/account/security/license-usage.js"></script>
+<script src="/assets/js/custom/account/settings/deactivate-account.js"></script>
+<script src="/assets/js/widgets.bundle.js"></script>
+<script src="/assets/js/custom/apps/chat/chat.js"></script>
 
-<script src="assets/js/custom/utilities/modals/financeiro/new-caixa.js"></script>
-<script src="assets/js/custom/utilities/modals/financeiro/new-banco.js"></script>
+<script src="/assets/js/custom/utilities/modals/financeiro/new-caixa.js"></script>
+<script src="/assets/js/custom/utilities/modals/financeiro/new-banco.js"></script>
 
 <!--end::Custom Javascript-->
-<script src="assets/js/custom/apps/lancamento/excluirCaixa.js"></script>
+<script src="/assets/js/custom/apps/lancamento/excluirCaixa.js"></script>
 
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="assets/js/custom/apps/user-management/users/list/table.js"></script>
-<script src="assets/js/custom/apps/user-management/users/list/export-users.js"></script>
-<script src="assets/js/custom/apps/user-management/users/list/add.js"></script>
+<script src="/assets/js/custom/apps/user-management/users/list/table.js"></script>
+<script src="/assets/js/custom/apps/user-management/users/list/export-users.js"></script>
+<script src="/assets/js/custom/apps/user-management/users/list/add.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->
 
 
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function() {
         const deleteLinks = document.querySelectorAll('.delete-link');

@@ -272,7 +272,7 @@
                                             <td data-banco-code="{{ $banco->banco }}">
                                                 <!-- SVG será inserido dinamicamente pelo script -->
                                                 <img src="" class="w-25px me-3" alt="Banco Logo" />
-                                                <span class="banco-name"></span>
+                                                <span class="">{{ $banco->banco }}</span>
                                             </td>
                                             <!--end::Name=-->
                                             <!--begin::Email=-->
@@ -282,7 +282,7 @@
                                             </td>
                                             <!--end::Email=-->
                                             <!--begin::Company=-->
-                                            <td>{{ $banco->conta }}</td>
+                                            <td>{{ $banco->banco }}</td>
                                             <!--end::Company=-->
                                             <!--begin::Payment method=-->
                                             <td>{{ $banco->digito }} </td>
@@ -415,104 +415,145 @@
                                                 </label>
                                                 <!--end::Label-->
                                                 <!--begin::Input-->
-                                                <select id="bank_select" name="banco" aria-label="Select a Country"
-                                                    data-control="select2" data-placeholder="Selecione seu banco..."
+                                                <select id="bank_select" name="banco"
+                                                    aria-label="Selecione seu banco" data-control="select2"
+                                                    data-placeholder="Selecione seu banco..."
                                                     data-dropdown-parent="#kt_modal_add_customer"
                                                     class="form-select fw-bold">
                                                     <option value=""></option>
-                                                    <option value="001" data-logo="brasil.svg">Banco do Brasil S.A
+                                                    <option value="Banco do Brasil S.A" data-logo="brasil.svg"
+                                                        data-name="Banco do Brasil S.A">Banco do Brasil S.A</option>
+                                                    <option value="Banco Santander Brasil S.A"
+                                                        data-logo="santander.svg"
+                                                        data-name="Banco Santander Brasil S.A">Banco Santander Brasil
+                                                        S.A</option>
+                                                    <option value="Bradesco S.A" data-logo="bradesco.svg"
+                                                        data-name="Bradesco S.A">Bradesco S.A</option>
+                                                    <option value="Caixa Econômica Federal" data-logo="caixa.svg"
+                                                        data-name="Caixa Econômica Federal">Caixa Econômica Federal
                                                     </option>
-                                                    <option value="033" data-logo="santander.svg">Banco Santander
-                                                        Brasil S.A</option>
-                                                    <option value="237" data-logo="bradesco.svg">Bradesco S.A
-                                                    </option>
-                                                    <option value="104" data-logo="caixa.svg">Caixa Econômica
-                                                        Federal</option>
-                                                    <option value="341" data-logo="itau.svg">Itaú Unibanco S.A
-                                                    </option>
-                                                    <option value="143" data-logo="lets-bank.svg">Lets Bank S.A
-                                                    </option>
-                                                    <option value="403" data-logo="mercadopago.svg">Mercado Pago
-                                                    </option>
-                                                    <option value="260" data-logo="nubank.svg">Nu Pagamentos S.A
+                                                    <option value="Itaú Unibanco S.A" data-logo="itau.svg"
+                                                        data-name="Itaú Unibanco S.A">Itaú Unibanco S.A</option>
+                                                    <option value="Lets Bank S.A" data-logo="lets-bank.svg"
+                                                        data-name="Lets Bank S.A">Lets Bank S.A</option>
+                                                    <option value="Mercado Pago" data-logo="mercadopago.svg"
+                                                        data-name="Mercado Pago">Mercado Pago</option>
+                                                    <option value="Nu Pagamentos S.A (Nubank)" data-logo="nubank.svg"
+                                                        data-name="Nu Pagamentos S.A (Nubank)">Nu Pagamentos S.A
                                                         (Nubank)</option>
-                                                    <option value="136" data-logo="unicred.svg">Unicred</option>
-                                                    <option value="290" data-logo="pagseguro.svg">PagSeguro
-                                                        Internet S.A</option>
-                                                    <option value="748" data-logo="sicredi.svg">Sicredi</option>
-                                                    <option value="197" data-logo="stone.svg">Stone Pagamentos S.A
+                                                    <option value="Unicred" data-logo="unicred.svg"
+                                                        data-name="Unicred">Unicred</option>
+                                                    <option value="PagSeguro Internet S.A" data-logo="pagseguro.svg"
+                                                        data-name="PagSeguro Internet S.A">PagSeguro Internet S.A
                                                     </option>
-                                                    <option value="065" data-logo="ailos.svg">Ailos</option>
-                                                    <option value="756" data-logo="sicoob.svg">Sicoob</option>
-                                                    <option value="000" data-logo="quality-digital-bank.svg">
-                                                        Quality Digital Bank - temporária</option>
-                                                    <option value="364" data-logo="asaas.svg">Asaas IP S.A</option>
-                                                    <option value="070" data-logo="brb.svg">BRB - Banco de Brasília
+                                                    <option value="Sicredi" data-logo="sicredi.svg"
+                                                        data-name="Sicredi">Sicredi</option>
+                                                    <option value="Stone Pagamentos S.A" data-logo="stone.svg"
+                                                        data-name="Stone Pagamentos S.A">Stone Pagamentos S.A</option>
+                                                    <option value="Ailos" data-logo="ailos.svg" data-name="Ailos">
+                                                        Ailos</option>
+                                                    <option value="Sicoob" data-logo="sicoob.svg" data-name="Sicoob">
+                                                        Sicoob</option>
+                                                    <option value="Quality Digital Bank - temporária"
+                                                        data-logo="quality-digital-bank.svg"
+                                                        data-name="Quality Digital Bank - temporária">Quality Digital
+                                                        Bank - temporária</option>
+                                                    <option value="Asaas IP S.A" data-logo="asaas.svg"
+                                                        data-name="Asaas IP S.A">Asaas IP S.A</option>
+                                                    <option value="BRB - Banco de Brasília" data-logo="brb.svg"
+                                                        data-name="BRB - Banco de Brasília">BRB - Banco de Brasília
                                                     </option>
-                                                    <option value="218" data-logo="banco-bs2.svg">Banco BS2 S.A
+                                                    <option value="Banco BS2 S.A" data-logo="banco-bs2.svg"
+                                                        data-name="Banco BS2 S.A">Banco BS2 S.A</option>
+                                                    <option value="Banco BTG Pactual" data-logo="btg-pactual.svg"
+                                                        data-name="Banco BTG Pactual">Banco BTG Pactual</option>
+                                                    <option value="Banco C6 S.A" data-logo="banco-c6.svg"
+                                                        data-name="Banco C6 S.A">Banco C6 S.A</option>
+                                                    <option value="Banco Daycoval" data-logo="banco-daycoval.svg"
+                                                        data-name="Banco Daycoval">Banco Daycoval</option>
+                                                    <option value="Banco Industrial do Brasil S.A"
+                                                        data-logo="banco-industrial-do-brasil.svg"
+                                                        data-name="Banco Industrial do Brasil S.A">Banco Industrial do
+                                                        Brasil S.A</option>
+                                                    <option value="Banco Inter S.A" data-logo="banco-inter.svg"
+                                                        data-name="Banco Inter S.A">Banco Inter S.A</option>
+                                                    <option value="Banco Mercantil do Brasil S.A"
+                                                        data-logo="banco-mercantil.svg"
+                                                        data-name="Banco Mercantil do Brasil S.A">Banco Mercantil do
+                                                        Brasil S.A</option>
+                                                    <option value="Banco Original S.A" data-logo="banco-original.svg"
+                                                        data-name="Banco Original S.A">Banco Original S.A</option>
+                                                    <option value="Banco Pine" data-logo="banco-pine.svg"
+                                                        data-name="Banco Pine">Banco Pine</option>
+                                                    <option value="Banco Rendimento" data-logo="banco-rendimento.svg"
+                                                        data-name="Banco Rendimento">Banco Rendimento</option>
+                                                    <option value="Banco Safra S.A" data-logo="banco-safra.svg"
+                                                        data-name="Banco Safra S.A">Banco Safra S.A</option>
+                                                    <option value="Banco Sofisa" data-logo="banco-sofisa.svg"
+                                                        data-name="Banco Sofisa">Banco Sofisa</option>
+                                                    <option value="Banco Topazio" data-logo="banco-topazio.svg"
+                                                        data-name="Banco Topazio">Banco Topazio</option>
+                                                    <option value="Banco Triângulo - Tribanco"
+                                                        data-logo="banco-triangulo.svg"
+                                                        data-name="Banco Triângulo - Tribanco">Banco Triângulo -
+                                                        Tribanco</option>
+                                                    <option value="ABC Brasil" data-logo="abc-brasil.svg"
+                                                        data-name="ABC Brasil">ABC Brasil</option>
+                                                    <option value="Banco da Amazônia S.A"
+                                                        data-logo="banco-da-amazonia.svg"
+                                                        data-name="Banco da Amazônia S.A">Banco da Amazônia S.A
                                                     </option>
-                                                    <option value="208" data-logo="btg-pactual.svg">Banco BTG
-                                                        Pactual</option>
-                                                    <option value="336" data-logo="banco-c6.svg">Banco C6 S.A
+                                                    <option value="Banco do Estado do Espírito Santo"
+                                                        data-logo="banco-estado-espirito-santo.svg"
+                                                        data-name="Banco do Estado do Espírito Santo">Banco do Estado
+                                                        do Espírito Santo</option>
+                                                    <option value="Banco do Estado do Pará"
+                                                        data-logo="banco-estado-para.svg"
+                                                        data-name="Banco do Estado do Pará">Banco do Estado do Pará
                                                     </option>
-                                                    <option value="707" data-logo="banco-daycoval.svg">Banco
-                                                        Daycoval</option>
-                                                    <option value="604" data-logo="banco-industrial-do-brasil.svg">
-                                                        Banco Industrial do Brasil S.A</option>
-                                                    <option value="077" data-logo="banco-inter.svg">Banco Inter S.A
-                                                    </option>
-                                                    <option value="389" data-logo="banco-mercantil.svg">Banco
-                                                        Mercantil do Brasil S.A</option>
-                                                    <option value="212" data-logo="banco-original.svg">Banco
-                                                        Original S.A</option>
-                                                    <option value="643" data-logo="banco-pine.svg">Banco Pine
-                                                    </option>
-                                                    <option value="633" data-logo="banco-rendimento.svg">Banco
-                                                        Rendimento</option>
-                                                    <option value="422" data-logo="banco-safra.svg">Banco Safra S.A
-                                                    </option>
-                                                    <option value="637" data-logo="banco-sofisa.svg">Banco Sofisa
-                                                    </option>
-                                                    <option value="082" data-logo="banco-topazio.svg">Banco Topazio
-                                                    </option>
-                                                    <option value="634" data-logo="banco-triangulo.svg">Banco
-                                                        Triângulo - Tribanco</option>
-                                                    <option value="246" data-logo="abc-brasil.svg">ABC Brasil
-                                                    </option>
-                                                    <option value="003" data-logo="banco-da-amazonia.svg">Banco da
-                                                        Amazônia S.A</option>
-                                                    <option value="021"
-                                                        data-logo="banco-estado-espirito-santo.svg">Banco do Estado do
-                                                        Espírito Santo</option>
-                                                    <option value="037" data-logo="banco-estado-para.svg">Banco do
-                                                        Estado do Pará</option>
-                                                    <option value="047" data-logo="banco-estado-sergipe.svg">Banco
-                                                        do Estado do Sergipe</option>
-                                                    <option value="004" data-logo="banco-nordeste.svg">Banco do
-                                                        Nordeste do Brasil S.A</option>
-                                                    <option value="000" data-logo="bancos-escuros.svg">Bancos
-                                                        Escuros</option>
-                                                    <option value="011" data-logo="bank-of-america.svg">Bank of
-                                                        America</option>
-                                                    <option value="041" data-logo="banrisul.svg">Banrisul</option>
-                                                    <option value="268" data-logo="capitual.svg">Capitual</option>
-                                                    <option value="331" data-logo="conta-simples.svg">Conta Simples
+                                                    <option value="Banco do Estado do Sergipe"
+                                                        data-logo="banco-estado-sergipe.svg"
+                                                        data-name="Banco do Estado do Sergipe">Banco do Estado do
+                                                        Sergipe</option>
+                                                    <option value="Banco do Nordeste do Brasil S.A"
+                                                        data-logo="banco-nordeste.svg"
+                                                        data-name="Banco do Nordeste do Brasil S.A">Banco do Nordeste
+                                                        do Brasil S.A</option>
+                                                    <option value="Bancos Escuros" data-logo="bancos-escuros.svg"
+                                                        data-name="Bancos Escuros">Bancos Escuros</option>
+                                                    <option value="Bank of America" data-logo="bank-of-america.svg"
+                                                        data-name="Bank of America">Bank of America</option>
+                                                    <option value="Banrisul" data-logo="banrisul.svg"
+                                                        data-name="Banrisul">Banrisul</option>
+                                                    <option value="Capitual" data-logo="capitual.svg"
+                                                        data-name="Capitual">Capitual</option>
+                                                    <option value="Conta Simples Soluções em Pagamentos"
+                                                        data-logo="conta-simples.svg"
+                                                        data-name="Conta Simples Soluções em Pagamentos">Conta Simples
                                                         Soluções em Pagamentos</option>
-                                                    <option value="323" data-logo="cora-credito.svg">Cora Sociedade
+                                                    <option value="Cora Sociedade Crédito Direto S.A"
+                                                        data-logo="cora-credito.svg"
+                                                        data-name="Cora Sociedade Crédito Direto S.A">Cora Sociedade
                                                         Crédito Direto S.A</option>
-                                                    <option value="097" data-logo="credisis.svg">Credisis</option>
-                                                    <option value="085" data-logo="cresol.svg">Cresol</option>
-                                                    <option value="403" data-logo="efi-gerencianet.svg">Efí -
-                                                        Gerencianet</option>
-                                                    <option value="401" data-logo="grafeno.svg">Grafeno</option>
-                                                    <option value="323" data-logo="omie-cash.svg">Omie.Cash
-                                                    </option>
-                                                    <option value="084" data-logo="uniprime.svg">Uniprime</option>
+                                                    <option value="Credisis" data-logo="credisis.svg"
+                                                        data-name="Credisis">Credisis</option>
+                                                    <option value="Cresol" data-logo="cresol.svg" data-name="Cresol">
+                                                        Cresol</option>
+                                                    <option value="Efí - Gerencianet" data-logo="efi-gerencianet.svg"
+                                                        data-name="Efí - Gerencianet">Efí - Gerencianet</option>
+                                                    <option value="Grafeno" data-logo="grafeno.svg"
+                                                        data-name="Grafeno">Grafeno</option>
+                                                    <option value="Omie.Cash" data-logo="omie-cash.svg"
+                                                        data-name="Omie.Cash">Omie.Cash</option>
+                                                    <option value="Uniprime" data-logo="uniprime.svg"
+                                                        data-name="Uniprime">Uniprime</option>
                                                 </select>
                                                 <!--end::Input-->
-                                                </select>
-                                                <!--end::Input-->
+
+
                                             </div>
+                                            <!-- Campo oculto para armazenar o nome do banco -->
+                                            <input type="hidden" id="banco_nome" name="banco_nome" value="">
                                             <!--end::Input group-->
                                             <!--begin::Input group-->
                                             <div class="row g-9 mb-7">
@@ -592,13 +633,13 @@
                                     <div class="modal-footer flex-center">
                                         <!--begin::Button-->
                                         <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">
-                                            <img src="assets/media/icons/duotune/arrows/arr092.svg" />
+                                            <img src="/assets/media/icons/duotune/arrows/arr092.svg" />
                                             Sair
                                         </button>
                                         <!--end::Button-->
                                         <!--begin::Button-->
                                         <button type="submit" class="btn btn-primary">
-                                            <img src="assets/media/icons/duotune/general/gen035.svg" />
+                                            <img src="/assets/media/icons/duotune/general/gen035.svg" />
                                             <span class="indicator-label">Salvar</span>
                                         </button>
                                         <!--end::Button-->
@@ -784,28 +825,42 @@
 
         $('#kt_modal_add_customer').modal('show');
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const bankSelect = document.getElementById('bank_select');
+        const bancoNomeInput = document.getElementById('banco_nome');
+
+        if (bankSelect && bancoNomeInput) {
+            // Atualiza o campo oculto sempre que o banco é selecionado
+            bankSelect.addEventListener('change', function() {
+                const selectedOption = bankSelect.options[bankSelect.selectedIndex];
+                const bancoNome = selectedOption.getAttribute('data-name'); // Obtém o nome do banco
+                bancoNomeInput.value = bancoNome || ''; // Atualiza o valor do campo oculto
+            });
+        }
+    });
 </script>
 
 
 
 <script>
-    var hostUrl = "assets/";
+    var hostUrl = "/assets/";
 </script>
 <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-<script src="assets/plugins/global/plugins.bundle.js"></script>
-<script src="assets/js/scripts.bundle.js"></script>
+<script src="/assets/plugins/global/plugins.bundle.js"></script>
+<script src="/assets/js/scripts.bundle.js"></script>
 <!--end::Global Javascript Bundle-->
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="assets/js/custom/apps/customers/list/export.js"></script>
-<script src="assets/js/custom/apps/bancos/bancos.js"></script>
-<script src="assets/js/custom/apps/customers/add.js"></script>
-<script src="assets/js/widgets.bundle.js"></script>
-<script src="assets/js/custom/apps/chat/chat.js"></script>
-<script src="assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/assets/js/custom/apps/customers/list/export.js"></script>
+<script src="/assets/js/custom/apps/bancos/bancos.js"></script>
+<script src="/assets/js/custom/apps/customers/add.js"></script>
+<script src="/assets/js/widgets.bundle.js"></script>
+<script src="/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->

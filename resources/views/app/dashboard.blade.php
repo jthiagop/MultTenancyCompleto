@@ -335,5 +335,5 @@
         });
     });
 </script>
-</div>
+
 <!--end::Toolbar-->

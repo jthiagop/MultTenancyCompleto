@@ -18219,7 +18219,7 @@ S2.define('select2/i18n/en',[],function () {
       return message;
     },
     noResults: function () {
-      return 'Nenhum resultado encontrado';
+      return 'Nenhum resultado encontrado.';
     },
     searching: function () {
       return 'Searching…';

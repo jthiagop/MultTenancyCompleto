@@ -26,32 +26,81 @@ var KTAppEcommerceReportShipping = function () {
         });
     }
 
-    // Inicializa o date range picker
-    var initDaterangepicker = () => {
-        var start = moment().subtract(29, "days");
-        var end = moment();
-        var input = $("#kt_ecommerce_report_shipping_daterangepicker");
+    // // Inicializa o date range picker
+    // var initDaterangepicker = () => {
+    //     var start = moment().subtract(29, "days");
+    //     var end = moment();
+    //     var input = $("#kt_ecommerce_report_shipping_daterangepicker");
 
-        function cb(start, end) {
-            input.val(start.format("MMMM D, YYYY") + " - " + end.format("MMMM D, YYYY"));
-            filterByDateRange(start, end);
-        }
+    //     function cb(start, end) {
+    //         input.val(start.format("MMMM D, YYYY") + " - " + end.format("MMMM D, YYYY"));
+    //         filterByDateRange(start, end);
+    //     }
 
-        input.daterangepicker({
-            startDate: start,
-            endDate: end,
-            ranges: {
-                "Hoje": [moment(), moment()],
-                "Ontem": [moment().subtract(1, "days"), moment().subtract(1, "days")],
-                "Últimos 7 Dias": [moment().subtract(6, "days"), moment()],
-                "Últimos 30 Dias": [moment().subtract(29, "days"), moment()],
-                "Este Mês": [moment().startOf("month"), moment().endOf("month")],
-                "Mês Passado": [moment().subtract(1, "month").startOf("month"), moment().subtract(1, "month").endOf("month")]
-            }
-        }, cb);
+    //     input.daterangepicker({
+    //         startDate: start,
+    //         endDate: end,
+    //         ranges: {
+    //             "Hoje": [moment(), moment()],
+    //             "Ontem": [moment().subtract(1, "days"), moment().subtract(1, "days")],
+    //             "Últimos 7 Dias": [moment().subtract(6, "days"), moment()],
+    //             "Últimos 30 Dias": [moment().subtract(29, "days"), moment()],
+    //             "Este Mês": [moment().startOf("month"), moment().endOf("month")],
+    //             "Mês Passado": [moment().subtract(1, "month").startOf("month"), moment().subtract(1, "month").endOf("month")]
+    //         }
+    //     }, cb);
 
-        cb(start, end);
+    //     cb(start, end);
+    // }
+    // Inicializar o DateRangePicker
+var initDaterangepicker = function () {
+    // Configura a localidade para português do Brasil
+    moment.locale('pt-br');
+
+    // Configuração inicial do intervalo de datas
+    var start = moment().subtract(29, "days");
+    var end = moment();
+    var input = $("#kt_ecommerce_report_shipping_daterangepicker");
+
+    // Callback para exibir o intervalo selecionado
+    function cb(start, end) {
+        input.html(start.format("DD/MM/YYYY") + " - " + end.format("DD/MM/YYYY"));
+        filterByDateRange(start, end);
     }
+
+    // Inicializar o DateRangePicker com opções de intervalo
+    input.daterangepicker({
+        startDate: start,
+        endDate: end,
+        ranges: {
+            "Hoje": [moment(), moment()],
+            "Ontem": [moment().subtract(1, "days"), moment().subtract(1, "days")],
+            "Últimos 7 Dias": [moment().subtract(6, "days"), moment()],
+            "Últimos 30 Dias": [moment().subtract(29, "days"), moment()],
+            "Este Mês": [moment().startOf("month"), moment().endOf("month")],
+            "Mês Passado": [moment().subtract(1, "month").startOf("month"), moment().subtract(1, "month").endOf("month")]
+        },
+        locale: {
+            format: "DD/MM/YYYY", // Define o formato padrão para o picker
+            applyLabel: "Aplicar",
+            cancelLabel: "Cancelar",
+            fromLabel: "De",
+            toLabel: "Até",
+            customRangeLabel: "Personalizado",
+            weekLabel: "S",
+            daysOfWeek: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+            monthNames: [
+                "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+            ],
+            firstDay: 0 // Início da semana no domingo
+        }
+    }, cb);
+
+    // Executa o callback inicial para definir o valor padrão
+    cb(start, end);
+};
+
 
     // Filtra pelo intervalo de datas
     var filterByDateRange = (start, end) => {

@@ -17,7 +17,8 @@
         "sopamo/laravel-filepond": "^1.4",
         "spatie/laravel-permission": "^6.9",
         "stancl/tenancy": "*",
-        "webpatser/laravel-uuid": "^4.0"
+        "webpatser/laravel-uuid": "^4.0",
+        "yoeunes/toastr": "*"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.13",
@@ -35,7 +36,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/Helpers/FileHelper.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

@@ -40,7 +40,6 @@ class CadastroBancoController extends Controller
     public function store(Request $request)
     {
         $subsidiaryId = User::getCompany();
-
         // Validação dos dados
         $validator = Validator::make($request->all(), [
             'banco' => 'required|string|max:255', // Nome do banco, obrigatório e deve ser uma string
@@ -63,7 +62,7 @@ class CadastroBancoController extends Controller
         $validatedData['created_by'] = $user->id; // ID do usuário autenticado
         $caixa = CadastroBanco::create($validatedData);
 
-        return redirect()->route('cadastroBancos.index');
+        return redirect()->route('cadastroBancos.index')->with('success', 'Banco adicionada com sucesso!');
     }
 
     /**

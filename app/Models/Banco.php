@@ -18,6 +18,7 @@ class Banco extends Model
         'valor',
         'tipo', // assume que tipo só pode ser "entrada" ou "saida"
         'lancamento_padrao',
+        'lancamento_padrao_id',
         'centro',
         'tipo_documento',
         'numero_documento',
@@ -26,6 +27,8 @@ class Banco extends Model
         'origem',
         'created_by',
         'updated_by',
+        'comprovacao_fiscal',
+        'movimentacao_id',
     ];
 
     public function anexos()
@@ -38,6 +41,18 @@ class Banco extends Model
         return $this->belongsTo(CadastroBanco::class, 'banco_id');
     }
 
+    public function movimentacao()
+    {
+        return $this->belongsTo(Movimentacao::class, 'movimentacao_id');
+    }
+
+
+    // Relacionamento com o lançamento padrão
+    public function lancamentoPadrao()
+    {
+        return $this->belongsTo(LancamentoPadrao::class, 'lancamento_padrao_id');
+    }
+
     static public function getBancoList()
     {
         $userId = auth()->user()->id; // Recupere o ID do usuário logado
@@ -48,6 +63,15 @@ class Banco extends Model
             ->get();
 
         return $entradas;
+    }
+
+    static public function getEntidadesBanco()
+    {
+        $companyId = auth()->user()->company_id; // Recupere a empresa do usuário logado
+
+        return EntidadeFinanceira::where('tipo', 'banco') // Filtra apenas pelo tipo banco
+            ->where('company_id', $companyId) // Filtra pela empresa do usuário
+            ->get();
     }
 
     static public function getBancoEntrada()

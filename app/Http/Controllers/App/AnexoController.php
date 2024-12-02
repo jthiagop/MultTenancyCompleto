@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Validator;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class AnexoController extends Controller
 {
@@ -34,15 +35,47 @@ class AnexoController extends Controller
      */
     public function store(Request $request)
     {
-        $data = $request->all();
-        $data['created_by'] = Auth::id();
-        $data['updated_by'] = Auth::id();
+        // Registrar todos os dados recebidos no log (para depuração)
+        Log::info('Dados recebidos no request:', $request->all());
 
-        Anexo::create($data);
+        if ($request->has('caixa_id')) {
+            Log::info('Caixa ID:', ['caixa_id' => $request->input('caixa_id')]);
+        } elseif ($request->has('banco_id')) {
+            Log::info('Banco ID:', ['banco_id' => $request->input('banco_id')]);
+        } else {
+            Log::warning('Nenhum ID foi enviado na requisição.');
+        }
 
-        return redirect()->route('caixa.index');
 
+        // Verifica se um arquivo foi enviado
+        if ($request->hasFile('file')) {
+            $file = $request->file('file');
+
+            // Armazenar o arquivo no diretório 'anexos' dentro de 'public'
+            $caminhoArquivo = $file->store('anexos', 'public');
+
+            // Salvar os detalhes do arquivo no banco de dados
+            $anexo = Anexo::create([
+                'caixa_id' => $request->input('caixa_id'), // ID do caixa relacionado
+                'banco_id' => $request->input('banco_id'), // ID opcional do banco
+                'nome_arquivo' => $file->getClientOriginalName(),
+                'caminho_arquivo' => $caminhoArquivo, // Caminho do arquivo armazenado
+                'size' => $file->getSize(), // Tamanho do arquivo
+                'created_by' => auth()->id(), // ID do usuário autenticado
+                'updated_by' => auth()->id(), // ID do usuário autenticado
+            ]);
+
+            // Retornar resposta de sucesso
+            return response()->json([
+                'message' => 'Arquivo enviado com sucesso!',
+                'file_path' => $caminhoArquivo,
+            ], 200);
+        }
+
+        // Caso nenhum arquivo tenha sido enviado
+        return response()->json(['message' => 'Nenhum arquivo foi enviado'], 400);
     }
+
 
     public function update(Request $request, $id)
 {

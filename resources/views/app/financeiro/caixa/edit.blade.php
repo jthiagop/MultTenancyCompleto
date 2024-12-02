@@ -113,31 +113,42 @@
 
                     <!--begin::Modal - Confirmar Exclusão-->
 
-    <div class="modal fade" id="kt_modal_delete_card" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Confirmar Exclusão</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"
-                        aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    Tem certeza que deseja excluir o registro: {{ $caixa->id }}?
-                </div>
-                <div class="modal-footer">
-                    <form id="delete-form" method="POST" action="{{ route('caixa.destroy', $caixa->id) }}">
-                        @csrf
-                        @method('DELETE')
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-danger">
-                            <i class="fas fa-trash-alt me-2"></i> Confirmar Exclusão
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!--end::Modal - Confirmar Exclusão-->
+                    <div class="modal fade" id="kt_modal_delete_card" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered">
+                            <div class="modal-content">
+                                <!-- Cabeçalho -->
+                                <div class="modal-header">
+                                    <h5 class="modal-title text-danger fw-bold">Confirmar Exclusão</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+
+                                <!-- Corpo -->
+                                <div class="modal-body text-center">
+                                    <i class="bi bi-exclamation-circle-fill text-danger fs-2 mb-4"></i>
+                                    <p class="mb-0 fs-5 fw-semibold text-center">
+                                        Tem certeza que deseja excluir o registro <strong>#{{ $caixa->id }}</strong>?
+                                    </p>
+                                    <small class="text-muted d-block mt-3">
+                                        Esta ação não pode ser desfeita.
+                                    </small>
+                                </div>
+
+                                <!-- Rodapé -->
+                                <div class="modal-footer justify-content-center">
+                                    <form id="delete-form" method="POST" action="{{ route('caixa.destroy', $caixa->id) }}">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-danger px-4">
+                                            <i class="fas fa-trash-alt me-2"></i> Confirmar Exclusão
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                    <!--end::Modal - Confirmar Exclusão-->
 
 
                 <!--begin::Content-->
@@ -177,14 +188,25 @@
                                         <!--begin::Section-->
                                         <div class="mb-10">
                                             <!--begin::Title-->
-                                            <h5 class="mb-4">Dados da Cobrança: @if ($caixa->tipo === 'entrada')
+                                            <h5 class="mb-4">
+                                                Dados da Cobrança:
+                                                @if ($caixa->tipo === 'entrada')
                                                     <span class="text-success">#{{ $caixa->id }}</span>
                                                 @elseif($caixa->tipo === 'saida')
                                                     <span class="text-danger">#{{ $caixa->id }}</span>
                                                 @else
                                                     <span class="text-secondary">#{{ $caixa->id }}</span>
                                                 @endif
+
+                                                @if ($caixa->comprovacao_fiscal == 1)
+                                                    <!-- Ícone em amarelo -->
+                                                    <span alt="Lançamento com Comprovação Fiscal" title="Lançamento com Comprovação Fiscal" class="svg-icon svg-icon-1 ms-5" style="width: 50px; height: 50px;"><svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><g fill="none" stroke="#00faa7" stroke-width="1.5"><path d="M12 16c-5.76 0-6.78-5.74-6.96-10.294c-.051-1.266-.076-1.9.4-2.485c.475-.586 1.044-.682 2.183-.874A26.4 26.4 0 0 1 12 2c1.784 0 3.253.157 4.377.347c1.139.192 1.708.288 2.184.874s.45 1.219.4 2.485C18.781 10.26 17.761 16 12.001 16Z"/><path stroke-linecap="round" d="M12 16v3"/><path stroke-linecap="round" stroke-linejoin="round" d="M15.5 22h-7l.34-1.696a1 1 0 0 1 .98-.804h4.36a1 1 0 0 1 .98.804z"/><path d="m19 5l.949.316c.99.33 1.485.495 1.768.888S22 7.12 22 8.162v.073c0 .86 0 1.291-.207 1.643s-.584.561-1.336.98L17.5 12.5M5 5l-.949.316c-.99.33-1.485.495-1.768.888S2 7.12 2 8.162v.073c0 .86 0 1.291.207 1.643s.584.561 1.336.98L6.5 12.5m4.646-6.477C11.526 5.34 11.716 5 12 5s.474.34.854 1.023l.098.176c.108.194.162.29.246.354c.085.064.19.088.4.135l.19.044c.738.167 1.107.25 1.195.532s-.164.577-.667 1.165l-.13.152c-.143.167-.215.25-.247.354s-.021.215 0 .438l.02.203c.076.785.114 1.178-.115 1.352c-.23.174-.576.015-1.267-.303l-.178-.082c-.197-.09-.295-.135-.399-.135s-.202.045-.399.135l-.178.082c-.691.319-1.037.477-1.267.303s-.191-.567-.115-1.352l.02-.203c.021-.223.032-.334 0-.438s-.104-.187-.247-.354l-.13-.152c-.503-.588-.755-.882-.667-1.165c.088-.282.457-.365 1.195-.532l.19-.044c.21-.047.315-.07.4-.135c.084-.064.138-.16.246-.354z"/><path stroke-linecap="round" d="M18 22H6"/></g></svg> </span>
+                                                    @else
+                                                    <!-- Ícone em vermelho -->
+                                                    <span alt="Lançamento sem Comprovação Fiscal" title="Lançamento sem Comprovação Fiscal"  class="svg-icon svg-icon-1 ms-5" style="width: 50px; height: 50px;"> <svg xmlns="http://www.w3.org/2000/svg" width="1em" height="1em" viewBox="0 0 24 24"><path fill="#fa0000" fill-rule="evenodd" d="M12 1.25c-1.828 0-3.339.161-4.502.357l-.134.023c-1.01.169-1.85.31-2.507 1.118c-.42.519-.557 1.08-.588 1.705l-.492.164c-.463.154-.87.29-1.191.44c-.348.162-.667.37-.911.709s-.341.707-.385 1.088c-.04.353-.04.78-.04 1.269v.145c0 .402 0 .757.03 1.054c.032.321.103.634.28.936c.179.303.417.517.683.701c.245.17.555.343.907.538l2.64 1.467c.54 1.061 1.281 2.007 2.3 2.69c.887.596 1.952.97 3.213 1.069a.8.8 0 0 0-.053.277v1.75H9.82a1.75 1.75 0 0 0-1.716 1.407l-.219 1.093H6a.75.75 0 0 0 0 1.5h12a.75.75 0 0 0 0-1.5h-1.885l-.219-1.093a1.75 1.75 0 0 0-1.716-1.407h-1.43V17a.8.8 0 0 0-.053-.277c1.261-.1 2.326-.473 3.213-1.068c1.02-.684 1.76-1.63 2.3-2.691l2.64-1.467c.352-.195.662-.368.907-.538c.265-.184.504-.398.682-.7c.178-.303.25-.616.281-.937c.03-.297.03-.652.03-1.054v-.145c0-.488 0-.916-.04-1.269c-.044-.381-.14-.75-.385-1.088c-.244-.339-.563-.547-.91-.71c-.323-.15-.729-.285-1.192-.439l-.492-.164c-.03-.626-.167-1.186-.588-1.705c-.656-.809-1.496-.95-2.506-1.118l-.135-.023A27 27 0 0 0 12 1.25m2.585 20l-.16-.799a.25.25 0 0 0-.245-.201H9.82a.25.25 0 0 0-.245.201l-.16.799zM4.288 6.028l.014-.005c.072 1.52.243 3.2.671 4.77l-1.066-.591c-.389-.217-.633-.353-.809-.475c-.162-.113-.215-.18-.244-.23c-.03-.05-.062-.128-.082-.324a11 11 0 0 1-.022-.938v-.073c0-.539.001-.88.03-1.138c.028-.238.072-.327.112-.381c.039-.055.109-.125.326-.226c.236-.11.56-.219 1.07-.39m15.41-.005c-.071 1.52-.243 3.2-.67 4.77l1.065-.591c.389-.217.633-.353.809-.475c.162-.113.215-.18.244-.23c.03-.05.062-.128.082-.324c.021-.214.022-.493.022-.938v-.073c0-.539-.001-.88-.03-1.138c-.028-.238-.072-.327-.112-.381c-.039-.055-.109-.125-.326-.226c-.236-.11-.56-.219-1.07-.39zM7.748 3.086A25.6 25.6 0 0 1 12 2.75c1.74 0 3.167.153 4.252.336c1.207.204 1.46.28 1.727.608c.262.322.287.628.233 1.983c-.09 2.258-.388 4.696-1.31 6.55c-.456.914-1.052 1.662-1.827 2.182c-.771.517-1.766.841-3.075.841s-2.303-.324-3.074-.841c-.776-.52-1.372-1.268-1.827-2.183c-.923-1.853-1.22-4.29-1.31-6.55c-.054-1.354-.03-1.66.233-1.982c.266-.328.519-.404 1.726-.608" clip-rule="evenodd"/></svg> </span>
+                                                @endif
                                             </h5>
+
                                             <!--end::Title-->
                                             <!--begin::Details-->
                                             <div class="d-flex flex-wrap py-5">
@@ -324,7 +346,7 @@
                                                     <!--end::Svg Icon-->
                                                     <input type="text" data-kt-filemanager-table-filter="search"
                                                         class="form-control form-control-solid w-250px ps-15"
-                                                        placeholder="Search Files & Folders" />
+                                                        placeholder="Pesquisar Arquivos" />
                                                 </div>
                                                 <!--end::Search-->
                                             </div>
@@ -335,7 +357,7 @@
                                                     data-kt-filemanager-table-toolbar="base">
 
                                                     <!--begin::Export-->
-                                                    <button   type="button" class="btn btn-light-primary me-3"
+                                                    <button disabled   type="button" class="btn btn-light-primary me-3"
                                                         id="kt_file_manager_new_folder">
                                                         <!--begin::Svg Icon | path: icons/duotune/files/fil013.svg-->
                                                         <span class="svg-icon svg-icon-2">
@@ -459,7 +481,7 @@
                                                         </td>
                                                         <!--end::Name=-->
                                                         <!--begin::Size-->
-                                                        <td>489 KB</td>
+                                                        <td>{{ formatSizeUnits($file->size) }}</td>
                                                         <!--end::Size-->
                                                         <!--begin::Last modified-->
                                                         <td>{{ $file->updated_at->format('d M Y, g:i a') }}</td>
@@ -607,8 +629,9 @@
                                                                         <!--begin::Menu item-->
                                                                         <div class="menu-item px-3">
                                                                             <a href="#"
-                                                                                class="menu-link text-danger px-3"
-                                                                                data-kt-filemanager-table-filter="delete_row">Delete</a>
+                                                                            class="menu-link text-danger px-3"
+                                                                            data-kt-filemanager-table-filter="delete_row"
+                                                                            data-file-id="{{ $file->id }}">Excluir</a>
                                                                         </div>
                                                                         <!--end::Menu item-->
                                                                     </div>

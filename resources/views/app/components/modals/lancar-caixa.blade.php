@@ -159,8 +159,23 @@
                                     <!--end::Input-->
                                 </div>
                                 <!--end::Col-->
+                                <div class="col-md-2 fv-row">
+                                    <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
+                                        <span class="required">Entidade</span>
+                                        <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                        title="Entidades financeiras representam pontos de controle financeiro, como caixas, bancos, dízimos, coletas ou doações. Elas são utilizadas para organizar e monitorar as entradas e saídas de recursos financeiros, ajudando na gestão eficiente e na geração de relatórios gerenciais."></i>
+                                    </label>
+                                    <select name="entidade_id" id="entidade_id" data-dropdown-css-class="w-200px" class="form-select form-select-solid" data-control="select" required>
+                                        @foreach ($entidades as $entidade)
+                                            <option value="{{ $entidade->id }}">{{ $entidade->nome }} ({{ ucfirst($entidade->tipo) }})</option>
+                                        @endforeach
+                                    </select>
+                                    @error('entidade_id')
+                                        <div class="text-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
                                 <!--begin::Col-->
-                                <div class="col-md-7 fv-row">
+                                <div class="col-md-5 fv-row">
                                     <!--begin::Label-->
                                     <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
                                         <span class="">Descrição</span>
@@ -335,14 +350,12 @@
                                 <!-- Novo campo de entrada para o banco de depósito -->
                                 <div class="col-md-4 fv-row" id="banco-deposito" style="display:none;">
                                     <label class=" fs-5 fw-semibold mb-2">Banco de Depósito</label>
-                                    <select id="bancoSelect" name="banco_id" aria-label="Select a Banco"
+                                    <select id="bancoSelect" name="entidade_banco_id" aria-label="Select a Banco"
                                         data-control="select2" data-placeholder="Escolha um banco..."
                                         class="form-select form-select-solid">
                                         <option value=""></option>
-                                        @foreach ($bancos as $banco)
-                                            <option data-banco-code="{{ $banco->banco }}"
-                                                value="{{ $banco->id }}">{{ $banco->banco }} -
-                                                {{ $banco->name }}/{{ $banco->conta }}</option>
+                                        @foreach ($entidadesBanco as $entidade)
+                                            <option value="{{ $entidade->id }}">{{ $entidade->nome }} ({{ ucfirst($entidade->tipo) }})</option>
                                         @endforeach
                                     </select>
                                 </div>
@@ -356,14 +369,18 @@
                                     <div class="fs-7 fw-semibold text-muted">Documentos que comprovam transações financeiras</div>
                                 </div>
                                 <!--end::Label-->
-
+                                <!-- Input Hidden para garantir o envio de "0" quando desmarcado -->
+                                <input type="hidden" name="comprovacao_fiscal" value="0">
                                 <!--begin::Switch-->
                                 <label class="form-check form-switch form-check-custom form-check-solid">
-                                    <input class="form-check-input" type="checkbox"
-                                        checked="checked" />
-                                    <span class="form-check-label fw-semibold text-muted">
-
-                                    </span>
+                                    <!-- Checkbox para enviar 1 quando marcado -->
+                                    <input
+                                        class="form-check-input"
+                                        type="checkbox"
+                                        name="comprovacao_fiscal"
+                                        value="1"
+                                    />
+                                    <span class="form-check-label fw-semibold text-muted">Possui Nota</span>
                                 </label>
                                 <!--end::Switch-->
                             </div>
@@ -449,4 +466,6 @@
     <!--end::Modal dialog-->
 </div>
 
-<script></script>
+<script>
+    var lpsData = @json($lps);
+</script>

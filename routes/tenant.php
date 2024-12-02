@@ -14,6 +14,7 @@ use App\Http\Controllers\App\TenantFilialController;
 use App\Http\Controllers\App\CaixaController;
 use App\Http\Controllers\App\LancamentoPadraoController;
 use App\Http\Controllers\App\CadastroBancoController;
+use App\Http\Controllers\App\EntidadeFinanceiraController;
 use App\Http\Controllers\App\FielController;
 use App\Http\Controllers\App\NamePatrimonioController;
 use App\Http\Controllers\App\PatrimonioController;
@@ -144,6 +145,9 @@ Route::middleware([
             Route::get('/prestacao-de-contas', [PrestacaoDeContaController::class, 'index'])->name('relatorios.prestacao.de.contas');
 
             Route::resource('fieis', FielController::class);
+
+            Route::resource('entidades', EntidadeFinanceiraController::class);
+            Route::post('entidades/{id}/movimentacao', [EntidadeFinanceiraController::class, 'addMovimentacao'])->name('entidades.movimentacao');
 
             });
         });

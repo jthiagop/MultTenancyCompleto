@@ -1,8 +1,7 @@
-<!-- DataTables CSS -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/dataTables.bootstrap5.min.css">
-<!-- DateRangePicker CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css">
+<link href="https://kendo.cdn.telerik.com/themes/8.0.1/default/default-main.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
+<script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
 
 <x-tenant-app-layout>
 
@@ -34,19 +33,11 @@
                             <!--end::Item-->
                             <!--begin::Item-->
                             <li class="breadcrumb-item text-muted">
-                                <a href="{{ route('caixa.index') }}" class="text-muted text-hover-primary">Financeiro</a>
+                                <a href="{{ route('caixa.index') }}"
+                                    class="text-muted text-hover-primary">Financeiro</a>
                             </li>
                             <!--end::Item-->
-                            <!--begin::Item-->
-                            <li class="breadcrumb-item">
-                                <span class="bullet bg-gray-400 w-5px h-2px"></span>
-                            </li>
-                            <!--end::Item-->
-                            <!--begin::Item-->
-                            <li class="breadcrumb-item text-muted">
-                                <a href="{{ route('caixa.create') }}" class="text-muted text-hover-primary">Lançamento caixa</a>
-                            </li>
-                            <!--end::Item-->
+
                             <!--begin::Item-->
                             <li class="breadcrumb-item">
                                 <span class="bullet bg-gray-400 w-5px h-2px"></span>
@@ -75,10 +66,14 @@
                             <!--begin::Details-->
                             <div class="d-flex flex-wrap flex-sm-nowrap mb-6">
                                 <!--begin::Image-->
-                                <div class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-                                    <svg version="1.1" id="_x34_" width="100" height="100" id="_x34_" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 512 512" xml:space="preserve" fill="#000000">
+                                <div
+                                    class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
+                                    <svg version="1.1" id="_x34_" width="100" height="100" id="_x34_"
+                                        xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                        viewBox="0 0 512 512" xml:space="preserve" fill="#000000">
                                         <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round"></g>
+                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round" stroke-linejoin="round">
+                                        </g>
                                         <g id="SVGRepo_iconCarrier">
                                             <g>
                                                 <path
@@ -167,20 +162,26 @@
                                             </div>
                                             <!--end::Status-->
                                             <!--begin::Description-->
-                                            <div class="d-flex flex-wrap fw-semibold mb-4 fs-5 text-gray-400">Todos os lançamentos relacionados ao Caixa</div>
+                                            <div class="d-flex flex-wrap fw-semibold mb-4 fs-5 text-gray-400">Todos os
+                                                lançamentos relacionados ao Caixa</div>
                                             <!--end::Description-->
                                         </div>
                                         <!--end::Details-->
                                         <!--begin::Actions-->
-                                        <div class="d-flex mb-4">
+                                        <div class="d-flex mb-4 align-items-center">
                                             <a href="{{ route('caixa.index') }}"
                                                 class="btn btn-sm btn-bg-light btn-active-color-primary me-3">Financeiro</a>
-                                            <a href="" data-bs-toggle="modal" data-bs-target="#kt_modal_new_target" class="btn btn-sm btn-success me-3">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
-                                                    <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16"/>
-                                                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-                                                  </svg>
-                                                  Lançamento</a>
+                                            <a href="" data-bs-toggle="modal"
+                                                data-bs-target="#kt_modal_new_target"
+                                                class="btn btn-sm btn-success me-3">
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                    fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
+                                                    <path
+                                                        d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
+                                                    <path
+                                                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
+                                                </svg>
+                                                <span>Lançamento</span></a>
                                             <!--begin::Menu-->
                                             <div class="me-0">
                                                 <button
@@ -320,11 +321,12 @@
                                                     </span>
                                                     <!--end::Svg Icon-->
                                                     <div class="fs-4 fw-bold" data-kt-countup="true"
-                                                        data-kt-countup-value="{{ $valorSaidas }} "data-kt-countup-prefix="R$ ">0</div>
+                                                        data-kt-countup-value="{{ $valorSaidas }} "data-kt-countup-prefix="R$ ">
+                                                        0</div>
                                                 </div>
                                                 <!--end::Number-->
                                                 <!--begin::Label-->
-                                                <div class="fw-semibold fs-6 text-gray-400" >Saída</div>
+                                                <div class="fw-semibold fs-6 text-gray-400">Saída</div>
                                                 <!--end::Label-->
                                             </div>
                                             <!--end::Stat-->
@@ -352,7 +354,8 @@
                                                 </div>
                                                 <!--end::Number-->
                                                 <!--begin::Label-->
-                                                <div class="fw-semibold fs-6 text-gray-400" data-kt-countup-prefix="R$ ">Entrada</div>
+                                                <div class="fw-semibold fs-6 text-gray-400"
+                                                    data-kt-countup-prefix="R$ ">Entrada</div>
                                                 <!--end::Label-->
                                             </div>
                                             <!--end::Stat-->
@@ -473,7 +476,8 @@
                             <!--begin::Card toolbar-->
                             <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
                                 <!--begin::Daterangepicker-->
-                                <input class="form-control form-control-solid w-100 mw-250px" placeholder="Pick date range" id="kt_ecommerce_report_shipping_daterangepicker" />
+                                <input class="form-control form-control-solid w-100 mw-250px"
+                                    placeholder="Pick date range" id="kt_ecommerce_report_shipping_daterangepicker" />
 
                                 <!--end::Daterangepicker-->
                                 <!--begin::Filter-->
@@ -565,77 +569,97 @@
                                 <tbody class="fw-semibold text-gray-600">
                                     <!--begin::Table row-->
                                     @foreach ($caixas as $caixa)
-                                    <tr>
-                                        <!--begin::User=-->
-                                        <td>{{ $caixa->id }}</td>
-                                        <!--end::User=-->
-                                        <!--begin::Role=-->
-                                        <td>{{ date(' d-m-Y', strtotime($caixa->data_competencia)) }}</td>
-                                        <!--end::Role=-->
-                                        <!--begin::Last login=-->
-                                        <td>{{ $caixa->tipo_documento }}</td>
-                                        <!--end::Last login=-->
-                                        <!--begin::Two step=-->
-                                        <td>{{ $caixa->lancamentoPadrao->caixas ? $caixa->lancamentoPadrao->description : 'N/A' }}</td>
-                                        <!--end::Two step=-->
-                                        <!--begin::Joined-->
-                                        <td>
-                                            <div
-                                                class="badge fw-bold {{ $caixa->tipo == 'entrada' ? 'badge-success' : 'badge-danger' }}">
-                                                {{ $caixa->tipo }}
-                                            </div>
-                                        </td>
-                                        <!--begin::Joined-->
-                                        <td>R$ {{ number_format($caixa->valor, 2, ',', '.') }}</td>
-                                        <td class="text-center">{{ $caixa->origem }}</td>
-                                        <!--begin::Action=-->
-                                        <td class="text-end">
-                                            <a href="#"
-                                                class="btn btn-light btn-active-light-primary btn-sm"
-                                                data-kt-menu-trigger="click"
-                                                data-kt-menu-placement="bottom-end">Ações
-                                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
-                                                <span class="svg-icon svg-icon-5 m-0">
-                                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                                        fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <path
-                                                            d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z"
-                                                            fill="currentColor" />
-                                                    </svg>
-                                                </span>
-                                                <!--end::Svg Icon--></a>
-                                            <!--begin::Menu-->
-                                            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
-                                                data-kt-menu="true">
-                                                <!--begin::Menu item-->
-                                                <div class="menu-item px-3">
-                                                    <a href="{{ route('caixa.edit', $caixa->id) }}"
-                                                        class="menu-link px-3">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-pencil-square" viewBox="0 0 16 16">
-                                                            <path d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z"/>
-                                                            <path fill-rule="evenodd" d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z"/>
-                                                          </svg>
-                                                        Editar</a>
-                                                    <a href="#" class="menu-link px-3 delete-link text-danger"
-                                                        data-id="{{ $caixa->id }}">
-                                                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash3" viewBox="0 0 16 16">
-                                                            <path d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5"/>
-                                                          </svg>
-                                                        Excluir</a>
-                                                    <form id="delete-form-{{ $caixa->id }}"
-                                                        action="{{ route('caixa.destroy', $caixa->id) }}"
-                                                        method="POST" style="display: none;">
-                                                        @csrf
-                                                        @method('DELETE')
-                                                    </form>
+                                        <tr>
+                                            <!--begin::User=-->
+                                            <td>{{ $caixa->id }}</td>
+                                            <!--end::User=-->
+                                            <!--begin::Role=-->
+                                            <td>{{ date(' d-m-Y', strtotime($caixa->data_competencia)) }}</td>
+                                            <!--end::Role=-->
+                                            <!--begin::Last login=-->
+                                            <td>{{ $caixa->tipo_documento }}</td>
+                                            <!--end::Last login=-->
+                                            <!--begin::Two step=-->
+                                            <td>{{ $caixa->lancamentoPadrao->caixas ? $caixa->lancamentoPadrao->description : 'N/A' }}
+                                            </td>
+                                            <!--end::Two step=-->
+                                            <!--begin::Joined-->
+                                            <td>
+                                                <div
+                                                    class="badge fw-bold {{ $caixa->tipo == 'entrada' ? 'badge-success' : 'badge-danger' }}">
+                                                    {{ $caixa->tipo }}
                                                 </div>
-                                                <!--end::Menu item-->
-                                            </div>
-                                            <!--end::Menu-->
-                                        </td>
-                                        <!--end::Action=-->
-                                    </tr>
-                                @endforeach
+                                            </td>
+                                            <!--begin::Joined-->
+                                            <td>R$ {{ number_format($caixa->valor, 2, ',', '.') }}</td>
+                                            <td class="text-center">{{ $caixa->origem }}</td>
+                                            <!--begin::Action=-->
+                                            <td class="text-end">
+                                                <a href="#"
+                                                    class="btn btn-light btn-active-light-primary btn-sm"
+                                                    data-kt-menu-trigger="click"
+                                                    data-kt-menu-placement="bottom-end">Ações
+                                                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
+                                                    <span class="svg-icon svg-icon-5 m-0">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path
+                                                                d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z"
+                                                                fill="currentColor" />
+                                                        </svg>
+                                                    </span>
+                                                    <!--end::Svg Icon--></a>
+                                                <!--begin::Menu-->
+                                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
+                                                    data-kt-menu="true">
+                                                    <!--begin::Menu item-->
+                                                    <div class="menu-item px-3">
+                                                        <!--begin::Edit Link-->
+                                                        <a href="{{ route('caixa.edit', $caixa->id) }}"
+                                                            class="menu-link px-3 d-flex align-items-center">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16"
+                                                                height="16" fill="currentColor"
+                                                                class="bi bi-pencil-square me-2" viewBox="0 0 16 16">
+                                                                <path
+                                                                    d="M15.502 1.94a.5.5 0 0 1 0 .706L14.459 3.69l-2-2L13.502.646a.5.5 0 0 1 .707 0l1.293 1.293zm-1.75 2.456-2-2L4.939 9.21a.5.5 0 0 0-.121.196l-.805 2.414a.25.25 0 0 0 .316.316l2.414-.805a.5.5 0 0 0 .196-.12l6.813-6.814z" />
+                                                                <path fill-rule="evenodd"
+                                                                    d="M1 13.5A1.5 1.5 0 0 0 2.5 15h11a1.5 1.5 0 0 0 1.5-1.5v-6a.5.5 0 0 0-1 0v6a.5.5 0 0 1-.5.5h-11a.5.5 0 0 1-.5-.5v-11a.5.5 0 0 1 .5-.5H9a.5.5 0 0 0 0-1H2.5A1.5 1.5 0 0 0 1 2.5z" />
+                                                            </svg>
+                                                            <span>Editar</span>
+                                                        </a>
+                                                        <!--end::Edit Link-->
+
+                                                        <!--begin::Delete Link-->
+                                                        <a href="#"
+                                                            class="menu-link px-3 delete-link text-danger d-flex align-items-center"
+                                                            data-id="{{ $caixa->id }}">
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="16"
+                                                                height="16" fill="currentColor"
+                                                                class="bi bi-trash3 me-2" viewBox="0 0 16 16">
+                                                                <path
+                                                                    d="M6.5 1h3a.5.5 0 0 1 .5.5v1H6v-1a.5.5 0 0 1 .5-.5M11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3A1.5 1.5 0 0 0 5 1.5v1H1.5a.5.5 0 0 0 0 1h.538l.853 10.66A2 2 0 0 0 4.885 16h6.23a2 2 0 0 0 1.994-1.84l.853-10.66h.538a.5.5 0 0 0 0-1zm1.958 1-.846 10.58a1 1 0 0 1-.997.92h-6.23a1 1 0 0 1-.997-.92L3.042 3.5zm-7.487 1a.5.5 0 0 1 .528.47l.5 8.5a.5.5 0 0 1-.998.06L5 5.03a.5.5 0 0 1 .47-.53Zm5.058 0a.5.5 0 0 1 .47.53l-.5 8.5a.5.5 0 1 1-.998-.06l.5-8.5a.5.5 0 0 1 .528-.47M8 4.5a.5.5 0 0 1 .5.5v8.5a.5.5 0 0 1-1 0V5a.5.5 0 0 1 .5-.5" />
+                                                            </svg>
+                                                            <span>Excluir</span>
+                                                        </a>
+                                                        <!--end::Delete Link-->
+
+                                                        <!--begin::Delete Form-->
+                                                        <form id="delete-form-{{ $caixa->id }}"
+                                                            action="{{ route('caixa.destroy', $caixa->id) }}"
+                                                            method="POST" style="display: none;">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                        </form>
+                                                        <!--end::Delete Form-->
+                                                    </div>
+                                                    <!--end::Menu item-->
+
+                                                </div>
+                                                <!--end::Menu-->
+                                            </td>
+                                            <!--end::Action=-->
+                                        </tr>
+                                    @endforeach
                                     <!--end::Table row-->
                                 </tbody>
                                 <!--end::Table body-->
@@ -676,45 +700,39 @@
 
 <!-- jQuery -->
 <!-- Bootstrap Bundle (includes Popper) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- DataTables -->
-<!-- Moment.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-<!-- DateRangePicker -->
-<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
 <!-- Custom Script -->
 <script src="/assets/js/custom_script.js"></script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function () {
-    const deleteLinks = document.querySelectorAll('.delete-link');
+    document.addEventListener('DOMContentLoaded', function() {
+        const deleteLinks = document.querySelectorAll('.delete-link');
 
-    deleteLinks.forEach(link => {
-        link.addEventListener('click', function (event) {
-            event.preventDefault();
-            const id = this.getAttribute('data-id');
-            const form = document.getElementById(`delete-form-${id}`);
+        deleteLinks.forEach(link => {
+            link.addEventListener('click', function(event) {
+                event.preventDefault();
+                const id = this.getAttribute('data-id');
+                const form = document.getElementById(`delete-form-${id}`);
 
-            Swal.fire({
-                title: 'Você tem certeza?',
-                text: 'Esta ação não pode ser desfeita!',
-                icon: 'warning',
-                showCancelButton: true,
-                confirmButtonText: 'Sim, exclua!',
-                cancelButtonText: 'Não, cancele',
-                customClass: {
-                    confirmButton: 'btn btn-danger',
-                    cancelButton: 'btn btn-secondary'
-                },
-                buttonsStyling: false
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    form.submit();
-                }
+                Swal.fire({
+                    title: 'Você tem certeza?',
+                    text: 'Esta ação não pode ser desfeita!',
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonText: 'Sim, exclua!',
+                    cancelButtonText: 'Não, cancele',
+                    customClass: {
+                        confirmButton: 'btn btn-danger',
+                        cancelButton: 'btn btn-secondary'
+                    },
+                    buttonsStyling: false
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
             });
         });
     });
-});
 </script>
-

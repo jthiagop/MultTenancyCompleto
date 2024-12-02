@@ -22,8 +22,13 @@ var KTModalUpdateCaixa = function () {
 
         flatpickr('[name="data_competencia"], [name="dataAquisicao"]', {
             enableTime: false,
-            dateFormat: "d/m/Y",
-            locale: "pt"
+            dateFormat: "d/m/Y", // Formato visual
+            locale: "pt",
+            onChange: function (selectedDates, dateStr, instance) {
+                // Formata para ISO 8601 e define o valor real
+                const isoDate = selectedDates[0].toISOString().split('T')[0]; // YYYY-MM-DD
+                instance.input.setAttribute('data-iso', isoDate);
+            }
         });
     };
 
@@ -51,6 +56,10 @@ var KTModalUpdateCaixa = function () {
                         validators: {
                             notEmpty: {
                                 message: 'Data é obrigatória'
+                            },
+                            date: {
+                                format: 'DD/MM/YYYY', // Formato esperado
+                                message: 'Formato de data inválido'
                             }
                         }
                     },
