@@ -12,13 +12,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('caixas', function (Blueprint $table) {
-            // Adiciona a coluna 'lancamento_padrao_id' como chave estrangeira
-            $table->foreignId('lancamento_padrao_id')->nullable()->constrained('lancamento_padraos')->onDelete('set null');
+            $table->bigInteger('lancamento_padrao_id')->nullable();
+            $table->foreign('lancamento_padrao_id')->references('id')->on('lancamento_padraos')->onDelete('set null');
         });
 
         Schema::table('bancos', function (Blueprint $table) {
-            // Adiciona a coluna 'lancamento_padrao_id' como chave estrangeira
-            $table->foreignId('lancamento_padrao_id')->nullable()->constrained('lancamento_padraos')->onDelete('set null');
+            $table->bigInteger('lancamento_padrao_id')->nullable();
+            $table->foreign('lancamento_padrao_id')->references('id')->on('lancamento_padraos')->onDelete('set null');
         });
     }
 
