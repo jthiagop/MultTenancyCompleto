@@ -11,6 +11,7 @@ return new class extends Migration
      */
     public function up()
     {
+        if (!Schema::hasTable('caixas')) {
         Schema::create('caixas', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('company_id'); // Adiciona a coluna company_id
@@ -36,6 +37,7 @@ return new class extends Migration
             $table->foreign('created_by')->references('id')->on('users')->onDelete('set null');
             $table->foreign('updated_by')->references('id')->on('users')->onDelete('set null');
         });
+        }
     }
 
     public function down()
