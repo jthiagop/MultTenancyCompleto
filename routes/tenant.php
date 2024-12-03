@@ -83,7 +83,6 @@ Route::middleware([
             Route::resource('caixa', CaixaController::class);
             Route::resource('users', UserController::class);
 
-            Route::resource('company', CompanyController::class);
 
             Route::resource('telaLogin', TelaDeLoginController::class);
         });
@@ -148,6 +147,9 @@ Route::middleware([
 
             Route::resource('entidades', EntidadeFinanceiraController::class);
             Route::post('entidades/{id}/movimentacao', [EntidadeFinanceiraController::class, 'addMovimentacao'])->name('entidades.movimentacao');
+
+            Route::resource('company', CompanyController::class);
+
 
             });
         });
