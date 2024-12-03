@@ -1093,8 +1093,8 @@
                                                     <div class="menu-item px-3">
                                                         <a href="{{ route('caixa.edit', $caixa->id) }}"
                                                             class="menu-link px-3">Editar</a>
-                                                        <a href="#" class="menu-link px-3 delete-link"
-                                                            data-id="{{ $caixa->id }}">Excluir</a>
+                                                        {{-- <a href="#" class="menu-link px-3 delete-link"
+                                                            data-id="{{ $caixa->id }}">Excluir</a> --}}
                                                         <form id="delete-form-{{ $caixa->id }}"
                                                             action="{{ route('caixa.destroy', $caixa->id) }}"
                                                             method="POST" style="display: none;">

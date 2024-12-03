@@ -629,7 +629,7 @@
                                                         </a>
                                                         <!--end::Edit Link-->
 
-                                                        <!--begin::Delete Link-->
+                                                        {{-- <!--begin::Delete Link-->
                                                         <a href="#"
                                                             class="menu-link px-3 delete-link text-danger d-flex align-items-center"
                                                             data-id="{{ $caixa->id }}">
@@ -641,7 +641,7 @@
                                                             </svg>
                                                             <span>Excluir</span>
                                                         </a>
-                                                        <!--end::Delete Link-->
+                                                        <!--end::Delete Link--> --}}
 
                                                         <!--begin::Delete Form-->
                                                         <form id="delete-form-{{ $caixa->id }}"
