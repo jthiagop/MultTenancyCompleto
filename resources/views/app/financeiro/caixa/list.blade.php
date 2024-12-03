@@ -580,7 +580,7 @@
                                             <td>{{ $caixa->tipo_documento }}</td>
                                             <!--end::Last login=-->
                                             <!--begin::Two step=-->
-                                            <td>{{ $caixa->lancamentoPadrao->description }}
+                                            <td>{{ optional($caixa->lancamentoPadrao)->description  }}
                                             </td>
                                             <!--end::Two step=-->
                                             <!--begin::Joined-->
