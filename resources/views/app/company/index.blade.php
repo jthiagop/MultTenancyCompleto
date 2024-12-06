@@ -11,7 +11,7 @@
                     <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
                         <!--begin::Title-->
                         <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
-                            Project Users</h1>
+                            Administração de Organismcos</h1>
                         <!--end::Title-->
                         <!--begin::Breadcrumb-->
                         <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
@@ -26,7 +26,7 @@
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
-                            <li class="breadcrumb-item text-muted">Projects</li>
+                            <li class="breadcrumb-item text-muted">Organismos</li>
                             <!--end::Item-->
                         </ul>
                         <!--end::Breadcrumb-->
@@ -82,8 +82,8 @@
                                 <!--begin::Image-->
                                 <div
                                     class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-                                    <img class="mw-50px mw-lg-75px" src="assets/media/svg/brand-logos/volicity-9.svg"
-                                        alt="image" />
+                                    <img class="mw-50px mw-lg-75px"
+                                        src="{{ route('file', ['path' => $companyes[0]->avatar]) }}" alt="image" />
                                 </div>
                                 <!--end::Image-->
                                 <!--begin::Wrapper-->
@@ -95,8 +95,9 @@
                                             <!--begin::Status-->
                                             <div class="d-flex align-items-center mb-1">
                                                 <a href="#"
-                                                    class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">CRM
-                                                    Dashboard</a>
+                                                    class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">{{ $companyes[0]->name }}</a>
+
+
                                                 <span class="badge badge-light-success me-auto">In Progress</span>
                                             </div>
                                             <!--end::Status-->
@@ -292,63 +293,33 @@
                                         <!--begin::Users-->
                                         <div class="symbol-group symbol-hover mb-3">
                                             <!--begin::User-->
+                                            @foreach ($company->users->take(6) as $user)
+                                                <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
+                                                    title="{{ $user->name }}">
+                                                    <img alt="{{ $user->name }}"
+                                                            src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
+                                                                    ? route('file', ['path' => $user->avatar])
+                                                                    : '/assets/media/avatars/blank.png' }}" />
+                                                </div>
+                                            @endforeach
+
+                                            @if ($company->users->count() > 6)
+                                                <a href="#" class="symbol symbol-35px symbol-circle" data-bs-toggle="modal" data-bs-target="#kt_modal_view_users" title="Mais {{ $company->users->count() - 5 }} usuários">
+                                                    <span class="symbol-label bg-dark text-inverse-dark fs-8 fw-bold"
+                                                    data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-trigger="hover" title="View more users">
+                                                        +{{ $company->users->count() - 5 }}
+                                                    </span>
+                                                </a>
+                                            @endif
+                                            @if ($company->users->count() < 1)
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                                title="Alan Warden">
-                                                <span
-                                                    class="symbol-label bg-warning text-inverse-warning fw-bold">A</span>
+                                                title="Nenhum usuário cadastrado">
+                                                <span class="symbol-label fs-8 fw-bold bg-light text-gray-800">
+                                                    {{ 0 }}
+                                                </span>
                                             </div>
+                                        @endif
                                             <!--end::User-->
-                                            <!--begin::User-->
-                                            <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                                title="Michael Eberon">
-                                                <img alt="Pic" src="assets/media/avatars/300-11.jpg" />
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                                title="Michelle Swanston">
-                                                <img alt="Pic" src="assets/media/avatars/300-7.jpg" />
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                                title="Francis Mitcham">
-                                                <img alt="Pic" src="assets/media/avatars/300-20.jpg" />
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                                title="Susan Redwood">
-                                                <span
-                                                    class="symbol-label bg-primary text-inverse-primary fw-bold">S</span>
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                                title="Melody Macy">
-                                                <img alt="Pic" src="assets/media/avatars/300-2.jpg" />
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                                title="Perry Matthew">
-                                                <span class="symbol-label bg-info text-inverse-info fw-bold">P</span>
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                                title="Barry Walter">
-                                                <img alt="Pic" src="assets/media/avatars/300-12.jpg" />
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::All users-->
-                                            <a href="#" class="symbol symbol-35px symbol-circle"
-                                                data-bs-toggle="modal" data-bs-target="#kt_modal_view_users">
-                                                <span class="symbol-label bg-dark text-inverse-dark fs-8 fw-bold"
-                                                    data-bs-toggle="tooltip" data-bs-trigger="hover"
-                                                    title="View more users">+42</span>
-                                            </a>
-                                            <!--end::All users-->
                                         </div>
                                         <!--end::Users-->
                                     </div>
@@ -362,8 +333,8 @@
                             <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold">
                                 <!--begin::Nav item-->
                                 <li class="nav-item">
-                                    <a class="nav-link text-active-primary py-5 me-6"
-                                        href="../../demo1/dist/apps/projects/project.html">Overview</a>
+                                    <a class="nav-link text-active-primary py-5 me-6 active"
+                                        href="../../demo1/dist/apps/projects/project.html">Organismos</a>
                                 </li>
                                 <!--end::Nav item-->
                                 <!--begin::Nav item-->
@@ -380,7 +351,7 @@
                                 <!--end::Nav item-->
                                 <!--begin::Nav item-->
                                 <li class="nav-item">
-                                    <a class="nav-link text-active-primary py-5 me-6 active"
+                                    <a class="nav-link text-active-primary py-5 me-6 "
                                         href="../../demo1/dist/apps/projects/users.html">Users</a>
                                 </li>
                                 <!--end::Nav item-->
@@ -515,64 +486,64 @@
                             <!--begin::Row-->
                             <div class="row g-6 g-xl-9">
                                 <!--begin::Col-->
-                                @foreach ($companyes as $company )
-                                <div class="col-md-6 col-xxl-4">
-                                    <!--begin::Card-->
-                                    <div class="card">
-                                        <!--begin::Card body-->
-                                        <div class="card-body d-flex flex-center flex-column pt-12 p-9">
-                                            <!--begin::Avatar-->
-                                            <div class="symbol symbol-65px symbol-circle mb-5">
-                                                @if ($company->avatar && !empty($company->avatar))
-                                                <img src="{{ route('file', ['path' => $company->avatar]) }}"
-                                                    alt="{{ $company->name }}" class="w-100">
-                                            @else
-                                                <img src="assets/media/avatars/300-6.jpg"
-                                                    alt="{{ $company->name }}" class="w-100">
-                                            @endif
-                                                <div
-                                                    class="bg-success position-absolute border border-4 border-body h-15px w-15px rounded-circle translate-middle start-100 top-100 ms-n3 mt-n3">
+                                @foreach ($companyes as $company)
+                                    <div class="col-md-6 col-xxl-4">
+                                        <!--begin::Card-->
+                                        <div class="card">
+                                            <!--begin::Card body-->
+                                            <div class="card-body d-flex flex-center flex-column pt-12 p-9">
+                                                <!--begin::Avatar-->
+                                                <div class="symbol symbol-65px symbol-circle mb-5">
+                                                    @if ($company->avatar && !empty($company->avatar))
+                                                        <img src="{{ route('file', ['path' => $company->avatar]) }}"
+                                                            alt="{{ $company->name }}" class="w-100">
+                                                    @else
+                                                        <img src="/assets/media/avatars/300-6.jpg"
+                                                            alt="{{ $company->name }}" class="w-100">
+                                                    @endif
+                                                    <div
+                                                        class="bg-success position-absolute border border-4 border-body h-15px w-15px rounded-circle translate-middle start-100 top-100 ms-n3 mt-n3">
+                                                    </div>
                                                 </div>
+                                                <!--end::Avatar-->
+                                                <!--begin::Name-->
+                                                <a href="{{ route('company.show', ['company' => $company->id]) }}"
+                                                    class="fs-4 text-gray-800 text-hover-primary fw-bold mb-0">{{ $company->name }}</a>
+                                                <!--end::Name-->
+                                                <!--begin::Position-->
+                                                <div class="fw-semibold text-gray-400 mb-6">{{ $company->email }}.
+                                                </div>
+                                                <!--end::Position-->
+                                                <!--begin::Info-->
+                                                <div class="d-flex flex-center flex-wrap">
+                                                    <!--begin::Stats-->
+                                                    <div
+                                                        class="border border-gray-300 border-dashed rounded min-w-80px py-3 px-4 mx-2 mb-3">
+                                                        <div class="fs-6 fw-bold text-gray-700">$14,560</div>
+                                                        <div class="fw-semibold text-gray-400">Earnings</div>
+                                                    </div>
+                                                    <!--end::Stats-->
+                                                    <!--begin::Stats-->
+                                                    <div
+                                                        class="border border-gray-300 border-dashed rounded min-w-80px py-3 px-4 mx-2 mb-3">
+                                                        <div class="fs-6 fw-bold text-gray-700">23</div>
+                                                        <div class="fw-semibold text-gray-400">Tasks</div>
+                                                    </div>
+                                                    <!--end::Stats-->
+                                                    <!--begin::Stats-->
+                                                    <div
+                                                        class="border border-gray-300 border-dashed rounded min-w-80px py-3 px-4 mx-2 mb-3">
+                                                        <div class="fs-6 fw-bold text-gray-700">$236,400</div>
+                                                        <div class="fw-semibold text-gray-400">Sales</div>
+                                                    </div>
+                                                    <!--end::Stats-->
+                                                </div>
+                                                <!--end::Info-->
                                             </div>
-                                            <!--end::Avatar-->
-                                            <!--begin::Name-->
-                                            <a href="#"
-                                                class="fs-4 text-gray-800 text-hover-primary fw-bold mb-0">{{ $company->name }}</a>
-                                            <!--end::Name-->
-                                            <!--begin::Position-->
-                                            <div class="fw-semibold text-gray-400 mb-6">{{ $company->email }}.
-                                            </div>
-                                            <!--end::Position-->
-                                            <!--begin::Info-->
-                                            <div class="d-flex flex-center flex-wrap">
-                                                <!--begin::Stats-->
-                                                <div
-                                                    class="border border-gray-300 border-dashed rounded min-w-80px py-3 px-4 mx-2 mb-3">
-                                                    <div class="fs-6 fw-bold text-gray-700">$14,560</div>
-                                                    <div class="fw-semibold text-gray-400">Earnings</div>
-                                                </div>
-                                                <!--end::Stats-->
-                                                <!--begin::Stats-->
-                                                <div
-                                                    class="border border-gray-300 border-dashed rounded min-w-80px py-3 px-4 mx-2 mb-3">
-                                                    <div class="fs-6 fw-bold text-gray-700">23</div>
-                                                    <div class="fw-semibold text-gray-400">Tasks</div>
-                                                </div>
-                                                <!--end::Stats-->
-                                                <!--begin::Stats-->
-                                                <div
-                                                    class="border border-gray-300 border-dashed rounded min-w-80px py-3 px-4 mx-2 mb-3">
-                                                    <div class="fs-6 fw-bold text-gray-700">$236,400</div>
-                                                    <div class="fw-semibold text-gray-400">Sales</div>
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::Info-->
+                                            <!--end::Card body-->
                                         </div>
-                                        <!--end::Card body-->
+                                        <!--end::Card-->
                                     </div>
-                                    <!--end::Card-->
-                                </div>
                                 @endforeach
 
                                 <!--end::Col-->
@@ -631,56 +602,103 @@
                                             <!--begin::Head-->
                                             <thead class="fs-7 text-gray-400 text-uppercase">
                                                 <tr>
-                                                    <th class="min-w-250px">Manager</th>
-                                                    <th class="min-w-150px">Date</th>
-                                                    <th class="min-w-90px">Amount</th>
+                                                    <th class="min-w-250px">Entidade</th>
                                                     <th class="min-w-90px">Status</th>
-                                                    <th class="min-w-50px text-end">Details</th>
+                                                    <th class="min-w-150px">Data</th>
+                                                    <th class="min-w-90px">Saldo</th>
+                                                    <th class="min-w-90px">Membros</th>
+                                                    <th class="min-w-90px">Status</th>
+                                                    <th class="min-w-50px text-end">Detalhes</th>
                                                 </tr>
                                             </thead>
                                             <!--end::Head-->
                                             <!--begin::Body-->
                                             <tbody class="fs-6">
                                                 <tr>
-                                                    @foreach ($companyes as $company )
-                                                    <td>
-                                                        <!--begin::company-->
-                                                        <div class="d-flex align-items-center">
-                                                            <!--begin::Wrapper-->
-                                                            <div class="me-5 position-relative">
-                                                                <!--begin::Avatar-->
-                                                                <div class="symbol symbol-35px symbol-circle">
-                                                                    @if ($company->avatar && !empty($company->avatar))
-                                                                    <img src="{{ route('file', ['path' => $company->avatar]) }}"
-                                                                        alt="{{ $company->name }}" class="w-100">
-                                                                @else
-                                                                    <img src="assets/media/avatars/300-6.jpg"
-                                                                        alt="{{ $company->name }}" class="w-100">
+                                                    @foreach ($companyes as $company)
+                                                        <td>
+                                                            <!--begin::company-->
+                                                            <div class="d-flex align-items-center">
+                                                                <!--begin::Wrapper-->
+                                                                <div class="me-5 position-relative">
+                                                                    <!--begin::Avatar-->
+                                                                    <div class="symbol symbol-35px symbol-circle">
+                                                                        @if ($company->avatar && !empty($company->avatar))
+                                                                            <img src="{{ route('file', ['path' => $company->avatar]) }}"
+                                                                                alt="{{ $company->name }}"
+                                                                                class="w-100">
+                                                                        @else
+                                                                            <img src="/assets/media/avatars/300-6.jpg"
+                                                                                alt="{{ $company->name }}"
+                                                                                class="w-100">
+                                                                        @endif
+                                                                    </div>
+                                                                    <!--end::Avatar-->
+                                                                </div>
+                                                                <!--end::Wrapper-->
+                                                                <!--begin::Info-->
+                                                                <div class="d-flex flex-column justify-content-center">
+                                                                    <a href=""
+                                                                        class="mb-1 text-gray-800 text-hover-primary">{{ $company->name }}</a>
+                                                                    <div class="fw-semibold fs-6 text-gray-400">
+                                                                        {{ $company->email }}
+                                                                    </div>
+                                                                </div>
+                                                                <!--end::Info-->
+                                                            </div>
+                                                            <!--end::User-->
+                                                        </td>
+                                                        <td>{{ $company->type }}</td>
+                                                        <td>{{ $company->created_at->format('d/m/Y') }} </td>
+                                                        <td>$449.00</td>
+                                                        <td>
+                                                            <!--begin::Members-->
+                                                            <div class="symbol-group symbol-hover fs-8">
+                                                                @foreach ($company->users->take(5) as $user)
+                                                                    <div class="symbol symbol-25px symbol-circle"
+                                                                        data-bs-toggle="tooltip"
+                                                                        title="{{ $user->name }}">
+                                                                        <img alt="{{ $user->name }}" src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
+                                                                            ? route('file', ['path' => $user->avatar])
+                                                                            : '/assets/media/avatars/blank.png' }}" />
+                                                                    </div>
+                                                                @endforeach
+
+                                                                @if ($company->users->count() > 5)
+                                                                    <div class="symbol symbol-25px symbol-circle"
+                                                                        data-bs-toggle="tooltip"
+                                                                        title="Mais {{ $company->users->count() - 5 }} usuários">
+                                                                        <span
+                                                                            class="symbol-label fs-8 fw-bold bg-light text-gray-800">
+                                                                            +{{ $company->users->count() - 5 }}
+                                                                        </span>
+                                                                    </div>
                                                                 @endif
-                                                                </div>
-                                                                <!--end::Avatar-->
+                                                                @if ($company->users->count() < 1)
+                                                                    <div class="symbol symbol-25px symbol-circle text-center"
+                                                                        data-bs-toggle="tooltip"
+                                                                        title="Nenhum usuário cadastrado">
+                                                                        <span
+                                                                            class="symbol-label fs-8 fw-bold bg-light text-gray-800">
+                                                                            {{ 0 }}
+                                                                        </span>
+                                                                    </div>
+                                                                @endif
                                                             </div>
-                                                            <!--end::Wrapper-->
-                                                            <!--begin::Info-->
-                                                            <div class="d-flex flex-column justify-content-center">
-                                                                <a href=""
-                                                                    class="mb-1 text-gray-800 text-hover-primary">{{ $company->name }}</a>
-                                                                <div class="fw-semibold fs-6 text-gray-400">max@kt.com
-                                                                </div>
-                                                            </div>
-                                                            <!--end::Info-->
-                                                        </div>
-                                                        <!--end::User-->
-                                                    </td>
-                                                    <td>May 05, 2023</td>
-                                                    <td>$449.00</td>
-                                                    <td>
-                                                        <span
-                                                            class="badge badge-light-danger fw-bold px-4 py-3">{{ $company->status }}</span>
-                                                    </td>
-                                                    <td class="text-end">
-                                                        <a href="#" class="btn btn-light btn-sm">View</a>
-                                                    </td>
+                                                            <!--end::Members-->
+                                                        </td>
+                                                        <td>
+                                                            @if ($company->status === 'active')
+                                                                <span class="badge badge-success">ATIVO</span>
+                                                            @else
+                                                                <span class="badge badge-danger">INATIVO</span>
+                                                            @endif
+                                                        </td>
+                                                        <td class="text-end">
+                                                            <a href="{{ route('company.show', $company->id) }}" class="btn btn-light btn-sm">
+                                                                Ver
+                                                            </a>
+                                                        </td>
                                                 </tr>
                                                 @endforeach
                                             </tbody>
@@ -729,13 +747,10 @@
                                     <!--begin::Heading-->
                                     <div class="text-center mb-13">
                                         <!--begin::Title-->
-                                        <h1 class="mb-3">Browse Users</h1>
+                                        <h1 class="mb-3">Buscar pelos usuários</h1>
                                         <!--end::Title-->
                                         <!--begin::Description-->
-                                        <div class="text-muted fw-semibold fs-5">If you need more info, please check
-                                            out our
-                                            <a href="#" class="link-primary fw-bold">Users Directory</a>.
-                                        </div>
+                                            <div class="text-muted fw-semibold fs-5">Se precisar de mais informações, confira nosso <a href="#" class="link-primary fw-bold">Diretório de Usuários</a>. </div>
                                         <!--end::Description-->
                                     </div>
                                     <!--end::Heading-->
@@ -743,514 +758,47 @@
                                     <div class="mb-15">
                                         <!--begin::List-->
                                         <div class="mh-375px scroll-y me-n7 pe-7">
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <img alt="Pic" src="assets/media/avatars/300-6.jpg" />
-                                                    </div>
-                                                    <!--end::Avatar-->
+                                            @foreach ( $users as $user )
+                                                <!--begin::User-->
+                                                <div class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
                                                     <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Emma
-                                                            Smith
-                                                            <span class="badge badge-light fs-8 fw-semibold ms-2">Art
-                                                                Director</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">smith@kpmg.com</div>
-                                                        <!--end::Email-->
+                                                    <div class="d-flex align-items-center">
+                                                        <!--begin::Avatar-->
+                                                        <div class="symbol symbol-35px symbol-circle">
+                                                            <img alt="{{ $user->name }}"
+                                                            src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
+                                                                    ? route('file', ['path' => $user->avatar])
+                                                                    : '/assets/media/avatars/blank.png' }}" />
+                                                        </div>
+                                                        <!--end::Avatar-->
+                                                        <!--begin::Details-->
+                                                        <div class="ms-6">
+                                                            <!--begin::Name-->
+                                                            <a href="#"
+                                                                class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">{{ $user->name}}
+                                                                <span class="badge badge-light fs-8 fw-semibold ms-2">Art
+                                                                    Director</span></a>
+                                                            <!--end::Name-->
+                                                            <!--begin::Email-->
+                                                            <div class="fw-semibold text-muted">{{ $user->email }}</div>
+                                                            <!--end::Email-->
+                                                        </div>
+                                                        <!--end::Details-->
                                                     </div>
                                                     <!--end::Details-->
+                                                    <!--begin::Stats-->
+                                                    <div class="d-flex">
+                                                        <!--begin::Sales-->
+                                                        <div class="text-end">
+                                                            <div class="fs-5 fw-bold text-dark">$23,000</div>
+                                                            <div class="fs-7 text-muted">Sales</div>
+                                                        </div>
+                                                        <!--end::Sales-->
+                                                    </div>
+                                                    <!--end::Stats-->
                                                 </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$23,000</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <span
-                                                            class="symbol-label bg-light-danger text-danger fw-semibold">M</span>
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Melody
-                                                            Macy
-                                                            <span
-                                                                class="badge badge-light fs-8 fw-semibold ms-2">Marketing
-                                                                Analytic</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">melody@altbox.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$50,500</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <img alt="Pic" src="assets/media/avatars/300-1.jpg" />
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Max
-                                                            Smith
-                                                            <span
-                                                                class="badge badge-light fs-8 fw-semibold ms-2">Software
-                                                                Enginer</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">max@kt.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$75,900</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <img alt="Pic" src="assets/media/avatars/300-5.jpg" />
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Sean
-                                                            Bean
-                                                            <span class="badge badge-light fs-8 fw-semibold ms-2">Web
-                                                                Developer</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">sean@dellito.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$10,500</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <img alt="Pic" src="assets/media/avatars/300-25.jpg" />
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Brian
-                                                            Cox
-                                                            <span
-                                                                class="badge badge-light fs-8 fw-semibold ms-2">UI/UX
-                                                                Designer</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">brian@exchange.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$20,000</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <span
-                                                            class="symbol-label bg-light-warning text-warning fw-semibold">C</span>
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Mikaela
-                                                            Collins
-                                                            <span class="badge badge-light fs-8 fw-semibold ms-2">Head
-                                                                Of Marketing</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">mik@pex.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$9,300</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <img alt="Pic" src="assets/media/avatars/300-9.jpg" />
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Francis
-                                                            Mitcham
-                                                            <span
-                                                                class="badge badge-light fs-8 fw-semibold ms-2">Software
-                                                                Arcitect</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">f.mit@kpmg.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$15,000</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <span
-                                                            class="symbol-label bg-light-danger text-danger fw-semibold">O</span>
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Olivia
-                                                            Wild
-                                                            <span
-                                                                class="badge badge-light fs-8 fw-semibold ms-2">System
-                                                                Admin</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">olivia@corpmail.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$23,000</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <span
-                                                            class="symbol-label bg-light-primary text-primary fw-semibold">N</span>
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Neil
-                                                            Owen
-                                                            <span
-                                                                class="badge badge-light fs-8 fw-semibold ms-2">Account
-                                                                Manager</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">owen.neil@gmail.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$45,800</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <img alt="Pic" src="assets/media/avatars/300-23.jpg" />
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Dan
-                                                            Wilson
-                                                            <span class="badge badge-light fs-8 fw-semibold ms-2">Web
-                                                                Desinger</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">dam@consilting.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$90,500</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <span
-                                                            class="symbol-label bg-light-danger text-danger fw-semibold">E</span>
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Emma
-                                                            Bold
-                                                            <span
-                                                                class="badge badge-light fs-8 fw-semibold ms-2">Corporate
-                                                                Finance</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">emma@intenso.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$5,000</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div
-                                                class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <img alt="Pic" src="assets/media/avatars/300-12.jpg" />
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Ana
-                                                            Crown
-                                                            <span
-                                                                class="badge badge-light fs-8 fw-semibold ms-2">Customer
-                                                                Relationship</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">ana.cf@limtel.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$70,000</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
-                                            <!--begin::User-->
-                                            <div class="d-flex flex-stack py-5">
-                                                <!--begin::Details-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Avatar-->
-                                                    <div class="symbol symbol-35px symbol-circle">
-                                                        <span
-                                                            class="symbol-label bg-light-info text-info fw-semibold">A</span>
-                                                    </div>
-                                                    <!--end::Avatar-->
-                                                    <!--begin::Details-->
-                                                    <div class="ms-6">
-                                                        <!--begin::Name-->
-                                                        <a href="#"
-                                                            class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">Robert
-                                                            Doe
-                                                            <span
-                                                                class="badge badge-light fs-8 fw-semibold ms-2">Marketing
-                                                                Executive</span></a>
-                                                        <!--end::Name-->
-                                                        <!--begin::Email-->
-                                                        <div class="fw-semibold text-muted">robert@benko.com</div>
-                                                        <!--end::Email-->
-                                                    </div>
-                                                    <!--end::Details-->
-                                                </div>
-                                                <!--end::Details-->
-                                                <!--begin::Stats-->
-                                                <div class="d-flex">
-                                                    <!--begin::Sales-->
-                                                    <div class="text-end">
-                                                        <div class="fs-5 fw-bold text-dark">$45,500</div>
-                                                        <div class="fs-7 text-muted">Sales</div>
-                                                    </div>
-                                                    <!--end::Sales-->
-                                                </div>
-                                                <!--end::Stats-->
-                                            </div>
-                                            <!--end::User-->
+                                                <!--end::User-->
+                                            @endforeach
                                         </div>
                                         <!--end::List-->
                                     </div>
@@ -1290,18 +838,16 @@
                                 <!--begin::Modal header-->
                                 <div class="modal-header pb-0 border-0 justify-content-end">
                                     <!--begin::Close-->
-                                    <div class="btn btn-sm btn-icon btn-active-color-primary"
-                                        data-bs-dismiss="modal">
+                                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
                                         <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
                                         <span class="svg-icon svg-icon-1">
-                                            <svg width="24" height="24" viewBox="0 0 24 24"
-                                                fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                <rect opacity="0.5" x="6" y="17.3137" width="16"
-                                                    height="2" rx="1"
-                                                    transform="rotate(-45 6 17.3137)" fill="currentColor" />
-                                                <rect x="7.41422" y="6" width="16" height="2"
-                                                    rx="1" transform="rotate(45 7.41422 6)"
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2"
+                                                    rx="1" transform="rotate(-45 6 17.3137)"
                                                     fill="currentColor" />
+                                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
+                                                    transform="rotate(45 7.41422 6)" fill="currentColor" />
                                             </svg>
                                         </span>
                                         <!--end::Svg Icon-->
@@ -1336,8 +882,7 @@
                                                     fill="none" xmlns="http://www.w3.org/2000/svg">
                                                     <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546"
                                                         height="2" rx="1"
-                                                        transform="rotate(45 17.0365 15.1223)"
-                                                        fill="currentColor" />
+                                                        transform="rotate(45 17.0365 15.1223)" fill="currentColor" />
                                                     <path
                                                         d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
                                                         fill="currentColor" />
@@ -1396,7 +941,7 @@
                                                         <!--begin::Avatar-->
                                                         <div class="symbol symbol-35px symbol-circle me-5">
                                                             <img alt="Pic"
-                                                                src="assets/media/avatars/300-6.jpg" />
+                                                                src="/assets/media/avatars/300-6.jpg" />
                                                         </div>
                                                         <!--end::Avatar-->
                                                         <!--begin::Info-->
@@ -1430,7 +975,7 @@
                                                         <!--begin::Avatar-->
                                                         <div class="symbol symbol-35px symbol-circle me-5">
                                                             <img alt="Pic"
-                                                                src="assets/media/avatars/300-1.jpg" />
+                                                                src="/assets/media/avatars/300-1.jpg" />
                                                         </div>
                                                         <!--end::Avatar-->
                                                         <!--begin::Info-->
@@ -1447,7 +992,7 @@
                                                         <!--begin::Avatar-->
                                                         <div class="symbol symbol-35px symbol-circle me-5">
                                                             <img alt="Pic"
-                                                                src="assets/media/avatars/300-5.jpg" />
+                                                                src="/assets/media/avatars/300-5.jpg" />
                                                         </div>
                                                         <!--end::Avatar-->
                                                         <!--begin::Info-->
@@ -1464,7 +1009,7 @@
                                                         <!--begin::Avatar-->
                                                         <div class="symbol symbol-35px symbol-circle me-5">
                                                             <img alt="Pic"
-                                                                src="assets/media/avatars/300-25.jpg" />
+                                                                src="/assets/media/avatars/300-25.jpg" />
                                                         </div>
                                                         <!--end::Avatar-->
                                                         <!--begin::Info-->
@@ -1500,7 +1045,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="assets/media/avatars/300-6.jpg" />
+                                                                    src="/assets/media/avatars/300-6.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -1598,7 +1143,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="assets/media/avatars/300-1.jpg" />
+                                                                    src="/assets/media/avatars/300-1.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -1646,7 +1191,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="assets/media/avatars/300-5.jpg" />
+                                                                    src="/assets/media/avatars/300-5.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -1695,7 +1240,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="assets/media/avatars/300-25.jpg" />
+                                                                    src="/assets/media/avatars/300-25.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -1792,7 +1337,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="assets/media/avatars/300-9.jpg" />
+                                                                    src="/assets/media/avatars/300-9.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -1939,7 +1484,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="assets/media/avatars/300-23.jpg" />
+                                                                    src="/assets/media/avatars/300-23.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -2037,7 +1582,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="assets/media/avatars/300-12.jpg" />
+                                                                    src="/assets/media/avatars/300-12.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -2135,7 +1680,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="assets/media/avatars/300-13.jpg" />
+                                                                    src="/assets/media/avatars/300-13.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -2233,7 +1778,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="assets/media/avatars/300-21.jpg" />
+                                                                    src="/assets/media/avatars/300-21.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -2282,7 +1827,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="assets/media/avatars/300-1.jpg" />
+                                                                    src="/assets/media/avatars/300-1.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -2333,7 +1878,7 @@
                                                 <!--end::Message-->
                                                 <!--begin::Illustration-->
                                                 <div class="text-center px-5">
-                                                    <img src="assets/media/illustrations/sketchy-1/1.png"
+                                                    <img src="/assets/media/illustrations/sketchy-1/1.png"
                                                         alt="" class="w-100 h-200px h-sm-325px" />
                                                 </div>
                                                 <!--end::Illustration-->
@@ -2386,7 +1931,8 @@
                     <!--begin::Modal body-->
                     <div class="modal-body scroll-y px-10 px-lg-15 pt-0 pb-15">
                         <!--begin:Form-->
-                        <form class="form" action=" {{ route('company.store') }}" method="POST" enctype="multipart/form-data">
+                        <form class="form" action=" {{ route('company.store') }}" method="POST"
+                            enctype="multipart/form-data">
                             @csrf
                             <!--begin::Heading-->
                             <div class="mb-13 text-center">
@@ -2406,11 +1952,11 @@
                                 <!--begin::Image input placeholder-->
                                 <style>
                                     .image-input-placeholder {
-                                        background-image: url('assets/media/svg/files/blank-image.svg');
+                                        background-image: url('/assets/media/svg/files/blank-image.svg');
                                     }
 
                                     [data-bs-theme="dark"] .image-input-placeholder {
-                                        background-image: url('assets/media/svg/files/blank-image-dark.svg');
+                                        background-image: url('/assets/media/svg/files/blank-image-dark.svg');
                                     }
                                 </style>
                                 <!--end::Image input placeholder-->
@@ -2591,7 +2137,7 @@
                             <div class="text-center">
                                 <button type="reset" id="kt_modal_new_target_cancel"
                                     class="btn btn-light me-3">Cancel</button>
-                                <button type="submit"  class="btn btn-primary">
+                                <button type="submit" class="btn btn-primary">
                                     <span class="indicator-label">Salvar</span>
 
                                 </button>

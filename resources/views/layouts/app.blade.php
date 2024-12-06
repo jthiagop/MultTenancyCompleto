@@ -71,7 +71,6 @@
             @include('layouts.navigation')
             <!--end::Wrapper-->
             <!-- Include os assets do PHPFlasher -->
-                @flasher_render
         </div>
         <!--end::Page-->
     </div>

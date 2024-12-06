@@ -382,11 +382,11 @@ class BancoController extends Controller
     {
         try {
             // Localize o registro do Caixa com base no ID fornecido
-            $caixa = Banco::with('anexos', 'movimentacao')->findOrFail($id);
+            $banco = Banco::with('anexos', 'movimentacao')->findOrFail($id);
 
             // Exclua os anexos associados (se existirem)
-            if ($caixa->anexos) {
-                foreach ($caixa->anexos as $anexo) {
+            if ($banco->anexos) {
+                foreach ($banco->anexos as $anexo) {
                     // Exclua o arquivo do armazenamento
                     Storage::disk('public')->delete($anexo->caminho_arquivo);
 
@@ -396,29 +396,32 @@ class BancoController extends Controller
             }
 
             // Verifique se há uma movimentação associada e exclua
-            if ($caixa->movimentacao) {
-                $caixa->movimentacao->delete();
+            if ($banco->movimentacao) {
+                $banco->movimentacao->delete();
 
                 // Atualize o saldo da entidade associada à movimentação
-                $entidade = $caixa->movimentacao->entidade;
+                $entidade = $banco->movimentacao->entidade;
                 if ($entidade) {
                     $entidade->atualizarSaldo();
                 }
             }
 
             // Exclua o registro do Caixa
-            $caixa->delete();
+            $banco->delete();
 
-            // Exibe mensagem de sucesso
-            return view('app.financeiro.caixa.list')->with('message', 'Registro excluído com sucesso!');
+            Flasher::addSuccess('Lançamento excluído com sucesso!');
+            // Redireciona para a lista de caixas com mensagem de sucesso
+            return redirect()
+                ->route('banco.list') // Substitua 'banco.list' pelo nome correto da rota
+                ->with('message', 'Registro excluído com sucesso!');
         } catch (\Exception $e) {
             // Log de erro
             Log::error('Erro ao excluir registro do Caixa: ' . $e->getMessage());
 
-            // Exibe mensagem de erro
-            \Flasher\Laravel\Facade\Flasher::addError('Erro ao excluir o registro: ' . $e->getMessage());
-
-            return view('app.financeiro.caixa.list')->with('message', 'Erro ao excluir o registro.');
+            // Redireciona para a lista de bancos com mensagem de erro
+            return redirect()
+                ->route('banco.list') // Substitua 'banco.list' pelo nome correto da rota
+                ->with('message', 'Erro ao excluir o registro.');
         }
     }
 }

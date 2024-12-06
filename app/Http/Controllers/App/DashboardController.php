@@ -6,6 +6,7 @@ use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\TenantFilial;
 use App\Models\User;
+use Flasher\Laravel\Facade\Flasher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
@@ -22,16 +23,12 @@ class DashboardController extends Controller
         // Recupere o usuário logado
         $user = auth()->user();
 
+
         // Define o ano selecionado, com o ano atual como padrão
         $selectedYear = $request->input('year', now()->year);
 
         // Recupera a empresa do usuário logado
-        $company = DB::table('users')
-            ->join('company_user', 'users.id', '=', 'company_user.user_id')
-            ->join('companies', 'company_user.company_id', '=', 'companies.id')
-            ->where('users.id', $user->id)
-            ->select('users.*', 'company_user.company_id', 'companies.name as companies_name')
-            ->first(); // Usando first() para obter um único registro
+        $company = $user->companies()->first(); // Ou qualquer método que obtenha a empresa
 
         // Define as categorias de lançamento que queremos filtrar
         $categoriasLancamento = ['Doações', 'Coletas', 'Intenções'];
@@ -96,6 +93,7 @@ class DashboardController extends Controller
             }
         }
 
+        Flasher::addSuccess('Teste de sucesso do PHP Flasher!');
 
 
         // Retorna para a view

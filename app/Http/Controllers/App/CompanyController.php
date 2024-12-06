@@ -5,6 +5,7 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Models\Adress;
 use App\Models\Company;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -19,8 +20,9 @@ class CompanyController extends Controller
      */
     public function index()
     {
+        $users = User::all();
         $companyes = Company::all();
-        return view('app.company.index', ['companyes' => $companyes]);
+        return view('app.company.index', ['companyes' => $companyes, 'users' => $users]);
     }
 
     /**
@@ -67,11 +69,13 @@ class CompanyController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($companyId)
+    public function show($id)
     {
-        $company = Company::with('users')->findOrFail($companyId);
-        return view('company.show', compact('company'));
+        $company = Company::findOrFail($id); // Garante que a empresa existe ou lança erro 404
+        return view('app.company.show', compact('company'));
     }
+
+
 
     /**
      * Show the form for editing the specified resource.

@@ -60,6 +60,13 @@ class Company extends Model
         return $this->belongsToMany(User::class);
     }
 
+    // Company.php
+    public function usersCompany()
+    {
+        return $this->hasMany(User::class, 'company_id');
+    }
+
+
     /**
      * Get the branches of this company if it is a parent.
      */

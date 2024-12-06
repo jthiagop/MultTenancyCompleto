@@ -49,6 +49,8 @@ class CaixaController extends Controller
 
 
 
+
+
         return view('app.financeiro.index', [
             'caixas' => $caixas,
             'valorEntrada' => $valorEntrada,
@@ -288,16 +290,17 @@ class CaixaController extends Controller
                     ]);
                 }
             }
+    // Mensagem de sucesso
+    flash()->success('O livro foi salvo com sucesso!');
 
-            // Adiciona mensagem de sucesso
-            Flasher::addSuccess('Lançamento criado com sucesso!');
-
-            // Exibe mensagem de sucesso
-            return redirect()->back()->with('message', 'Lançamento criado com sucesso!');
+            // Exibe a mensagem diretamente usando o Flasher e redireciona
+            return redirect()->back();
         } catch (\Exception $e) {
-            // Adiciona mensagem de erro
+            // Adiciona mensagem de erro com detalhes da exceção
             Flasher::addError('Ocorreu um erro ao processar o lançamento: ' . $e->getMessage());
-            return redirect()->back()->withInput()->with('message', 'Erro no Lançamento!');
+
+            // Retorna com os dados antigos e exibe as mensagens de erro
+            return redirect()->back()->withInput();
         }
     }
 
@@ -437,9 +440,11 @@ class CaixaController extends Controller
                     ]);
                 }
             }
+                // Adiciona mensagem de sucesso
+                Flasher::addSuccess('Lançamento excluído com sucesso!');
 
             // Exibe mensagem de sucesso
-            return redirect()->back()->with('message', 'Atualizado com sucesso!');
+            return redirect()->back();
         } catch (\Exception $e) {
             // Log de erro e mensagem de retorno
             Log::error('Erro ao atualizar movimentação: ' . $e->getMessage());
@@ -483,16 +488,20 @@ class CaixaController extends Controller
             // Exclua o registro do Caixa
             $caixa->delete();
 
-            // Exibe mensagem de sucesso
-            return view('app.financeiro.caixa.list')->with('message', 'Registro excluído com sucesso!');
+                // Adiciona mensagem de sucesso
+            Flasher::addSuccess('Lançamento excluído com sucesso!');
+            // Redireciona para a lista de caixas com mensagem de sucesso
+            return redirect()
+                ->route('caixa.list') // Substitua 'caixa.list' pelo nome correto da rota
+                ->with('message', 'Registro excluído com sucesso!');
         } catch (\Exception $e) {
             // Log de erro
             Log::error('Erro ao excluir registro do Caixa: ' . $e->getMessage());
 
-            // Exibe mensagem de erro
-            \Flasher\Laravel\Facade\Flasher::addError('Erro ao excluir o registro: ' . $e->getMessage());
-
-            return view('app.financeiro.caixa.list')->with('message', 'Erro ao excluir o registro.');
+            // Redireciona para a lista de caixas com mensagem de erro
+            return redirect()
+                ->route('caixa.list') // Substitua 'caixa.list' pelo nome correto da rota
+                ->with('message', 'Erro ao excluir o registro.');
         }
     }
 

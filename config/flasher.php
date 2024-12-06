@@ -35,4 +35,9 @@ return [
     'filter' => [
         'limit' => 5, // Limit the number of displayed notifications
     ],
+
+    // Additional Flasher options for customization
+    'options' => [
+        'positionClass' => 'flasher-bottom', // Adiciona classe para exibição no rodapé
+    ],
 ];

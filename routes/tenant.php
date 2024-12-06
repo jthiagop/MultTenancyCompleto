@@ -149,6 +149,8 @@ Route::middleware([
             Route::post('entidades/{id}/movimentacao', [EntidadeFinanceiraController::class, 'addMovimentacao'])->name('entidades.movimentacao');
 
             Route::resource('company', CompanyController::class);
+            Route::get('/company/edit/{company}', [CompanyController::class, 'editCompany'])->name('company.editCompany');
+
 
 
             });
