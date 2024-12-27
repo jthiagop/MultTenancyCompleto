@@ -32083,18 +32083,46 @@ Inputmask({
 }).mask("#rg");
 
 Inputmask({
-    "mask": "9{1,3}.999.999,99 m²", // permite de 1 a 3 dígitos antes do primeiro ponto
-    "numericInput": true,
-    "autoUnmask": true,
-    "removeMaskOnSubmit": true,
-    "placeholder": "", // remove o preenchimento com zeros
-}).mask("#area_total");
+    mask: "AAA-9A99", // Alterna entre os dois formatos
+    definitions: {
+        'A': {
+            validator: "[A-Za-z0-9]", // Aceita letras (A-Z) e números (0-9)
+            casing: "upper", // Converte letras para caixa alta
+        },
+        '9': {
+            validator: "[0-9]", // Apenas números
+        }
+    },
+    greedy: false, // Permite alternar entre os formatos
+    showMaskOnHover: false, // Esconde a máscara ao passar o mouse
+    showMaskOnFocus: true, // Mostra a máscara ao focar no campo
+}).mask("#placa");
+
 
 Inputmask({
-    "mask": "9{1,3}.999.999,99 m²", // permite de 1 a 3 dígitos antes do primeiro ponto
-    "numericInput": true,
-    "autoUnmask": true,
-    "placeholder": "", // remove o preenchimento com zeros
+    alias: "numeric",
+    groupSeparator: ".",
+    radixPoint: ",",
+    autoGroup: true,
+    digits: 2,
+    digitsOptional: false,
+    suffix: " m²",    // Se quiser que apareça ao final
+    rightAlign: false,
+    removeMaskOnSubmit: true
+}).mask("#area_total");
+
+
+
+Inputmask({
+    alias: "numeric",
+    groupSeparator: ".",
+    radixPoint: ",",
+    autoGroup: true,
+    digits: 2,
+    digitsOptional: false,
+    suffix: " m²",    // Se quiser que apareça ao final
+    rightAlign: false,
+    removeMaskOnSubmit: true
 }).mask("#area_privativa");
 
 // CEP

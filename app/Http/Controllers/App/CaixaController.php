@@ -22,6 +22,8 @@ use Spatie\Activitylog\Facades\Activity; // Importe a facade Activity
 use Illuminate\Support\Str;
 use Flasher\Laravel\Facade\Flasher;
 use Illuminate\Support\Facades\Log;
+use Flasher\Prime\FlasherInterface;
+
 
 class CaixaController extends Controller
 {
@@ -97,6 +99,7 @@ class CaixaController extends Controller
 
         // Obter os valores de entrada e saída de caixa para a empresa
         $valorEntrada = Caixa::getCaixaEntrada($companyId);
+        /** @var TYPE_NAME $valorSaidas */
         $valorSaidas = Caixa::getCaixaSaida($companyId);
 
         // Obter informações da empresa associada ao usuário (ajustando para relacionamento)
@@ -193,10 +196,10 @@ class CaixaController extends Controller
 
             $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
             // Adiciona os campos de auditoria
-            $validatedData['created_by'] = auth()->id();
-            $validatedData['created_by_name'] = auth()->user()->name;
-            $validatedData['updated_by'] = auth()->id();
-            $validatedData['updated_by_name'] = auth()->user()->name;
+            $validatedData['created_by'] = Auth::user();
+            $validatedData['created_by_name'] = Auth::user()->user()->name;
+            $validatedData['updated_by'] = Auth::user();
+            $validatedData['updated_by_name'] = Auth::user()->user()->name;
 
             // Cria o lançamento na tabela 'movimentacoes'
             try {
@@ -204,12 +207,13 @@ class CaixaController extends Controller
                     'entidade_id' => $validatedData['entidade_id'],
                     'tipo' => $validatedData['tipo'],
                     'valor' => $validatedData['valor'],
+                    'data' => $validatedData['data_competencia'],
                     'descricao' => $validatedData['descricao'],
                     'company_id' => $subsidiaryId->company_id,
-                    'created_by' => auth()->id(),
-                    'created_by_name' => auth()->user()->name,
-                    'updated_by' => auth()->id(),
-                    'updated_by_name' => auth()->user()->name,
+                    'created_by' => Auth::user(),
+                    'created_by_name' => Auth::user()->user()->name,
+                    'updated_by' => Auth::user(),
+                    'updated_by_name' => Auth::user()->user()->name,
                 ]);
             } catch (\Exception $e) {
                 // Log de erro
@@ -239,10 +243,10 @@ class CaixaController extends Controller
                         'valor' => $validatedData['valor'],
                         'descricao' => $validatedData['descricao'],
                         'company_id' => $subsidiaryId->company_id,
-                        'created_by' => auth()->id(),
-                        'created_by_name' => auth()->user()->name,
-                        'updated_by' => auth()->id(),
-                        'updated_by_name' => auth()->user()->name,
+                        'created_by' => Auth::user()->id(),
+                        'created_by_name' => Auth::user()->user()->name,
+                        'updated_by' => Auth::user()->id(),
+                        'updated_by_name' => Auth::user()->user()->name,
                     ]);
                 } catch (\Exception $e) {
                     // Log de erro
@@ -266,8 +270,8 @@ class CaixaController extends Controller
                             'nome_arquivo' => $anexoName,
                             'caminho_arquivo' => $anexoPath,
                             'size' => $anexo->getSize(), // Tamanho do arquivo
-                            'created_by' => auth()->id(),
-                            'updated_by' => auth()->id(),
+                            'created_by' => Auth::user()->id(),
+                            'updated_by' => Auth::user()->id(),
                         ]);
                     }
                 }
@@ -285,13 +289,13 @@ class CaixaController extends Controller
                         'nome_arquivo' => $anexoName,
                         'caminho_arquivo' => $anexoPath,
                         'size' => $anexo->getSize(), // Tamanho do arquivo
-                        'created_by' => auth()->id(),
-                        'updated_by' => auth()->id(),
+                        'created_by' => Auth::user()->id(),
+                        'updated_by' => Auth::user()->id(),
                     ]);
                 }
             }
-    // Mensagem de sucesso
-    flash()->success('O livro foi salvo com sucesso!');
+        // Mensagem de sucesso
+        flash()->success('O livro foi salvo com sucesso!');
 
             // Exibe a mensagem diretamente usando o Flasher e redireciona
             return redirect()->back();
@@ -403,7 +407,7 @@ class CaixaController extends Controller
                 'tipo' => $validatedData['tipo'],
                 'valor' => $validatedData['valor'],
                 'descricao' => $validatedData['descricao'],
-                'updated_by' => auth()->id(),
+                'updated_by' => Auth::user()->id(),
             ]);
 
             // Ajusta o impacto do novo valor no saldo
@@ -435,8 +439,8 @@ class CaixaController extends Controller
                         'nome_arquivo' => $anexoName,
                         'size' => $anexo->getSize(), // Tamanho do arquivo
                         'caminho_arquivo' => $anexoPath,
-                        'created_by' => auth()->id(),
-                        'updated_by' => auth()->id(),
+                        'created_by' => Auth::user()->id(),
+                        'updated_by' => Auth::user()->id(),
                     ]);
                 }
             }

@@ -8,8 +8,11 @@ use App\Models\NamePatrimonio;
 use App\Models\Patrimonio;
 use App\Models\PatrimonioAnexo;
 use App\Models\User;
+use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Laracasts\Flash\Flash;
+
 
 class PatrimonioController extends Controller
 {
@@ -20,12 +23,14 @@ class PatrimonioController extends Controller
     {
         $nameForos = NamePatrimonio::all();
         $patrimonios = Patrimonio::all();
+        $escrituras = Escritura::all();
 
         return view(
             'app.patrimonios.index',
             [
                 'nameForos' => $nameForos,
                 'patrimonios' => $patrimonios,
+                'escrituras' => $escrituras,
             ]
         );
     }
@@ -68,9 +73,8 @@ class PatrimonioController extends Controller
             $patrimonio->uf = $request->input('uf');
             $patrimonio->complemento = $request->input('complemento');
             $patrimonio['company_id'] = User::getCompany()->company_id;
-            $patrimonio['updated_by'] = auth()->user()->id;
-            $patrimonio['created_by'] = auth()->user()->id;
-
+            $patrimonio['updated_by'] = Auth::id();
+            $patrimonio['created_by'] = Auth::id();
 
             // Salvando o patrimônio no banco de dados
             $patrimonio->save();
@@ -82,28 +86,64 @@ class PatrimonioController extends Controller
             $patrimonio->codigo_rid = $codigoRID;
             $patrimonio->save();
 
+            // Função auxiliar para converter "1.234,56" em "1234.56"
+function formatNumber(?string $number): ?string
+{
+    if (is_null($number) || $number === '') {
+        return null; // ou "0" caso queira default 0
+    }
+    // Remove pontos e substitui vírgula por ponto
+    return str_replace(',', '.', str_replace('.', '', $number));
+}
             // Verificando se há dados de escritura no request
-            if ($request->has(['outorgante', 'matricula', 'aquisicao', 'outorgado', 'valor', 'area_total', 'area_privativa'])) {
-                // Criando uma nova escritura
+            // Verificando se todos os campos mínimos estão "preenchidos"
+            if ($request->filled([
+                'outorgante',
+                'matricula',
+                'aquisicao',
+                'outorgado',
+                'valor',
+                'area_total',
+                'area_privativa'
+            ])) {
+                // Coletando dados em array
+                $data = $request->only([
+                    'outorgante',
+                    'matricula',
+                    'aquisicao',
+                    'outorgado',
+                    'valor',
+                    'area_total',
+                    'area_privativa',
+                    'informacoes',
+                    'outorgante_telefone',
+                    'outorgante_email',
+                    'outorgado_telefone',
+                    'outorgado_email',
+                ]);
+
+                // Convertendo a data 'aquisicao' de d/m/Y para Y-m-d
+                try {
+                    $data['aquisicao'] = Carbon::createFromFormat('d/m/Y', $data['aquisicao'])->format('Y-m-d');
+                } catch (\Exception $e) {
+                    // Se cair aqui, a data estava inválida
+                    // Dependendo da sua lógica, pode lançar exception ou apenas ignorar/criar sem data
+                    throw new \Exception('Data de aquisição inválida: ' . $e->getMessage());
+                }
+
+                // Convertendo valores numéricos
+                $data['valor'] = formatNumber($data['valor']);
+                $data['area_total'] = formatNumber($data['area_total']);
+                $data['area_privativa'] = formatNumber($data['area_privativa']);
+
+                // Criando e populando a nova escritura
                 $escritura = new Escritura();
-                $escritura->outorgante = $request->input('outorgante');
-                $escritura->matricula = $request->input('matricula');
-                $escritura->aquisicao = $request->input('aquisicao');
-                $escritura->outorgado = $request->input('outorgado');
-                $escritura['valor'] = str_replace(',', '.', str_replace('.', '', $request['valor']));
-                $escritura->area_total = $request->input('area_total');
-                $escritura->area_privativa = $request->input('area_privativa');
-                $escritura->informacoes = $request->input('informacoes');
+                $escritura->fill($data);
+
+                // Atribuições manuais que não estão no fillable (se necessário)
                 $escritura->patrimonio_id = $patrimonio->id;
-                $escritura['created_by'] = auth()->user()->id;
-                $escritura['updated_by'] = auth()->user()->id;
-
-
-            // Adicionando os novos campos de contato para o outorgante e outorgado
-            $escritura->outorgante_telefone = $request->input('outorgante_telefone');
-            $escritura->outorgante_email = $request->input('outorgante_email');
-            $escritura->outorgado_telefone = $request->input('outorgado_telefone');
-            $escritura->outorgado_email = $request->input('outorgado_email');
+                $escritura->created_by = Auth::id();
+                $escritura->updated_by = Auth::id();
 
                 // Salvando a escritura no banco de dados
                 $escritura->save();
@@ -215,10 +255,67 @@ class PatrimonioController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        // Validação dos dados da requisição
+        $request->validate([
+            'descricao'   => 'required|string|max:255',
+            'cep'         => 'required|string|max:9',
+            'logradouro'  => 'required|string|max:255',
+            'bairro'      => 'required|string|max:255',
+            'localidade'  => 'required|string|max:255',
+            'uf'          => 'required|string|size:2',
+            'complemento' => 'nullable|string|max:255',
+            'folha' => 'nullable|string|max:255',
+            'livro' => 'nullable|string|max:255',
+            'registro' => 'nullable|string|max:255',
+        ]);
+
+        try {
+            // Localiza o registro pelo ID
+            $patrimonio = Patrimonio::findOrFail($id);
+
+            // Atualiza os campos
+            $patrimonio->descricao   = $request->descricao;
+            $patrimonio->cep         = $request->cep;
+            $patrimonio->logradouro  = $request->logradouro;
+            $patrimonio->bairro      = $request->bairro;
+            $patrimonio->localidade  = $request->localidade;
+            $patrimonio->uf          = $request->uf;
+            $patrimonio->complemento = $request->complemento;
+            $patrimonio->folha = $request->folha;
+            $patrimonio->livro = $request->livro;
+            $patrimonio->registro = $request->registro;
+
+            // Salva as alterações no banco de dados
+            $patrimonio->save();
+
+            // Configura a mensagem flash de sucesso com título e RID
+       // Configura a mensagem flash de sucesso com título e RID
+       flash()
+       ->option('position', 'top-right')
+       ->option('offset', ['x' => 0, 'y' => 80]) // Desloca 80px para baixo
+       ->option('timeout', 4000)
+       ->success('Registro com RID ' . $patrimonio->codigo_rid . ' foi atualizado com sucesso!', [
+           'title' => 'Atualização Bem-Sucedida'
+       ]);
+
+        // Redireciona de volta com a mensagem de sucesso
+        return redirect()->back();
+    } catch (\Exception $e) {
+        // Configura a mensagem flash de erro
+        flash()
+            ->option('position', 'top-right')
+            ->option('offset', ['x' => 0, 'y' => 80])
+            ->option('timeout', 4000)
+            ->error('Erro', 'Erro ao atualizar o registro: ' . $e->getMessage());
+
+        // Redireciona de volta com a mensagem de erro
+        return redirect()->back();
     }
+    }
+
+
 
     /**
      * Remove the specified resource from storage.

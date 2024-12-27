@@ -7,7 +7,7 @@
                                                                    data-kt-menu-placement="bottom-end">
                                                                    <span class="symbol symbol-20px">
                                                                        <img class="rounded"
-                                                                           src="assets/media/flags/united-states.svg"
+                                                                           src="/assets/media/flags/united-states.svg"
                                                                            alt="" />
                                                                    </span>
                                                                </div>
@@ -20,7 +20,7 @@
                                                                            class="menu-link d-flex px-5 active">
                                                                            <span class="symbol symbol-20px me-4">
                                                                                <img class="rounded-1"
-                                                                                   src="assets/media/flags/united-states.svg"
+                                                                                   src="/assets/media/flags/united-states.svg"
                                                                                    alt="" />
                                                                            </span>English</a>
                                                                    </div>
@@ -31,7 +31,7 @@
                                                                            class="menu-link d-flex px-5">
                                                                            <span class="symbol symbol-20px me-4">
                                                                                <img class="rounded-1"
-                                                                                   src="assets/media/flags/spain.svg"
+                                                                                   src="/assets/media/flags/spain.svg"
                                                                                    alt="" />
                                                                            </span>Spanish</a>
                                                                    </div>
@@ -42,7 +42,7 @@
                                                                            class="menu-link d-flex px-5">
                                                                            <span class="symbol symbol-20px me-4">
                                                                                <img class="rounded-1"
-                                                                                   src="assets/media/flags/germany.svg"
+                                                                                   src="/assets/media/flags/germany.svg"
                                                                                    alt="" />
                                                                            </span>German</a>
                                                                    </div>
@@ -53,7 +53,7 @@
                                                                            class="menu-link d-flex px-5">
                                                                            <span class="symbol symbol-20px me-4">
                                                                                <img class="rounded-1"
-                                                                                   src="assets/media/flags/japan.svg"
+                                                                                   src="/assets/media/flags/japan.svg"
                                                                                    alt="" />
                                                                            </span>Japanese</a>
                                                                    </div>
@@ -64,7 +64,7 @@
                                                                            class="menu-link d-flex px-5">
                                                                            <span class="symbol symbol-20px me-4">
                                                                                <img class="rounded-1"
-                                                                                   src="assets/media/flags/france.svg"
+                                                                                   src="/assets/media/flags/france.svg"
                                                                                    alt="" />
                                                                            </span>French</a>
                                                                    </div>

@@ -1,6 +1,6 @@
             <div id="kt_app_header" class="app-header">
                 <!--begin::Header container-->
-                <div class="app-container container-fluid d-flex align-items-stretch justify-content-between"
+                <div class="app-container container-xxl d-flex align-items-stretch justify-content-between"
                     id="kt_app_header_container">
                     <!--begin::sidebar mobile toggle-->
                     <div class="d-flex align-items-center d-lg-none ms-n2 me-2" title="Show sidebar menu">
@@ -25,9 +25,9 @@
                     <!--begin::Mobile logo-->
                     <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
                         <a href="../../demo1/dist/index.html" class="d-lg-none">
-                            <img alt="Logo" src="assets/media/logos/default-small.svg"
+                            <img alt="Logo" src="/assets/media/logos/default-small.svg"
                                 class="theme-light-show h-30px" />
-                            <img alt="Logo" src="assets/media/logos/default-small-dark.svg"
+                            <img alt="Logo" src="/assets/media/logos/default-small-dark.svg"
                                 class="theme-dark-show h-30px" />
                         </a>
                     </div>
@@ -708,7 +708,7 @@
                                                         <!--end:Col-->
                                                         <!--begin:Col-->
                                                         <div class="col-lg-4">
-                                                            <img src="assets/media/stock/600x600/img-82.jpg"
+                                                            <img src="/assets/media/stock/600x600/img-82.jpg"
                                                                 class="rounded mw-100" alt="" />
                                                         </div>
                                                         <!--end:Col-->
@@ -829,7 +829,7 @@
                                                         <!--end:Col-->
                                                         <!--begin:Col-->
                                                         <div class="col-lg-7">
-                                                            <img src="assets/media/stock/900x600/46.jpg"
+                                                            <img src="/assets/media/stock/900x600/46.jpg"
                                                                 class="rounded mw-100" alt="" />
                                                         </div>
                                                         <!--end:Col-->
@@ -1494,7 +1494,7 @@
                                                         <!--end:Col-->
                                                         <!--begin:Col-->
                                                         <div class="col-lg-5 pe-lg-5">
-                                                            <img src="assets/media/stock/600x600/img-84.jpg"
+                                                            <img src="/assets/media/stock/600x600/img-84.jpg"
                                                                 class="rounded mw-100" alt="" />
                                                         </div>
                                                         <!--end:Col-->
@@ -3004,7 +3004,7 @@
                                                 <!--end:Col-->
                                                 <!--begin:Col-->
                                                 <div class="col-lg-7 mb-3 pt-2 pe-lg-8">
-                                                    <img src="assets/media/stock/900x600/74.jpg"
+                                                    <img src="/assets/media/stock/900x600/74.jpg"
                                                         class="rounded mw-100" alt="" />
                                                 </div>
                                                 <!--end:Col-->
@@ -3281,7 +3281,7 @@
                                                         class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                                         <!--begin::Symbol-->
                                                         <div class="symbol symbol-40px me-4">
-                                                            <img src="assets/media/avatars/300-6.jpg"
+                                                            <img src="/assets/media/avatars/300-6.jpg"
                                                                 alt="" />
                                                         </div>
                                                         <!--end::Symbol-->
@@ -3300,7 +3300,7 @@
                                                         class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                                         <!--begin::Symbol-->
                                                         <div class="symbol symbol-40px me-4">
-                                                            <img src="assets/media/avatars/300-2.jpg"
+                                                            <img src="/assets/media/avatars/300-2.jpg"
                                                                 alt="" />
                                                         </div>
                                                         <!--end::Symbol-->
@@ -3319,7 +3319,7 @@
                                                         class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                                         <!--begin::Symbol-->
                                                         <div class="symbol symbol-40px me-4">
-                                                            <img src="assets/media/avatars/300-9.jpg"
+                                                            <img src="/assets/media/avatars/300-9.jpg"
                                                                 alt="" />
                                                         </div>
                                                         <!--end::Symbol-->
@@ -3338,7 +3338,7 @@
                                                         class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                                         <!--begin::Symbol-->
                                                         <div class="symbol symbol-40px me-4">
-                                                            <img src="assets/media/avatars/300-14.jpg"
+                                                            <img src="/assets/media/avatars/300-14.jpg"
                                                                 alt="" />
                                                         </div>
                                                         <!--end::Symbol-->
@@ -3357,7 +3357,7 @@
                                                         class="d-flex text-dark text-hover-primary align-items-center mb-5">
                                                         <!--begin::Symbol-->
                                                         <div class="symbol symbol-40px me-4">
-                                                            <img src="assets/media/avatars/300-11.jpg"
+                                                            <img src="/assets/media/avatars/300-11.jpg"
                                                                 alt="" />
                                                         </div>
                                                         <!--end::Symbol-->
@@ -3383,7 +3383,7 @@
                                                         <div class="symbol symbol-40px me-4">
                                                             <span class="symbol-label bg-light">
                                                                 <img class="w-20px h-20px"
-                                                                    src="assets/media/svg/brand-logos/volicity-9.svg"
+                                                                    src="/assets/media/svg/brand-logos/volicity-9.svg"
                                                                     alt="" />
                                                             </span>
                                                         </div>
@@ -3404,7 +3404,7 @@
                                                         <div class="symbol symbol-40px me-4">
                                                             <span class="symbol-label bg-light">
                                                                 <img class="w-20px h-20px"
-                                                                    src="assets/media/svg/brand-logos/tvit.svg"
+                                                                    src="/assets/media/svg/brand-logos/tvit.svg"
                                                                     alt="" />
                                                             </span>
                                                         </div>
@@ -3426,7 +3426,7 @@
                                                         <div class="symbol symbol-40px me-4">
                                                             <span class="symbol-label bg-light">
                                                                 <img class="w-20px h-20px"
-                                                                    src="assets/media/svg/misc/infography.svg"
+                                                                    src="/assets/media/svg/misc/infography.svg"
                                                                     alt="" />
                                                             </span>
                                                         </div>
@@ -3449,7 +3449,7 @@
                                                         <div class="symbol symbol-40px me-4">
                                                             <span class="symbol-label bg-light">
                                                                 <img class="w-20px h-20px"
-                                                                    src="assets/media/svg/brand-logos/leaf.svg"
+                                                                    src="/assets/media/svg/brand-logos/leaf.svg"
                                                                     alt="" />
                                                             </span>
                                                         </div>
@@ -3470,7 +3470,7 @@
                                                         <div class="symbol symbol-40px me-4">
                                                             <span class="symbol-label bg-light">
                                                                 <img class="w-20px h-20px"
-                                                                    src="assets/media/svg/brand-logos/tower.svg"
+                                                                    src="/assets/media/svg/brand-logos/tower.svg"
                                                                     alt="" />
                                                             </span>
                                                         </div>
@@ -4570,7 +4570,7 @@
                                                 <!--begin::Illustration-->
                                                 <div class="text-center px-4">
                                                     <img class="mw-100 mh-200px" alt="image"
-                                                        src="assets/media/illustrations/sketchy-1/1.png" />
+                                                        src="/assets/media/illustrations/sketchy-1/1.png" />
                                                 </div>
                                                 <!--end::Illustration-->
                                             </div>

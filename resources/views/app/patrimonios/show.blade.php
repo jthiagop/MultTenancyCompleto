@@ -100,8 +100,8 @@
                                 <div class="d-flex flex-stack align-items-end pb-4 mt-n19">
                                     <div
                                         class="symbol symbol-125px symbol-lg-150px symbol-fixed position-relative mt-n3">
-                                        <img class="me-5" width="75px" height="75px" src="/assets/media/png/house3d.png" alt=""
-                                            />
+                                        <img class="me-5" width="75px" height="75px"
+                                            src="/assets/media/png/house3d.png" alt="" />
                                         <div
                                             class="position-absolute translate-middle bottom-0 start-100 ms-n1 mb-9 bg-success rounded-circle h-15px w-15px">
                                         </div>
@@ -251,7 +251,8 @@
                                     <div class="d-flex">
                                         <a href="#" class="btn btn-sm btn-light me-3"
                                             id="kt_drawer_chat_toggle">Send Message</a>
-                                        <button class="btn btn-sm btn-primary me-3" data-bs-toggle="modal" data-bs-target="#kt_modal_upgrade_plan" >
+                                        <button class="btn btn-sm btn-primary me-3" data-bs-toggle="modal"
+                                            data-bs-target="#kt_modal_upgrade_plan">
                                             <!--begin::Svg Icon | path: icons/duotune/arrows/arr012.svg-->
                                             <span class="svg-icon svg-icon-3 d-none">
                                                 <svg width="24" height="24" viewBox="0 0 24 24"
@@ -275,7 +276,8 @@
                                             <!--end::Indicator progress-->
                                         </button>
 
-                                        <button class="btn btn-sm btn-success me-3" data-bs-toggle="modal" data-bs-target="#kt_modal_upgrade_plan">
+                                        <button class="btn btn-sm btn-success me-3" data-bs-toggle="modal"
+                                            data-bs-target="#kt_modal_upgrade_plan">
                                             <!--begin::Svg Icon | path: icons/duotune/arrows/arr012.svg-->
                                             <span class="svg-icon svg-icon-3 d-none">
                                                 <svg width="24" height="24" viewBox="0 0 24 24"
@@ -299,7 +301,8 @@
                                             <!--end::Indicator progress-->
                                         </button>
 
-                                        <button class="btn btn-sm btn-info me-3" data-bs-toggle="modal" data-bs-target="#kt_modal_upgrade_plan">
+                                        <button class="btn btn-sm btn-info me-3" data-bs-toggle="modal"
+                                            data-bs-target="#kt_modal_upgrade_plan">
                                             <!--begin::Svg Icon | path: icons/duotune/arrows/arr012.svg-->
                                             <span class="svg-icon svg-icon-3 d-none">
                                                 <svg width="24" height="24" viewBox="0 0 24 24"
@@ -380,8 +383,8 @@
                                     <!--begin::Button-->
                                     @role('admin_user')
                                         <!-- Link habilitado com cadeado aberto para o usuário autorizado -->
-                                        <a href="#" onclick="openEditAddressModal({{ $patrimonio->toJson() }})"
-                                            class="btn btn-sm btn-primary align-self-center">
+                                        <a href="#" class="btn btn-sm btn-primary align-self-center"
+                                            data-bs-toggle="modal" data-bs-target="#kt_modal_new_address">
                                             <i class="bi bi-unlock-fill"></i>
                                             <span>Editar</span>
                                         </a>
@@ -452,7 +455,8 @@
                                         <!--begin::Col-->
                                         <div class="col-lg-8">
                                             <a href="#"
-                                                class="fw-semibold fs-6 text-gray-800 text-hover-primary">{{ $patrimonio->localidade }} - {{$patrimonio->uf  }}</a>
+                                                class="fw-semibold fs-6 text-gray-800 text-hover-primary">{{ $patrimonio->localidade }}
+                                                - {{ $patrimonio->uf }}</a>
                                         </div>
                                         <!--end::Col-->
                                     </div>
@@ -565,7 +569,7 @@
                                                     houver alguma inconsistência, entre em contato <br> com o suporte ou
                                                     faça as correções necessárias.
                                                     <a class="fw-bold"
-                                                        href="../../demo1/dist/account/billing.html">Ajude-me</a>!
+                                                        href="#">Ajude-me</a>!
                                                 </div>
                                             </div>
                                             <!--end::Content-->
@@ -579,260 +583,328 @@
                             <!--end::details View-->
                             <!--begin::Row-->
                             <div class="row gy-5 g-xl-10">
-                                <!--begin::Col-->
-                                <div class="col-xl-7 mb-xl-10">
-                                    <!--begin::Chart widget 5-->
-                                    <div class="card card-flush h-lg-100">
-                                        <!--begin::Header-->
-                                        <div class="card-header flex-nowrap pt-5">
-                                            <!--begin::Title-->
-                                            <h3 class="card-title align-items-start flex-column">
-                                                <span class="card-label fw-bold text-dark">Dados da Escritura</span>
-                                                <span class="text-gray-400 pt-2 fw-semibold fs-6">Dados dos últimos
-                                                    proprietários</span>
-                                            </h3>
-                                            <!--end::Title-->
-                                            <!--begin::Toolbar-->
-                                            <div class="card-toolbar">
-                                                <!--begin::Menu-->
-                                                <button
-                                                    class="btn btn-icon btn-color-gray-400 btn-active-color-primary justify-content-end"
-                                                    data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"
-                                                    data-kt-menu-overflow="true">
-                                                    <!--begin::Svg Icon | path: icons/duotune/general/gen023.svg-->
-                                                    <span class="svg-icon svg-icon-1 svg-icon-gray-300 me-n1">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <rect opacity="0.3" x="2" y="2" width="20"
-                                                                height="20" rx="4" fill="currentColor" />
-                                                            <rect x="11" y="11" width="2.6" height="2.6"
-                                                                rx="1.3" fill="currentColor" />
-                                                            <rect x="15" y="11" width="2.6" height="2.6"
-                                                                rx="1.3" fill="currentColor" />
-                                                            <rect x="7" y="11" width="2.6" height="2.6"
-                                                                rx="1.3" fill="currentColor" />
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                </button>
-                                                <!--begin::Menu 2-->
-                                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-150px"
-                                                    data-kt-menu="true">
-                                                    <!--begin::Menu item-->
-                                                    <div class="menu-item px-3">
-                                                        <div class="menu-content fs-6 text-dark fw-bold px-3 py-4">
-                                                            Ações rápidas</div>
-                                                    </div>
-                                                    <!--end::Menu item-->
-                                                    <!--begin::Menu separator-->
-                                                    <div class="separator mb-3 opacity-75"></div>
-                                                    <!--end::Menu separator-->
-                                                    <!--begin::Menu item-->
-                                                    <div class="menu-item px-3">
-                                                        <a href="#" class="menu-link px-3">Cobrar Foro</a>
-                                                    </div>
-                                                    <!--end::Menu item-->
-                                                    <!--begin::Menu item-->
-                                                    <div class="menu-item px-3">
-                                                        <a href="#" class="menu-link px-3">Cobrar Laudêmio</a>
-                                                    </div>
-                                                    <!--end::Menu item-->
-                                                    <!--begin::Menu item-->
-                                                    <div class="menu-item px-3" data-kt-menu-trigger="hover"
-                                                        data-kt-menu-placement="right-start">
+                                @if ($patrimonio->escrituras->isNotEmpty())
+                                    <!--begin::Col-->
+                                    <div class="col-xl-7 mb-xl-10">
+                                        <!--begin::Chart widget 5-->
+                                        <div class="card card-flush h-lg-100">
+                                            <!--begin::Header-->
+                                            <div class="card-header flex-nowrap pt-5">
+                                                <!--begin::Title-->
+                                                <h3 class="card-title align-items-start flex-column">
+                                                    <span class="card-label fw-bold text-dark">Dados da
+                                                        Escritura</span>
+                                                    <span class="text-gray-400 pt-2 fw-semibold fs-6">Dados dos últimos
+                                                        proprietários</span>
+                                                </h3>
+                                                <!--end::Title-->
+                                                <!--begin::Toolbar-->
+                                                <div class="card-toolbar">
+                                                    <!--begin::Menu-->
+                                                    <button
+                                                        class="btn btn-icon btn-color-gray-400 btn-active-color-primary justify-content-end"
+                                                        data-kt-menu-trigger="click"
+                                                        data-kt-menu-placement="bottom-end"
+                                                        data-kt-menu-overflow="true">
+                                                        <!--begin::Svg Icon | path: icons/duotune/general/gen023.svg-->
+                                                        <span class="svg-icon svg-icon-1 svg-icon-gray-300 me-n1">
+                                                            <svg width="24" height="24" viewBox="0 0 24 24"
+                                                                fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <rect opacity="0.3" x="2" y="2" width="20"
+                                                                    height="20" rx="4"
+                                                                    fill="currentColor" />
+                                                                <rect x="11" y="11" width="2.6" height="2.6"
+                                                                    rx="1.3" fill="currentColor" />
+                                                                <rect x="15" y="11" width="2.6" height="2.6"
+                                                                    rx="1.3" fill="currentColor" />
+                                                                <rect x="7" y="11" width="2.6" height="2.6"
+                                                                    rx="1.3" fill="currentColor" />
+                                                            </svg>
+                                                        </span>
+                                                        <!--end::Svg Icon-->
+                                                    </button>
+                                                    <!--begin::Menu 2-->
+                                                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-150px"
+                                                        data-kt-menu="true">
                                                         <!--begin::Menu item-->
-                                                        <a href="#" class="menu-link px-3">
-                                                            <span class="menu-title">New Group</span>
-                                                            <span class="menu-arrow"></span>
-                                                        </a>
+                                                        <div class="menu-item px-3">
+                                                            <div class="menu-content fs-6 text-dark fw-bold px-3 py-4">
+                                                                Ações rápidas</div>
+                                                        </div>
                                                         <!--end::Menu item-->
-                                                        <!--begin::Menu sub-->
-                                                        <div class="menu-sub menu-sub-dropdown w-175px py-4">
-                                                            <!--begin::Menu item-->
-                                                            <div class="menu-item px-3">
-                                                                <a href="#" class="menu-link px-3">Cobrar
-                                                                    Foro</a>
-                                                            </div>
-                                                            <!--end::Menu item-->
-                                                            <!--begin::Menu item-->
-                                                            <div class="menu-item px-3">
-                                                                <a href="#" class="menu-link px-3">Cobrar
-                                                                    Laudêmio</a>
-                                                            </div>
-                                                            <!--end::Menu item-->
-                                                            <!--begin::Menu item-->
-                                                            <div class="menu-item px-3">
-                                                                <a href="#" class="menu-link px-3">Criar
-                                                                    PTAM</a>
-                                                            </div>
-                                                            <!--end::Menu item-->
+                                                        <!--begin::Menu separator-->
+                                                        <div class="separator mb-3 opacity-75"></div>
+                                                        <!--end::Menu separator-->
+                                                        <!--begin::Menu item-->
+                                                        <div class="menu-item px-3">
+                                                            <a href="#" class="menu-link px-3">Cobrar Foro</a>
                                                         </div>
-                                                        <!--end::Menu sub-->
-                                                    </div>
-                                                    <!--end::Menu item-->
-                                                    <!--begin::Menu item-->
-                                                    <div class="menu-item px-3">
-                                                        <a href="#" class="menu-link px-3">New Contact</a>
-                                                    </div>
-                                                    <!--end::Menu item-->
-                                                    <!--begin::Menu separator-->
-                                                    <div class="separator mt-3 opacity-75"></div>
-                                                    <!--end::Menu separator-->
-                                                    <!--begin::Menu item-->
-                                                    <div class="menu-item px-3">
-                                                        <div class="menu-content px-3 py-3">
-                                                            <a class="btn btn-primary btn-sm px-4"
-                                                                href="#">Editar dados</a>
+                                                        <!--end::Menu item-->
+                                                        <!--begin::Menu item-->
+                                                        <div class="menu-item px-3">
+                                                            <a href="#" class="menu-link px-3">Cobrar
+                                                                Laudêmio</a>
                                                         </div>
+                                                        <!--end::Menu item-->
+                                                        <!--begin::Menu item-->
+                                                        <div class="menu-item px-3" data-kt-menu-trigger="hover"
+                                                            data-kt-menu-placement="right-start">
+                                                            <!--begin::Menu item-->
+                                                            <a href="#" class="menu-link px-3">
+                                                                <span class="menu-title">New Group</span>
+                                                                <span class="menu-arrow"></span>
+                                                            </a>
+                                                            <!--end::Menu item-->
+                                                            <!--begin::Menu sub-->
+                                                            <div class="menu-sub menu-sub-dropdown w-175px py-4">
+                                                                <!--begin::Menu item-->
+                                                                <div class="menu-item px-3">
+                                                                    <a href="#" class="menu-link px-3">Cobrar
+                                                                        Foro</a>
+                                                                </div>
+                                                                <!--end::Menu item-->
+                                                                <!--begin::Menu item-->
+                                                                <div class="menu-item px-3">
+                                                                    <a href="#" class="menu-link px-3">Cobrar
+                                                                        Laudêmio</a>
+                                                                </div>
+                                                                <!--end::Menu item-->
+                                                                <!--begin::Menu item-->
+                                                                <div class="menu-item px-3">
+                                                                    <a href="#" class="menu-link px-3">Criar
+                                                                        PTAM</a>
+                                                                </div>
+                                                                <!--end::Menu item-->
+                                                            </div>
+                                                            <!--end::Menu sub-->
+                                                        </div>
+                                                        <!--end::Menu item-->
+                                                        <!--begin::Menu item-->
+                                                        <div class="menu-item px-3">
+                                                            <a href="#" class="menu-link px-3">New Contact</a>
+                                                        </div>
+                                                        <!--end::Menu item-->
+                                                        <!--begin::Menu separator-->
+                                                        <div class="separator mt-3 opacity-75"></div>
+                                                        <!--end::Menu separator-->
+                                                        <!--begin::Menu item-->
+                                                        <div class="menu-item px-3">
+                                                            <div class="menu-content px-3 py-3">
+                                                                <a class="btn btn-primary btn-sm px-4" href="#"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#DM_modal_edit_escritura">
+                                                                    Editar dados
+                                                                </a>
+                                                            </div>
+                                                        </div>
+                                                        <!--end::Menu item-->
                                                     </div>
-                                                    <!--end::Menu item-->
+                                                    <!--end::Menu 2-->
+                                                    <!--end::Menu-->
                                                 </div>
-                                                <!--end::Menu 2-->
-                                                <!--end::Menu-->
+                                                <!--end::Toolbar-->
                                             </div>
-                                            <!--end::Toolbar-->
-                                        </div>
-                                        <!--end::Header-->
-                                        <!--begin::Body-->
-                                        <div class="card-body pt-5 ps-6">
-                                            <div class="separator separator-content my-5"><span
-                                                    class="w-250px fw-bold">Outorgante</span></div>
-                                            <!--begin::Card body-->
-                                            <div class="card-body p-9">
+                                            <!--end::Header-->
+                                            <!--begin::Body-->
+                                            <div class="card-body pt-5 ps-6">
+                                                <div class="separator separator-content my-5"><span
+                                                        class="w-250px fw-bold">Outorgante</span></div>
+                                                <!--begin::Card body-->
+                                                <div class="card-body p-9">
 
-                                                <!--begin::Input group-->
-                                                <div class="row mb-7">
-                                                    <!--begin::Label-->
-                                                    <label class="col-lg-4 fw-semibold text-muted">Outorgante
-                                                        <i class="fas fa-exclamation-circle ms-1 fs-7"
-                                                            data-bs-toggle="tooltip"
-                                                            title="Pessoa ou entidade que concede ou transfere(Vendedor)"></i></label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Col-->
-                                                    <div class="col-lg-8 d-flex align-items-center">
-                                                        <span class="fw-bold fs-6 text-gray-800 me-2">
-                                                            {{ $patrimonio->escrituras->last()->outorgante ?? 'Sem escritura' }}
-                                                        </span>
+                                                    <!--begin::Input group-->
+                                                    <div class="row mb-7">
+                                                        <!--begin::Label-->
+                                                        <label class="col-lg-4 fw-semibold text-muted">Outorgante
+                                                            <i class="fas fa-exclamation-circle ms-1 fs-7"
+                                                                data-bs-toggle="tooltip"
+                                                                title="Pessoa ou entidade que concede ou transfere(Vendedor)"></i></label>
+                                                        <!--end::Label-->
+                                                        <!--begin::Col-->
+                                                        <div class="col-lg-8 d-flex align-items-center">
+                                                            <span class="fw-bold fs-6 text-gray-800 me-2">
+                                                                {{ $patrimonio->escrituras->last()->outorgante ?? 'Sem escritura' }}
+                                                            </span>
+                                                        </div>
+                                                        <!--end::Col-->
                                                     </div>
-                                                    <!--end::Col-->
-                                                </div>
-                                                <!--end::Input group-->
-                                                <!--begin::Row-->
-                                                <div class="row mb-7">
-                                                    <!--begin::Label-->
-                                                    <label class="col-lg-4 fw-semibold text-muted">Número da
-                                                        Matrícula</label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Col-->
-                                                    <div class="col-lg-8">
-                                                        <span class="fw-bold fs-6 text-gray-800 me-2">
-                                                            {{ $patrimonio->escrituras->last()->matricula ?? 'Sem matricula' }}
-                                                        </span>
+                                                    <!--end::Input group-->
+                                                    <!--begin::Row-->
+                                                    <div class="row mb-7">
+                                                        <!--begin::Label-->
+                                                        <label class="col-lg-4 fw-semibold text-muted">Número da
+                                                            Matrícula</label>
+                                                        <!--end::Label-->
+                                                        <!--begin::Col-->
+                                                        <div class="col-lg-8">
+                                                            <span class="fw-bold fs-6 text-gray-800 me-2">
+                                                                {{ $patrimonio->escrituras->last()->matricula ?? 'Sem matricula' }}
+                                                            </span>
+                                                        </div>
+                                                        <!--end::Col-->
                                                     </div>
-                                                    <!--end::Col-->
-                                                </div>
-                                                <!--end::Row-->
-                                                <!--begin::Input group-->
-                                                <div class="row mb-7">
-                                                    <!--begin::Label-->
-                                                    <label class="col-lg-4 fw-semibold text-muted">Data de <a
-                                                            href=""></a>quisição</label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Col-->
-                                                    <div class="col-lg-8 fv-row">
-                                                        <span class="fw-bold fs-6 text-gray-800 me-2">
-                                                            {{ date(' d-m-Y', strtotime($patrimonio->escrituras->last()->aquisicao ?? 'Sem data')) }}
-                                                        </span>
+                                                    <!--end::Row-->
+                                                    <!--begin::Input group-->
+                                                    <div class="row mb-7">
+                                                        <!--begin::Label-->
+                                                        <label class="col-lg-4 fw-semibold text-muted">Data de
+                                                            aquisição</label>
+                                                        <!--end::Label-->
+                                                        <!--begin::Col-->
+                                                        <div class="col-lg-8 fv-row">
+                                                            <span class="fw-bold fs-6 text-gray-800 me-2">
+                                                                @if ($patrimonio->escrituras->last()?->aquisicao)
+                                                                    {{ date('d/m/Y', strtotime($patrimonio->escrituras->last()->aquisicao)) }}
+                                                                @else
+                                                                    Sem data
+                                                                @endif
+                                                            </span>
+                                                        </div>
+                                                        <!--end::Col-->
                                                     </div>
-                                                    <!--end::Col-->
-                                                </div>
-                                                <!--end::Input group-->
-                                                <div class="separator separator-content my-15"><span
-                                                        class="w-250px fw-bold">Outorgado</span></div>
-                                                <!--begin::Input group-->
-                                                <div class="row mb-7">
-                                                    <!--begin::Label-->
-                                                    <label class="col-lg-4 fw-semibold text-muted">Outorgado
-                                                        <i class="fas fa-exclamation-circle ms-1 fs-7"
-                                                            data-bs-toggle="tooltip"
-                                                            title="Pessoa ou entidade que recebe (comprador)"></i></label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Col-->
-                                                    <div class="col-lg-8">
-                                                        <span class="fw-bold fs-6 text-gray-800 me-2">
-                                                            {{ $patrimonio->escrituras->last()->outorgado ?? 'Sem Outorgado' }}
-                                                        </span>
-                                                    </div>
-                                                    <!--end::Col-->
+                                                    <!--end::Input group-->
+                                                    <div class="separator separator-content my-15"><span
+                                                            class="w-250px fw-bold">Outorgado</span></div>
+                                                    <!--begin::Input group-->
+                                                    <div class="row mb-7">
+                                                        <!--begin::Label-->
+                                                        <label class="col-lg-4 fw-semibold text-muted">Outorgado
+                                                            <i class="fas fa-exclamation-circle ms-1 fs-7"
+                                                                data-bs-toggle="tooltip"
+                                                                title="Pessoa ou entidade que recebe (comprador)"></i></label>
+                                                        <!--end::Label-->
+                                                        <!--begin::Col-->
+                                                        <div class="col-lg-8">
+                                                            <span class="fw-bold fs-6 text-gray-800 me-2">
+                                                                {{ $patrimonio->escrituras->last()->outorgado ?? 'Sem Outorgado' }}
+                                                            </span>
+                                                        </div>
+                                                        <!--end::Col-->
 
-                                                </div>
-                                                <!--end::Input group-->
-                                                <!--begin::Input group-->
-                                                <div class="row mb-7">
-                                                    <!--begin::Label-->
-                                                    <label class="col-lg-4 fw-semibold text-muted">Valor de
-                                                        Aquisição</label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Col-->
-                                                    <div class="col-lg-8">
-                                                        <span class="fw-bold fs-6 text-gray-800 me-2">
-                                                            {{ $patrimonio->escrituras->last()->valor ?? 'Sem valor ' }}
-                                                        </span>
                                                     </div>
-                                                    <!--end::Col-->
-                                                </div>
-                                                <!--end::Input group-->
-                                                <!--begin::Input group-->
-                                                <div class="row mb-7">
-                                                    <!--begin::Label-->
-                                                    <label class="col-lg-4 fw-semibold text-muted">Área Total</label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Col-->
-                                                    <div class="col-lg-8">
-                                                        <span class="fw-bold fs-6 text-gray-800 me-2">
-                                                            {{ $patrimonio->escrituras->last()->area_total ?? 'Sem área total' }}
-                                                        </span>
+                                                    <!--end::Input group-->
+                                                    <!--begin::Input group-->
+                                                    <div class="row mb-7">
+                                                        <!--begin::Label-->
+                                                        <label class="col-lg-4 fw-semibold text-muted">Valor de
+                                                            Aquisição</label>
+                                                        <!--end::Label-->
+                                                        <!--begin::Col-->
+                                                        <div class="col-lg-8">
+                                                            <span class="fw-bold fs-6 text-gray-800 me-2">
+                                                                {{ $patrimonio->escrituras->last()?->valor
+                                                                    ? 'R$ ' . number_format($patrimonio->escrituras->last()->valor, 2, ',', '.')
+                                                                    : 'Sem valor' }}
+                                                            </span>
+                                                        </div>
+                                                        <!--end::Col-->
                                                     </div>
-                                                    <!--end::Col-->
-                                                </div>
-                                                <!--end::Input group-->
-                                                <!--begin::Input group-->
-                                                <div class="row mb-10">
-                                                    <!--begin::Label-->
-                                                    <label class="col-lg-4 fw-semibold text-muted">Área
-                                                        Privativa</label>
-                                                    <!--begin::Label-->
-                                                    <!--begin::Label-->
-                                                    <div class="col-lg-8">
-                                                        <span class="fw-bold fs-6 text-gray-800 me-2">
-                                                            {{ $patrimonio->escrituras->last()->area_privativa ?? 'Sem área privativa' }}
-                                                        </span>
+                                                    <!--end::Input group-->
+                                                    <!--begin::Input group-->
+                                                    <div class="row mb-7">
+                                                        <!--begin::Label-->
+                                                        <label class="col-lg-4 fw-semibold text-muted">Área
+                                                            Total</label>
+                                                        <!--end::Label-->
+                                                        <!--begin::Col-->
+                                                        <div class="col-lg-8">
+                                                            <span class="fw-bold fs-6 text-gray-800 me-2">
+                                                                {{ $patrimonio->escrituras->last()?->area_total
+                                                                    ? number_format($patrimonio->escrituras->last()->area_total, 2, ',', '.') . ' m²'
+                                                                    : 'Sem área total' }}
+                                                            </span>
+                                                        </div>
+                                                        <!--end::Col-->
                                                     </div>
-                                                    <!--begin::Label-->
-                                                </div>
-                                                <!--end::Input group-->
-                                                <!--begin::Input group-->
-                                                <div class="row mb-10">
-                                                    <!--begin::Label-->
-                                                    <label class="col-lg-4 fw-semibold text-muted">Informações</label>
-                                                    <!--begin::Label-->
-                                                    <!--begin::Label-->
-                                                    <div class="col-lg-8">
-                                                        <span class="fw-bold fs-6 text-gray-800 me-2">
-                                                            {{ $patrimonio->escrituras->last()->informacoes ?? 'Sem Informações' }}
-                                                        </span>
+                                                    <!--end::Input group-->
+                                                    <!--begin::Input group-->
+                                                    <div class="row mb-10">
+                                                        <!--begin::Label-->
+                                                        <label class="col-lg-4 fw-semibold text-muted">Área
+                                                            Privativa</label>
+                                                        <!--begin::Label-->
+                                                        <!--begin::Label-->
+                                                        <div class="col-lg-8">
+                                                            <span class="fw-bold fs-6 text-gray-800 me-2">
+                                                                {{ $patrimonio->escrituras->last()?->area_privativa
+                                                                    ? number_format($patrimonio->escrituras->last()->area_privativa, 2, ',', '.') . ' m²'
+                                                                    : 'Sem área privativa' }}
+                                                            </span>
+                                                        </div>
+                                                        <!--begin::Label-->
                                                     </div>
-                                                    <!--begin::Label-->
+                                                    <!--end::Input group-->
+                                                    <!--begin::Input group-->
+                                                    <div class="row mb-10">
+                                                        <!--begin::Label-->
+                                                        <label
+                                                            class="col-lg-4 fw-semibold text-muted">Informações</label>
+                                                        <!--begin::Label-->
+                                                        <!--begin::Label-->
+                                                        <div class="col-lg-8">
+                                                            <span class="fw-bold fs-6 text-gray-800 me-2">
+                                                                {{ $patrimonio->escrituras->last()->informacoes ?? 'Sem Informações' }}
+                                                            </span>
+                                                        </div>
+                                                        <!--begin::Label-->
+                                                    </div>
+                                                    <!--end::Input group-->
                                                 </div>
-                                                <!--end::Input group-->
+                                                <!--end::Card body-->
                                             </div>
-                                            <!--end::Card body-->
+                                            <!--end::Body-->
                                         </div>
-                                        <!--end::Body-->
+                                        <!--end::Chart widget 5-->
                                     </div>
-                                    <!--end::Chart widget 5-->
-                                </div>
-                                <!--end::Col-->
+                                    <!--end::Col-->
+                                @else
+                                    <!--begin::Col-->
+                                    <div class="col-xl-7 mb-xl-10">
+                                        <!--begin::Engage widget 11-->
+                                        <div class="card card-flush h-xl-100"
+                                            style="background-color: #202B46; background-image:url('/assets/media/svg/shapes/widget-bg-2.png')"
+                                            data-bs-theme="light">
+                                            <!--begin::Body-->
+                                            <div
+                                                class="card-body d-flex flex-column justify-content-between mt-6 bgi-no-repeat bgi-size-cover bgi-position-x-center">
+                                                <!--begin::Wrapper-->
+                                                <div class="mb-10">
+                                                    <!--begin::Title-->
+                                                    <div class="fs-1 fw-bold text-white text-center mb-9">
+                                                        <span class="me-2">Analyse Your
+                                                            <br />
+                                                            <span class="position-relative d-inline-block">
+                                                                <a href="#"
+                                                                    class="text-success opacity-75-hover">Infrastructure</a>
+                                                                <!--begin::Separator-->
+                                                                <span
+                                                                    class="position-absolute opacity-25 bottom-0 start-0 border-4 border-success border-bottom w-100"></span>
+                                                                <!--end::Separator-->
+                                                            </span></span>with Keen
+                                                    </div>
+                                                    <!--end::Title-->
+                                                    <!--begin::Action-->
+                                                    <div class="text-center">
+                                                        <a href='#'
+                                                            class="btn btn-sm btn-color-white bg-body bg-opacity-15 bg-hover-opacity-25 fw-bold fs-7"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#DM_modal_store_escritura">Get Started</a>
+                                                    </div>
+                                                    <!--begin::Action-->
+                                                </div>
+                                                <!--begin::Wrapper-->
+                                                <!--begin::Illustration-->
+                                                <img class="mx-auto h-150px h-lg-200px mb-11"
+                                                    src="/assets/media/svg/illustrations/sigma/illustration-realestate.svg"
+                                                    alt="" />
+                                                <!--end::Illustration-->
+                                            </div>
+                                            <!--end::Body-->
+                                        </div>
+                                        <!--end::Engage widget 11-->
+                                    </div>
+                                    <!--end::Col-->
+                                @endif
                                 <!--begin::Col-->
                                 <div class="col-xl-5 mb-5 mb-xl-10">
                                     <!--begin::Engage widget 1-->
@@ -993,7 +1065,8 @@
                                                             <td class="text-end">{{ $escritura->aquisicao }}</td>
                                                             <!--end::Product ID-->
                                                             <!--begin::Date added-->
-                                                            <td class="text-end">{{ \Carbon\Carbon::parse($escritura->aquisicao)->format('d M, Y') }}
+                                                            <td class="text-end">
+                                                                {{ \Carbon\Carbon::parse($escritura->aquisicao)->format('d M, Y') }}
                                                             </td>
                                                             <!--end::Date added-->
                                                             <!--begin::Price-->
@@ -1081,317 +1154,510 @@
                                 <!--end::Modal dialog-->
                             </div>
                             <!--end::Modal - Selecionar Localização-->
-                            		<!--begin::Modal - Upgrade plan-->
-		<div class="modal fade" id="kt_modal_upgrade_plan" tabindex="-1" aria-hidden="true">
-			<!--begin::Modal dialog-->
-			<div class="modal-dialog modal-xl">
-				<!--begin::Modal content-->
-				<div class="modal-content rounded">
-					<!--begin::Modal header-->
-					<div class="modal-header justify-content-end border-0 pb-0">
-						<!--begin::Close-->
-						<div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
-							<!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-							<span class="svg-icon svg-icon-1">
-								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-									<rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
-									<rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor" />
-								</svg>
-							</span>
-							<!--end::Svg Icon-->
-						</div>
-						<!--end::Close-->
-					</div>
-					<!--end::Modal header-->
-					<!--begin::Modal body-->
-					<div class="modal-body pt-0 pb-15 px-5 px-xl-20">
-						<!--begin::Heading-->
-						<div class="mb-13 text-center">
-							<h1 class="mb-3">Upgrade a Plan</h1>
-							<div class="text-muted fw-semibold fs-5">If you need more info, please check
-							<a href="#" class="link-primary fw-bold">Pricing Guidelines</a>.</div>
-						</div>
-						<!--end::Heading-->
-						<!--begin::Plans-->
-							<!--begin::Content-->
-							<div id="kt_app_content" class="app-content flex-column-fluid">
-								<!--begin::Content container-->
-								<div id="kt_app_content_container" class="app-container container-xxl">
-									<!--begin::Layout-->
-									<div class="d-flex flex-column flex-lg-row">
-										<!--begin::Content-->
-										<div class="flex-lg-row-fluid mb-10 mb-lg-0 me-lg-7 me-xl-10">
-											<!--begin::Card-->
-											<div class="card">
-												<!--begin::Card body-->
-												<div class="card-body p-12">
-													<!--begin::Form-->
-													<form action="" id="kt_invoice_form">
-														<!--begin::Wrapper-->
-														<div class="d-flex flex-column align-items-start flex-xxl-row">
-															<!--begin::Input group-->
-															<div class="d-flex align-items-center flex-equal fw-row me-4 order-2" data-bs-toggle="tooltip" data-bs-trigger="hover" title="Specify invoice date">
-																<!--begin::Date-->
-																<div class="fs-6 fw-bold text-gray-700 text-nowrap">Date:</div>
-																<!--end::Date-->
-																<!--begin::Input-->
-																<div class="position-relative d-flex align-items-center w-150px">
-																	<!--begin::Datepicker-->
-																	<input class="form-control form-control-transparent fw-bold pe-5" placeholder="Select date" name="invoice_date" />
-																	<!--end::Datepicker-->
-																	<!--begin::Icon-->
-																	<!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
-																	<span class="svg-icon svg-icon-2 position-absolute ms-4 end-0">
-																		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-																			<path d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z" fill="currentColor" />
-																		</svg>
-																	</span>
-																	<!--end::Svg Icon-->
-																	<!--end::Icon-->
-																</div>
-																<!--end::Input-->
-															</div>
-															<!--end::Input group-->
-															<!--begin::Input group-->
-															<div class="d-flex flex-center flex-equal fw-row text-nowrap order-1 order-xxl-2 me-4" data-bs-toggle="tooltip" data-bs-trigger="hover" title="Enter invoice number">
-																<span class="fs-2x fw-bold text-gray-800">Invoice #</span>
-																<input type="text" class="form-control form-control-flush fw-bold text-muted fs-3 w-125px" value="2021001" placehoder="..." />
-															</div>
-															<!--end::Input group-->
-															<!--begin::Input group-->
-															<div class="d-flex align-items-center justify-content-end flex-equal order-3 fw-row" data-bs-toggle="tooltip" data-bs-trigger="hover" title="Specify invoice due date">
-																<!--begin::Date-->
-																<div class="fs-6 fw-bold text-gray-700 text-nowrap">Due Date:</div>
-																<!--end::Date-->
-																<!--begin::Input-->
-																<div class="position-relative d-flex align-items-center w-150px">
-																	<!--begin::Datepicker-->
-																	<input class="form-control form-control-transparent fw-bold pe-5" placeholder="Select date" name="invoice_due_date" />
-																	<!--end::Datepicker-->
-																	<!--begin::Icon-->
-																	<!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
-																	<span class="svg-icon svg-icon-2 position-absolute end-0 ms-4">
-																		<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-																			<path d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z" fill="currentColor" />
-																		</svg>
-																	</span>
-																	<!--end::Svg Icon-->
-																	<!--end::Icon-->
-																</div>
-																<!--end::Input-->
-															</div>
-															<!--end::Input group-->
-														</div>
-														<!--end::Top-->
-														<!--begin::Separator-->
-														<div class="separator separator-dashed my-10"></div>
-														<!--end::Separator-->
-														<!--begin::Wrapper-->
-														<div class="mb-0">
-															<!--begin::Row-->
-															<div class="row gx-10 mb-5">
-																<!--begin::Col-->
-																<div class="col-lg-6">
-																	<label class="form-label fs-6 fw-bold text-gray-700 mb-3">Outorgado</label>
-																	<!--begin::Input group-->
-																	<div class="mb-5">
-																		<input type="text" class="form-control form-control-solid" placeholder="Nome" value="{{$patrimonio->escrituras->last()->outorgado ?? 'Sem escritura'  }}" />
-																	</div>
-																	<!--end::Input group-->
-																	<!--begin::Input group-->
-																	<div class="mb-5">
-																		<input type="text" class="form-control form-control-solid" placeholder="Email" />
-																	</div>
-																	<!--end::Input group-->
-																	<!--begin::Input group-->
-																	<div class="mb-5">
-																		<textarea name="notes" class="form-control form-control-solid" rows="3" placeholder="Who is this invoice from?"></textarea>
-																	</div>
-																	<!--end::Input group-->
-																</div>
-																<!--end::Col-->
-																<!--begin::Col-->
-																<div class="col-lg-6">
-																	<label class="form-label fs-6 fw-bold text-gray-700 mb-3">Outorgante</label>
-																	<!--begin::Input group-->
-																	<div class="mb-5">
-																		<input type="text" class="form-control form-control-solid" placeholder="Name" />
-																	</div>
-																	<!--end::Input group-->
-																	<!--begin::Input group-->
-																	<div class="mb-5">
-																		<input type="text" class="form-control form-control-solid" placeholder="Email" />
-																	</div>
-																	<!--end::Input group-->
-																	<!--begin::Input group-->
-																	<div class="mb-5">
-																		<textarea name="notes" class="form-control form-control-solid" rows="3" placeholder="What is this invoice for?"></textarea>
-																	</div>
-																	<!--end::Input group-->
-																</div>
-																<!--end::Col-->
-															</div>
-															<!--end::Row-->
-															<!--begin::Table wrapper-->
-															<div class="table-responsive mb-10">
-																<!--begin::Table-->
-																<table class="table g-5 gs-0 mb-0 fw-bold text-gray-700" data-kt-element="items">
-																	<!--begin::Table head-->
-																	<thead>
-																		<tr class="border-bottom fs-7 fw-bold text-gray-700 text-uppercase">
-																			<th class="min-w-300px w-475px">Item</th>
-																			<th class="min-w-100px w-100px">QTY</th>
-																			<th class="min-w-150px w-150px">Price</th>
-																			<th class="min-w-100px w-150px text-end">Total</th>
-																			<th class="min-w-75px w-75px text-end">Action</th>
-																		</tr>
-																	</thead>
-																	<!--end::Table head-->
-																	<!--begin::Table body-->
-																	<tbody>
-																		<tr class="border-bottom border-bottom-dashed" data-kt-element="item">
-																			<td class="pe-7">
-																				<input type="text" class="form-control form-control-solid mb-2" name="name[]" placeholder="Item name" />
-																				<input type="text" class="form-control form-control-solid" name="description[]" placeholder="Description" />
-																			</td>
-																			<td class="ps-0">
-																				<input class="form-control form-control-solid" type="number" min="1" name="quantity[]" placeholder="1" value="1" data-kt-element="quantity" />
-																			</td>
-																			<td>
-																				<input type="text" class="form-control form-control-solid text-end" name="price[]" placeholder="0.00" value="0.00" data-kt-element="price" />
-																			</td>
-																			<td class="pt-8 text-end text-nowrap">$
-																			<span data-kt-element="total">0.00</span></td>
-																			<td class="pt-5 text-end">
-																				<button type="button" class="btn btn-sm btn-icon btn-active-color-primary" data-kt-element="remove-item">
-																					<!--begin::Svg Icon | path: icons/duotune/general/gen027.svg-->
-																					<span class="svg-icon svg-icon-3">
-																						<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-																							<path d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z" fill="currentColor" />
-																							<path opacity="0.5" d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z" fill="currentColor" />
-																							<path opacity="0.5" d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z" fill="currentColor" />
-																						</svg>
-																					</span>
-																					<!--end::Svg Icon-->
-																				</button>
-																			</td>
-																		</tr>
-																	</tbody>
-																	<!--end::Table body-->
-																	<!--begin::Table foot-->
-																	<tfoot>
-																		<tr class="border-top border-top-dashed align-top fs-6 fw-bold text-gray-700">
-																			<th class="text-primary">
-																				<button class="btn btn-link py-1" data-kt-element="add-item">Add item</button>
-																			</th>
-																			<th colspan="2" class="border-bottom border-bottom-dashed ps-0">
-																				<div class="d-flex flex-column align-items-start">
-																					<div class="fs-5">Subtotal</div>
-																					<button class="btn btn-link py-1" data-bs-toggle="tooltip" data-bs-trigger="hover" title="Coming soon">Add tax</button>
-																					<button class="btn btn-link py-1" data-bs-toggle="tooltip" data-bs-trigger="hover" title="Coming soon">Add discount</button>
-																				</div>
-																			</th>
-																			<th colspan="2" class="border-bottom border-bottom-dashed text-end">$
-																			<span data-kt-element="sub-total">0.00</span></th>
-																		</tr>
-																		<tr class="align-top fw-bold text-gray-700">
-																			<th></th>
-																			<th colspan="2" class="fs-4 ps-0">Total</th>
-																			<th colspan="2" class="text-end fs-4 text-nowrap">$
-																			<span data-kt-element="grand-total">0.00</span></th>
-																		</tr>
-																	</tfoot>
-																	<!--end::Table foot-->
-																</table>
-															</div>
-															<!--end::Table-->
-															<!--begin::Item template-->
-															<table class="table d-none" data-kt-element="item-template">
-																<tr class="border-bottom border-bottom-dashed" data-kt-element="item">
-																	<td class="pe-7">
-																		<input type="text" class="form-control form-control-solid mb-2" name="name[]" placeholder="Item name" />
-																		<input type="text" class="form-control form-control-solid" name="description[]" placeholder="Description" />
-																	</td>
-																	<td class="ps-0">
-																		<input class="form-control form-control-solid" type="number" min="1" name="quantity[]" placeholder="1" data-kt-element="quantity" />
-																	</td>
-																	<td>
-																		<input type="text" class="form-control form-control-solid text-end" name="price[]" placeholder="0.00" data-kt-element="price" />
-																	</td>
-																	<td class="pt-8 text-end">$
-																	<span data-kt-element="total">0.00</span></td>
-																	<td class="pt-5 text-end">
-																		<button type="button" class="btn btn-sm btn-icon btn-active-color-primary" data-kt-element="remove-item">
-																			<!--begin::Svg Icon | path: icons/duotune/general/gen027.svg-->
-																			<span class="svg-icon svg-icon-3">
-																				<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-																					<path d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z" fill="currentColor" />
-																					<path opacity="0.5" d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z" fill="currentColor" />
-																					<path opacity="0.5" d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z" fill="currentColor" />
-																				</svg>
-																			</span>
-																			<!--end::Svg Icon-->
-																		</button>
-																	</td>
-																</tr>
-															</table>
-															<table class="table d-none" data-kt-element="empty-template">
-																<tr data-kt-element="empty">
-																	<th colspan="5" class="text-muted text-center py-10">No items</th>
-																</tr>
-															</table>
-															<!--end::Item template-->
-															<!--begin::Notes-->
-															<div class="mb-0">
-																<label class="form-label fs-6 fw-bold text-gray-700">Notes</label>
-																<textarea name="notes" class="form-control form-control-solid" rows="3" placeholder="Thanks for your business"></textarea>
-															</div>
-															<!--end::Notes-->
-														</div>
-														<!--end::Wrapper-->
-													</form>
-													<!--end::Form-->
-												</div>
-												<!--end::Card body-->
-											</div>
-											<!--end::Card-->
-										</div>
-										<!--end::Content-->
-									</div>
-									<!--end::Layout-->
-								</div>
-								<!--end::Content container-->
-							</div>
-							<!--end::Content-->
-						<!--end::Plans-->
-						<!--begin::Actions-->
-						<div class="d-flex flex-center flex-row-fluid pt-12">
-							<button type="reset" class="btn btn-light me-3" data-bs-dismiss="modal">Cancel</button>
-							<button type="submit" class="btn btn-primary" id="kt_modal_upgrade_plan_btn">
-								<!--begin::Indicator label-->
-                                <span class="svg-icon svg-icon-3">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M15.43 8.56949L10.744 15.1395C10.6422 15.282 10.5804 15.4492 10.5651 15.6236C10.5498 15.7981 10.5815 15.9734 10.657 16.1315L13.194 21.4425C13.2737 21.6097 13.3991 21.751 13.5557 21.8499C13.7123 21.9488 13.8938 22.0014 14.079 22.0015H14.117C14.3087 21.9941 14.4941 21.9307 14.6502 21.8191C14.8062 21.7075 14.9261 21.5526 14.995 21.3735L21.933 3.33649C22.0011 3.15918 22.0164 2.96594 21.977 2.78013C21.9376 2.59432 21.8452 2.4239 21.711 2.28949L15.43 8.56949Z" fill="currentColor" />
-                                        <path opacity="0.3" d="M20.664 2.06648L2.62602 9.00148C2.44768 9.07085 2.29348 9.19082 2.1824 9.34663C2.07131 9.50244 2.00818 9.68731 2.00074 9.87853C1.99331 10.0697 2.04189 10.259 2.14054 10.4229C2.23919 10.5869 2.38359 10.7185 2.55601 10.8015L7.86601 13.3365C8.02383 13.4126 8.19925 13.4448 8.37382 13.4297C8.54839 13.4145 8.71565 13.3526 8.85801 13.2505L15.43 8.56548L21.711 2.28448C21.5762 2.15096 21.4055 2.05932 21.2198 2.02064C21.034 1.98196 20.8409 1.99788 20.664 2.06648Z" fill="currentColor" />
-                                    </svg>
-                                    Upgrade Plan
-                                </span>
-								<!--end::Indicator label-->
-								<!--begin::Indicator progress-->
-								<span class="indicator-progress">Please wait...
-								<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-								<!--end::Indicator progress-->
-							</button>
-						</div>
-						<!--end::Actions-->
-					</div>
-					<!--end::Modal body-->
-				</div>
-				<!--end::Modal content-->
-			</div>
-			<!--end::Modal dialog-->
-		</div>
-		<!--end::Modal - Upgrade plan-->
+                            <!--begin::Modal - Upgrade plan-->
+                            <div class="modal fade" id="kt_modal_upgrade_plan" tabindex="-1" aria-hidden="true">
+                                <!--begin::Modal dialog-->
+                                <div class="modal-dialog modal-xl">
+                                    <!--begin::Modal content-->
+                                    <div class="modal-content rounded">
+                                        <!--begin::Modal header-->
+                                        <div class="modal-header justify-content-end border-0 pb-0">
+                                            <!--begin::Close-->
+                                            <div class="btn btn-sm btn-icon btn-active-color-primary"
+                                                data-bs-dismiss="modal">
+                                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
+                                                <span class="svg-icon svg-icon-1">
+                                                    <svg width="24" height="24" viewBox="0 0 24 24"
+                                                        fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                        <rect opacity="0.5" x="6" y="17.3137" width="16"
+                                                            height="2" rx="1"
+                                                            transform="rotate(-45 6 17.3137)" fill="currentColor" />
+                                                        <rect x="7.41422" y="6" width="16" height="2"
+                                                            rx="1" transform="rotate(45 7.41422 6)"
+                                                            fill="currentColor" />
+                                                    </svg>
+                                                </span>
+                                                <!--end::Svg Icon-->
+                                            </div>
+                                            <!--end::Close-->
+                                        </div>
+                                        <!--end::Modal header-->
+                                        <!--begin::Modal body-->
+                                        <div class="modal-body pt-0 pb-15 px-5 px-xl-20">
+                                            <!--begin::Heading-->
+                                            <div class="mb-13 text-center">
+                                                <h1 class="mb-3">Upgrade a Plan</h1>
+                                                <div class="text-muted fw-semibold fs-5">If you need more info, please
+                                                    check
+                                                    <a href="#" class="link-primary fw-bold">Pricing
+                                                        Guidelines</a>.
+                                                </div>
+                                            </div>
+                                            <!--end::Heading-->
+                                            <!--begin::Plans-->
+                                            <!--begin::Content-->
+                                            <div id="kt_app_content" class="app-content flex-column-fluid">
+                                                <!--begin::Content container-->
+                                                <div id="kt_app_content_container"
+                                                    class="app-container container-xxl">
+                                                    <!--begin::Layout-->
+                                                    <div class="d-flex flex-column flex-lg-row">
+                                                        <!--begin::Content-->
+                                                        <div class="flex-lg-row-fluid mb-10 mb-lg-0 me-lg-7 me-xl-10">
+                                                            <!--begin::Card-->
+                                                            <div class="card">
+                                                                <!--begin::Card body-->
+                                                                <div class="card-body p-12">
+                                                                    <!--begin::Form-->
+                                                                    <form action="" id="kt_invoice_form">
+                                                                        <!--begin::Wrapper-->
+                                                                        <div
+                                                                            class="d-flex flex-column align-items-start flex-xxl-row">
+                                                                            <!--begin::Input group-->
+                                                                            <div class="d-flex align-items-center flex-equal fw-row me-4 order-2"
+                                                                                data-bs-toggle="tooltip"
+                                                                                data-bs-trigger="hover"
+                                                                                title="Specify invoice date">
+                                                                                <!--begin::Date-->
+                                                                                <div
+                                                                                    class="fs-6 fw-bold text-gray-700 text-nowrap">
+                                                                                    Date:</div>
+                                                                                <!--end::Date-->
+                                                                                <!--begin::Input-->
+                                                                                <div
+                                                                                    class="position-relative d-flex align-items-center w-150px">
+                                                                                    <!--begin::Datepicker-->
+                                                                                    <input
+                                                                                        class="form-control form-control-transparent fw-bold pe-5"
+                                                                                        placeholder="Select date"
+                                                                                        name="invoice_date" />
+                                                                                    <!--end::Datepicker-->
+                                                                                    <!--begin::Icon-->
+                                                                                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
+                                                                                    <span
+                                                                                        class="svg-icon svg-icon-2 position-absolute ms-4 end-0">
+                                                                                        <svg width="24"
+                                                                                            height="24"
+                                                                                            viewBox="0 0 24 24"
+                                                                                            fill="none"
+                                                                                            xmlns="http://www.w3.org/2000/svg">
+                                                                                            <path
+                                                                                                d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z"
+                                                                                                fill="currentColor" />
+                                                                                        </svg>
+                                                                                    </span>
+                                                                                    <!--end::Svg Icon-->
+                                                                                    <!--end::Icon-->
+                                                                                </div>
+                                                                                <!--end::Input-->
+                                                                            </div>
+                                                                            <!--end::Input group-->
+                                                                            <!--begin::Input group-->
+                                                                            <div class="d-flex flex-center flex-equal fw-row text-nowrap order-1 order-xxl-2 me-4"
+                                                                                data-bs-toggle="tooltip"
+                                                                                data-bs-trigger="hover"
+                                                                                title="Enter invoice number">
+                                                                                <span
+                                                                                    class="fs-2x fw-bold text-gray-800">Invoice
+                                                                                    #</span>
+                                                                                <input type="text"
+                                                                                    class="form-control form-control-flush fw-bold text-muted fs-3 w-125px"
+                                                                                    value="2021001"
+                                                                                    placehoder="..." />
+                                                                            </div>
+                                                                            <!--end::Input group-->
+                                                                            <!--begin::Input group-->
+                                                                            <div class="d-flex align-items-center justify-content-end flex-equal order-3 fw-row"
+                                                                                data-bs-toggle="tooltip"
+                                                                                data-bs-trigger="hover"
+                                                                                title="Specify invoice due date">
+                                                                                <!--begin::Date-->
+                                                                                <div
+                                                                                    class="fs-6 fw-bold text-gray-700 text-nowrap">
+                                                                                    Due Date:</div>
+                                                                                <!--end::Date-->
+                                                                                <!--begin::Input-->
+                                                                                <div
+                                                                                    class="position-relative d-flex align-items-center w-150px">
+                                                                                    <!--begin::Datepicker-->
+                                                                                    <input
+                                                                                        class="form-control form-control-transparent fw-bold pe-5"
+                                                                                        placeholder="Select date"
+                                                                                        name="invoice_due_date" />
+                                                                                    <!--end::Datepicker-->
+                                                                                    <!--begin::Icon-->
+                                                                                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
+                                                                                    <span
+                                                                                        class="svg-icon svg-icon-2 position-absolute end-0 ms-4">
+                                                                                        <svg width="24"
+                                                                                            height="24"
+                                                                                            viewBox="0 0 24 24"
+                                                                                            fill="none"
+                                                                                            xmlns="http://www.w3.org/2000/svg">
+                                                                                            <path
+                                                                                                d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z"
+                                                                                                fill="currentColor" />
+                                                                                        </svg>
+                                                                                    </span>
+                                                                                    <!--end::Svg Icon-->
+                                                                                    <!--end::Icon-->
+                                                                                </div>
+                                                                                <!--end::Input-->
+                                                                            </div>
+                                                                            <!--end::Input group-->
+                                                                        </div>
+                                                                        <!--end::Top-->
+                                                                        <!--begin::Separator-->
+                                                                        <div class="separator separator-dashed my-10">
+                                                                        </div>
+                                                                        <!--end::Separator-->
+                                                                        <!--begin::Wrapper-->
+                                                                        <div class="mb-0">
+                                                                            <!--begin::Row-->
+                                                                            <div class="row gx-10 mb-5">
+                                                                                <!--begin::Col-->
+                                                                                <div class="col-lg-6">
+                                                                                    <label
+                                                                                        class="form-label fs-6 fw-bold text-gray-700 mb-3">Outorgado</label>
+                                                                                    <!--begin::Input group-->
+                                                                                    <div class="mb-5">
+                                                                                        <input type="text"
+                                                                                            class="form-control form-control-solid"
+                                                                                            placeholder="Nome"
+                                                                                            value="{{ $patrimonio->escrituras->last()->outorgado ?? 'Sem escritura' }}" />
+                                                                                    </div>
+                                                                                    <!--end::Input group-->
+                                                                                    <!--begin::Input group-->
+                                                                                    <div class="mb-5">
+                                                                                        <input type="text"
+                                                                                            class="form-control form-control-solid"
+                                                                                            placeholder="Email" />
+                                                                                    </div>
+                                                                                    <!--end::Input group-->
+                                                                                    <!--begin::Input group-->
+                                                                                    <div class="mb-5">
+                                                                                        <textarea name="notes" class="form-control form-control-solid" rows="3"
+                                                                                            placeholder="Who is this invoice from?"></textarea>
+                                                                                    </div>
+                                                                                    <!--end::Input group-->
+                                                                                </div>
+                                                                                <!--end::Col-->
+                                                                                <!--begin::Col-->
+                                                                                <div class="col-lg-6">
+                                                                                    <label
+                                                                                        class="form-label fs-6 fw-bold text-gray-700 mb-3">Outorgante</label>
+                                                                                    <!--begin::Input group-->
+                                                                                    <div class="mb-5">
+                                                                                        <input type="text"
+                                                                                            class="form-control form-control-solid"
+                                                                                            placeholder="Name" />
+                                                                                    </div>
+                                                                                    <!--end::Input group-->
+                                                                                    <!--begin::Input group-->
+                                                                                    <div class="mb-5">
+                                                                                        <input type="text"
+                                                                                            class="form-control form-control-solid"
+                                                                                            placeholder="Email" />
+                                                                                    </div>
+                                                                                    <!--end::Input group-->
+                                                                                    <!--begin::Input group-->
+                                                                                    <div class="mb-5">
+                                                                                        <textarea name="notes" class="form-control form-control-solid" rows="3"
+                                                                                            placeholder="What is this invoice for?"></textarea>
+                                                                                    </div>
+                                                                                    <!--end::Input group-->
+                                                                                </div>
+                                                                                <!--end::Col-->
+                                                                            </div>
+                                                                            <!--end::Row-->
+                                                                            <!--begin::Table wrapper-->
+                                                                            <div class="table-responsive mb-10">
+                                                                                <!--begin::Table-->
+                                                                                <table
+                                                                                    class="table g-5 gs-0 mb-0 fw-bold text-gray-700"
+                                                                                    data-kt-element="items">
+                                                                                    <!--begin::Table head-->
+                                                                                    <thead>
+                                                                                        <tr
+                                                                                            class="border-bottom fs-7 fw-bold text-gray-700 text-uppercase">
+                                                                                            <th
+                                                                                                class="min-w-300px w-475px">
+                                                                                                Item</th>
+                                                                                            <th
+                                                                                                class="min-w-100px w-100px">
+                                                                                                QTY</th>
+                                                                                            <th
+                                                                                                class="min-w-150px w-150px">
+                                                                                                Price</th>
+                                                                                            <th
+                                                                                                class="min-w-100px w-150px text-end">
+                                                                                                Total</th>
+                                                                                            <th
+                                                                                                class="min-w-75px w-75px text-end">
+                                                                                                Action</th>
+                                                                                        </tr>
+                                                                                    </thead>
+                                                                                    <!--end::Table head-->
+                                                                                    <!--begin::Table body-->
+                                                                                    <tbody>
+                                                                                        <tr class="border-bottom border-bottom-dashed"
+                                                                                            data-kt-element="item">
+                                                                                            <td class="pe-7">
+                                                                                                <input type="text"
+                                                                                                    class="form-control form-control-solid mb-2"
+                                                                                                    name="name[]"
+                                                                                                    placeholder="Item name" />
+                                                                                                <input type="text"
+                                                                                                    class="form-control form-control-solid"
+                                                                                                    name="description[]"
+                                                                                                    placeholder="Description" />
+                                                                                            </td>
+                                                                                            <td class="ps-0">
+                                                                                                <input
+                                                                                                    class="form-control form-control-solid"
+                                                                                                    type="number"
+                                                                                                    min="1"
+                                                                                                    name="quantity[]"
+                                                                                                    placeholder="1"
+                                                                                                    value="1"
+                                                                                                    data-kt-element="quantity" />
+                                                                                            </td>
+                                                                                            <td>
+                                                                                                <input type="text"
+                                                                                                    class="form-control form-control-solid text-end"
+                                                                                                    name="price[]"
+                                                                                                    placeholder="0.00"
+                                                                                                    value="0.00"
+                                                                                                    data-kt-element="price" />
+                                                                                            </td>
+                                                                                            <td
+                                                                                                class="pt-8 text-end text-nowrap">
+                                                                                                $
+                                                                                                <span
+                                                                                                    data-kt-element="total">0.00</span>
+                                                                                            </td>
+                                                                                            <td class="pt-5 text-end">
+                                                                                                <button type="button"
+                                                                                                    class="btn btn-sm btn-icon btn-active-color-primary"
+                                                                                                    data-kt-element="remove-item">
+                                                                                                    <!--begin::Svg Icon | path: icons/duotune/general/gen027.svg-->
+                                                                                                    <span
+                                                                                                        class="svg-icon svg-icon-3">
+                                                                                                        <svg width="24"
+                                                                                                            height="24"
+                                                                                                            viewBox="0 0 24 24"
+                                                                                                            fill="none"
+                                                                                                            xmlns="http://www.w3.org/2000/svg">
+                                                                                                            <path
+                                                                                                                d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z"
+                                                                                                                fill="currentColor" />
+                                                                                                            <path
+                                                                                                                opacity="0.5"
+                                                                                                                d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z"
+                                                                                                                fill="currentColor" />
+                                                                                                            <path
+                                                                                                                opacity="0.5"
+                                                                                                                d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z"
+                                                                                                                fill="currentColor" />
+                                                                                                        </svg>
+                                                                                                    </span>
+                                                                                                    <!--end::Svg Icon-->
+                                                                                                </button>
+                                                                                            </td>
+                                                                                        </tr>
+                                                                                    </tbody>
+                                                                                    <!--end::Table body-->
+                                                                                    <!--begin::Table foot-->
+                                                                                    <tfoot>
+                                                                                        <tr
+                                                                                            class="border-top border-top-dashed align-top fs-6 fw-bold text-gray-700">
+                                                                                            <th class="text-primary">
+                                                                                                <button
+                                                                                                    class="btn btn-link py-1"
+                                                                                                    data-kt-element="add-item">Add
+                                                                                                    item</button>
+                                                                                            </th>
+                                                                                            <th colspan="2"
+                                                                                                class="border-bottom border-bottom-dashed ps-0">
+                                                                                                <div
+                                                                                                    class="d-flex flex-column align-items-start">
+                                                                                                    <div
+                                                                                                        class="fs-5">
+                                                                                                        Subtotal</div>
+                                                                                                    <button
+                                                                                                        class="btn btn-link py-1"
+                                                                                                        data-bs-toggle="tooltip"
+                                                                                                        data-bs-trigger="hover"
+                                                                                                        title="Coming soon">Add
+                                                                                                        tax</button>
+                                                                                                    <button
+                                                                                                        class="btn btn-link py-1"
+                                                                                                        data-bs-toggle="tooltip"
+                                                                                                        data-bs-trigger="hover"
+                                                                                                        title="Coming soon">Add
+                                                                                                        discount</button>
+                                                                                                </div>
+                                                                                            </th>
+                                                                                            <th colspan="2"
+                                                                                                class="border-bottom border-bottom-dashed text-end">
+                                                                                                $
+                                                                                                <span
+                                                                                                    data-kt-element="sub-total">0.00</span>
+                                                                                            </th>
+                                                                                        </tr>
+                                                                                        <tr
+                                                                                            class="align-top fw-bold text-gray-700">
+                                                                                            <th></th>
+                                                                                            <th colspan="2"
+                                                                                                class="fs-4 ps-0">Total
+                                                                                            </th>
+                                                                                            <th colspan="2"
+                                                                                                class="text-end fs-4 text-nowrap">
+                                                                                                $
+                                                                                                <span
+                                                                                                    data-kt-element="grand-total">0.00</span>
+                                                                                            </th>
+                                                                                        </tr>
+                                                                                    </tfoot>
+                                                                                    <!--end::Table foot-->
+                                                                                </table>
+                                                                            </div>
+                                                                            <!--end::Table-->
+                                                                            <!--begin::Item template-->
+                                                                            <table class="table d-none"
+                                                                                data-kt-element="item-template">
+                                                                                <tr class="border-bottom border-bottom-dashed"
+                                                                                    data-kt-element="item">
+                                                                                    <td class="pe-7">
+                                                                                        <input type="text"
+                                                                                            class="form-control form-control-solid mb-2"
+                                                                                            name="name[]"
+                                                                                            placeholder="Item name" />
+                                                                                        <input type="text"
+                                                                                            class="form-control form-control-solid"
+                                                                                            name="description[]"
+                                                                                            placeholder="Description" />
+                                                                                    </td>
+                                                                                    <td class="ps-0">
+                                                                                        <input
+                                                                                            class="form-control form-control-solid"
+                                                                                            type="number"
+                                                                                            min="1"
+                                                                                            name="quantity[]"
+                                                                                            placeholder="1"
+                                                                                            data-kt-element="quantity" />
+                                                                                    </td>
+                                                                                    <td>
+                                                                                        <input type="text"
+                                                                                            class="form-control form-control-solid text-end"
+                                                                                            name="price[]"
+                                                                                            placeholder="0.00"
+                                                                                            data-kt-element="price" />
+                                                                                    </td>
+                                                                                    <td class="pt-8 text-end">$
+                                                                                        <span
+                                                                                            data-kt-element="total">0.00</span>
+                                                                                    </td>
+                                                                                    <td class="pt-5 text-end">
+                                                                                        <button type="button"
+                                                                                            class="btn btn-sm btn-icon btn-active-color-primary"
+                                                                                            data-kt-element="remove-item">
+                                                                                            <!--begin::Svg Icon | path: icons/duotune/general/gen027.svg-->
+                                                                                            <span
+                                                                                                class="svg-icon svg-icon-3">
+                                                                                                <svg width="24"
+                                                                                                    height="24"
+                                                                                                    viewBox="0 0 24 24"
+                                                                                                    fill="none"
+                                                                                                    xmlns="http://www.w3.org/2000/svg">
+                                                                                                    <path
+                                                                                                        d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z"
+                                                                                                        fill="currentColor" />
+                                                                                                    <path
+                                                                                                        opacity="0.5"
+                                                                                                        d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z"
+                                                                                                        fill="currentColor" />
+                                                                                                    <path
+                                                                                                        opacity="0.5"
+                                                                                                        d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z"
+                                                                                                        fill="currentColor" />
+                                                                                                </svg>
+                                                                                            </span>
+                                                                                            <!--end::Svg Icon-->
+                                                                                        </button>
+                                                                                    </td>
+                                                                                </tr>
+                                                                            </table>
+                                                                            <table class="table d-none"
+                                                                                data-kt-element="empty-template">
+                                                                                <tr data-kt-element="empty">
+                                                                                    <th colspan="5"
+                                                                                        class="text-muted text-center py-10">
+                                                                                        No items</th>
+                                                                                </tr>
+                                                                            </table>
+                                                                            <!--end::Item template-->
+                                                                            <!--begin::Notes-->
+                                                                            <div class="mb-0">
+                                                                                <label
+                                                                                    class="form-label fs-6 fw-bold text-gray-700">Notes</label>
+                                                                                <textarea name="notes" class="form-control form-control-solid" rows="3"
+                                                                                    placeholder="Thanks for your business"></textarea>
+                                                                            </div>
+                                                                            <!--end::Notes-->
+                                                                        </div>
+                                                                        <!--end::Wrapper-->
+                                                                    </form>
+                                                                    <!--end::Form-->
+                                                                </div>
+                                                                <!--end::Card body-->
+                                                            </div>
+                                                            <!--end::Card-->
+                                                        </div>
+                                                        <!--end::Content-->
+                                                    </div>
+                                                    <!--end::Layout-->
+                                                </div>
+                                                <!--end::Content container-->
+                                            </div>
+                                            <!--end::Content-->
+                                            <!--end::Plans-->
+                                            <!--begin::Actions-->
+                                            <div class="d-flex flex-center flex-row-fluid pt-12">
+                                                <button type="reset" class="btn btn-light me-3"
+                                                    data-bs-dismiss="modal">Cancel</button>
+                                                <button type="submit" class="btn btn-primary"
+                                                    id="kt_modal_upgrade_plan_btn">
+                                                    <!--begin::Indicator label-->
+                                                    <span class="svg-icon svg-icon-3">
+                                                        <svg width="24" height="24" viewBox="0 0 24 24"
+                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                            <path
+                                                                d="M15.43 8.56949L10.744 15.1395C10.6422 15.282 10.5804 15.4492 10.5651 15.6236C10.5498 15.7981 10.5815 15.9734 10.657 16.1315L13.194 21.4425C13.2737 21.6097 13.3991 21.751 13.5557 21.8499C13.7123 21.9488 13.8938 22.0014 14.079 22.0015H14.117C14.3087 21.9941 14.4941 21.9307 14.6502 21.8191C14.8062 21.7075 14.9261 21.5526 14.995 21.3735L21.933 3.33649C22.0011 3.15918 22.0164 2.96594 21.977 2.78013C21.9376 2.59432 21.8452 2.4239 21.711 2.28949L15.43 8.56949Z"
+                                                                fill="currentColor" />
+                                                            <path opacity="0.3"
+                                                                d="M20.664 2.06648L2.62602 9.00148C2.44768 9.07085 2.29348 9.19082 2.1824 9.34663C2.07131 9.50244 2.00818 9.68731 2.00074 9.87853C1.99331 10.0697 2.04189 10.259 2.14054 10.4229C2.23919 10.5869 2.38359 10.7185 2.55601 10.8015L7.86601 13.3365C8.02383 13.4126 8.19925 13.4448 8.37382 13.4297C8.54839 13.4145 8.71565 13.3526 8.85801 13.2505L15.43 8.56548L21.711 2.28448C21.5762 2.15096 21.4055 2.05932 21.2198 2.02064C21.034 1.98196 20.8409 1.99788 20.664 2.06648Z"
+                                                                fill="currentColor" />
+                                                        </svg>
+                                                        Upgrade Plan
+                                                    </span>
+                                                    <!--end::Indicator label-->
+                                                    <!--begin::Indicator progress-->
+                                                    <span class="indicator-progress">Please wait...
+                                                        <span
+                                                            class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                                    <!--end::Indicator progress-->
+                                                </button>
+                                            </div>
+                                            <!--end::Actions-->
+                                        </div>
+                                        <!--end::Modal body-->
+                                    </div>
+                                    <!--end::Modal content-->
+                                </div>
+                                <!--end::Modal dialog-->
+                            </div>
+                            <!--end::Modal - Upgrade plan-->
 
                         </div>
                         <!--end:::Tab pane-->
@@ -1430,8 +1696,7 @@
                                         <div class="d-flex justify-content-end"
                                             data-kt-filemanager-table-toolbar="base">
                                             <!--begin::Back to folders-->
-                                            <a href="#"
-                                                class="btn btn-icon btn-light-primary me-3">
+                                            <a href="#" class="btn btn-icon btn-light-primary me-3">
                                                 <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
                                                 <span class="svg-icon svg-icon-2">
                                                     <svg width="24" height="24" viewBox="0 0 24 24"
@@ -1563,7 +1828,8 @@
                                                                 </svg>
                                                             </span>
                                                             <!--end::Svg Icon-->
-                                                            <a href="{{ route('file', ['path' => $anexo->caminho_arquivo]) }}" target="_blank"
+                                                            <a href="{{ route('file', ['path' => $anexo->caminho_arquivo]) }}"
+                                                                target="_blank"
                                                                 class="text-gray-800 text-hover-primary">{{ $anexo->nome_arquivo }}</a>
                                                         </div>
                                                     </td>
@@ -1586,10 +1852,18 @@
                                                                     data-kt-menu-placement="bottom-end">
                                                                     <!-- Ícone SVG -->
                                                                     <span class="svg-icon svg-icon-5 m-0">
-                                                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                                            <rect x="10" y="10" width="4" height="4" rx="2" fill="currentColor" />
-                                                                            <rect x="17" y="10" width="4" height="4" rx="2" fill="currentColor" />
-                                                                            <rect x="3" y="10" width="4" height="4" rx="2" fill="currentColor" />
+                                                                        <svg width="24" height="24"
+                                                                            viewBox="0 0 24 24" fill="none"
+                                                                            xmlns="http://www.w3.org/2000/svg">
+                                                                            <rect x="10" y="10" width="4"
+                                                                                height="4" rx="2"
+                                                                                fill="currentColor" />
+                                                                            <rect x="17" y="10" width="4"
+                                                                                height="4" rx="2"
+                                                                                fill="currentColor" />
+                                                                            <rect x="3" y="10" width="4"
+                                                                                height="4" rx="2"
+                                                                                fill="currentColor" />
                                                                         </svg>
                                                                     </span>
                                                                 </button>
@@ -1598,13 +1872,17 @@
                                                                 <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4"
                                                                     data-kt-menu="true">
                                                                     <div class="menu-item px-3">
-                                                                        <a href="#" class="menu-link px-3">Download</a>
+                                                                        <a href="#"
+                                                                            class="menu-link px-3">Download</a>
                                                                     </div>
                                                                     <div class="menu-item px-3">
-                                                                        <a href="#" class="menu-link px-3" data-kt-filemanager-table="rename">Renomear</a>
+                                                                        <a href="#" class="menu-link px-3"
+                                                                            data-kt-filemanager-table="rename">Renomear</a>
                                                                     </div>
                                                                     <div class="menu-item px-3">
-                                                                        <a href="#" class="menu-link text-danger px-3" data-kt-filemanager-table="delete_row">Excluir</a>
+                                                                        <a href="#"
+                                                                            class="menu-link text-danger px-3"
+                                                                            data-kt-filemanager-table="delete_row">Excluir</a>
                                                                     </div>
                                                                 </div>
                                                             </div>
@@ -1669,7 +1947,8 @@
                                                     <!--end::Svg Icon-->
                                                 </span>
                                                 <span class="indicator-progress">
-                                                    <span class="spinner-border spinner-border-sm align-middle"></span>
+                                                    <span
+                                                        class="spinner-border spinner-border-sm align-middle"></span>
                                                 </span>
                                             </button>
                                             <!--end:Submit button-->
@@ -1694,7 +1973,8 @@
                                                     <!--end::Svg Icon-->
                                                 </span>
                                                 <span class="indicator-progress">
-                                                    <span class="spinner-border spinner-border-sm align-middle"></span>
+                                                    <span
+                                                        class="spinner-border spinner-border-sm align-middle"></span>
                                                 </span>
                                             </button>
                                             <!--end:Cancel button-->
@@ -1787,12 +2067,12 @@
                                             <span class="svg-icon svg-icon-5 m-0">
                                                 <svg width="24" height="24" viewBox="0 0 24 24"
                                                     fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <rect x="10" y="10" width="4" height="4" rx="2"
-                                                        fill="currentColor" />
-                                                    <rect x="17" y="10" width="4" height="4" rx="2"
-                                                        fill="currentColor" />
-                                                    <rect x="3" y="10" width="4" height="4" rx="2"
-                                                        fill="currentColor" />
+                                                    <rect x="10" y="10" width="4" height="4"
+                                                        rx="2" fill="currentColor" />
+                                                    <rect x="17" y="10" width="4" height="4"
+                                                        rx="2" fill="currentColor" />
+                                                    <rect x="3" y="10" width="4" height="4"
+                                                        rx="2" fill="currentColor" />
                                                 </svg>
                                             </span>
                                             <!--end::Svg Icon-->
@@ -1814,7 +2094,8 @@
                                             <!--begin::Menu item-->
                                             <div class="menu-item px-3">
                                                 <a href="#" class="menu-link px-3"
-                                                    data-kt-filemanager-table-filter="move_row" data-bs-toggle="modal"
+                                                    data-kt-filemanager-table-filter="move_row"
+                                                    data-bs-toggle="modal"
                                                     data-bs-target="#kt_modal_move_to_folder">Move to folder</a>
                                             </div>
                                             <!--end::Menu item-->
@@ -1938,7 +2219,8 @@
                             <!--end::Modal - Upload File-->
 
                             <!--begin::Modal - New Product-->
-                            <div class="modal fade" id="kt_modal_move_to_folder" tabindex="-1" aria-hidden="true">
+                            <div class="modal fade" id="kt_modal_move_to_folder" tabindex="-1"
+                                aria-hidden="true">
                                 <!--begin::Modal dialog-->
                                 <div class="modal-dialog modal-dialog-centered mw-650px">
                                     <!--begin::Modal content-->
@@ -2771,315 +3053,19 @@
     </div>
     <!--end:::Main-->
 
-    <!--begin::Modal - New Address-->
-    <div class="modal fade" id="kt_modal_new_address" tabindex="-1" aria-hidden="true">
-        <!--begin::Modal dialog-->
-        <div class="modal-dialog modal-dialog-centered mw-650px">
-            <!--begin::Modal content-->
-            <div class="modal-content">
-                <!--begin::Form-->
-                <form id="kt_modal_new_address_form" class="form fv-plugins-bootstrap5 fv-plugins-framework"
-                    method="POST" action="{{ route('namePatrimonio.store') }}">
-                    @csrf
-                    <input type="hidden" id="method_field" name="_method" value="POST">
-                    <input type="hidden" id="address_id" name="id">
+    <!--begin::Modal - Dados do Patrimonio-->
+    @include('app.components.modals.patrimonio.edit-patrimonio')
+    <!--end::Modal - Dados do Patrimonio-->
 
-                    <div class="modal-header" id="kt_modal_new_address_header">
-                        <!--begin::Modal title-->
-                        <h2>Add New Address</h2>
-                        <!--end::Modal title-->
-                        <!--begin::Close-->
-                        <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
-                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-                            <span class="svg-icon svg-icon-1">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <rect opacity="0.5" x="6" y="17.3137" width="16" height="2"
-                                        rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
-                                    <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                        transform="rotate(45 7.41422 6)" fill="currentColor" />
-                                </svg>
-                            </span>
-                            <!--end::Svg Icon-->
-                        </div>
-                        <!--end::Close-->
-                    </div>
-                    <!--end::Modal header-->
-                    <!--begin::Modal body-->
-                    <div class="modal-body py-10 px-lg-17">
-                        <!--begin::Scroll-->
-                        <div class="scroll-y me-n7 pe-7" id="kt_modal_new_address_scroll" data-kt-scroll="true"
-                            data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto"
-                            data-kt-scroll-dependencies="#kt_modal_new_address_header"
-                            data-kt-scroll-wrappers="#kt_modal_new_address_scroll" data-kt-scroll-offset="300px">
-                            <!--begin::Notice-->
-                            <!--begin::Notice-->
-                            <div
-                                class="notice d-flex bg-light-warning rounded border-warning border border-dashed mb-9 p-6">
-                                <!--begin::Icon-->
-                                <!--begin::Svg Icon | path: icons/duotune/general/gen044.svg-->
-                                <span class="svg-icon svg-icon-2tx svg-icon-warning me-4">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <rect opacity="0.3" x="2" y="2" width="20" height="20"
-                                            rx="10" fill="currentColor" />
-                                        <rect x="11" y="14" width="7" height="2" rx="1"
-                                            transform="rotate(-90 11 14)" fill="currentColor" />
-                                        <rect x="11" y="17" width="2" height="2" rx="1"
-                                            transform="rotate(-90 11 17)" fill="currentColor" />
-                                    </svg>
-                                </span>
-                                <!--end::Svg Icon-->
-                                <!--end::Icon-->
-                                <!--begin::Wrapper-->
-                                <div class="d-flex flex-stack flex-grow-1">
-                                    <!--begin::Content-->
-                                    <div class="fw-semibold">
-                                        <h4 class="text-gray-900 fw-bold">Warning</h4>
-                                        <div class="fs-6 text-gray-700">Updating address may affter to your
-                                            <a href="#">Tax Location</a>
-                                        </div>
-                                    </div>
-                                    <!--end::Content-->
-                                </div>
-                                <!--end::Wrapper-->
-                            </div>
-                            <!--end::Notice-->
-                            <!--end::Notice-->
-                            <div class="row mb-5">
-                                <div class="d-flex flex-column mb-5 fv-row">
-                                    <!--begin::Label-->
-                                    <label class="required fs-5 fw-semibold mb-2">Descrição</label>
-                                    <!--end::Label-->
-                                    <!--begin::Input-->
-                                    <input class="form-control form-control-solid" placeholder=""
-                                        name="descricao" />
-                                    <!--end::Input-->
-                                </div>
-                            </div>
-                            <!--begin::Input group-->
-                            <div class="row g-9 mb-5">
-                                <!--begin::Col-->
-                                <div class="col-md-3 fv-row">
-                                    <!--begin::Label-->
-                                    <label class="fs-5 fw-semibold mb-2">CEP</label>
-                                    <!--end::Label-->
-                                    <!--begin::Input-->
-                                    <input class="form-control form-control-solid" placeholder="" id="cep"
-                                        name="cep" />
-                                    <!--end::Input-->
-                                </div>
-                                <!--end::Col-->
-                                <!--begin::Col-->
-                                <div class="col-md-9 fv-row">
-                                    <!--begin::Label-->
-                                    <label class="fs-5 fw-semibold mb-2">Rua</label>
-                                    <!--end::Label-->
-                                    <!--begin::Input-->
-                                    <input class="form-control form-control-solid" placeholder="" id="logradouro"
-                                        name="logradouro" />
-                                    <!--end::Input-->
-                                </div>
-                                <!--end::Col-->
-                            </div>
-                            <!--end::Input group-->
-                            <!--begin::Input group-->
-                            <div class="row mb-5">
-                                <!--begin::Col-->
-                                <div class="col-md-6 fv-row">
-                                    <!--begin::Label-->
-                                    <label class="required fs-5 fw-semibold mb-2">Bairro</label>
-                                    <!--end::Label-->
-                                    <!--begin::Input-->
-                                    <input type="text" class="form-control form-control-solid" placeholder=""
-                                        id="bairro" name="bairro" />
-                                    <!--end::Input-->
-                                </div>
-                                <!--end::Col-->
-                                <!--begin::Col-->
-                                <div class="col-md-6 fv-row">
-                                    <!--end::Label-->
-                                    <label class="required fs-5 fw-semibold mb-2">Cidade</label>
-                                    <!--end::Label-->
-                                    <!--end::Input-->
-                                    <input type="text" class="form-control form-control-solid" placeholder=""
-                                        id="localidade" name="localidade" />
-                                    <!--end::Input-->
-                                </div>
-                                <!--end::Col-->
-                            </div>
-                            <!--end::Input group-->
-                            <!--begin::Input group-->
-                            <div class="row mb-5">
-                                <!--begin::Col-->
-                                <div class="col-md-5 fv-row">
-                                    <!--begin::Label-->
-                                    <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
-                                        <span class="required">Estado</span>
-                                        <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
-                                            title="Your payment statements may very based on selected country"></i>
-                                    </label>
-                                    <!--end::Label-->
-                                    <!--begin::Select-->
-                                    <select id="uf" name="uf" data-control="select2"
-                                        data-dropdown-parent="#kt_modal_new_address"
-                                        data-placeholder="Select a Country..."
-                                        class="form-select form-select-solid">
-                                        <option value="AC">Acre</option>
-                                        <option value="AL">Alagoas</option>
-                                        <option value="AP">Amapá</option>
-                                        <option value="AM">Amazonas</option>
-                                        <option value="BA">Bahia</option>
-                                        <option value="CE">Ceará</option>
-                                        <option value="DF">Distrito Federal</option>
-                                        <option value="ES">Espírito Santo</option>
-                                        <option value="GO">Goiás</option>
-                                        <option value="MA">Maranhão</option>
-                                        <option value="MT">Mato Grosso</option>
-                                        <option value="MS">Mato Grosso do Sul</option>
-                                        <option value="MG">Minas Gerais</option>
-                                        <option value="PA">Pará</option>
-                                        <option value="PB">Paraíba</option>
-                                        <option value="PR">Paraná</option>
-                                        <option value="PE">Pernambuco</option>
-                                        <option value="PI">Piauí</option>
-                                        <option value="RJ">Rio de Janeiro</option>
-                                        <option value="RN">Rio Grande do Norte</option>
-                                        <option value="RS">Rio Grande do Sul</option>
-                                        <option value="RO">Rondônia</option>
-                                        <option value="RR">Roraima</option>
-                                        <option value="SC">Santa Catarina</option>
-                                        <option value="SP">São Paulo</option>
-                                        <option value="SE">Sergipe</option>
-                                        <option value="TO">Tocantins</option>
-                                    </select>
-                                    <!--end::Select-->
-                                </div>
-                                <div class="col-md-4 fv-row">
-                                    <!--begin::Input group-->
-                                    <!--begin::Label-->
-                                    <label class="required fs-5 fw-semibold mb-2">N. do Município</label>
-                                    <!--end::Label-->
-                                    <!--begin::Input-->
-                                    <input class="form-control form-control-solid" placeholder="" id="ibge"
-                                        name="ibge" />
-                                    <!--end::Input-->
-                                    <!--end::Input group-->
-                                </div>
-                                <div class="col-md-3 fv-row">
-                                    <!--begin::Input group-->
-                                    <!--begin::Label-->
-                                    <label class="required fs-5 fw-semibold mb-2">N. do Foro</label>
-                                    <!--end::Label-->
-                                    <!--begin::Input-->
-                                    <input class="form-control form-control-solid" placeholder="" id="numForo"
-                                        name="numForo" />
-                                    <!--end::Input-->
-                                    <!--end::Input group-->
-                                </div>
-                            </div>
-                            <!--end::Input group-->
+    <!--begin::Modal - Dados do Editar Escritura-->
+        @include('app.components.modals.patrimonio.escrituras.edit-escritura')
+        <!--end::Modal - Dados do Editar Escritura-->
+        @include('app.components.modals.patrimonio.escrituras.store-escritura')
 
-                            <!--begin::Input group-->
-                            <div class="d-flex flex-column mb-5 fv-row">
-                                <!--begin::Label-->
-                                <label class="required fs-5 fw-semibold mb-2">Complemento</label>
-                                <!--end::Label-->
-                                <!--begin::Input-->
-                                <textarea class="form-control form-control-solid" placeholder="" id="complemento" name="complemento"> </textarea>
-                                <!--end::Input-->
-                            </div>
-                            <!--end::Input group-->
-                        </div>
-                        <!--end::Scroll-->
-                    </div>
-                    <!--end::Modal body-->
-                    <!--begin::Modal footer-->
-                    <div class="modal-footer flex-center">
-                        <!--begin::Button-->
-                        <button type="reset" id="kt_modal_new_address_cancel"
-                            class="btn btn-light me-3">Discard</button>
-                        <!--end::Button-->
-                        <!--begin::Button-->
-                        <button type="submit" id="kt_modal_new_address_submit" class="btn btn-primary">
-                            <span class="indicator-label">Submit</span>
-                            <span class="indicator-progress">Please wait...
-                                <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                        </button>
-                        <!--end::Button-->
-                    </div>
-                    <!--end::Modal footer-->
-                </form>
-                <!--end::Form-->
-            </div>
-        </div>
-    </div>
-    <!--end::Modal - New Address-->
+
 
     <script async defer
         src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA9tPypF5Ic2DXAMrJwiX1Dsj5FVi_SuPs&callback=initMap"></script>
-
-    <script>
-        function openEditAddressModal(address) {
-            document.getElementById('kt_modal_new_address_header').querySelector('h2').innerText =
-                "Atualizar : {{ $patrimonio->codigo_rid }}";
-            document.getElementById('method_field').value = 'PUT';
-            document.getElementById('address_id').value = address.id;
-            document.getElementById('kt_modal_new_address_form').action = "{{ route('namePatrimonio.update', ':id') }}"
-                .replace(':id', address.id);
-
-            document.querySelector('input[name="descricao"]').value = address.descricao;
-            document.querySelector('input[name="cep"]').value = address.cep;
-            document.querySelector('input[name="logradouro"]').value = address.logradouro;
-            document.querySelector('input[name="bairro"]').value = address.bairro;
-            document.querySelector('input[name="localidade"]').value = address.localidade;
-            document.querySelector('select[name="uf"]').value = address.uf;
-            document.querySelector('input[name="ibge"]').value = address.ibge;
-            document.querySelector('input[name="numForo"]').value = address.numForo;
-            document.querySelector('textarea[name="complemento"]').value = address.complemento;
-
-            $('#uf').select2();
-            $('#kt_modal_new_address').modal('show');
-        }
-
-        $('#kt_modal_new_address_form').on('submit', function(e) {
-            e.preventDefault(); // Previne o comportamento padrão de envio do formulário
-
-            var form = $(this);
-            var actionUrl = form.attr('action');
-            var formData = form.serialize(); // Captura os dados do formulário
-
-            $.ajax({
-                url: actionUrl,
-                type: $('#method_field').val(), // Verifica se é POST ou PUT
-                data: formData,
-                success: function(response) {
-                    if (response.success) {
-                        // Fecha o modal
-                        $('#kt_modal_new_address').modal('hide');
-
-                        // Exibe uma mensagem de sucesso (opcional)
-                        alert('Endereço salvo com sucesso!');
-
-                        // Atualiza o conteúdo da página, você pode usar JavaScript para atualizar os elementos desejados
-                        // Supondo que você tenha uma tabela com id 'address-table' para listar os endereços
-                        // Por exemplo, você pode atualizar a tabela via AJAX ou recarregar uma parte dela
-
-                        // Você pode usar algo como:
-                        // $('#address-table').load(location.href + " #address-table");
-
-                        // Outra opção seria adicionar ou atualizar diretamente o HTML correspondente ao endereço salvo
-                        // usando a resposta JSON, se ela incluir o endereço atualizado.
-                    } else {
-                        alert('Erro ao salvar o endereço.');
-                    }
-                },
-                error: function(xhr) {
-                    alert('Ocorreu um erro. Tente novamente.');
-                }
-            });
-        });
-    </script>
 
 </x-tenant-app-layout>
 <!--begin::Vendors Javascript(used for this page only)-->

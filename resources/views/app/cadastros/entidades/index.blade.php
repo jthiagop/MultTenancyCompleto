@@ -388,10 +388,6 @@
                                                             </td>
                                                         </tr>
                                                     @empty
-                                                        <tr>
-                                                            <td colspan="5" class="text-center">Nenhuma entidade
-                                                                financeira encontrada.</td>
-                                                        </tr>
                                                     @endforelse
                                                 </tbody>
                                                 <!--end::Table body-->

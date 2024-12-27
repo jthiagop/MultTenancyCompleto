@@ -113,7 +113,7 @@
                 <label class="fs-6 fw-semibold mb-2">Livro</label>
                 <!--end::Label-->
                 <!--begin::Input-->
-                <input class="form-control form-control-solid" placeholder="" name="livro" />
+                <input class="form-control form-control-solid" placeholder="L-0001" name="livro" />
                 <!--end::Input-->
             </div>
             <!--end::Col-->
@@ -123,7 +123,7 @@
                 <label class="fs-6 fw-semibold mb-2">Folha</label>
                 <!--end::Label-->
                 <!--begin::Input-->
-                <input class="form-control form-control-solid" placeholder="" name="folha" />
+                <input class="form-control form-control-solid" placeholder="F-0002" name="folha" />
                 <!--end::Input-->
             </div>
             <!--end::Col-->
@@ -133,7 +133,7 @@
                 <label class="fs-6 fw-semibold mb-2">Registro</label>
                 <!--end::Label-->
                 <!--begin::Input-->
-                <input class="form-control form-control-solid" placeholder="" name="registro" />
+                <input class="form-control form-control-solid" placeholder="R-23423" name="registro" />
                 <!--end::Input-->
             </div>
             <!--end::Col-->
@@ -188,7 +188,7 @@
                         <label class="required fs-6 fw-semibold mb-2">CEP</label>
                         <!--end::Label-->
                         <!--begin::Input-->
-                        <input class="form-control form-control-solid" placeholder="" name="cep"
+                        <input class="form-control form-control-solid" placeholder="00000-000" name="cep"
                             id="cep" />
                         <!--end::Input-->
                     </div>
@@ -199,7 +199,7 @@
                         <label class="required fs-6 fw-semibold mb-2">Bairro</label>
                         <!--end::Label-->
                         <!--begin::Input-->
-                        <input class="form-control form-control-solid" placeholder="" id="bairro"
+                        <input class="form-control form-control-solid" placeholder="São Francisco" id="bairro"
                             name="bairro" />
                         <!--end::Input-->
                     </div>
@@ -212,7 +212,7 @@
                     <label class="fs-6 fw-semibold mb-2">Rua</label>
                     <!--end::Label-->
                     <!--begin::Input-->
-                    <input class="form-control form-control-solid" placeholder="nome da rua"
+                    <input class="form-control form-control-solid" placeholder="Rua Bento XVI"
                         id="logradouro" name="logradouro" value="" />
                     <!--end::Input-->
                 </div>
@@ -225,8 +225,8 @@
                         <label class=" fs-6 fw-semibold mb-2">Cidade</label>
                         <!--end::Label-->
                         <!--begin::Input-->
-                        <input class="form-control form-control-solid" placeholder=""id="localidade"
-                            name="localidade" value="Victoria" />
+                        <input class="form-control form-control-solid" placeholder="Caruaru"id="localidade"
+                            name="localidade" value="" />
                         <!--end::Input-->
                     </div>
                     <!--end::Col-->
@@ -331,8 +331,8 @@
                     <label class=" fs-6 fw-semibold mb-2">E-Mail</label>
                     <!--end::Label-->
                     <!--begin::Input-->
-                    <input class="form-control form-control-solid" placeholder="" name="outorgante_email"
-                    type="email" id="email" placeholder="seuemail@exemplo.com" />
+                    <input class="form-control form-control-solid" placeholder="nome@exemplo.com.br" name="outorgante_email"
+                    type="email" id="email" />
                     <!--end::Input-->
                 </div>
                 <!--end::Col-->
@@ -342,7 +342,7 @@
                     <label class=" fs-6 fw-semibold mb-2">Telefone</label>
                     <!--end::Label-->
                     <!--begin::Input-->
-                    <input class="form-control form-control-solid" type="text" placeholder="" id="telefone"
+                    <input class="form-control form-control-solid" type="text" placeholder="(00) 0.0000-0000" id="telefone"
                         name="outorgante_telefone" />
                     <!--end::Input-->
                 </div>
@@ -352,7 +352,7 @@
             <!--begin::Input group-->
             <div class="row g-9 mb-7">
                 <!--begin::Col-->
-                <div class="col-md-6 fv-row">
+                <div class="col-md-8 fv-row">
                     <!--begin::Label-->
                     <label class=" fs-6 fw-semibold mb-2">Número da Matrícula</label>
                     <!--end::Label-->
@@ -363,12 +363,12 @@
                 </div>
                 <!--end::Col-->
                 <!--begin::Col-->
-                <div class="col-md-6 fv-row">
+                <div class="col-md-4 fv-row">
                     <!--begin::Label-->
                     <label class=" fs-6 fw-semibold mb-2">Data da Aquisição</label>
                     <!--end::Label-->
                     <!--begin::Input-->
-                    <input class="form-control form-control-solid" type="date" placeholder="" id="aquisicao"
+                    <input class="form-control form-control-solid" type="date" placeholder="Secione a data" id="aquisicao"
                         name="aquisicao" />
                     <!--end::Input-->
                 </div>
@@ -397,8 +397,8 @@
                     <label class=" fs-6 fw-semibold mb-2">E-Mail</label>
                     <!--end::Label-->
                     <!--begin::Input-->
-                    <input class="form-control form-control-solid" placeholder="" name="outorgado_email"
-                    type="email" id="email" placeholder="seuemail@exemplo.com" />
+                    <input class="form-control form-control-solid"  name="outorgado_email"
+                    type="email" id="email" placeholder="nome@exemplo.com.br" />
                     <!--end::Input-->
                 </div>
                 <!--end::Col-->
@@ -408,7 +408,7 @@
                     <label class=" fs-6 fw-semibold mb-2">Telefone</label>
                     <!--end::Label-->
                     <!--begin::Input-->
-                    <input class="form-control form-control-solid" type="text" placeholder="" id="telefone"
+                    <input class="form-control form-control-solid" type="text" placeholder="(00) 0.0000-0000" id="telefone"
                         name="outorgado_telefone" />
                     <!--end::Input-->
                 </div>
@@ -435,7 +435,7 @@
                     <!--end::Icon-->
                     <!--begin::Datepicker-->
                     <input class="form-control form-control-solid ps-12" placeholder="" name="valor"
-                    id="valor" />
+                    id="valor2" />
                     <!--end::Datepicker-->
                 </div>
                 </div>

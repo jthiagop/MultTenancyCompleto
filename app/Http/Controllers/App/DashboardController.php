@@ -6,6 +6,7 @@ use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\TenantFilial;
 use App\Models\User;
+use Auth;
 use Flasher\Laravel\Facade\Flasher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,7 @@ class DashboardController extends Controller
         $dateHelper = new DateHelper();
 
         // Recupere o usuário logado
-        $user = auth()->user();
+        $user = Auth::user();
 
 
         // Define o ano selecionado, com o ano atual como padrão
@@ -92,10 +93,6 @@ class DashboardController extends Controller
                 $areaChartData['series'][$i]['data'][] = $valor ?: 0; // Insere 0 se não houver valor
             }
         }
-
-        Flasher::addSuccess('Teste de sucesso do PHP Flasher!');
-
-
         // Retorna para a view
         return view('app.dashboard', [
             'company' => $company,

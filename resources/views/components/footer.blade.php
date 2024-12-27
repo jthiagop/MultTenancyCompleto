@@ -1,29 +1,44 @@
                     <!--begin::Footer-->
                     <div id="kt_app_footer" class="app-footer">
                         <!--begin::Footer container-->
-                        <div
-                            class="app-container container-fluid d-flex flex-column flex-md-row flex-center flex-md-stack py-3">
-                            <!--begin::Copyright-->
-                            <div class="text-dark order-2 order-md-1">
-                                <span class="text-muted fw-semibold me-1">2024&copy;</span>
-                                <a href="" target="_blank"
-                                    class="text-gray-800 text-hover-primary">Dominus</a>
+                        <footer class="app-container container-xxl py-4 ">
+                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                                <!-- Copyright -->
+                                <div class="text-center text-md-start text-muted">
+                                    <span class="fw-semibold me-1" id="current-year"></span>
+                                    <script>
+                                        // Atualiza o elemento com o ID 'current-year' com o ano atual
+                                        document.getElementById('current-year').innerHTML = new Date().getFullYear() + '&copy;';
+                                    </script>
+                                    <a href="#" target="_blank" rel="noopener noreferrer"
+                                        class="text-gray-800 text-hover-primary text-decoration-none">
+                                        Dominus - Sistema Eclesiástico
+                                    </a>
+                                </div>
+
+                                <!-- Menu Links -->
+                                <nav class="text-center">
+                                    <ul class="list-inline m-0">
+                                        <li class="list-inline-item">
+                                            <a href="#" target="_blank" class="text-gray-600 text-hover-primary text-decoration-none px-2">
+                                                <i class="bi bi-info-circle me-1"></i>Sobre
+                                            </a>
+                                        </li>
+                                        <li class="list-inline-item">
+                                            <a href="https://wa.me/5581999770126" target="_blank" rel="noopener noreferrer"
+                                                class="text-gray-600 text-hover-primary text-decoration-none px-2">
+                                                <i class="bi bi-whatsapp me-1"></i>Suporte
+                                            </a>
+                                        </li>
+                                        <li class="list-inline-item">
+                                            <a href="#" target="_blank" class="text-gray-600 text-hover-primary text-decoration-none px-2">
+                                                <i class="bi bi-cart me-1"></i>Purchase
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </nav>
                             </div>
-                            <!--end::Copyright-->
-                            <!--begin::Menu-->
-                            <ul class="menu menu-gray-600 menu-hover-primary fw-semibold order-1">
-                                <li class="menu-item">
-                                    <a href="" target="_blank" class="menu-link px-2">Sobre</a>
-                                </li>
-                                <li class="menu-item">
-                                    <a href="https://wa.me/5581999770126" target="_blank" class="menu-link px-2">Suporte</a>
-                                </li>
-                                <li class="menu-item">
-                                    <a href="" target="_blank" class="menu-link px-2">Purchase</a>
-                                </li>
-                            </ul>
-                            <!--end::Menu-->
-                        </div>
-                        <!--end::Footer container-->
+                        </footer>
+
                     </div>
                     <!--end::Footer-->

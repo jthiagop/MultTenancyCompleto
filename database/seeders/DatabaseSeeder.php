@@ -17,10 +17,10 @@ class DatabaseSeeder extends Seeder
         // User::factory(10)->create();
 
         // Caminho original da imagem
-        $originalPath = resource_path('assets/midia/avatars/1avatar.png');
+        $originalPath = resource_path('/assets/midia/avatars/1avatar.png');
 
         // Caminho para onde a imagem será copiada
-        $storagePath = 'public/avatars/1avatar.png';
+        $storagePath = '/public/avatars/1avatar.png';
 
         // Copiar a imagem para o diretório de armazenamento
         Storage::copy($originalPath, $storagePath);

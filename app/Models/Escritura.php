@@ -14,7 +14,7 @@ class Escritura extends Model
         'matricula',
         'aquisicao',
         'outorgado',
-        'valor_aquisicao',
+        'valor',
         'area_total',
         'area_privativa',
         'informacoes',

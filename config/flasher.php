@@ -26,9 +26,7 @@ return [
     // Map Laravel session keys to PHPFlasher types
     'flash_bag' => [
         'success' => ['success'],
-        'error' => ['error', 'danger'],
-        'warning' => ['warning', 'alarm'],
-        'info' => ['info', 'notice', 'alert'],
+
     ],
 
     // Filter criteria for notifications (e.g., limit number, types)

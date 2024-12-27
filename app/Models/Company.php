@@ -57,7 +57,7 @@ class Company extends Model
     // Relação com os usuários
     public function users()
     {
-        return $this->belongsToMany(User::class);
+        return $this->hasMany(User::class, 'company_id');
     }
 
     // Company.php
@@ -94,5 +94,37 @@ class Company extends Model
     public function addresses()
     {
         return $this->hasOne(Adress::class, 'company_id');
+    }
+
+
+    public function entidadesFinanceiras()
+    {
+        return $this->hasMany(EntidadeFinanceira::class, 'company_id', 'id');
+    }
+
+    public function getReceitaMes(){
+
+            // Obtém o mês e ano atual
+    $currentMonth = now()->format('m');
+    $currentYear = now()->format('Y');
+
+        // Soma todas as entradas (tipo = 'entrada') do mês atual
+        return self::join('entidades_financeiras', 'movimentacoes.entidade_id', '=', 'entidades_financeiras.id')
+        ->where('movimentacoes.tipo', 'entrada') // Filtra apenas movimentações de entrada
+        ->whereMonth('movimentacoes.data', $currentMonth) // Filtra pelo mês atual
+        ->whereYear('movimentacoes.data', $currentYear)   // Filtra pelo ano atual
+        ->sum('movimentacoes.valor'); // Soma a coluna 'valor'
+
+    }
+
+    public static function getRoleColors()
+    {
+        return [
+            'global' => 'badge-danger',
+            'admin' => 'badge-primary',
+            'admin_user' => 'badge-warning',
+            'user' => 'badge-info',
+            // Adicione mais papéis e cores conforme necessário
+        ];
     }
 }

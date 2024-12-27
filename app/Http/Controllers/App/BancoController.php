@@ -10,6 +10,7 @@ use App\Models\EntidadeFinanceira;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use App\Models\User;
+use Auth;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Flasher\Laravel\Facade\Flasher;
@@ -114,7 +115,7 @@ class BancoController extends Controller
             }
 
             // Usuário autenticado
-            $user = auth()->user();
+            $user = Auth::user();
 
             $validatedData = $validator->validated();
 
@@ -126,10 +127,10 @@ class BancoController extends Controller
             $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
 
             // Adiciona os campos de auditoria
-            $validatedData['created_by'] = auth()->id();
-            $validatedData['created_by_name'] = auth()->user()->name;
-            $validatedData['updated_by'] = auth()->id();
-            $validatedData['updated_by_name'] = auth()->user()->name;
+            $validatedData['created_by'] = Auth::user()->id;
+            $validatedData['created_by_name'] = Auth::user()->name;
+            $validatedData['updated_by'] = Auth::user()->id;
+            $validatedData['updated_by_name'] = Auth::user()->name;
 
             // Cria o lançamento na tabela 'movimentacoes'
             try {
@@ -137,12 +138,13 @@ class BancoController extends Controller
                     'entidade_id' => $validatedData['entidade_id'],
                     'tipo' => $validatedData['tipo'],
                     'valor' => $validatedData['valor'],
+                    'data' => $validatedData['data_competencia'],
                     'descricao' => $validatedData['descricao'],
                     'company_id' => $subsidiaryId->company_id,
-                    'created_by' => auth()->id(),
-                    'created_by_name' => auth()->user()->name,
-                    'updated_by' => auth()->id(),
-                    'updated_by_name' => auth()->user()->name,
+                    'created_by' => Auth::user()->id,
+                    'created_by_name' => Auth::user()->name,
+                    'updated_by' => Auth::user()->id,
+                    'updated_by_name' => Auth::user()->name,
                 ]);
             } catch (\Exception $e) {
                 // Log de erro
@@ -260,7 +262,7 @@ class BancoController extends Controller
                 'tipo' => $validatedData['tipo'],
                 'valor' => $validatedData['valor'],
                 'descricao' => $validatedData['descricao'],
-                'updated_by' => auth()->id(),
+                'updated_by' => Auth::user()->id,
             ]);
 
             // Ajusta o impacto do novo valor no saldo
@@ -291,8 +293,8 @@ class BancoController extends Controller
                         'banco_id' => $banco->id,
                         'nome_arquivo' => $anexoName,
                         'caminho_arquivo' => $anexoPath,
-                        'created_by' => auth()->id(),
-                        'updated_by' => auth()->id(),
+                        'created_by' => Auth::user()->id,
+                        'updated_by' => Auth::user()->id,
                     ]);
                 }
             }
@@ -317,7 +319,7 @@ class BancoController extends Controller
     public function list()
     {
         // Suponha que você já tenha o ID da empresa disponível
-        $companyId = auth()->user()->company_id; // ou $companyId = 1; se o ID for fixo
+        $companyId = Auth::user()->company_id; // ou $companyId = 1; se o ID for fixo
 
         $lps = LancamentoPadrao::all();
         $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos

@@ -23,8 +23,8 @@
     <!--begin::Fonts(mandatory for all pages)-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.7-beta.19/inputmask.min.js"></script>
-
     <!--end::Fonts-->
+
     <!--begin::Vendor Stylesheets(used for this page only)-->
     <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
     <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
@@ -32,14 +32,9 @@
     <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
     <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
     <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
-
-    <style>
-        /* Adicional para garantir que não sobreponha a navbar */
-        .toast {
-            z-index: 1050 !important; /* Certifique-se de que está acima de outros elementos */
-        }
-    </style>
     <!--end::Global Stylesheets Bundle-->
+
+    @notifyCss
 </head>
 <!--end::Head-->
 <!--begin::Body-->
@@ -48,7 +43,6 @@
 
 <body id="kt_app_body" data-kt-app-layout="light-header" data-kt-app-header-fixed="true"
     data-kt-app-toolbar-enabled="true" class="app-default">
-    <!-- Mensagens do Flasher -->
 
     <!--begin::Theme mode setup on page load-->
     <script>
@@ -70,6 +64,17 @@
             document.documentElement.setAttribute("data-bs-theme", themeMode);
         }
     </script>
+
+    <style>
+
+/* Flash Messages */
+.flash-messages {
+    position: fixed;
+    z-index: 999; /* Garante que esteja acima da navbar */
+    top: 80px; /* Coloca abaixo da navbar */
+    right: 20px;
+}
+    </style>
     <!--end::Theme mode setup on page load-->
     <!--begin::App-->
     <div class="d-flex flex-column flex-root app-root" id="kt_app_root">
@@ -83,7 +88,7 @@
     </div>
     <!--end::App-->
 
-
+    @notifyJs
     <!--begin::Javascript-->
     <script>
         var hostUrl = "{{ url('') }}/assets/";
@@ -92,10 +97,9 @@
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
     <script src="{{ url('assets/plugins/global/plugins.bundle.js') }}"></script>
     <script src="{{ url('assets/js/scripts.bundle.js') }}"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-toast-plugin/1.3.2/jquery.toast.min.js"
-        integrity="sha512-zlWWyZq71UMApAjih4WkaRpikgY9Bz1oXIW5G0fED4vk14JjGlQ1UmkGM392jEULP8jbNMiwLWdM8Z87Hu88Fw=="
-        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <!--end::Global Javascript Bundle-->
+    <script src="{{ url('vendor/mckenziearts/laravel-notify/js/notify.js') }}"></script>
+
+
 </body>
 <!--end::Body-->
 

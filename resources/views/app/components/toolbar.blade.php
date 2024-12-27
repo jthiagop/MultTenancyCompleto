@@ -5,7 +5,6 @@
         <div class="page-title d-flex align-items-center flex-wrap me-3">
             <!--begin::Logo-->
             <div class="symbol symbol-45px me-3">
-
                 @if (!empty($company->avatar))
                     <img class="rounded-circle" alt="Logo"
                         src="{{ route('file', ['path' => $company->avatar]) }}" />

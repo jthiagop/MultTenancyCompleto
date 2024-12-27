@@ -46820,6 +46820,7 @@ body,
   background-color: var(--bs-app-header-base-bg-color);
   box-shadow: var(--bs-app-header-base-box-shadow);
   border-bottom: var(--bs-app-header-base-border-bottom);
+
 }
 
 @media (min-width: 992px) {
@@ -46842,7 +46843,7 @@ body,
     height: var(--bs-app-header-height);
   }
   [data-kt-app-header-fixed=true] .app-header {
-    z-index: 100;
+    z-index: 1;
     position: fixed;
     left: 0;
     right: 0;

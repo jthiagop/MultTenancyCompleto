@@ -20,6 +20,8 @@ class UserController extends Controller
     /**
      * Display a listing of the resource.
      */
+
+
     public function showProfile()
     {
     }
@@ -79,40 +81,39 @@ class UserController extends Controller
             'roles' => 'required|array',
             'company_id' => 'required',
             'filiais' => 'array', // Certifique-se de que 'filiais' é um array
+            'details' => 'nullable|string|max:5000', // Detalhes do usuário, texto opcional com limite
+            'status' => 'nullable|boolean', // Status como um campo booleano
+            'notifications' => 'nullable|array', // Deve ser um array, opcional (email/telefone)
         ]);
 
-        // Processar e salvar o avatar
-        if ($request->hasFile('avatar')) {
-            // Obtém o arquivo de avatar do request
-            $avatar = $request->file('avatar');
+        $validatedData['status'] = json_encode($request->input('status', [0]));
 
-            // Gera um nome único para o arquivo de avatar
-            $avatarName = time() . '_' . $avatar->getClientOriginalName();
+        // Verificar se já existe um usuário associado ao e-mail para manter o avatar atual
+        $existingUser = User::where('email', $validatedData['email'])->first();
 
-                    // Verificar se o diretório 'perfis' existe, e criar se necessário
-        if (!Storage::exists('perfis')) {
-            Storage::makeDirectory('perfis');
-        }
-
-            // Salva o arquivo na pasta 'perfis' dentro da pasta de armazenamento (storage/app/public)
-            $avatarPath = Storage::putFileAs('perfis', $avatar, $avatarName);
-
-            // Salva o nome do arquivo na coluna 'avatar' do usuário no banco de dados
-            $validatedData['avatar'] = $avatarPath;
+        if ($existingUser) {
+            $validatedData['avatar'] = $existingUser->avatar;
         } else {
-            // Define uma imagem padrão caso nenhum arquivo tenha sido enviado
-            $validatedData['avatar'] = 'tenant/blank.png'; // Ajuste o caminho conforme necessário
+            // Processar o upload do avatar se não existir
+            $validatedData['avatar'] = $this->handleAvatarUpload($request);
         }
 
-        $user = User::create($validatedData);
-
+        // Criação ou atualização do usuário
+        $user = User::updateOrCreate(
+            ['email' => $validatedData['email']], // Critério para identificar o usuário
+            [
+                'name' => $validatedData['name'],
+                'password' => bcrypt($validatedData['password']),
+                'avatar' => $validatedData['avatar'],
+                'company_id' => $validatedData['company_id'],
+                'details' => $validatedData['details'],
+                'active' => json_encode($validatedData['status'] ?? [0]),
+                'notifications' => json_encode($validatedData['notifications'] ?? []),
+                ]
+        );
         // Sincronizar permissões (roles) se estiverem presentes
         if (isset($validatedData['roles'])) {
             $user->roles()->sync($request->input('roles'));
-        }
-        // Verifique se a chave 'filiais' existe no array de dados
-        if (isset($validatedData['filiais'])) {
-            $user->filiais()->sync($validatedData['filiais']);
         }
 
         // Relacionar o usuário à empresa na tabela pivot company_user
@@ -120,8 +121,11 @@ class UserController extends Controller
             'created_at' => now(),
             'updated_at' => now()
         ]);
+    // Adicionar mensagem de sucesso ao Flasher
+    session()->flash('success', 'Usuário criado ou atualizado com sucesso.');
 
-        return redirect()->route('users.index');
+    // Retornar para a página anterior
+    return redirect()->back();
     }
     /**
      * Display the specified resource.
@@ -181,4 +185,26 @@ class UserController extends Controller
     {
         //
     }
+
+    /**
+ * Processa o upload do avatar.
+ *
+ * @param Request $request
+ * @return string Caminho do avatar salvo
+ */
+private function handleAvatarUpload(Request $request)
+{
+    if ($request->hasFile('avatar')) {
+        $avatar = $request->file('avatar');
+        $avatarName = time() . '_' . $avatar->getClientOriginalName();
+
+        if (!Storage::exists('perfis')) {
+            Storage::makeDirectory('perfis');
+        }
+
+        return Storage::putFileAs('perfis', $avatar, $avatarName);
+    }
+
+    return 'tenant/blank.png'; // Imagem padrão se não houver upload
+}
 }

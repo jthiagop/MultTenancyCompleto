@@ -7,6 +7,8 @@ use App\Models\EntidadeFinanceira;
 use App\Models\Movimentacao;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Flasher\Laravel\Facade\Flasher;
+
 
 class EntidadeFinanceiraController extends Controller
 {
@@ -26,52 +28,62 @@ class EntidadeFinanceiraController extends Controller
     // Salva uma nova entidade financeira
     public function store(Request $request)
     {
-        // Obter o ID da empresa do usuário autenticado
-        $companyId = Auth::user()->company_id;
-
+            // Remover formatação de milhar e substituir vírgulas por pontos
+    $request->merge([
+        'saldo_inicial' => str_replace(['.', ','], ['', '.'], $request->saldo_inicial),
+        'saldo_atual' => str_replace(['.', ','], ['', '.'], $request->saldo_atual),
+    ]);
         // Validação dos dados de entrada
         $validatedData = $request->validate([
             'nome' => 'required|string|max:255',
             'tipo' => 'required|in:caixa,banco,dizimo,coleta,doacao',
-            'saldo_inicial' => 'required',
-            'saldo_atual' => 'nullable', // Opcional
+            'saldo_inicial' => 'required|numeric',
+            'saldo_atual' => 'nullable|numeric',
             'descricao' => 'nullable|string|max:500',
+            'company_id' => 'required|exists:companies,id', // Validação do company_id
         ]);
 
+        // Adicionar campos adicionais
+        $validatedData['created_by'] = auth()->id();
+        $validatedData['created_by_name'] = auth()->user()->name;
+        $validatedData['updated_by'] = auth()->id();
+        $validatedData['updated_by_name'] = auth()->user()->name;
+
+        // Se saldo_atual não for informado, utiliza saldo_inicial como valor padrão
+        $validatedData['saldo_atual'] = $validatedData['saldo_atual'] ?? $validatedData['saldo_inicial'];
+
         try {
-            // Adicionar campos adicionais ao array de dados validados
-            $validatedData['company_id'] = $companyId;
-            $validatedData['created_by'] = auth()->id();
-            $validatedData['created_by_name'] = auth()->user()->name;
-            $validatedData['updated_by'] = auth()->id();
-            $validatedData['updated_by_name'] = auth()->user()->name;
-
-            // Se saldo_atual não for informado, utiliza saldo_inicial como valor padrão
-            $validatedData['saldo_atual'] = $validatedData['saldo_atual'] ?? $validatedData['saldo_inicial'];
-
             // Criar a entidade financeira
             $entidade = EntidadeFinanceira::create($validatedData);
 
-                    // Criação de uma movimentação inicial para registrar o saldo inicial
-        Movimentacao::create([
-            'entidade_id' => $entidade->id,
-            'tipo' => 'entrada',
-            'valor' => $validatedData['saldo_inicial'],
-            'descricao' => 'Saldo inicial da entidade financeira',
-            'company_id' => $companyId,
-            'created_by' => auth()->user()->id,
-            'created_by_name' => auth()->user()->name,
-            'updated_by' => auth()->user()->id,
-            'updated_by_name' => auth()->user()->name,
-        ]);
+            // Criar a movimentação inicial
+            Movimentacao::create([
+                'entidade_id' => $entidade->id,
+                'tipo' => 'entrada',
+                'valor' => $validatedData['saldo_inicial'],
+                'descricao' => 'Saldo inicial da entidade financeira',
+                'company_id' => $validatedData['company_id'],
+                'created_by' => auth()->user()->id,
+                'created_by_name' => auth()->user()->name,
+                'updated_by' => auth()->user()->id,
+                'updated_by_name' => auth()->user()->name,
+            ]);
 
-            // Redirecionar com mensagem de sucesso
-            return redirect()->back()->with('message', 'Lançamento criado com sucesso!');
-        } catch (\Exception $e) {
-            // Em caso de erro, redirecionar com mensagem de erro
-            return redirect()->back()->with('error', 'Erro ao criar a entidade financeira: ' . $e->getMessage());
-        }
+        // Adiciona uma mensagem de sucesso ao Flasher
+   // Mensagem de sucesso
+            flash()->success('O lançamento foi salvo com sucesso!');
+
+            // Exibe a mensagem diretamente usando o Flasher e redireciona
+            return redirect()->back();
+            } catch (\Exception $e) {
+            // Adiciona mensagem de erro com detalhes da exceção
+            Flasher::addError('Ocorreu um erro ao processar o lançamento: ' . $e->getMessage());
+
+            // Retorna com os dados antigos e exibe as mensagens de erro
+            return redirect()->back()->withInput();
+            }
     }
+
 
 
     // Adiciona uma movimentação

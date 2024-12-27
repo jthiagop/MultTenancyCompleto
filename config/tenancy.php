@@ -17,6 +17,7 @@ return [
      * Only relevant if you're using the domain or subdomain identification middleware.
      */
     'central_domains' => [
+        'companies',
         env('CENTRAL_DOMAIN_1', '127.0.0.1'),
         env('CENTRAL_DOMAIN_2', 'localhost'),
         //env('CENTRAL_DOMAIN_3', 'dominusbr.com'),

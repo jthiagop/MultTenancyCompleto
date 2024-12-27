@@ -32,6 +32,11 @@ class EntidadeFinanceira extends Model
         return $this->hasMany(Movimentacao::class, 'entidade_id');
     }
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id'); // Cada EntidadeFinanceira pertence a uma Company
+    }
+
     // Método para atualizar o saldo atual
     public function atualizarSaldo()
     {

@@ -27,11 +27,10 @@ var KTModalNewTarget = function () {
 		});
 
 		// Due date. For more info, please visit the official plugin site: https://flatpickr.js.org/
-        var dueDates = document.querySelectorAll('[name="data"], [name="dataAquisicao"]');
+        var dueDates = document.querySelectorAll('[name="data"], [name="aquisicao"]');
 
         dueDates.forEach(function(dueDate) {
             flatpickr(dueDate, {
-                enableTime: true,
                 dateFormat: "d/m/Y", // Formato pt-BR para exibição
                 locale: "pt", // Define a localidade como português do Brasil
             });

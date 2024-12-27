@@ -9,7 +9,7 @@
             <!--end::Toolbar-->
             <div id="kt_app_content_container" class="app-container container-xxl">
                 <!--begin::Input group-->
-                <div id="kt_app_content" class="app-content flex-column-fluid">
+                <div id="kt_app_content" class="app-content flex-column-xxl">
                     <!--begin::Row-->
                     <div class="row mb-xxl-5">
 
@@ -99,6 +99,23 @@
                                 class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
                                 aria-label="Acessar módulo Cadastro de Fiéis">
                                 <img class="me-5" width="75px" height="75px" src="/assets/media/png/fieis.png"
+                                    alt="Ícone Cadastro de Fiéis">
+                                <span class="d-block fw-semibold text-start">
+                                    <span class="text-dark fw-bold fs-4 mb-2 d-block">Cadastro de Fiéis</span>
+                                    <span class="text-muted fw-semibold fs-6">Gerenciamento de membros e
+                                        contribuições</span>
+                                </span>
+                            </a>
+                        </div>
+
+                        <!--begin::Col - Cadastro de Fiéis-->
+                        <div class="col-lg-4 hover-elevate-up parent-hover mb-5">
+                            <input type="radio" class="btn-check" name="account_type" value="faithful"
+                                id="kt_create_account_form_account_type_faithful" />
+                            <a href="{{ route('car_insurance.index') }}"
+                                class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
+                                aria-label="Acessar módulo Cadastro de Fiéis">
+                                <img class="me-5" width="75px" height="75px" src="/assets/media/png/carro.png"
                                     alt="Ícone Cadastro de Fiéis">
                                 <span class="d-block fw-semibold text-start">
                                     <span class="text-dark fw-bold fs-4 mb-2 d-block">Cadastro de Fiéis</span>

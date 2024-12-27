@@ -11,6 +11,7 @@ class Patrimonio extends Model
 
     protected $fillable = [
         'id',
+        'codigo_rid',
         'descricao',
         'patrimonio',
         'data',

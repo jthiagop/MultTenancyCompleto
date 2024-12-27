@@ -15,7 +15,12 @@ use App\Http\Controllers\App\CaixaController;
 use App\Http\Controllers\App\LancamentoPadraoController;
 use App\Http\Controllers\App\CadastroBancoController;
 use App\Http\Controllers\App\EntidadeFinanceiraController;
+use App\Http\Controllers\App\EscrituraController;
 use App\Http\Controllers\App\FielController;
+use App\Http\Controllers\App\Filter\filterController;
+use App\Http\Controllers\App\Filter\RebortController;
+use App\Http\Controllers\App\Financeiro\TransacaoFinanceiraController;
+use App\Http\Controllers\App\Frota\CarInsuranceController;
 use App\Http\Controllers\App\NamePatrimonioController;
 use App\Http\Controllers\App\PatrimonioController;
 use App\Http\Controllers\App\ReportController;
@@ -95,6 +100,11 @@ Route::middleware([
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
 
             Route::resource('users', UserController::class);
+
+            Route::resource('company', CompanyController::class);
+            Route::get('/company/edit/{company}', [CompanyController::class, 'editCompany'])->name('company.editCompany');
+
+            Route::post('/filter', [RebortController::class, 'generateReport']);
         });
 
         // Grupo de rotas acessíveis apenas para administradores
@@ -121,6 +131,7 @@ Route::middleware([
 
 
             Route::resource('patrimonio', PatrimonioController::class);
+            Route::resource('escritura', EscrituraController::class);
             Route::resource('patrimonioAnexo', PatrimonioAnexoController::class);
 
             Route::get('patrimonios/imoveis', [PatrimonioController::class, 'imoveis'])->name('patrimonio.imoveis');
@@ -148,9 +159,13 @@ Route::middleware([
             Route::resource('entidades', EntidadeFinanceiraController::class);
             Route::post('entidades/{id}/movimentacao', [EntidadeFinanceiraController::class, 'addMovimentacao'])->name('entidades.movimentacao');
 
-            Route::resource('company', CompanyController::class);
-            Route::get('/company/edit/{company}', [CompanyController::class, 'editCompany'])->name('company.editCompany');
 
+
+            Route::resource('car_insurance', CarInsuranceController::class);
+            // Rota para marcar veículo como vendido
+            Route::post('car_insurance/{id}/sell', [CarInsuranceController::class, 'sell'])->name('car_insurance.sell');
+
+            Route::resource('transacoes-financeiras', TransacaoFinanceiraController::class);
 
 
             });
