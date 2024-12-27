@@ -19,7 +19,7 @@ return new class extends Migration
             $table->enum('tipo', ['entrada', 'saida']);
             $table->decimal('valor', 15, 2);
             $table->string('descricao', 255)->nullable();
-            $table->foreignId('lancamento_padrao_id')->nullable(); // Relaciona com `lancamento_padraos`
+            $table->unsignedInteger('lancamento_padrao_id')->nullable(); // Relaciona com `lancamento_padraos`
             $table->unsignedBigInteger('movimentacao_id')->nullable(); // Relaciona com `movimentacoes`
             $table->unsignedBigInteger('centro')->nullable();
             $table->string('tipo_documento', 50)->nullable();
