@@ -3258,7 +3258,6 @@
                             <!--end::Navbar-->
                         </div>
                         <!--end::Header wrapper-->
-                        @include('notify::components.notify')
 
                     </div>
                     <!--end::Header container-->
