@@ -150,8 +150,8 @@
                                         <!--end::Svg Icon-->Exportar</button>
                                     <!--end::Export-->
                                     <!--begin::Add customer-->
-                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#kt_modal_add_customer">Cadastro de Lançamento</button>
+                                    <a href="{{ route('lancamentoPadrao.create') }}" class="btn btn-primary">Cadastro
+                                        de Lançamento</a>
                                     <!--end::Add customer-->
                                 </div>
                                 <!--end::Toolbar-->
@@ -188,9 +188,9 @@
                                         </th>
                                         <th class="min-w-20px">id</th>
                                         <th class="min-w-500px">Drescrição</th>
-                                        <th class="min-w-125px">Categoria</th>
+                                        <th class="min-w-155px">Categoria</th>
                                         <th class="min-w-125px">Tipo</th>
-                                        <th class="min-w-125px">Usuário</th>
+                                        <th class="min-w-225px">Usuário</th>
                                         <th class="min-w-125px">data</th>
                                         <th class="text-end min-w-70px">Ação</th>
                                     </tr>
@@ -212,7 +212,7 @@
                                             <td>{{ $lp->id }}</td>
                                             <!--begin::Name=-->
                                             <td>
-                                                <a href="../../demo1/dist/apps/ecommerce/customers/details.html"
+                                                <a href="{{ route('lancamentoPadrao.edit', $lp->id) }}"
                                                     class="text-gray-800 text-hover-primary mb-1">{{ $lp->description }}</a>
                                             </td>
                                             <!--end::Name=-->
@@ -220,7 +220,7 @@
                                             <td>
                                                 <div
                                                     class=" badge {{ $categoryColors[$lp->category] ?? 'text-muted' }}">
-                                                    {{ $lp->category }}
+                                                    {{ $lp->getCategoryEmoji() }} {{ $lp->category }}
                                                 </div>
                                             </td>
                                             <!--end::Email=-->
@@ -235,49 +235,24 @@
                                             </td>
                                             <!--end::Status=-->
                                             <!--begin::IP Address=-->
-                                            <td>{{ $lp->user->name }}</td>
+                                            <td>{{ Str::limit($lp->user->name, 20) }}</td>
                                             <!--end::IP Address=-->
                                             <!--begin::Date=-->
-                                            <td>{{ date(' d-m-Y', strtotime($lp->date)) }}</td>
+                                            <td>{{ date(' d/m/Y', strtotime($lp->date)) }}</td>
                                             <!--end::Date=-->
                                             <!--begin::Action=-->
-                                            <td class="text-end">
-                                                <a href="#"
-                                                    class="btn btn-sm btn-light btn-active-light-primary"
-                                                    data-kt-menu-trigger="click"
-                                                    data-kt-menu-placement="bottom-end">Ações
-                                                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
-                                                    <span class="svg-icon svg-icon-5 m-0">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path
-                                                                d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z"
-                                                                fill="currentColor" />
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon--></a>
-                                                <!--begin::Menu-->
-                                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
-                                                    data-kt-menu="true">
-                                                    <!--begin::Menu item-->
-                                                    <div class="menu-item px-3">
-                                                        <button type="button" class="btn btn-secondary" data-bs-toggle="modal" data-bs-target="#kt_modal_edit_customer"
-                                                            data-id="{{ $lp->id }}"
-                                                            data-type="{{ $lp->type }}"
-                                                            data-description="{{ $lp->description }}"
-                                                            data-date="{{ $lp->date }}">
-                                                            Editar
-                                                        </button>
-                                                    </div>
-                                                    <!--end::Menu item-->
-                                                    <!--begin::Menu item-->
-                                                    <div class="menu-item px-3">
-                                                        <a href="#" class="menu-link px-3"
-                                                            data-kt-customer-table-filter="delete_row">Delete</a>
-                                                    </div>
-                                                    <!--end::Menu item-->
-                                                </div>
-                                                <!--end::Menu-->
+                                                <!-- Botão de edição com ícone -->
+                                                <td class="text-end">
+                                                    <!-- Link de edição com ícone de lápis -->
+                                                    <a href="{{ route('lancamentoPadrao.edit', $lp->id) }}" class="btn btn-sm btn-light btn-active-light-primary">
+                                                        <!-- Ícone de lápis -->
+                                                        <span class="svg-icon svg-icon-5 m-0">
+                                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                <path d="M21.2799 6.40005L11.7399 15.94C10.7899 16.89 7.96987 17.33 7.33987 16.7C6.70987 16.07 7.13987 13.25 8.08987 12.3L17.6399 2.75002C17.8754 2.49308 18.1605 2.28654 18.4781 2.14284C18.7956 1.99914 19.139 1.92124 19.4875 1.9139C19.8359 1.90657 20.1823 1.96991 20.5056 2.10012C20.8289 2.23033 21.1225 2.42473 21.3686 2.67153C21.6147 2.91833 21.8083 3.21243 21.9379 3.53609C22.0674 3.85976 22.1299 4.20626 22.1217 4.55471C22.1134 4.90316 22.0346 5.24635 21.8904 5.5635C21.7462 5.88065 21.5395 6.16524 21.2824 6.40005H21.2799ZM15.6399 4.50002L2.28987 17.85C2.19987 17.94 2.11987 18.12 2.09987 18.25L1.63987 21.8C1.54987 22.39 2.02987 22.87 2.61987 22.78L6.15987 22.32C6.28987 22.3 6.45987 22.22 6.55987 22.12L19.9099 8.77002C20.6599 8.02002 21.0799 7.05002 20.9899 6.04002C20.9099 5.02002 20.2699 4.06002 19.2299 3.50002C18.1999 2.93002 17.1999 2.88002 16.2299 3.34002L15.6399 4.50002Z" fill="currentColor"/>
+                                                                <path d="M5.88989 21.85C5.69989 21.66 5.50989 21.47 5.32989 21.28C5.14989 21.1 4.95989 20.91 4.76989 20.72C4.67989 20.63 4.59989 20.54 4.51989 20.45C4.43989 20.36 4.32989 20.22 4.21989 20.09C4.16989 20.03 4.08989 19.94 4.01989 19.86C3.93989 19.77 3.83989 19.64 3.74989 19.53C3.70989 19.49 3.65989 19.42 3.60989 19.37C3.55989 19.32 3.49989 19.27 3.44989 19.22L8.08989 14.58C8.47989 14.19 8.83989 13.85 9.16989 13.53C10.1199 12.58 11.5599 12.58 12.5099 13.53C13.4599 14.48 13.4599 15.92 12.5099 16.87C12.1899 17.19 11.8499 17.56 11.4699 17.94L5.88989 21.85Z" fill="currentColor"/>
+                                                            </svg>
+                                                        </span>
+                                                    </a>
                                             </td>
                                             <!--end::Action=-->
                                         </tr>
@@ -299,7 +274,8 @@
                             <!--begin::Modal content-->
                             <div class="modal-content">
                                 <!--begin::Form-->
-                                <form class="form" method="POST" action="{{ route('lancamentoPadrao.store') }}" id="kt_modal_add_customer_form">
+                                <form class="form" method="POST" action="{{ route('lancamentoPadrao.store') }}"
+                                    id="kt_modal_add_customer_form">
                                     @csrf
                                     @method('POST') <!-- Ou PUT, DELETE para edição e exclusão -->
                                     <input type="hidden" name="id" id="lancamento_padrao_id">
@@ -405,7 +381,8 @@
                                                     <option value="Intenções">Intenções</option>
                                                     <option value="Liturgia">Liturgia</option>
                                                     <option value="Manutenção">Manutenção</option>
-                                                    <option value="Material de escritório">Material de escritório</option>
+                                                    <option value="Material de escritório">Material de escritório
+                                                    </option>
                                                     <option value="Pessoal">Pessoal</option>
                                                     <option value="Rendimentos">Rendimentos</option>
                                                     <option value="Saúde">Saúde</option>
@@ -449,108 +426,121 @@
                     <!--end::Modal - Customers - Add-->
 
                     <!--begin::Modal - Customers - Edit-->
-<!-- Modal de Edição -->
-<div class="modal fade" id="kt_modal_edit_customer" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered mw-650px">
-        <div class="modal-content">
-            <form class="form" method="POST" id="kt_modal_edit_customer_form">
-                @csrf
-                @method('PUT')
-                <input type="hidden" name="id" id="lancamento_padrao_id">
+                    <!-- Modal de Edição -->
+                    <div class="modal fade" id="kt_modal_edit_customer" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered mw-650px">
+                            <div class="modal-content">
+                                <form class="form" method="POST" id="kt_modal_edit_customer_form">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="id" id="lancamento_padrao_id">
 
-                <div class="modal-header" id="kt_modal_edit_customer_header">
-                    <h2 class="fw-bold">Editar Lançamento Padrão</h2>
-                    <div id="kt_modal_edit_customer_close" class="btn btn-icon btn-sm btn-active-icon-primary">
-                        <span class="svg-icon svg-icon-1">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor" />
-                            </svg>
-                        </span>
+                                    <div class="modal-header" id="kt_modal_edit_customer_header">
+                                        <h2 class="fw-bold">Editar Lançamento Padrão</h2>
+                                        <div id="kt_modal_edit_customer_close"
+                                            class="btn btn-icon btn-sm btn-active-icon-primary">
+                                            <span class="svg-icon svg-icon-1">
+                                                <svg width="24" height="24" viewBox="0 0 24 24"
+                                                    fill="none">
+                                                    <rect opacity="0.5" x="6" y="17.3137" width="16"
+                                                        height="2" rx="1"
+                                                        transform="rotate(-45 6 17.3137)" fill="currentColor" />
+                                                    <rect x="7.41422" y="6" width="16" height="2"
+                                                        rx="1" transform="rotate(45 7.41422 6)"
+                                                        fill="currentColor" />
+                                                </svg>
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-body py-10 px-lg-17">
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Tipo</label>
+                                            <select class="form-select form-select-solid" name="type"
+                                                data-control="select2">
+                                                <option value="entrada">Entrada</option>
+                                                <option value="saida">Saída</option>
+                                            </select>
+                                        </div>
+                                        <div class="fv-row mb-15">
+                                            <label class="required fs-6 fw-semibold mb-2">Descrição</label>
+                                            <textarea class="form-control form-control-solid" rows="3" name="description"></textarea>
+                                        </div>
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Data</label>
+                                            <input type="date" class="form-control form-control-solid"
+                                                name="date" />
+                                        </div>
+                                        <div class="fv-row mb-7">
+                                            <label class="required fs-6 fw-semibold mb-2">Categoria</label>
+                                            <select class="form-select form-select-solid" name="category"
+                                                data-control="select2">
+                                                <!-- Adicione as opções de categoria -->
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div class="modal-footer flex-center">
+                                        <button type="reset" id="kt_modal_edit_customer_cancel"
+                                            class="btn btn-light me-3">Cancelar</button>
+                                        <button type="submit" id="kt_modal_edit_customer_submit"
+                                            class="btn btn-primary">
+                                            <span class="indicator-label">Atualizar</span>
+                                            <span class="indicator-progress">Por favor, aguarde...
+                                                <span
+                                                    class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <div class="modal-body py-10 px-lg-17">
-                    <div class="fv-row mb-7">
-                        <label class="required fs-6 fw-semibold mb-2">Tipo</label>
-                        <select class="form-select form-select-solid" name="type" data-control="select2">
-                            <option value="entrada">Entrada</option>
-                            <option value="saida">Saída</option>
-                        </select>
-                    </div>
-                    <div class="fv-row mb-15">
-                        <label class="required fs-6 fw-semibold mb-2">Descrição</label>
-                        <textarea class="form-control form-control-solid" rows="3" name="description"></textarea>
-                    </div>
-                    <div class="fv-row mb-7">
-                        <label class="required fs-6 fw-semibold mb-2">Data</label>
-                        <input type="date" class="form-control form-control-solid" name="date" />
-                    </div>
-                    <div class="fv-row mb-7">
-                        <label class="required fs-6 fw-semibold mb-2">Categoria</label>
-                        <select class="form-select form-select-solid" name="category" data-control="select2">
-                            <!-- Adicione as opções de categoria -->
-                        </select>
-                    </div>
-                </div>
+                    <script>
+                        $(document).ready(function() {
+                            // Inicializar Select2
+                            $('[data-control="select2"]').select2();
 
-                <div class="modal-footer flex-center">
-                    <button type="reset" id="kt_modal_edit_customer_cancel" class="btn btn-light me-3">Cancelar</button>
-                    <button type="submit" id="kt_modal_edit_customer_submit" class="btn btn-primary">
-                        <span class="indicator-label">Atualizar</span>
-                        <span class="indicator-progress">Por favor, aguarde...
-                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                        </span>
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
+                            // Função para abrir o modal de edição
+                            function openModalForEditing(lancamentoPadrao) {
+                                // Preencher os campos do modal com os dados do lançamento existente
+                                $('#lancamento_padrao_id').val(lancamentoPadrao.id);
+                                $('[name="type"]').val(lancamentoPadrao.type).trigger('change');
+                                $('[name="description"]').val(lancamentoPadrao.description);
+                                $('[name="date"]').val(lancamentoPadrao.date);
+                                $('[name="category"]').val(lancamentoPadrao.category).trigger('change');
 
-<script>
-    $(document).ready(function() {
-        // Inicializar Select2
-        $('[data-control="select2"]').select2();
+                                // Atualizar a ação do formulário para usar o método PUT e a rota de update
+                                $('#kt_modal_edit_customer_form').attr('action', `/lancamentoPadrao/${lancamentoPadrao.id}`);
+                                $('#kt_modal_edit_customer_form').find('input[name="_method"]').val('PUT');
 
-        // Função para abrir o modal de edição
-        function openModalForEditing(lancamentoPadrao) {
-            // Preencher os campos do modal com os dados do lançamento existente
-            $('#lancamento_padrao_id').val(lancamentoPadrao.id);
-            $('[name="type"]').val(lancamentoPadrao.type).trigger('change');
-            $('[name="description"]').val(lancamentoPadrao.description);
-            $('[name="date"]').val(lancamentoPadrao.date);
-            $('[name="category"]').val(lancamentoPadrao.category).trigger('change');
+                                // Abrir o modal
+                                $('#kt_modal_edit_customer').modal('show');
+                            }
 
-            // Atualizar a ação do formulário para usar o método PUT e a rota de update
-            $('#kt_modal_edit_customer_form').attr('action', `/lancamentoPadrao/${lancamentoPadrao.id}`);
-            $('#kt_modal_edit_customer_form').find('input[name="_method"]').val('PUT');
+                            // Listener para abrir o modal de edição
+                            $('.edit-button').on('click', function() {
+                                var lancamentoPadrao = $(this).data(
+                                'lancamentopadrao'); // Supondo que você passe os dados do lançamento via data-attributes
+                                openModalForEditing(lancamentoPadrao);
+                            });
 
-            // Abrir o modal
-            $('#kt_modal_edit_customer').modal('show');
-        }
+                            // Função para abrir o modal de criação
+                            function openModalForCreating() {
+                                // Limpar os campos do modal
+                                $('#kt_modal_edit_customer_form').trigger('reset');
+                                $('#lancamento_padrao_id').val('');
 
-        // Listener para abrir o modal de edição
-        $('.edit-button').on('click', function() {
-            var lancamentoPadrao = $(this).data('lancamentopadrao'); // Supondo que você passe os dados do lançamento via data-attributes
-            openModalForEditing(lancamentoPadrao);
-        });
+                                // Atualizar a ação do formulário para usar o método POST e a rota de store
+                                $('#kt_modal_edit_customer_form').attr('action', `{{ route('lancamentoPadrao.store') }}`);
+                                $('#kt_modal_edit_customer_form').find('input[name="_method"]').val('POST');
 
-        // Função para abrir o modal de criação
-        function openModalForCreating() {
-            // Limpar os campos do modal
-            $('#kt_modal_edit_customer_form').trigger('reset');
-            $('#lancamento_padrao_id').val('');
-
-            // Atualizar a ação do formulário para usar o método POST e a rota de store
-            $('#kt_modal_edit_customer_form').attr('action', `{{ route('lancamentoPadrao.store') }}`);
-            $('#kt_modal_edit_customer_form').find('input[name="_method"]').val('POST');
-
-            // Abrir o modal
-            $('#kt_modal_edit_customer').modal('show');
-        }
-    });
-</script>
+                                // Abrir o modal
+                                $('#kt_modal_edit_customer').modal('show');
+                            }
+                        });
+                    </script>
 
 
                     <!--end::Modal - Customers - Edit-->
@@ -716,5 +706,3 @@
 <script src="assets/js/custom/utilities/modals/users-search.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->
-
-

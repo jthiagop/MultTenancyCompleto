@@ -479,7 +479,4 @@
             <!--end::Modal dialog-->
 
         </div>
-        <!--end::Modal - Upgrade plan-->
-        <script>
-            var lpsData = @json($lps);
-        </script>
+

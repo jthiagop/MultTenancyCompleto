@@ -10,125 +10,137 @@
             <div id="kt_app_content_container" class="app-container container-xxl">
                 <!--begin::Input group-->
                 <div id="kt_app_content" class="app-content flex-column-xxl">
-                    <!--begin::Row-->
-                    <div class="row mb-xxl-5">
+                    <!--begin::Graph-->
+                    <div class="card card-flush h-lg-100">
+                        <!--begin::Card header-->
+                        <div class="card-header mt-6  text-center">
+                            <div class="card-title flex-column text-center">
+                                <h3 class="fw-bold mb-1">Modulos do Sistema</h3>
+                            </div>
 
-                        <!--begin::Col - Financeiro-->
-                        <div class="col-lg-4 hover-elevate-up parent-hover mb-5">
-                            <input type="radio" class="btn-check" name="account_type" value="personal"
-                                id="kt_create_account_form_account_type_personal" />
-                            <a href="{{ route('caixa.index') }}"
-                                class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
-                                aria-label="Acessar módulo Financeiro">
-                                <img class="me-5" width="75px" height="75px" src="/assets/media/png/financeiro.svg"
-                                    alt="Ícone Financeiro">
-                                <span class="d-block fw-semibold text-start">
-                                    <span class="text-dark fw-bold d-block fs-4 mb-2">Financeiro</span>
-                                    <span class="text-muted fw-semibold fs-6">Cadastros financeiros,
-                                        movimentações</span>
-                                </span>
-                            </a>
-                        </div>
+                            <!--begin::Row-->
+                            <div class="row mb-xxl-5 mt-6">
 
-                        <!--begin::Col - Patrimônio-->
-                        <div class="col-lg-4 hover-elevate-up parent-hover mb-5">
-                            <input type="radio" class="btn-check" name="account_type" value="donations"
-                                id="kt_create_account_form_account_type_donations" />
-                            <a href="{{ route('patrimonio.index') }}"
-                                class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
-                                aria-label="Acessar módulo Patrimônio">
-                                <div class="d-flex align-items-center me-5">
-                                    <img width="75px" height="75px" src="/assets/media/png/house3d.png"
-                                        alt="Ícone Patrimônio">
+                                <!--begin::Col - Financeiro-->
+                                <div class="col-lg-4 hover-elevate-up parent-hover mb-5">
+                                    <input type="radio" class="btn-check" name="account_type" value="personal"
+                                        id="kt_create_account_form_account_type_personal" />
+                                    <a href="{{ route('caixa.index') }}"
+                                        class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
+                                        aria-label="Acessar módulo Financeiro">
+                                        <img class="me-5" width="75px" height="75px"
+                                            src="/assets/media/png/financeiro.svg" alt="Ícone Financeiro">
+                                        <span class="d-block fw-semibold text-start">
+                                            <span class="text-dark fw-bold d-block fs-4 mb-2">Financeiro</span>
+                                            <span class="text-muted fw-semibold fs-6">Cadastros financeiros,
+                                                movimentações</span>
+                                        </span>
+                                    </a>
                                 </div>
-                                <span class="d-block fw-semibold text-start">
-                                    <span class="text-dark fw-bold fs-4 mb-2 d-block">Patrimônio</span>
-                                    <span class="text-muted fw-semibold fs-6">Gestão patrimonial, foro e laudêmio</span>
-                                </span>
-                            </a>
-                        </div>
 
-                        <!--begin::Col - Contabilidade-->
-                        <div class="col-lg-4 hover-elevate-up parent-hover mb-3">
-                            <a href="{{ route('caixa.create') }}"
-                                class="btn btn-outline btn-outline-dashed btn-outline-danger disabled active p-4 d-flex align-items-center">
-                                <!--begin::Icon and Badge-->
-                                <div class="d-flex align-items-center me-4">
-                                    <img class="me-5" width="75px" height="75px"
-                                        src="/assets/media/png/contabilidade.png" alt="Contabilidade">
+                                <!--begin::Col - Patrimônio-->
+                                <div class="col-lg-4 hover-elevate-up parent-hover mb-5">
+                                    <input type="radio" class="btn-check" name="account_type" value="donations"
+                                        id="kt_create_account_form_account_type_donations" />
+                                    <a href="{{ route('patrimonio.index') }}"
+                                        class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
+                                        aria-label="Acessar módulo Patrimônio">
+                                        <div class="d-flex align-items-center me-5">
+                                            <img width="75px" height="75px" src="/assets/media/png/house3d.png"
+                                                alt="Ícone Patrimônio">
+                                        </div>
+                                        <span class="d-block fw-semibold text-start">
+                                            <span class="text-dark fw-bold fs-4 mb-2 d-block">Patrimônio</span>
+                                            <span class="text-muted fw-semibold fs-6">Gestão patrimonial, foro e
+                                                laudêmio</span>
+                                        </span>
+                                    </a>
                                 </div>
-                                <!--end::Icon and Badge-->
-                                <!--begin::Info-->
-                                <span class="d-block fw-semibold text-start">
-                                    <span class="d-block fw-semibold text-start">
-                                        <span class="text-dark fw-bold d-block fs-4 mb-2">Contabilidade</span>
-                                        <span class="text-muted fw-semibold fs-6">Controle financeiro e gestão de
-                                            ativos.</span>
-                                    </span>
-                                </span>
-                                <!--end::Info-->
-                                <!--begin::Lock Icon-->
-                                <div class="d-flex justify-content-end ms-4 mb-15">
-                                    <i class="fa-solid fa-lock" title="Módulo Bloqueado!" alt="Módulo Bloqueado!"></i>
+
+                                <!--begin::Col - Contabilidade-->
+                                <div class="col-lg-4 hover-elevate-up parent-hover mb-3">
+                                    <a href="{{ route('caixa.create') }}"
+                                        class="btn btn-outline btn-outline-dashed btn-outline-danger disabled active p-4 d-flex align-items-center">
+                                        <!--begin::Icon and Badge-->
+                                        <div class="d-flex align-items-center me-4">
+                                            <img class="me-5" width="75px" height="75px"
+                                                src="/assets/media/png/contabilidade.png" alt="Contabilidade">
+                                        </div>
+                                        <!--end::Icon and Badge-->
+                                        <!--begin::Info-->
+                                        <span class="d-block fw-semibold text-start">
+                                            <span class="d-block fw-semibold text-start">
+                                                <span class="text-dark fw-bold d-block fs-4 mb-2">Contabilidade</span>
+                                                <span class="text-muted fw-semibold fs-6">Controle financeiro e gestão
+                                                    de
+                                                    ativos.</span>
+                                            </span>
+                                        </span>
+                                        <!--end::Info-->
+                                        <!--begin::Lock Icon-->
+                                        <div class="d-flex justify-content-end ms-4 mb-15">
+                                            <i class="fa-solid fa-lock" title="Módulo Bloqueado!"
+                                                alt="Módulo Bloqueado!"></i>
+                                        </div>
+                                        <!--end::Lock Icon-->
+                                    </a>
                                 </div>
-                                <!--end::Lock Icon-->
-                            </a>
-                        </div>
 
-                        <!--begin::Col - Dízimo e Doações-->
-                        <div class="col-lg-4 hover-elevate-up parent-hover mb-5">
-                            <input type="radio" class="btn-check" name="account_type" value="donations"
-                                id="kt_create_account_form_account_type_donations" />
-                            <a href="#"
-                                class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
-                                aria-label="Acessar módulo Dízimo e Doações">
-                                <img class="me-5" width="75px" height="75px" src="/assets/media/png/dizimo.png"
-                                    alt="Ícone Dízimo e Doações">
-                                <span class="d-block fw-semibold text-start">
-                                    <span class="text-dark fw-bold fs-4 mb-2 d-block">Dízimo e Doações</span>
-                                    <span class="text-muted fw-semibold fs-6">Gestão de dízimos e doações</span>
-                                </span>
-                            </a>
-                        </div>
+                                <!--begin::Col - Dízimo e Doações-->
+                                <div class="col-lg-4 hover-elevate-up parent-hover mb-5">
+                                    <input type="radio" class="btn-check" name="account_type" value="donations"
+                                        id="kt_create_account_form_account_type_donations" />
+                                    <a href="#"
+                                        class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
+                                        aria-label="Acessar módulo Dízimo e Doações">
+                                        <img class="me-5" width="75px" height="75px"
+                                            src="/assets/media/png/dizimo.png" alt="Ícone Dízimo e Doações">
+                                        <span class="d-block fw-semibold text-start">
+                                            <span class="text-dark fw-bold fs-4 mb-2 d-block">Dízimo e Doações</span>
+                                            <span class="text-muted fw-semibold fs-6">Gestão de dízimos e doações</span>
+                                        </span>
+                                    </a>
+                                </div>
 
-                        <!--begin::Col - Cadastro de Fiéis-->
-                        <div class="col-lg-4 hover-elevate-up parent-hover mb-5">
-                            <input type="radio" class="btn-check" name="account_type" value="faithful"
-                                id="kt_create_account_form_account_type_faithful" />
-                            <a href="{{ route('fieis.index') }}"
-                                class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
-                                aria-label="Acessar módulo Cadastro de Fiéis">
-                                <img class="me-5" width="75px" height="75px" src="/assets/media/png/fieis.png"
-                                    alt="Ícone Cadastro de Fiéis">
-                                <span class="d-block fw-semibold text-start">
-                                    <span class="text-dark fw-bold fs-4 mb-2 d-block">Cadastro de Fiéis</span>
-                                    <span class="text-muted fw-semibold fs-6">Gerenciamento de membros e
-                                        contribuições</span>
-                                </span>
-                            </a>
-                        </div>
+                                <!--begin::Col - Cadastro de Fiéis-->
+                                <div class="col-lg-4 hover-elevate-up parent-hover mb-5">
+                                    <input type="radio" class="btn-check" name="account_type" value="faithful"
+                                        id="kt_create_account_form_account_type_faithful" />
+                                    <a href="{{ route('fieis.index') }}"
+                                        class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
+                                        aria-label="Acessar módulo Cadastro de Fiéis">
+                                        <img class="me-5" width="75px" height="75px"
+                                            src="/assets/media/png/fieis.png" alt="Ícone Cadastro de Fiéis">
+                                        <span class="d-block fw-semibold text-start">
+                                            <span class="text-dark fw-bold fs-4 mb-2 d-block">Cadastro de Fiéis</span>
+                                            <span class="text-muted fw-semibold fs-6">Gerenciamento de membros e
+                                                contribuições</span>
+                                        </span>
+                                    </a>
+                                </div>
 
-                        <!--begin::Col - Cadastro de Fiéis-->
-                        <div class="col-lg-4 hover-elevate-up parent-hover mb-5">
-                            <input type="radio" class="btn-check" name="account_type" value="faithful"
-                                id="kt_create_account_form_account_type_faithful" />
-                            <a href="{{ route('car_insurance.index') }}"
-                                class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
-                                aria-label="Acessar módulo Cadastro de Fiéis">
-                                <img class="me-5" width="75px" height="75px" src="/assets/media/png/carro.png"
-                                    alt="Ícone Cadastro de Fiéis">
-                                <span class="d-block fw-semibold text-start">
-                                    <span class="text-dark fw-bold fs-4 mb-2 d-block">Cadastro de Fiéis</span>
-                                    <span class="text-muted fw-semibold fs-6">Gerenciamento de membros e
-                                        contribuições</span>
-                                </span>
-                            </a>
-                        </div>
+                                <!--begin::Col - Cadastro de Fiéis-->
+                                <div class="col-lg-4 hover-elevate-up parent-hover mb-5">
+                                    <input type="radio" class="btn-check" name="account_type" value="faithful"
+                                        id="kt_create_account_form_account_type_faithful" />
+                                    <a href="{{ route('cemiterio.index') }}"
+                                        class="btn btn-outline btn-outline-dashed btn-active-light-primary active p-4 d-flex align-items-center"
+                                        aria-label="Acessar módulo Cadastro de Fiéis">
+                                        <img class="me-5" width="75px" height="75px"
+                                            src="/assets/media/png/lapide2.png" alt="Ícone Cadastro de Fiéis">
+                                        <span class="d-block fw-semibold text-start">
+                                            <span class="text-dark fw-bold fs-4 mb-2 d-block">Cadastro de
+                                                Sepulturas</span>
+                                            <span class="text-muted fw-semibold fs-6">Gerenciamento de sepultamentos,
+                                                manutenção e pagamentos</span>
+                                        </span>
+                                    </a>
+                                </div>
 
+                            </div>
+                            <!--end::Row-->
+                        </div>
                     </div>
-                    <!--end::Row-->
-
-
 
                     <div class="separator separator-dotted separator-content my-5 d-flex align-items-center">
                         <span class="me-2">

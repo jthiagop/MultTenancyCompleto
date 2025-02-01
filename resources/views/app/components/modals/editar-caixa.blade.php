@@ -1,6 +1,6 @@
 <div class="modal fade" id="kt_modal_new_card" tabindex="-1" aria-hidden="true">
     <!--begin::Modal dialog-->
-    <div class="modal-dialog modal-dialog-centered mw-650px">
+    <div class="modal-dialog modal-dialog-centered mw-800px">
         <!--begin::Modal content-->
         <div class="modal-content">
             <!--begin::Modal header-->
@@ -31,20 +31,60 @@
                 <form method="POST" action="{{ route('caixa.update', $caixa->id) }}" enctype="multipart/form-data">
                     @csrf
                     @method('PUT')
+                    <!-- Mensagens Gerais de Erro -->
+                    @if ($errors->any())
+                        <div class="alert alert-danger">
+                            <strong>Houve um problema ao processar o formulário:</strong>
+                            <ul>
+                                @foreach ($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
                     <!-- Campo oculto para entidade_id -->
                     <input type="hidden" name="entidade_id" value="{{ $caixa->movimentacao->entidade->id ?? '' }}">
 
                     <!--begin::Input group-->
-                    <div class="d-flex flex-column mb-7 fv-row">
-                        <!--begin::Label-->
-                        <label class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
-                            <span class="required">Descrição</span>
-                            <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
-                                title="Specify a card holder's name"></i>
-                        </label>
-                        <!--end::Label-->
-                        <input type="text" class="form-control form-control-solid" placeholder="" name="descricao"
-                            value="{{ old('descricao', $caixa->descricao) }}" />
+                    <div class="row g-9 mb-5">
+                        <!--begin::Col-->
+                        <div class="col-md-7 fv-row">
+                            <!--begin::Label-->
+                            <label class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
+                                <span class="required">Descrição</span>
+                                <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                    title="Specify a card holder's name"></i>
+                            </label>
+                            <!--end::Label-->
+                            <input type="text" class="form-control form-control-solid" placeholder=""
+                                name="descricao" value="{{ old('descricao', $caixa->descricao) }}" />
+                        </div>
+                        <div class="col-md-5 fv-row">
+                            <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
+                                <span class="required">Entidade</span>
+                                <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                    title="Entidades financeiras representam pontos de controle financeiro, como caixas, caixas, dízimos, coletas ou doações. Elas são utilizadas para organizar e monitorar as entradas e saídas de recursos financeiros, ajudando na gestão eficiente e na geração de relatórios gerenciais.">
+                                </i>
+                            </label>
+
+                            <!-- Aqui você percorre TODAS as entidades e marca como selecionada aquela que o usuário já tiver -->
+                            <select name="entidade_id" id="entidade_id" data-dropdown-css-class="w-200px"
+                                class="form-select form-select-solid" data-control="select" required>
+                                @foreach ($entidades as $entidade)
+                                    <option value="{{ $entidade->id }}" {{-- Usamos old() para recuperar valor em caso de erro de validação
+                                             e $caixa->entidade_id para trazer o valor do caixa --}}
+                                        {{ old('entidade_id', $caixa->entidade_id) == $entidade->id ? 'selected' : '' }}>
+                                        {{ $entidade->nome }} ({{ ucfirst($entidade->tipo) }})
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            @error('entidade_id')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                     </div>
                     <!--end::Input group-->
                     <div class="row g-9 mb-5">
@@ -124,7 +164,8 @@
                                 data-dropdown-css-class="w-200px" data-placeholder="Selecione o tipo" name="tipo"
                                 required data-hide-search="true" id="tipo_select_caixa">
                                 <option value="" disabled selected>Defina o tipo</option>
-                                <option value="entrada" {{ old('tipo', $caixa->tipo) == 'entrada' ? 'selected' : '' }}>
+                                <option value="entrada"
+                                    {{ old('tipo', $caixa->tipo) == 'entrada' ? 'selected' : '' }}>
                                     Entrada</option>
                                 <option value="saida" {{ old('tipo', $caixa->tipo) == 'saida' ? 'selected' : '' }}>
                                     Saída</option>
@@ -227,31 +268,29 @@
                                 @enderror
                             </div>
                             <!-- Novo campo de entrada para o banco de depósito -->
-                            <div class="col-md-6 fv-row" id="banco-deposito" style="display:none;">
-                                <label class="required fs-5 fw-semibold mb-2">Selecione o Banco de
-                                    Depósito</label>
-                                <select id="bancoSelect" name="banco_id" aria-label="Select a Banco"
-                                    data-control="select2" data-placeholder="Escolha um banco..."
-                                    class="form-select fw-bold">
-                                    <option value=""></option>
-                                    @foreach ($bancos as $banco)
-                                        <option data-banco-code="{{ $banco->banco }}" value="{{ $banco->id }}">
-                                            <span class="banco-name"></span>{{ $banco->banco }} -
-                                            {{ $banco->name }}/{{ $banco->conta }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
+
                         </div>
 
                         <div class="row mb-10">
                             <div class="col-md-12 fv-row">
                                 <label class="required fs-5 fw-semibold mb-2">Centro de Custo</label>
                                 <div class="input-group">
-                                    <input type="text" name="centro" readonly
-                                        class="form-control form-control-solid ps-12" placeholder=""
-                                        value="{{ old('centro', $caixa->centro) }}" />
+                                    <select name="cost_center_id" id="cost_center_id"
+                                        class="form-select form-select-solid @error('cost_center_id') is-invalid @enderror"
+                                        data-control="select" data-dropdown-css-class="auto"
+                                        data-placeholder="Selecione o Centro de Custo">
+                                        <!-- Placeholder -->
+                                        <option value="" disabled>Selecione o Centro de Custo</option>
+                                        @foreach ($centrosAtivos as $centro)
+                                            <option value="{{ $centro->id }}"
+                                                {{ old('cost_center_id', $centroCusto->cost_center_id ?? '') == $centro->id ? 'selected' : '' }}>
+                                                {{ $centro->name }}
+                                            </option>
+                                        @endforeach
+                                    </select>
+
                                 </div>
-                                @error('centro')
+                                @error('cost_center_id')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>

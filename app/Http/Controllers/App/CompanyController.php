@@ -4,9 +4,11 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\Adress;
+use App\Models\Banco;
 use App\Models\Company;
 use App\Models\Movimentacao;
 use App\Models\User;
+use File;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
@@ -72,6 +74,25 @@ class CompanyController extends Controller
      */
     public function show($companyId, Request $request)
     {
+        // Caminho para a pasta com os SVGs
+    $svgPath = public_path('assets/media/svg/bancos');
+
+    // Filtra todos os arquivos .svg do diretório
+    $svgFiles = File::files($svgPath);
+
+    // Monta um array com 'nome' e 'caminho'
+    $listaBancos = [];
+    foreach ($svgFiles as $file) {
+        // Ex: bradesco.svg => bradesco
+        $filename = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+        $listaBancos[] = [
+            'slug'   => $filename,
+            'label'  => ucfirst($filename), // ou algo custom
+            // Ex: /assets/media/svg/bancos/bradesco.svg
+            'icon'   => asset("assets/media/svg/bancos/{$file->getFilename()}"),
+        ];
+    }
+
         // Busca a empresa pelo ID
         $company = Company::findOrFail($companyId);
 
@@ -154,6 +175,7 @@ class CompanyController extends Controller
             'roleColors' => $roleColors,
             'totalUsers' => $totalUsers,
             'areaChartData' => $areaChartData, // Dados do gráfico
+            'listaBancos' => $listaBancos,
 
 
         ]);

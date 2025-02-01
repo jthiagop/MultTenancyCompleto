@@ -2,6 +2,7 @@
 
 namespace App\Models\Financeiro;
 
+use App\Models\Anexo;
 use App\Models\EntidadeFinanceira;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class TransacaoFinanceira extends Model
 {
     /** @use HasFactory<\Database\Factories\TransacaoFinanceiraFactory> */
+    protected $table = 'transacoes_financeiras';
 
         use HasFactory, SoftDeletes;
 
@@ -26,7 +28,7 @@ class TransacaoFinanceira extends Model
             'descricao',
             'lancamento_padrao_id',
             'movimentacao_id',
-            'centro',
+            'cost_center_id',
             'tipo_documento',
             'numero_documento',
             'origem',
@@ -34,7 +36,14 @@ class TransacaoFinanceira extends Model
             'comprovacao_fiscal',
             'created_by',
             'updated_by',
+            'created_by_name',
+            'updated_by_name',
         ];
+
+        public function costCenter()
+        {
+            return $this->belongsTo(CostCenter::class, 'cost_center_id');
+        }
 
         public function lancamentoPadrao()
         {
@@ -59,5 +68,10 @@ class TransacaoFinanceira extends Model
         public function updatedBy()
         {
             return $this->belongsTo(User::class, 'updated_by');
+        }
+
+        public function modulos_anexos()
+        {
+            return $this->hasMany(ModulosAnexo::class, 'anexavel_id');
         }
     }

@@ -131,7 +131,7 @@ var initDaterangepicker = function () {
             if (valor === 'all') {
                 valor = ''; // Limpa o filtro para mostrar todos os resultados
             }
-            datatable.column(4).search(valor).draw(); // A coluna "Tipo" é a 5ª na tabela, então o índice é 4
+            datatable.column(5).search(valor).draw(); // A coluna "Tipo" é a 5ª na tabela, então o índice é 4
         });
     };
 

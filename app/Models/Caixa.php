@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Auth;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -66,7 +67,7 @@ class Caixa extends Model implements Auditable
 
     static public function getCaixaList()
     {
-        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+        $userId = Auth::user()->id; // Recupere o ID do usuário logado
 
         // Use Eloquent para carregar caixas com o relacionamento lancamentoPadrao
         return Caixa::with('lancamentoPadrao')
@@ -79,7 +80,7 @@ class Caixa extends Model implements Auditable
 
     static public function getEntidadesCaixa()
     {
-        $companyId = auth()->user()->company_id; // Recupere a empresa do usuário logado
+        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
 
         return EntidadeFinanceira::where('tipo', 'caixa') // Filtra apenas pelo tipo banco
             ->where('company_id', $companyId) // Filtra pela empresa do usuário
@@ -88,7 +89,7 @@ class Caixa extends Model implements Auditable
 
     static public function getEntidadesBanco()
     {
-        $companyId = auth()->user()->company_id; // Recupere a empresa do usuário logado
+        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
 
         return EntidadeFinanceira::where('tipo', 'banco') // Filtra apenas pelo tipo banco
             ->where('company_id', $companyId) // Filtra pela empresa do usuário
@@ -103,7 +104,7 @@ class Caixa extends Model implements Auditable
 
     static public function getCaixaEntrada()
     {
-        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+        $userId = Auth::user()->id; // Recupere o ID do usuário logado
 
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
@@ -125,7 +126,7 @@ class Caixa extends Model implements Auditable
     static public function getCaixaSaida()
     {
 
-        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+        $userId = Auth::user()->id; // Recupere o ID do usuário logado
 
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
@@ -147,7 +148,7 @@ class Caixa extends Model implements Auditable
     static public function getCaixa()
     {
 
-        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+        $userId = Auth::user()->id; // Recupere o ID do usuário logado
 
         $entradas = DB::table('caixas')
             ->join('company_user', 'caixas.company_id', '=', 'company_user.company_id')

@@ -2,7 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Financeiro\ModulosAnexo;
+use App\Models\Financeiro\TransacaoFinanceira;
+use Auth;
 use Carbon\Carbon;
+use File;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -30,10 +34,9 @@ class Banco extends Model
         'comprovacao_fiscal',
         'movimentacao_id',
     ];
-
     public function anexos()
     {
-        return $this->hasMany(Anexo::class, 'banco_id');
+        return $this->morphMany(ModulosAnexo::class, 'anexable_id');
     }
 
     public function bancoCadastrado()
@@ -41,11 +44,22 @@ class Banco extends Model
         return $this->belongsTo(CadastroBanco::class, 'banco_id');
     }
 
+    public function transacoes_financeiras()
+    {
+        return $this->belongsTo(TransacaoFinanceira::class);
+    }
+
+    public function modulos_anexos()
+    {
+        // "anexavel" é o mesmo sufixo usado em "anexavel_id" e "anexavel_type"
+        return $this->morphMany(ModulosAnexo::class, 'anexavel');
+    }
+
+
     public function movimentacao()
     {
         return $this->belongsTo(Movimentacao::class, 'movimentacao_id');
     }
-
 
     // Relacionamento com o lançamento padrão
     public function lancamentoPadrao()
@@ -55,7 +69,7 @@ class Banco extends Model
 
     static public function getBancoList()
     {
-        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+        $userId = Auth::user()->id; // Recupere o ID do usuário logado
 
         $entradas = DB::table('bancos')
             ->join('company_user', 'bancos.company_id', '=', 'company_user.company_id')
@@ -67,7 +81,7 @@ class Banco extends Model
 
     static public function getEntidadesBanco()
     {
-        $companyId = auth()->user()->company_id; // Recupere a empresa do usuário logado
+        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
 
         return EntidadeFinanceira::where('tipo', 'banco') // Filtra apenas pelo tipo banco
             ->where('company_id', $companyId) // Filtra pela empresa do usuário
@@ -76,18 +90,19 @@ class Banco extends Model
 
     static public function getBancoEntrada()
     {
-        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+        $userId = Auth::user()->id; // Recupere o ID do usuário logado
 
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
 
-        $entradas = DB::table('bancos')
-            ->join('company_user', 'bancos.company_id', '=', 'company_user.company_id')
+        $entradas = DB::table('movimentacoes')
+            ->join('company_user', 'movimentacoes.company_id', '=', 'company_user.company_id')
             ->where('company_user.user_id', $userId)
-            ->where('bancos.tipo', 'entrada') // Filtra apenas as entradas
-            ->whereYear('bancos.data_competencia', $currentYear) // Filtra pelo ano vigente
-            ->whereMonth('bancos.data_competencia', $currentMonth) // Filtra pelo mês vigente
-            ->select('bancos.*') // Selecione todas as colunas da tabela 'caixa'
+            ->where('movimentacoes.tipo', 'entrada') // Filtra apenas as entradas
+            ->whereYear('movimentacoes.data', $currentYear) // Filtra pelo ano vigente
+            ->whereMonth('movimentacoes.data', $currentMonth) // Filtra pelo mês vigente
+            ->whereNull('movimentacoes.deleted_at') // Ignora registros excluídos (Soft Delete)
+            ->select('movimentacoes.*') // Selecione todas as colunas da tabela 'caixa'
             ->get();
 
         $somaEntradas = $entradas->sum('valor'); //soma os valores de entrada
@@ -98,18 +113,19 @@ class Banco extends Model
     static public function getBancoSaida()
     {
 
-        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+        $userId = Auth::user()->id; // Recupere o ID do usuário logado
 
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
 
-        $saidas = DB::table('bancos')
-            ->join('company_user', 'bancos.company_id', '=', 'company_user.company_id')
+        $saidas = DB::table('movimentacoes')
+            ->join('company_user', 'movimentacoes.company_id', '=', 'company_user.company_id')
             ->where('company_user.user_id', $userId)
-            ->where('bancos.tipo', 'saida') // Filtra apenas as entradas
-            ->whereYear('bancos.data_competencia', $currentYear) // Filtra pelo ano vigente
-            ->whereMonth('bancos.data_competencia', $currentMonth) // Filtra pelo mês vigente
-            ->select('bancos.*') // Selecione todas as colunas da tabela 'caixa'
+            ->where('movimentacoes.tipo', 'saida') // Filtra apenas as entradas
+            ->whereYear('movimentacoes.data', $currentYear) // Filtra pelo ano vigente
+            ->whereMonth('movimentacoes.data', $currentMonth) // Filtra pelo mês vigente
+            ->whereNull('movimentacoes.deleted_at') // Ignora registros excluídos (Soft Delete)
+            ->select('movimentacoes.*') // Selecione todas as colunas da tabela 'caixa'
             ->get();
 
         $SomaSaidas = $saidas->sum('valor'); //soma os valores de entrada
@@ -120,7 +136,7 @@ class Banco extends Model
     static public function getBanco()
     {
 
-        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+        $userId = Auth::user()->id; // Recupere o ID do usuário logado
 
         $entradas = DB::table('bancos')
             ->join('company_user', 'bancos.company_id', '=', 'company_user.company_id')
@@ -146,7 +162,7 @@ class Banco extends Model
 
     static public function getCadastroBanco()
     {
-        $userId = auth()->user()->id; // Recupere o ID do usuário logado
+        $userId = Auth::user()->id; // Recupere o ID do usuário logado
 
         $entradas = Banco::join('company_user', 'bancos.company_id', '=', 'company_user.company_id')
             ->where('company_user.user_id', $userId)
@@ -155,5 +171,33 @@ class Banco extends Model
         return $entradas;
     }
 
+        /**
+     * Retorna a lista de bancos com os ícones (.svg) disponíveis.
+     *
+     * @return array
+     */
+    public static function getBancoIcons()
+    {
+        // Caminho para a pasta com os SVGs
+        $svgPath = public_path('assets/media/svg/bancos');
+
+        // Verifica se o diretório existe
+        if (!File::exists($svgPath)) {
+            return [];
+        }
+
+        // Lista os arquivos .svg
+        $svgFiles = File::files($svgPath);
+
+        // Mapeia os arquivos para um array estruturado
+        return collect($svgFiles)->map(function ($file) {
+            $filename = pathinfo($file->getFilename(), PATHINFO_FILENAME);
+            return [
+                'slug' => $filename,
+                'label' => ucfirst($filename), // Nome formatado (ex.: "Bradesco")
+                'icon' => asset("assets/media/svg/bancos/{$file->getFilename()}"), // Caminho público
+            ];
+        })->toArray();
+    }
 
 }

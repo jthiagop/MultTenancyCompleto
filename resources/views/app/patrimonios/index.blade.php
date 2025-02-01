@@ -439,137 +439,11 @@
                         <!--end::Form-->
                         <!--begin::Wrapper-->
                         <div class="py-5">
-                            {{-- <!--begin::Suggestions-->
-                            <div data-kt-search-element="suggestions">
-                                <!--begin::Heading-->
-                                <h3 class="fw-semibold mb-5">Últimas pesquisas:</h3>
-                                <!--end::Heading-->
-                                <!--begin::Users-->
-                                <div class="mh-375px scroll-y me-n7 pe-7">
-                                    <!--begin::User-->
-                                    <a href="#"
-                                        class="d-flex align-items-center p-3 rounded bg-state-light bg-state-opacity-50 mb-1">
-                                        <!--begin::Avatar-->
-                                        <div class="symbol symbol-35px symbol-circle me-5">
-                                            <img alt="Pic" src="assets/media/avatars/300-6.jpg" />
-                                        </div>
-                                        <!--end::Avatar-->
-                                        <!--begin::Info-->
-                                        <div class="fw-semibold">
-                                            <span class="fs-6 text-gray-800 me-2">Emma Smith</span>
-                                            <span class="badge badge-light">Art Director</span>
-                                        </div>
-                                        <!--end::Info-->
-                                    </a>
-                                    <!--end::User-->
-                                    <!--begin::User-->
-                                    <a href="#"
-                                        class="d-flex align-items-center p-3 rounded bg-state-light bg-state-opacity-50 mb-1">
-                                        <!--begin::Avatar-->
-                                        <div class="symbol symbol-35px symbol-circle me-5">
-                                            <span class="symbol-label bg-light-danger text-danger fw-semibold">M</span>
-                                        </div>
-                                        <!--end::Avatar-->
-                                        <!--begin::Info-->
-                                        <div class="fw-semibold">
-                                            <span class="fs-6 text-gray-800 me-2">Melody Macy</span>
-                                            <span class="badge badge-light">Marketing Analytic</span>
-                                        </div>
-                                        <!--end::Info-->
-                                    </a>
-                                    <!--end::User-->
-                                    <!--begin::User-->
-                                    <a href="#"
-                                        class="d-flex align-items-center p-3 rounded bg-state-light bg-state-opacity-50 mb-1">
-                                        <!--begin::Avatar-->
-                                        <div class="symbol symbol-35px symbol-circle me-5">
-                                            <img alt="Pic" src="assets/media/avatars/300-1.jpg" />
-                                        </div>
-                                        <!--end::Avatar-->
-                                        <!--begin::Info-->
-                                        <div class="fw-semibold">
-                                            <span class="fs-6 text-gray-800 me-2">Max Smith</span>
-                                            <span class="badge badge-light">Software Enginer</span>
-                                        </div>
-                                        <!--end::Info-->
-                                    </a>
-                                    <!--end::User-->
-                                    <!--begin::User-->
-                                    <a href="#"
-                                        class="d-flex align-items-center p-3 rounded bg-state-light bg-state-opacity-50 mb-1">
-                                        <!--begin::Avatar-->
-                                        <div class="symbol symbol-35px symbol-circle me-5">
-                                            <img alt="Pic" src="assets/media/avatars/300-5.jpg" />
-                                        </div>
-                                        <!--end::Avatar-->
-                                        <!--begin::Info-->
-                                        <div class="fw-semibold">
-                                            <span class="fs-6 text-gray-800 me-2">Sean Bean</span>
-                                            <span class="badge badge-light">Web Developer</span>
-                                        </div>
-                                        <!--end::Info-->
-                                    </a>
-                                    <!--end::User-->
-                                    <!--begin::User-->
-                                    <a href="#"
-                                        class="d-flex align-items-center p-3 rounded bg-state-light bg-state-opacity-50 mb-1">
-                                        <!--begin::Avatar-->
-                                        <div class="symbol symbol-35px symbol-circle me-5">
-                                            <img alt="Pic" src="assets/media/avatars/300-25.jpg" />
-                                        </div>
-                                        <!--end::Avatar-->
-                                        <!--begin::Info-->
-                                        <div class="fw-semibold">
-                                            <span class="fs-6 text-gray-800 me-2">Brian Cox</span>
-                                            <span class="badge badge-light">UI/UX Designer</span>
-                                        </div>
-                                        <!--end::Info-->
-                                    </a>
-                                    <!--end::User-->
-                                </div>
-                                <!--end::Users-->
-                            </div>
-                            <!--end::Suggestions--> --}}
+
                             <!--begin::Results(add d-none to below element to hide the users list by default)-->
                             <div data-kt-search-element="results" class="d-none">
                                 <!--begin::Users-->
-                                <div class="mh-375px scroll-y me-n7 pe-7">
-                                    @foreach ( $patrimonios as $patrimonioSearch)
-                                                                            <!--begin::User-->
-                                    <div class="rounded d-flex flex-stack bg-active-lighten p-4" data-user-id="0">
-                                        <!--begin::Details-->
-                                        <div class="d-flex align-items-center">
-                                            <!--begin::Checkbox-->
-                                            <label class="form-check form-check-custom form-check-solid me-5">
-                                                <input class="form-check-input" type="checkbox" name="users"
-                                                    data-kt-check="true" data-kt-check-target="[data-user-id='0']"
-                                                    value="0" />
-                                            </label>
-                                            <!--end::Checkbox-->
-                                            <!--begin::Details-->
-                                            <div class="ms-5">
-                                                <a href="#"
-                                                    class="fs-5 fw-bold text-gray-900 text-hover-primary mb-2">{{$patrimonioSearch->codigo_rid}}</a>
-                                                <div class="fw-semibold text-muted">{{ $patrimonioSearch->patrimonio, $patrimonioSearch->logradouro }}</div>
-                                            </div>
-                                            <!--end::Details-->
-                                        </div>
-                                        <!--end::Details-->
-                                        <!--begin::Access menu-->
-                                        <div class="ms-2 w-100px">
-                                            <!-- Botão de visualização -->
-                                            <a href="{{ route('patrimonio.show', $patrimonioSearch->id) }}"
-                                                class="btn btn-light btn-sm"><span><i class="fa-solid fa-eye"></i>Exibir</span></a>
-                                        </div>
-                                        <!--end::Access menu-->
-                                    </div>
-                                    <!--end::User-->
-                                    <!--begin::Separator-->
-                                    <div class="border-bottom border-gray-300 border-bottom-dashed"></div>
-                                    <!--end::Separator-->
-                                    @endforeach
-                                </div>
-                                <!--end::Users-->
+
                                 <!--begin::Actions-->
                                 <div class="d-flex flex-center mt-15">
                                     <button type="reset" id="kt_modal_users_search_reset" data-bs-dismiss="modal"
@@ -585,7 +459,7 @@
                                 <!--begin::Message-->
                                 <div class="fw-semibold py-10">
                                     <div class="text-gray-600 fs-3 mb-2">Nenhum Patrimônio encontrado</div>
-                                    <div class="text-muted fs-6">Tente pesquisar pelo RID, patrimônio...
+                                    <div class="text-muted fs-6">Tente pesquisar pelo RID, patrimônio.........
                                     </div>
                                 </div>
                                 <!--end::Message-->

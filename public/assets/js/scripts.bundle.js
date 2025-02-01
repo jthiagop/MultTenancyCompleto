@@ -7664,6 +7664,8 @@ var KTLayoutSearch = function() {
             var patrimonios = response.data;
 
             if (patrimonios.length > 0) {
+                console.log("Vou inserir HTML em resultsElement:", resultsElement, patrimonios);
+
                 var resultsHtml = '';
                 patrimonios.forEach(function(patrimonio) {
                     resultsHtml += `

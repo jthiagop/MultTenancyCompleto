@@ -27,7 +27,6 @@ class GlobalVariablesServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             $currentUser = Auth::user(); // Usuário autenticado, se existir
             $defaultAvatar = 'assets/media/avatars/300-6.jpg'; // Avatar padrão
-
             // Inicializa a variável $company como null
             $company = null;
 
@@ -35,7 +34,6 @@ class GlobalVariablesServiceProvider extends ServiceProvider
                 // Obtém a empresa associada ao usuário autenticado, se existir
                 $company = $currentUser->companies()->first(); // Use a relação entre User e Company
             }
-
             // Compartilha as variáveis com as views
             $view->with([
                 'currentUser' => $currentUser,

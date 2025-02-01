@@ -65,7 +65,4 @@ class EntidadeFinanceira extends Model
             ->where('company_id', $companyId) // Filtra pela empresa do usuário
             ->sum('saldo_atual'); // Soma a coluna 'saldo_atual'
     }
-
-
 }
-

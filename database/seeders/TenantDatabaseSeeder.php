@@ -19,6 +19,5 @@ class TenantDatabaseSeeder extends Seeder
         Role::create(['name' => 'admin_user'], ['descript'=>'Acesso acessa a filial como um administrador local']);
         Role::create(['name' => 'user'], ['descript'=> 'Eles podem visualizar suas próprias transações, gerar relatórios e acompanhar seu histórico financeiro.']);
         Role::create(['name' => 'sub_user'], ['descript'=>'Ideal para pessoas que precisam visualizar dados de conteúdo, mas não precisa fazer quaisquer atualizações']);
-
     }
 }

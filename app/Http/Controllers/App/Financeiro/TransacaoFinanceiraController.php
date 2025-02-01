@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreTransacaoFinanceiraRequest;
 use App\Models\Anexo;
 use App\Models\Banco;
+use App\Models\Financeiro\ModulosAnexo;
 use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
@@ -16,16 +17,14 @@ use Flasher;
 use Illuminate\Http\Request;
 use Log;
 use Validator;
+use Yajra\DataTables\Facades\DataTables;
 
 class TransacaoFinanceiraController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        //
-    }
+    public function index() {}
 
     /**
      * Show the form for creating a new resource.
@@ -40,130 +39,113 @@ class TransacaoFinanceiraController extends Controller
      */
     public function store(StoreTransacaoFinanceiraRequest $request)
     {
-            dd($request);
-        try {
-            $subsidiaryId = User::getCompany();
+        // Recupera a companhia associada ao usuário autenticado
+        $subsidiary = User::getCompany();
 
-            // Converte a data para o formato correto
-            $validatedData = $request->validated();
-            $validatedData['data_competencia'] = Carbon::createFromFormat('d-m-Y', $validatedData['data_competencia'])->format('Y-m-d');
-            $validatedData['company_id'] = $subsidiaryId->company_id;
-            $validatedData['origem'] = 'CX';
-            $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
-            $validatedData['created_by'] = Auth::id();
-            $validatedData['created_by_name'] = Auth::user()->name;
-            $validatedData['updated_by'] = Auth::id();
-            $validatedData['updated_by_name'] = Auth::user()->name;
+        if (!$subsidiary) {
+            return redirect()->back()->with('error', 'Companhia não encontrada.');
+        }
 
-            // Cria o lançamento na tabela 'movimentacoes'
-            try {
-                $movimentacao = Movimentacao::create([
-                    'entidade_id' => $validatedData['entidade_id'],
-                    'tipo' => $validatedData['tipo'],
-                    'valor' => $validatedData['valor'],
-                    'data' => $validatedData['data_competencia'],
-                    'descricao' => $validatedData['descricao'],
-                    'company_id' => $subsidiaryId->company_id,
-                    'created_by' => Auth::id(), // Pegando apenas o ID do usuário
-                    'created_by_name' => Auth::user()->name, // Nome do usuário
-                    'updated_by' => Auth::id(), // Pegando apenas o ID do usuário
-                    'updated_by_name' => Auth::user()->name, // Nome do usuário
-                ]);
+        // Validação dos dados é automática com StoreTransacaoFinanceiraRequest, não é necessário duplicar validações aqui
 
-                // Retorno de sucesso
-                return redirect()->back()->with('message', 'Movimentação criada com sucesso!');
-            } catch (\Exception $e) {
-                // Log de erro
-                Log::error('Erro ao criar movimentação: ' . $e->getMessage());
-                return redirect()->back()->with('error', 'Erro ao criar a movimentação.');
-            }
+        // Processa os dados validados
+        $validatedData = $request->validated();
 
+        // Converte o valor e a data para os formatos adequados
+        $validatedData['data_competencia'] = Carbon::createFromFormat('d-m-Y', $validatedData['data_competencia'])->format('Y-m-d');
+        $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
 
-            // Cria o lançamento na tabela 'caixa'
-            $validatedData['movimentacao_id'] = $movimentacao->id; // Vincula a movimentação
-            dd($validatedData, $movimentacao);
-            // Cria o registro no caixa
-            $caixa = TransacaoFinanceira::create($validatedData);
+        // Adiciona informações padrão
+        $validatedData['company_id'] = $subsidiary->company_id;
+        $validatedData['created_by'] = Auth::id();
+        $validatedData['created_by_name'] = Auth::user()->name;
+        $validatedData['updated_by'] = Auth::id();
+        $validatedData['updated_by_name'] = Auth::user()->name;
 
-            // Verifica e processa lançamentos padrão
-            $lancamentoPadrao = LancamentoPadrao::find($validatedData['lancamento_padrao_id']);
-            if ($lancamentoPadrao && $lancamentoPadrao->description === 'Deposito Bancário') {
-                $validatedData['origem'] = 'BC';
-                $validatedData['tipo'] = 'entrada';
-                $validatedData['comprovacao_fiscal'] = $validatedData['comprovacao_fiscal'];
+        // Cria o lançamento na tabela 'movimentacoes'
+        $movimentacao = Movimentacao::create([
+            'entidade_id' => $validatedData['entidade_id'],
+            'tipo' => $validatedData['tipo'],
+            'valor' => $validatedData['valor'],
+            'data' => $validatedData['data_competencia'],
+            'descricao' => $validatedData['descricao'],
+            'company_id' => $validatedData['company_id'],
+            'created_by' => $validatedData['created_by'],
+            'created_by_name' => $validatedData['created_by_name'],
+            'updated_by' => $validatedData['updated_by'],
+            'updated_by_name' => $validatedData['updated_by_name'],
+        ]);
 
-                // Cria o lançamento na tabela 'movimentacoes'
-                try {
-                    $movimentacao = Movimentacao::create([
-                        'entidade_id' => $validatedData['entidade_banco_id'],
-                        'tipo' => $validatedData['tipo'],
-                        'valor' => $validatedData['valor'],
-                        'descricao' => $validatedData['descricao'],
-                        'company_id' => $subsidiaryId->company_id,
-                        'created_by' => Auth::id(),
-                        'created_by_name' => Auth::user()->name,
-                        'updated_by' => Auth::id(),
-                        'updated_by_name' => Auth::user()->name,
-                    ]);
-                } catch (\Exception $e) {
-                    // Log de erro
-                    dd('Erro ao criar movimentação:', $e->getMessage(), $e->getTrace());
-                    Log::error('Erro ao criar movimentação: ' . $e->getMessage());
-                    return redirect()->back()->with('error', 'Erro ao criar a movimentação.');
-                }
+        // Cria o registro no caixa
+        $validatedData['movimentacao_id'] = $movimentacao->id;
+        $caixa = TransacaoFinanceira::create($validatedData);
 
-                // Cria o lançamento na tabela 'caixa'
-                $validatedData['movimentacao_id'] = $movimentacao->id; // Vincula a movimentação
+        // Verifica e processa lançamentos padrão
+        $this->processarLancamentoPadrao($validatedData);
 
-                $banco = Banco::create($validatedData);
+        // Processa anexos, se existirem
+        $this->processarAnexos($request, $caixa);
 
-                if ($request->hasFile('files')) {
-                    foreach ($request->file('files') as $anexo) {
-                        $anexoName = time() . '_' . $anexo->getClientOriginalName();
-                        $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
+        // Adiciona mensagem de sucesso
+        Flasher::addSuccess('Lançamento criado com sucesso!');
+        return redirect()->back()->with('message', 'Lançamento criado com sucesso!');
+    }
 
-                        Anexo::create([
-                            'banco_id' => $banco->id,
-                            'nome_arquivo' => $anexoName,
-                            'caminho_arquivo' => $anexoPath,
-                            'size' => $anexo->getSize(), // Tamanho do arquivo
-                            'created_by' => Auth::id(),
-                            'updated_by' => Auth::id(),
-                        ]);
-                    }
-                }
-            }
+    /**
+     * Processa lançamentos padrão.
+     */
+    private function processarLancamentoPadrao(array $validatedData)
+    {
+        $lancamentoPadrao = LancamentoPadrao::find($validatedData['lancamento_padrao_id']);
+        if ($lancamentoPadrao && $lancamentoPadrao->description === 'Deposito Bancário') {
+            $validatedData['origem'] = 'Banco';
+            $validatedData['tipo'] = 'entrada';
 
+            // Cria outra movimentação para "Deposito Bancário"
+            $movimentacaoBanco = Movimentacao::create([
+                'entidade_id' => $validatedData['entidade_banco_id'],
+                'tipo' => $validatedData['tipo'],
+                'valor' => $validatedData['valor'],
+                'descricao' => $validatedData['descricao'],
+                'company_id' => $validatedData['company_id'],
+                'created_by' => $validatedData['created_by'],
+                'created_by_name' => $validatedData['created_by_name'],
+                'updated_by' => $validatedData['updated_by'],
+                'updated_by_name' => $validatedData['updated_by_name'],
+            ]);
 
-            // Verifica se há arquivos anexos
-            if ($request->hasFile('files')) {
-                foreach ($request->file('files') as $anexo) {
-                    $anexoName = time() . '_' . $anexo->getClientOriginalName();
-                    $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
-
-                    Anexo::create([
-                        'caixa_id' => $caixa->id,
-                        'nome_arquivo' => $anexoName,
-                        'caminho_arquivo' => $anexoPath,
-                        'size' => $anexo->getSize(), // Tamanho do arquivo
-                        'created_by' => Auth::user()->id(),
-                        'updated_by' => Auth::user()->id(),
-                    ]);
-                }
-            }
-        // Mensagem de sucesso
-        flash()->success('O livro foi salvo com sucesso!');
-
-            // Exibe a mensagem diretamente usando o Flasher e redireciona
-            return redirect()->back();
-        } catch (\Exception $e) {
-            // Adiciona mensagem de erro com detalhes da exceção
-            Flasher::addError('Ocorreu um erro ao processar o lançamento: ' . $e->getMessage());
-
-            // Retorna com os dados antigos e exibe as mensagens de erro
-            return redirect()->back()->withInput();
+            // Cria o lançamento no banco
+            $validatedData['movimentacao_id'] = $movimentacaoBanco->id;
+            Banco::create($validatedData);
         }
     }
+
+    /**
+     * Processa os anexos enviados.
+     */
+    private function processarAnexos(Request $request, TransacaoFinanceira $caixa)
+    {
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                $anexoName = time() . '_' . $file->getClientOriginalName();
+                $anexoPath = $file->storeAs('anexos', $anexoName, 'public');
+
+                ModulosAnexo::create([
+                    'anexavel_id'   => $caixa->id,                   // ID da transacao_financeira
+                    'anexavel_type' => TransacaoFinanceira::class,   // caminho da classe do Model
+                    'nome_arquivo'  => $anexoName,
+                    'caminho_arquivo' => $anexoPath,
+                    'tamanho_arquivo' => $file->getSize(),
+                    'tipo_arquivo'  => $file->getMimeType() ?? '',  // se quiser
+                    'created_by'    => Auth::id(),
+                    'created_by_name' => Auth::user()->name,
+                    // etc., se tiver mais campos
+                ]);
+            }
+        }
+    }
+
+
 
     /**
      * Display the specified resource.
@@ -195,5 +177,60 @@ class TransacaoFinanceiraController extends Controller
     public function destroy(TransacaoFinanceira $transacaoFinanceira)
     {
         //
+    }
+
+
+    /**
+     * Retorna os dados em formato JSON para DataTables.
+     */
+    public function getData(Request $request)
+    {
+        // Monta a query base. Se precisar de Eager Loading, faça ->with('entidadeFinanceira','lancamentoPadrao',...)
+        $query = TransacaoFinanceira::with([
+            'entidadeFinanceira',
+            'lancamentoPadrao'
+        ]);
+
+        // Transforma em DataTable
+        return DataTables::of($query)
+            ->addColumn('action', function ($row) {
+                // Exemplo: se quiser alguma coluna de ação
+                return '<a href="#" class="btn btn-sm btn-primary">Editar</a>';
+            })
+            ->addColumn('entidade_nome', function ($row) {
+                // Exemplo para acessar $row->entidadeFinanceira->nome de forma segura
+                return optional($row->entidadeFinanceira)->nome ?? '-';
+            })
+            ->editColumn('comprovacao_fiscal', function ($row) {
+                // Renderiza o ícone igual ao Blade
+                if ($row->comprovacao_fiscal === 1) {
+                    return '<i class="fas fa-check-circle text-success" title="Tem comprovação Fiscal"></i>';
+                } else {
+                    return '<i class="bi bi-x-circle-fill text-danger" title="Não tem comprovação fiscal"></i>';
+                }
+            })
+            ->editColumn('lancamentoPadrao.description', function ($row) {
+                return optional($row->lancamentoPadrao)->description ?? '-';
+            })
+            ->editColumn('lancamentoPadrao.category', function ($row) {
+                return optional($row->lancamentoPadrao)->category ?? '-';
+            })
+            ->editColumn('data_competencia', function ($row) {
+                return optional($row->data_competencia)->format('d M, Y') ?? '-';
+            })
+            ->editColumn('tipo', function ($row) {
+                // Similar à logic de badge
+                if ($row->tipo === 'entrada') {
+                    return '<span class="badge badge-light-success">Entrada</span>';
+                } else {
+                    return '<span class="badge badge-light-danger">Saída</span>';
+                }
+            })
+            ->editColumn('valor', function ($row) {
+                // Formata valor
+                return 'R$ ' . number_format($row->valor, 2, ',', '.');
+            })
+            ->rawColumns(['comprovacao_fiscal', 'tipo', 'action']) // Indica quais colunas podem ter HTML
+            ->make(true);
     }
 }

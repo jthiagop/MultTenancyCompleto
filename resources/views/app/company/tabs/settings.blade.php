@@ -189,27 +189,28 @@
                         <!--begin::Start Date-->
                         <div class="col-md-2">
                             <input type="text" class="form-control form-control-solid" placeholder="00000-000"
-                                name="cep" id="cep" value="{{ $companyShow->addresses->cep }}" />
+                                name="cep" id="cep" value="{{ $companyShow->addresses->cep ?? '' }}
+                                " />
                         </div>
                         <!--end::Start Date-->
                         <!--begin::End Date-->
                         <div class="col-md-6">
                             <input type="text" class="form-control form-control-solid"
                                 placeholder="Rua: Exemplo de Francisco" name="logradouro" id="logradouro"
-                                value="{{ $companyShow->addresses->rua }}" />
+                                value="{{ $companyShow->addresses->rua ?? ''}} " />
                         </div>
                         <!--end::End Date-->
                         <!--begin::End Date-->
                         <div class="col-md-3">
                             <input type="text" class="form-control form-control-solid"
                                 placeholder="Bairro: São Sebastião" name="bairro" id="bairro"
-                                value="{{ $companyShow->addresses->bairro }}" />
+                                value="{{ $companyShow->addresses->bairro ?? '' }}" />
                         </div>
                         <!--end::End Date-->
                         <!--begin::End Date-->
                         <div class="col-md-1">
                             <input type="text" class="form-control form-control-solid" placeholder="118"
-                                name="numero" id="numero" value="{{ $companyShow->addresses->numero }}" />
+                                name="numero" id="numero" value="{{ $companyShow->addresses->numero ?? '' }}" />
                         </div>
                         <!--end::End Date-->
                     </div>

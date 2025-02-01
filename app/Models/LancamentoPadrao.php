@@ -47,4 +47,39 @@ class LancamentoPadrao extends Model
     {
         return $this->hasMany(Banco::class, 'lancamento_padrao_id');
     }
+
+        /**
+     * Retorna o emoji correspondente à categoria.
+     *
+     * @return string
+     */
+    public function getCategoryEmoji(): string
+    {
+        $emojis = [
+            'Administrativo' => '🏢',
+            'Alimentação' => '🍴',
+            'Cerimônias' => '🎉',
+            'Comércio' => '🛒',
+            'Coletas' => '🗑️',
+            'Comunicação' => '📞',
+            'Contribuições' => '💰',
+            'Doações' => '🎁',
+            'Educação' => '📚',
+            'Equipamentos' => '🛠️',
+            'Eventos' => '🎪',
+            'Intenções' => '🙏',
+            'Liturgia' => '⛪',
+            'Manutenção' => '🔧',
+            'Material de escritório' => '📎',
+            'Pessoal' => '👤',
+            'Rendimentos' => '💹',
+            'Saúde' => '🏥',
+            'Serviços essenciais' => '⚙️',
+            'Suprimentos' => '📦',
+            'Financeiro' => '💳',
+            'Transporte' => '🚗',
+        ];
+
+        return $emojis[$this->category] ?? '❓'; // Retorna '❓' se a categoria não for encontrada
+    }
 }

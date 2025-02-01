@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Auth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,7 @@ class CadastroBanco extends Model
     static public function getCadastroBanco()
     {
     // Recupere o usuário logado
-    $userId = auth()->user()->id; // Recupere o ID do usuário logado
+    $userId = Auth::user()->id; // Recupere o ID do usuário logado
 
     // Recupera o ID da companhia associada ao usuário logado
     $saidas = DB::table('cadastro_bancos')

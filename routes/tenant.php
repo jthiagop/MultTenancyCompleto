@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\App\PrestacaoDeContaController;
 use App\Http\Controllers\App\AnexoController;
+use App\Http\Controllers\App\Anexos\ModulosAnexosController;
 use App\Http\Controllers\App\BancoController;
 use App\Http\Controllers\App\CompanyController;
 use App\Http\Controllers\App\DashboardController;
@@ -14,11 +15,15 @@ use App\Http\Controllers\App\TenantFilialController;
 use App\Http\Controllers\App\CaixaController;
 use App\Http\Controllers\App\LancamentoPadraoController;
 use App\Http\Controllers\App\CadastroBancoController;
+use App\Http\Controllers\App\Cemiterio\CemeteryController;
+use App\Http\Controllers\App\Cemiterio\SepulturaController;
 use App\Http\Controllers\App\EntidadeFinanceiraController;
 use App\Http\Controllers\App\EscrituraController;
 use App\Http\Controllers\App\FielController;
 use App\Http\Controllers\App\Filter\filterController;
 use App\Http\Controllers\App\Filter\RebortController;
+use App\Http\Controllers\App\Financeiro\CostCenterController;
+use App\Http\Controllers\App\Financeiro\ReciboController;
 use App\Http\Controllers\App\Financeiro\TransacaoFinanceiraController;
 use App\Http\Controllers\App\Frota\CarInsuranceController;
 use App\Http\Controllers\App\NamePatrimonioController;
@@ -26,6 +31,7 @@ use App\Http\Controllers\App\PatrimonioController;
 use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\App\PatrimonioAnexoController;
 use App\Http\Controllers\App\TelaDeLoginController;
+use App\Models\Financeiro\ModulosAnexo;
 use App\Models\TenantFilial;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
@@ -117,6 +123,8 @@ Route::middleware([
             Route::resource('users', UserController::class);
         });
 
+        Route::resource('costCenter', CostCenterController::class);
+
 
         // Grupo de rotas acessíveis apenas para usuários com o papel 'user'
         Route::group(['middleware' => ['role:user']], function () {
@@ -124,7 +132,10 @@ Route::middleware([
 
             Route::resource('caixa', CaixaController::class);
             Route::resource('banco', BancoController::class);
+            Route::resource('recibos', ReciboController::class);
+
             Route::resource('anexos', AnexoController::class);
+            Route::resource('modulosAnexos', ModulosAnexosController::class);
             Route::resource('post', PostController::class);
 
             Route::get('/lancamento_padrao/tipo/{tipo}', [LancamentoPadraoController::class, 'getLancamentosByTipo']);
@@ -151,6 +162,10 @@ Route::middleware([
             Route::get('/report/shipping', [ReportController::class, 'shippingReport'])->name('report.shipping');
             Route::get('/report/shipping/data', [ReportController::class, 'shippingReportData'])->name('report.shipping.data');
 
+            Route::resource('cemiterio', CemeteryController::class);
+            Route::resource('sepultura', SepulturaController::class);
+
+            //Grupo de Relatorios
             Route::prefix('relatorios')->group(function () {
             Route::get('/prestacao-de-contas', [PrestacaoDeContaController::class, 'index'])->name('relatorios.prestacao.de.contas');
 
@@ -160,12 +175,13 @@ Route::middleware([
             Route::post('entidades/{id}/movimentacao', [EntidadeFinanceiraController::class, 'addMovimentacao'])->name('entidades.movimentacao');
 
 
-
             Route::resource('car_insurance', CarInsuranceController::class);
             // Rota para marcar veículo como vendido
             Route::post('car_insurance/{id}/sell', [CarInsuranceController::class, 'sell'])->name('car_insurance.sell');
 
             Route::resource('transacoes-financeiras', TransacaoFinanceiraController::class);
+            // Rota que retorna dados em JSON para o DataTables
+            Route::get('/transacoes/data', [TransacaoFinanceiraController::class, 'getData'])->name('transacoes.data');
 
 
             });

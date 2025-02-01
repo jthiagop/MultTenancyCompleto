@@ -87,19 +87,14 @@
         <!--end::Page-->
     </div>
     <!--end::App-->
-
-    @notifyJs
     <!--begin::Javascript-->
     <script>
         var hostUrl = "{{ url('') }}/assets/";
     </script>
-
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
     <script src="{{ url('assets/plugins/global/plugins.bundle.js') }}"></script>
     <script src="{{ url('assets/js/scripts.bundle.js') }}"></script>
     <script src="{{ url('vendor/mckenziearts/laravel-notify/js/notify.js') }}"></script>
-
-
 </body>
 <!--end::Body-->
 

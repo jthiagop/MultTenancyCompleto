@@ -1,6 +1,6 @@
 <div class="modal fade" id="kt_modal_new_card" tabindex="-1" aria-hidden="true">
     <!--begin::Modal dialog-->
-    <div class="modal-dialog modal-dialog-centered mw-650px">
+    <div class="modal-dialog modal-dialog-centered mw-800px">
         <!--begin::Modal content-->
         <div class="modal-content">
             <!--begin::Modal header-->
@@ -34,17 +34,45 @@
                     <!-- Campo oculto para entidade_id -->
                     <input type="hidden" name="entidade_id" value="{{ $banco->movimentacao->entidade->id ?? '' }}">
 
-                    <!--begin::Input group-->
-                    <div class="d-flex flex-column mb-7 fv-row">
-                        <!--begin::Label-->
-                        <label class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
-                            <span class="required">Descrição</span>
-                            <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
-                                title="Specify a card holder's name"></i>
-                        </label>
-                        <!--end::Label-->
-                        <input type="text" class="form-control form-control-solid" placeholder="" name="descricao"
-                            value="{{ old('descricao', $banco->descricao) }}" />
+                    <!--end::Input group-->
+                    <div class="row g-9 mb-5">
+                        <!--begin::Col-->
+                        <div class="col-md-7 fv-row">
+                            <!--begin::Label-->
+                            <label class="d-flex align-items-center fs-6 fw-semibold form-label mb-2">
+                                <span class="required">Descrição</span>
+                                <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                    title="Specify a card holder's name"></i>
+                            </label>
+                            <!--end::Label-->
+                            <input type="text" class="form-control form-control-solid" placeholder=""
+                                name="descricao" value="{{ old('descricao', $banco->descricao) }}" />
+                        </div>
+                        <div class="col-md-5 fv-row">
+                            <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
+                                <span class="required">Entidade</span>
+                                <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                    title="Entidades financeiras representam pontos de controle financeiro, como caixas, bancos, dízimos, coletas ou doações. Elas são utilizadas para organizar e monitorar as entradas e saídas de recursos financeiros, ajudando na gestão eficiente e na geração de relatórios gerenciais.">
+                                </i>
+                            </label>
+
+                            <!-- Aqui você percorre TODAS as entidades e marca como selecionada aquela que o usuário já tiver -->
+                            <select name="entidade_id" id="entidade_id" data-dropdown-css-class="w-200px"
+                                class="form-select form-select-solid" data-control="select" required>
+                                @foreach ($entidadesBanco as $entidade)
+                                    <option value="{{ $entidade->id }}" {{-- Usamos old() para recuperar valor em caso de erro de validação
+                                             e $banco->entidade_id para trazer o valor do banco --}}
+                                        {{ old('entidade_id', $banco->entidade_id) == $entidade->id ? 'selected' : '' }}>
+                                        {{ $entidade->nome }} ({{ ucfirst($entidade->tipo) }})
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            @error('entidade_id')
+                                <div class="text-danger">{{ $message }}</div>
+                            @enderror
+                        </div>
+
                     </div>
                     <!--end::Input group-->
                     <div class="row g-9 mb-5">
@@ -105,7 +133,7 @@
                                 <!--end::Icon-->
                                 <!--begin::Datepicker-->
                                 <input class="form-control form-control-solid ps-12" name="data_competencia" required
-                                    type="text" placeholder="Pick a date" id="kt_datepicker_1"
+                                    type="text" placeholder="Informe a data" id="kt_datepicker_1"
                                     value="{{ old('data_competencia', \Carbon\Carbon::parse($banco->data_competencia)->format('d/m/Y')) }}" />
 
                                 <!--end::Datepicker-->
@@ -124,7 +152,8 @@
                                 data-dropdown-css-class="w-200px" data-placeholder="Selecione o tipo" name="tipo"
                                 required data-hide-search="true" id="tipo_select_banco">
                                 <option value="" disabled selected>Defina o tipo</option>
-                                <option value="entrada" {{ old('tipo', $banco->tipo) == 'entrada' ? 'selected' : '' }}>
+                                <option value="entrada"
+                                    {{ old('tipo', $banco->tipo) == 'entrada' ? 'selected' : '' }}>
                                     Entrada</option>
                                 <option value="saida" {{ old('tipo', $banco->tipo) == 'saida' ? 'selected' : '' }}>
                                     Saída</option>
@@ -233,11 +262,20 @@
                             <div class="col-md-12 fv-row">
                                 <label class="required fs-5 fw-semibold mb-2">Centro de Custo</label>
                                 <div class="input-group">
-                                    <input type="text" name="centro" readonly
-                                        class="form-control form-control-solid ps-12" placeholder=""
-                                        value="{{ old('centro', $banco->centro) }}" />
+                                    <select name="cost_center_id" id="cost_center_id" class="form-select form-select-solid @error('cost_center_id') is-invalid @enderror"
+                                    data-control="select" data-dropdown-css-class="auto" data-placeholder="Selecione o Centro de Custo">
+                                    <!-- Placeholder -->
+                                    <option value="" disabled>Selecione o Centro de Custo</option>
+                                    @foreach ($centrosAtivos as $centro)
+                                        <option value="{{ $centro->id }}"
+                                            {{ old('cost_center_id', $centroCusto->cost_center_id ?? '') == $centro->id ? 'selected' : '' }}>
+                                            {{ $centro->name }}
+                                        </option>
+                                    @endforeach
+                                </select>
+
                                 </div>
-                                @error('centro')
+                                @error('cost_center_id')
                                     <div class="text-danger">{{ $message }}</div>
                                 @enderror
                             </div>

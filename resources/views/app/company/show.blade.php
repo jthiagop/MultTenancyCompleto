@@ -857,6 +857,8 @@
 <script src="/assets/js/custom/utilities/modals/users-search.js"></script>
 <script src="/assets/js/custom/utilities/modals/novo-usuario/novo-usuario.js"></script>
 <script src="/assets/js/custom/apps/projects/list/list.js"></script>
+<script src="/assets/js/custom/apps/ecommerce/customers/details/transaction-history.js"></script>
+
 <!--end::Custom Javascript-->
 {{-- Modal::Pestacao de Conta --}}
 <script src="/assets/js/custom/utilities/modals/company/prestacaoConta.js"></script>

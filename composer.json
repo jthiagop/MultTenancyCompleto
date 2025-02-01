@@ -6,6 +6,8 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "barryvdh/laravel-dompdf": "^3.1",
+        "davidhsianturi/blade-bootstrap-icons": "^1.5",
         "doctrine/dbal": "*",
         "guzzlehttp/guzzle": "^7.8",
         "laravel-lang/common": "*",
@@ -21,7 +23,8 @@
         "spatie/browsershot": "^5.0",
         "spatie/laravel-permission": "^6.9",
         "stancl/tenancy": "*",
-        "webpatser/laravel-uuid": "^4.0"
+        "webpatser/laravel-uuid": "^4.0",
+        "yajra/laravel-datatables-oracle": "^11.1"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.13",

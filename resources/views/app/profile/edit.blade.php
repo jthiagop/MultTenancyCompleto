@@ -106,7 +106,7 @@
                                         <!--end::Avatar-->
                                         <!--begin::Name-->
                                         <a href="#"
-                                            class="fs-3 text-gray-800 text-hover-primary fw-bold mb-3">{{ $user->name }}</a>
+                                            class="fs-3 text-gray-800 text-hover-primary fw-bold mb-3">{{ $user->name ?? '' }}</a>
                                         <!--end::Name-->
                                         <!--begin::Position-->
                                         <div class="mb-9">

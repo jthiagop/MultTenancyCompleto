@@ -31,8 +31,8 @@ var DMModalNewCaixa = function () {
 
         dueDates.forEach(function(dueDate) {
             flatpickr(dueDate, {
-                enableTime: true,
-                dateFormat: "d-m-Y", // Formato pt-BR para exibição
+                enableTime: false,
+                dateFormat: "d/m/Y", // Formato pt-BR para exibição
                 locale: "pt", // Define a localidade como português do Brasil
                 defaultDate: new Date() // Define a data atual como padrão
             });
@@ -222,7 +222,6 @@ $(document).ready(function () {
     // Inicializa o Select2
     const initializeSelect2 = () => {
         $('#lancamento_padrao_caixa').select2({
-            dropdownParent: $('#kt_modal_new_target'),
             placeholder: 'Escolha um Lançamento...',
             width: '100%',
             allowClear: true
@@ -241,48 +240,46 @@ $(document).ready(function () {
     // Evento de mudança no select de lançamento padrão
     $('#lancamento_padrao_caixa').on('change', function () {
         const selectedOption = $(this).find('option:selected');
-        const selectedDescription = selectedOption.data('description');
+        const selectedDescription = selectedOption.data('type'); // Obtém o tipo associado
 
-        console.log('Descrição selecionada:', selectedDescription);
+        console.log('Tipo selecionado:', selectedDescription);
 
         // Alterna o campo do banco de depósito
         toggleBancoDepositoField(selectedDescription);
     });
 
     // Manipula a mudança no tipo de caixa
-    const tipoSelect = document.getElementById('tipo_select_caixa');
+    const tipoSelect = document.getElementById('tipo_select_banco');
     const lancamentoPadraoSelect = document.getElementById('lancamento_padrao_caixa');
 
     tipoSelect.addEventListener('change', function () {
         const selectedTipo = tipoSelect.value;
 
-        // Limpa as opções existentes
+        // Limpa todas as opções do select de Lançamento Padrão
         lancamentoPadraoSelect.innerHTML = '';
 
-        // Adiciona a opção inicial
+        // Adiciona a opção vazia
         const emptyOption = document.createElement('option');
         emptyOption.value = '';
         emptyOption.text = 'Escolha um Lançamento...';
         lancamentoPadraoSelect.appendChild(emptyOption);
 
-        // Filtra e adiciona as opções baseadas no tipo selecionado
-        lpsData.forEach((lp) => {
+        // Filtra e adiciona as opções de acordo com o tipo selecionado
+        lpsData.forEach(function (lp) {
             if (lp.type === selectedTipo) {
                 const option = document.createElement('option');
                 option.value = lp.id;
                 option.text = lp.description;
-                option.setAttribute('data-description', lp.description); // Adiciona o atributo data-description
+                option.setAttribute('data-type', lp.type); // Adiciona o atributo data-type
                 lancamentoPadraoSelect.appendChild(option);
             }
         });
 
-        // Recarrega o Select2 com as novas opções
-        initializeSelect2();
+        // Destroi o Select2 anterior e inicializa novamente
+        $('#lancamento_padrao_caixa').select2('destroy'); // Destroi a instância anterior
+        initializeSelect2(); // Recarrega o Select2 com as novas opções
     });
 
     // Inicializa o Select2 na página
     initializeSelect2();
 });
-
-
-

@@ -226,17 +226,6 @@ KTUtil.onDOMContentLoaded(function () {
 
 
 $(document).ready(function() {
-    $('#lancamento_padrao').on('change', function() {
-        var selectedValue = $(this).val();
-        if (selectedValue === 'Deposito Bancário') {
-            $('#banco-deposito').show(); // Mostra o campo do banco de depósito
-        } else {
-            $('#banco-deposito').hide(); // Esconde o campo do banco de depósito
-        }
-    });
-});
-
-$(document).ready(function() {
     $('#lancamento_padrao_banco').on('change', function() {
         var selectedValue = $(this).val();
         if (selectedValue === 'Deposito Bancário') {
@@ -253,10 +242,9 @@ document.addEventListener('DOMContentLoaded', function() {
     const tipoSelect = document.getElementById('tipo_select_banco');
     const lancamentoPadraoSelect = document.getElementById('lancamento_padrao_banco');
 
-    // Função para inicializar o Select2 com dropdownParent
+    // Função para inicializar o Select2
     const initializeSelect2 = () => {
         $('#lancamento_padrao_banco').select2({
-            dropdownParent: $('#dm_modal_novo_lancamento_banco'),
             placeholder: 'Escolha um Lançamento...',
             width: '100%'
         });
@@ -291,3 +279,4 @@ document.addEventListener('DOMContentLoaded', function() {
     // Inicializa o Select2 ao carregar a página
     initializeSelect2();
 });
+

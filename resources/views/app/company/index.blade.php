@@ -17,7 +17,7 @@
                         <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
                             <!--begin::Item-->
                             <li class="breadcrumb-item text-muted">
-                                <a href="../../demo1/dist/index.html" class="text-muted text-hover-primary">Home</a>
+                                <a href="{{ route('dashboard') }}" class="text-muted text-hover-primary">Dashboard</a>
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
@@ -2165,11 +2165,13 @@
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="/assets/js/custom/apps/projects/list/list.js"></script>
 <script src="/assets/js/custom/apps/projects/users/users.js"></script>
-<script src="/assets/js/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
-<script src="/assets/js/custom/utilities/modals/new-target.js"></script>
+
+		<!--begin::Custom Javascript(used for this page only)-->
+		<script src="/assets/js/widgets.bundle.js"></script>
+		<script src="/assets/js/custom/apps/chat/chat.js"></script>
+		<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+		<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
+		<script src="/assets/js/custom/utilities/modals/new-target.js"></script>
+		<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->

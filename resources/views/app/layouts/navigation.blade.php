@@ -484,7 +484,7 @@
                                                                     <span class="menu-bullet">
                                                                         <span class="bullet bullet-dot"></span>
                                                                     </span>
-                                                                    <span class="menu-title">Criar Bancos</span>
+                                                                    <span class="menu-title">Bancos</span>
                                                                 </a>
                                                                 <!--end:Menu link-->
                                                             </div>
@@ -497,8 +497,21 @@
                                                                     <span class="menu-bullet">
                                                                         <span class="bullet bullet-dot"></span>
                                                                     </span>
-                                                                    <span class="menu-title">Criar Entidade
+                                                                    <span class="menu-title">Entidade
                                                                         Financeira</span>
+                                                                </a>
+                                                                <!--end:Menu link-->
+                                                            </div>
+                                                            <!--end:Menu item-->
+                                                            <!--begin:Menu item-->
+                                                            <div class="menu-item">
+                                                                <!--begin:Menu link-->
+                                                                <a
+                                                                    class="menu-link {{ Route::currentRouteName() == 'costCenter.index' ? 'active' : '' }}"href="{{ route('costCenter.index') }}">
+                                                                    <span class="menu-bullet">
+                                                                        <span class="bullet bullet-dot"></span>
+                                                                    </span>
+                                                                    <span class="menu-title">Centro de Custo</span>
                                                                 </a>
                                                                 <!--end:Menu link-->
                                                             </div>

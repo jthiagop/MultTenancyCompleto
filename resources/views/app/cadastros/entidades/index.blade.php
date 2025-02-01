@@ -11,7 +11,7 @@
                     <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
                         <!--begin::Title-->
                         <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
-                            Criação de Entidade</h1>
+                            Criação de Entidade Financeira</h1>
                         <!--end::Title-->
                         <!--begin::Breadcrumb-->
                         <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
@@ -26,7 +26,9 @@
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
-                            <li class="breadcrumb-item text-muted">Financeiro</li>
+                            <li class="breadcrumb-item text-muted">
+                                <a href="{{ route('caixa.index') }}" class="text-muted text-hover-primary">Financeiro</a>
+                            </li>
                             <!--end::Item-->
                             <!--begin::Item-->
                             <li class="breadcrumb-item">
@@ -97,36 +99,30 @@
                             <!--begin::Chart widget 5-->
                             <div class="card card-flush h-lg-100">
                                 <div class="card-body">
-                                    <!--begin::Form-->
+                                    <!--begin:Form-->
                                     <form method="POST" action="{{ route('entidades.store') }}" class="form mb-15">
                                         @csrf <!-- Token CSRF obrigatório para proteção -->
-                                        <!--begin::Title-->
-                                        <!--end::CSRF Token-->
-                                        <div class="d-flex flex-column mb-9 fv-row">
-                                            <h1 class="fw-bold text-dark mb-7">Cadastrar Nova Entidade Financeira</h1>
-                                            <span class="fs-4 fw-semibold text-gray-600 d-block">Preencha os detalhes da
-                                                nova entidade financeira.</span>
-                                        </div>
-                                        <!--end::Title-->
 
-                                        <!--begin::Input group-->
+                                        <!--begin::Heading-->
+                                        <div class="mb-13 text-center">
+                                            <!--begin::Title-->
+                                            <h1 class="mb-3">Cadastrar Nova Entidade</h1>
+                                            <!--end::Title-->
+                                            <!--begin::Description-->
+                                            <div class="text-muted fw-semibold fs-5">
+                                                Preencha os detalhes da nova
+                                                <a href="#" class="fw-bold link-primary">Entidade Financeira</a>.
+                                            </div>
+                                            <!--end::Description-->
+                                        </div>
+                                        <!--end::Heading-->
+
                                         <div class="row mb-5">
                                             <!--begin::Col-->
-                                            <div class="col-md-6 fv-row">
-                                                <label class="fs-5 fw-semibold mb-2">Nome da Entidade</label>
-                                                <input type="text" class="form-control form-control-solid"
-                                                    placeholder="Ex: Caixa Central" name="nome"
-                                                    value="{{ old('nome') }}" required />
-                                                @error('nome')
-                                                    <div class="text-danger mt-2">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <!--end::Col-->
-
-                                            <!--begin::Col-->
-                                            <div class="col-md-6 fv-row">
+                                            <div class="col-md-4 fv-row">
                                                 <label class="fs-5 fw-semibold mb-2">Tipo</label>
-                                                <select name="tipo" class="form-select form-select-solid" required>
+                                                <select name="tipo" id="tipo"
+                                                    class="form-select form-select-solid" required>
                                                     <option value="" disabled selected>Selecione o tipo</option>
                                                     <option value="caixa"
                                                         {{ old('tipo') == 'caixa' ? 'selected' : '' }}>Caixa</option>
@@ -144,10 +140,86 @@
                                                 @enderror
                                             </div>
                                             <!--end::Col-->
+
+                                            <!--begin::Col-->
+                                            <div class="col-md-8 fv-row" id="nome-entidade-group">
+                                                <label class="fs-5 fw-semibold mb-2">Nome da Entidade</label>
+                                                <input type="text" class="form-control form-control-solid"
+                                                    placeholder="Ex: Caixa Central" name="nome"
+                                                    value="{{ old('nome') }}" />
+                                                @error('nome')
+                                                    <div class="text-danger mt-2">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <!--end::Col-->
+
+                                            <!-- Campos para Banco (inicialmente ocultos) -->
+                                            <!-- Grupo de Banco (Oculto por padrão) -->
+                                            <div class="col-md-8 fv-row d-none" id="banco-group">
+                                                <label class="fs-5 fw-semibold mb-2">Banco</label>
+                                                <select id="banco-select" name="banco"
+                                                    class="form-select form-select-solid" data-control="select2"
+                                                    data-placeholder="Selecione um banco">
+                                                    <option></option> <!-- para placeholder vazio -->
+                                                    <!-- Exemplo manual: -->
+                                                    <option value="Banco Bradesco"
+                                                        data-icon="/assets/media/svg/bancos/bradesco.svg">Banco
+                                                        Bradesco</option>
+                                                    <option value="Banco Caixa"
+                                                        data-icon="/assets/media/svg/bancos/caixa.svg">Banco Caixa
+                                                    </option>
+                                                    <option value="Banco Nubank"
+                                                        data-icon="/assets/media/svg/bancos/nubank.svg">Banco Nubank
+                                                    </option>
+                                                    <option value="Banco Itau"
+                                                        data-icon="/assets/media/svg/bancos/itau.svg">Banco Itaú
+                                                    </option>
+                                                    <option value="Banco do Brasil"
+                                                        data-icon="/assets/media/svg/bancos/brasil.svg">Brasil do
+                                                        Brasil</option>
+                                                    <option value="Banco stone"
+                                                        data-icon="/assets/media/svg/bancos/stone.svg">Banco Stone
+                                                    </option>
+                                                    <option value="Banco Unicred"
+                                                        data-icon="/assets/media/svg/bancos/unicred.svg">Banco Unicred
+                                                    </option>
+                                                    <option value="Banco Inter"
+                                                        data-icon="/assets/media/svg/bancos/inter.svg">Banco Inter
+                                                    </option>
+                                                    <!-- ... e assim por diante -->
+                                                </select>
+
+                                                @error('banco')
+                                                    <div class="text-danger mt-2">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                            <!--end::Input group-->
                                         </div>
                                         <!--end::Input group-->
-
                                         <!--begin::Input group-->
+                                        <div class="row mb-5">
+                                            <div class="col-md-6 fv-row d-none" id="agencia-group">
+                                                <label class="fs-5 fw-semibold mb-2">Agência</label>
+                                                <input type="text" class="form-control form-control-solid"
+                                                    placeholder="Número da agência" name="agencia"
+                                                    value="{{ old('agencia') }}" />
+                                                @error('agencia')
+                                                    <div class="text-danger mt-2">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+
+                                            <div class="col-md-6 fv-row d-none" id="conta-group">
+                                                <label class="fs-5 fw-semibold mb-2">Conta</label>
+                                                <input type="text" class="form-control form-control-solid"
+                                                    placeholder="Número da conta" name="conta"
+                                                    value="{{ old('conta') }}" />
+                                                @error('conta')
+                                                    <div class="text-danger mt-2">{{ $message }}</div>
+                                                @enderror
+                                            </div>
+                                        </div>
+
+                                        <!--begin::Linha Saldo Inicial / Saldo Atual-->
                                         <div class="row mb-5">
                                             <!--begin::Col-->
                                             <div class="col-md-6 fv-row">
@@ -232,36 +304,80 @@
                                             <!--end::Col-->
                                         </div>
                                         <!--end::Input group-->
+                                        <!--end::Linha Saldo-->
 
-                                        <!--begin::Input group-->
+                                        <!--begin::Descrição-->
                                         <div class="d-flex flex-column mb-5 fv-row">
-                                            <!--begin::Label-->
                                             <label class="fs-5 fw-semibold mb-2">Descrição</label>
-                                            <!--end::Label-->
-                                            <!--begin::Textarea-->
                                             <textarea class="form-control form-control-solid" rows="4" name="descricao"
-                                                placeholder="Insira uma descrição para a entidade (opcional)"></textarea>
-                                            <!--end::Textarea-->
+                                                placeholder="Insira uma descrição (opcional)"></textarea>
                                             @error('descricao')
                                                 <div class="text-danger mt-2">{{ $message }}</div>
                                             @enderror
                                         </div>
-                                        <!--end::Input group-->
+                                        <!--end::Descrição-->
 
-                                        <!--begin::Submit-->
-                                        <button type="submit" class="btn btn-primary">
-                                            <!--begin::Indicator label-->
-                                            <span class="indicator-label">Cadastrar Entidade</span>
-                                            <!--end::Indicator label-->
-                                            <!--begin::Indicator progress-->
-                                            <span class="indicator-progress">Aguarde...
-                                                <span
-                                                    class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                                            <!--end::Indicator progress-->
-                                        </button>
-                                        <!--end::Submit-->
+                                        <!--begin::Notice (Opcional)-->
+                                        <div
+                                            class="notice d-flex bg-light-primary rounded border-primary border border-dashed mb-9 p-6">
+                                            <span class="svg-icon svg-icon-2tx svg-icon-primary me-4">
+                                                <!-- Ícone ilustrativo -->
+                                                <svg width="24" height="24" viewBox="0 0 24 24"
+                                                    fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path opacity="0.3" d="M3.20001 5.91897L16.9 3.01895C17.4 2.91895
+                                                        18 3.219 18.1 3.819L19.2 9.01895L3.20001 5.91897Z"
+                                                        fill="currentColor" />
+                                                    <path opacity="0.3" d="M13 13.9189C13 12.2189 14.3 10.9189
+                                                        16 10.9189H21C21.6 10.9189 22 11.3189 22
+                                                        11.9189V15.9189C22 16.5189 21.6 16.9189
+                                                        21 16.9189H16C14.3 16.9189 13 15.6189
+                                                        13 13.9189ZM16 12.4189C15.2 12.4189 14.5
+                                                        13.1189 14.5 13.9189C14.5 14.7189 15.2
+                                                        15.4189 16 15.4189C16.8 15.4189 17.5
+                                                        14.7189 17.5 13.9189C17.5 13.1189 16.8
+                                                        12.4189 16 12.4189Z" fill="currentColor" />
+                                                    <path d="M13 13.9189C13 12.2189 14.3 10.9189
+                                                    16 10.9189H21V7.91895C21 6.81895 20.1
+                                                    5.91895 19 5.91895H3C2.4 5.91895
+                                                    2 6.31895 2 6.91895V20.9189C2
+                                                    21.5189 2.4 21.9189 3
+                                                    21.9189H19C20.1 21.9189 21
+                                                    21.0189 21 19.9189V16.9189H16C14.3
+                                                    16.9189 13 15.6189 13 13.9189Z" fill="currentColor" />
+                                                </svg>
+                                            </span>
+                                            <div class="d-flex flex-stack flex-grow-1">
+                                                <div class="fw-semibold">
+                                                    <h4 class="text-gray-900 fw-bold">Dica</h4>
+                                                    <div class="fs-6 text-gray-700">
+                                                        Certifique-se de preencher corretamente todos os campos
+                                                        obrigatórios.
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!--end::Notice-->
+
+                                        <!--begin::Actions-->
+                                        <div class="text-center">
+                                            <button type="reset" class="btn btn-light me-3"
+                                                data-kt-modal-action-type="cancel">
+                                                Cancelar
+                                            </button>
+                                            <button type="submit" class="btn btn-primary"
+                                                id="kt_modal_submit_button">
+                                                <span class="indicator-label">Enviar</span>
+                                                <span class="indicator-progress">
+                                                    Aguarde...
+                                                    <span
+                                                        class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                                </span>
+                                            </button>
+                                        </div>
+                                        <!--end::Actions-->
                                     </form>
-                                    <!--end::Form-->
+                                    <!--end:Form-->
+
 
                                 </div>
                             </div>
@@ -377,8 +493,10 @@
                                                                 {{ $entidade->updated_at->format('d/m/Y H:i') }}
                                                             </td>
                                                             <!-- Saldo Atual -->
-                                                            <td class="text-end pe-0 {{ $entidade->saldo_atual >= 0 ? 'text-success' : 'text-danger' }}">
-                                                                R$ {{ number_format($entidade->saldo_atual, 2, ',', '.') }}
+                                                            <td
+                                                                class="text-end pe-0 {{ $entidade->saldo_atual >= 0 ? 'text-success' : 'text-danger' }}">
+                                                                R$
+                                                                {{ number_format($entidade->saldo_atual, 2, ',', '.') }}
                                                             </td>
                                                             <!-- Tipo -->
                                                             <td class="text-end pe-0">{{ ucfirst($entidade->tipo) }}
@@ -421,3 +539,115 @@
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="/assets/js/custom/apps/ecommerce/reports/sales/sales.js"></script>
+<script src="/assets/js/custom/utilities/modals/bidding.js"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoSelect = document.getElementById('tipo');
+        const nomeEntidadeGroup = document.getElementById('nome-entidade-group');
+        const bancoGroup = document.getElementById('banco-group');
+        const agenciaGroup = document.getElementById('agencia-group');
+        const contaGroup = document.getElementById('conta-group');
+
+        // Função para exibir/esconder campos
+        function toggleFields() {
+            const selected = tipoSelect.value;
+            if (selected === 'banco') {
+                nomeEntidadeGroup.classList.add('d-none'); // Esconde Nome da Entidade
+                bancoGroup.classList.remove('d-none'); // Mostra o select de Banco
+                agenciaGroup.classList.remove('d-none'); // Mostra Agência
+                contaGroup.classList.remove('d-none'); // Mostra Conta
+            } else {
+                nomeEntidadeGroup.classList.remove('d-none');
+                bancoGroup.classList.add('d-none');
+                agenciaGroup.classList.add('d-none');
+                contaGroup.classList.add('d-none');
+            }
+        }
+
+        // Evento de mudança no select "tipo"
+        tipoSelect.addEventListener('change', toggleFields);
+
+        // Ao carregar a página, se "tipo=banco" já estiver selecionado (ex.: old value),
+        // podemos chamar toggleFields() para exibir/esconder adequadamente.
+        toggleFields();
+    });
+</script>
+<script>
+    $(document).ready(function() {
+        $('#banco-select').select2({
+            placeholder: "Selecione um banco",
+            allowClear: true,
+
+            // Exibir ícone no menu suspenso
+            templateResult: function(state) {
+                // Se for placeholder ou sem valor, retornar o texto normal
+                if (!state.id) {
+                    return state.text;
+                }
+
+                // Recupera o caminho do ícone do atributo data-icon
+                let iconUrl = $(state.element).attr('data-icon');
+                if (!iconUrl) {
+                    return state.text;
+                }
+
+                // Monta um elemento com img + texto
+                let $state = $(`
+                    <span class="d-flex align-items-center">
+                        <img src="${iconUrl}" class="me-2" style="width:24px; height:24px;" />
+                        <span>${state.text}</span>
+                    </span>
+                `);
+
+                return $state;
+            },
+
+            // Exibir ícone na opção selecionada
+            templateSelection: function(state) {
+                if (!state.id) {
+                    return state.text;
+                }
+
+                let iconUrl = $(state.element).attr('data-icon');
+                if (!iconUrl) {
+                    return state.text;
+                }
+
+                let $state = $(`
+                    <span class="d-flex align-items-center">
+                        <img src="${iconUrl}" class="me-2" style="width:24px; height:24px;" />
+                        <span>${state.text}</span>
+                    </span>
+                `);
+                return $state;
+            },
+        });
+    });
+</script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+    const submitButton = document.getElementById('kt_modal_submit_button');
+    const form = document.querySelector('form'); // Seleciona o formulário
+
+    form.addEventListener('submit', function (e) {
+        // Impede o envio do formulário até que o JavaScript seja executado
+        e.preventDefault();
+
+        // Mostra o indicador de carregamento
+        submitButton.setAttribute('data-kt-indicator', 'on');
+        submitButton.disabled = true;
+
+        // Simula um atraso (substitua isso pelo envio real do formulário)
+        setTimeout(function () {
+            // Oculta o indicador de carregamento
+            submitButton.removeAttribute('data-kt-indicator');
+            submitButton.disabled = false;
+
+            // Envia o formulário (substitua isso pelo envio real do formulário)
+            form.submit();
+        }, 2000); // 2 segundos de atraso (apenas para simulação)
+    });
+});
+</script>

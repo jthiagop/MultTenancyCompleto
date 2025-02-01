@@ -61,8 +61,8 @@ class AnexoController extends Controller
                 'nome_arquivo' => $file->getClientOriginalName(),
                 'caminho_arquivo' => $caminhoArquivo, // Caminho do arquivo armazenado
                 'size' => $file->getSize(), // Tamanho do arquivo
-                'created_by' => auth()->id(), // ID do usuário autenticado
-                'updated_by' => auth()->id(), // ID do usuário autenticado
+                'created_by' => Auth::id(), // ID do usuário autenticado
+                'updated_by' => Auth::id(), // ID do usuário autenticado
             ]);
 
             // Retornar resposta de sucesso
@@ -90,7 +90,7 @@ class AnexoController extends Controller
     }
 
     // Obtém o usuário autenticado
-    $user = auth()->user();
+    $user = Auth::user();
 
     // Tenta encontrar o registro `Caixa` e `Banco`
     $caixa = Caixa::find($id);

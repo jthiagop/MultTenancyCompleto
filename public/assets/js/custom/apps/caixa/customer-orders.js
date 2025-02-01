@@ -59,7 +59,7 @@ var KTAppEcommerceReportCustomerOrders = function () {
             if (value === 'all') {
                 value = '';
             }
-            datatable.column(2).search(value).draw();
+            datatable.column(5).search(value).draw();
         });
     }
 

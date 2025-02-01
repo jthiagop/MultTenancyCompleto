@@ -4,6 +4,8 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\LancamentoPadrao;
+use Auth;
+use Flasher;
 use Illuminate\Http\Request;
 
 class LancamentoPadraoController extends Controller
@@ -45,11 +47,13 @@ class LancamentoPadraoController extends Controller
     {
         // Obtém o tipo selecionado do request
         $tipo = $request->input('tipo');
+        $lps = LancamentoPadrao::all();
+
 
         // Se um tipo foi selecionado, busque os lançamentos correspondentes
         $lancamentos = $tipo ? LancamentoPadrao::where('tipo', $tipo)->get() : collect();
 
-        return view('sua_view', compact('lancamentos', 'tipo'));
+        return view('app.cadastros.lancamentoPadrao.create', compact('lancamentos', 'tipo', 'lps'));
     }
 
     /**
@@ -59,13 +63,20 @@ class LancamentoPadraoController extends Controller
     {
         // Validação dos dados
         $request->validate([
-            'type' => 'required|string',
-            'description' => 'required|string',
+            'description' => 'required|string|max:255',
+            'type' => 'required|in:entrada,saida',
             'date' => 'required|date',
-            'category' => 'required|string',
+            'category' => 'required|string|max:255',
+        ], [
+            'description.required' => 'O nome do lançamento é obrigatório.',
+            'type.required' => 'O tipo do lançamento é obrigatório.',
+            'type.in' => 'O tipo deve ser "entrada" ou "saída".',
+            'category.required' => 'A categoria é obrigatória.'
         ]);
 
-        $user = auth()->user(); // Usuário autenticado
+
+
+        $user = Auth::user(); // Usuário autenticado
 
         // Criação do lançamento
         LancamentoPadrao::create([
@@ -76,7 +87,9 @@ class LancamentoPadraoController extends Controller
             'user_id' => $user->id, // Pegando o ID do usuário autenticado
         ]);
 
-        return redirect()->route('lancamentoPadrao.index') ;
+            // Adiciona mensagem de sucesso
+        Flasher::addSuccess('Lançamento cadastrado com sucesso!');
+        return redirect()->back()->with('message', 'Lançamento Padrão criado com sucesso!');
     }
 
 
@@ -93,8 +106,11 @@ class LancamentoPadraoController extends Controller
      */
     public function edit(string $id)
     {
-        $lps = LancamentoPadrao::find($id);
-        return response()->json($lps);
+        $lp = LancamentoPadrao::find($id);
+
+        $lps = LancamentoPadrao::all();
+
+        return view('app.cadastros.lancamentoPadrao.edit', ['lps' => $lps, 'lp' => $lp ]);
     }
 
     /**
@@ -102,16 +118,32 @@ class LancamentoPadraoController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        $data = $request->validate([
-            'type' => 'required|string',
-            'description' => 'required|string',
-            // Validações adicionais...
+        // Validação dos dados
+        $request->validate([
+            'description' => 'required|string|max:255',
+            'type' => 'required|in:entrada,saida',
+            'date' => 'required|date',
+            'category' => 'required|string|max:255',
+        ], [
+            'description.required' => 'O nome do lançamento é obrigatório.',
+            'type.required' => 'O tipo do lançamento é obrigatório.',
+            'type.in' => 'O tipo deve ser "entrada" ou "saída".',
+            'category.required' => 'A categoria é obrigatória.'
         ]);
 
+        // Encontra o lançamento padrão pelo ID
         $lancamento = LancamentoPadrao::findOrFail($id);
-        $lancamento->update($data);
 
-        return redirect()->route('lancamentoPadrao.index')->with('success', 'Lançamento Padrão atualizado com sucesso!');
+        // Atualiza os dados do lançamento
+        $lancamento->update([
+            'description' => $request->description,
+            'type' => $request->type,
+            'date' => $request->date,
+            'category' => $request->category,
+        ]);
+
+        // Redireciona com uma mensagem de sucesso
+        return redirect()->route('lancamentoPadrao.create')->with('success', 'Lançamento Padrão atualizado com sucesso!');
     }
 
     /**
@@ -119,7 +151,22 @@ class LancamentoPadraoController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        try {
+            // Localiza o registro pelo ID
+            $lancamento = LancamentoPadrao::findOrFail($id);
+
+            // Exclui o registro
+            $lancamento->delete();
+
+            // Redireciona com uma mensagem de sucesso
+            return redirect()->route('lancamentopadrao.index')->with('success', 'Lançamento Padrão excluído com sucesso!');
+        } catch (\Exception $e) {
+            // Log do erro (opcional)
+            \Log::error('Erro ao excluir Lançamento Padrão: ' . $e->getMessage());
+
+            // Redireciona com uma mensagem de erro
+            return redirect()->route('lancamentoPadrao.index')->with('error', 'Erro ao excluir Lançamento Padrão.');
+        }
     }
 
 

@@ -32073,6 +32073,23 @@ Inputmask({
     "mask" : "999.999.999-99"
 }).mask("#cpf");
 
+Inputmask({
+    "mask": "L-9999", // Máscara para o formato 'L-0001'
+    "placeholder": "L-____", // Placeholder para guiar o usuário
+    "definitions": {
+        'L': {
+            validator: "[A-Za-z]", // Apenas letras são permitidas
+            cardinality: 1
+        },
+        '9': {
+            validator: "[0-9]", // Apenas números são permitidos
+            cardinality: 1
+        }
+    }
+}).mask("#codigo_sepultura"); // Aplica a máscara ao
+
+
+
 // Phone
 Inputmask({
     "mask" : "99.999.999/9999-99"

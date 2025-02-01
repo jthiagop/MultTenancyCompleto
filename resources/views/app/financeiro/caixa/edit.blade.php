@@ -111,44 +111,47 @@
                     </div>
                 </div>
 
-                    <!--begin::Modal - Confirmar Exclusão-->
+                <!--begin::Modal - Confirmar Exclusão-->
 
-                    <div class="modal fade" id="kt_modal_delete_card" tabindex="-1" aria-hidden="true">
-                        <div class="modal-dialog modal-dialog-centered">
-                            <div class="modal-content">
-                                <!-- Cabeçalho -->
-                                <div class="modal-header">
-                                    <h5 class="modal-title text-danger fw-bold">Confirmar Exclusão</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
+                <div class="modal fade" id="kt_modal_delete_card" tabindex="-1" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered">
+                        <div class="modal-content">
+                            <!-- Cabeçalho -->
+                            <div class="modal-header">
+                                <h5 class="modal-title text-danger fw-bold">Confirmar Exclusão</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal"
+                                    aria-label="Close"></button>
+                            </div>
 
-                                <!-- Corpo -->
-                                <div class="modal-body text-center">
-                                    <i class="bi bi-exclamation-circle-fill text-danger fs-2 mb-4"></i>
-                                    <p class="mb-0 fs-5 fw-semibold text-center">
-                                        Tem certeza que deseja excluir o registro <strong>#{{ $caixa->id }}</strong>?
-                                    </p>
-                                    <small class="text-muted d-block mt-3">
-                                        Esta ação não pode ser desfeita.
-                                    </small>
-                                </div>
+                            <!-- Corpo -->
+                            <div class="modal-body text-center">
+                                <i class="bi bi-exclamation-circle-fill text-danger fs-2 mb-4"></i>
+                                <p class="mb-0 fs-5 fw-semibold text-center">
+                                    Tem certeza que deseja excluir o registro <strong>#{{ $caixa->id }}</strong>?
+                                </p>
+                                <small class="text-muted d-block mt-3">
+                                    Esta ação não pode ser desfeita.
+                                </small>
+                            </div>
 
-                                <!-- Rodapé -->
-                                <div class="modal-footer justify-content-center">
-                                    <form id="delete-form" method="POST" action="{{ route('caixa.destroy', $caixa->id) }}">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">Cancelar</button>
-                                        <button type="submit" class="btn btn-danger px-4">
-                                            <i class="fas fa-trash-alt me-2"></i> Confirmar Exclusão
-                                        </button>
-                                    </form>
-                                </div>
+                            <!-- Rodapé -->
+                            <div class="modal-footer justify-content-center">
+                                <form id="delete-form" method="POST"
+                                    action="{{ route('caixa.destroy', $caixa->id) }}">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="button" class="btn btn-secondary px-4"
+                                        data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" class="btn btn-danger px-4">
+                                        <i class="fas fa-trash-alt me-2"></i> Confirmar Exclusão
+                                    </button>
+                                </form>
                             </div>
                         </div>
-
                     </div>
-                    <!--end::Modal - Confirmar Exclusão-->
+
+                </div>
+                <!--end::Modal - Confirmar Exclusão-->
 
 
                 <!--begin::Content-->
@@ -166,10 +169,13 @@
                                         <!--begin::Card title-->
                                         <div class="card-title">
                                             <div class="d-flex align-items-center mb-2">
-                                                <a href="#" class="text-gray-800 text-hover-primary fs-2 fw-bolder me-1">Dados da Cobrança:</a>
+                                                <a href="#"
+                                                    class="text-gray-800 text-hover-primary fs-2 fw-bolder me-1">Dados
+                                                    da Cobrança:</a>
 
                                                 @if ($caixa->tipo === 'entrada')
-                                                    <span class=" fs-2 fw-bolder me-1 text-success">#{{ $caixa->id }}</span>
+                                                    <span
+                                                        class=" fs-2 fw-bolder me-1 text-success">#{{ $caixa->id }}</span>
                                                 @elseif($caixa->tipo === 'saida')
                                                     <span class="text-danger">#{{ $caixa->id }}</span>
                                                 @else
@@ -178,23 +184,39 @@
 
                                                 @if ($caixa->comprovacao_fiscal == 1)
                                                     <!-- Ícone em amarelo -->
-                                                    <a href="#" class="" data-bs-toggle="tooltip" data-bs-placement="right" alt="Lançamento com Comprovação Fiscal" title="Lançamento com Comprovação Fiscal">
+                                                    <a href="#" class="" data-bs-toggle="tooltip"
+                                                        data-bs-placement="right"
+                                                        alt="Lançamento com Comprovação Fiscal"
+                                                        title="Lançamento com Comprovação Fiscal">
                                                         <!--begin::Svg Icon | path: icons/duotune/general/gen026.svg-->
                                                         <span class="svg-icon svg-icon-1 svg-icon-primary">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                                                                <path d="M10.0813 3.7242C10.8849 2.16438 13.1151 2.16438 13.9187 3.7242V3.7242C14.4016 4.66147 15.4909 5.1127 16.4951 4.79139V4.79139C18.1663 4.25668 19.7433 5.83365 19.2086 7.50485V7.50485C18.8873 8.50905 19.3385 9.59842 20.2758 10.0813V10.0813C21.8356 10.8849 21.8356 13.1151 20.2758 13.9187V13.9187C19.3385 14.4016 18.8873 15.491 19.2086 16.4951V16.4951C19.7433 18.1663 18.1663 19.7433 16.4951 19.2086V19.2086C15.491 18.8873 14.4016 19.3385 13.9187 20.2758V20.2758C13.1151 21.8356 10.8849 21.8356 10.0813 20.2758V20.2758C9.59842 19.3385 8.50905 18.8873 7.50485 19.2086V19.2086C5.83365 19.7433 4.25668 18.1663 4.79139 16.4951V16.4951C5.1127 15.491 4.66147 14.4016 3.7242 13.9187V13.9187C2.16438 13.1151 2.16438 10.8849 3.7242 10.0813V10.0813C4.66147 9.59842 5.1127 8.50905 4.79139 7.50485V7.50485C4.25668 5.83365 5.83365 4.25668 7.50485 4.79139V4.79139C8.50905 5.1127 9.59842 4.66147 10.0813 3.7242V3.7242Z" fill="currentColor" />
-                                                                <path d="M14.8563 9.1903C15.0606 8.94984 15.3771 8.9385 15.6175 9.14289C15.858 9.34728 15.8229 9.66433 15.6185 9.9048L11.863 14.6558C11.6554 14.9001 11.2876 14.9258 11.048 14.7128L8.47656 12.4271C8.24068 12.2174 8.21944 11.8563 8.42911 11.6204C8.63877 11.3845 8.99996 11.3633 9.23583 11.5729L11.3706 13.4705L14.8563 9.1903Z" fill="white" />
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                                height="24px" viewBox="0 0 24 24">
+                                                                <path
+                                                                    d="M10.0813 3.7242C10.8849 2.16438 13.1151 2.16438 13.9187 3.7242V3.7242C14.4016 4.66147 15.4909 5.1127 16.4951 4.79139V4.79139C18.1663 4.25668 19.7433 5.83365 19.2086 7.50485V7.50485C18.8873 8.50905 19.3385 9.59842 20.2758 10.0813V10.0813C21.8356 10.8849 21.8356 13.1151 20.2758 13.9187V13.9187C19.3385 14.4016 18.8873 15.491 19.2086 16.4951V16.4951C19.7433 18.1663 18.1663 19.7433 16.4951 19.2086V19.2086C15.491 18.8873 14.4016 19.3385 13.9187 20.2758V20.2758C13.1151 21.8356 10.8849 21.8356 10.0813 20.2758V20.2758C9.59842 19.3385 8.50905 18.8873 7.50485 19.2086V19.2086C5.83365 19.7433 4.25668 18.1663 4.79139 16.4951V16.4951C5.1127 15.491 4.66147 14.4016 3.7242 13.9187V13.9187C2.16438 13.1151 2.16438 10.8849 3.7242 10.0813V10.0813C4.66147 9.59842 5.1127 8.50905 4.79139 7.50485V7.50485C4.25668 5.83365 5.83365 4.25668 7.50485 4.79139V4.79139C8.50905 5.1127 9.59842 4.66147 10.0813 3.7242V3.7242Z"
+                                                                    fill="currentColor" />
+                                                                <path
+                                                                    d="M14.8563 9.1903C15.0606 8.94984 15.3771 8.9385 15.6175 9.14289C15.858 9.34728 15.8229 9.66433 15.6185 9.9048L11.863 14.6558C11.6554 14.9001 11.2876 14.9258 11.048 14.7128L8.47656 12.4271C8.24068 12.2174 8.21944 11.8563 8.42911 11.6204C8.63877 11.3845 8.99996 11.3633 9.23583 11.5729L11.3706 13.4705L14.8563 9.1903Z"
+                                                                    fill="white" />
                                                             </svg>
                                                         </span>
                                                         <!--end::Svg Icon-->
                                                     </a>
-                                                    @else
+                                                @else
                                                     <!-- Ícone em vermelho -->
-                                                    <a href="#" class="" data-bs-toggle="tooltip" data-bs-placement="right" alt="Lançamento Sem Comprovação Fiscal" title="Sem Comprovação Fiscal">
+                                                    <a href="#" class="" data-bs-toggle="tooltip"
+                                                        data-bs-placement="right"
+                                                        alt="Lançamento Sem Comprovação Fiscal"
+                                                        title="Sem Comprovação Fiscal">
                                                         <span class="svg-icon svg-icon-1 svg-icon-danger">
-                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px" height="24px" viewBox="0 0 24 24">
-                                                                <path d="M10.0813 3.7242C10.8849 2.16438 13.1151 2.16438 13.9187 3.7242V3.7242C14.4016 4.66147 15.4909 5.1127 16.4951 4.79139V4.79139C18.1663 4.25668 19.7433 5.83365 19.2086 7.50485V7.50485C18.8873 8.50905 19.3385 9.59842 20.2758 10.0813V10.0813C21.8356 10.8849 21.8356 13.1151 20.2758 13.9187V13.9187C19.3385 14.4016 18.8873 15.491 19.2086 16.4951V16.4951C19.7433 18.1663 18.1663 19.7433 16.4951 19.2086V19.2086C15.491 18.8873 14.4016 19.3385 13.9187 20.2758V20.2758C13.1151 21.8356 10.8849 21.8356 10.0813 20.2758V20.2758C9.59842 19.3385 8.50905 18.8873 7.50485 19.2086V19.2086C5.83365 19.7433 4.25668 18.1663 4.79139 16.4951V16.4951C5.1127 15.491 4.66147 14.4016 3.7242 13.9187V13.9187C2.16438 13.1151 2.16438 10.8849 3.7242 10.0813V10.0813C4.66147 9.59842 5.1127 8.50905 4.79139 7.50485V7.50485C4.25668 5.83365 5.83365 4.25668 7.50485 4.79139V4.79139C8.50905 5.1127 9.59842 4.66147 10.0813 3.7242V3.7242Z" fill="currentColor" />
-                                                                <path d="M14.5 9.5L9.5 14.5M9.5 9.5L14.5 14.5" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                                                            <svg xmlns="http://www.w3.org/2000/svg" width="24px"
+                                                                height="24px" viewBox="0 0 24 24">
+                                                                <path
+                                                                    d="M10.0813 3.7242C10.8849 2.16438 13.1151 2.16438 13.9187 3.7242V3.7242C14.4016 4.66147 15.4909 5.1127 16.4951 4.79139V4.79139C18.1663 4.25668 19.7433 5.83365 19.2086 7.50485V7.50485C18.8873 8.50905 19.3385 9.59842 20.2758 10.0813V10.0813C21.8356 10.8849 21.8356 13.1151 20.2758 13.9187V13.9187C19.3385 14.4016 18.8873 15.491 19.2086 16.4951V16.4951C19.7433 18.1663 18.1663 19.7433 16.4951 19.2086V19.2086C15.491 18.8873 14.4016 19.3385 13.9187 20.2758V20.2758C13.1151 21.8356 10.8849 21.8356 10.0813 20.2758V20.2758C9.59842 19.3385 8.50905 18.8873 7.50485 19.2086V19.2086C5.83365 19.7433 4.25668 18.1663 4.79139 16.4951V16.4951C5.1127 15.491 4.66147 14.4016 3.7242 13.9187V13.9187C2.16438 13.1151 2.16438 10.8849 3.7242 10.0813V10.0813C4.66147 9.59842 5.1127 8.50905 4.79139 7.50485V7.50485C4.25668 5.83365 5.83365 4.25668 7.50485 4.79139V4.79139C8.50905 5.1127 9.59842 4.66147 10.0813 3.7242V3.7242Z"
+                                                                    fill="currentColor" />
+                                                                <path d="M14.5 9.5L9.5 14.5M9.5 9.5L14.5 14.5"
+                                                                    stroke="white" stroke-width="2"
+                                                                    stroke-linecap="round" stroke-linejoin="round" />
                                                             </svg>
                                                         </span>
                                                     </a>
@@ -204,17 +226,129 @@
                                         <!--begin::Card title-->
                                         <!--begin::Card toolbar-->
                                         <div class="card-toolbar">
-                                            <a href="#" class="btn btn-light-primary me-3" data-bs-toggle="modal"
-                                                data-bs-target="#kt_modal_new_card"><i class="fas fa-edit"></i>
-                                                Editar</a>
-                                            <!-- Botão para Excluir -->
-                                            <!-- Botão para Excluir -->
-                                            <a href="#" class="btn btn-light-danger" data-bs-toggle="modal"
-                                                data-bs-target="#kt_modal_delete_card">
-                                                <i class="fas fa-trash-alt"></i> Excluir
-                                            </a>
+
                                         </div>
                                         <!--end::Card toolbar-->
+                                        <!--begin::Actions-->
+                                        <div class="d-flex mb-4 align-items-center">
+                                            <div class="me-0">
+                                                <!-- Botão do Menu -->
+                                                <button
+                                                    class="btn btn-sm btn-icon btn-bg-warning btn-active-color-light"
+                                                    data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"
+                                                    aria-label="Opções">
+                                                    <i class="bi bi-three-dots fs-3"></i>
+                                                </button>
+                                                <!--begin::Menu Dropdown-->
+                                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px py-3"
+                                                    data-kt-menu="true">
+                                                    <!--begin::Título do Menu-->
+                                                    <div class="menu-item px-3">
+                                                        <div
+                                                            class="menu-content text-muted pb-2 px-3 fs-7 text-uppercase">
+                                                            Gerenciamento
+                                                        </div>
+                                                    </div>
+                                                    <!--end::Título do Menu-->
+                                                    <div class="menu-item px-3">
+                                                        <a href="#" class="menu-link px-3 icon-hover-blue"data-bs-toggle="modal" data-bs-target="#kt_modal_new_card">
+                                                            <i class="fas fa-edit me-2"></i>Editar Lançamento</a>
+                                                    </div>
+                                                    <!--end::Item: Editar-->
+                                                    <!--begin::Item: Criar Fatura-->
+                                                    <!-- HTML -->
+                                                    <div class="menu-item px-3">
+                                                        <a href="#" class="menu-link px-3 icon-hover-blue"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#kt_modal_delete_card">
+                                                            <i class="bi bi-receipt me-2"></i>
+                                                            Gerar Recibo
+                                                        </a>
+                                                    </div>
+                                                    <!-- CSS -->
+                                                    <style>
+                                                        /* Quando pairar o mouse sobre o link .icon-hover-blue, o ícone dentro dele (i) ficará azul */
+                                                        .icon-hover-blue:hover i {
+                                                            color: #0d6efd;
+                                                            /* Azul padrão do Bootstrap ou cor de sua preferência */
+                                                        }
+                                                    </style>
+                                                    <!--end::Item: Criar Fatura-->
+                                                    <!--begin::Item: Criar Pagamento (exemplo com ícone de alerta)-->
+                                                    <!--end::Item: Criar Pagamento-->
+                                                    <!--begin::Item: Gerar Boleto-->
+                                                    <div class="menu-item px-3">
+                                                        <a href="#" class="menu-link px-3">Gerar Boleto</a>
+                                                    </div>
+                                                    <!--end::Item: Gerar Boleto-->
+                                                    <!--begin::Item: Assinatura (submenu)-->
+                                                    <div class="menu-item px-3" data-kt-menu-trigger="hover"
+                                                        data-kt-menu-placement="right-end">
+                                                        <a href="#" class="menu-link px-3">
+                                                            <span class="menu-title">Assinatura</span>
+                                                            <span class="menu-arrow"></span>
+                                                        </a>
+                                                        <!--begin::Submenu-->
+                                                        <div class="menu-sub menu-sub-dropdown w-175px py-4">
+                                                            <!--begin::Item: Planos-->
+                                                            <div class="menu-item px-3">
+                                                                <a href="#" class="menu-link px-3">Planos</a>
+                                                            </div>
+                                                            <!--end::Item: Planos-->
+
+                                                            <!--begin::Item: Cobrança-->
+                                                            <div class="menu-item px-3">
+                                                                <a href="#" class="menu-link px-3">Cobrança</a>
+                                                            </div>
+                                                            <!--end::Item: Cobrança-->
+
+                                                            <!--begin::Item: Extratos-->
+                                                            <div class="menu-item px-3">
+                                                                <a href="#" class="menu-link px-3">Extratos</a>
+                                                            </div>
+                                                            <!--end::Item: Extratos-->
+
+                                                            <!--begin::Separador-->
+                                                            <div class="separator my-2"></div>
+                                                            <!--end::Separador-->
+
+                                                            <!--begin::Item: Recorrência (switch)-->
+                                                            <div class="menu-item px-3">
+                                                                <div class="menu-content px-3">
+                                                                    <label
+                                                                        class="form-check form-switch form-check-custom form-check-solid">
+                                                                        <input class="form-check-input w-30px h-20px"
+                                                                            type="checkbox" value="1"
+                                                                            checked="checked" name="notifications" />
+                                                                        <span
+                                                                            class="form-check-label text-muted fs-6">Recorrente</span>
+                                                                    </label>
+                                                                </div>
+                                                            </div>
+                                                            <!--end::Item: Recorrência (switch)-->
+                                                        </div>
+                                                        <!--end::Submenu-->
+                                                    </div>
+                                                    <!--end::Item: Assinatura (submenu)-->
+
+                                                    <!--begin::Item: Excluir-->
+                                                    <div class="menu-item px-3 icon-hover-danger">
+                                                        <a href="#" class="menu-link px-3 text-danger"
+                                                            data-bs-toggle="modal"
+                                                            data-bs-target="#kt_modal_delete_card">
+                                                            <i class="bi bi-trash me-2 text-danger"></i>
+                                                            Excluir
+                                                        </a>
+
+                                                    </div>
+                                                    <!--end::Item: Excluir-->
+                                                </div>
+                                                <!--end::Menu Dropdown-->
+                                            </div>
+                                            <!--end::Menu-->
+
+                                        </div>
+                                        <!--end::Actions-->
                                     </div>
                                     <!--end::Card header-->
                                     <!--begin::Card body-->
@@ -243,7 +377,8 @@
                                                         <!--begin::Row-->
                                                         <tr>
                                                             <td class="text-gray-400">Centro de Custo:</td>
-                                                            <td class="text-gray-800">{{ $caixa->centro }}</td>
+                                                            <td class="text-gray-800">{{ $caixa->costCenter->name }}
+                                                            </td>
                                                         </tr>
                                                         <!--end::Row-->
                                                         <!--begin::Row-->
@@ -374,7 +509,7 @@
                                                     data-kt-filemanager-table-toolbar="base">
 
                                                     <!--begin::Export-->
-                                                    <button disabled   type="button" class="btn btn-light-primary me-3"
+                                                    <button disabled type="button" class="btn btn-light-primary me-3"
                                                         id="kt_file_manager_new_folder">
                                                         <!--begin::Svg Icon | path: icons/duotune/files/fil013.svg-->
                                                         <span class="svg-icon svg-icon-2">
@@ -398,8 +533,7 @@
 
                                                     <!--begin::Add customer-->
                                                     <button type="button" class="btn btn-primary"
-                                                        data-bs-toggle="modal"
-                                                        data-bs-target="#kt_modal_upload_arquivo">
+                                                        data-bs-toggle="modal" data-bs-target="#kt_modal_upload_arquivo">
                                                         <!--begin::Svg Icon | path: icons/duotune/files/fil018.svg-->
                                                         <span class="svg-icon svg-icon-2">
                                                             <svg width="24" height="24" viewBox="0 0 24 24"
@@ -457,209 +591,109 @@
                                                         <th class="min-w-250px">Nome</th>
                                                         <th class="min-w-10px">Tamanho</th>
                                                         <th class="min-w-125px">Data da Modificação</th>
-                                                        <th class="w-125px"></th>
+                                                        <th class="text-end">Excluir</th>
                                                     </tr>
                                                     <!--end::Table row-->
                                                 </thead>
                                                 <!--end::Table head-->
                                                 <!--begin::Table body-->
                                                 <tbody class="fw-semibold text-gray-600">
-                                                    @foreach ($caixa->anexos as $file)
-                                                    <tr>
-                                                        <!--begin::Checkbox-->
-                                                        <td>
-                                                            <div
-                                                                class="form-check form-check-sm form-check-custom form-check-solid">
-                                                                <input class="form-check-input" type="checkbox"
-                                                                    value="1" />
-                                                            </div>
-                                                        </td>
-                                                        <!--end::Checkbox-->
-                                                        <!--begin::Name=-->
-                                                        <td>
-                                                            <div class="d-flex align-items-center">
-                                                                <!--begin::Svg Icon | path: icons/duotune/files/fil003.svg-->
-                                                                <span
-                                                                    class="svg-icon svg-icon-2x svg-icon-primary me-4">
-                                                                    <svg width="24" height="24"
-                                                                        viewBox="0 0 24 24" fill="none"
-                                                                        xmlns="http://www.w3.org/2000/svg">
-                                                                        <path opacity="0.3"
-                                                                            d="M19 22H5C4.4 22 4 21.6 4 21V3C4 2.4 4.4 2 5 2H14L20 8V21C20 21.6 19.6 22 19 22Z"
-                                                                            fill="currentColor" />
-                                                                        <path d="M15 8H20L14 2V7C14 7.6 14.4 8 15 8Z"
-                                                                            fill="currentColor" />
-                                                                    </svg>
-                                                                </span>
-                                                                <!--end::Svg Icon-->
-                                                                <a href="{{ route('file', ['path' => $file->caminho_arquivo]) }}"    target="_blank"
-                                                                    class="text-gray-800 text-hover-primary">{{ $file->nome_arquivo }}</a>
-                                                            </div>
-                                                        </td>
-                                                        <!--end::Name=-->
-                                                        <!--begin::Size-->
-                                                        <td>{{ formatSizeUnits($file->size) }}</td>
-                                                        <!--end::Size-->
-                                                        <!--begin::Last modified-->
-                                                        <td>{{ $file->updated_at->format('d M Y, g:i a') }}</td>
-                                                        <!--end::Last modified-->
-                                                        <!--begin::Actions-->
-                                                        <td class="text-end"
-                                                            data-kt-filemanager-table="action_dropdown">
-                                                            <div class="d-flex justify-content-end">
-                                                                <!--begin::Share link-->
-                                                                <div class="ms-2"
-                                                                    data-kt-filemanger-table="copy_link">
-                                                                    <button type="button"
-                                                                        class="btn btn-sm btn-icon btn-light btn-active-light-primary"
-                                                                        data-kt-menu-trigger="click"
-                                                                        data-kt-menu-placement="bottom-end">
-                                                                        <!--begin::Svg Icon | path: icons/duotune/coding/cod007.svg-->
-                                                                        <span class="svg-icon svg-icon-5 m-0">
-                                                                            <svg width="24" height="24"
-                                                                                viewBox="0 0 24 24" fill="none"
-                                                                                xmlns="http://www.w3.org/2000/svg">
-                                                                                <path opacity="0.3"
-                                                                                    d="M18.4 5.59998C18.7766 5.9772 18.9881 6.48846 18.9881 7.02148C18.9881 7.55451 18.7766 8.06577 18.4 8.44299L14.843 12C14.466 12.377 13.9547 12.5887 13.4215 12.5887C12.8883 12.5887 12.377 12.377 12 12C11.623 11.623 11.4112 11.1117 11.4112 10.5785C11.4112 10.0453 11.623 9.53399 12 9.15698L15.553 5.604C15.9302 5.22741 16.4415 5.01587 16.9745 5.01587C17.5075 5.01587 18.0188 5.22741 18.396 5.604L18.4 5.59998ZM20.528 3.47205C20.0614 3.00535 19.5074 2.63503 18.8977 2.38245C18.288 2.12987 17.6344 1.99988 16.9745 1.99988C16.3145 1.99988 15.661 2.12987 15.0513 2.38245C14.4416 2.63503 13.8876 3.00535 13.421 3.47205L9.86801 7.02502C9.40136 7.49168 9.03118 8.04568 8.77863 8.6554C8.52608 9.26511 8.39609 9.91855 8.39609 10.5785C8.39609 11.2384 8.52608 11.8919 8.77863 12.5016C9.03118 13.1113 9.40136 13.6653 9.86801 14.132C10.3347 14.5986 10.8886 14.9688 11.4984 15.2213C12.1081 15.4739 12.7616 15.6039 13.4215 15.6039C14.0815 15.6039 14.7349 15.4739 15.3446 15.2213C15.9543 14.9688 16.5084 14.5986 16.975 14.132L20.528 10.579C20.9947 10.1124 21.3649 9.55844 21.6175 8.94873C21.8701 8.33902 22.0001 7.68547 22.0001 7.02551C22.0001 6.36555 21.8701 5.71201 21.6175 5.10229C21.3649 4.49258 20.9947 3.93867 20.528 3.47205Z"
-                                                                                    fill="currentColor" />
-                                                                                <path
-                                                                                    d="M14.132 9.86804C13.6421 9.37931 13.0561 8.99749 12.411 8.74695L12 9.15698C11.6234 9.53421 11.4119 10.0455 11.4119 10.5785C11.4119 11.1115 11.6234 11.6228 12 12C12.3766 12.3772 12.5881 12.8885 12.5881 13.4215C12.5881 13.9545 12.3766 14.4658 12 14.843L8.44699 18.396C8.06999 18.773 7.55868 18.9849 7.02551 18.9849C6.49235 18.9849 5.98101 18.773 5.604 18.396C5.227 18.019 5.0152 17.5077 5.0152 16.9745C5.0152 16.4413 5.227 15.93 5.604 15.553L8.74701 12.411C8.28705 11.233 8.28705 9.92498 8.74701 8.74695C8.10159 8.99737 7.5152 9.37919 7.02499 9.86804L3.47198 13.421C2.52954 14.3635 2.00009 15.6417 2.00009 16.9745C2.00009 18.3073 2.52957 19.5855 3.47202 20.528C4.41446 21.4704 5.69269 21.9999 7.02551 21.9999C8.35833 21.9999 9.63656 21.4704 10.579 20.528L14.132 16.975C14.5987 16.5084 14.9689 15.9544 15.2215 15.3447C15.4741 14.735 15.6041 14.0815 15.6041 13.4215C15.6041 12.7615 15.4741 12.108 15.2215 11.4983C14.9689 10.8886 14.5987 10.3347 14.132 9.86804Z"
-                                                                                    fill="currentColor" />
-                                                                            </svg>
-                                                                        </span>
-                                                                        <!--end::Svg Icon-->
-                                                                    </button>
-                                                                    <!--begin::Menu-->
-                                                                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-300px"
-                                                                        data-kt-menu="true">
-                                                                        <!--begin::Card-->
-                                                                        <div class="card card-flush">
-                                                                            <div class="card-body p-5">
-                                                                                <!--begin::Loader-->
-                                                                                <div class="d-flex"
-                                                                                    data-kt-filemanger-table="copy_link_generator">
-                                                                                    <!--begin::Spinner-->
-                                                                                    <div class="me-5"
-                                                                                        data-kt-indicator="on">
-                                                                                        <span
-                                                                                            class="indicator-progress">
-                                                                                            <span
-                                                                                                class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                                                                        </span>
-                                                                                    </div>
-                                                                                    <!--end::Spinner-->
-                                                                                    <!--begin::Label-->
-                                                                                    <div class="fs-6 text-dark">
-                                                                                        Generating Share Link...</div>
-                                                                                    <!--end::Label-->
-                                                                                </div>
-                                                                                <!--end::Loader-->
-                                                                                <!--begin::Link-->
-                                                                                <div class="d-flex flex-column text-start d-none"
-                                                                                    data-kt-filemanger-table="copy_link_result">
-                                                                                    <div class="d-flex mb-3">
-                                                                                        <!--begin::Svg Icon | path: icons/duotune/arrows/arr085.svg-->
-                                                                                        <span
-                                                                                            class="svg-icon svg-icon-2 svg-icon-success me-3">
-                                                                                            <svg width="24"
-                                                                                                height="24"
-                                                                                                viewBox="0 0 24 24"
-                                                                                                fill="none"
-                                                                                                xmlns="http://www.w3.org/2000/svg">
-                                                                                                <path
-                                                                                                    d="M9.89557 13.4982L7.79487 11.2651C7.26967 10.7068 6.38251 10.7068 5.85731 11.2651C5.37559 11.7772 5.37559 12.5757 5.85731 13.0878L9.74989 17.2257C10.1448 17.6455 10.8118 17.6455 11.2066 17.2257L18.1427 9.85252C18.6244 9.34044 18.6244 8.54191 18.1427 8.02984C17.6175 7.47154 16.7303 7.47154 16.2051 8.02984L11.061 13.4982C10.7451 13.834 10.2115 13.834 9.89557 13.4982Z"
-                                                                                                    fill="currentColor" />
-                                                                                            </svg>
-                                                                                        </span>
-                                                                                        <!--end::Svg Icon-->
-                                                                                        <div class="fs-6 text-dark">
-                                                                                            Share Link Generated</div>
-                                                                                    </div>
-                                                                                    <input type="text"
-                                                                                        class="form-control form-control-sm"
-                                                                                        value="https://path/to/file/or/folder/" />
-                                                                                    <div
-                                                                                        class="text-muted fw-normal mt-2 fs-8 px-3">
-                                                                                        Read only.
-                                                                                        <a href="../../demo1/dist/apps/file-manager/settings/.html"
-                                                                                            class="ms-2">Change
-                                                                                            permissions</a>
-                                                                                    </div>
-                                                                                </div>
-                                                                                <!--end::Link-->
-                                                                            </div>
-                                                                        </div>
-                                                                        <!--end::Card-->
+                                                    @forelse ($caixa->modulos_anexos as $file)
+                                                        <tr>
+                                                            <!-- ID -->
+                                                            <td>{{ $file->id }}</td>
+
+                                                            <!-- Nome -->
+                                                            <td>
+                                                                <x-file-icon :file="$file->nome_arquivo" />
+                                                            </td>
+
+                                                            <!-- Tamanho -->
+                                                            <td>{{ formatSizeUnits($file->tamanho_arquivo) }}</td>
+
+                                                            <!-- Última Modificação -->
+                                                            <td>{{ \Carbon\Carbon::parse($file->updated_at)->format('d M Y, g:i a') }}
+                                                            </td>
+
+                                                            <!-- Ações -->
+                                                            <td class="text-end">
+                                                                <a href="#"
+                                                                    class="btn btn-icon btn-active-light-danger w-30px h-30px"
+                                                                    title="Excluir" data-bs-toggle="modal"
+                                                                    data-bs-target="#kt_modal_delete_file">
+                                                                    <span class="svg-icon svg-icon-3">
+                                                                        <svg width="24" height="24"
+                                                                            viewBox="0 0 24 24" fill="none"
+                                                                            xmlns="http://www.w3.org/2000/svg">
+                                                                            <path
+                                                                                d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z"
+                                                                                fill="currentColor" />
+                                                                            <path opacity="0.5"
+                                                                                d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z"
+                                                                                fill="currentColor" />
+                                                                            <path opacity="0.5"
+                                                                                d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z"
+                                                                                fill="currentColor" />
+                                                                        </svg>
+                                                                    </span>
+                                                                </a>
+                                                            </td>
+                                                        </tr>
+                                                        <!--begin::Modal - Confirmar Exclusão-->
+                                                        <div class="modal fade" id="kt_modal_delete_file"
+                                                            tabindex="-1" aria-hidden="true">
+                                                            <div class="modal-dialog modal-dialog-centered">
+                                                                <div class="modal-content">
+                                                                    <!-- Cabeçalho -->
+                                                                    <div class="modal-header">
+                                                                        <h5 class="modal-title text-danger fw-bold">
+                                                                            Confirmar Exclusão</h5>
+                                                                        <button type="button" class="btn-close"
+                                                                            data-bs-dismiss="modal"
+                                                                            aria-label="Close"></button>
                                                                     </div>
-                                                                    <!--end::Menu-->
-                                                                </div>
-                                                                <!--end::Share link-->
-                                                                <!--begin::More-->
-                                                                <div class="ms-2">
-                                                                    <button type="button"
-                                                                        class="btn btn-sm btn-icon btn-light btn-active-light-primary"
-                                                                        data-kt-menu-trigger="click"
-                                                                        data-kt-menu-placement="bottom-end">
-                                                                        <!--begin::Svg Icon | path: icons/duotune/general/gen052.svg-->
-                                                                        <span class="svg-icon svg-icon-5 m-0">
-                                                                            <svg width="24" height="24"
-                                                                                viewBox="0 0 24 24" fill="none"
-                                                                                xmlns="http://www.w3.org/2000/svg">
-                                                                                <rect x="10" y="10" width="4"
-                                                                                    height="4" rx="2"
-                                                                                    fill="currentColor" />
-                                                                                <rect x="17" y="10" width="4"
-                                                                                    height="4" rx="2"
-                                                                                    fill="currentColor" />
-                                                                                <rect x="3" y="10" width="4"
-                                                                                    height="4" rx="2"
-                                                                                    fill="currentColor" />
-                                                                            </svg>
-                                                                        </span>
-                                                                        <!--end::Svg Icon-->
-                                                                    </button>
-                                                                    <!--begin::Menu-->
-                                                                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4"
-                                                                        data-kt-menu="true">
-                                                                        <!--begin::Menu item-->
-                                                                        <div class="menu-item px-3">
-                                                                            <a href="#"
-                                                                                class="menu-link px-3">Download
-                                                                                File</a>
-                                                                        </div>
-                                                                        <!--end::Menu item-->
-                                                                        <!--begin::Menu item-->
-                                                                        <div class="menu-item px-3">
-                                                                            <a href="#" class="menu-link px-3"
-                                                                                data-kt-filemanager-table="rename">Rename</a>
-                                                                        </div>
-                                                                        <!--end::Menu item-->
-                                                                        <!--begin::Menu item-->
-                                                                        <div class="menu-item px-3">
-                                                                            <a href="#" class="menu-link px-3"
-                                                                                data-kt-filemanager-table-filter="move_row"
-                                                                                data-bs-toggle="modal"
-                                                                                data-bs-target="#kt_modal_move_to_folder">Move
-                                                                                to folder</a>
-                                                                        </div>
-                                                                        <!--end::Menu item-->
-                                                                        <!--begin::Menu item-->
-                                                                        <div class="menu-item px-3">
-                                                                            <a href="#"
-                                                                            class="menu-link text-danger px-3"
-                                                                            data-kt-filemanager-table-filter="delete_row"
-                                                                            data-file-id="{{ $file->id }}">Excluir</a>
-                                                                        </div>
-                                                                        <!--end::Menu item-->
+
+                                                                    <!-- Corpo -->
+                                                                    <div class="modal-body text-center">
+                                                                        <i
+                                                                            class="bi bi-exclamation-circle-fill text-danger fs-2 mb-4"></i>
+                                                                        <p class="mb-0 fs-5 fw-semibold text-center">
+                                                                            Tem certeza que deseja excluir o documento
+                                                                            <strong>#{{ $file->nome_arquivo }}</strong>?
+                                                                        </p>
+                                                                        <small class="text-muted d-block mt-3">
+                                                                            Esta ação não pode ser desfeita.
+                                                                        </small>
                                                                     </div>
-                                                                    <!--end::Menu-->
+
+                                                                    <!-- Rodapé -->
+                                                                    <div class="modal-footer justify-content-center">
+                                                                        <form method="POST"
+                                                                            action="{{ route('modulosAnexos.destroy', $file->id) }}"
+                                                                            class="d-inline">
+                                                                            @csrf
+                                                                            @method('DELETE')
+                                                                            <button type="button"
+                                                                                class="btn btn-secondary px-4"
+                                                                                data-bs-dismiss="modal">Cancelar</button>
+                                                                            <button type="submit"
+                                                                                class="btn btn-danger px-4">
+                                                                                <i class="fas fa-trash-alt me-2"></i>
+                                                                                Confirmar Exclusão
+                                                                            </button>
+                                                                        </form>
+                                                                    </div>
                                                                 </div>
-                                                                <!--end::More-->
                                                             </div>
-                                                        </td>
-                                                        <!--end::Actions-->
-                                                    </tr>
-                                                    @endforeach
+
+                                                        </div>
+                                                        <!--end::Modal - Confirmar Exclusão-->
+                                                    @empty
+                                                        <tr>
+                                                            <td colspan="5" class="text-center text-muted">Nenhum
+                                                                arquivo encontrado.</td>
+                                                        </tr>
+                                                    @endforelse
                                                 </tbody>
                                                 <!--end::Table body-->
                                             </table>
@@ -668,135 +702,6 @@
                                         <!--end::Card body-->
                                     </div>
                                     <!--end::Card-->
-                                </div>
-                                <!--end::Card-->
-                                <!--begin::Card-->
-                                <div class="card card-flush pt-3 mb-5 mb-xl-10">
-                                    <!--begin::Card header-->
-                                    <div class="card-header">
-                                        <!--begin::Card title-->
-                                        <div class="card-title">
-                                            <h2>Modificações Recentes</h2>
-                                        </div>
-                                        <!--end::Card title-->
-                                        <!--begin::Card toolbar-->
-                                        <div class="card-toolbar">
-                                            <a href="#" class="btn btn-light-primary">View All Events</a>
-                                        </div>
-                                        <!--end::Card toolbar-->
-                                    </div>
-                                    <!--end::Card header-->
-                                    <!--begin::Card body-->
-                                    <div class="card-body pt-0">
-                                        <!--begin::Table wrapper-->
-                                        <div class="table-responsive">
-                                            <!--begin::Table-->
-                                            <table
-                                                class="table align-middle table-row-dashed fs-6 text-gray-600 fw-semibold gy-5"
-                                                id="kt_table_customers_events">
-                                                <!--begin::Table body-->
-                                                <tbody>
-                                                    <!--begin::Table row-->
-                                                    <tr>
-                                                        <!--begin::Event=-->
-                                                        <td class="min-w-400px">
-                                                            <a href="#"
-                                                                class="fw-bold text-gray-800 text-hover-primary me-1">Brian
-                                                                Cox</a>has made payment to
-                                                            <a href="#"
-                                                                class="fw-bold text-gray-800 text-hover-primary">5470-3581</a>
-                                                        </td>
-                                                        <!--end::Event=-->
-                                                        <!--begin::Timestamp=-->
-                                                        <td class="pe-0 text-gray-600 text-end min-w-200px">19 Aug
-                                                            2023, 2:40 pm
-                                                        </td>
-                                                        <!--end::Timestamp=-->
-                                                    </tr>
-                                                    <!--end::Table row-->
-                                                    <!--begin::Table row-->
-                                                    <tr>
-                                                        <!--begin::Event=-->
-                                                        <td class="min-w-400px">Invoice
-                                                            <a href="#"
-                                                                class="fw-bold text-gray-800 text-hover-primary me-1">9730-7169</a>status
-                                                            has changed from
-                                                            <span class="badge badge-light-primary me-1">In
-                                                                Transit</span>to
-                                                            <span class="badge badge-light-success">Approved</span>
-                                                        </td>
-                                                        <!--end::Event=-->
-                                                        <!--begin::Timestamp=-->
-                                                        <td class="pe-0 text-gray-600 text-end min-w-200px">15 Apr
-                                                            2023, 5:20 pm
-                                                        </td>
-                                                        <!--end::Timestamp=-->
-                                                    </tr>
-                                                    <!--end::Table row-->
-                                                    <!--begin::Table row-->
-                                                    <tr>
-                                                        <!--begin::Event=-->
-                                                        <td class="min-w-400px">Invoice
-                                                            <a href="#"
-                                                                class="fw-bold text-gray-800 text-hover-primary me-1">9730-7169</a>status
-                                                            has changed from
-                                                            <span class="badge badge-light-primary me-1">In
-                                                                Transit</span>to
-                                                            <span class="badge badge-light-success">Approved</span>
-                                                        </td>
-                                                        <!--end::Event=-->
-                                                        <!--begin::Timestamp=-->
-                                                        <td class="pe-0 text-gray-600 text-end min-w-200px">21 Feb
-                                                            2023, 8:43 pm
-                                                        </td>
-                                                        <!--end::Timestamp=-->
-                                                    </tr>
-                                                    <!--end::Table row-->
-                                                    <!--begin::Table row-->
-                                                    <tr>
-                                                        <!--begin::Event=-->
-                                                        <td class="min-w-400px">Invoice
-                                                            <a href="#"
-                                                                class="fw-bold text-gray-800 text-hover-primary me-1">9511-2431</a>status
-                                                            has changed from
-                                                            <span
-                                                                class="badge badge-light-warning me-1">Pending</span>to
-                                                            <span class="badge badge-light-info">In Progress</span>
-                                                        </td>
-                                                        <!--end::Event=-->
-                                                        <!--begin::Timestamp=-->
-                                                        <td class="pe-0 text-gray-600 text-end min-w-200px">10 Nov
-                                                            2023, 9:23 pm
-                                                        </td>
-                                                        <!--end::Timestamp=-->
-                                                    </tr>
-                                                    <!--end::Table row-->
-                                                    <!--begin::Table row-->
-                                                    <tr>
-                                                        <!--begin::Event=-->
-                                                        <td class="min-w-400px">
-                                                            <a href="#"
-                                                                class="fw-bold text-gray-800 text-hover-primary me-1">Brian
-                                                                Cox</a>has made payment to
-                                                            <a href="#"
-                                                                class="fw-bold text-gray-800 text-hover-primary">5470-3581</a>
-                                                        </td>
-                                                        <!--end::Event=-->
-                                                        <!--begin::Timestamp=-->
-                                                        <td class="pe-0 text-gray-600 text-end min-w-200px">21 Feb
-                                                            2023, 11:05 am
-                                                        </td>
-                                                        <!--end::Timestamp=-->
-                                                    </tr>
-                                                    <!--end::Table row-->
-                                                </tbody>
-                                                <!--end::Table body-->
-                                            </table>
-                                            <!--end::Table-->
-                                        </div>
-                                        <!--end::Table wrapper-->
-                                    </div>
-                                    <!--end::Card body-->
                                 </div>
                                 <!--end::Card-->
                             </div>
@@ -935,16 +840,16 @@
         });
     });
 
-    document.addEventListener('DOMContentLoaded', function () {
-    // Inicializar os tooltips e menus do Bootstrap
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.map(function (tooltipTriggerEl) {
-        return new bootstrap.Tooltip(tooltipTriggerEl);
-    });
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializar os tooltips e menus do Bootstrap
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        tooltipTriggerList.map(function(tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
 
-    var menuElements = document.querySelectorAll('[data-kt-menu]');
-    menuElements.forEach(function (menuEl) {
-        new KTMenu(menuEl);
+        var menuElements = document.querySelectorAll('[data-kt-menu]');
+        menuElements.forEach(function(menuEl) {
+            new KTMenu(menuEl);
+        });
     });
-});
 </script>

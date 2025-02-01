@@ -3,12 +3,17 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Financer\UpdateTransacaoFinanceiraRequest;
+use App\Http\Requests\Financer\StoreTransacaoFinanceiraRequest;
 use App\Models\Anexo;
 use App\Models\Banco;
 use App\Models\CadastroBanco;
 use App\Models\Caixa;
 use App\Models\Company;
 use App\Models\EntidadeFinanceira;
+use App\Models\Financeiro\CostCenter;
+use App\Models\Financeiro\ModulosAnexo;
+use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use App\Models\User;
@@ -32,6 +37,14 @@ class CaixaController extends Controller
      */
     public function index()
     {
+        // Supondo que você tenha uma forma de obter o company_id, por exemplo, do usuário autenticado
+        $companyId = Auth::user()->company_id; // Ajuste conforme sua lógica
+
+        $transacoesFinanceiras = TransacaoFinanceira::with('entidadeFinanceira') // Eager Load
+            ->where('company_id', $companyId) // Filtro pelo company_id
+            ->orderBy('id', 'DESC')
+            ->paginate(10);
+
         $valorEntradaBanco = Banco::getBancoEntrada();
         $ValorSaidasBanco = Banco::getBancoSaida();
 
@@ -49,10 +62,6 @@ class CaixaController extends Controller
         list($somaEntradas, $somaSaida) = caixa::getCaixa();
         $total = $somaEntradas - $somaSaida;
 
-
-
-
-
         return view('app.financeiro.index', [
             'caixas' => $caixas,
             'valorEntrada' => $valorEntrada,
@@ -64,12 +73,16 @@ class CaixaController extends Controller
             'total' => $total,
             'entidades' => $entidades,
             'entidadesBanco' => $entidadesBanco,
+            'transacoesFinanceiras' => $transacoesFinanceiras,
 
         ]);
     }
 
-    public function list()
+    public function list(Request $request)
     {
+        // Obter o valor da aba ativa da URL, se presente
+        $activeTab = $request->input('tab', 'overview'); // 'overview' é o padrão caso não haja o parâmetro 'tab'
+
         $user = Auth::user();
         $lps = LancamentoPadrao::all();
         $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
@@ -95,10 +108,15 @@ class CaixaController extends Controller
         // Calcular o total (entradas - saídas)
         $total = EntidadeFinanceira::getValorTotalEntidade();
         // Listar todos os registros de caixa para a empresa do usuário
-        $caixas = Caixa::getCaixaList($companyId);
+        $transacoes = TransacaoFinanceira::where('origem', 'Caixa')
+        ->where('company_id', $companyId)
+        ->get();
+
+        $centrosAtivos = CostCenter::getCadastroCentroCusto();
 
         // Obter os valores de entrada e saída de caixa para a empresa
         $valorEntrada = Caixa::getCaixaEntrada($companyId);
+
         /** @var TYPE_NAME $valorSaidas */
         $valorSaidas = Caixa::getCaixaSaida($companyId);
 
@@ -106,7 +124,7 @@ class CaixaController extends Controller
         $company = $user->company;
 
         return view('app.financeiro.caixa.list', [
-            'caixas' => $caixas,
+            'transacoes' => $transacoes,
             'valorEntrada' => $valorEntrada,
             'valorSaidas' => $valorSaidas,
             'total' => $total,
@@ -115,6 +133,8 @@ class CaixaController extends Controller
             'company' => $company,
             'entidades' => $entidades,
             'entidadesBanco' => $entidadesBanco,
+            'activeTab' => $activeTab,
+            'centrosAtivos' => $centrosAtivos,
 
 
         ]);
@@ -125,7 +145,7 @@ class CaixaController extends Controller
      */
     public function create()
     {
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::orderBy('created_at', 'desc')->take(6)->get();
 
         $company = User::getCompanyName();
 
@@ -150,161 +170,129 @@ class CaixaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreTransacaoFinanceiraRequest $request)
     {
-        try {
-            $subsidiaryId = User::getCompany();
+        // Recupera a companhia associada ao usuário autenticado
+        $subsidiary = User::getCompany();
 
-            // Converte a data do formato 'd-m-Y' para 'Y-m-d'
-            $dataCompetencia = Carbon::createFromFormat('d-m-Y', $request->input('data_competencia'))->format('Y-m-d');
-            // Validação dos dados
-            $validator = Validator::make($request->all(), [
-                'data_competencia' => 'required|date',
-                'descricao' => 'required|string',
-                'valor' => 'required', // Garante que o valor é numérico
-                'tipo' => 'required|in:entrada,saida',
-                'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
-                'centro' => 'required|string',
-                'tipo_documento' => 'required|string',
-                'numero_documento' => 'nullable|string',
-                'files.*' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
-                'historico_complementar' => 'nullable|string|max:500',
-                'entidade_banco_id' => 'nullable|exists:entidades_financeiras,id',
-                'comprovacao_fiscal' => 'required|boolean', // Garante que seja 0 ou 1
-                'entidade_id' => 'required|exists:entidades_financeiras,id', // Valida se a entidade existe
-            ], [
-                'entidade_id.required' => 'A entidade é obrigatória.',
-                'entidade_id.exists' => 'A entidade selecionada não é válida.',
+        if (!$subsidiary) {
+            return redirect()->back()->with('error', 'Companhia não encontrada.');
+        }
+
+        // Validação dos dados é automática com StoreTransacaoFinanceiraRequest, não é necessário duplicar validações aqui
+
+        // Processa os dados validados
+        $validatedData = $request->validated();
+
+        // Converte o valor e a data para os formatos adequados
+        $validatedData['data_competencia'] = Carbon::createFromFormat('d/m/Y', $validatedData['data_competencia'])->format('Y-m-d');
+        $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
+
+        // Adiciona informações padrão
+        $validatedData['company_id'] = $subsidiary->company_id;
+        $validatedData['created_by'] = Auth::id();
+        $validatedData['created_by_name'] = Auth::user()->name;
+        $validatedData['updated_by'] = Auth::id();
+        $validatedData['updated_by_name'] = Auth::user()->name;
+
+        $validatedData['updated_by_name'] = Auth::user()->name;
+
+        // 1) Chama o método movimentacao() e guarda o retorno
+        $movimentacao = $this->movimentacao($validatedData);
+
+        // 2) Atribui o ID retornado à chave movimentacao_id de $validatedData
+        $validatedData['movimentacao_id'] = $movimentacao->id;
+
+        // 3) Cria o registro na tabela transacoes_financeiras usando o ID que acabamos de obter
+        $caixa = TransacaoFinanceira::create($validatedData);
+
+        // Verifica e processa lançamentos padrão
+        $this->processarLancamentoPadrao($validatedData);
+
+        // Processa anexos, se existirem
+        $this->processarAnexos($request, $caixa);
+
+        // Adiciona mensagem de sucesso
+        Flasher::addSuccess('Lançamento criado com sucesso!');
+        return redirect()->back()->with('message', 'Lançamento criado com sucesso!');
+    }
+
+    /**
+     * Processa movimentacao.
+     */
+    private function movimentacao(array $validatedData)
+    {
+        // Cria o lançamento na tabela 'movimentacoes'
+        $movimentacao = Movimentacao::create([
+            'entidade_id' => $validatedData['entidade_id'],
+            'tipo'        => $validatedData['tipo'],
+            'valor'       => $validatedData['valor'],
+            'data'        => $validatedData['data_competencia'],
+            'descricao'   => $validatedData['descricao'],
+            'company_id'  => $validatedData['company_id'],
+            'created_by'  => $validatedData['created_by'],
+            'created_by_name' => $validatedData['created_by_name'],
+            'updated_by'      => $validatedData['updated_by'],
+            'updated_by_name' => $validatedData['updated_by_name'],
+        ]);
+
+        // Retorna o objeto Movimentacao recém-criado, de onde poderemos pegar o ID
+        return $movimentacao;
+    }
+
+    /**
+     * Processa lançamentos padrão.
+     */
+    private function processarLancamentoPadrao(array $validatedData)
+    {
+        $lancamentoPadrao = LancamentoPadrao::find($validatedData['lancamento_padrao_id']);
+        if ($lancamentoPadrao && $lancamentoPadrao->description === 'Deposito Bancário') {
+            $validatedData['origem'] = 'Caixa';
+            $validatedData['tipo'] = 'entrada';
+
+            // Cria outra movimentação para "Deposito Bancário"
+            $movimentacaoBanco = Movimentacao::create([
+                'entidade_id' => $validatedData['entidade_banco_id'],
+                'tipo' => $validatedData['tipo'],
+                'valor' => $validatedData['valor'],
+                'descricao' => $validatedData['descricao'],
+                'company_id' => $validatedData['company_id'],
+                'created_by' => $validatedData['created_by'],
+                'created_by_name' => $validatedData['created_by_name'],
+                'updated_by' => $validatedData['updated_by'],
+                'updated_by_name' => $validatedData['updated_by_name'],
             ]);
 
-            // Verifica se a validação falhou
-            if ($validator->fails()) {
+            // Cria o lançamento no banco
+            $validatedData['movimentacao_id'] = $movimentacaoBanco->id;
+            Banco::create($validatedData);
+        }
+    }
 
-                // Adiciona os erros ao PHPFlasher
-                foreach ($validator->errors()->all() as $error) {
-                    Flasher::addError($error);
-                }
+    /**
+     * Processa os anexos enviados.
+     */
+    private function processarAnexos(Request $request, TransacaoFinanceira $caixa)
+    {
+        if ($request->hasFile('files')) {
+            foreach ($request->file('files') as $file) {
+                 // Nome original do arquivo (sem caminho completo)
+                $nomeOriginal = $file->getClientOriginalName();
+                $anexoName = time() . '_' . $file->getClientOriginalName();
+                $anexoPath = $file->storeAs('anexos', $anexoName, 'public');
 
-                return redirect()->back()->withErrors($validator)->withInput();
-            }
-
-            $validatedData = $validator->validated();
-            // Adiciona a data convertida ao array de dados validados
-            $validatedData['data_competencia'] = $dataCompetencia;
-            $validatedData['company_id'] = $subsidiaryId->company_id;
-            $validatedData['origem'] = 'CX';
-
-            $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
-            // Adiciona os campos de auditoria
-            $validatedData['created_by'] = Auth::user();
-            $validatedData['created_by_name'] = Auth::user()->user()->name;
-            $validatedData['updated_by'] = Auth::user();
-            $validatedData['updated_by_name'] = Auth::user()->user()->name;
-
-            // Cria o lançamento na tabela 'movimentacoes'
-            try {
-                $movimentacao = Movimentacao::create([
-                    'entidade_id' => $validatedData['entidade_id'],
-                    'tipo' => $validatedData['tipo'],
-                    'valor' => $validatedData['valor'],
-                    'data' => $validatedData['data_competencia'],
-                    'descricao' => $validatedData['descricao'],
-                    'company_id' => $subsidiaryId->company_id,
-                    'created_by' => Auth::user(),
-                    'created_by_name' => Auth::user()->user()->name,
-                    'updated_by' => Auth::user(),
-                    'updated_by_name' => Auth::user()->user()->name,
+                ModulosAnexo::create([
+                    'anexavel_id'   => $caixa->id,                   // ID da transacao_financeira
+                    'anexavel_type' => TransacaoFinanceira::class,   // caminho da classe do Model
+                    'nome_arquivo'  => $nomeOriginal,
+                    'caminho_arquivo' => $anexoPath,
+                    'tamanho_arquivo' => $file->getSize(),
+                    'tipo_arquivo'  => $file->getMimeType() ?? '',  // se quiser
+                    'created_by'    => Auth::id(),
+                    'created_by_name' => Auth::user()->name,
+                    // etc., se tiver mais campos
                 ]);
-            } catch (\Exception $e) {
-                // Log de erro
-                dd('Erro ao criar movimentação:', $e->getMessage(), $e->getTrace());
-                Log::error('Erro ao criar movimentação: ' . $e->getMessage());
-                return redirect()->back()->with('error', 'Erro ao criar a movimentação.');
             }
-
-            // Cria o lançamento na tabela 'caixa'
-            $validatedData['movimentacao_id'] = $movimentacao->id; // Vincula a movimentação
-
-            // Cria o registro no caixa
-            $caixa = Caixa::create($validatedData);
-
-            // Verifica e processa lançamentos padrão
-            $lancamentoPadrao = LancamentoPadrao::find($validatedData['lancamento_padrao_id']);
-            if ($lancamentoPadrao && $lancamentoPadrao->description === 'Deposito Bancário') {
-                $validatedData['origem'] = 'BC';
-                $validatedData['tipo'] = 'entrada';
-                $validatedData['comprovacao_fiscal'] = $validatedData['comprovacao_fiscal'];
-
-                // Cria o lançamento na tabela 'movimentacoes'
-                try {
-                    $movimentacao = Movimentacao::create([
-                        'entidade_id' => $validatedData['entidade_banco_id'],
-                        'tipo' => $validatedData['tipo'],
-                        'valor' => $validatedData['valor'],
-                        'descricao' => $validatedData['descricao'],
-                        'company_id' => $subsidiaryId->company_id,
-                        'created_by' => Auth::user()->id(),
-                        'created_by_name' => Auth::user()->user()->name,
-                        'updated_by' => Auth::user()->id(),
-                        'updated_by_name' => Auth::user()->user()->name,
-                    ]);
-                } catch (\Exception $e) {
-                    // Log de erro
-                    dd('Erro ao criar movimentação:', $e->getMessage(), $e->getTrace());
-                    Log::error('Erro ao criar movimentação: ' . $e->getMessage());
-                    return redirect()->back()->with('error', 'Erro ao criar a movimentação.');
-                }
-
-                // Cria o lançamento na tabela 'caixa'
-                $validatedData['movimentacao_id'] = $movimentacao->id; // Vincula a movimentação
-
-                $banco = Banco::create($validatedData);
-
-                if ($request->hasFile('files')) {
-                    foreach ($request->file('files') as $anexo) {
-                        $anexoName = time() . '_' . $anexo->getClientOriginalName();
-                        $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
-
-                        Anexo::create([
-                            'banco_id' => $banco->id,
-                            'nome_arquivo' => $anexoName,
-                            'caminho_arquivo' => $anexoPath,
-                            'size' => $anexo->getSize(), // Tamanho do arquivo
-                            'created_by' => Auth::user()->id(),
-                            'updated_by' => Auth::user()->id(),
-                        ]);
-                    }
-                }
-            }
-
-
-            // Verifica se há arquivos anexos
-            if ($request->hasFile('files')) {
-                foreach ($request->file('files') as $anexo) {
-                    $anexoName = time() . '_' . $anexo->getClientOriginalName();
-                    $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
-
-                    Anexo::create([
-                        'caixa_id' => $caixa->id,
-                        'nome_arquivo' => $anexoName,
-                        'caminho_arquivo' => $anexoPath,
-                        'size' => $anexo->getSize(), // Tamanho do arquivo
-                        'created_by' => Auth::user()->id(),
-                        'updated_by' => Auth::user()->id(),
-                    ]);
-                }
-            }
-        // Mensagem de sucesso
-        flash()->success('O livro foi salvo com sucesso!');
-
-            // Exibe a mensagem diretamente usando o Flasher e redireciona
-            return redirect()->back();
-        } catch (\Exception $e) {
-            // Adiciona mensagem de erro com detalhes da exceção
-            Flasher::addError('Ocorreu um erro ao processar o lançamento: ' . $e->getMessage());
-
-            // Retorna com os dados antigos e exibe as mensagens de erro
-            return redirect()->back()->withInput();
         }
     }
 
@@ -322,15 +310,31 @@ class CaixaController extends Controller
      */
     public function edit($id)
     {
+        // Obter o ID da empresa do usuário autenticado
+        $companyId = Auth::user()->company_id;
+
+        // Buscar o banco com o ID e verificar se pertence à empresa do usuário
+        $caixa = TransacaoFinanceira::with('modulos_anexos')
+            ->where('company_id', $companyId) // Filtrar pelo company_id do usuário
+            ->findOrFail($id);
+
+
         $lps = LancamentoPadrao::all();
+        $entidadesBanco = Banco::getEntidadesBanco();
+        $entidades = Caixa::getEntidadesCaixa();
+        $centrosAtivos = CostCenter::where('company_id', $companyId)->get();
 
-        //Aqui, movimentacao.entidade busca a entidade associada à movimentação.
-        $caixa = Caixa::with(['anexos', 'movimentacao.entidade'])->findOrFail($id);
-
-        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
-
-
-        return view('app.financeiro.caixa.edit', compact('caixa', 'bancos', 'lps'));
+        // Retornar a view com os dados filtrados
+        return view(
+            'app.financeiro.caixa.edit',
+            [
+                'caixa' => $caixa,
+                'lps' => $lps,
+                'entidades' => $entidades,
+                'entidadesBanco' => $entidadesBanco,
+                'centrosAtivos' => $centrosAtivos,
+            ]
+        );
     }
 
     /**
@@ -363,7 +367,7 @@ class CaixaController extends Controller
                 'valor' => 'required|regex:/^\d+(\.\d{1,2})?$/',
                 'tipo' => 'required|in:entrada,saida',
                 'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
-                'centro' => 'required|string|max:255',
+                'cost_center_id' => 'required|exists:cost_centers,id',
                 'tipo_documento' => 'required|string|max:255',
                 'numero_documento' => 'nullable|string|max:50',
                 'historico_complementar' => 'nullable|string|max:500',
@@ -377,7 +381,6 @@ class CaixaController extends Controller
 
             // Se a validação falhar
             if ($validator->fails()) {
-                dd($validator->errors()->all());
                 foreach ($validator->errors()->all() as $error) {
                     \Flasher\Laravel\Facade\Flasher::addError($error);
                 }
@@ -388,41 +391,45 @@ class CaixaController extends Controller
             $validatedData = $validator->validated();
 
             // Busca o registro no banco de dados
-            $caixa = Caixa::findOrFail($id);
-            $movimentacao = Movimentacao::findOrFail($caixa->movimentacao_id);
+            $banco = TransacaoFinanceira::findOrFail($id);
+            $movimentacao = Movimentacao::findOrFail($banco->movimentacao_id);
 
             // Ajusta o saldo da entidade antes de atualizar os valores
-            $entidade = EntidadeFinanceira::findOrFail($validatedData['entidade_id']);
+            // 1) Entidade antiga vinculada à movimentação
+            $oldEntidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
 
             // Reverte o impacto do lançamento antigo no saldo da entidade
+            // 2) Reverter saldo antigo
             if ($movimentacao->tipo === 'entrada') {
-                $entidade->saldo_atual -= $movimentacao->valor;
+                $oldEntidade->saldo_atual -= $movimentacao->valor;
             } else {
-                $entidade->saldo_atual += $movimentacao->valor;
+                $oldEntidade->saldo_atual += $movimentacao->valor;
             }
+            $oldEntidade->save();
 
-            // Atualiza os dados da movimentação
+            // 3) Atualiza a movimentação (agora ela aponta para a nova entidade e novo valor)
             $movimentacao->update([
                 'entidade_id' => $validatedData['entidade_id'],
-                'tipo' => $validatedData['tipo'],
-                'valor' => $validatedData['valor'],
-                'descricao' => $validatedData['descricao'],
-                'updated_by' => Auth::user()->id(),
+                'tipo'        => $validatedData['tipo'],
+                'valor'       => $validatedData['valor'],
+                'descricao'   => $validatedData['descricao'],
+                'updated_by'  => Auth::user()->id,
             ]);
 
-            // Ajusta o impacto do novo valor no saldo
+            // 4) Entidade nova escolhida no form
+            $newEntidade = EntidadeFinanceira::findOrFail($validatedData['entidade_id']);
+
+            // 5) Aplicar o valor atualizado na nova entidade
             if ($validatedData['tipo'] === 'entrada') {
-                $entidade->saldo_atual += $validatedData['valor'];
+                $newEntidade->saldo_atual += $validatedData['valor'];
             } else {
-                $entidade->saldo_atual -= $validatedData['valor'];
+                $newEntidade->saldo_atual -= $validatedData['valor'];
             }
+            $newEntidade->save();
 
-            // Salva o novo saldo
-            $entidade->save();
-
-            // Atualiza os dados do caixa
+            // Atualiza os dados do banco
             $validatedData['movimentacao_id'] = $movimentacao->id; // Mantém o vínculo com a movimentação
-            $caixa->update($validatedData);
+            $banco->update($validatedData);
 
             // Verifica se há anexos enviados
             if ($request->hasFile('anexos')) {
@@ -435,20 +442,18 @@ class CaixaController extends Controller
 
                     // Cria o registro do anexo no banco de dados
                     Anexo::create([
-                        'caixa_id' => $caixa->id,
+                        'banco_id' => $banco->id,
                         'nome_arquivo' => $anexoName,
-                        'size' => $anexo->getSize(), // Tamanho do arquivo
                         'caminho_arquivo' => $anexoPath,
-                        'created_by' => Auth::user()->id(),
-                        'updated_by' => Auth::user()->id(),
+                        'created_by' => Auth::user()->id,
+                        'updated_by' => Auth::user()->id,
                     ]);
                 }
             }
-                // Adiciona mensagem de sucesso
-                Flasher::addSuccess('Lançamento excluído com sucesso!');
 
-            // Exibe mensagem de sucesso
-            return redirect()->back();
+            // Adiciona mensagem de sucesso
+            Flasher::addSuccess('Lançamento atualiazado com sucesso!');
+            return redirect()->back()->with('message', 'Atualizado com sucesso!');
         } catch (\Exception $e) {
             // Log de erro e mensagem de retorno
             Log::error('Erro ao atualizar movimentação: ' . $e->getMessage());
@@ -456,73 +461,124 @@ class CaixaController extends Controller
         }
     }
 
+    /**
+     * Formata os dados do request antes de processá-los.
+     *
+     * @param \Illuminate\Http\Request $request
+     * @return void
+     */
+    private function formatarDadosRequest($request)
+    {
+        // Tratar o valor do campo "valor"
+        if ($request->has('valor')) {
+            $request->merge([
+                'valor' => str_replace(',', '.', str_replace('.', '', $request->input('valor')))
+            ]);
+        }
 
+        // Converter data_competencia para o formato correto
+        if ($request->has('data_competencia')) {
+            $request->merge([
+                'data_competencia' => Carbon::createFromFormat('d/m/Y', $request->input('data_competencia'))->format('Y-m-d')
+            ]);
+        }
+    }
+
+    /**
+     * Reverte o saldo da entidade para antes da atualização.
+     *
+     * @param \App\Models\Movimentacao $movimentacao
+     * @return void
+     */
+    private function reverterSaldoEntidade($movimentacao)
+    {
+        $entidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
+
+        if ($movimentacao->tipo === 'entrada') {
+            $entidade->saldo_atual -= $movimentacao->valor;
+        } else {
+            $entidade->saldo_atual += $movimentacao->valor;
+        }
+
+        $entidade->save();
+    }
+
+    /**
+     * Aplica o novo saldo na entidade financeira.
+     *
+     * @param int $entidadeId
+     * @param string $tipo
+     * @param float $valor
+     * @return void
+     */
+    private function aplicarSaldoEntidade($entidadeId, $tipo, $valor)
+    {
+        $entidade = EntidadeFinanceira::findOrFail($entidadeId);
+
+        if ($tipo === 'entrada') {
+            $entidade->saldo_atual += $valor;
+        } else {
+            $entidade->saldo_atual -= $valor;
+        }
+
+        $entidade->save();
+    }
 
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(string $id)
+    public function destroy($id)
     {
         try {
-            // Localize o registro do Caixa com base no ID fornecido
-            $caixa = Caixa::with('anexos', 'movimentacao')->findOrFail($id);
+            // 1) Localiza a transação financeira pelo ID
+            $transacao = TransacaoFinanceira::findOrFail($id);
 
-            // Exclua os anexos associados (se existirem)
-            if ($caixa->anexos) {
-                foreach ($caixa->anexos as $anexo) {
-                    // Exclua o arquivo do armazenamento
+            // 2) Localiza a movimentação associada
+            $movimentacao = Movimentacao::findOrFail($transacao->movimentacao_id);
+
+            // 3) Localiza a entidade financeira associada
+            $entidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
+
+            // 4) Ajusta o saldo da entidade financeira
+            // Obs.: aqui deve subtrair ou somar usando $movimentacao->valor (não $entidade->valor)
+            if ($movimentacao->tipo === 'entrada') {
+                // Se a movimentação era uma entrada, subtrai o valor do saldo atual
+                $entidade->saldo_atual -= $transacao->valor;
+            } else {
+                // Se a movimentação era uma saída, adiciona o valor ao saldo atual
+                $entidade->saldo_atual += $transacao->valor;
+            }
+            $entidade->save();
+
+            // 5) Excluir anexos associados (se houver)
+            $anexos = ModulosAnexo::where('anexavel_id', $transacao->id)
+                ->where('anexavel_type', TransacaoFinanceira::class)
+                ->get();
+
+            foreach ($anexos as $anexo) {
+                // Remove o arquivo do disco, se existir
+                if (Storage::disk('public')->exists($anexo->caminho_arquivo)) {
                     Storage::disk('public')->delete($anexo->caminho_arquivo);
-
-                    // Exclua o registro do anexo no banco de dados
-                    $anexo->delete();
                 }
+                // Exclui o registro no banco
+                $anexo->delete();
             }
 
-            // Verifique se há uma movimentação associada e exclua
-            if ($caixa->movimentacao) {
-                $caixa->movimentacao->delete();
+            // 6) Exclui a movimentação associada
+            $movimentacao->delete();
 
-                // Atualize o saldo da entidade associada à movimentação
-                $entidade = $caixa->movimentacao->entidade;
-                if ($entidade) {
-                    $entidade->atualizarSaldo();
-                }
-            }
+            // 7) Exclui a transação financeira
+            $transacao->delete();
 
-            // Exclua o registro do Caixa
-            $caixa->delete();
+            // 8) Mensagem de sucesso e redirecionamento
+            Flasher::addSuccess('Transação excluída com sucesso!');
+            return redirect()->route('caixa.list');
 
-                // Adiciona mensagem de sucesso
-            Flasher::addSuccess('Lançamento excluído com sucesso!');
-            // Redireciona para a lista de caixas com mensagem de sucesso
-            return redirect()
-                ->route('caixa.list') // Substitua 'caixa.list' pelo nome correto da rota
-                ->with('message', 'Registro excluído com sucesso!');
         } catch (\Exception $e) {
-            // Log de erro
-            Log::error('Erro ao excluir registro do Caixa: ' . $e->getMessage());
-
-            // Redireciona para a lista de caixas com mensagem de erro
-            return redirect()
-                ->route('caixa.list') // Substitua 'caixa.list' pelo nome correto da rota
-                ->with('message', 'Erro ao excluir o registro.');
+            // 9) Em caso de erro, registra log e retorna com mensagem de erro
+            Log::error('Erro ao excluir transação: ' . $e->getMessage());
+            Flasher::addError('Erro ao excluir transação: ' . $e->getMessage());
+            return redirect()->back();
         }
-    }
-
-
-    public function destroySelected($id)
-    {
-
-        dd($id);
-
-        $file = Anexo::findOrFail($id);
-
-        // Excluir o arquivo do sistema de arquivos
-        Storage::delete($file->caminho_arquivo);
-
-        // Excluir o registro do banco de dados
-        $file->delete();
-
-        return response()->json(['success' => true]);
     }
 }

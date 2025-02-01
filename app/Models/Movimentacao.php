@@ -54,16 +54,16 @@ class Movimentacao extends Model
             $entidade->save();
         });
 
-        // Reverte saldo ao excluir uma movimentação
-        static::deleting(function ($movimentacao) {
-            $entidade = EntidadeFinanceira::find($movimentacao->entidade_id);
-            if ($movimentacao->tipo === 'entrada') {
-                $entidade->saldo_atual -= $movimentacao->valor;
-            } else {
-                $entidade->saldo_atual += $movimentacao->valor;
-            }
-            $entidade->save();
-        });
+        // // Reverte saldo ao excluir uma movimentação
+        // static::deleting(function ($movimentacao) {
+        //     $entidade = EntidadeFinanceira::find($movimentacao->entidade_id);
+        //     if ($movimentacao->tipo === 'entrada') {
+        //         $entidade->saldo_atual -= $movimentacao->valor;
+        //     } else {
+        //         $entidade->saldo_atual += $movimentacao->valor;
+        //     }
+        //     $entidade->save();
+        // });
     }
 
     public function calcularSaldoAtual()

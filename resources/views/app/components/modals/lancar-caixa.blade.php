@@ -126,8 +126,7 @@
                         <form id="kt_modal_new_target_form" class="form" action="{{ route('caixa.store') }}"
                             method="POST" enctype="multipart/form-data" novalidate>
                             @csrf <!-- Token CSRF para Laravel -->
-                            <!-- Input invisível para 'origem' -->
-                                <input type="hidden" name="origem" value="Caixa">
+
                             <!--begin::Input group-->
                             <div class="row g-9 mb-8">
                                 <!--begin::Col-->
@@ -161,6 +160,7 @@
                                     <!--end::Input-->
                                 </div>
                                 <!--end::Col-->
+                                <!--begin::Col-->
                                 <div class="col-md-2 fv-row">
                                     <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
                                         <span class="required">Entidade</span>
@@ -176,6 +176,7 @@
                                         <div class="text-danger">{{ $message }}</div>
                                     @enderror
                                 </div>
+                                <!--end::Col-->
                                 <!--begin::Col-->
                                 <div class="col-md-5 fv-row">
                                     <!--begin::Label-->
