@@ -34,7 +34,7 @@ return new class extends Migration
             // Índices e chaves estrangeiras
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('entidade_id')->references('id')->on('entidades_financeiras')->onDelete('cascade');
-            $table->foreign('lancamento_padrao_id')->references('id')->on('lancamento_padraos')->onDelete('set null');
+            $table->foreignId('lancamento_padrao_id')->nullable()->constrained('lancamento_padraos')->onDelete('set null');
             $table->foreign('movimentacao_id')->references('id')->on('movimentacoes')->onDelete('cascade');
 
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
