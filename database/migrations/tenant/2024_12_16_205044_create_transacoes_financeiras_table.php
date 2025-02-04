@@ -19,7 +19,7 @@ return new class extends Migration
             $table->enum('tipo', ['entrada', 'saida']);
             $table->decimal('valor', 15, 2);
             $table->string('descricao', 255)->nullable();
-            $table->foreign('lancamento_padrao_id')->references('id')->on('lancamento_padraos')->onDelete('set null');
+            $table->foreignId('lancamento_padrao_id')->nullable()->constrained('lancamento_padraos')->onDelete('set null');
             $table->unsignedBigInteger('movimentacao_id')->nullable(); // Relaciona com `movimentacoes`
             $table->unsignedBigInteger('centro')->nullable();
             $table->string('tipo_documento', 50)->nullable();
@@ -34,6 +34,7 @@ return new class extends Migration
             // Índices e chaves estrangeiras
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('cascade');
             $table->foreign('entidade_id')->references('id')->on('entidades_financeiras')->onDelete('cascade');
+
             $table->foreign('movimentacao_id')->references('id')->on('movimentacoes')->onDelete('cascade');
 
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
