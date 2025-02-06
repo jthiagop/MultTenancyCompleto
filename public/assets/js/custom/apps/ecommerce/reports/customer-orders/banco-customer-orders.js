@@ -29,7 +29,7 @@ var KTAppEcommerceReportCustomerOrders = function () {
     var initDaterangepicker = () => {
         var start = moment().subtract(29, "days");
         var end = moment();
-        var input = $("#kt_ecommerce_report_customer_orders_daterangepicker");
+        var input = $("#kt_ecommerce_report_shipping_daterangepicker");
 
         function cb(start, end) {
             input.html(start.format("MMMM D, YYYY") + " - " + end.format("MMMM D, YYYY"));
@@ -59,7 +59,7 @@ var KTAppEcommerceReportCustomerOrders = function () {
             if (value === 'all') {
                 value = '';
             }
-            datatable.column(2).search(value).draw();
+            datatable.column(5).search(value).draw();
         });
     }
 

@@ -97,17 +97,17 @@ var initDaterangepicker = function () {
         $.fn.dataTable.ext.search.pop();
     }
 
-    // Handle status filter dropdown
+    // Filtra pelo status
     var handleStatusFilter = () => {
-        const filterStatus = document.querySelector('[data-kt-ecommerce-order-filter="status"]');
-        $(filterStatus).on('change', e => {
-            let value = e.target.value;
-            if (value === 'all') {
-                value = '';
+        const filtroStatus = document.querySelector('[data-kt-ecommerce-order-filter="status"]');
+        $(filtroStatus).on('change', e => {
+            let valor = e.target.value;
+            if (valor === 'all') {
+                valor = ''; // Limpa o filtro para mostrar todos os resultados
             }
-            datatable.column(4).search(value).draw();
+            datatable.column(5).search(valor).draw(); // A coluna "Tipo" é a 5ª na tabela, então o índice é 4
         });
-    }
+    };
 
     // Hook export buttons
     var exportButtons = () => {

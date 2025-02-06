@@ -123,7 +123,7 @@
                                                         <a href="#"
                                                             class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">Busca
                                                             de
-                                                            movimentação bancária</a>
+                                                            Movimentação Bancária</a>
                                                         {{-- <span class="badge badge-light-success me-auto">Ativado</span> --}}
                                                     </div>
                                                     <!--end::Status-->
@@ -404,8 +404,14 @@
                                             <!--begin::Title-->
                                             <h4 class="card-title d-flex align-items-start flex-column">
                                                 <span class="card-label fw-bold text-gray-800">Lista de Bancos</span>
-                                                <span class="text-gray-400 mt-1 fw-bold fs-7">Exibindo
-                                                    {{ count($entidadesBanco) }} bancos</span>
+                                                <span class="text-gray-400 mt-1 fw-bold fs-7">
+                                                    Exibindo {{ count($entidadesBanco) }}
+                                                    @if(count($entidadesBanco) == 1)
+                                                        banco
+                                                    @else
+                                                        bancos
+                                                    @endif
+                                                </span>
                                             </h4>
                                             <!--end::Title-->
                                             <!--begin::Toolbar-->
@@ -439,7 +445,7 @@
                                                             <!--begin::Symbol-->
                                                             <div class="symbol symbol-70px symbol-circle me-5">
                                                                 <span class="symbol-label bg-light-primary">
-                                                                    <!-- Custom Icon based on the bank -->
+                                                                    <!-- Exibir o Icone do Banco -->
                                                                     <span
                                                                         class="svg-icon svg-icon-3x svg-icon-primary">
                                                                         <!-- You can add a custom icon or keep it as is -->
@@ -459,7 +465,8 @@
                                                             <div class="m-0">
                                                                 <!--begin::Subtitle-->
                                                                 <h4 class="fw-bold text-gray-800 mb-3">
-                                                                    {{ $entidade->nome }}</h4>
+                                                                    {{ $entidade->nome }} <span
+                                                                    class="badge badge-info fs-base">{{ $entidade->agencia }}</span></h4>
                                                                 <!--end::Subtitle-->
 
                                                                 <!--begin::Items-->
@@ -557,7 +564,6 @@
 <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <script src="/assets/js/custom/utilities/modals/financeiro/moduloAnexos.js"></script>
-<script src="/assets/js/custom/apps/ecommerce/reports/customer-orders/banco-customer-orders.js"></script>
 <script src="/assets/js/custom/utilities/modals/financeiro/new-banco.js"></script>
 
 <script src="/assets/plugins/custom/formrepeater/formrepeater.bundle.js"></script>
@@ -576,13 +582,7 @@
 <!--end::Javascript-->
 
 <!-- jQuery -->
-<!-- Bootstrap Bundle (includes Popper) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<!-- DataTables -->
-<!-- Moment.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
-<!-- DateRangePicker -->
-<script src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+
 <!-- Custom Script -->
 <script src="{{ asset('js/custom_script.js') }}"></script>
 

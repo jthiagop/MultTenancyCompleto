@@ -65,7 +65,6 @@ Route::middleware([
     // Rota para a página de login
     Route::get('/', function () {
         return view('app.auth.login');
-
     });
 
     // Rota para o dashboard, acessível apenas por usuários autenticados e verificados
@@ -167,23 +166,25 @@ Route::middleware([
 
             //Grupo de Relatorios
             Route::prefix('relatorios')->group(function () {
-            Route::get('/prestacao-de-contas', [PrestacaoDeContaController::class, 'index'])->name('relatorios.prestacao.de.contas');
+                Route::get('/prestacao-de-contas', [PrestacaoDeContaController::class, 'index'])
+                    ->name('relatorios.prestacao.de.contas');
+                // web.php
+                Route::get('/prestacao-de-contas/pdf', [PrestacaoDeContaController::class, 'gerarPdf'])
+                    ->name('relatorios.prestacao.de.contas.gerar');
 
-            Route::resource('fieis', FielController::class);
+                Route::resource('fieis', FielController::class);
 
-            Route::resource('entidades', EntidadeFinanceiraController::class);
-            Route::post('entidades/{id}/movimentacao', [EntidadeFinanceiraController::class, 'addMovimentacao'])->name('entidades.movimentacao');
-
-
-            Route::resource('car_insurance', CarInsuranceController::class);
-            // Rota para marcar veículo como vendido
-            Route::post('car_insurance/{id}/sell', [CarInsuranceController::class, 'sell'])->name('car_insurance.sell');
-
-            Route::resource('transacoes-financeiras', TransacaoFinanceiraController::class);
-            // Rota que retorna dados em JSON para o DataTables
-            Route::get('/transacoes/data', [TransacaoFinanceiraController::class, 'getData'])->name('transacoes.data');
+                Route::resource('entidades', EntidadeFinanceiraController::class);
+                Route::post('entidades/{id}/movimentacao', [EntidadeFinanceiraController::class, 'addMovimentacao'])->name('entidades.movimentacao');
 
 
+                Route::resource('car_insurance', CarInsuranceController::class);
+                // Rota para marcar veículo como vendido
+                Route::post('car_insurance/{id}/sell', [CarInsuranceController::class, 'sell'])->name('car_insurance.sell');
+
+                Route::resource('transacoes-financeiras', TransacaoFinanceiraController::class);
+                // Rota que retorna dados em JSON para o DataTables
+                Route::get('/transacoes/data', [TransacaoFinanceiraController::class, 'getData'])->name('transacoes.data');
             });
         });
     });

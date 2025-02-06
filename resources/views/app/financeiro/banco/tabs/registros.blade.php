@@ -46,19 +46,23 @@
                 <!--end::Card title-->
                 <!--begin::Card toolbar-->
                 <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
+                    <!--begin::Daterangepicker-->
+                    <input class="form-control form-control-solid w-100 mw-250px" placeholder="Pick date range"
+                        id="kt_ecommerce_report_shipping_daterangepicker" />
+
+                    <!--end::Daterangepicker-->
                     <!--begin::Filter-->
                     <div class="w-150px">
                         <!--begin::Select2-->
-                        <select class="form-select form-select-solid" data-control="select2" data-hide-search="true"
-                            data-placeholder="Status" data-kt-ecommerce-order-filter="status">
-                            <option></option>
-                            <option value="all">Todos</option>
-                            <option value="entrada">Entrada</option>
-                            <option value="saida">Saída</option>
-                            <option value="Pending">Pending</option>
-                            <option value="Cancelled">Cancelled</option>
-                        </select>
-                        <!--end::Select2-->
+                        <select class="form-select form-select-solid" data-control="select2"
+                        data-hide-search="true" data-placeholder="Status"
+                        data-kt-ecommerce-order-filter="status">
+                        <option></option>
+                        <option value="all">Todos</option>
+                        <option value="entrada">entrada</option>
+                        <option value="saida">Saída</option>
+                    </select>
+                    <!--end::Select2-->
                     </div>
                     <!--end::Filter-->
                     <!--begin::Export dropdown-->
@@ -109,132 +113,139 @@
             <div class="card-body pt-0">
                 <!--begin::Table-->
                 <!--begin::Table-->
-                <table class="table align-middle table-row-dashed fs-6 gy-2"
-                    id="kt_ecommerce_report_customer_orders_table">
-                    <thead>
-                        <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
-                            <th class="min-w-75px">ID</th>
-                            <th class="min-w-100px">Data</th>
-                            <th class="min-w-150px">Tipo Documento</th>
-                            <th class="min-w-100px">NF</th>
-                            <th class="min-w-250px">Descrição</th>
-                            <th class="min-w-125px">Tipo</th>
-                            <th class="min-w-125px">Valor</th>
-                            <th class="min-w-75px">Origem</th>
-                            <th class="min-w-70px">Anexos</th>
-                            <th class="text-end min-w-50px">Ações</th>
-                        </tr>
-                    </thead>
-                    <tbody class="fw-semibold text-gray-800">
-                        @foreach ($transacoes as $transacao)
-                            <tr>
-                                <td>{{ $transacao->id }}</td>
-                                <td>{{ \Carbon\Carbon::parse($transacao->data_competencia)->format('d/m/y') }}</td>
-                                <td>{{ $transacao->tipo_documento }}</td>
-                                <td>
-                                    {!! $transacao->comprovacao_fiscal
-                                        ? '<i class="fas fa-check-circle text-success" title="Comprovação Fiscal"></i>'
-                                        : '<i class="bi bi-x-circle-fill text-danger" title="Sem Comprovação Fiscal"></i>' !!}
-                                </td>
-                                <td>{{ optional($transacao->lancamentoPadrao)->description }}</td>
-                                <td>
-                                    <div
-                                        class="badge fw-bold {{ $transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger' }}">
-                                        {{ $transacao->tipo }}
-                                    </div>
-                                </td>
-                                <td>R$ {{ number_format($transacao->valor, 2, ',', '.') }}</td>
-                                <td class="text-center">{{ $transacao->origem }}</td>
-                                <td class="text-center">
-                                    <!--begin::Anexos-->
-                                    <div class="symbol-group symbol-hover fs-8">
-                                        @php
-                                            $anexos = $transacao->modulos_anexos->take(3); // Exibir até 5 anexos
-                                            $remainingAnexos = $transacao->modulos_anexos->count() - 3; // Contar anexos extras
-                                            $icons = [
-                                                'pdf' => [
-                                                    'icon' => 'bi-file-earmark-pdf-fill',
-                                                    'color' => 'text-danger',
-                                                ],
-                                                'jpg' => [
-                                                    'icon' => 'bi-file-earmark-image-fill',
-                                                    'color' => 'text-warning',
-                                                ],
-                                                'jpeg' => [
-                                                    'icon' => 'bi-file-earmark-image-fill',
-                                                    'color' => 'text-primary',
-                                                ],
-                                                'png' => [
-                                                    'icon' => 'bi-file-earmark-image-fill',
-                                                    'color' => 'text-warning',
-                                                ],
-                                                'doc' => [
-                                                    'icon' => 'bi-file-earmark-word-fill',
-                                                    'color' => 'text-info',
-                                                ],
-                                                'docx' => [
-                                                    'icon' => 'bi-file-earmark-word-fill',
-                                                    'color' => 'text-info',
-                                                ],
-                                                'xls' => [
-                                                    'icon' => 'bi-file-earmark-spreadsheet-fill',
-                                                    'color' => 'text-warning',
-                                                ],
-                                                'xlsx' => [
-                                                    'icon' => 'bi-file-earmark-spreadsheet-fill',
-                                                    'color' => 'text-warning',
-                                                ],
-                                                'txt' => [
-                                                    'icon' => 'bi-file-earmark-text-fill',
-                                                    'color' => 'text-muted',
-                                                ],
-                                            ];
-                                            $defaultIcon = [
-                                                'icon' => 'bi-file-earmark-fill',
-                                                'color' => 'text-secondary',
-                                            ];
-                                        @endphp
-
-                                        <!-- Mostrar até 5 anexos -->
-                                        @foreach ($anexos as $anexo)
-                                            @php
-                                                $extension = pathinfo($anexo->nome_arquivo ?? '', PATHINFO_EXTENSION);
-                                                $iconData = $icons[strtolower($extension)] ?? $defaultIcon;
-                                            @endphp
-                                            <div class="symbol symbol-30px symbol-circle bg-light-primary text-primary d-flex justify-content-center align-items-center"
-                                                data-bs-toggle="tooltip" title="{{ $anexo->nome_arquivo }}">
-                                                <a href="{{ route('file', ['path' => $anexo->caminho_arquivo]) }}"
-                                                    target="_blank" class="text-decoration-none">
-                                                    <i
-                                                        class="bi {{ $iconData['icon'] }} {{ $iconData['color'] }} fs-3"></i>
-                                                </a>
+                            <!--begin::Table-->
+                            <table class="table align-middle table-row-dashed fs-6 gy-2"
+                                id="kt_ecommerce_report_shipping_table">
+                                <!--begin::Table head-->
+                                <thead>
+                                    <!--begin::Table row-->
+                                    <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                                        <th class="min-w-75px">ID</th>
+                                        <th class="min-w-100px">Data</th>
+                                        <th class="min-w-150px">Tipo Documento</th>
+                                        <th class="min-w-100px">NF</th>
+                                        <th class="min-w-250px">Descrição</th>
+                                        <th class="min-w-125px">Tipo</th>
+                                        <th class="min-w-125px">Valor</th>
+                                        <th class="min-w-75px">Origem</th>
+                                        <th class="min-w-70px">Anexos</th>
+                                        <th class="text-end min-w-50px">Ações</th>
+                                    </tr>
+                                    <!--end::Table row-->
+                                </thead>
+                                <!--end::Table head-->
+                                <!--begin::Table body-->
+                                <tbody class="fw-semibold text-gray-600">
+                                    <!--begin::Table row-->
+                                    @foreach ($transacoes as $transacao)
+                                    <tr>
+                                        <td>{{ $transacao->id }}</td>
+                                        <td>{{ \Carbon\Carbon::parse($transacao->data_competencia)->format('d/m/y') }}</td>
+                                        <td>{{ $transacao->tipo_documento }}</td>
+                                        <td>
+                                            {!! $transacao->comprovacao_fiscal
+                                                ? '<i class="fas fa-check-circle text-success" title="Comprovação Fiscal"></i>'
+                                                : '<i class="bi bi-x-circle-fill text-danger" title="Sem Comprovação Fiscal"></i>' !!}
+                                        </td>
+                                        <td>{{ optional($transacao->lancamentoPadrao)->description }}</td>
+                                        <td>
+                                            <div
+                                                class="badge fw-bold {{ $transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger' }}">
+                                                {{ $transacao->tipo }}
                                             </div>
-                                        @endforeach
+                                        </td>
+                                        <td>R$ {{ number_format($transacao->valor, 2, ',', '.') }}</td>
+                                        <td class="text-center">{{ $transacao->origem }}</td>
+                                        <td class="text-center">
+                                            <!--begin::Anexos-->
+                                            <div class="symbol-group symbol-hover fs-8">
+                                                @php
+                                                    $anexos = $transacao->modulos_anexos->take(3); // Exibir até 5 anexos
+                                                    $remainingAnexos = $transacao->modulos_anexos->count() - 3; // Contar anexos extras
+                                                    $icons = [
+                                                        'pdf' => [
+                                                            'icon' => 'bi-file-earmark-pdf-fill',
+                                                            'color' => 'text-danger',
+                                                        ],
+                                                        'jpg' => [
+                                                            'icon' => 'bi-file-earmark-image-fill',
+                                                            'color' => 'text-warning',
+                                                        ],
+                                                        'jpeg' => [
+                                                            'icon' => 'bi-file-earmark-image-fill',
+                                                            'color' => 'text-primary',
+                                                        ],
+                                                        'png' => [
+                                                            'icon' => 'bi-file-earmark-image-fill',
+                                                            'color' => 'text-warning',
+                                                        ],
+                                                        'doc' => [
+                                                            'icon' => 'bi-file-earmark-word-fill',
+                                                            'color' => 'text-info',
+                                                        ],
+                                                        'docx' => [
+                                                            'icon' => 'bi-file-earmark-word-fill',
+                                                            'color' => 'text-info',
+                                                        ],
+                                                        'xls' => [
+                                                            'icon' => 'bi-file-earmark-spreadsheet-fill',
+                                                            'color' => 'text-warning',
+                                                        ],
+                                                        'xlsx' => [
+                                                            'icon' => 'bi-file-earmark-spreadsheet-fill',
+                                                            'color' => 'text-warning',
+                                                        ],
+                                                        'txt' => [
+                                                            'icon' => 'bi-file-earmark-text-fill',
+                                                            'color' => 'text-muted',
+                                                        ],
+                                                    ];
+                                                    $defaultIcon = [
+                                                        'icon' => 'bi-file-earmark-fill',
+                                                        'color' => 'text-secondary',
+                                                    ];
+                                                @endphp
 
-                                        <!-- Mostrar contador de anexos extras, se houver -->
-                                        @if ($remainingAnexos > 0)
-                                            <div class="symbol symbol-25px symbol-circle" data-bs-toggle="tooltip"
-                                                title="Mais {{ $remainingAnexos }} anexos">
-                                                <a href="{{ route('banco.edit', $transacao->id) }}">
-                                                    <span class="symbol-label fs-8 fw-bold bg-light text-gray-800">
-                                                        +{{ $remainingAnexos }}
-                                                    </span>
-                                                </a>
-                                            </div>
-                                        @endif
+                                                <!-- Mostrar até 5 anexos -->
+                                                @foreach ($anexos as $anexo)
+                                                    @php
+                                                        $extension = pathinfo($anexo->nome_arquivo ?? '', PATHINFO_EXTENSION);
+                                                        $iconData = $icons[strtolower($extension)] ?? $defaultIcon;
+                                                    @endphp
+                                                    <div class="symbol symbol-30px symbol-circle bg-light-primary text-primary d-flex justify-content-center align-items-center"
+                                                        data-bs-toggle="tooltip" title="{{ $anexo->nome_arquivo }}">
+                                                        <a href="{{ route('file', ['path' => $anexo->caminho_arquivo]) }}"
+                                                            target="_blank" class="text-decoration-none">
+                                                            <i
+                                                                class="bi {{ $iconData['icon'] }} {{ $iconData['color'] }} fs-3"></i>
+                                                        </a>
+                                                    </div>
+                                                @endforeach
 
-                                        <!-- Exibir mensagem se não houver anexos -->
-                                        @if ($transacao->modulos_anexos->isEmpty())
-                                            <div class="symbol symbol-25px symbol-circle text-center"
-                                                data-bs-toggle="tooltip" title="Nenhum anexo disponível">
-                                                <span class="symbol-label fs-8 fw-bold bg-light text-gray-800">
-                                                    {{ 0 }}
-                                                </span>
+                                                <!-- Mostrar contador de anexos extras, se houver -->
+                                                @if ($remainingAnexos > 0)
+                                                    <div class="symbol symbol-25px symbol-circle" data-bs-toggle="tooltip"
+                                                        title="Mais {{ $remainingAnexos }} anexos">
+                                                        <a href="{{ route('banco.edit', $transacao->id) }}">
+                                                            <span class="symbol-label fs-8 fw-bold bg-light text-gray-800">
+                                                                +{{ $remainingAnexos }}
+                                                            </span>
+                                                        </a>
+                                                    </div>
+                                                @endif
+
+                                                <!-- Exibir mensagem se não houver anexos -->
+                                                @if ($transacao->modulos_anexos->isEmpty())
+                                                    <div class="symbol symbol-25px symbol-circle text-center"
+                                                        data-bs-toggle="tooltip" title="Nenhum anexo disponível">
+                                                        <span class="symbol-label fs-8 fw-bold bg-light text-gray-800">
+                                                            {{ 0 }}
+                                                        </span>
+                                                    </div>
+                                                @endif
                                             </div>
-                                        @endif
-                                    </div>
-                                    <!--end::Anexos-->
-                                </td>
+                                            <!--end::Anexos-->
+                                        </td>
 
                                 <!--begin::Action=-->
                                 <td class="text-end">
@@ -259,10 +270,13 @@
                                         <!--end::Button-->
                                 </td>
                                 <!--end::Action=-->
-                            </tr>
-                        @endforeach
-                    </tbody>
-                </table>
+                                    </tr>
+                                @endforeach
+                                    <!--end::Table row-->
+                                </tbody>
+                                <!--end::Table body-->
+                            </table>
+                            <!--end::Table-->
 
                 <!--end::Table-->
             </div>

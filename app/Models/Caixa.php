@@ -59,9 +59,9 @@ class Caixa extends Model implements Auditable
     }
 
     public function movimentacao()
-{
-    return $this->belongsTo(Movimentacao::class, 'movimentacao_id');
-}
+    {
+        return $this->belongsTo(Movimentacao::class, 'movimentacao_id');
+    }
 
 
 
@@ -109,13 +109,15 @@ class Caixa extends Model implements Auditable
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
 
-        $entradas = DB::table('caixas')
-            ->join('company_user', 'caixas.company_id', '=', 'company_user.company_id')
+        $entradas = DB::table('transacoes_financeiras')
+            ->join('company_user', 'transacoes_financeiras.company_id', '=', 'company_user.company_id')
             ->where('company_user.user_id', $userId)
-            ->where('caixas.tipo', 'entrada') // Filtra apenas as entradas
-            ->whereYear('caixas.data_competencia', $currentYear) // Filtra pelo ano vigente
-            ->whereMonth('caixas.data_competencia', $currentMonth) // Filtra pelo mês vigente
-            ->select('caixas.*') // Selecione todas as colunas da tabela 'caixa'
+            ->where('transacoes_financeiras.tipo', 'entrada') // Filtra apenas as saídas (S para saída, E para entrada)
+            ->where('transacoes_financeiras.origem', 'Caixa') // Filtra apenas as saídas (S para saída, E para entrada)
+            ->whereYear('transacoes_financeiras.data_competencia', $currentYear) // Filtra pelo ano vigente
+            ->whereMonth('transacoes_financeiras.data_competencia', $currentMonth) // Filtra pelo mês vigente
+            ->whereNull('transacoes_financeiras.deleted_at') // Ignora registros excluídos (Soft Delete)
+            ->select('transacoes_financeiras.*', 'transacoes_financeiras.origem')
             ->get();
 
         $somaEntradas = $entradas->sum('valor'); //soma os valores de entrada
@@ -131,13 +133,15 @@ class Caixa extends Model implements Auditable
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
 
-        $saidas = DB::table('caixas')
-            ->join('company_user', 'caixas.company_id', '=', 'company_user.company_id')
+        $saidas = DB::table('transacoes_financeiras')
+            ->join('company_user', 'transacoes_financeiras.company_id', '=', 'company_user.company_id')
             ->where('company_user.user_id', $userId)
-            ->where('caixas.tipo', 'saida') // Filtra apenas as entradas
-            ->whereYear('caixas.data_competencia', $currentYear) // Filtra pelo ano vigente
-            ->whereMonth('caixas.data_competencia', $currentMonth) // Filtra pelo mês vigente
-            ->select('caixas.*') // Selecione todas as colunas da tabela 'caixa'
+            ->where('transacoes_financeiras.tipo', 'saida') // Filtra apenas as saídas (S para saída, E para entrada)
+            ->where('transacoes_financeiras.origem', 'Caixa') // Filtra apenas as saídas (S para saída, E para entrada)
+            ->whereYear('transacoes_financeiras.data_competencia', $currentYear) // Filtra pelo ano vigente
+            ->whereMonth('transacoes_financeiras.data_competencia', $currentMonth) // Filtra pelo mês vigente
+            ->whereNull('transacoes_financeiras.deleted_at') // Ignora registros excluídos (Soft Delete)
+            ->select('transacoes_financeiras.*', 'transacoes_financeiras.origem')
             ->get();
 
         $SomaSaidas = $saidas->sum('valor'); //soma os valores de entrada
@@ -171,6 +175,4 @@ class Caixa extends Model implements Auditable
         return ([$somaEntradas, $somaSaida]); // Retorna o valor para o controlador
 
     }
-
-
 }

@@ -79,7 +79,7 @@
                                             <!--begin::Status-->
                                             <div class="d-flex align-items-center mb-1">
                                                 <a href="#"
-                                                    class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">movimentações do caixa</a>
+                                                    class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">Movimentações do caixa</a>
                                                 <span class="badge badge-light-success me-auto">Ativado</span>
                                             </div>
                                             <!--end::Status-->
@@ -93,8 +93,7 @@
                                         <div class="d-flex mb-4 align-items-center">
                                             <a href="{{ route('caixa.index') }}"
                                                 class="btn btn-sm btn-bg-light btn-active-color-primary me-3">Financeiro</a>
-                                            <a href="" data-bs-toggle="modal"
-                                                data-bs-target="#kt_modal_new_target"
+                                            <a href="{{ route('caixa.list', ['tab' => 'lancamento']) }}"
                                                 class="btn btn-sm btn-success me-3">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                     fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
@@ -214,9 +213,7 @@
                                                 class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                                                 <!--begin::Number-->
                                                 <div class="d-flex align-items-center">
-                                                    <div class="fs-4 fw-bold" data-kt-countup="true"
-                                                        data-kt-countup-value="{{ $total }}"
-                                                        data-kt-countup-prefix="R$ ">0</div>
+                                                    <div class="fs-4 fw-bold">R$ {{ number_format($total, 2, ',', '.') }}</div>
                                                 </div>
                                                 <!--end::Number-->
                                                 <!--begin::Label-->
@@ -242,9 +239,7 @@
                                                         </svg>
                                                     </span>
                                                     <!--end::Svg Icon-->
-                                                    <div class="fs-4 fw-bold" data-kt-countup="true"
-                                                        data-kt-countup-value="{{ $valorSaidas }} "data-kt-countup-prefix="R$ ">
-                                                        0</div>
+                                                    <div class="fs-4 fw-bold">R$ {{ number_format($valorSaidas, 2, ',', '.') }}</div>
                                                 </div>
                                                 <!--end::Number-->
                                                 <!--begin::Label-->
@@ -270,9 +265,7 @@
                                                         </svg>
                                                     </span>
                                                     <!--end::Svg Icon-->
-                                                    <div class="fs-4 fw-bold" data-kt-countup="true"
-                                                        data-kt-countup-value="{{ $valorEntrada }}"
-                                                        data-kt-countup-prefix="$">0</div>
+                                                        <div class="fs-4 fw-bold">R$ {{ number_format($valorEntrada, 2, ',', '.') }}</div>
                                                 </div>
                                                 <!--end::Number-->
                                                 <!--begin::Label-->
@@ -403,7 +396,6 @@
         </div>
         <!--end::Content wrapper-->
 
-        @include('app.components.modals.lancar-caixa')
 
 </x-tenant-app-layout>
 

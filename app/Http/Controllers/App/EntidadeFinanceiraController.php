@@ -79,6 +79,7 @@ class EntidadeFinanceiraController extends Controller
         $validatedData['created_by_name']  = Auth::user()->name;
         $validatedData['updated_by']       = Auth::id();
         $validatedData['updated_by_name']  = Auth::user()->name;
+
         try {
             // 6) Criar a entidade no banco
             $entidade = EntidadeFinanceira::create($validatedData);

@@ -123,6 +123,8 @@ class CaixaController extends Controller
         // Obter informações da empresa associada ao usuário (ajustando para relacionamento)
         $company = $user->company;
 
+        $entidadesBanco = Caixa::getEntidadesBanco();
+
         return view('app.financeiro.caixa.list', [
             'transacoes' => $transacoes,
             'valorEntrada' => $valorEntrada,
@@ -211,6 +213,40 @@ class CaixaController extends Controller
 
         // Processa anexos, se existirem
         $this->processarAnexos($request, $caixa);
+
+            // 5) Se for um "Deposito Bancário", faça algo adicional
+    //    Ex: buscar o ID que corresponde a “Deposito Bancário” antes (igual você faz na Request)
+    $idDeposito = LancamentoPadrao::where('description', 'Deposito Bancário')->value('id');
+
+    if (!empty($validatedData['lancamento_padrao_id'])
+        && $validatedData['lancamento_padrao_id'] == $idDeposito
+        && !empty($validatedData['entidade_banco_id'])) {
+
+        // Exemplo 5.1) Atualizar a própria Movimentação com o banco escolhido
+        // (caso tenha coluna 'entidade_banco_id' ou semelhante)
+        $movimentacao->update([
+            'entidade_banco_id' => $validatedData['entidade_banco_id']
+        ]);
+
+        // Exemplo 5.2) Ou inserir em outra tabela, como uma "movimentacoes_bancarias",
+        // se esse for seu modelo/relacionamento
+        // MovimentacaoBancaria::create([
+        //    'movimentacao_id'   => $movimentacao->id,
+        //    'entidade_banco_id' => $validatedData['entidade_banco_id'],
+        //    'valor'             => $validatedData['valor'],
+        //    'data'              => $validatedData['data_competencia'],
+        //    // etc...
+        // ]);
+
+        // Exemplo 5.3) Se for preciso criar um novo registro em `entidades_financeiras`
+        // (mas normalmente você só escolheria um existente).
+        // EntidadeFinanceira::create([
+        //   'nome' => 'Banco X',
+        //   'tipo' => 'banco',
+        //   ...
+        // ]);
+
+    }
 
         // Adiciona mensagem de sucesso
         Flasher::addSuccess('Lançamento criado com sucesso!');

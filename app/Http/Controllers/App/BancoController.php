@@ -84,6 +84,15 @@ class BancoController extends Controller
         $IfBancos = TransacaoFinanceira::where('company_id', $companyId)
             ->get();
 
+        // Exemplo no Controller
+        $bancosIcones = [
+            'Bradesco' => 'bradesco.svg',
+            'Itaú' => 'itau.svg',
+            'Santander' => 'santander.svg',
+            'Caixa' => 'caixa.svg',
+            'Banco Nubank' => 'nubank.svg',
+            // ...
+        ];
 
         return view('app.financeiro.banco.list', [
             'bancos' => $bancos,
@@ -460,7 +469,6 @@ class BancoController extends Controller
             // 8) Mensagem de sucesso e redirecionamento
             Flasher::addSuccess('Transação excluída com sucesso!');
             return redirect()->route('banco.list');
-
         } catch (\Exception $e) {
             // 9) Em caso de erro, registra log e retorna com mensagem de erro
             Log::error('Erro ao excluir transação: ' . $e->getMessage());
@@ -468,5 +476,4 @@ class BancoController extends Controller
             return redirect()->back();
         }
     }
-
 }

@@ -7,10 +7,12 @@ use App\Models\EntidadeFinanceira;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use App\Models\User;
+use Auth;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-
+use Illuminate\Support\Facades\DB;
 
 class TransacaoFinanceira extends Model
 {
@@ -74,4 +76,33 @@ class TransacaoFinanceira extends Model
         {
             return $this->hasMany(ModulosAnexo::class, 'anexavel_id');
         }
+
+        static public function getChartSaida()
+{
+    $userId = Auth::user()->id; // Recupere o ID do usuário logado
+    $currentYear = Carbon::now()->year;
+    $currentMonth = Carbon::now()->month;
+
+    // Consulta principal na tabela transacoes_financeiras
+    $saidas = DB::table('transacoes_financeiras')
+        ->join('company_user', 'transacoes_financeiras.company_id', '=', 'company_user.company_id')
+        ->where('company_user.user_id', $userId)
+        ->where('transacoes_financeiras.tipo', 'S') // Filtra apenas as saídas (S para saída, E para entrada)
+        ->whereYear('transacoes_financeiras.data_competencia', $currentYear) // Filtra pelo ano vigente
+        ->whereMonth('transacoes_financeiras.data_competencia', $currentMonth) // Filtra pelo mês vigente
+        ->whereNull('transacoes_financeiras.deleted_at') // Ignora registros excluídos (Soft Delete)
+        ->select('transacoes_financeiras.*', 'transacoes_financeiras.origem')
+        ->get();
+
+    // Separar entre Banco e Caixa
+    $bancoSaidas = $saidas->where('origem', 'Banco')->sum('valor');
+    $caixaSaidas = $saidas->where('origem', 'Caixa')->sum('valor');
+
+    // Retornar os valores em um array associativo
+    return [
+        'banco' => $bancoSaidas,
+        'caixa' => $caixaSaidas,
+        'total' => $bancoSaidas + $caixaSaidas
+    ];
+}
     }

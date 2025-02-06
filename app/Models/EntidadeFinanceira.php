@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Auth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
@@ -16,6 +17,8 @@ class EntidadeFinanceira extends Model
     protected $fillable = [
         'nome',
         'tipo',
+        'agencia',
+        'conta',
         'saldo_inicial',
         'saldo_atual',
         'descricao',
@@ -48,7 +51,7 @@ class EntidadeFinanceira extends Model
 
     static public function getValorTotalEntidade()
     {
-        $companyId = auth()->user()->company_id; // Recupere a empresa do usuário logado
+        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
 
         // Soma os saldos atuais das entidades financeiras do tipo 'caixa'
         return EntidadeFinanceira::where('tipo', 'caixa') // Filtra pelo tipo desejado
@@ -58,7 +61,7 @@ class EntidadeFinanceira extends Model
 
     static public function getValorTotalEntidadeBC()
     {
-        $companyId = auth()->user()->company_id; // Recupere a empresa do usuário logado
+        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
 
         // Soma os saldos atuais das entidades financeiras do tipo 'caixa'
         return EntidadeFinanceira::where('tipo', 'banco') // Filtra pelo tipo desejado
