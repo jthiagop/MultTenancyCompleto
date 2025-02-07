@@ -18,3 +18,7 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# 2) Ignorar tudo dentro de /storage
+/storage/
+

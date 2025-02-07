@@ -407,33 +407,7 @@
                                             <span class="fs-6 text-muted">Insira no máximo 250
                                                 caracteres</span>
                                         </div>
-                                        <div class="tab-pane fade" id="kt_tab_pane_2" role="tabpanel">
-                                            <input type="file" name="files[]" id="photos" />
-                                            <script>
-                                                $("#photos").kendoUpload({
-                                                    async: {
-                                                        removeUrl: "{{ url('/remove') }}",
-                                                        removeField: "path",
-                                                        withCredentials: false
-                                                    },
-                                                    multiple: true, // Permite a seleção de múltiplos arquivos
-                                                    validation: {
-                                                        allowedExtensions: ["jpg", "jpeg", "png", "pdf", "page"], // Extensões permitidas
-                                                        maxFileSize: 5242880, // Tamanho máximo do arquivo (5 MB)
-                                                        minFileSize: 1024 // Tamanho mínimo do arquivo (1 KB)
-                                                    },
-                                                    localization: {
-                                                        uploadSuccess: "Upload bem-sucedido!",
-                                                        uploadFail: "Falha no upload",
-                                                        invalidFileExtension: "Tipo de arquivo não permitido",
-                                                        invalidMaxFileSize: "O arquivo é muito grande",
-                                                        invalidMinFileSize: "O arquivo é muito pequeno",
-                                                        select: "Anexar Arquivos"
 
-                                                    }
-                                                });
-                                            </script>
-                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -469,6 +443,4 @@
     <!--end::Modal dialog-->
 </div>
 
-<script>
-    var lpsData = @json($lps);
-</script>
+

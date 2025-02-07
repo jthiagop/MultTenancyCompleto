@@ -232,7 +232,7 @@
                             </div>
                             <!--end::Input group-->
                             <!--end::Input group-->
-                            <div class="row g-9 mb-5">
+                            <div class="row g-9 mb-8 fv-row">
                                 <div class="col-md-3 fv-row">
                                     <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
                                         <span class="required">Entrada/Saída</span>
@@ -240,13 +240,16 @@
                                             title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
                                     </label>
                                     <!-- Campo Entrada/Saída -->
-                                        <select name="tipo"
-                                        id="tipo_select_banco"
+                                    <select name="tipo" id="tipo_select_banco"
                                         class="form-select form-select-solid">
                                         <option value="" disabled selected>Defina o tipo</option>
-                                        <option value="entrada" {{ old('tipo') == 'entrada' ? 'selected' : '' }}>Entrada</option>
-                                        <option value="saida"   {{ old('tipo') == 'saida' ? 'selected' : '' }}>Saída</option>
-                                        </select>
+                                        <option value="entrada" {{ old('tipo') == 'entrada' ? 'selected' : '' }}>
+                                            Entrada
+                                        </option>
+                                        <option value="saida" {{ old('tipo') == 'saida' ? 'selected' : '' }}>
+                                            Saída
+                                        </option>
+                                    </select>
                                     @error('tipo')
                                         <div class="text-danger">{{ $message }}</div>
                                     @enderror
@@ -257,6 +260,7 @@
                                     <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
                                         title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
                                     <div class="input-group">
+                                        <!-- Lançamento Padrão -->
                                         <select name="lancamento_padrao_id" id="lancamento_padrao_caixa"
                                             class="form-select form-select-solid fw-bold">
                                             <option value=""></option>
@@ -299,7 +303,7 @@
                             </div>
                             <!--begin::Input group-->
                             <!--begin::Input group-->
-                            <div class="row g-9 mb-5">
+                            <div class="row g-9 mb-8 fv-row">
                                 <!--begin::Col-->
                                 <div class="col-md-4 fv-row">
                                     <label class="required fs-6 fw-semibold mb-2">Tipo de Documento</label><i
@@ -376,16 +380,16 @@
                                     @enderror
                                 </div>
 
-                                <!-- Campo Banco de Depósito (oculto inicialmente) -->
+                                <!-- Novo campo de entrada para o banco de depósito -->
                                 <div class="col-md-4 fv-row" id="banco-deposito" style="display:none;">
                                     <label class="fs-5 fw-semibold mb-2">Banco de Depósito</label>
-                                    <select id="bancoSelect" name="entidade_banco_id"
+                                    <select id="bancoSelect" name="entidade_banco_id" aria-label="Select a Banco"
+                                        data-control="select2" data-placeholder="Escolha um banco..."
                                         class="form-select form-select-solid">
-                                        <option value="">Escolha o Banco</option>
+                                        <option value=""> Escolha o Banco </option>
                                         @foreach ($entidadesBanco as $entidade)
-                                            <option value="{{ $entidade->id }}"
-                                                {{ old('entidade_banco_id') == $entidade->id ? 'selected' : '' }}>
-                                                {{ $entidade->nome }} ({{ ucfirst($entidade->tipo) }})
+                                            <option value="{{ old($entidade->id) }}">{{ $entidade->nome }}
+                                                ({{ ucfirst($entidade->tipo) }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -507,7 +511,7 @@
         // ARRAY de lançamentos (exemplo). No seu caso, você pode injetar via Blade.
         // Aqui cada objeto contém: { id, description, type: 'entrada' ou 'saida' }
         // Exemplo:
-        // const lpsData = {!! json_encode($lps) !!};
+        const lpsData = {!! json_encode($lps) !!};
         // Certifique-se de que $lps inclui 'description' e 'type'.
         // Ou então monte manualmente se preferir.
 

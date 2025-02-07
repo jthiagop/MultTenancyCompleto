@@ -466,7 +466,7 @@
                                                                 <!--begin::Subtitle-->
                                                                 <h4 class="fw-bold text-gray-800 mb-3">
                                                                     {{ $entidade->nome }} <span
-                                                                    class="badge badge-info fs-base">{{ $entidade->agencia }}</span></h4>
+                                                                    class="badge badge-info fs-base">{{ $entidade->conta }}</span></h4>
                                                                 <!--end::Subtitle-->
 
                                                                 <!--begin::Items-->

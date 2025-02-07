@@ -34,14 +34,17 @@ class PrestacaoDeContaController extends Controller
         // 1) Capturar filtros
         $dataInicial = $request->input('data_inicial');
         $dataFinal   = $request->input('data_final');
-        $costCenter  = $request->input('cost_center_id', 'name');
+        $costCenter  = $request->input('cost_center_id');
 
         // 2) Montar query de transações
         $query = TransacaoFinanceira::query();
 
-        // Filtro por data (data_competencia)
-        if ($dataInicial && $dataFinal) {
-            $query->whereBetween('data_competencia', [$dataInicial, $dataFinal]);
+        // Filtro por data inicial e final
+        if ($dataInicial) {
+            $query->where('data_competencia', '>=', $dataInicial);
+        }
+        if ($dataFinal) {
+            $query->where('data_competencia', '<=', $dataFinal);
         }
 
         // Filtro por centro de custo
@@ -49,59 +52,52 @@ class PrestacaoDeContaController extends Controller
             $query->where('cost_center_id', $costCenter);
         }
 
-        // Você pode incluir outros filtros que julgar necessário
-
-        // 3) Obter os registros
+        // 3) Obter os registros e agrupar por 'origem'
         $transacoes = $query->orderBy('data_competencia', 'asc')->get();
+        $agrupadoPorOrigem = $transacoes->groupBy('origem');
+        // Ex.: dois grupos: "Banco" e "Caixa"
 
-        // 4) Processar/Organizar os dados (exemplo de agrupamento por conta/categoria)
-        //    Aqui você adaptaria conforme a sua necessidade.
-        $agrupadoPorConta = $transacoes->groupBy('tipo_documento'); // Exemplo: agrupar por tipo_documento
-
-        // 5) Calcular saldos e outras informações
-        //    Supondo que você vá somar entradas e saídas, você pode filtrar no collection
-        //    Este é só um exemplo simples. Você pode criar estruturas mais elaboradas.
-
+        // 4) Calcular as somas por cada origem
+        //    e também podemos calcular um total geral de entradas/saídas
         $dadosParaView = [];
-        foreach ($agrupadoPorConta as $contaDocumento => $items) {
-            // Pega entradas
-            $entradaTotal = $items->where('tipo', 'E')->sum('valor');
+        $totalGeralEntrada = 0;
+        $totalGeralSaida   = 0;
 
-            // Pega saídas
-            $saidaTotal = $items->where('tipo', 'S')->sum('valor');
+        foreach ($agrupadoPorOrigem as $origem => $items) {
+            // Somar entradas (tipo = 'E')
+            $entradaTotal = $items->where('tipo', 'entrada')->sum('valor');
 
-            // Monta um array que contenha:
-            // - nome da categoria
-            // - saldo anterior (você pode ter que buscar isso antes do período?)
-            // - lista de movimentações
-            // - total de entradas, total de saídas
+            // Somar saídas (tipo = 'S')
+            $saidaTotal   = $items->where('tipo', 'saida')->sum('valor');
 
+            // Atualiza total geral
+            $totalGeralEntrada += $entradaTotal;
+            $totalGeralSaida   += $saidaTotal;
+
+            // Guardar no array de resultados por origem
             $dadosParaView[] = [
-                'tipo_documento' => $contaDocumento,
-                'movimentacoes'  => $items,
+                // 'origem' => 'Banco' ou 'Caixa'
+                'origem'         => $origem,
+                'movimentacoes'  => $items,          // todos os registros deste grupo
                 'total_entrada'  => $entradaTotal,
-                'total_saida'    => $saidaTotal
+                'total_saida'    => $saidaTotal,
             ];
         }
 
-        // 6) Montar o PDF
-        //    Ao final, retornamos a visualização para gerar o PDF
-        //    Passamos $dadosParaView (ou outro nome) para a blade
-
+        // 5) Montar o PDF
         $pdf = Pdf::loadView('app.relatorios.financeiro.prestacao_pdf', [
-            'dados'         => $dadosParaView,
-            'dataInicial'   => $dataInicial,
-            'dataFinal'     => $dataFinal,
-            'costCenter'    => $costCenter,
+            'dados'            => $dadosParaView,
+            'dataInicial'      => $dataInicial,
+            'dataFinal'        => $dataFinal,
+            'costCenter'       => $costCenter,
+            // Passamos também os totais gerais
+            'totalGeralEntrada'=> $totalGeralEntrada,
+            'totalGeralSaida'  => $totalGeralSaida,
         ]);
 
-        // Retorna para visualização no navegador:
-        // return $pdf->stream('relatorio-prestacao-de-contas.pdf');
-
-        // Ou força o download:
         return $pdf->stream('relatorio-prestacao-de-contas.pdf');
-
     }
+
 
     /**
      * Show the form for creating a new resource.
