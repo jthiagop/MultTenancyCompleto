@@ -265,6 +265,15 @@
                                                             Gerar Recibo
                                                         </a>
                                                     </div>
+                                                    <div class="menu-item px-3">
+                                                        <form action="{{ route('bill.print', $caixa->id) }}" method="POST" class="d-inline">
+                                                            @csrf <!-- Token CSRF para segurança -->
+                                                            <button type="submit" class="menu-link px-3 icon-hover-blue bg-transparent border-0 w-100 text-start">
+                                                                <i class="bi bi-printer me-2"></i> <!-- Ícone de impressão -->
+                                                                Imprimir
+                                                            </button>
+                                                        </form>
+                                                    </div>
                                                     <!-- CSS -->
                                                     <style>
                                                         /* Quando pairar o mouse sobre o link .icon-hover-blue, o ícone dentro dele (i) ficará azul */
@@ -601,21 +610,20 @@
                                                     @forelse ($caixa->modulos_anexos as $file)
                                                         <tr>
                                                             <!-- ID -->
-                                                            <td>{{ $file->id }}</td>
-
+                                                            <td>
+                                                                {{ $file->id }}</td>
                                                             <!-- Nome -->
                                                             <td>
-                                                                <x-file-icon :file="$file->nome_arquivo" />
+                                                                <x-file-icon :file="$file->caminho_arquivo" />
                                                             </td>
-
                                                             <!-- Tamanho -->
-                                                            <td>{{ formatSizeUnits($file->tamanho_arquivo) }}</td>
-
-                                                            <!-- Última Modificação -->
-                                                            <td>{{ \Carbon\Carbon::parse($file->updated_at)->format('d M Y, g:i a') }}
+                                                            <td>
+                                                                {{ formatSizeUnits($file->tamanho_arquivo) }}</td>
+                                                                <!-- Última Modificação -->
+                                                            <td>
+                                                                {{ \Carbon\Carbon::parse($file->updated_at)->format('d M Y, g:i a') }}
                                                             </td>
-
-                                                            <!-- Ações -->
+                                                                <!-- Ações -->
                                                             <td class="text-end">
                                                                 <a href="#"
                                                                     class="btn btn-icon btn-active-light-danger w-30px h-30px"

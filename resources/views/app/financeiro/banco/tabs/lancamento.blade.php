@@ -108,7 +108,7 @@
                                             <option value="" disabled selected>Selecione o Banco</option>
                                             <!-- Placeholder configurado aqui -->
                                             @foreach ($entidadesBanco as $entidade)
-                                                <option value="{{ $entidade->id }}">{{ $entidade->nome }} ({{ ucfirst($entidade->tipo) }})</option>
+                                                <option value="{{ $entidade->id }}">{{ $entidade->nome }} ({{ ucfirst($entidade->agencia) }})</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -357,7 +357,7 @@
                                 <div class="tab-content" id="myTabContent">
                                     <div class="tab-pane fade show active" id="kt_tab_pane_1" role="tabpanel">
                                         <textarea class="form-control" name="historico_complementar" id="complemento" cmaxlength="250" rows="3"
-                                            name="target_details" placeholder="Mais detalhes sobre o foro"></textarea>
+                                            name="target_details" placeholder="Mais detalhes sobre o lançamento"></textarea>
                                         <span class="fs-6 text-muted">Insira no máximo 250
                                             caracteres</span>
                                     </div>

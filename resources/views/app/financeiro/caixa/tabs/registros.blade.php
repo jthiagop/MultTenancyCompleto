@@ -164,7 +164,7 @@
                                                         ],
                                                         'png' => [
                                                             'icon' => 'bi-file-earmark-image-fill',
-                                                            'color' => 'text-warning',
+                                                            'color' => 'text-success',
                                                         ],
                                                         'doc' => [
                                                             'icon' => 'bi-file-earmark-word-fill',

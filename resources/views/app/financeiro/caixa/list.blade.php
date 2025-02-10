@@ -93,8 +93,7 @@
                                         <div class="d-flex mb-4 align-items-center">
                                             <a href="{{ route('caixa.index') }}"
                                                 class="btn btn-sm btn-bg-light btn-active-color-primary me-3">Financeiro</a>
-                                            <a href="" data-bs-toggle="modal"
-                                                data-bs-target="#kt_modal_new_target"
+                                            <a href="{{ route('caixa.list', ['tab' => 'lancamento']) }}"
                                                 class="btn btn-sm btn-success me-3">
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                                     fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">

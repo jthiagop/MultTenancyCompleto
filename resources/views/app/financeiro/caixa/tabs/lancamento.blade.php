@@ -287,7 +287,6 @@
                                             class="form-select form-select-solid @error('cost_center_id') is-invalid @enderror"
                                             data-control="select2" data-dropdown-css-class="auto"
                                             data-placeholder="Selecione o Centro de Custo">
-                                            <option value="" disabled selected>Selecione o Centro de Custo
                                             </option>
                                             <!-- Placeholder configurado aqui -->
                                             @foreach ($centrosAtivos as $centrosAtivos)
@@ -388,8 +387,9 @@
                                         class="form-select form-select-solid">
                                         <option value=""> Escolha o Banco </option>
                                         @foreach ($entidadesBanco as $entidade)
-                                            <option value="{{ old($entidade->id) }}">{{ $entidade->nome }}
-                                                ({{ ucfirst($entidade->tipo) }})
+                                            <option value="{{ $entidade->id }}"
+                                                {{ old('entidade_banco_id') == $entidade->id ? 'selected' : '' }}>
+                                                {{ $entidade->nome }} ({{ ucfirst($entidade->agencia) }})
                                             </option>
                                         @endforeach
                                     </select>
@@ -436,7 +436,7 @@
                                     <div class="tab-content" id="myTabContent">
                                         <div class="tab-pane fade show active" id="kt_tab_pane_1" role="tabpanel">
                                             <textarea class="form-control" name="historico_complementar" id="complemento" cmaxlength="250" rows="3"
-                                                name="target_details" placeholder="Mais detalhes sobre o foro"></textarea>
+                                                name="target_details" placeholder="Mais detalhes sobre lançamento"></textarea>
                                             <span class="fs-6 text-muted">Insira no máximo 250
                                                 caracteres</span>
                                         </div>

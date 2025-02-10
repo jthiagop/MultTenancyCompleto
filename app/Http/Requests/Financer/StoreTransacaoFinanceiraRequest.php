@@ -28,6 +28,8 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
         $lancamentoPadraoDepositoId = LancamentoPadrao::where('description', 'Deposito Bancário')
             ->value('id');
 
+            //dd($_REQUEST);
+
         return [
 
             'data_competencia' => 'required',

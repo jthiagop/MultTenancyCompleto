@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\TransacaoFinanceira;
 use Auth;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
+use PDF;
 
 class PrestacaoDeContaController extends Controller
 {
@@ -85,17 +85,30 @@ class PrestacaoDeContaController extends Controller
         }
 
         // 5) Montar o PDF
-        $pdf = Pdf::loadView('app.relatorios.financeiro.prestacao_pdf', [
+        $pdf = PDF::loadView('app.relatorios.financeiro.prestacao_pdf', [
             'dados'            => $dadosParaView,
             'dataInicial'      => $dataInicial,
             'dataFinal'        => $dataFinal,
             'costCenter'       => $costCenter,
             // Passamos também os totais gerais
-            'totalGeralEntrada'=> $totalGeralEntrada,
+            'totalGeralEntrada' => $totalGeralEntrada,
             'totalGeralSaida'  => $totalGeralSaida,
         ]);
 
         return $pdf->stream('relatorio-prestacao-de-contas.pdf');
+    }
+
+    public function print(Request $request, $id)
+    {
+        // Obter o ID da empresa do usuário autenticado
+        $companyId = Auth::user()->company_id;
+
+        // Buscar o banco com o ID e verificar se pertence à empresa do usuário
+        $caixa = TransacaoFinanceira::with('modulos_anexos')
+            ->where('company_id', $companyId) // Filtrar pelo company_id do usuário
+            ->findOrFail($id);
+
+            dd($caixa);
     }
 
 

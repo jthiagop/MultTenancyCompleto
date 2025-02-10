@@ -57,10 +57,10 @@ Route::middleware([
     PreventAccessFromCentralDomains::class,
 ])->group(function () {
 
+    // Rota para exibir uma página de erro quando o tenant não é encontrado
     Route::get('/tenant-not-found', function () {
         return view('errors.tenant_not_found');
     })->name('tenant.not.found');
-
 
     // Rota para a página de login
     Route::get('/', function () {
@@ -68,15 +68,19 @@ Route::middleware([
     });
 
     // Rota para o dashboard, acessível apenas por usuários autenticados e verificados
-    Route::get('/dashboard', [DashboardController::class, 'index'])->middleware(['auth', 'verified'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware(['auth', 'verified'])
+        ->name('dashboard');
 
     // Rotas de perfil de usuário
-    Route::get('/app/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/app/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/app/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
-    Route::match(['put', 'patch'], '/app/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::prefix('/app/profile')->group(function () {
+        Route::get('/', [ProfileController::class, 'edit'])->name('profile.edit');
+        Route::patch('/', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('profile.destroy');
+        Route::match(['put', 'patch'], '/', [ProfileController::class, 'update'])->name('profile.update');
+    });
 
-
+    // Rota para servir arquivos públicos
     Route::get('/file/{path}', function ($path) {
         return response()->file(Storage::disk('public')->path($path));
     })->where('path', '.*')->name('file');
@@ -86,105 +90,88 @@ Route::middleware([
     // Grupo de rotas protegido pelo middleware 'auth' e 'ensureUserHasAccess'
     Route::middleware(['auth', 'ensureUserHasAccess'])->group(function () {
 
-
-        // Grupo de rotas acessíveis apenas para administradores
-        Route::group(['middleware' => ['role:global']], function () {
+        // Rotas acessíveis apenas para administradores globais
+        Route::middleware(['role:global'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
             Route::resource('users', UserController::class);
-
-
             Route::resource('telaLogin', TelaDeLoginController::class);
         });
 
-        // Grupo de rotas acessíveis apenas para administradores
-        Route::group(['middleware' => ['role:admin']], function () {
+        // Rotas acessíveis apenas para administradores
+        Route::middleware(['role:admin'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
-            // Rota para a função 'list'
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
-
             Route::resource('users', UserController::class);
-
             Route::resource('company', CompanyController::class);
             Route::get('/company/edit/{company}', [CompanyController::class, 'editCompany'])->name('company.editCompany');
-
             Route::post('/filter', [RebortController::class, 'generateReport']);
         });
 
-        // Grupo de rotas acessíveis apenas para administradores
-        Route::group(['middleware' => ['role:admin_user']], function () {
+        // Rotas acessíveis apenas para administradores e usuários específicos
+        Route::middleware(['role:admin_user'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
             Route::resource('lancamentoPadrao', LancamentoPadraoController::class);
             Route::resource('cadastroBancos', CadastroBancoController::class);
-
             Route::resource('users', UserController::class);
         });
 
+        // Rotas para gerenciamento de centros de custo
         Route::resource('costCenter', CostCenterController::class);
 
-
-        // Grupo de rotas acessíveis apenas para usuários com o papel 'user'
-        Route::group(['middleware' => ['role:user']], function () {
+        // Rotas acessíveis apenas para usuários comuns
+        Route::middleware(['role:user'])->group(function () {
             Route::delete('/caixas/{id}', [CaixaController::class, 'destroySelected'])->name('caixas.destroySelected');
-
             Route::resource('caixa', CaixaController::class);
             Route::resource('banco', BancoController::class);
             Route::resource('recibos', ReciboController::class);
-
             Route::resource('anexos', AnexoController::class);
             Route::resource('modulosAnexos', ModulosAnexosController::class);
             Route::resource('post', PostController::class);
-
             Route::get('/lancamento_padrao/tipo/{tipo}', [LancamentoPadraoController::class, 'getLancamentosByTipo']);
-
-
             Route::resource('patrimonio', PatrimonioController::class);
             Route::resource('escritura', EscrituraController::class);
             Route::resource('patrimonioAnexo', PatrimonioAnexoController::class);
-
             Route::get('patrimonios/imoveis', [PatrimonioController::class, 'imoveis'])->name('patrimonio.imoveis');
-
-            //Nome do Patrimonio
             Route::resource('namePatrimonio', NamePatrimonioController::class);
             Route::post('/validar-num-foro', [NamePatrimonioController::class, 'validarNumForo']);
-
-
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
             Route::get('app/financeiro/banco/list', [BancoController::class, 'list'])->name('banco.list');
-
             Route::get('/patrimonios/search', [PatrimonioController::class, 'search'])->name('patrimonios.search');
             Route::get('/patrimonios/grafico', [PatrimonioController::class, 'grafico']);
-
-
             Route::get('/report/shipping', [ReportController::class, 'shippingReport'])->name('report.shipping');
             Route::get('/report/shipping/data', [ReportController::class, 'shippingReportData'])->name('report.shipping.data');
-
             Route::resource('cemiterio', CemeteryController::class);
             Route::resource('sepultura', SepulturaController::class);
 
-            //Grupo de Relatorios
+            // Grupo de rotas para relatórios
             Route::prefix('relatorios')->group(function () {
+
                 Route::get('/prestacao-de-contas', [PrestacaoDeContaController::class, 'index'])
                     ->name('relatorios.prestacao.de.contas');
-                // web.php
+                Route::post('bill/{id}/print', [ PrestacaoDeContaController::class, 'print'])->name('bill.print');
+
                 Route::get('/prestacao-de-contas/pdf', [PrestacaoDeContaController::class, 'gerarPdf'])
                     ->name('relatorios.prestacao.de.contas.gerar');
 
                 Route::resource('fieis', FielController::class);
 
                 Route::resource('entidades', EntidadeFinanceiraController::class);
-                Route::post('entidades/{id}/movimentacao', [EntidadeFinanceiraController::class, 'addMovimentacao'])->name('entidades.movimentacao');
 
+                Route::post('entidades/{id}/movimentacao', [EntidadeFinanceiraController::class, 'addMovimentacao'])
+                    ->name('entidades.movimentacao');
 
                 Route::resource('car_insurance', CarInsuranceController::class);
-                // Rota para marcar veículo como vendido
-                Route::post('car_insurance/{id}/sell', [CarInsuranceController::class, 'sell'])->name('car_insurance.sell');
+
+                Route::post('car_insurance/{id}/sell', [CarInsuranceController::class, 'sell'])
+                    ->name('car_insurance.sell');
 
                 Route::resource('transacoes-financeiras', TransacaoFinanceiraController::class);
-                // Rota que retorna dados em JSON para o DataTables
-                Route::get('/transacoes/data', [TransacaoFinanceiraController::class, 'getData'])->name('transacoes.data');
+
+                Route::get('/transacoes/data', [TransacaoFinanceiraController::class, 'getData'])
+                    ->name('transacoes.data');
             });
         });
     });
