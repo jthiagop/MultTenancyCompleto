@@ -109,8 +109,8 @@ class CaixaController extends Controller
         $total = EntidadeFinanceira::getValorTotalEntidade();
         // Listar todos os registros de caixa para a empresa do usuário
         $transacoes = TransacaoFinanceira::where('origem', 'Caixa')
-        ->where('company_id', $companyId)
-        ->get();
+            ->where('company_id', $companyId)
+            ->get();
 
         $centrosAtivos = CostCenter::getCadastroCentroCusto();
 
@@ -181,12 +181,10 @@ class CaixaController extends Controller
             return redirect()->back()->with('error', 'Companhia não encontrada.');
         }
 
-        // Validação dos dados é automática com StoreTransacaoFinanceiraRequest, não é necessário duplicar validações aqui
-
-        // Processa os dados validados
+        // Validação automática com StoreTransacaoFinanceiraRequest
         $validatedData = $request->validated();
 
-        // Converte o valor e a data para os formatos adequados
+        // Formata valores
         $validatedData['data_competencia'] = Carbon::createFromFormat('d/m/Y', $validatedData['data_competencia'])->format('Y-m-d');
         $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
 
@@ -197,61 +195,47 @@ class CaixaController extends Controller
         $validatedData['updated_by'] = Auth::id();
         $validatedData['updated_by_name'] = Auth::user()->name;
 
-        $validatedData['updated_by_name'] = Auth::user()->name;
-
-        // 1) Chama o método movimentacao() e guarda o retorno
+        // 1) Criar movimentação no Caixa
         $movimentacao = $this->movimentacao($validatedData);
-
-        // 2) Atribui o ID retornado à chave movimentacao_id de $validatedData
         $validatedData['movimentacao_id'] = $movimentacao->id;
 
-        // 3) Cria o registro na tabela transacoes_financeiras usando o ID que acabamos de obter
+        // 2) Criar lançamento no Caixa
         $caixa = TransacaoFinanceira::create($validatedData);
 
-        // Verifica e processa lançamentos padrão
-        $this->processarLancamentoPadrao($validatedData);
+        // Busca o ID do Lançamento Padrão "Depósito Bancário"
+        $lancamentoPadraoDepositoId = LancamentoPadrao::where('description', 'Deposito Bancário')->value('id');
 
-        // Processa anexos, se existirem
+        // 3) Se o Lançamento Padrão for "Depósito Bancário", cria o lançamento no Banco
+        if (isset($validatedData['lancamento_padrao_id']) && (int) $validatedData['lancamento_padrao_id'] === (int) $lancamentoPadraoDepositoId) {
+
+            // Ajusta os dados para o Banco
+            $validatedData['origem'] = 'Banco';
+            $validatedData['tipo'] = ($validatedData['tipo'] === 'saida') ? 'entrada' : 'saida';
+
+            // Se houver um banco associado, adiciona ao campo entidade_id
+            if (!empty($validatedData['entidade_banco_id'])) {
+                $validatedData['entidade_id'] = $validatedData['entidade_banco_id'];
+            }
+
+            // Criar movimentação no Banco
+            $movimentacaoBanco = $this->movimentacao($validatedData);
+            $validatedData['movimentacao_id'] = $movimentacaoBanco->id;
+
+            // Criar lançamento no Banco
+            $banco = TransacaoFinanceira::create($validatedData);
+
+            // Processar anexos
+            $this->processarAnexos($request, $banco);
+        }
+
+        // Processar anexos do caixa
         $this->processarAnexos($request, $caixa);
 
-            // 5) Se for um "Deposito Bancário", faça algo adicional
-    //    Ex: buscar o ID que corresponde a “Deposito Bancário” antes (igual você faz na Request)
-    $idDeposito = LancamentoPadrao::where('description', 'Deposito Bancário')->value('id');
-
-    if (!empty($validatedData['lancamento_padrao_id'])
-        && $validatedData['lancamento_padrao_id'] == $idDeposito
-        && !empty($validatedData['entidade_banco_id'])) {
-
-        // Exemplo 5.1) Atualizar a própria Movimentação com o banco escolhido
-        // (caso tenha coluna 'entidade_banco_id' ou semelhante)
-        $movimentacao->update([
-            'entidade_banco_id' => $validatedData['entidade_banco_id']
-        ]);
-
-        // Exemplo 5.2) Ou inserir em outra tabela, como uma "movimentacoes_bancarias",
-        // se esse for seu modelo/relacionamento
-        // MovimentacaoBancaria::create([
-        //    'movimentacao_id'   => $movimentacao->id,
-        //    'entidade_banco_id' => $validatedData['entidade_banco_id'],
-        //    'valor'             => $validatedData['valor'],
-        //    'data'              => $validatedData['data_competencia'],
-        //    // etc...
-        // ]);
-
-        // Exemplo 5.3) Se for preciso criar um novo registro em `entidades_financeiras`
-        // (mas normalmente você só escolheria um existente).
-        // EntidadeFinanceira::create([
-        //   'nome' => 'Banco X',
-        //   'tipo' => 'banco',
-        //   ...
-        // ]);
-
-    }
-
-        // Adiciona mensagem de sucesso
+        // Mensagem de sucesso
         Flasher::addSuccess('Lançamento criado com sucesso!');
         return redirect()->back()->with('message', 'Lançamento criado com sucesso!');
     }
+
 
     /**
      * Processa movimentacao.
@@ -312,7 +296,7 @@ class CaixaController extends Controller
     {
         if ($request->hasFile('files')) {
             foreach ($request->file('files') as $file) {
-                 // Nome original do arquivo (sem caminho completo)
+                // Nome original do arquivo (sem caminho completo)
                 $nomeOriginal = $file->getClientOriginalName();
                 $anexoName = time() . '_' . $file->getClientOriginalName();
                 $anexoPath = $file->storeAs('anexos', $anexoName, 'public');
@@ -609,7 +593,6 @@ class CaixaController extends Controller
             // 8) Mensagem de sucesso e redirecionamento
             Flasher::addSuccess('Transação excluída com sucesso!');
             return redirect()->route('caixa.list');
-
         } catch (\Exception $e) {
             // 9) Em caso de erro, registra log e retorna com mensagem de erro
             Log::error('Erro ao excluir transação: ' . $e->getMessage());

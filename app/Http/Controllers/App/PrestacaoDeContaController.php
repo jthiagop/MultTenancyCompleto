@@ -8,6 +8,7 @@ use App\Models\Financeiro\TransacaoFinanceira;
 use Auth;
 use Illuminate\Http\Request;
 use PDF;
+use Spatie\Browsershot\Browsershot;
 
 class PrestacaoDeContaController extends Controller
 {
@@ -85,17 +86,30 @@ class PrestacaoDeContaController extends Controller
         }
 
         // 5) Montar o PDF
-        $pdf = PDF::loadView('app.relatorios.financeiro.prestacao_pdf', [
-            'dados'            => $dadosParaView,
-            'dataInicial'      => $dataInicial,
-            'dataFinal'        => $dataFinal,
-            'costCenter'       => $costCenter,
-            // Passamos também os totais gerais
+        // Monta o HTML da sua View, sem renderizar ainda em PDF:
+        $html = view('app.relatorios.financeiro.prestacao_pdf', [
+            'dados'             => $dadosParaView,
+            'dataInicial'       => $dataInicial,
+            'dataFinal'         => $dataFinal,
+            'costCenter'        => $costCenter,
             'totalGeralEntrada' => $totalGeralEntrada,
-            'totalGeralSaida'  => $totalGeralSaida,
-        ]);
+            'totalGeralSaida'   => $totalGeralSaida,
+        ])->render();
 
-        return $pdf->stream('relatorio-prestacao-de-contas.pdf');
+        // Agora usamos o Browsershot para converter o HTML em PDF:
+        $pdf = Browsershot::html($html)
+            ->format('A4')
+            ->landscape()         // se precisar de modo paisagem
+            ->margins(10, 10, 10, 10)
+            ->showBackground()     // se quiser renderizar background de CSS
+            ->pdf();
+
+        // Retornar o PDF diretamente como resposta
+        return response($pdf)
+            ->withHeaders([
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="prestacao-de-contas.pdf"',
+            ]);
     }
 
     public function print(Request $request, $id)
@@ -108,7 +122,7 @@ class PrestacaoDeContaController extends Controller
             ->where('company_id', $companyId) // Filtrar pelo company_id do usuário
             ->findOrFail($id);
 
-            dd($caixa);
+        dd($caixa);
     }
 
 

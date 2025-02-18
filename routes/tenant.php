@@ -156,6 +156,8 @@ Route::middleware([
                 Route::get('/prestacao-de-contas/pdf', [PrestacaoDeContaController::class, 'gerarPdf'])
                     ->name('relatorios.prestacao.de.contas.gerar');
 
+                Route::post('/filter', [ PrestacaoDeContaController::class, 'generateReport']);
+
                 Route::resource('fieis', FielController::class);
 
                 Route::resource('entidades', EntidadeFinanceiraController::class);
