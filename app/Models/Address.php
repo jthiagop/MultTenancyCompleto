@@ -2,11 +2,15 @@
 
 namespace App\Models;
 
+use App\Models\Financeiro\Recibo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-class Adress extends Model
+class Address extends Model
 {
+        // Especifica o nome da tabela
+        protected $table = 'adresses'; // Nome da tabela no banco de dados
+
     use HasFactory;
 
     protected $fillable =
@@ -29,5 +33,10 @@ class Adress extends Model
     public function company()
     {
         return $this->hasOne( Company::class);
+    }
+
+    public function recibos()
+    {
+        return $this->hasMany(Recibo::class, 'address_id');
     }
 }

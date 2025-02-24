@@ -334,7 +334,7 @@ class CaixaController extends Controller
         $companyId = Auth::user()->company_id;
 
         // Buscar o banco com o ID e verificar se pertence à empresa do usuário
-        $caixa = TransacaoFinanceira::with('modulos_anexos')
+        $caixa = TransacaoFinanceira::with('modulos_anexos', 'recibo.address')
             ->where('company_id', $companyId) // Filtrar pelo company_id do usuário
             ->findOrFail($id);
 

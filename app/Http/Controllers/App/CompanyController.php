@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
-use App\Models\Adress;
+use App\Models\Address;
 use App\Models\Banco;
 use App\Models\Company;
 use App\Models\Movimentacao;
@@ -335,7 +335,7 @@ class CompanyController extends Controller
         $company->save();
 
         // Atualiza o endereço da empresa
-        $address = Adress::updateOrCreate(
+        $address = Address::updateOrCreate(
             ['company_id' => $company->id],
             [
                 'cep' => $request->cep,

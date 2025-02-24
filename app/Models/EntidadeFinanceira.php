@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Models\Financeiro\BankStatement;
+use App\Models\Financeiro\TransacaoFinanceira;
 use Auth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -35,9 +37,19 @@ class EntidadeFinanceira extends Model
         return $this->hasMany(Movimentacao::class, 'entidade_id');
     }
 
+    public function transacoesFinanceiras()
+    {
+        return $this->hasMany(TransacaoFinanceira::class, 'entidade_id');
+    }
+
     public function company()
     {
         return $this->belongsTo(Company::class, 'company_id'); // Cada EntidadeFinanceira pertence a uma Company
+    }
+
+    public function bankStatements()
+    {
+        return $this->hasMany(BankStatement::class, 'entidade_financeira_id');
     }
 
     // Método para atualizar o saldo atual

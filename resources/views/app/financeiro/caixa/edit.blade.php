@@ -4,6 +4,9 @@
 <script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
 <x-tenant-app-layout>
 
+    {{-- *** Modal *** --}}
+    @include('app.components.modals.financeiro.recibo.recibo')
+
     <!--begin::Main-->
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -87,7 +90,8 @@
             </div>
             <!--end::Toolbar-->
             <!--begin::Content-->
-            <div id="kt_app_content" class="app-content flex-column-fluid">
+            <div id="kt_app_toolbar" class="app-toolbar py-3 py-lg-6">
+
                 <!--begin::Content container-->
                 <div class="modal fade" id="confirmDeleteModal" tabindex="-1" role="dialog"
                     aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
@@ -161,7 +165,7 @@
                         <!--begin::Layout-->
                         <div class="d-flex flex-column flex-lg-row">
                             <!--begin::Content-->
-                            <div class="flex-lg-row-fluid me-lg-15 order-2 order-lg-1 mb-10 mb-lg-0">
+                            <div class="flex-lg-row-fluid mb-10 mb-lg-0 me-lg-7 me-xl-10">
                                 <!--begin::Card-->
                                 <div class="card card-flush pt-3 mb-5 mb-xl-10">
                                     <!--begin::Card header-->
@@ -258,9 +262,7 @@
                                                     <!--begin::Item: Criar Fatura-->
                                                     <!-- HTML -->
                                                     <div class="menu-item px-3">
-                                                        <a href="#" class="menu-link px-3 icon-hover-blue"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#kt_modal_delete_card">
+                                                        <a href="#" data-bs-toggle="modal" data-bs-target="#kt_modal_new_ticket" class="menu-link px-3 icon-hover-blue">
                                                             <i class="bi bi-receipt me-2"></i>
                                                             Gerar Recibo
                                                         </a>

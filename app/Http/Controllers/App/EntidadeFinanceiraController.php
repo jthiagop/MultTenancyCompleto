@@ -4,7 +4,12 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\EntidadeFinanceira;
+use App\Models\Financeiro\BankStatement;
+use App\Models\Financeiro\CostCenter;
+use App\Models\Financeiro\TransacaoFinanceira;
+use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Flasher\Laravel\Facade\Flasher;
@@ -135,25 +140,115 @@ class EntidadeFinanceiraController extends Controller
     }
 
     public function destroy(string $id)
-{
-    try {
-        // 1) Localiza a entidade financeira pelo ID
-        $entidade = EntidadeFinanceira::findOrFail($id);
-        // 2) Exclui as movimentações associadas (se necessário)
-        $movimentacao = Movimentacao::where('entidade_id', $entidade->id)->delete();
+    {
+        try {
+            // 1) Localiza a entidade financeira pelo ID
+            $entidade = EntidadeFinanceira::findOrFail($id);
+            // 2) Exclui as movimentações associadas (se necessário)
+            $movimentacao = Movimentacao::where('entidade_id', $entidade->id)->delete();
 
-        // 3) Exclui a entidade financeira
-        $entidade->delete();
+            // 3) Exclui a entidade financeira
+            $entidade->delete();
 
-        // 4) Mensagem de sucesso e redirecionamento
-        flash()->success('A entidade financeira foi excluída com sucesso!');
-        return redirect()->back(); // Redireciona para a lista de entidades
-    } catch (\Exception $e) {
-        // 5) Em caso de erro, registra log e retorna com mensagem de erro
-        \Log::error('Erro ao excluir entidade financeira: ' . $e->getMessage());
+            // 4) Mensagem de sucesso e redirecionamento
+            flash()->success('A entidade financeira foi excluída com sucesso!');
+            return redirect()->back(); // Redireciona para a lista de entidades
+        } catch (\Exception $e) {
+            // 5) Em caso de erro, registra log e retorna com mensagem de erro
+            \Log::error('Erro ao excluir entidade financeira: ' . $e->getMessage());
 
-        Flasher::addError('Ocorreu um erro ao excluir a entidade financeira: ' . $e->getMessage());
-        return redirect()->back();
+            Flasher::addError('Ocorreu um erro ao excluir a entidade financeira: ' . $e->getMessage());
+            return redirect()->back();
+        }
     }
-}
+
+    /**
+     * Display the specified resource.
+     */
+    public function show($id)
+    {
+        // Recupera o ID da empresa do usuário logado
+        $companyId = Auth::user()->company_id;
+
+        // 1. Carrega a entidade financeira (banco) do usuário logado,
+        // junto com duas relações:
+        //  - transacoesFinanceiras (todas, ordenadas por data_competencia desc)
+        //  - bankStatements (apenas as não conciliadas, ordenadas por dtposted desc)
+        // findOrFail($id) lança erro 404 se não encontrar
+        $entidade = EntidadeFinanceira::where('company_id', $companyId)
+        ->with([
+            'transacoesFinanceiras' => function ($query) {
+                // Ordena por data
+                $query->orderBy('data_competencia', 'desc');
+            },
+            'bankStatements' => function ($query) {
+                // Filtra lançamentos ainda não conciliados ou com status pendente/divergente
+                $query->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                      ->orderBy('dtposted', 'desc');
+            },
+        ])
+        ->findOrFail($id);
+
+        // 2. Para cada lançamento bancário pendente (bankStatement),
+        // vamos buscar possíveis transações financeiras que combinem
+        // com os dados do extrato (OFX).
+        foreach ($entidade->bankStatements as $lancamento) {
+
+            // Se o valor for negativo no OFX, convertemos para positivo
+            // e definimos que é 'saida'; se for positivo, é 'entrada'.
+            // Isso facilita a comparação com a tabela de transações financeiras.
+            $valorAbs = abs($lancamento->amount);
+            $tipo = $lancamento->amount < 0 ? 'saida' : 'entrada';
+
+            // 3. Criamos um intervalo de tolerância de 2 meses antes e 2 meses depois
+            // da data do extrato (dtposted). Assim, se no extrato a data for 2025-02-06,
+            // buscaremos transações entre 2 meses antes e 2 meses depois.
+            $dataInicio = Carbon::parse($lancamento->dtposted)
+                ->startOfDay()    // Ajusta a hora para 00:00:00
+                ->subMonths(2);   // Subtrai 2 meses
+
+            $dataFim = Carbon::parse($lancamento->dtposted)
+                ->endOfDay()      // Ajusta a hora para 23:59:59
+                ->addMonths(2);   // Adiciona 2 meses
+
+            // (Opcional) Podemos comparar número do documento do extrato
+            // com a coluna numero_documento das transações
+            $numeroDocumento = $lancamento->checknum;
+
+            // 4. Busca em transacoes_financeiras aquelas que:
+            //  - pertencem à mesma empresa (company_id)
+            //  - são da mesma entidade (entidade_id = $id)
+            //  - têm tipo compatível ('entrada' ou 'saida')
+            //  - têm valor igual ao valorAbs
+            //  - têm data_competencia no intervalo de 2 meses antes/depois de dtposted
+            $possiveis = TransacaoFinanceira::where('company_id', $companyId)
+                ->where('entidade_id', $id)
+                ->where('tipo', $tipo)
+                ->where('valor', $valorAbs)
+                ->whereBetween('data_competencia', [$dataInicio, $dataFim])
+                ->get();
+
+            // 5. Atribuímos essa coleção de possíveis transações
+            // na propriedade possiveisTransacoes do $lancamento,
+            // para que possamos exibir na view.
+            $lancamento->possiveisTransacoes = $possiveis;
+        }
+
+        // 6. Finalmente, retornamos a view 'app.financeiro.entidade.show'
+        // com os dados da entidade, suas transações, e os lançamentos não conciliados.
+
+        $centrosAtivos = CostCenter::getCadastroCentroCusto();
+        $lps = LancamentoPadrao::all();
+
+
+        return view('app.financeiro.entidade.show', [
+            'entidade' => $entidade,
+            'transacoes' => $entidade->transacoesFinanceiras,
+            'conciliacoesPendentes' => $entidade->bankStatements,
+            'centrosAtivos' => $centrosAtivos,
+            'lps' => $lps,
+
+        ]);
+    }
+
 }

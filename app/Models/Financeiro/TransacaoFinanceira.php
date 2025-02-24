@@ -42,9 +42,32 @@ class TransacaoFinanceira extends Model
             'updated_by_name',
         ];
 
+        // Tabela Pivot
+        public function bankStatements()
+        {
+            return $this->belongsToMany(
+                BankStatement::class,
+                'bank_statement_transacao',
+                'transacao_financeira_id',
+                'bank_statement_id'
+            )
+            ->withPivot('valor_conciliado', 'status_conciliacao')
+            ->withTimestamps();
+        }
+
+        public function recibo()
+        {
+            return $this->hasOne(Recibo::class, 'transacao_id');
+        }
+
         public function costCenter()
         {
             return $this->belongsTo(CostCenter::class, 'cost_center_id');
+        }
+
+        public function transacoesFinanceiras()
+        {
+            return $this->hasMany(TransacaoFinanceira::class, 'entidade_id');
         }
 
         public function lancamentoPadrao()

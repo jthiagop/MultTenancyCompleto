@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "cdff481bbb3a3c1b1af7078351b3885e",
+    "content-hash": "18da0af544549fc2d21e4396b0b7afc7",
     "packages": [
         {
             "name": "archtechx/enums",
@@ -51,6 +51,63 @@
                 "source": "https://github.com/archtechx/enums/tree/v1.1.0"
             },
             "time": "2024-07-15T14:28:34+00:00"
+        },
+        {
+            "name": "asgrim/ofxparser",
+            "version": "1.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/asgrim/ofxparser.git",
+                "reference": "7652efea77a1c5dda007f9764d8061f870248ea1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/asgrim/ofxparser/zipball/7652efea77a1c5dda007f9764d8061f870248ea1",
+                "reference": "7652efea77a1c5dda007f9764d8061f870248ea1",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=5.4"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-0": {
+                    "OfxParser": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Guillaume Bailleul",
+                    "email": "contact@guillaume-bailleul.fr",
+                    "homepage": "http://www.guillaume-bailleul.fr"
+                },
+                {
+                    "name": "James Titcumb",
+                    "email": "hello@jamestitcumb.com",
+                    "homepage": "http://www.jamestitcumb.com/"
+                },
+                {
+                    "name": "Oliver Lowe",
+                    "email": "mrtriangle@gmail.com"
+                }
+            ],
+            "description": "Simple OFX file parser",
+            "keywords": [
+                "finance",
+                "ofx",
+                "open financial exchange",
+                "parser"
+            ],
+            "support": {
+                "issues": "https://github.com/asgrim/ofxparser/issues",
+                "source": "https://github.com/asgrim/ofxparser/tree/master"
+            },
+            "abandoned": true,
+            "time": "2015-12-11T11:08:57+00:00"
         },
         {
             "name": "barryvdh/laravel-dompdf",
@@ -1561,6 +1618,57 @@
                 }
             ],
             "time": "2023-10-06T06:47:41+00:00"
+        },
+        {
+            "name": "endeken/ofx-php-parser",
+            "version": "0.1.1",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/endeken-com/ofx-php-parser.git",
+                "reference": "851222ba19f17764841cf78ace6e048a94fdc168"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/endeken-com/ofx-php-parser/zipball/851222ba19f17764841cf78ace6e048a94fdc168",
+                "reference": "851222ba19f17764841cf78ace6e048a94fdc168",
+                "shasum": ""
+            },
+            "require": {
+                "ext-libxml": "*",
+                "ext-mbstring": "*",
+                "ext-simplexml": "*"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^11.0"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "Endeken\\OFX\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Wes Guirra",
+                    "email": "wes.guirra@endeken.com"
+                }
+            ],
+            "description": "OFX PHP parser library",
+            "keywords": [
+                "finance",
+                "ofx",
+                "open financial exchange",
+                "parser"
+            ],
+            "support": {
+                "issues": "https://github.com/endeken-com/ofx-php-parser/issues",
+                "source": "https://github.com/endeken-com/ofx-php-parser/tree/0.1.1"
+            },
+            "time": "2024-02-25T21:06:47+00:00"
         },
         {
             "name": "facade/ignition-contracts",

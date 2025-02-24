@@ -124,7 +124,7 @@
                                         <th class="min-w-100px">Data</th>
                                         <th class="min-w-150px">Tipo Documento</th>
                                         <th class="min-w-100px">NF</th>
-                                        <th class="min-w-250px">Descrição</th>
+                                        <th class="min-w-400px">Descrição</th>
                                         <th class="min-w-125px">Tipo</th>
                                         <th class="min-w-125px">Valor</th>
                                         <th class="min-w-75px">Origem</th>
@@ -147,7 +147,10 @@
                                                 ? '<i class="fas fa-check-circle text-success" title="Comprovação Fiscal"></i>'
                                                 : '<i class="bi bi-x-circle-fill text-danger" title="Sem Comprovação Fiscal"></i>' !!}
                                         </td>
-                                        <td>{{ optional($transacao->lancamentoPadrao)->description }}</td>
+                                        <td>
+                                            <div class="fw-bold">{{ $transacao->descricao }}</div>
+                                            <div class="text-muted small">{{ optional($transacao->lancamentoPadrao)->description }}</div>
+                                        </td>
                                         <td>
                                             <div
                                                 class="badge fw-bold {{ $transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger' }}">

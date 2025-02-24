@@ -7,8 +7,101 @@
 <!-- Kendo UI (JS principal) -->
 <script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
 
+
+
 <x-tenant-app-layout>
 
+    <!-- Modal -->
+    <div class="modal fade" id="modalConciliacao" tabindex="-1" aria-labelledby="modalConciliacaoLabel" aria-hidden="true">
+        <!-- Modal -->
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <!-- Cabeçalho -->
+                <div class="modal-header">
+                    <h5 class="modal-title" id="modalImportarOFXLabel">Importe seu extrato em formato OFX</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                </div>
+                <form id="uploadForm" action="{{ route('upload.ofx') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+
+                    <!-- Corpo -->
+                    <div class="modal-body">
+                        <p><strong>Importe um arquivo OFX para sua conta.</strong></p>
+                        <p>1. Acesse o site do seu banco e exporte seu extrato no formato OFX.</p>
+                        <p>2. Após salvar o arquivo no seu computador, você poderá importá-lo para o sistema.</p>
+
+                        <!-- Área de Upload -->
+                        <div id="drop-area" class="border border-dashed rounded p-4 text-center">
+                            <input type="file" id="fileInput" class="d-none" accept=".ofx" name="file" />
+                            <label for="fileInput" class="btn btn-outline-primary">
+                                📎 Escolha um arquivo
+                            </label>
+                            Ou arraste-o para este espaço
+                            <p id="fileName" class="text-muted"></p>
+                        </div>
+                    </div>
+
+                    <!-- Rodapé -->
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-success" id="importButton" disabled>Importar
+                            Extrato</button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Estilos -->
+    <style>
+        #drop-area {
+            border: 8px dashed #007bff;
+            padding: 20px;
+            cursor: pointer;
+        }
+    </style>
+
+    <!-- Script -->
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            let dropArea = document.getElementById("drop-area");
+            let fileInput = document.getElementById("fileInput");
+            let fileNameDisplay = document.getElementById("fileName");
+            let importButton = document.getElementById("importButton");
+
+            // Evento ao selecionar um arquivo
+            fileInput.addEventListener("change", function() {
+                if (fileInput.files.length > 0) {
+                    fileNameDisplay.textContent = "📂 " + fileInput.files[0].name;
+                    importButton.removeAttribute("disabled");
+                }
+            });
+
+            // Eventos de arrastar e soltar
+            dropArea.addEventListener("dragover", function(event) {
+                event.preventDefault();
+                dropArea.style.backgroundColor = "#f8f9fa";
+            });
+
+            dropArea.addEventListener("dragleave", function() {
+                dropArea.style.backgroundColor = "white";
+            });
+
+            dropArea.addEventListener("drop", function(event) {
+                event.preventDefault();
+                dropArea.style.backgroundColor = "white";
+                let files = event.dataTransfer.files;
+                if (files.length > 0 && files[0].type === "application/x-ofx") {
+                    fileInput.files = files;
+                    fileNameDisplay.textContent = "📂 " + files[0].name;
+                    importButton.removeAttribute("disabled");
+                } else {
+                    alert("Por favor, selecione um arquivo OFX válido.");
+                }
+            });
+        });
+    </script>
     <!--begin::Main-->
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -97,6 +190,37 @@
             <div id="kt_app_content" class="app-content flex-column-fluid">
                 <!--begin::Content container-->
                 <div id="kt_app_content_container" class="app-container container-xxl">
+                    <!-- Mensagem de sucesso -->
+                    @if (session('success'))
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            {{ session('success') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                aria-label="Fechar"></button>
+                        </div>
+                    @endif
+
+                    <!-- Mensagem de erro geral (não relacionada à validação) -->
+                    @if (session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                aria-label="Fechar"></button>
+                        </div>
+                    @endif
+
+                    <!-- Mensagens de erro de validação (caso existam) -->
+                    @if ($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <ul>
+                                @foreach ($errors->all() as $erro)
+                                    <li>{{ $erro }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                aria-label="Fechar"></button>
+                        </div>
+                    @endif
+
                     <!--begin::Navbar-->
                     <div class="row no-gutters">
                         <div class="12 col-sm-12 col-md-8">
@@ -121,7 +245,8 @@
                                                     <!--begin::Status-->
                                                     <div class="d-flex align-items-center mb-1">
                                                         <a href="#"
-                                                            class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">Movimentação Bancária</a>
+                                                            class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">Movimentação
+                                                            Bancária</a>
                                                         {{-- <span class="badge badge-light-success me-auto">Ativado</span> --}}
                                                     </div>
                                                     <!--end::Status-->
@@ -145,8 +270,8 @@
                                                     <a href="{{ route('banco.list', ['tab' => 'lancamento']) }}"
                                                         class="btn btn-sm btn-primary me-3">
                                                         <svg xmlns="http://www.w3.org/2000/svg" width="16"
-                                                            height="16" fill="currentColor" class="bi bi-plus-circle"
-                                                            viewBox="0 0 16 16">
+                                                            height="16" fill="currentColor"
+                                                            class="bi bi-plus-circle" viewBox="0 0 16 16">
                                                             <path
                                                                 d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
                                                             <path
@@ -251,6 +376,16 @@
                                                             </div>
                                                             <!--end::Subscription Menu-->
 
+                                                            <!--begin::Nav item-->
+                                                            <!-- Link para abrir o modal -->
+                                                            <div class="menu-item px-3">
+                                                                <a class="menu-link px-3" href="#"
+                                                                    data-bs-toggle="modal"
+                                                                    data-bs-target="#modalConciliacao">
+                                                                    Conciliação Bancária
+                                                                </a>
+                                                            </div>
+                                                            <!--end::Nav item-->
                                                             <!--begin::Settings Item-->
                                                             <div class="menu-item px-3 my-1">
                                                                 <a href="#"
@@ -275,7 +410,8 @@
                                                         class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                                                         <!--begin::Number-->
                                                         <div class="d-flex align-items-center">
-                                                            <div class="fs-4 fw-bold">R$ {{ number_format($total, 2, ',', '.') }}</div>
+                                                            <div class="fs-4 fw-bold">R$
+                                                                {{ number_format($total, 2, ',', '.') }}</div>
                                                         </div>
                                                         <!--end::Number-->
                                                         <!--begin::Label-->
@@ -288,20 +424,23 @@
                                                         class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
                                                         <!--begin::Number-->
                                                         <div class="d-flex align-items-center">
-                                                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr065.svg-->
-                                                    <span class="svg-icon svg-icon-3 svg-icon-danger me-2">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <rect opacity="0.5" x="11" y="18" width="13"
-                                                                height="2" rx="1"
-                                                                transform="rotate(-90 11 18)" fill="currentColor" />
-                                                            <path
-                                                                d="M11.4343 15.4343L7.25 11.25C6.83579 10.8358 6.16421 10.8358 5.75 11.25C5.33579 11.6642 5.33579 12.3358 5.75 12.75L11.2929 18.2929C11.6834 18.6834 12.3166 18.6834 12.7071 18.2929L18.25 12.75C18.6642 12.3358 18.6642 11.6642 18.25 11.25C17.8358 10.8358 17.1642 10.8358 16.75 11.25L12.5657 15.4343C12.2533 15.7467 11.7467 15.7467 11.4343 15.4343Z"
-                                                                fill="currentColor" />
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                            <div class="fs-4 fw-bold">R$ {{ number_format($ValorSaidas, 2, ',', '.') }}</div>
+                                                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr065.svg-->
+                                                            <span class="svg-icon svg-icon-3 svg-icon-danger me-2">
+                                                                <svg width="24" height="24"
+                                                                    viewBox="0 0 24 24" fill="none"
+                                                                    xmlns="http://www.w3.org/2000/svg">
+                                                                    <rect opacity="0.5" x="11" y="18" width="13"
+                                                                        height="2" rx="1"
+                                                                        transform="rotate(-90 11 18)"
+                                                                        fill="currentColor" />
+                                                                    <path
+                                                                        d="M11.4343 15.4343L7.25 11.25C6.83579 10.8358 6.16421 10.8358 5.75 11.25C5.33579 11.6642 5.33579 12.3358 5.75 12.75L11.2929 18.2929C11.6834 18.6834 12.3166 18.6834 12.7071 18.2929L18.25 12.75C18.6642 12.3358 18.6642 11.6642 18.25 11.25C17.8358 10.8358 17.1642 10.8358 16.75 11.25L12.5657 15.4343C12.2533 15.7467 11.7467 15.7467 11.4343 15.4343Z"
+                                                                        fill="currentColor" />
+                                                                </svg>
+                                                            </span>
+                                                            <!--end::Svg Icon-->
+                                                            <div class="fs-4 fw-bold">R$
+                                                                {{ number_format($ValorSaidas, 2, ',', '.') }}</div>
                                                         </div>
                                                         <!--end::Number-->
                                                         <!--begin::Label-->
@@ -329,7 +468,8 @@
                                                                 </svg>
                                                             </span>
                                                             <!--end::Svg Icon-->
-                                                            <div class="fs-4 fw-bold">R$ {{ number_format($valorEntrada, 2, ',', '.') }}</div>
+                                                            <div class="fs-4 fw-bold">R$
+                                                                {{ number_format($valorEntrada, 2, ',', '.') }}</div>
                                                         </div>
                                                         <!--end::Number-->
                                                         <!--begin::Label-->
@@ -384,6 +524,7 @@
                                             </a>
                                         </li>
                                         <!--end::Nav item-->
+
                                     </ul>
                                     <!--end::Nav-->
                                 </div>
@@ -404,7 +545,7 @@
                                                 <span class="card-label fw-bold text-gray-800">Lista de Bancos</span>
                                                 <span class="text-gray-400 mt-1 fw-bold fs-7">
                                                     Exibindo {{ count($entidadesBanco) }}
-                                                    @if(count($entidadesBanco) == 1)
+                                                    @if (count($entidadesBanco) == 1)
                                                         banco
                                                     @else
                                                         bancos
@@ -464,7 +605,8 @@
                                                                 <!--begin::Subtitle-->
                                                                 <h4 class="fw-bold text-gray-800 mb-3">
                                                                     {{ $entidade->nome }} <span
-                                                                    class="badge badge-info fs-base">{{ $entidade->conta }}</span></h4>
+                                                                        class="badge badge-info fs-base">{{ $entidade->conta }}</span>
+                                                                </h4>
                                                                 <!--end::Subtitle-->
 
                                                                 <!--begin::Items-->
@@ -519,7 +661,7 @@
                                                         <div class="m-0">
                                                             <a href="#"
                                                                 class="btn btn-sm btn-light me-2 mb-2">Detalhes</a>
-                                                            <a href="#"
+                                                            <a href="{{ route('entidades.show', $entidade->id) }}"
                                                                 class="btn btn-sm btn-success mb-2">Entrar no Banco</a>
                                                         </div>
                                                         <!--end::Action-->
@@ -546,7 +688,7 @@
             <!--end::Content-->
         </div>
         <!--end::Content wrapper-->
-
+    </div>
         @include('app.components.modals.lancar-banco')
         <!--end::Modal - Upgrade plan-->
         <script>

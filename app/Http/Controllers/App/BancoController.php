@@ -71,7 +71,7 @@ class BancoController extends Controller
         // Filtrar as transações com origem "Banco"
         // Transações com anexos relacionados
         $transacoes = TransacaoFinanceira::with('modulos_anexos')
-            ->where('origem', 'Banco')
+            ->where('origem', ['Banco', 'Importado via OFX'])
             ->where('company_id', $companyId)
             ->get();
 

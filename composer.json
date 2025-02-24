@@ -6,9 +6,11 @@
     "license": "MIT",
     "require": {
         "php": "^8.2",
+        "asgrim/ofxparser": "^1.1",
         "barryvdh/laravel-dompdf": "^3.1",
         "davidhsianturi/blade-bootstrap-icons": "^1.5",
         "doctrine/dbal": "*",
+        "endeken/ofx-php-parser": "^0.1.1",
         "guzzlehttp/guzzle": "^7.8",
         "knplabs/knp-snappy": "^1.5",
         "laravel-lang/common": "*",

@@ -93,7 +93,7 @@ class Company extends Model
 
     public function addresses()
     {
-        return $this->hasOne(Adress::class, 'company_id');
+        return $this->hasOne(Address::class, 'company_id');
     }
 
 

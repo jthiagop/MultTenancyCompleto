@@ -22,8 +22,10 @@ use App\Http\Controllers\App\EscrituraController;
 use App\Http\Controllers\App\FielController;
 use App\Http\Controllers\App\Filter\filterController;
 use App\Http\Controllers\App\Filter\RebortController;
+use App\Http\Controllers\App\Financeiro\ConciliacaoController;
 use App\Http\Controllers\App\Financeiro\CostCenterController;
-use App\Http\Controllers\App\Financeiro\ReciboController;
+use App\Http\Controllers\App\Financeiro\OfxController;
+use App\Http\Controllers\App\Relatorios\ReciboController;
 use App\Http\Controllers\App\Financeiro\TransacaoFinanceiraController;
 use App\Http\Controllers\App\Frota\CarInsuranceController;
 use App\Http\Controllers\App\NamePatrimonioController;
@@ -126,7 +128,6 @@ Route::middleware([
             Route::delete('/caixas/{id}', [CaixaController::class, 'destroySelected'])->name('caixas.destroySelected');
             Route::resource('caixa', CaixaController::class);
             Route::resource('banco', BancoController::class);
-            Route::resource('recibos', ReciboController::class);
             Route::resource('anexos', AnexoController::class);
             Route::resource('modulosAnexos', ModulosAnexosController::class);
             Route::resource('post', PostController::class);
@@ -146,8 +147,21 @@ Route::middleware([
             Route::resource('cemiterio', CemeteryController::class);
             Route::resource('sepultura', SepulturaController::class);
 
+            Route::post('/upload-ofx', [OfxController::class, 'upload'])->name('upload.ofx');
+
+            Route::patch('/conciliacao/{id}/ignorar', [ConciliacaoController::class, 'ignorar'])->name('conciliacao.ignorar');
+            Route::get('/conciliacao', [ConciliacaoController::class, 'index'])->name('conciliacao.index');
+            Route::get('/conciliacao/comparar/{id}', [ConciliacaoController::class, 'comparar'])->name('conciliacao.comparar');
+            Route::post('/conciliacao/conciliar', [ConciliacaoController::class, 'conciliar'])->name('conciliacao.conciliar');
+
+
             // Grupo de rotas para relatórios
             Route::prefix('relatorios')->group(function () {
+
+                Route::resource('recibos', ReciboController::class);
+                Route::post('/recibos/gerar/{transacao}', [ReciboController::class, 'gerarRecibo'])->name('gerarRecibo');
+                Route::get('/recibo/imprimir/{id}', [ReciboController::class, 'imprimirRecibo'])->name('recibo.imprimir');
+
 
                 Route::get('/prestacao-de-contas', [PrestacaoDeContaController::class, 'index'])
                     ->name('relatorios.prestacao.de.contas');
