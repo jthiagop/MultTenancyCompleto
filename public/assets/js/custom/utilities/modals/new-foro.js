@@ -33,6 +33,7 @@ var KTModalNewTarget = function () {
             flatpickr(dueDate, {
                 dateFormat: "d/m/Y", // Formato pt-BR para exibição
                 locale: "pt", // Define a localidade como português do Brasil
+                allowInput: true
             });
         });
 
