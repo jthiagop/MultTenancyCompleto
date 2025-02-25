@@ -14,6 +14,7 @@ use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use App\Models\User;
+use App\Services\TransacaoFinanceiraService;
 use Auth;
 use Carbon\Carbon;
 use DB;
@@ -27,6 +28,12 @@ use Illuminate\Support\Facades\Validator;
 
 class BancoController extends Controller
 {
+    protected $transacaoService;
+
+    public function __construct(TransacaoFinanceiraService $transacaoService)
+    {
+        $this->transacaoService = $transacaoService;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -65,19 +72,26 @@ class BancoController extends Controller
         // Filtrar as entradas e saídas pelos bancos relacionados à empresa
         list($somaEntradas, $somaSaida) = Banco::getBanco();
 
+        // 🟢 Obtém a data do mês selecionado ou usa o mês atual
+        $mesSelecionado = $request->input('mes', Carbon::now()->month);
+        $anoSelecionado = $request->input('ano', Carbon::now()->year);
+        // 🟢 Obtém os dados do gráfico usando o Service
+        $dadosGrafico = $this->transacaoService->getDadosGrafico($mesSelecionado, $anoSelecionado);
+
+
         $total  = EntidadeFinanceira::getValorTotalEntidadeBC();
 
         $entidadesBanco = Banco::getEntidadesBanco();
         // Filtrar as transações com origem "Banco"
         // Transações com anexos relacionados
         $transacoes = TransacaoFinanceira::with('modulos_anexos')
-            ->where('origem', ['Banco', 'Importado via OFX'])
+            ->where('origem', 'Conciliação Bancária')
+            ->orWhere('origem', 'Banco')
             ->where('company_id', $companyId)
             ->get();
 
         $valorEntrada = Banco::getBancoEntrada();
         $ValorSaidas = Banco::getBancoSaida();
-
         $centrosAtivos = CostCenter::getCadastroCentroCusto();
 
         // Carregar bancos com entidades financeiras relacionadas
@@ -94,18 +108,56 @@ class BancoController extends Controller
             // ...
         ];
 
-        return view('app.financeiro.banco.list', [
+        // Lista de prioridades para os status de conciliação
+        $prioridadeStatus = ['divergente', 'em análise', 'parcial', 'pendente', 'ajustado', 'ignorado', 'ok'];
+
+        // Calcula o status final de conciliação para cada entidade bancária
+        foreach ($entidadesBanco as $entidade) {
+            // Obtém os status de conciliação de todos os extratos bancários da entidade
+            $statusConciliação = $entidade->bankStatements->pluck('status_conciliacao')->toArray();
+
+            // Define o status final com base na prioridade
+            $statusFinal = 'ok'; // Assume "OK" por padrão
+            foreach ($prioridadeStatus as $status) {
+                if (in_array($status, $statusConciliação)) {
+                    $statusFinal = $status;
+                    break; // Para no primeiro status encontrado seguindo a prioridade
+                }
+            }
+            // Armazena o status final na entidade para uso na View
+            $entidade->status_conciliacao = ucfirst($statusFinal);
+        }
+
+        // Mapeia classes CSS para os status
+        $statusClasses = [
+            'ok' => 'badge-light-success',
+            'pendente' => 'badge-light-warning',
+            'parcial' => 'badge-light-primary',
+            'divergente' => 'badge-light-danger',
+            'ignorado' => 'badge-light-secondary',
+            'ajustado' => 'badge-light-info',
+            'em análise' => 'badge-light-dark',
+        ];
+
+        // Adiciona a classe CSS correspondente a cada entidade
+        foreach ($entidadesBanco as $entidade) {
+            $entidade->badge_class = $statusClasses[strtolower($entidade->status_conciliacao)] ?? 'badge-light-secondary';
+        }
+
+        // 🟢 Retorna a View com todos os dados
+        return view('app.financeiro.banco.list', array_merge([
             'bancos' => $bancos,
             'valorEntrada' => $valorEntrada,
             'ValorSaidas' => $ValorSaidas,
             'total' => $total,
             'lps' => $lps,
-            'IfBancos' => $IfBancos,
             'entidadesBanco' => $entidadesBanco,
             'activeTab' => $activeTab,
             'transacoes' => $transacoes,
             'centrosAtivos' => $centrosAtivos,
-        ]);
+            'mesSelecionado' => $mesSelecionado,
+            'anoSelecionado' => $anoSelecionado,
+        ], $dadosGrafico));
     }
 
 
@@ -152,8 +204,6 @@ class BancoController extends Controller
         $validatedData['created_by'] = Auth::id();
         $validatedData['created_by_name'] = Auth::user()->name;
         $validatedData['updated_by'] = Auth::id();
-        $validatedData['updated_by_name'] = Auth::user()->name;
-
         $validatedData['updated_by_name'] = Auth::user()->name;
 
         // 1) Chama o método movimentacao() e guarda o retorno

@@ -352,32 +352,25 @@
                                                                         </div>
                                                                         <td>
                                                                             @if ($conciliacao->status_conciliacao == 'ok')
-                                                                                <span
-                                                                                    class="badge badge-success">✅
+                                                                                <span class="badge badge-success">✅
                                                                                     Conciliado</span>
                                                                             @elseif($conciliacao->status_conciliacao == 'pendente')
-                                                                                <span
-                                                                                    class="badge badge-warning">⏳
+                                                                                <span class="badge badge-warning">⏳
                                                                                     Pendente</span>
                                                                             @elseif($conciliacao->status_conciliacao == 'parcial')
-                                                                                <span
-                                                                                    class="badge badge-info">🟡
+                                                                                <span class="badge badge-info">🟡
                                                                                     Parcial</span>
                                                                             @elseif($conciliacao->status_conciliacao == 'divergente')
-                                                                                <span
-                                                                                    class="badge badge-danger">❌
+                                                                                <span class="badge badge-danger">❌
                                                                                     Divergente</span>
                                                                             @elseif($conciliacao->status_conciliacao == 'ignorado')
-                                                                                <span
-                                                                                    class="badge badge-secondary">🚫
+                                                                                <span class="badge badge-secondary">🚫
                                                                                     Ignorado</span>
                                                                             @elseif($conciliacao->status_conciliacao == 'ajustado')
-                                                                                <span
-                                                                                    class="badge badge-primary">🔧
+                                                                                <span class="badge badge-primary">🔧
                                                                                     Ajustado</span>
                                                                             @elseif($conciliacao->status_conciliacao == 'em análise')
-                                                                                <span
-                                                                                    class="badge badge-dark">🔍
+                                                                                <span class="badge badge-dark">🔍
                                                                                     Em Análise</span>
                                                                             @endif
                                                                         </td>
@@ -434,12 +427,16 @@
                                                             <!--begin::List widget 9-->
                                                             <div class="card card-flush h-xl-100">
                                                                 <!--begin::Header-->
-                                                                <div class="card-body d-flex align-items-center justify-content-center h-100"> <!-- Centraliza horizontal e verticalmente -->
-                                                                    <button class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
-                                                                            data-bs-toggle="modal"
-                                                                            data-bs-target="#modalConciliar{{ $conciliacao->id }}">
-                                                                            <span class="fs-1 me-2">🫱🏻‍🫲🏽</span> <!-- Emoji com tamanho ajustado -->
-                                                                            <span>Conciliar</span> <!-- Texto -->
+                                                                <div
+                                                                    class="card-body d-flex align-items-center justify-content-center h-100">
+                                                                    <!-- Centraliza horizontal e verticalmente -->
+                                                                    <button
+                                                                        class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
+                                                                        data-bs-toggle="modal"
+                                                                        data-bs-target="#modalConciliar{{ $conciliacao->id }}">
+                                                                        <span class="fs-1 me-2">🫱🏻‍🫲🏽</span>
+                                                                        <!-- Emoji com tamanho ajustado -->
+                                                                        <span>Conciliar</span> <!-- Texto -->
                                                                     </button>
                                                                 </div>
                                                                 <!--end::Body-->
@@ -453,75 +450,76 @@
                                                             <div class="card card-flush h-xl-100">
                                                                 <!--begin::Header-->
                                                                 <div
-                                                                class="card card-flush py-4 flex-row-fluid overflow-hidden  mb-3 h-xl-100 ">
+                                                                    class="card card-flush py-4 flex-row-fluid overflow-hidden  mb-3 h-xl-100 ">
 
 
-                                                                <p><strong>Encontramos um lançamento que parece
-                                                                        corresponder:</strong></p>
-                                                                <p class="mb-1">
-                                                                    <strong>Descrição:</strong>
-                                                                    {{ $transacaoSugerida->descricao }}
-                                                                </p>
-                                                                <p class="mb-1">
-                                                                    <strong>Data Competência:</strong>
-                                                                    {{ \Carbon\Carbon::parse($transacaoSugerida->data_competencia)->format('d/m/Y') }}
-                                                                </p>
-                                                                <p class="mb-1">
-                                                                    <strong>Valor:</strong> R$
-                                                                    {{ number_format($transacaoSugerida->valor, 2, ',', '.') }}
-                                                                </p>
-                                                                <p class="mb-1">
-                                                                    <strong>Número:</strong>
-                                                                    {{ $transacaoSugerida->numero_documento }}
-                                                                </p>
-                                                                <p class="mb-1">
-                                                                    <strong>Número:</strong>
-                                                                    {{ $transacaoSugerida->tipo }}
-                                                                </p>
-                                                                <!-- Botão para conciliar usando essa transação -->
-                                                                <form action="" method="POST">
-                                                                    @csrf
-                                                                    <input type="hidden" name="bank_statement_id"
-                                                                        value="{{ $conciliacao->id }}">
-                                                                    <input type="hidden" name="transacao_id"
-                                                                        value="{{ $transacaoSugerida->id }}">
-                                                                    <button type="submit"
-                                                                        class="btn btn-sm btn-success">
-                                                                        Selecionar lançamento existente
-                                                                    </button>
-                                                                </form>
+                                                                    <p><strong>Encontramos um lançamento que parece
+                                                                            corresponder:</strong></p>
+                                                                    <p class="mb-1">
+                                                                        <strong>Descrição:</strong>
+                                                                        {{ $transacaoSugerida->descricao }}
+                                                                    </p>
+                                                                    <p class="mb-1">
+                                                                        <strong>Data Competência:</strong>
+                                                                        {{ \Carbon\Carbon::parse($transacaoSugerida->data_competencia)->format('d/m/Y') }}
+                                                                    </p>
+                                                                    <p class="mb-1">
+                                                                        <strong>Valor:</strong> R$
+                                                                        {{ number_format($transacaoSugerida->valor, 2, ',', '.') }}
+                                                                    </p>
+                                                                    <p class="mb-1">
+                                                                        <strong>Número:</strong>
+                                                                        {{ $transacaoSugerida->numero_documento }}
+                                                                    </p>
+                                                                    <p class="mb-1">
+                                                                        <strong>Número:</strong>
+                                                                        {{ $transacaoSugerida->tipo }}
+                                                                    </p>
+                                                                    <!-- Botão para conciliar usando essa transação -->
+                                                                    <form action="" method="POST">
+                                                                        @csrf
+                                                                        <input type="hidden" name="bank_statement_id"
+                                                                            value="{{ $conciliacao->id }}">
+                                                                        <input type="hidden" name="transacao_id"
+                                                                            value="{{ $transacaoSugerida->id }}">
+                                                                        <button type="submit"
+                                                                            class="btn btn-sm btn-success">
+                                                                            Selecionar lançamento existente
+                                                                        </button>
+                                                                    </form>
 
-                                                                <hr>
-                                                                <!-- Se quiser listar todas as sugestões ao invés de só uma, podemos iterar -->
-                                                                @if ($sugestoes->count() > 1)
-                                                                    <p><strong>Outras sugestões:</strong></p>
-                                                                    <ul class="list-group mb-3">
-                                                                        @foreach ($sugestoes->skip(1) as $t)
-                                                                            <li
-                                                                                class="list-group-item d-flex justify-content-between align-items-center">
-                                                                                <div>
-                                                                                    {{ \Carbon\Carbon::parse($t->data_competencia)->format('d/m/Y') }}
-                                                                                    - R$
-                                                                                    {{ number_format($t->valor, 2, ',', '.') }}
-                                                                                    <small>({{ $t->descricao }})</small>
-                                                                                </div>
-                                                                                <form action="" method="POST">
-                                                                                    @csrf
-                                                                                    <input type="hidden"
-                                                                                        name="bank_statement_id"
-                                                                                        value="{{ $conciliacao->id }}">
-                                                                                    <input type="hidden"
-                                                                                        name="transacao_id"
-                                                                                        value="{{ $t->id }}">
-                                                                                    <button type="submit"
-                                                                                        class="btn btn-sm btn-primary">Usar
-                                                                                        este</button>
-                                                                                </form>
-                                                                            </li>
-                                                                        @endforeach
-                                                                    </ul>
-                                                                @endif
-                                                            </div>
+                                                                    <hr>
+                                                                    <!-- Se quiser listar todas as sugestões ao invés de só uma, podemos iterar -->
+                                                                    @if ($sugestoes->count() > 1)
+                                                                        <p><strong>Outras sugestões:</strong></p>
+                                                                        <ul class="list-group mb-3">
+                                                                            @foreach ($sugestoes->skip(1) as $t)
+                                                                                <li
+                                                                                    class="list-group-item d-flex justify-content-between align-items-center">
+                                                                                    <div>
+                                                                                        {{ \Carbon\Carbon::parse($t->data_competencia)->format('d/m/Y') }}
+                                                                                        - R$
+                                                                                        {{ number_format($t->valor, 2, ',', '.') }}
+                                                                                        <small>({{ $t->descricao }})</small>
+                                                                                    </div>
+                                                                                    <form action=""
+                                                                                        method="POST">
+                                                                                        @csrf
+                                                                                        <input type="hidden"
+                                                                                            name="bank_statement_id"
+                                                                                            value="{{ $conciliacao->id }}">
+                                                                                        <input type="hidden"
+                                                                                            name="transacao_id"
+                                                                                            value="{{ $t->id }}">
+                                                                                        <button type="submit"
+                                                                                            class="btn btn-sm btn-primary">Usar
+                                                                                            este</button>
+                                                                                    </form>
+                                                                                </li>
+                                                                            @endforeach
+                                                                        </ul>
+                                                                    @endif
+                                                                </div>
                                                                 <!--end::Body-->
                                                             </div>
                                                             <!--end::List widget 9-->
@@ -533,10 +531,13 @@
                                                             <!--begin::List widget 9-->
                                                             <div class="card card-flush h-xl-100">
                                                                 <!--begin::Header-->
-                                                                <div class="card-body d-flex align-items-center justify-content-center h-100">
-                                                                    <button class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
-                                                                            type="submit" form="{{ $conciliacao->id }}">
-                                                                        <span class="fs-1 me-2">🫱🏻‍🫲🏽</span> <!-- Emoji com tamanho ajustado -->
+                                                                <div
+                                                                    class="card-body d-flex align-items-center justify-content-center h-100">
+                                                                    <button
+                                                                        class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
+                                                                        type="submit" form="{{ $conciliacao->id }}">
+                                                                        <span class="fs-1 me-2">🫱🏻‍🫲🏽</span>
+                                                                        <!-- Emoji com tamanho ajustado -->
                                                                         <span>Conciliar</span> <!-- Texto -->
                                                                     </button>
                                                                 </div>
@@ -683,7 +684,7 @@
                                                                                         <input type="hidden"
                                                                                             name="origem"
                                                                                             class=""
-                                                                                            value="Importado via OFX">
+                                                                                            value="Conciliação Bancária">
                                                                                         <input type="hidden"
                                                                                             name="entidade_id"
                                                                                             class=""

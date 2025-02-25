@@ -37,15 +37,15 @@ class OfxController extends Controller
         $lancamentosNaoConciliados = BankStatement::where('reconciled', 0)->get();
 
         return redirect()
-            ->route('banco.list', ['tab' => 'conciliacao'])
+            ->route('banco.list', ['tab' => 'overview'])
             ->with('success', 'Extrato OFX importado com sucesso!')
             ->with('lancamentosNaoConciliados', $lancamentosNaoConciliados);
 
         } catch (\Exception $e) {
             return redirect()
-                ->route('banco.list', ['tab' => 'conciliacao'])
-                ->with('error', 'Ocorreu um erro ao importar o arquivo: ' . $e->getMessage());
-        }
+                ->route('banco.list', ['tab' => 'overview'])
+                ->with('error', 'Erro ao importar o arquivo: O banco, agência ou conta informados não coincidem. Detalhes: ' . $e->getMessage());
+            }
     }
 
 }

@@ -123,11 +123,11 @@
                                         <th class="min-w-75px">ID</th>
                                         <th class="min-w-100px">Data</th>
                                         <th class="min-w-150px">Tipo Documento</th>
-                                        <th class="min-w-100px">NF</th>
+                                        <th class="min-w-50px">NF</th>
                                         <th class="min-w-400px">Descrição</th>
                                         <th class="min-w-125px">Tipo</th>
                                         <th class="min-w-125px">Valor</th>
-                                        <th class="min-w-75px">Origem</th>
+                                        <th class="min-w-200px">Origem</th>
                                         <th class="min-w-70px">Anexos</th>
                                         <th class="text-end min-w-50px">Ações</th>
                                     </tr>

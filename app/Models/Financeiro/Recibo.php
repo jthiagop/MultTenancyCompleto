@@ -10,15 +10,18 @@ class Recibo extends Model
     protected $fillable = [
         'transacao_id',
         'address_id',
-        'numero_recibo',
-        'data_emissao',
-        'nome',
+        'valor',
+        'tipo_transacao',
         'cpf_cnpj',
+        'nome',
+
+        'referente',
+        'data_emissao',
+        'numero_recibo',
         'endereco',
         'cidade',
         'estado',
-        'valor',
-        'referente'];
+    ];
 
     public function transacao()
     {

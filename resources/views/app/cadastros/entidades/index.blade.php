@@ -162,29 +162,31 @@
                                                     data-placeholder="Selecione um banco">
                                                     <option></option> <!-- para placeholder vazio -->
                                                     <!-- Exemplo manual: -->
-                                                    <option value="Banco Bradesco"
-                                                        data-icon="/assets/media/svg/bancos/bradesco.svg">Banco
-                                                        Bradesco</option>
-                                                    <option value="Banco Caixa"
-                                                        data-icon="/assets/media/svg/bancos/caixa.svg">Banco Caixa
+                                                    <option value="Bradesco"
+                                                        data-icon="/assets/media/svg/bancos/bradesco.svg">
+                                                        Bradesco
                                                     </option>
-                                                    <option value="Banco Nubank"
-                                                        data-icon="/assets/media/svg/bancos/nubank.svg">Banco Nubank
+                                                    <option value="Caixa"
+                                                        data-icon="/assets/media/svg/bancos/caixa.svg">
+                                                        Caixa
                                                     </option>
-                                                    <option value="Banco Itau"
-                                                        data-icon="/assets/media/svg/bancos/itau.svg">Banco Itaú
+                                                    <option value="Nubank"
+                                                        data-icon="/assets/media/svg/bancos/nubank.svg">Nubank
                                                     </option>
-                                                    <option value="Banco do Brasil"
-                                                        data-icon="/assets/media/svg/bancos/brasil.svg">Brasil do
+                                                    <option value="Itau"
+                                                        data-icon="/assets/media/svg/bancos/itau.svg">Itaú
+                                                    </option>
+                                                    <option value="Brasil"
+                                                        data-icon="/assets/media/svg/bancos/brasil.svg">
                                                         Brasil</option>
-                                                    <option value="Banco stone"
-                                                        data-icon="/assets/media/svg/bancos/stone.svg">Banco Stone
+                                                    <option value="stone"
+                                                        data-icon="/assets/media/svg/bancos/stone.svg">Stone
                                                     </option>
-                                                    <option value="Banco Unicred"
-                                                        data-icon="/assets/media/svg/bancos/unicred.svg">Banco Unicred
+                                                    <option value="Unicred"
+                                                        data-icon="/assets/media/svg/bancos/unicred.svg">Unicred
                                                     </option>
-                                                    <option value="Banco Inter"
-                                                        data-icon="/assets/media/svg/bancos/inter.svg">Banco Inter
+                                                    <option value="Inter"
+                                                        data-icon="/assets/media/svg/bancos/inter.svg">Inter
                                                     </option>
                                                     <!-- ... e assim por diante -->
                                                 </select>

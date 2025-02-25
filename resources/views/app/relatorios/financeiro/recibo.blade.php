@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
+
 <head>
     <meta charset="UTF-8">
     <title>Recibo Nº {{ $recibo->id ?? 'XXXX' }}</title>
@@ -115,6 +116,7 @@
         }
     </style>
 </head>
+
 <body>
 
     <div class="container">
@@ -127,7 +129,9 @@
             </div>
             <div class="org-info">
                 CNPJ: {{ $company->cnpj }}<br>
-                {{ $company->addresses->rua }}, {{ $company->addresses->numero }} - {{ $company->addresses->bairro }}, {{ $company->addresses->cidade }}/{{ $company->addresses->uf }} - CEP: {{ $company->addresses->cep }}<br>
+                {{ $company->addresses->rua }}, {{ $company->addresses->numero }} - {{ $company->addresses->bairro }},
+                {{ $company->addresses->cidade }}/{{ $company->addresses->uf }} - CEP:
+                {{ $company->addresses->cep }}<br>
                 Telefone: (81) 3046-5061 | E-mail: curia@diocesedecaruaru.org
             </div>
         </div>
@@ -158,15 +162,23 @@
         </div>
 
         <!-- Corpo do Recibo -->
+        <!-- Corpo do Recibo -->
         <div class="body">
-            Recebemos de <strong>{{ $recibo->nome ?? 'Nome da Pessoa/Entidade' }}</strong>,
+            @php
+            // Define a frase de acordo com o tipo de transação
+            $tipoRecibo = isset($recibo->tipo_transacao) && strtolower($recibo->tipo_transacao) === 'pagamento'
+                ? 'Pagamos a'
+                : 'Recebemos de';
+        @endphp
+
+            {{ $tipoRecibo }} <strong>{{ $recibo->nome ?? 'Nome da Pessoa/Entidade' }}</strong>,
             portador do CPF/CNPJ <strong>{{ $recibo->cpf_cnpj ?? '___' }}</strong>,
             a importância de <strong>R$ {{ number_format($recibo->valor ?? 0, 2, ',', '.') }}</strong>
-            (<em>{{ \NumberFormatter::create('pt_BR', \NumberFormatter::SPELLOUT)
-                ->format($recibo->valor ?? 0) }}</em> reais),
+            (<em>{{ \NumberFormatter::create('pt_BR', \NumberFormatter::SPELLOUT)->format($recibo->valor ?? 0) }}</em>
+            reais),
             referente a <strong>{{ $recibo->referente ?? 'motivo/descrição' }}</strong>.<br><br>
 
-            @if(!empty($recibo->address))
+            @if (!empty($recibo->address))
                 Endereço: <strong>
                     {{ $recibo->address->rua ?? '' }},
                     Nº {{ $recibo->address->numero ?? 's/n' }},
@@ -180,6 +192,7 @@
             de {{ \Carbon\Carbon::now()->locale('pt_BR')->translatedFormat('F') }}
             de {{ \Carbon\Carbon::now()->format('Y') }}.
         </div>
+
 
         <!-- Assinatura -->
         <div class="signature-section">
@@ -197,4 +210,5 @@
     </div>
 
 </body>
+
 </html>

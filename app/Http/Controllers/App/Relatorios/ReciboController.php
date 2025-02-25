@@ -83,6 +83,7 @@ class ReciboController extends Controller
         return redirect()->back()->with('message', 'Recibo excluídos com sucesso!');
     }
 
+        // *** Gerar Recibo ***
 
     public function imprimirRecibo($reciboId)
     {
@@ -96,13 +97,14 @@ class ReciboController extends Controller
             'recibo' => $recibo,
         ])->render();
 
-        // 3) Gerar o PDF com Browsershot
         $pdf = Browsershot::html($html)
-            ->format('A4')
-            ->margins(10, 10, 10, 10)   // Ajuste as margens se precisar
-            ->showBackground()          // Para renderizar backgrounds de CSS
-            //->landscape()            // Se preferir modo paisagem, descomente
-            ->pdf();
+        ->format('A4')                 // Define o formato como A4
+        ->margins(5, 5, 5, 5)           // Margens menores para melhor aproveitamento
+        ->showBackground()               // Garante que fundos CSS sejam renderizados
+        ->deviceScaleFactor(2)           // Simula uma tela de alta resolução
+        ->quality(100) // Garante máxima qualidade para imagens
+        ->emulateMedia('screen') // Melhora a renderização do CSS no PDF
+        ->pdf();
 
         // 4) Retornar o PDF diretamente como resposta ao navegador
         return response($pdf)
@@ -121,6 +123,7 @@ class ReciboController extends Controller
             'data_emissao' => 'required|date_format:d/m/Y',
             'referente' => 'required',
         ]);
+
 
         if ($validator->fails()) {
             return redirect()->back()

@@ -1,6 +1,6 @@
        <!--begin::Modal - Support Center - Create Ticket-->
 
-@if (!empty($caixa->recibo) && !empty($caixa->recibo->id))
+@if (!empty($banco->recibo) && !empty($banco->recibo->id))
 <!-- Modal para Exclusão do Recibo -->
 <div class="modal fade" id="modalDeleteRecibo" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
@@ -14,7 +14,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
-                <form action="{{ route('recibos.destroy', $caixa->recibo->id) }}" method="POST">
+                <form action="{{ route('recibos.destroy', $banco->recibo->id) }}" method="POST">
                     @csrf
                     @method('DELETE')
                     <button type="submit" class="btn btn-danger">Excluir</button>
@@ -66,11 +66,11 @@
                        </div>
                        <!--end::Heading-->
                        <!--begin:Form-->
-                       <form method="POST" action="{{ route('gerarRecibo', ['transacao' => $caixa->id]) }}">
+                       <form method="POST" action="{{ route('gerarRecibo', ['transacao' => $banco->id]) }}">
                            @csrf
                            <!--begin::Wrapper-->
                            <input type="hidden" name="tipo_transacao"
-                               value="{{ $caixa->tipo === 'entrada' ? 'Recebimento' : 'Pagamento' }}">
+                               value="{{ $banco->tipo === 'entrada' ? 'Recebimento' : 'Pagamento' }}">
 
                            <!--begin::Separator-->
                            <div class="d-flex flex-column align-items-start flex-xxl-row">
@@ -85,7 +85,7 @@
                                        <!--begin::Datepicker-->
                                        <input class="form-control form-control-transparent fw-bold pe-5"
                                            placeholder="Select date" readonly name="data_emissao"
-                                           value="{{ \Carbon\Carbon::parse($caixa->data_competencia)->format('d/m/Y') }}" />
+                                           value="{{ \Carbon\Carbon::parse($banco->data_competencia)->format('d/m/Y') }}" />
                                        <!--end::Datepicker-->
                                        <!--begin::Icon-->
                                        <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
@@ -108,7 +108,7 @@
                                    data-bs-toggle="tooltip" data-bs-trigger="hover" title="Enter invoice number">
                                    <span class="fs-2x fw-bold readonly text-gray-800">Número #</span>
                                    <input type="text" class="form-control form-control-solid"
-                                       value="{{ $caixa->recibo->id ?? 'Não Emitido' }}" readonly placeholder="...">
+                                       value="{{ $banco->recibo->id ?? 'Não Emitido' }}" readonly placeholder="...">
 
                                </div>
                                <!--end::Input group-->
@@ -124,7 +124,7 @@
                                        <!--begin::Datepicker-->
                                        <input class="form-control form-control-transparent fw-bold pe-5"
                                            placeholder="Select date" name="valor" readonly
-                                           value="{{ number_format($caixa->valor, 2, ',', '.') }}" />
+                                           value="{{ number_format($banco->valor, 2, ',', '.') }}" />
                                        <!--end::Datepicker-->
                                        <!--begin::Icon-->
                                        <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
@@ -154,7 +154,7 @@
                                    <input type="text"
                                        class="form-control form-control-solid {{ $errors->has('nome') ? 'is-invalid' : '' }}"
                                        placeholder="Nome da Empresa ou da Pessoa" name="nome"
-                                       value="{{ old('nome', $caixa->recibo->nome ?? '') }}" />
+                                       value="{{ old('nome', $banco->recibo->nome ?? '') }}" />
 
                                    <!-- Exibir Mensagem de Erro -->
                                    @if ($errors->has('nome'))
@@ -177,7 +177,7 @@
                                    <input type="text"
                                        class="form-control form-control-solid {{ $errors->has('cpf_cnpj') ? 'is-invalid' : '' }}"
                                        placeholder="108.834.864-40" id="cpf_cnpj" name="cpf_cnpj"
-                                       value="{{ old('cpf_cnpj', $caixa->recibo->cpf_cnpj ?? '') }}" />
+                                       value="{{ old('cpf_cnpj', $banco->recibo->cpf_cnpj ?? '') }}" />
                                    <!-- Exibir Mensagem de Erro -->
                                    @if ($errors->has('cpf_cnpj'))
                                        <div class="invalid-feedback">
@@ -199,7 +199,7 @@
                                    <!--end::Label-->
                                    <input class="form-control form-control-solid" placeholder="55385-000"
                                        id="cep" name="cep"
-                                       value="{{ optional(optional($caixa->recibo)->address)->cep ?? '' }}" placeholder="Ex: 55385-000" />
+                                       value="{{ optional(optional($banco->recibo)->address)->cep ?? '' }}" placeholder="Ex: 55385-000" />
                                </div>
                                <!--end::Begin-->
                                <!--begin::Col-->
@@ -211,7 +211,7 @@
                                    <!--end::Label-->
                                    <input class="form-control form-control-solid" placeholder="Ex: Rua São José"
                                        id="logradouro" name="logradouro"
-                                       value="{{ optional(optional($caixa->recibo)->address)->rua ?? '' }}" />
+                                       value="{{ optional(optional($banco->recibo)->address)->rua ?? '' }}" />
                                </div>
                                <!--end::Begin-->
                                <!--begin::Col-->
@@ -223,7 +223,7 @@
                                    <!--end::Label-->
                                    <input class="form-control form-control-solid" placeholder="N:108" id="logradouro"
                                        name="numero"
-                                       value="{{ optional(optional($caixa->recibo)->address)->numero ?? '' }}" />
+                                       value="{{ optional(optional($banco->recibo)->address)->numero ?? '' }}" />
                                </div>
                                <!--end::Begin-->
                                <!--end::Input group-->
@@ -238,7 +238,7 @@
                                        <!--begin::Datepicker-->
                                        <input type="text" class="form-control form-control-solid"
                                            placeholder="Ex: Rua Frei Caneca" id="bairro"
-                                           value="{{ optional(optional($caixa->recibo)->address)->bairro ?? '' }}"
+                                           value="{{ optional(optional($banco->recibo)->address)->bairro ?? '' }}"
                                            name="bairro" />
                                        <!--end::Datepicker-->
                                    </div>
@@ -253,7 +253,7 @@
                                        <!--begin::Datepicker-->
                                        <input type="text" class="form-control form-control-solid"
                                            placeholder="Ex: Recife" id="localidade"
-                                           value="{{ optional(optional($caixa->recibo)->address)->cidade ?? '' }}"
+                                           value="{{ optional(optional($banco->recibo)->address)->cidade ?? '' }}"
                                            name="localidade" />
                                        <!--end::Datepicker-->
                                    </div>
@@ -266,7 +266,7 @@
                                    <select id="uf" name="uf"
                                        data-control="select2"class="form-select form-select-solid"
                                        data-control="select2" data-placeholder="Pernambuco"
-                                       {{ optional(optional($caixa->recibo)->uf)->uf ?? ''}}
+                                       {{ optional(optional($banco->recibo)->uf)->uf ?? ''}}
                                        data-hide-search="true">
                                        <option value=""></option>
                                        <option value="AC">Acre</option>
@@ -309,7 +309,7 @@
 
                                <!-- Textarea para descrição -->
                                <textarea class="form-control form-control-solid {{ $errors->has('referente') ? 'is-invalid' : '' }}"
-                                rows="4" name="referente" placeholder="Descreva o serviço prestado">{{ old('referente', $caixa->recibo->referente ?? '') }}</textarea>
+                                rows="4" name="referente" placeholder="Descreva o serviço prestado">{{ old('referente', $banco->recibo->referente ?? '') }}</textarea>
 
 
                                <!-- Exibir Mensagem de Erro -->
@@ -328,9 +328,9 @@
                                    class="btn btn-light me-3">Cancel</button>
 
                                <!-- Exibe os botões somente se existir um Recibo gerado -->
-                               @if (!empty($caixa->recibo) && !empty($caixa->recibo->id))
+                               @if (!empty($banco->recibo) && !empty($banco->recibo->id))
                                    <!-- Botão para Imprimir Recibo -->
-                                   <a href="{{ route('recibo.imprimir', $caixa->recibo->id) }}" target="_blank"
+                                   <a href="{{ route('recibo.imprimir', $banco->recibo->id) }}" target="_blank"
                                        class="btn btn-success">
                                        <i class="fas fa-print"></i> Imprimir Recibo
                                    </a>

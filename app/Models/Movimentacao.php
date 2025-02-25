@@ -45,7 +45,9 @@ class Movimentacao extends Model
 
         // Atualiza saldo após criar uma movimentação
         static::created(function ($movimentacao) {
+
             $entidade = EntidadeFinanceira::find($movimentacao->entidade_id);
+
             if ($movimentacao->tipo === 'entrada') {
                 $entidade->saldo_atual += $movimentacao->valor;
             } else {

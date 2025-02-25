@@ -185,6 +185,9 @@ Route::middleware([
                     ->name('car_insurance.sell');
 
                 Route::resource('transacoes-financeiras', TransacaoFinanceiraController::class);
+                Route::get('/transacao-financeira/grafico', [TransacaoFinanceiraController::class, 'grafico'])
+                        ->name('transacao.grafico');
+
 
                 Route::get('/transacoes/data', [TransacaoFinanceiraController::class, 'getData'])
                     ->name('transacoes.data');

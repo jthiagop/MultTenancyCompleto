@@ -233,4 +233,68 @@ class TransacaoFinanceiraController extends Controller
             ->rawColumns(['comprovacao_fiscal', 'tipo', 'action']) // Indica quais colunas podem ter HTML
             ->make(true);
     }
+
+    public function grafico(Request $request)
+    {
+        // Obtém o mês e ano selecionado ou usa o mês atual como padrão
+        $mesSelecionado = $request->input('mes', Carbon::now()->month);
+        $anoSelecionado = $request->input('ano', Carbon::now()->year);
+
+        // Obtém a quantidade de dias no mês selecionado
+        $diasNoMes = Carbon::create($anoSelecionado, $mesSelecionado, 1)->daysInMonth;
+
+        // Inicializa arrays para armazenar os dados do gráfico
+        $dias = [];
+        $recebimentos = [];
+        $pagamentos = [];
+        $transfEntrada = [];
+        $transfSaida = [];
+        $saldo = [];
+
+        // Busca todas as transações do mês selecionado
+        $transacoes = TransacaoFinanceira::whereYear('data_competencia', $anoSelecionado)
+            ->whereMonth('data_competencia', $mesSelecionado)
+            ->orderBy('data_competencia')
+            ->get();
+
+        // Variável para armazenar o saldo acumulado
+        $saldoAcumulado = 0;
+
+        // Loop para preencher os dados do gráfico para cada dia do mês
+        for ($dia = 1; $dia <= $diasNoMes; $dia++) {
+            $dataLoop = Carbon::create($anoSelecionado, $mesSelecionado, $dia)->format('Y-m-d');
+
+            // Filtra as transações do dia
+            $transacoesDia = $transacoes->filter(fn($t) => $t->data_competencia->format('Y-m-d') === $dataLoop);
+
+            // Calcula os totais de cada tipo de transação no dia
+            $valorRecebimentos = $transacoesDia->where('tipo', 'entrada')->sum('valor');
+            $valorPagamentos = $transacoesDia->where('tipo', 'saida')->sum('valor');
+            $valorTransfEnt = $transacoesDia->where('tipo', 'transfer_in')->sum('valor');
+            $valorTransfSai = $transacoesDia->where('tipo', 'transfer_out')->sum('valor');
+
+            // Atualiza o saldo acumulado
+            $saldoAcumulado += ($valorRecebimentos + $valorTransfEnt) - ($valorPagamentos + $valorTransfSai);
+
+            // Adiciona os valores ao array
+            $dias[] = $dia;
+            $recebimentos[] = (float) $valorRecebimentos;
+            $pagamentos[] = (float) $valorPagamentos;
+            $transfEntrada[] = (float) $valorTransfEnt;
+            $transfSaida[] = (float) $valorTransfSai;
+            $saldo[] = (float) $saldoAcumulado;
+        }
+
+        // Retorna para a view com os dados
+        return view('financeiro.graficos.mensal', compact(
+            'dias',
+            'recebimentos',
+            'pagamentos',
+            'transfEntrada',
+            'transfSaida',
+            'saldo',
+            'mesSelecionado',
+            'anoSelecionado'
+        ));
+    }
 }

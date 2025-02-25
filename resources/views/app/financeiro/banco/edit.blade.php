@@ -2,7 +2,12 @@
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 
 <script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
+
 <x-tenant-app-layout>
+
+    {{-- *** Modal *** --}}
+    @include('app.components.modals.financeiro.recibo.reciboBanco')
+
     <!--begin::Main-->
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -143,8 +148,31 @@
                 <div id="kt_app_content_container" class="app-container container-xxl">
                     <!--begin::Layout-->
                     <div class="d-flex flex-column flex-lg-row">
-                        <!--begin::Content-->
-                        <div class="flex-lg-row-fluid me-lg-15 order-2 order-lg-1 mb-10 mb-lg-0">
+
+                    </div>
+                    <!--end::Layout-->
+                </div>
+                <!--end::Content container-->
+            </div>
+            <!--end::Content-->
+        </div>
+        <!--end::Content wrapper-->
+    </div>
+    <!--end:::Main-->
+
+    <!--begin::Main-->
+    <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
+        <!--begin::Content wrapper-->
+        <div class="d-flex flex-column flex-column-fluid">
+            <!--begin::Content-->
+            <div id="kt_app_content" class="app-content flex-column-fluid">
+                <!--begin::Content container-->
+                <div id="kt_app_content_container" class="app-container container-xxl">
+                    <!--begin::Hero card-->
+                    <div class="card mb-12">
+                        <!--begin::Hero body-->
+                        <div class="card-body flex-column p-5">
+                            <!--begin::Content-->
                             <!--begin::Card-->
                             <div class="card card-flush pt-3 mb-5 mb-xl-10">
                                 <!--begin::Card header-->
@@ -153,7 +181,8 @@
                                     <div class="card-title">
                                         <div class="d-flex align-items-center mb-2">
                                             <a href="#"
-                                                class="text-gray-800 text-hover-primary fs-2 fw-bolder me-1">Dados da
+                                                class="text-gray-800 text-hover-primary fs-2 fw-bolder me-1">Dados
+                                                da
                                                 Cobrança:</a>
 
                                             @if ($banco->tipo === 'entrada')
@@ -218,6 +247,137 @@
                                         </a>
                                     </div>
                                     <!--end::Card toolbar-->
+                                    <!--begin::Actions-->
+                                    <div class="d-flex mb-4 align-items-center">
+                                        <div class="me-0">
+                                            <!-- Botão do Menu -->
+                                            <button class="btn btn-sm btn-icon btn-bg-warning btn-active-color-light"
+                                                data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end"
+                                                aria-label="Opções">
+                                                <i class="bi bi-three-dots fs-3"></i>
+                                            </button>
+                                            <!--begin::Menu Dropdown-->
+                                            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px py-3"
+                                                data-kt-menu="true">
+                                                <!--begin::Título do Menu-->
+                                                <div class="menu-item px-3">
+                                                    <div class="menu-content text-muted pb-2 px-3 fs-7 text-uppercase">
+                                                        Gerenciamento
+                                                    </div>
+                                                </div>
+                                                <!--end::Título do Menu-->
+                                                <div class="menu-item px-3">
+                                                    <a href="#"
+                                                        class="menu-link px-3 icon-hover-blue"data-bs-toggle="modal"
+                                                        data-bs-target="#kt_modal_new_card">
+                                                        <i class="fas fa-edit me-2"></i>Editar Lançamento</a>
+                                                </div>
+                                                <!--end::Item: Editar-->
+                                                <!--begin::Item: Criar Fatura-->
+                                                <!-- HTML -->
+                                                <div class="menu-item px-3">
+                                                    <a href="#" data-bs-toggle="modal"
+                                                        data-bs-target="#kt_modal_new_ticket"
+                                                        class="menu-link px-3 icon-hover-blue">
+                                                        <i class="bi bi-receipt me-2"></i>
+                                                        Gerar Recibo
+                                                    </a>
+                                                </div>
+                                                <div class="menu-item px-3">
+                                                    <form action="{{ route('bill.print', $banco->id) }}"
+                                                        method="POST" class="d-inline">
+                                                        @csrf <!-- Token CSRF para segurança -->
+                                                        <button type="submit"
+                                                            class="menu-link px-3 icon-hover-blue bg-transparent border-0 w-100 text-start">
+                                                            <i class="bi bi-printer me-2"></i>
+                                                            <!-- Ícone de impressão -->
+                                                            Imprimir
+                                                        </button>
+                                                    </form>
+                                                </div>
+                                                <!-- CSS -->
+                                                <style>
+                                                    /* Quando pairar o mouse sobre o link .icon-hover-blue, o ícone dentro dele (i) ficará azul */
+                                                    .icon-hover-blue:hover i {
+                                                        color: #0d6efd;
+                                                        /* Azul padrão do Bootstrap ou cor de sua preferência */
+                                                    }
+                                                </style>
+                                                <!--end::Item: Criar Fatura-->
+                                                <!--begin::Item: Criar Pagamento (exemplo com ícone de alerta)-->
+                                                <!--end::Item: Criar Pagamento-->
+                                                <!--begin::Item: Gerar Boleto-->
+                                                <div class="menu-item px-3">
+                                                    <a href="#" class="menu-link px-3">Gerar Boleto</a>
+                                                </div>
+                                                <!--end::Item: Gerar Boleto-->
+                                                <!--begin::Item: Assinatura (submenu)-->
+                                                <div class="menu-item px-3" data-kt-menu-trigger="hover"
+                                                    data-kt-menu-placement="right-end">
+                                                    <a href="#" class="menu-link px-3">
+                                                        <span class="menu-title">Assinatura</span>
+                                                        <span class="menu-arrow"></span>
+                                                    </a>
+                                                    <!--begin::Submenu-->
+                                                    <div class="menu-sub menu-sub-dropdown w-175px py-4">
+                                                        <!--begin::Item: Planos-->
+                                                        <div class="menu-item px-3">
+                                                            <a href="#" class="menu-link px-3">Planos</a>
+                                                        </div>
+                                                        <!--end::Item: Planos-->
+
+                                                        <!--begin::Item: Cobrança-->
+                                                        <div class="menu-item px-3">
+                                                            <a href="#" class="menu-link px-3">Cobrança</a>
+                                                        </div>
+                                                        <!--end::Item: Cobrança-->
+
+                                                        <!--begin::Item: Extratos-->
+                                                        <div class="menu-item px-3">
+                                                            <a href="#" class="menu-link px-3">Extratos</a>
+                                                        </div>
+                                                        <!--end::Item: Extratos-->
+
+                                                        <!--begin::Separador-->
+                                                        <div class="separator my-2"></div>
+                                                        <!--end::Separador-->
+
+                                                        <!--begin::Item: Recorrência (switch)-->
+                                                        <div class="menu-item px-3">
+                                                            <div class="menu-content px-3">
+                                                                <label
+                                                                    class="form-check form-switch form-check-custom form-check-solid">
+                                                                    <input class="form-check-input w-30px h-20px"
+                                                                        type="checkbox" value="1"
+                                                                        checked="checked" name="notifications" />
+                                                                    <span
+                                                                        class="form-check-label text-muted fs-6">Recorrente</span>
+                                                                </label>
+                                                            </div>
+                                                        </div>
+                                                        <!--end::Item: Recorrência (switch)-->
+                                                    </div>
+                                                    <!--end::Submenu-->
+                                                </div>
+                                                <!--end::Item: Assinatura (submenu)-->
+
+                                                <!--begin::Item: Excluir-->
+                                                <div class="menu-item px-3 icon-hover-danger">
+                                                    <a href="#" class="menu-link px-3 text-danger"
+                                                        data-bs-toggle="modal" data-bs-target="#kt_modal_delete_card">
+                                                        <i class="bi bi-trash me-2 text-danger"></i>
+                                                        Excluir
+                                                    </a>
+
+                                                </div>
+                                                <!--end::Item: Excluir-->
+                                            </div>
+                                            <!--end::Menu Dropdown-->
+                                        </div>
+                                        <!--end::Menu-->
+
+                                    </div>
+                                    <!--end::Actions-->
                                 </div>
                                 <!--end::Card header-->
                                 <!--begin::Card body-->
@@ -354,7 +514,8 @@
                                 <div class="modal-dialog" role="document">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar Exclusão
+                                            <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar
+                                                Exclusão
                                             </h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal"
                                                 aria-label="Close"></button>
@@ -381,197 +542,200 @@
                                 </div>
                             </div>
                             <!--end::Modal - Confirm Delete-->
-
+                        </div>
+                        <!--end::Hero body-->
+                    </div>
+                    <!--end::Hero card-->
+                    <!--begin::Row-->
+                    <div class="row gy-0 mb-6 mb-xl-12">
+                        <!--begin::Col-->
+                        <!--begin::Card-->
+                        <div class="card card-flush pt-3 mb-5 mb-xl-10">
                             <!--begin::Card-->
-                            <div class="card card-flush pt-3 mb-5 mb-xl-10">
-                                <!--begin::Card-->
-                                <div class="card card-flush">
-                                    <!--begin::Card header-->
-                                    <div class="card-header pt-8">
-                                        <div class="card-title">
-                                            <!--begin::Search-->
-                                            <div class="d-flex align-items-center position-relative my-1">
-                                                <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-                                                <span class="svg-icon svg-icon-1 position-absolute ms-6">
+                            <div class="card card-flush">
+                                <!--begin::Card header-->
+                                <div class="card-header pt-8">
+                                    <div class="card-title">
+                                        <!--begin::Search-->
+                                        <div class="d-flex align-items-center position-relative my-1">
+                                            <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
+                                            <span class="svg-icon svg-icon-1 position-absolute ms-6">
+                                                <svg width="24" height="24" viewBox="0 0 24 24"
+                                                    fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546"
+                                                        height="2" rx="1"
+                                                        transform="rotate(45 17.0365 15.1223)" fill="currentColor" />
+                                                    <path
+                                                        d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
+                                                        fill="currentColor" />
+                                                </svg>
+                                            </span>
+                                            <!--end::Svg Icon-->
+                                            <input type="text" data-kt-filemanager-table-filter="search"
+                                                class="form-control form-control-solid w-250px ps-15"
+                                                placeholder="Pesquisar Arquivos" />
+                                        </div>
+                                        <!--end::Search-->
+                                    </div>
+                                    <!--begin::Card toolbar-->
+                                    <div class="card-toolbar">
+                                        <!--begin::Toolbar-->
+                                        <div class="d-flex justify-content-end"
+                                            data-kt-filemanager-table-toolbar="base">
+                                            <!--begin::Export-->
+                                            @include('app.components.modals.modal-upload-banco')
+                                            <!--begin::Add customer-->
+                                            <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                                data-bs-target="#kt_modal_upload_arquivo">
+                                                <!--begin::Svg Icon | path: icons/duotune/files/fil018.svg-->
+                                                <span class="svg-icon svg-icon-2">
                                                     <svg width="24" height="24" viewBox="0 0 24 24"
                                                         fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546"
-                                                            height="2" rx="1"
-                                                            transform="rotate(45 17.0365 15.1223)"
+                                                        <path opacity="0.3" d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
                                                             fill="currentColor" />
                                                         <path
-                                                            d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
+                                                            d="M10.4 3.6L12 6H21C21.6 6 22 6.4 22 7V19C22 19.6 21.6 20 21 20H3C2.4 20 2 19.6 2 19V4C2 3.4 2.4 3 3 3H9.2C9.7 3 10.2 3.2 10.4 3.6ZM16 11.6L12.7 8.3C12.3 7.9 11.7 7.9 11.3 8.3L8 11.6H11V17C11 17.6 11.4 18 12 18C12.6 18 13 17.6 13 17V11.6H16Z"
                                                             fill="currentColor" />
                                                     </svg>
                                                 </span>
-                                                <!--end::Svg Icon-->
-                                                <input type="text" data-kt-filemanager-table-filter="search"
-                                                    class="form-control form-control-solid w-250px ps-15"
-                                                    placeholder="Pesquisar Arquivos" />
-                                            </div>
-                                            <!--end::Search-->
+                                                Anexar Arquivo
+                                            </button>
+                                            <!--end::Add customer-->
                                         </div>
-                                        <!--begin::Card toolbar-->
-                                        <div class="card-toolbar">
-                                            <!--begin::Toolbar-->
-                                            <div class="d-flex justify-content-end"
-                                                data-kt-filemanager-table-toolbar="base">
-                                                <!--begin::Export-->
-                                                @include('app.components.modals.modal-upload-banco')
-                                                <!--begin::Add customer-->
-                                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                                    data-bs-target="#kt_modal_upload_arquivo">
-                                                    <!--begin::Svg Icon | path: icons/duotune/files/fil018.svg-->
-                                                    <span class="svg-icon svg-icon-2">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <path opacity="0.3"
-                                                                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
-                                                                fill="currentColor" />
-                                                            <path
-                                                                d="M10.4 3.6L12 6H21C21.6 6 22 6.4 22 7V19C22 19.6 21.6 20 21 20H3C2.4 20 2 19.6 2 19V4C2 3.4 2.4 3 3 3H9.2C9.7 3 10.2 3.2 10.4 3.6ZM16 11.6L12.7 8.3C12.3 7.9 11.7 7.9 11.3 8.3L8 11.6H11V17C11 17.6 11.4 18 12 18C12.6 18 13 17.6 13 17V11.6H16Z"
-                                                                fill="currentColor" />
-                                                        </svg>
-                                                    </span>
-                                                    Anexar Arquivo
-                                                </button>
-                                                <!--end::Add customer-->
-                                            </div>
-                                            <!--end::Toolbar-->
-                                        </div>
-                                        <!--end::Card toolbar-->
+                                        <!--end::Toolbar-->
                                     </div>
-                                    <!--end::Card header-->
-                                    <!--begin::Card body-->
-                                    <div class="card-body">
-                                        <!--begin::Table-->
-                                        <table id="kt_file_manager_list" data-kt-filemanager-table="files"
-                                            class="table align-middle table-row-dashed fs-6 gy-3">
-                                            <!--begin::Table head-->
-                                            <thead>
-                                                <tr class="text-start text-gray-400 fw-bold fs-6 text-uppercase gs-0">
-                                                    <th class="min-w-10px">ID</th>
-                                                    <th class="min-w-250px">Nome</th>
-                                                    <th class="min-w-10px">Tamanho</th>
-                                                    <th class="min-w-125px">Última Modificação</th>
-                                                    <th class="w-125px text-end">Ações</th>
+                                    <!--end::Card toolbar-->
+                                </div>
+                                <!--end::Card header-->
+                                <!--begin::Card body-->
+                                <div class="card-body">
+                                    <!--begin::Table-->
+                                    <table id="kt_file_manager_list" data-kt-filemanager-table="files"
+                                        class="table align-middle table-row-dashed fs-6 gy-3">
+                                        <!--begin::Table head-->
+                                        <thead>
+                                            <tr class="text-start text-gray-400 fw-bold fs-6 text-uppercase gs-0">
+                                                <th class="min-w-10px">ID</th>
+                                                <th class="min-w-250px">Nome</th>
+                                                <th class="min-w-10px">Tamanho</th>
+                                                <th class="min-w-125px">Última Modificação</th>
+                                                <th class="w-125px text-end">Ações</th>
+                                            </tr>
+                                        </thead>
+                                        <!--end::Table head-->
+                                        <!--begin::Table body-->
+                                        <tbody class="fw-semibold text-gray-600">
+                                            @forelse ($banco->modulos_anexos as $file)
+                                                <tr>
+                                                    <!-- ID -->
+                                                    <td>{{ $file->id }}</td>
+
+                                                    <!-- Nome -->
+                                                    <td>
+                                                        <x-file-icon :file="$file->nome_arquivo" />
+                                                    </td>
+
+                                                    <!-- Tamanho -->
+                                                    <td>{{ formatSizeUnits($file->tamanho_arquivo) }}</td>
+
+                                                    <!-- Última Modificação -->
+                                                    <td>{{ \Carbon\Carbon::parse($file->updated_at)->format('d M Y, g:i a') }}
+                                                    </td>
+
+                                                    <!-- Ações -->
+                                                    <td class="text-end">
+                                                        <a href="#"
+                                                            class="btn btn-icon btn-active-light-danger w-30px h-30px"
+                                                            title="Excluir" data-bs-toggle="modal"
+                                                            data-bs-target="#kt_modal_delete_file">
+                                                            <span class="svg-icon svg-icon-3">
+                                                                <svg width="24" height="24"
+                                                                    viewBox="0 0 24 24" fill="none"
+                                                                    xmlns="http://www.w3.org/2000/svg">
+                                                                    <path
+                                                                        d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z"
+                                                                        fill="currentColor" />
+                                                                    <path opacity="0.5"
+                                                                        d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z"
+                                                                        fill="currentColor" />
+                                                                    <path opacity="0.5"
+                                                                        d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z"
+                                                                        fill="currentColor" />
+                                                                </svg>
+                                                            </span>
+                                                        </a>
+                                                    </td>
                                                 </tr>
-                                            </thead>
-                                            <!--end::Table head-->
-                                            <!--begin::Table body-->
-                                            <tbody class="fw-semibold text-gray-600">
-                                                @forelse ($banco->modulos_anexos as $file)
-                                                    <tr>
-                                                        <!-- ID -->
-                                                        <td>{{ $file->id }}</td>
+                                                <!--begin::Modal - Confirmar Exclusão-->
+                                                <div class="modal fade" id="kt_modal_delete_file" tabindex="-1"
+                                                    aria-hidden="true">
+                                                    <div class="modal-dialog modal-dialog-centered">
+                                                        <div class="modal-content">
+                                                            <!-- Cabeçalho -->
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title text-danger fw-bold">
+                                                                    Confirmar Exclusão</h5>
+                                                                <button type="button" class="btn-close"
+                                                                    data-bs-dismiss="modal"
+                                                                    aria-label="Close"></button>
+                                                            </div>
 
-                                                        <!-- Nome -->
-                                                        <td>
-                                                            <x-file-icon :file="$file->nome_arquivo" />
-                                                        </td>
+                                                            <!-- Corpo -->
+                                                            <div class="modal-body text-center">
+                                                                <i
+                                                                    class="bi bi-exclamation-circle-fill text-danger fs-2 mb-4"></i>
+                                                                <p class="mb-0 fs-5 fw-semibold text-center">
+                                                                    Tem certeza que deseja excluir o documento
+                                                                    <strong>#{{ $file->nome_arquivo }}</strong>?
+                                                                </p>
+                                                                <small class="text-muted d-block mt-3">
+                                                                    Esta ação não pode ser desfeita.
+                                                                </small>
+                                                            </div>
 
-                                                        <!-- Tamanho -->
-                                                        <td>{{ formatSizeUnits($file->tamanho_arquivo) }}</td>
-
-                                                        <!-- Última Modificação -->
-                                                        <td>{{ \Carbon\Carbon::parse($file->updated_at)->format('d M Y, g:i a') }}
-                                                        </td>
-
-                                                        <!-- Ações -->
-                                                        <td class="text-end">
-                                                            <a href="#"
-                                                                class="btn btn-icon btn-active-light-danger w-30px h-30px"
-                                                                title="Excluir" data-bs-toggle="modal"
-                                                                data-bs-target="#kt_modal_delete_file">
-                                                                <span class="svg-icon svg-icon-3">
-                                                                    <svg width="24" height="24"
-                                                                        viewBox="0 0 24 24" fill="none"
-                                                                        xmlns="http://www.w3.org/2000/svg">
-                                                                        <path
-                                                                            d="M5 9C5 8.44772 5.44772 8 6 8H18C18.5523 8 19 8.44772 19 9V18C19 19.6569 17.6569 21 16 21H8C6.34315 21 5 19.6569 5 18V9Z"
-                                                                            fill="currentColor" />
-                                                                        <path opacity="0.5"
-                                                                            d="M5 5C5 4.44772 5.44772 4 6 4H18C18.5523 4 19 4.44772 19 5V5C19 5.55228 18.5523 6 18 6H6C5.44772 6 5 5.55228 5 5V5Z"
-                                                                            fill="currentColor" />
-                                                                        <path opacity="0.5"
-                                                                            d="M9 4C9 3.44772 9.44772 3 10 3H14C14.5523 3 15 3.44772 15 4V4H9V4Z"
-                                                                            fill="currentColor" />
-                                                                    </svg>
-                                                                </span>
-                                                            </a>
-                                                        </td>
-                                                    </tr>
-                                                    <!--begin::Modal - Confirmar Exclusão-->
-                                                    <div class="modal fade" id="kt_modal_delete_file" tabindex="-1"
-                                                        aria-hidden="true">
-                                                        <div class="modal-dialog modal-dialog-centered">
-                                                            <div class="modal-content">
-                                                                <!-- Cabeçalho -->
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title text-danger fw-bold">
-                                                                        Confirmar Exclusão</h5>
-                                                                    <button type="button" class="btn-close"
-                                                                        data-bs-dismiss="modal"
-                                                                        aria-label="Close"></button>
-                                                                </div>
-
-                                                                <!-- Corpo -->
-                                                                <div class="modal-body text-center">
-                                                                    <i
-                                                                        class="bi bi-exclamation-circle-fill text-danger fs-2 mb-4"></i>
-                                                                    <p class="mb-0 fs-5 fw-semibold text-center">
-                                                                        Tem certeza que deseja excluir o documento
-                                                                        <strong>#{{ $file->nome_arquivo }}</strong>?
-                                                                    </p>
-                                                                    <small class="text-muted d-block mt-3">
-                                                                        Esta ação não pode ser desfeita.
-                                                                    </small>
-                                                                </div>
-
-                                                                <!-- Rodapé -->
-                                                                <div class="modal-footer justify-content-center">
-                                                                    <form method="POST"
-                                                                        action="{{ route('modulosAnexos.destroy', $file->id) }}"
-                                                                        class="d-inline">
-                                                                        @csrf
-                                                                        @method('DELETE')
-                                                                        <button type="button"
-                                                                            class="btn btn-secondary px-4"
-                                                                            data-bs-dismiss="modal">Cancelar</button>
-                                                                        <button type="submit"
-                                                                            class="btn btn-danger px-4">
-                                                                            <i class="fas fa-trash-alt me-2"></i>
-                                                                            Confirmar Exclusão
-                                                                        </button>
-                                                                    </form>
-                                                                </div>
+                                                            <!-- Rodapé -->
+                                                            <div class="modal-footer justify-content-center">
+                                                                <form method="POST"
+                                                                    action="{{ route('modulosAnexos.destroy', $file->id) }}"
+                                                                    class="d-inline">
+                                                                    @csrf
+                                                                    @method('DELETE')
+                                                                    <button type="button"
+                                                                        class="btn btn-secondary px-4"
+                                                                        data-bs-dismiss="modal">Cancelar</button>
+                                                                    <button type="submit"
+                                                                        class="btn btn-danger px-4">
+                                                                        <i class="fas fa-trash-alt me-2"></i>
+                                                                        Confirmar Exclusão
+                                                                    </button>
+                                                                </form>
                                                             </div>
                                                         </div>
-
                                                     </div>
-                                                    <!--end::Modal - Confirmar Exclusão-->
-                                                @empty
-                                                    <tr>
-                                                        <td colspan="5" class="text-center text-muted">Nenhum
-                                                            arquivo encontrado.</td>
-                                                    </tr>
-                                                @endforelse
-                                            </tbody>
 
-                                            <!--end::Table body-->
-                                        </table>
-                                        <!--end::Table-->
-                                    </div>
-                                    <!--end::Card body-->
+                                                </div>
+                                                <!--end::Modal - Confirmar Exclusão-->
+                                            @empty
+                                                <tr>
+                                                    <td colspan="5" class="text-center text-muted">Nenhum
+                                                        arquivo encontrado.</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
 
+                                        <!--end::Table body-->
+                                    </table>
+                                    <!--end::Table-->
                                 </div>
-                                <!--end::Card-->
+                                <!--end::Card body-->
+
                             </div>
                             <!--end::Card-->
                         </div>
-                        <!--end::Content-->
+                        <!--end::Card-->
+                        <!--end::Col-->
                     </div>
-                    <!--end::Layout-->
+                    <!--end::Row-->
                 </div>
                 <!--end::Content container-->
             </div>

@@ -30,6 +30,7 @@ class PrestacaoDeContaController extends Controller
         ]);
     }
 
+
     public function gerarPdf(Request $request)
     {
         // 1) Capturar filtros
@@ -100,7 +101,7 @@ class PrestacaoDeContaController extends Controller
         $pdf = Browsershot::html($html)
             ->format('A4')
             ->landscape()         // se precisar de modo paisagem
-            ->margins(10, 10, 10, 10)
+            ->margins(5, 5, 5, 5)
             ->showBackground()     // se quiser renderizar background de CSS
             ->pdf();
 

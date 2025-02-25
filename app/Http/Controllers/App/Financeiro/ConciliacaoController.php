@@ -13,6 +13,7 @@ use App\Models\Movimentacao;
 use App\Models\User;
 use Auth;
 use Carbon\Carbon;
+use DB;
 use Illuminate\Http\Request;
 
 class ConciliacaoController extends Controller
@@ -91,85 +92,79 @@ class ConciliacaoController extends Controller
 
     public function conciliar(StoreTransacaoFinanceiraRequest $request)
     {
-        $request->validate([
-            'bank_statement_id' => 'required|exists:bank_statements,id',
-            'transacao_id' => 'required|exists:transacoes_financeiras,id',
-            'valor' => 'nullable|numeric',
-        ]);
+        // Inicia uma transação para evitar inconsistências no banco
+        return DB::transaction(function () use ($request) {
+            // Recupera a companhia associada ao usuário autenticado
+            $subsidiary = User::getCompany();
 
-         // Recupera a companhia associada ao usuário autenticado
-         $subsidiary = User::getCompany();
+            if (!$subsidiary) {
+                return redirect()->back()->with('error', 'Companhia não encontrada.');
+            }
 
-         if (!$subsidiary) {
-             return redirect()->back()->with('error', 'Companhia não encontrada.');
-         }
+            // Processa os dados validados
+            $validatedData = $request->validated();
 
-         // Validação dos dados é automática com StoreTransacaoFinanceiraRequest, não é necessário duplicar validações aqui
+            // **Garante que o valor sempre seja positivo**
+            $validatedData['valor'] = abs($validatedData['valor']);
 
-         // Processa os dados validados
-         $validatedData = $request->validated();
+            // Adiciona informações padrão
+            $validatedData['company_id'] = $subsidiary->company_id;
+            $validatedData['created_by'] = Auth::id();
+            $validatedData['created_by_name'] = Auth::user()->name;
+            $validatedData['updated_by'] = Auth::id();
+            $validatedData['updated_by_name'] = Auth::user()->name;
 
+            // Gera movimentação financeira
+            $movimentacao = $this->movimentacao($validatedData);
+            $validatedData['movimentacao_id'] = $movimentacao->id;
 
-         // Converte o valor e a data para os formatos adequados
-         $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
+            // Cria a transação financeira
+            $caixa = TransacaoFinanceira::create($validatedData);
 
-         // Adiciona informações padrão
-         $validatedData['company_id'] = $subsidiary->company_id;
-         $validatedData['created_by'] = Auth::id();
-         $validatedData['created_by_name'] = Auth::user()->name;
-         $validatedData['updated_by'] = Auth::id();
-         $validatedData['updated_by_name'] = Auth::user()->name;
+            // Processa lançamentos padrão
+            $this->processarLancamentoPadrao($validatedData);
 
-         $validatedData['updated_by_name'] = Auth::user()->name;
+            // Processa anexos, se existirem
+            $this->processarAnexos($request, $caixa);
 
-         // 1) Chama o método movimentacao() e guarda o retorno
-         $movimentacao = $this->movimentacao($validatedData);
+            // Recupera os registros necessários
+            $bankStatement = BankStatement::find($request->bank_statement_id);
+            $transacao = TransacaoFinanceira::find($request->transacao_id);
 
+            if (!$bankStatement || !$transacao) {
+                return redirect()->back()->with('error', 'Erro ao buscar dados para conciliação.');
+            }
 
-         // 2) Atribui o ID retornado à chave movimentacao_id de $validatedData
-         $validatedData['movimentacao_id'] = $movimentacao->id;
+            // Define o valor conciliado
+            $valorConciliado = $request->valor ?? $transacao->valor;
 
-         // 3) Cria o registro na tabela transacoes_financeiras usando o ID que acabamos de obter
-         $caixa = TransacaoFinanceira::create($validatedData);
+            // **Lógica para definir o status**
+            if (bccomp($valorConciliado, $bankStatement->amount, 2) === 0) {
+                $status = 'ok'; // Conciliação perfeita
+            } elseif ($valorConciliado < $transacao->valor) {
+                $status = 'parcial'; // Conciliação parcial (falta valor)
+            } elseif ($valorConciliado > $transacao->valor) {
+                $status = 'divergente'; // Conciliação com excesso
+            } else {
+                $status = 'pendente'; // Algo inesperado, pendente de verificação
+            }
 
-         // Verifica e processa lançamentos padrão
-         $this->processarLancamentoPadrao($validatedData);
+            // **Atualiza bank_statements**
+            $bankStatement->update([
+                'reconciled' => true,
+                'status_conciliacao' => $status,
+            ]);
 
-         // Processa anexos, se existirem
-         $this->processarAnexos($request, $caixa);
+            // **Armazena na tabela pivot**
+            $bankStatement->transacoes()->attach($transacao->id, [
+                'valor_conciliado' => $valorConciliado,
+                'status_conciliacao' => $status,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
 
-
-        $bankStatement = BankStatement::findOrFail($request->bank_statement_id);
-        $transacao = TransacaoFinanceira::findOrFail($request->transacao_id);
-        $valorConciliado = $request->valor ?? $transacao->valor;
-
-        // **Lógica para definir o status**
-        if (bccomp($valorConciliado, $bankStatement->amount, 2) === 0) {
-            $status = 'ok'; // Conciliação perfeita
-        } elseif ($valorConciliado < $transacao->valor) {
-            $status = 'parcial'; // Conciliação parcial (falta valor)
-        } elseif ($valorConciliado > $transacao->valor) {
-            $status = 'divergente'; // Conciliação com excesso
-        } else {
-            $status = 'pendente'; // Algo inesperado, pendente de verificação
-        }
-
-        // **Atualiza bank_statements**
-        $bankStatement->update([
-            'reconciled' => true,
-            'status_conciliacao' => $status,
-        ]);
-
-
-        // **Armazena na tabela pivot**
-        $bankStatement->transacoes()->attach($transacao->id, [
-            'valor_conciliado' => $valorConciliado,
-            'status_conciliacao' => $status,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        return redirect()->back()->with('success', 'Lançamento conciliado com sucesso!');
+            return redirect()->back()->with('success', 'Lançamento conciliado com sucesso!');
+        });
     }
 
 

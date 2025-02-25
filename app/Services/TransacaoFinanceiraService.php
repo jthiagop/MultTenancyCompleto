@@ -124,4 +124,60 @@ class TransacaoFinanceiraService
             ]);
         }
     }
+
+    public function getDadosGrafico($mes, $ano)
+    {
+        // Obtém a quantidade de dias no mês selecionado
+        $diasNoMes = Carbon::create($ano, $mes, 1)->daysInMonth;
+
+        // Inicializa arrays para armazenar os dados do gráfico
+        $dias = [];
+        $recebimentos = [];
+        $pagamentos = [];
+        $transfEntrada = [];
+        $transfSaida = [];
+        $saldo = [];
+
+        // Busca todas as transações do mês selecionado
+        $transacoes = TransacaoFinanceira::whereYear('data_competencia', $ano)
+        ->whereMonth('data_competencia', $mes)
+        ->orderBy('data_competencia')
+        ->get()
+        ->map(function ($transacao) {
+            // Converte a string para um objeto Carbon
+            $transacao->data_competencia = Carbon::parse($transacao->data_competencia);
+            return $transacao;
+        });
+
+
+        // Variável para armazenar o saldo acumulado
+        $saldoAcumulado = 0;
+
+        // Loop para preencher os dados do gráfico para cada dia do mês
+        for ($dia = 1; $dia <= $diasNoMes; $dia++) {
+            $dataLoop = Carbon::create($ano, $mes, $dia)->format('Y-m-d');
+
+            // Filtra as transações do dia
+            $transacoesDia = $transacoes->filter(fn ($t) => $t->data_competencia->format('Y-m-d') === $dataLoop);
+
+            // Calcula os totais de cada tipo de transação no dia
+            $valorRecebimentos = $transacoesDia->where('tipo', 'entrada')->sum('valor');
+            $valorPagamentos = $transacoesDia->where('tipo', 'saida')->sum('valor');
+            $valorTransfEnt = $transacoesDia->where('tipo', 'transfer_in')->sum('valor');
+            $valorTransfSai = $transacoesDia->where('tipo', 'transfer_out')->sum('valor');
+
+            // Atualiza o saldo acumulado
+            $saldoAcumulado += ($valorRecebimentos + $valorTransfEnt) - ($valorPagamentos + $valorTransfSai);
+
+            // Adiciona os valores ao array
+            $dias[] = $dia;
+            $recebimentos[] = (float) $valorRecebimentos;
+            $pagamentos[] = (float) $valorPagamentos;
+            $transfEntrada[] = (float) $valorTransfEnt;
+            $transfSaida[] = (float) $valorTransfSai;
+            $saldo[] = (float) $saldoAcumulado;
+        }
+
+        return compact('dias', 'recebimentos', 'pagamentos', 'transfEntrada', 'transfSaida', 'saldo');
+    }
 }

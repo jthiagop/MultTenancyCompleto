@@ -143,20 +143,14 @@
                                  <td>25 Jul 2023, 6:05 pm</td>
                                  <!--begin::Status=-->
                                  <!-- Status de Conciliação -->
-                                 @if ($entidade->bankStatements->first())
                                      <td class="text-end pe-0">
-                                         <!-- Badge de Status -->
-                                         <span
-                                             class="badge {{ $entidade->bankStatements->first()->reconciled ? 'badge-light-success' : 'badge-light-warning' }} fs-base">
-                                             {{ $entidade->bankStatements->first()->reconciled ? 'Realizada' : 'Pendente' }}
-                                         </span>
+                                        @foreach ($entidadesBanco as $entidade)
+                                        <span class="badge {{ $entidade->badge_class }} fs-base">
+                                            {{ $entidade->status_conciliacao }}
+                                        </span>
+                                    @endforeach
+
                                      </td>
-                                 @else
-                                     <td class="text-end pe-0">
-                                         <!-- Mensagem padrão caso não haja registros -->
-                                         <span class="text-muted fs-base">Nenhum registro encontrado</span>
-                                     </td>
-                                 @endif
                                  <!--begin::No products=-->
                                  <td class="text-end pe-0">62</td>
                                  <!--end::No products=-->
