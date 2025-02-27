@@ -153,91 +153,10 @@
                                             <div
                                                 class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6">
                                                 <!--begin::Svg Icon | path: icons/duotune/finance/fin006.svg-->
-                                                <span class="svg-icon svg-icon-3x me-5">
-                                                    <svg version="1.1" id="_x34_"
-                                                        xmlns="http://www.w3.org/2000/svg"
-                                                        xmlns:xlink="http://www.w3.org/1999/xlink"
-                                                        viewBox="0 0 512.00 512.00" xml:space="preserve"
-                                                        width="256px" height="256px" fill="#000000"
-                                                        stroke="#000000" stroke-width="4.096">
-                                                        <g id="SVGRepo_bgCarrier" stroke-width="0"></g>
-                                                        <g id="SVGRepo_tracerCarrier" stroke-linecap="round"
-                                                            stroke-linejoin="round" stroke="#CCCCCC"
-                                                            stroke-width="1.024">
-                                                        </g>
-                                                        <g id="SVGRepo_iconCarrier">
-                                                            <g>
-                                                                <polygon style="fill:#EFEEEF;"
-                                                                    points="474.016,135.427 493.838,135.427 493.838,85.881 256.001,0 18.162,85.881 18.162,135.427 37.985,135.427 ">
-                                                                </polygon>
-                                                                <polygon style="fill:#E3E1E1;"
-                                                                    points="50.81,105.702 256.001,31.602 461.19,105.702 ">
-                                                                </polygon>
-                                                                <polygon style="fill:#CBCBCB;"
-                                                                    points="270.627,36.883 256.001,31.602 50.81,105.702 80.063,105.702 ">
-                                                                </polygon>
-                                                                <polygon style="fill:#CBCBCB;"
-                                                                    points="434.38,189.938 444.283,189.938 444.283,170.114 365.004,170.114 365.004,189.938 374.914,189.938 ">
-                                                                </polygon>
-                                                                <polygon style="fill:#CBCBCB;"
-                                                                    points="374.914,402.988 365.004,402.988 365.004,422.81 444.283,422.81 444.283,402.988 434.38,402.988 ">
-                                                                </polygon>
-                                                                <rect x="374.914" y="189.938" style="fill:#D8D8D9;"
-                                                                    width="59.465" height="213.05"></rect>
-                                                                <rect x="226.267" y="189.938" style="fill:#D8D8D9;"
-                                                                    width="59.457" height="213.05"></rect>
-                                                                <rect x="77.62" y="189.938" style="fill:#D8D8D9;"
-                                                                    width="59.465" height="213.05"></rect>
-                                                                <g>
-                                                                    <rect x="102.397" y="189.938" style="fill:#CBCBCB;"
-                                                                        width="9.912" height="213.05"></rect>
-                                                                    <rect x="82.575" y="189.938" style="fill:#CBCBCB;"
-                                                                        width="9.919" height="213.05"></rect>
-                                                                    <rect x="122.219" y="189.938" style="fill:#CBCBCB;"
-                                                                        width="9.912" height="213.05"></rect>
-                                                                </g>
-                                                                <g>
-                                                                    <rect x="251.044" y="189.938" style="fill:#CBCBCB;"
-                                                                        width="9.912" height="213.05"></rect>
-                                                                    <rect x="231.231" y="189.938" style="fill:#CBCBCB;"
-                                                                        width="9.903" height="213.05"></rect>
-                                                                    <rect x="270.866" y="189.938" style="fill:#CBCBCB;"
-                                                                        width="9.903" height="213.05"></rect>
-                                                                </g>
-                                                                <g>
-                                                                    <rect x="399.693" y="189.938" style="fill:#CBCBCB;"
-                                                                        width="9.91" height="213.05"></rect>
-                                                                    <rect x="379.878" y="189.938" style="fill:#CBCBCB;"
-                                                                        width="9.903" height="213.05"></rect>
-                                                                    <rect x="419.515" y="189.938" style="fill:#CBCBCB;"
-                                                                        width="9.901" height="213.05"></rect>
-                                                                </g>
-                                                                <polygon style="fill:#CBCBCB;"
-                                                                    points="285.724,189.938 295.645,189.938 295.645,170.114 216.364,170.114 216.364,189.938 226.267,189.938 ">
-                                                                </polygon>
-                                                                <polygon style="fill:#CBCBCB;"
-                                                                    points="226.267,402.988 216.364,402.988 216.364,422.81 295.645,422.81 295.645,402.988 285.724,402.988 ">
-                                                                </polygon>
-                                                                <polygon style="fill:#CBCBCB;"
-                                                                    points="137.086,189.938 146.996,189.938 146.996,170.114 67.717,170.114 67.717,189.938 77.62,189.938 ">
-                                                                </polygon>
-                                                                <polygon style="fill:#CBCBCB;"
-                                                                    points="77.62,402.988 67.717,402.988 67.717,422.81 146.996,422.81 146.996,402.988 137.086,402.988 ">
-                                                                </polygon>
-                                                                <g>
-                                                                    <polygon style="fill:#EFEEEF;"
-                                                                        points="37.985,462.446 18.162,462.446 18.162,512 493.838,512 493.838,462.446 474.016,462.446 ">
-                                                                    </polygon>
-                                                                    <rect x="37.985" y="422.81" style="fill:#D8D8D9;"
-                                                                        width="436.031" height="39.637"></rect>
-                                                                </g>
-                                                                <rect x="37.985" y="135.427" style="fill:#D8D8D9;"
-                                                                    width="436.031" height="34.687"></rect>
-                                                            </g>
-                                                        </g>
-                                                    </svg>
-                                                </span>
-                                                <!--end::Icon-->
+                                                <span class="svg-icon svg-icon-5x me-5">
+                                                    <img width="50" height="50" src="/assets/media/png/banco3.png" alt="">
+                                            </span>
+
                                                 <!--begin::Wrapper-->
                                                 <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
                                                     <!--begin::Content-->
@@ -295,7 +214,7 @@
                             <div class="card-header border-0">
                                 <!--begin::Card title-->
                                 <div class="card-title">
-                                    <h2>Transaction History</h2>
+                                    <h2>Histórico de Transações</h2>
                                 </div>
                                 <!--end::Card title-->
                             </div>

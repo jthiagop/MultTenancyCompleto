@@ -30,22 +30,44 @@ class OfxController extends Controller
                 'file.max'      => 'O arquivo ultrapassa o tamanho máximo de 20MB.',
             ]);
 
-            // Chama o Service para processar o OFX
-            $this->ofxService->processOfx($request->file('file'));
+            $file = $request->file('file');
+            $fileContents = file_get_contents($file->getRealPath());
+            $fileHash = md5($fileContents);
 
-            // Busca lançamentos não conciliados
-        $lancamentosNaoConciliados = BankStatement::where('reconciled', 0)->get();
+            // Verifica se já foi importado
+            if (BankStatement::where('file_hash', $fileHash)->exists()) {
+                return redirect()
+                    ->route('banco.list', ['tab' => 'overview'])
+                    ->with('warning', 'Este arquivo OFX já foi importado anteriormente.');
+            }
 
-        return redirect()
-            ->route('banco.list', ['tab' => 'overview'])
-            ->with('success', 'Extrato OFX importado com sucesso!')
-            ->with('lancamentosNaoConciliados', $lancamentosNaoConciliados);
+            // Processa OFX e extrai dados
+            $ofxData = $this->ofxService->processOfx($file);
+            $totalValue = $ofxData['total_value'] ?? 0;
+            $transactionCount = $ofxData['transaction_count'] ?? 0;
+
+            // Salva no banco
+            BankStatement::create([
+                'bank_account_id' => Auth::user()->bank_account_id, // Exemplo de associação
+                'file_name' => $file->getClientOriginalName(),
+                'file_hash' => $fileHash,
+                'total_value' => $totalValue,
+                'transaction_count' => $transactionCount,
+                'imported_by' => Auth::id(),
+                'reconciled' => 0,
+
+            ]);
+
+            return redirect()
+                ->route('banco.list', ['tab' => 'overview'])
+                ->with('success', 'Extrato OFX importado com sucesso!');
 
         } catch (\Exception $e) {
             return redirect()
                 ->route('banco.list', ['tab' => 'overview'])
-                ->with('error', 'Erro ao importar o arquivo: O banco, agência ou conta informados não coincidem. Detalhes: ' . $e->getMessage());
-            }
+                ->with('error', 'Erro ao importar o arquivo: ' . $e->getMessage());
+        }
     }
+
 
 }

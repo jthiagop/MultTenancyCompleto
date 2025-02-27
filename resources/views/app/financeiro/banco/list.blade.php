@@ -231,7 +231,7 @@
                                         <!--begin::Image-->
                                         <div
                                             class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-                                            <img class="img-fluid w-100 h-100 rounded" src="/assets/media/png/banco.png"
+                                            <img class="img-fluid w-100 h-100 rounded" src="/assets/media/png/banco3.png"
                                                 alt="image" />
                                         </div>
                                         <!--end::Image-->

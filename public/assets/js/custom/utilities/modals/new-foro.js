@@ -33,9 +33,14 @@ var KTModalNewTarget = function () {
             flatpickr(dueDate, {
                 dateFormat: "d/m/Y", // Formato pt-BR para exibição
                 locale: "pt", // Define a localidade como português do Brasil
-                allowInput: true
+                allowInput: true, // Impede a digitação manual inválida
+                defaultDate: new Date(), // Define a data atual como padrão
+                maxDate: new Date(), // (Opcional) Impede datas futuras
             });
+              // Aplicando máscara de entrada para orientar o usuário
+              Inputmask("99/99/9999").mask(dueDate);
         });
+
 
 		// Team assign. For more info, plase visit the official plugin site: https://select2.org/
         $(form.querySelector('[name="team_assign"]')).on('change', function() {

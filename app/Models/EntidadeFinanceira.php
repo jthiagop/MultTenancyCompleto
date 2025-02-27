@@ -30,6 +30,11 @@ class EntidadeFinanceira extends Model
         'updated_by_name',
         'updated_by',
     ];
+    public function podeConciliarCom(BankStatement $outraTransacao, $tolerancia = 5.00)
+{
+    return abs($this->amount + $outraTransacao->amount) <= $tolerancia;
+}
+
 
     // Relacionamento com movimentações
     public function movimentacoes()

@@ -34,6 +34,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
 
             'data_competencia' => 'required',
             'descricao' => 'required|string',
+            'descricao2' => 'string',
             'valor' => 'required',
             'tipo' => 'required|in:entrada,saida',
             'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',

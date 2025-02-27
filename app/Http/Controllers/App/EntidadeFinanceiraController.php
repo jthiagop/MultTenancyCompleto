@@ -167,60 +167,48 @@ class EntidadeFinanceiraController extends Controller
      */
     public function show($id)
     {
-        // Recupera o ID da empresa do usuário logado
+        // 1. Recupera o ID da empresa do usuário logado
         $companyId = Auth::user()->company_id;
 
-        // 1. Carrega a entidade financeira (banco) do usuário logado,
-        // junto com duas relações:
-        //  - transacoesFinanceiras (todas, ordenadas por data_competencia desc)
-        //  - bankStatements (apenas as não conciliadas, ordenadas por dtposted desc)
-        // findOrFail($id) lança erro 404 se não encontrar
+        // 2. Carrega a entidade financeira (banco) do usuário logado,
+        //    junto com duas relações:
+        //    - transacoesFinanceiras (todas, ordenadas por data_competencia desc)
+        //    - bankStatements (apenas as não conciliadas ou pendentes/divergentes, ordenadas por dtposted desc)
         $entidade = EntidadeFinanceira::where('company_id', $companyId)
         ->with([
             'transacoesFinanceiras' => function ($query) {
-                // Ordena por data
                 $query->orderBy('data_competencia', 'desc');
             },
             'bankStatements' => function ($query) {
-                // Filtra lançamentos ainda não conciliados ou com status pendente/divergente
                 $query->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                      ->whereDoesntHave('transacoes') // Exclui os que já possuem conciliação
                       ->orderBy('dtposted', 'desc');
             },
         ])
         ->findOrFail($id);
 
-        // 2. Para cada lançamento bancário pendente (bankStatement),
-        // vamos buscar possíveis transações financeiras que combinem
-        // com os dados do extrato (OFX).
-        foreach ($entidade->bankStatements as $lancamento) {
 
-            // Se o valor for negativo no OFX, convertemos para positivo
-            // e definimos que é 'saida'; se for positivo, é 'entrada'.
-            // Isso facilita a comparação com a tabela de transações financeiras.
+
+        // 3. Para cada lançamento bancário pendente (bankStatement),
+        //    buscar possíveis transações financeiras compatíveis
+        foreach ($entidade->bankStatements as $lancamento) {
+            // Se o valor for negativo no extrato, definimos 'saida'; caso contrário, 'entrada'.
             $valorAbs = abs($lancamento->amount);
             $tipo = $lancamento->amount < 0 ? 'saida' : 'entrada';
 
-            // 3. Criamos um intervalo de tolerância de 2 meses antes e 2 meses depois
-            // da data do extrato (dtposted). Assim, se no extrato a data for 2025-02-06,
-            // buscaremos transações entre 2 meses antes e 2 meses depois.
+            // Criamos um intervalo de tolerância de 2 meses antes e 2 meses depois da data do extrato
             $dataInicio = Carbon::parse($lancamento->dtposted)
-                ->startOfDay()    // Ajusta a hora para 00:00:00
-                ->subMonths(2);   // Subtrai 2 meses
+                ->startOfDay()
+                ->subMonths(2);
 
             $dataFim = Carbon::parse($lancamento->dtposted)
-                ->endOfDay()      // Ajusta a hora para 23:59:59
-                ->addMonths(2);   // Adiciona 2 meses
+                ->endOfDay()
+                ->addMonths(2);
 
-            // (Opcional) Podemos comparar número do documento do extrato
-            // com a coluna numero_documento das transações
+            // Exemplo de comparação com numero_documento do extrato
             $numeroDocumento = $lancamento->checknum;
 
-            // 4. Busca em transacoes_financeiras aquelas que:
-            //  - pertencem à mesma empresa (company_id)
-            //  - são da mesma entidade (entidade_id = $id)
-            //  - têm tipo compatível ('entrada' ou 'saida')
-            //  - têm valor igual ao valorAbs
-            //  - têm data_competencia no intervalo de 2 meses antes/depois de dtposted
+            // 4. Busca em transacoes_financeiras as candidatas
             $possiveis = TransacaoFinanceira::where('company_id', $companyId)
                 ->where('entidade_id', $id)
                 ->where('tipo', $tipo)
@@ -228,27 +216,45 @@ class EntidadeFinanceiraController extends Controller
                 ->whereBetween('data_competencia', [$dataInicio, $dataFim])
                 ->get();
 
-            // 5. Atribuímos essa coleção de possíveis transações
-            // na propriedade possiveisTransacoes do $lancamento,
-            // para que possamos exibir na view.
+            // Atribuímos essa coleção de possíveis transações na propriedade possiveisTransacoes do $lancamento
             $lancamento->possiveisTransacoes = $possiveis;
         }
 
-        // 6. Finalmente, retornamos a view 'app.financeiro.entidade.show'
-        // com os dados da entidade, suas transações, e os lançamentos não conciliados.
-
+        // 5. Carrega dados auxiliares (centros de custo, lançamentos padrão, etc.)
         $centrosAtivos = CostCenter::getCadastroCentroCusto();
         $lps = LancamentoPadrao::all();
 
+        // 6. Calcula o percentual de conciliação (exemplo)
+        $totalTransacoes = $entidade->transacoesFinanceiras->count();
+        $totalConciliadas = $entidade->transacoesFinanceiras
+            ->where('status_conciliacao', 'ok')
+            ->count();
+        $percentualConciliado = $totalTransacoes > 0
+            ? ($totalConciliadas / $totalTransacoes) * 100
+            : 0;
 
+        // 7. Agrupa as transacoesFinanceiras por dia, se quiser exibir em layout “por data”
+        //    (opcional, dependendo de como você exibirá no Blade)
+        $transacoesPorDia = $entidade->transacoesFinanceiras->groupBy(function ($item) {
+            return Carbon::parse($item->data_competencia)->format('Y-m-d');
+        });
+
+        // 8. Retorna a view com os dados necessários
         return view('app.financeiro.entidade.show', [
             'entidade' => $entidade,
+            // Movimentações gerais
             'transacoes' => $entidade->transacoesFinanceiras,
+            // Lançamentos pendentes de conciliação
             'conciliacoesPendentes' => $entidade->bankStatements,
+            // Auxiliares
             'centrosAtivos' => $centrosAtivos,
             'lps' => $lps,
-
+            // Percentual conciliado
+            'percentualConciliado' => round($percentualConciliado),
+            // Transações agrupadas por dia (se quiser exibir estilo timeline/por data)
+            'transacoesPorDia' => $transacoesPorDia,
         ]);
     }
+
 
 }

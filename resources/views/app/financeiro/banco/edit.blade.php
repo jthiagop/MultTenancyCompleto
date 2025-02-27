@@ -235,17 +235,7 @@
                                     </div>
                                     <!--begin::Card title-->
                                     <!--begin::Card toolbar-->
-                                    <div class="card-toolbar">
-                                        <a href="#" class="btn btn-light-primary me-3" data-bs-toggle="modal"
-                                            data-bs-target="#kt_modal_new_card"><i class="fas fa-edit"></i>
-                                            Editar</a>
-                                        <!-- Botão para Excluir -->
-                                        <!-- Botão para Excluir -->
-                                        <a href="#" class="btn btn-light-danger" data-bs-toggle="modal"
-                                            data-bs-target="#kt_modal_delete_card">
-                                            <i class="fas fa-trash-alt"></i> Excluir
-                                        </a>
-                                    </div>
+
                                     <!--end::Card toolbar-->
                                     <!--begin::Actions-->
                                     <div class="d-flex mb-4 align-items-center">

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\App\Financeiro;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Financer\StoreTransacaoFinanceiraRequest;
 use App\Models\Banco;
+use App\Models\EntidadeFinanceira;
 use App\Models\Financeiro\BankStatement;
 use App\Models\Financeiro\ModulosAnexo;
 use App\Models\Financeiro\TransacaoFinanceira;
@@ -14,7 +15,10 @@ use App\Models\User;
 use Auth;
 use Carbon\Carbon;
 use DB;
+use Flasher;
 use Illuminate\Http\Request;
+use Log;
+use Validator;
 
 class ConciliacaoController extends Controller
 {
@@ -61,10 +65,97 @@ class ConciliacaoController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
     {
-        //
+        try {
+
+            // Tratamento do valor para garantir formato correto
+            if ($request->has('valor')) {
+                $valorFormatado = str_replace(',', '.', str_replace('.', '', $request->input('valor')));
+                $request->merge(['valor' => $valorFormatado]);
+            }
+
+            // Converter data_competencia para formato correto
+            if ($request->has('data_competencia')) {
+                $dataFormatada = Carbon::createFromFormat('Y-m-d', $request->input('data_competencia'))->format('Y-m-d');
+                $request->merge(['data_competencia' => $dataFormatada]);
+            }
+
+
+            // Validação dos dados recebidos
+            $validator = Validator::make($request->all(), [
+                'data_competencia' => 'required|date',
+                'valor' => 'required|numeric|min:0',
+                'descricao' => 'required|string|max:255',
+                'numero_documento' => 'nullable|string|max:50',
+                'entidade_id' => 'required|exists:entidades_financeiras,id',
+            ], [
+                'valor.numeric' => 'O valor deve ser um número válido.',
+                'data_competencia.required' => 'A data de competência é obrigatória.',
+            ]);
+
+            // Se a validação falhar, retorna com erros
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            // Dados validados
+            $validatedData = $validator->validated();
+
+            // Busca a transação financeira
+            $transacao = TransacaoFinanceira::findOrFail($id);
+            $movimentacao = Movimentacao::findOrFail($transacao->movimentacao_id);
+
+            // Ajusta o saldo da entidade antes de atualizar os valores
+            $oldEntidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
+
+            // Reverter saldo anterior
+            if ($movimentacao->tipo === 'entrada') {
+                $oldEntidade->saldo_atual -= $movimentacao->valor;
+            } else {
+                $oldEntidade->saldo_atual += $movimentacao->valor;
+            }
+            $oldEntidade->save();
+
+            // Atualiza os dados da movimentação
+            $movimentacao->update([
+                'entidade_id' => $validatedData['entidade_id'],
+                'valor' => $validatedData['valor'],
+                'descricao' => $validatedData['descricao'],
+                'updated_by' => Auth::user()->id,
+            ]);
+
+            // Ajusta o saldo na nova entidade financeira
+            $newEntidade = EntidadeFinanceira::findOrFail($validatedData['entidade_id']);
+
+            if ($movimentacao->tipo === 'entrada') {
+                $newEntidade->saldo_atual += $validatedData['valor'];
+            } else {
+                $newEntidade->saldo_atual -= $validatedData['valor'];
+            }
+            $newEntidade->save();
+
+            // Atualiza a transação financeira
+            $transacao->update([
+                'data_competencia' => $validatedData['data_competencia'],
+                'valor' => $validatedData['valor'],
+                'descricao' => $validatedData['descricao'],
+                'numero_documento' => $validatedData['numero_documento'],
+                'movimentacao_id' => $movimentacao->id,
+            ]);
+
+            // Mensagem de sucesso
+            Flasher::addSuccess('Transação financeira atualizada com sucesso!');
+            return redirect()->back()->with('message', 'Atualização realizada com sucesso!');
+        } catch (\Exception $e) {
+            // Registro do erro para depuração
+            Log::error('Erro ao atualizar a transação financeira: ' . $e->getMessage());
+
+            // Redireciona com mensagem de erro
+            return redirect()->back()->withInput()->with('error', 'Erro ao atualizar: ' . $e->getMessage());
+        }
     }
+
 
     /**
      * Remove the specified resource from storage.
@@ -101,8 +192,13 @@ class ConciliacaoController extends Controller
                 return redirect()->back()->with('error', 'Companhia não encontrada.');
             }
 
+
             // Processa os dados validados
             $validatedData = $request->validated();
+
+                        // Verifica se "descricao2" foi enviado e atribui a "descricao"
+        $validatedData['descricao'] = $validatedData['descricao2'] ;
+
 
             // **Garante que o valor sempre seja positivo**
             $validatedData['valor'] = abs($validatedData['valor']);
@@ -167,6 +263,28 @@ class ConciliacaoController extends Controller
         });
     }
 
+    public function pivot(Request $request)
+    {
+        return DB::transaction(function () use ($request) {
+            // Busca os registros
+            $bankStatement = BankStatement::find($request->bank_statement_id);
+            $transacao = TransacaoFinanceira::find($request->transacao_financeira_id);
+
+            if (!$bankStatement || !$transacao) {
+                return redirect()->back()->with('error', 'Erro ao buscar dados para conciliação.');
+            }
+
+            // Define o valor conciliado
+            $valorConciliado = $request->valor_conciliado ?? $transacao->valor;
+
+            // Chama o método direto do modelo
+            $bankStatement->conciliarCom($transacao, $valorConciliado);
+
+            return redirect()->back()->with('success', 'Conciliação realizada com sucesso!');
+        });
+    }
+
+
 
     public function ignorarLançamento(Request $request)
     {
@@ -185,7 +303,19 @@ class ConciliacaoController extends Controller
         return redirect()->back()->with('success', 'Lançamento ignorado com sucesso!');
     }
 
-        /**
+    public function ignorar($id)
+    {
+        // Encontra o lançamento bancário pelo ID
+        $bankStatement = BankStatement::findOrFail($id);
+
+        // Atualiza o status para "ignorado"
+        $bankStatement->update(['status_conciliacao' => 'ignorado']);
+
+        // Redireciona com mensagem de sucesso
+        return redirect()->back()->with('success', 'Lançamento ignorado com sucesso!');
+    }
+
+    /**
      * Processa movimentacao.
      */
     private function movimentacao(array $validatedData)

@@ -153,6 +153,10 @@ Route::middleware([
             Route::get('/conciliacao', [ConciliacaoController::class, 'index'])->name('conciliacao.index');
             Route::get('/conciliacao/comparar/{id}', [ConciliacaoController::class, 'comparar'])->name('conciliacao.comparar');
             Route::post('/conciliacao/conciliar', [ConciliacaoController::class, 'conciliar'])->name('conciliacao.conciliar');
+            Route::post('/conciliacao', [ConciliacaoController::class, 'pivot'])->name('conciliacao.pivot');
+            Route::put('/transacoes-financeiras/{id}', [ConciliacaoController::class, 'update'])->name('conciliacao.update');
+
+
 
 
             // Grupo de rotas para relatórios

@@ -165,41 +165,139 @@
 
                         <!-- Conteúdo das Abas -->
                         <div class="tab-content" id="myTabContent">
-                            <!-- Aba de Movimentação -->
-                            <div class="tab-pane fade  " id="kt_tab_pane_movimentacao" role="tabpanel">
+                            <div class="tab-pane fade" id="kt_tab_pane_movimentacao" role="tabpanel">
                                 <div class="card">
                                     <div class="card-body">
                                         <h5 class="card-title">Movimentação</h5>
+
                                         @if ($transacoes->isEmpty())
                                             <p class="text-muted">Nenhuma movimentação encontrada.</p>
                                         @else
-                                            <table class="table">
-                                                <thead>
-                                                    <tr>
-                                                        <th>Data</th>
-                                                        <th>Descrição</th>
-                                                        <th>Valor</th>
-                                                        <th>Tipo</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach ($transacoes as $transacao)
-                                                        <tr>
-                                                            <td>{{ \Carbon\Carbon::parse($transacao->data_competencia)->format('d/m/Y') }}
-                                                            </td>
-                                                            <td>{{ $transacao->descricao }}</td>
-                                                            <td>R$ {{ number_format($transacao->valor, 2, ',', '.') }}
-                                                            </td>
-                                                            <td>
-                                                                <span
-                                                                    class="badge {{ $transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger' }}">
-                                                                    {{ ucfirst($transacao->tipo) }}
-                                                                </span>
-                                                            </td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
+                                            <!-- Início do Accordion -->
+                                            <div class="accordion" id="movimentacaoAccordion">
+
+                                                @foreach ($transacoesPorDia as $dia => $listaTransacoes)
+                                                    @php
+                                                        $dataCarbon = \Carbon\Carbon::parse($dia);
+                                                        // Exemplo de saldo final (ajuste conforme sua lógica)
+                                                        $saldoBanco = 6160.77;
+                                                        $saldoContaAzul = 5663.27;
+                                                        // Exemplo de conciliações pendentes no dia
+                                                        $qtdPendencias = 3;
+                                                    @endphp
+
+                                                    <div class="accordion-item">
+                                                        <!-- Cabeçalho do Accordion -->
+                                                        <h2 class="accordion-header" id="heading-{{ $dia }}">
+                                                            <button class="accordion-button fs-4 fw-semibold collapsed"
+                                                                type="button" data-bs-toggle="collapse"
+                                                                data-bs-target="#collapse-{{ $dia }}"
+                                                                aria-expanded="false"
+                                                                aria-controls="collapse-{{ $dia }}">
+                                                                <!-- Exibe a data e o dia da semana -->
+                                                                {{ $dataCarbon->format('d/m/Y') }}
+                                                                ({{ $dataCarbon->translatedFormat('l') }})
+                                                            </button>
+                                                        </h2>
+
+                                                        <!-- Corpo do Accordion -->
+                                                        <div id="collapse-{{ $dia }}"
+                                                            class="accordion-collapse collapse"
+                                                            aria-labelledby="heading-{{ $dia }}"
+                                                            data-bs-parent="#movimentacaoAccordion">
+
+                                                            <div class="accordion-body">
+
+                                                                <!-- Alerta de Pendências ou Mensagem de Conciliação -->
+                                                                @if ($qtdPendencias > 0)
+                                                                    <div
+                                                                        class="alert alert-warning d-flex justify-content-between align-items-center">
+                                                                        <div>
+                                                                            <strong>{{ $qtdPendencias }} conciliações
+                                                                                pendentes neste dia.</strong>
+                                                                            <br>
+                                                                            Efetue as conciliações para acompanhar suas
+                                                                            movimentações corretamente.
+                                                                        </div>
+                                                                        <!-- Botões "Expandir tudo" / "Recolher tudo" (opcional) -->
+                                                                        <div>
+                                                                            <a href="#"
+                                                                                class="btn btn-sm btn-light">Expandir
+                                                                                tudo</a>
+                                                                            <a href="#"
+                                                                                class="btn btn-sm btn-light">Recolher
+                                                                                tudo</a>
+                                                                        </div>
+                                                                    </div>
+                                                                @else
+                                                                    <div
+                                                                        class="alert alert-info d-flex justify-content-between align-items-center">
+                                                                        <div>
+                                                                            <strong>Todos os lançamentos estão
+                                                                                conciliados.</strong>
+                                                                            <br>
+                                                                            Nenhuma pendência encontrada para
+                                                                            {{ $dataCarbon->format('d/m/Y') }}.
+                                                                        </div>
+                                                                        <div>
+                                                                            <a href="#"
+                                                                                class="btn btn-sm btn-light">Expandir
+                                                                                tudo</a>
+                                                                            <a href="#"
+                                                                                class="btn btn-sm btn-light">Recolher
+                                                                                tudo</a>
+                                                                        </div>
+                                                                    </div>
+                                                                @endif
+
+                                                                <!-- Tabela de Lançamentos do Dia -->
+                                                                <table class="table table-bordered mb-3">
+                                                                    <thead>
+                                                                        <tr>
+                                                                            <th>Descrição</th>
+                                                                            <th>Valor</th>
+                                                                            <th>Tipo</th>
+                                                                        </tr>
+                                                                    </thead>
+                                                                    <tbody>
+                                                                        @foreach ($listaTransacoes as $transacao)
+                                                                            <tr>
+                                                                                <td>{{ $transacao->descricao }}</td>
+                                                                                <td>
+                                                                                    R$
+                                                                                    {{ number_format($transacao->valor, 2, ',', '.') }}
+                                                                                </td>
+                                                                                <td>
+                                                                                    <span
+                                                                                        class="badge {{ $transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger' }}">
+                                                                                        {{ ucfirst($transacao->tipo) }}
+                                                                                    </span>
+                                                                                </td>
+                                                                            </tr>
+                                                                        @endforeach
+                                                                    </tbody>
+                                                                </table>
+
+                                                                <!-- Saldo final do dia (exemplo) -->
+                                                                <div class="text-end">
+                                                                    <small class="text-muted">
+                                                                        Saldo final do dia no Banco:
+                                                                        <strong>R$
+                                                                            {{ number_format($saldoBanco, 2, ',', '.') }}</strong>
+                                                                        | Dominus:
+                                                                        <strong>R$
+                                                                            {{ number_format($saldoContaAzul, 2, ',', '.') }}</strong>
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <!-- Fim do Corpo do Accordion -->
+                                                    </div>
+                                                    <!-- Fim accordion-item -->
+                                                @endforeach
+
+                                            </div>
+                                            <!-- Fim do Accordion -->
                                         @endif
                                     </div>
                                 </div>
@@ -432,10 +530,9 @@
                                                                     <!-- Centraliza horizontal e verticalmente -->
                                                                     <button
                                                                         class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
-                                                                        data-bs-toggle="modal"
-                                                                        data-bs-target="#modalConciliar{{ $conciliacao->id }}">
+                                                                        type="submit" form="{{ $conciliacao->id }}">
                                                                         <span class="fs-1 me-2">🫱🏻‍🫲🏽</span>
-                                                                        <!-- Emoji com tamanho ajustado -->
+                                                                        <!-- Emoji -->
                                                                         <span>Conciliar</span> <!-- Texto -->
                                                                     </button>
                                                                 </div>
@@ -449,77 +546,239 @@
                                                             <!--begin::List widget 9-->
                                                             <div class="card card-flush h-xl-100">
                                                                 <!--begin::Header-->
-                                                                <div
-                                                                    class="card card-flush py-4 flex-row-fluid overflow-hidden  mb-3 h-xl-100 ">
-
-
-                                                                    <p><strong>Encontramos um lançamento que parece
-                                                                            corresponder:</strong></p>
-                                                                    <p class="mb-1">
-                                                                        <strong>Descrição:</strong>
-                                                                        {{ $transacaoSugerida->descricao }}
-                                                                    </p>
-                                                                    <p class="mb-1">
-                                                                        <strong>Data Competência:</strong>
-                                                                        {{ \Carbon\Carbon::parse($transacaoSugerida->data_competencia)->format('d/m/Y') }}
-                                                                    </p>
-                                                                    <p class="mb-1">
-                                                                        <strong>Valor:</strong> R$
-                                                                        {{ number_format($transacaoSugerida->valor, 2, ',', '.') }}
-                                                                    </p>
-                                                                    <p class="mb-1">
-                                                                        <strong>Número:</strong>
-                                                                        {{ $transacaoSugerida->numero_documento }}
-                                                                    </p>
-                                                                    <p class="mb-1">
-                                                                        <strong>Número:</strong>
-                                                                        {{ $transacaoSugerida->tipo }}
-                                                                    </p>
-                                                                    <!-- Botão para conciliar usando essa transação -->
-                                                                    <form action="" method="POST">
+                                                                <div id="viewData-{{ $conciliacao->id }}">
+                                                                    <form id="form-{{ $conciliacao->id }}"
+                                                                        action="{{ route('conciliacao.pivot') }}"
+                                                                        method="POST">
                                                                         @csrf
                                                                         <input type="hidden" name="bank_statement_id"
                                                                             value="{{ $conciliacao->id }}">
-                                                                        <input type="hidden" name="transacao_id"
+                                                                        <input type="hidden"
+                                                                            name="transacao_financeira_id"
                                                                             value="{{ $transacaoSugerida->id }}">
-                                                                        <button type="submit"
-                                                                            class="btn btn-sm btn-success">
-                                                                            Selecionar lançamento existente
-                                                                        </button>
-                                                                    </form>
+                                                                        <input type="hidden" name="valor"
+                                                                            value="{{ $transacaoSugerida->valor }}">
 
-                                                                    <hr>
-                                                                    <!-- Se quiser listar todas as sugestões ao invés de só uma, podemos iterar -->
-                                                                    @if ($sugestoes->count() > 1)
-                                                                        <p><strong>Outras sugestões:</strong></p>
-                                                                        <ul class="list-group mb-3">
-                                                                            @foreach ($sugestoes->skip(1) as $t)
-                                                                                <li
-                                                                                    class="list-group-item d-flex justify-content-between align-items-center">
-                                                                                    <div>
-                                                                                        {{ \Carbon\Carbon::parse($t->data_competencia)->format('d/m/Y') }}
-                                                                                        - R$
-                                                                                        {{ number_format($t->valor, 2, ',', '.') }}
-                                                                                        <small>({{ $t->descricao }})</small>
+                                                                        <div
+                                                                            class="card card-flush border border-hover-primary py-4 p-7 rounded flex-row-fluid overflow-hidden mb-3 h-xl-100">
+                                                                            <span
+                                                                                style="background-color: #fff3cd; padding: 6px 12px; border-radius: 4px; border-left: 4px solid #ffc107; color: black;">
+                                                                                ⚠️ <strong>Encontramos um lançamento que
+                                                                                    parece corresponder:</strong>
+                                                                            </span>
+                                                                            <hr>
+
+                                                                            <div class="d-flex flex-stack pb-3">
+                                                                                <div class="d-flex">
+                                                                                    <div class="">
+                                                                                        <div
+                                                                                            class="d-flex align-items-center">
+                                                                                            <a href="#"
+                                                                                                class="text-dark fw-bold text-hover-primary fs-5 me-4">
+                                                                                                {{ \Carbon\Carbon::parse($transacaoSugerida->data_competencia)->format('d/m/Y') }}
+                                                                                            </a>
+                                                                                        </div>
+                                                                                        <span
+                                                                                            class="text-muted fw-semibold mb-3">
+                                                                                            @if ($transacaoSugerida->tipo == 'entrada')
+                                                                                                <span
+                                                                                                    style="color: green;">Receita</span>
+                                                                                            @elseif($transacaoSugerida->tipo == 'saida')
+                                                                                                <span
+                                                                                                    class="text-danger">Despesa</span>
+                                                                                            @else
+                                                                                                <span>Tipo não
+                                                                                                    identificado</span>
+                                                                                            @endif
+                                                                                        </span>
                                                                                     </div>
-                                                                                    <form action=""
-                                                                                        method="POST">
-                                                                                        @csrf
-                                                                                        <input type="hidden"
-                                                                                            name="bank_statement_id"
-                                                                                            value="{{ $conciliacao->id }}">
-                                                                                        <input type="hidden"
-                                                                                            name="transacao_id"
-                                                                                            value="{{ $t->id }}">
-                                                                                        <button type="submit"
-                                                                                            class="btn btn-sm btn-primary">Usar
-                                                                                            este</button>
-                                                                                    </form>
-                                                                                </li>
-                                                                            @endforeach
-                                                                        </ul>
-                                                                    @endif
+                                                                                </div>
+
+                                                                                <div clas="d-flex">
+                                                                                    <div class="text-end pb-3">
+                                                                                        @if ($transacaoSugerida->tipo == 'entrada')
+                                                                                            <span class="fw-bold fs-5"
+                                                                                                style="color: green;">
+                                                                                                R$
+                                                                                                {{ number_format($transacaoSugerida->valor, 2, ',', '.') }}</span>
+                                                                                        @elseif($transacaoSugerida->tipo == 'saida')
+                                                                                            <span
+                                                                                                class="fw-bold fs-5 text-danger">R$
+                                                                                                {{ number_format($transacaoSugerida->valor, 2, ',', '.') }}</span>
+                                                                                        @endif
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div class="p-0">
+                                                                                <p
+                                                                                    class="text-gray-700 fw-semibold fs-6 mb-4">
+                                                                                    <strong>Descrição:</strong>
+                                                                                    {{ $transacaoSugerida->descricao }}
+                                                                                </p>
+
+                                                                                <div class="d-flex flex-stack">
+                                                                                    <div
+                                                                                        class="d-flex flex-column mw-200px">
+                                                                                        <div
+                                                                                            class="d-flex align-items-center mb-2">
+                                                                                            <span
+                                                                                                class="text-gray-700 fs-6 fw-semibold me-2">{{ $percentualConciliado }}%</span>
+                                                                                            <span
+                                                                                                class="text-muted fs-8">Conciliação
+                                                                                                Bancária</span>
+                                                                                        </div>
+                                                                                        <div
+                                                                                            class="progress h-6px w-200px">
+                                                                                            <div class="progress-bar bg-primary"
+                                                                                                role="progressbar"
+                                                                                                style="width: {{ $percentualConciliado }}%"
+                                                                                                aria-valuenow="{{ $percentualConciliado }}"
+                                                                                                aria-valuemin="0"
+                                                                                                aria-valuemax="100">
+                                                                                            </div>
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    <div class="d-flex gap-2">
+                                                                                        <a href="#"
+                                                                                            class="btn btn-sm btn-primary"
+                                                                                            onclick="toggleEdit({{ $conciliacao->id }})">✏️
+                                                                                            Editar</a>
+                                                                                        <a href="#"
+                                                                                            class="btn btn-sm btn-warning">⛓️‍💥
+                                                                                            Desvincular</a>
+                                                                                    </div>
+                                                                                </div>
+                                                                            </div>
+                                                                        </div>
+                                                                    </form>
                                                                 </div>
+
+                                                                <!-- Formulário de Edição -->
+                                                                <div id="editForm-{{ $conciliacao->id }}"
+                                                                    class="d-none">
+                                                                    <div
+                                                                        class="card card-flush py-4 flex-row-fluid overflow-hidden p-5 border">
+                                                                        <div
+                                                                            class="alert alert-dismissible bg-light-warning border border-warning border-dashed d-flex flex-column flex-sm-row p-4 mb-10">
+                                                                            <div class="d-flex flex-column pe-3">
+                                                                                <!-- Ícone de atenção (opcional) -->
+                                                                                <span
+                                                                                    class="svg-icon svg-icon-2hx svg-icon-warning me-4 mb-2">
+                                                                                    ⚠️ <!-- Ícone do FontAwesome -->
+                                                                                    <span
+                                                                                        class="fs-6 fw-bold">Atenção:</span>
+                                                                                </span>
+                                                                                <!-- Mensagem principal -->
+                                                                                <span class="fs-6">Os dados do
+                                                                                    lançamento devem ser
+                                                                                    <strong>iguais</strong> aos da
+                                                                                    conciliação.</span>
+                                                                            </div>
+                                                                        </div>
+                                                                        <form
+                                                                            id="formularioEdicao-{{ $conciliacao->id }}"
+                                                                            action="{{ route('conciliacao.update', $transacao->id) }}"
+                                                                            method="POST">
+                                                                            @csrf
+                                                                            @method('PUT')
+
+                                                                            <div class="row mb-3">
+                                                                                <div class="col-md-6">
+                                                                                    <label
+                                                                                        for="data_competencia-{{ $conciliacao->id }}"
+                                                                                        class="required form-label fw-semibold">Data</label>
+                                                                                    <input type="date"
+                                                                                        class="form-control"
+                                                                                        id="data_competencia-{{ $conciliacao->id }}"
+                                                                                        name="data_competencia"
+                                                                                        value="{{ old('data_competencia', \Carbon\Carbon::parse($transacaoSugerida->data_competencia)->format('Y-m-d')) }}">
+                                                                                </div>
+
+                                                                                <div class="col-md-6">
+                                                                                    <label
+                                                                                        for="valor2-{{ $conciliacao->id }}"
+                                                                                        class="required form-label fw-semibold">Valor</label>
+                                                                                    <input type="text"
+                                                                                        class="form-control"
+                                                                                        id="valor2-{{ $conciliacao->id }}"
+                                                                                        name="valor"
+                                                                                        value="{{ old('valor', number_format($transacaoSugerida->valor, 2, ',', '.')) }}">
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div class="row mb-3">
+                                                                                <div class="col-md-4">
+                                                                                    <input type="hidden"
+                                                                                        name="bank_statement_id"
+                                                                                        value="{{ $conciliacao->id }}">
+                                                                                    <label
+                                                                                        for="numero_documento-{{ $conciliacao->id }}"
+                                                                                        class="required form-label fw-semibold">Código</label>
+                                                                                    <input type="text"
+                                                                                        name="numero_documento"
+                                                                                        class="form-control"
+                                                                                        id="numero_documento-{{ $conciliacao->id }}"
+                                                                                        value="{{ old('numero_documento', $conciliacao->checknum) }}">
+                                                                                </div>
+
+                                                                                <div class="col-md-8 mb-5">
+                                                                                    <label
+                                                                                        for="descricao-{{ $conciliacao->id }}"
+                                                                                        class="required form-label fw-semibold">Descrição</label>
+                                                                                    <input type="text"
+                                                                                        class="form-control"
+                                                                                        id="descricao-{{ $conciliacao->id }}"
+                                                                                        name="descricao"
+                                                                                        value="{{ old('descricao', $transacaoSugerida->descricao) }}">
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div class="d-flex gap-2">
+                                                                                <a href="#"
+                                                                                    class="btn btn-sm btn-success"
+                                                                                    onclick="document.getElementById('formularioEdicao-{{ $conciliacao->id }}').submit();">
+                                                                                    💾 Salvar
+                                                                                </a>
+                                                                                <a href="#"
+                                                                                    class="btn btn-sm btn-secondary"
+                                                                                    onclick="toggleEdit({{ $conciliacao->id }})">❌
+                                                                                    Cancelar</a>
+                                                                            </div>
+                                                                        </form>
+                                                                    </div>
+                                                                </div>
+
+                                                                <!-- Script para alternar entre visualização e edição -->
+                                                                <script>
+                                                                    function toggleEdit(id) {
+                                                                        var viewDiv = document.getElementById('viewData-' + id);
+                                                                        var editDiv = document.getElementById('editForm-' + id);
+
+                                                                        if (editDiv.classList.contains('d-none')) {
+                                                                            viewDiv.classList.add('d-none');
+                                                                            editDiv.classList.remove('d-none');
+
+                                                                            // Mantém a posição do scroll no local do formulário
+                                                                            editDiv.scrollIntoView({
+                                                                                behavior: 'smooth',
+                                                                                block: 'nearest'
+                                                                            });
+                                                                        } else {
+                                                                            editDiv.classList.add('d-none');
+                                                                            viewDiv.classList.remove('d-none');
+
+                                                                            // Mantém a posição no mesmo lugar ao voltar para a visualização
+                                                                            viewDiv.scrollIntoView({
+                                                                                behavior: 'smooth',
+                                                                                block: 'nearest'
+                                                                            });
+                                                                        }
+                                                                    }
+                                                                </script>
+
+
                                                                 <!--end::Body-->
                                                             </div>
                                                             <!--end::List widget 9-->
@@ -627,38 +886,54 @@
                                                                                 @csrf
                                                                                 <!-- Exemplo simples de formulário -->
                                                                                 <div class="row mb-3">
+                                                                                    <!-- Campo Descrição -->
                                                                                     <div class="col-md-6">
                                                                                         <label for="descricao"
-                                                                                            class="required form-label fw-semibold">Descrição
-                                                                                        </label>
+                                                                                            class="required form-label fw-semibold">Descrição</label>
                                                                                         <input type="text"
-                                                                                            value="{{ $conciliacao->memo }}"
-                                                                                            class="form-control"
-                                                                                            name="descricao"
+                                                                                            value="{{ old('descricao', $conciliacao->memo) }}"
+                                                                                            class="form-control @error('descricao') is-invalid @enderror"
+                                                                                            name="descricao2"
                                                                                             placeholder="Ex: PAYMENT - Fulano">
+
+                                                                                        <!-- Exibir erro abaixo do campo -->
+                                                                                        @error('descricao')
+                                                                                            <div class="invalid-feedback">
+                                                                                                {{ $message }}
+                                                                                            </div>
+                                                                                        @enderror
                                                                                     </div>
+
+                                                                                    <!-- Campo Centro de Custo -->
                                                                                     <div class="col-md-6">
+
                                                                                         <label for="categoria"
                                                                                             class="required form-label fw-semibold">Centro
-                                                                                            de Custo
-                                                                                        </label>
+                                                                                            de Custo</label>
                                                                                         <select name="cost_center_id"
                                                                                             id="banco_id"
                                                                                             class="form-select form-select-solid @error('cost_center_id') is-invalid @enderror"
                                                                                             data-control="select2"
                                                                                             data-dropdown-css-class="auto"
                                                                                             data-placeholder="Selecione o Centro de Custo">
-                                                                                            <!-- Placeholder configurado aqui -->
                                                                                             @foreach ($centrosAtivos as $centrosAtivo)
                                                                                                 <option
-                                                                                                    value="{{ $centrosAtivo->id }}">
+                                                                                                    value="{{ $centrosAtivo->id }}"
+                                                                                                    {{ old('cost_center_id') == $centrosAtivo->id }}>
                                                                                                     {{ $centrosAtivo->name }}
                                                                                                 </option>
                                                                                             @endforeach
                                                                                         </select>
-                                                                                    </div>
 
+                                                                                        <!-- Exibir erro abaixo do campo -->
+                                                                                        @error('cost_center_id')
+                                                                                            <div class="invalid-feedback">
+                                                                                                {{ $message }}
+                                                                                            </div>
+                                                                                        @enderror
+                                                                                    </div>
                                                                                 </div>
+
                                                                                 <div class="row mb-3">
                                                                                     <div class="col-md-8">
                                                                                         <!-- Campo oculto para armazenar se é entrada ou saída -->
@@ -706,11 +981,6 @@
                                                                                             class="form-select form-select-solid lancamento_padrao_banco"
                                                                                             data-control="select2">
                                                                                             <!-- Placeholder option -->
-                                                                                            <option value=""
-                                                                                                selected disabled>
-                                                                                                Selecione um
-                                                                                                lançamento padrão
-                                                                                            </option>
                                                                                             @foreach ($lps as $lp)
                                                                                                 <option
                                                                                                     value="{{ $lp->id }}"
