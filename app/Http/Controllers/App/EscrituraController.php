@@ -87,8 +87,6 @@ class EscrituraController extends Controller
      */
     public function update(Request $request, Patrimonio $patrimonio, Escritura $escritura)
     {
-
-        dd($request->all());
         try {
             $validatedData = $request->validate([
                 'outorgante' => 'nullable|string|max:255',
