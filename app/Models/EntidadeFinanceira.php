@@ -85,4 +85,12 @@ class EntidadeFinanceira extends Model
             ->where('company_id', $companyId) // Filtra pela empresa do usuário
             ->sum('saldo_atual'); // Soma a coluna 'saldo_atual'
     }
+
+    static public function getEntidadeFinanceira()
+    {
+        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
+
+        // Soma os saldos atuais das entidades financeiras do tipo 'caixa'
+        return EntidadeFinanceira::where('company_id', $companyId)->get();
+    }
 }

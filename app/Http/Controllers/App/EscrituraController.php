@@ -50,7 +50,6 @@ class EscrituraController extends Controller
             $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
 
             $escritura = Escritura::create($validatedData);
-
             // Mensagem de sucesso usando flash
             session()->flash('success', 'Escritura Salva com sucesso!');
 

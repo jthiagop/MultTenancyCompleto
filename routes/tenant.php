@@ -23,12 +23,15 @@ use App\Http\Controllers\App\FielController;
 use App\Http\Controllers\App\Filter\filterController;
 use App\Http\Controllers\App\Filter\RebortController;
 use App\Http\Controllers\App\Financeiro\ConciliacaoController;
+use App\Http\Controllers\App\Financeiro\ContasFinanceirasController;
 use App\Http\Controllers\App\Financeiro\CostCenterController;
+use App\Http\Controllers\App\Financeiro\FormasPagamentoController;
 use App\Http\Controllers\App\Financeiro\OfxController;
 use App\Http\Controllers\App\Relatorios\ReciboController;
 use App\Http\Controllers\App\Financeiro\TransacaoFinanceiraController;
 use App\Http\Controllers\App\Frota\CarInsuranceController;
 use App\Http\Controllers\App\NamePatrimonioController;
+use App\Http\Controllers\App\Patrimonio\AvaliadorController;
 use App\Http\Controllers\App\PatrimonioController;
 use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\App\PatrimonioAnexoController;
@@ -92,12 +95,21 @@ Route::middleware([
     // Grupo de rotas protegido pelo middleware 'auth' e 'ensureUserHasAccess'
     Route::middleware(['auth', 'ensureUserHasAccess'])->group(function () {
 
+
+        Route::get('/atualizar-status', function () {
+            Artisan::call('contas:atualizar-status');
+            return 'Status atualizados!';
+        });
+
         // Rotas acessíveis apenas para administradores globais
         Route::middleware(['role:global'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
             Route::resource('users', UserController::class);
             Route::resource('telaLogin', TelaDeLoginController::class);
+
+            Route::resource('formas-pagamento', FormasPagamentoController::class);
+
         });
 
         // Rotas acessíveis apenas para administradores
@@ -132,7 +144,15 @@ Route::middleware([
             Route::resource('modulosAnexos', ModulosAnexosController::class);
             Route::resource('post', PostController::class);
             Route::get('/lancamento_padrao/tipo/{tipo}', [LancamentoPadraoController::class, 'getLancamentosByTipo']);
+
+            // *** Editar Patrimônio ***
             Route::resource('patrimonio', PatrimonioController::class);
+            Route::post('/save-location', [PatrimonioController::class, 'updateLocation'])->name('patrimonios.updateLocation');
+
+            // *** Rotas resource para Contas Financeiras ***
+            Route::resource('contas-financeiras', ContasFinanceirasController::class);
+
+
             Route::resource('escritura', EscrituraController::class);
             Route::resource('patrimonioAnexo', PatrimonioAnexoController::class);
             Route::get('patrimonios/imoveis', [PatrimonioController::class, 'imoveis'])->name('patrimonio.imoveis');
@@ -146,6 +166,8 @@ Route::middleware([
             Route::get('/report/shipping/data', [ReportController::class, 'shippingReportData'])->name('report.shipping.data');
             Route::resource('cemiterio', CemeteryController::class);
             Route::resource('sepultura', SepulturaController::class);
+
+            Route::resource('avaliador',AvaliadorController::class);
 
             Route::post('/upload-ofx', [OfxController::class, 'upload'])->name('upload.ofx');
 

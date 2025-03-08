@@ -1,4 +1,7 @@
 <x-tenant-app-layout>
+{{-- *** Modal de  *** --}}
+    @include('app.components.modals.patrimonio.avaliador.createAvaliador')
+
     <!--begin::Main-->
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -1832,6 +1835,8 @@
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="/assets/js/custom/apps/patrimonio/patrimonio.js"></script>
 <script src="/assets/js/custom/utilities/modals/new-address-foro.js"></script>
+
+<script src="/assets/js/custom/utilities/modals/patrimonio/avaliador/avaliador.js"></script>
 
 <script src="/assets/js/widgets.bundle.js"></script>
 <script src="/assets/js/custom/apps/chat/chat.js"></script>

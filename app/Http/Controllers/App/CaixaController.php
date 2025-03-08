@@ -10,10 +10,12 @@ use App\Models\Banco;
 use App\Models\CadastroBanco;
 use App\Models\Caixa;
 use App\Models\Company;
+use App\Models\ContasFinanceiras;
 use App\Models\EntidadeFinanceira;
 use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\ModulosAnexo;
 use App\Models\Financeiro\TransacaoFinanceira;
+use App\Models\FormasPagamento;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use App\Models\User;
@@ -53,6 +55,8 @@ class CaixaController extends Controller
 
         $caixas = Caixa::getCaixaList();
 
+        // Busca todos os dados da tabela formas_pagamento
+        $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
         $entidades = Caixa::getEntidadesCaixa();
         $entidadesBanco = Caixa::getEntidadesBanco();
 
@@ -62,20 +66,55 @@ class CaixaController extends Controller
         list($somaEntradas, $somaSaida) = caixa::getCaixa();
         $total = $somaEntradas - $somaSaida;
 
-        return view('app.financeiro.index', [
-            'caixas' => $caixas,
-            'valorEntrada' => $valorEntrada,
-            'ValorSaidas' => $ValorSaidas,
-            'valorEntradaBanco' => $valorEntradaBanco,
-            'ValorSaidasBanco' => $ValorSaidasBanco,
-            'lps' => $lps,
-            'bancos' => $bancos,
-            'total' => $total,
-            'entidades' => $entidades,
-            'entidadesBanco' => $entidadesBanco,
-            'transacoesFinanceiras' => $transacoesFinanceiras,
+        $centrosAtivos = CostCenter::getCadastroCentroCusto();
 
-        ]);
+        $todasEntidades = EntidadeFinanceira::getEntidadeFinanceira();
+
+        // filtragem de despesas
+        $despesasEmAberto = ContasFinanceiras::where('tipo_financeiro', 'despesa')
+            ->where('status_pagamento', 'em aberto')
+            ->whereDate('data_primeiro_vencimento', '<=', Carbon::today())
+            ->get();
+        $valorDespesaTotal = $despesasEmAberto->sum('valor');
+
+
+        // filtragem de receitas
+        $receitasEmAberto = ContasFinanceiras::where('tipo_financeiro', 'receita')
+            ->where('status_pagamento', 'em aberto')
+            ->whereDate('data_primeiro_vencimento', '<=', Carbon::today())
+            ->get();
+
+        $receitasAVencer = ContasFinanceiras::where('tipo_financeiro', 'receita')
+            ->whereIn('status_pagamento', ['em aberto', 'pendente', 'vencida'])
+            ->whereDate('data_primeiro_vencimento', '>', Carbon::today())
+            ->get();
+
+
+        $valorTotal = $receitasEmAberto->sum('valor');
+        $TotalreceitasAVencer = $receitasAVencer->sum('valor');
+
+        return view('app.financeiro.index', compact(
+            'caixas',
+            'valorEntrada',
+            'ValorSaidas',
+            'valorEntradaBanco',
+            'ValorSaidasBanco',
+            'lps',
+            'centrosAtivos',
+            'todasEntidades',
+            'bancos',
+            'total',
+            'entidades',
+            'entidadesBanco',
+            'transacoesFinanceiras',
+            'formasPagamento',
+            'receitasEmAberto',
+            'receitasAVencer',
+            'valorTotal',
+            'TotalreceitasAVencer',
+            'despesasEmAberto',
+            'valorDespesaTotal',
+        ));
     }
 
     public function list(Request $request)
@@ -105,7 +144,7 @@ class CaixaController extends Controller
         // Obter as somas de entradas e saídas utilizando métodos no modelo Caixa
         list($somaEntradas, $somaSaidas) = Caixa::getCaixa($companyId);
 
-        // Calcular o total (entradas - saídas)
+        // Calcular o total (entradas - saídaƒs)
         $total = EntidadeFinanceira::getValorTotalEntidade();
         // Listar todos os registros de caixa para a empresa do usuário
         $transacoes = TransacaoFinanceira::where('origem', 'Caixa')

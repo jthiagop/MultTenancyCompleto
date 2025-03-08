@@ -110,7 +110,7 @@
                                          <!--end::Heading-->
                                          <!--begin::Menu item-->
                                          <div class="menu-item px-3">
-                                             <a href="#" class="menu-link px-3">Create Invoice</a>
+                                             <a href="#" class="menu-link px-3 " data-bs-toggle="modal" data-bs-target="#Dm_modal_Avaliador" >Criar Avaliador</a>
                                          </div>
                                          <!--end::Menu item-->
                                          <!--begin::Menu item-->

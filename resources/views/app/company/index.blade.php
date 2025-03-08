@@ -11,7 +11,7 @@
                     <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
                         <!--begin::Title-->
                         <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
-                            Administração de Organismcos</h1>
+                            Administração de Organismo</h1>
                         <!--end::Title-->
                         <!--begin::Breadcrumb-->
                         <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
@@ -82,11 +82,12 @@
                                 <!--begin::Image-->
                                 <div
                                     class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-                                        @if (!empty($company->avatar))
+                                    @if (!empty($company->avatar))
                                         <img class="img-fluid w-100 h-100 rounded" alt="Logo"
                                             src="{{ route('file', ['path' => $companyes[0]->avatar]) }}" />
                                     @else
-                                        <img class="img-fluid w-100 h-100 rounded" alt="Logo" src="/assets/media/png/perfil.svg" />
+                                        <img class="img-fluid w-100 h-100 rounded" alt="Logo"
+                                            src="/assets/media/png/perfil.svg" />
                                     @endif
                                 </div>
                                 <!--end::Image-->
@@ -137,8 +138,56 @@
                                                     </div>
                                                     <!--end::Heading-->
                                                     <!--begin::Menu item-->
-                                                    <div class="menu-item px-3">
-                                                        <a href="#" class="menu-link px-3">Create Invoice</a>
+                                                    <div class="menu-item px-3" data-kt-menu-trigger="hover"
+                                                        data-kt-menu-placement="right-end">
+                                                        <a href="#" class="menu-link px-3">
+                                                            <span class="menu-title">Cadastro</span>
+                                                            <span class="menu-arrow"></span>
+                                                        </a>
+                                                        <!--begin::Menu sub-->
+                                                        <div class="menu-sub menu-sub-dropdown w-175px py-4">
+                                                            <!--begin::Menu item-->
+                                                            <div class="menu-item px-3">
+                                                                <a href="{{ route('formas-pagamento.index') }}"
+                                                                    class="menu-link px-3">Formas de pagamento</a>
+                                                            </div>
+                                                            <!--end::Menu item-->
+                                                            <!--begin::Menu item-->
+                                                            <div class="menu-item px-3">
+                                                                <a href="#" class="menu-link px-3">Billing</a>
+                                                            </div>
+                                                            <!--end::Menu item-->
+                                                            <!--begin::Menu item-->
+                                                            <div class="menu-item px-3">
+                                                                <a href="#"
+                                                                    class="menu-link px-3">Statements</a>
+                                                            </div>
+                                                            <!--end::Menu item-->
+                                                            <!--begin::Menu separator-->
+                                                            <div class="separator my-2"></div>
+                                                            <!--end::Menu separator-->
+                                                            <!--begin::Menu item-->
+                                                            <div class="menu-item px-3">
+                                                                <div class="menu-content px-3">
+                                                                    <!--begin::Switch-->
+                                                                    <label
+                                                                        class="form-check form-switch form-check-custom form-check-solid">
+                                                                        <!--begin::Input-->
+                                                                        <input class="form-check-input w-30px h-20px"
+                                                                            type="checkbox" value="1"
+                                                                            checked="checked" name="notifications" />
+                                                                        <!--end::Input-->
+                                                                        <!--end::Label-->
+                                                                        <span
+                                                                            class="form-check-label text-muted fs-6">Recuring</span>
+                                                                        <!--end::Label-->
+                                                                    </label>
+                                                                    <!--end::Switch-->
+                                                                </div>
+                                                            </div>
+                                                            <!--end::Menu item-->
+                                                        </div>
+                                                        <!--end::Menu sub-->
                                                     </div>
                                                     <!--end::Menu item-->
                                                     <!--begin::Menu item-->
@@ -301,28 +350,31 @@
                                                 <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                     title="{{ $user->name }}">
                                                     <img alt="{{ $user->name }}"
-                                                            src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
-                                                                    ? route('file', ['path' => $user->avatar])
-                                                                    : '/assets/media/avatars/blank.png' }}" />
+                                                        src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
+                                                            ? route('file', ['path' => $user->avatar])
+                                                            : '/assets/media/avatars/blank.png' }}" />
                                                 </div>
                                             @endforeach
 
                                             @if ($company->users->count() > 6)
-                                                <a href="#" class="symbol symbol-35px symbol-circle" data-bs-toggle="modal" data-bs-target="#kt_modal_view_users" title="Mais {{ $company->users->count() - 5 }} usuários">
+                                                <a href="#" class="symbol symbol-35px symbol-circle"
+                                                    data-bs-toggle="modal" data-bs-target="#kt_modal_view_users"
+                                                    title="Mais {{ $company->users->count() - 5 }} usuários">
                                                     <span class="symbol-label bg-dark text-inverse-dark fs-8 fw-bold"
-                                                    data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-trigger="hover" title="View more users">
+                                                        data-bs-toggle="tooltip" data-bs-trigger="hover"
+                                                        data-bs-trigger="hover" title="View more users">
                                                         +{{ $company->users->count() - 5 }}
                                                     </span>
                                                 </a>
                                             @endif
                                             @if ($company->users->count() < 1)
-                                            <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                                title="Nenhum usuário cadastrado">
-                                                <span class="symbol-label fs-8 fw-bold bg-light text-gray-800">
-                                                    {{ 0 }}
-                                                </span>
-                                            </div>
-                                        @endif
+                                                <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
+                                                    title="Nenhum usuário cadastrado">
+                                                    <span class="symbol-label fs-8 fw-bold bg-light text-gray-800">
+                                                        {{ 0 }}
+                                                    </span>
+                                                </div>
+                                            @endif
                                             <!--end::User-->
                                         </div>
                                         <!--end::Users-->
@@ -415,21 +467,21 @@
                             <ul class="nav nav-pills me-6 mb-2 mb-sm-0">
                                 <li class="nav-item m-0">
                                     <a class="btn btn-sm btn-icon btn-light btn-color-muted btn-active-primary me-3  active"
-                                    data-bs-toggle="tab" href="#kt_project_users_table_pane">
-                                    <!--begin::Svg Icon | path: icons/duotune/abstract/abs015.svg-->
-                                    <span class="svg-icon svg-icon-2">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path
-                                                d="M21 7H3C2.4 7 2 6.6 2 6V4C2 3.4 2.4 3 3 3H21C21.6 3 22 3.4 22 4V6C22 6.6 21.6 7 21 7Z"
-                                                fill="currentColor" />
-                                            <path opacity="0.3"
-                                                d="M21 14H3C2.4 14 2 13.6 2 13V11C2 10.4 2.4 10 3 10H21C21.6 10 22 10.4 22 11V13C22 13.6 21.6 14 21 14ZM22 20V18C22 17.4 21.6 17 21 17H3C2.4 17 2 17.4 2 18V20C2 20.6 2.4 21 3 21H21C21.6 21 22 20.6 22 20Z"
-                                                fill="currentColor" />
-                                        </svg>
-                                    </span>
-                                    <!--end::Svg Icon-->
-                                </a>
+                                        data-bs-toggle="tab" href="#kt_project_users_table_pane">
+                                        <!--begin::Svg Icon | path: icons/duotune/abstract/abs015.svg-->
+                                        <span class="svg-icon svg-icon-2">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
+                                                <path
+                                                    d="M21 7H3C2.4 7 2 6.6 2 6V4C2 3.4 2.4 3 3 3H21C21.6 3 22 3.4 22 4V6C22 6.6 21.6 7 21 7Z"
+                                                    fill="currentColor" />
+                                                <path opacity="0.3"
+                                                    d="M21 14H3C2.4 14 2 13.6 2 13V11C2 10.4 2.4 10 3 10H21C21.6 10 22 10.4 22 11V13C22 13.6 21.6 14 21 14ZM22 20V18C22 17.4 21.6 17 21 17H3C2.4 17 2 17.4 2 18V20C2 20.6 2.4 21 3 21H21C21.6 21 22 20.6 22 20Z"
+                                                    fill="currentColor" />
+                                            </svg>
+                                        </span>
+                                        <!--end::Svg Icon-->
+                                    </a>
                                 </li>
                                 <li class="nav-item m-0">
                                     <a class="btn btn-sm btn-icon btn-light btn-color-muted btn-active-primary "
@@ -662,9 +714,10 @@
                                                                     <div class="symbol symbol-25px symbol-circle"
                                                                         data-bs-toggle="tooltip"
                                                                         title="{{ $user->name }}">
-                                                                        <img alt="{{ $user->name }}" src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
-                                                                            ? route('file', ['path' => $user->avatar])
-                                                                            : '/assets/media/avatars/blank.png' }}" />
+                                                                        <img alt="{{ $user->name }}"
+                                                                            src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
+                                                                                ? route('file', ['path' => $user->avatar])
+                                                                                : '/assets/media/avatars/blank.png' }}" />
                                                                     </div>
                                                                 @endforeach
 
@@ -699,7 +752,8 @@
                                                             @endif
                                                         </td>
                                                         <td class="text-end">
-                                                            <a href="{{ route('company.show', $company->id) }}" class="btn btn-light btn-sm">
+                                                            <a href="{{ route('company.show', $company->id) }}"
+                                                                class="btn btn-light btn-sm">
                                                                 Ver
                                                             </a>
                                                         </td>
@@ -754,7 +808,9 @@
                                         <h1 class="mb-3">Buscar pelos usuários</h1>
                                         <!--end::Title-->
                                         <!--begin::Description-->
-                                            <div class="text-muted fw-semibold fs-5">Se precisar de mais informações, confira nosso <a href="#" class="link-primary fw-bold">Diretório de Usuários</a>. </div>
+                                        <div class="text-muted fw-semibold fs-5">Se precisar de mais informações,
+                                            confira nosso <a href="#" class="link-primary fw-bold">Diretório de
+                                                Usuários</a>. </div>
                                         <!--end::Description-->
                                     </div>
                                     <!--end::Heading-->
@@ -762,15 +818,16 @@
                                     <div class="mb-15">
                                         <!--begin::List-->
                                         <div class="mh-375px scroll-y me-n7 pe-7">
-                                            @foreach ( $users as $user )
+                                            @foreach ($users as $user)
                                                 <!--begin::User-->
-                                                <div class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
+                                                <div
+                                                    class="d-flex flex-stack py-5 border-bottom border-gray-300 border-bottom-dashed">
                                                     <!--begin::Details-->
                                                     <div class="d-flex align-items-center">
                                                         <!--begin::Avatar-->
                                                         <div class="symbol symbol-35px symbol-circle">
                                                             <img alt="{{ $user->name }}"
-                                                            src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
+                                                                src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
                                                                     ? route('file', ['path' => $user->avatar])
                                                                     : '/assets/media/avatars/blank.png' }}" />
                                                         </div>
@@ -779,12 +836,14 @@
                                                         <div class="ms-6">
                                                             <!--begin::Name-->
                                                             <a href="#"
-                                                                class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">{{ $user->name}}
-                                                                <span class="badge badge-light fs-8 fw-semibold ms-2">Art
+                                                                class="d-flex align-items-center fs-5 fw-bold text-dark text-hover-primary">{{ $user->name }}
+                                                                <span
+                                                                    class="badge badge-light fs-8 fw-semibold ms-2">Art
                                                                     Director</span></a>
                                                             <!--end::Name-->
                                                             <!--begin::Email-->
-                                                            <div class="fw-semibold text-muted">{{ $user->email }}</div>
+                                                            <div class="fw-semibold text-muted">{{ $user->email }}
+                                                            </div>
                                                             <!--end::Email-->
                                                         </div>
                                                         <!--end::Details-->
@@ -2166,12 +2225,12 @@
 <script src="/assets/js/custom/apps/projects/list/list.js"></script>
 <script src="/assets/js/custom/apps/projects/users/users.js"></script>
 
-		<!--begin::Custom Javascript(used for this page only)-->
-		<script src="/assets/js/widgets.bundle.js"></script>
-		<script src="/assets/js/custom/apps/chat/chat.js"></script>
-		<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-		<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-		<script src="/assets/js/custom/utilities/modals/new-target.js"></script>
-		<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+<!--begin::Custom Javascript(used for this page only)-->
+<script src="/assets/js/widgets.bundle.js"></script>
+<script src="/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/assets/js/custom/utilities/modals/new-target.js"></script>
+<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->

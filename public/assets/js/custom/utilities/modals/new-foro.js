@@ -59,12 +59,12 @@ var KTModalNewTarget = function () {
 			{
 				fields: {
                     "descricao": {
-                        validators: {
-                            notEmpty: {
-                                message: 'Descrição do patrimônio é obrigatória'
+                            validators: {
+                              notEmpty: {
+                                message: '⚠️ A descrição é obrigatório'
+                              }
                             }
-                        }
-                    },
+                          },
                     'patrimonio': {
                         validators: {
                             notEmpty: {

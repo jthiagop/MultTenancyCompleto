@@ -1,246 +1,151 @@
 <div class="modal fade" id="DM_modal_store_escritura" tabindex="-1" aria-hidden="true">
-    <!--begin::Modal dialog-->
-    <div class="modal-dialog modal-dialog-centered mw-650px">
-        <!--begin::Modal content-->
-        <div class="modal-content">
-            <!--begin::Form-->
-            <form id="kt_modal_new_address_form" class="form fv-plugins-bootstrap5 fv-plugins-framework"
-                method="POST" action="{{ route('escritura.store')}}">
-                @csrf
-                <div class="modal-header">
-                    <!--begin::Modal title-->
-                    <h2>Cadastra Escritura: {{ $patrimonio->codigo_rid }} </h2>
-                    <!--end::Modal title-->
-                    <input type="hidden" name="patrimonio_id" value="{{ $patrimonio->id }}">
+    			<!--begin::Modal dialog-->
+			<div class="modal-dialog mw-800px">
+				<!--begin::Modal content-->
+				<div class="modal-content">
+					<!--begin::Modal header-->
+					<div class="modal-header pb-0 border-0">
+						<!--begin::Close-->
+						<div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+							<!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
+							<span class="svg-icon svg-icon-1">
+								<svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+									<rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
+									<rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor" />
+								</svg>
+							</span>
+							<!--end::Svg Icon-->
+						</div>
+						<!--end::Close-->
+					</div>
+					<!--end::Modal header-->
+					<!--begin::Modal body-->
+					<div class="modal-body scroll-y mx-5 mx-xl-10 pt-0 pb-15">
+						<!--begin::Heading-->
+						<div class="text-center mb-13">
+							<!--begin::Title-->
+							<h1 class="d-flex justify-content-center align-items-center mb-3">Cadastrar Outorgante e Outorgado</h1>
+							<!--end::Title-->
+							<!--begin::Description-->
+							<div class="text-muted fw-semibold fs-5">Código RID do Patrimônio:
+							<a href="" class="link-primary fw-bold"><strong>{{ $patrimonio->codigo_rid }}</strong></a>.</div>
+							<!--end::Description-->
+						</div>
+						<!--end::Heading-->
+						<!--begin::Users-->
+						<div class="mh-475px scroll-y me-n7 pe-7">
+                            <form id="kt_modal_new_address_form" class="form fv-plugins-bootstrap5 fv-plugins-framework" method="POST" action="{{ route('escritura.store') }}">
+                                @csrf
+                                <!-- Dados do Outorgante -->
+                                <input type="hidden" name="patrimonio_id" value="{{ $patrimonio->id }}">
 
-                    <!--begin::Close-->
-                    <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
-                        <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-                        <span class="svg-icon svg-icon-1">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                xmlns="http://www.w3.org/2000/svg">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2"
-                                    rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
-                                <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                    transform="rotate(45 7.41422 6)" fill="currentColor" />
-                            </svg>
-                        </span>
-                        <!--end::Svg Icon-->
-                    </div>
-                    <!--end::Close-->
-                </div>
-                <!--end::Modal header-->
-                <!--begin::Modal body-->
-                <div class="modal-body py-10 px-lg-17">
-                    <!--begin::Scroll-->
-                    <div class="scroll-y me-n7 pe-7" id="kt_modal_new_address_scroll" data-kt-scroll="true"
-                        data-kt-scroll-activate="{default: false, lg: true}" data-kt-scroll-max-height="auto"
-                        data-kt-scroll-dependencies="#kt_modal_new_address_header"
-                        data-kt-scroll-wrappers="#kt_modal_new_address_scroll" data-kt-scroll-offset="300px">
-                        <!--begin::Input group-->
-                        <div class="d-flex flex-column mb-8 fv-row">
-                            <!--begin::Label-->
-                            <label class="d-flex align-items-center fs-6 fw-semibold mb-2" for="outorgante">
-                                <span>Outorgante</span>
-                                <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
-                                    title="Especifique aqui os detalhes do patrimônios"></i>
-                            </label>
-                            <!--end::Label-->
-                            <input type="text" class="form-control form-control-solid"
-                                placeholder="Pessoa ou entidade que concede ou transfere (Vendedor)"
-                                id="outorgante" name="outorgante"
-                                value="{{ old('outorgante', optional($patrimonio->escrituras->last())->outorgante ?? '') }}" />
-                        </div>
-                        <!--end::Input group-->
-
-                        <!--begin::Input group-->
-                        <div class="row g-9 mb-7">
-                            <!--begin::Col-->
-                            <div class="col-md-7 fv-row">
-                                <!--begin::Label-->
-                                <label class="fs-6 fw-semibold mb-2" for="outorgante_email">E-Mail</label>
-                                <!--end::Label-->
-                                <!--begin::Input-->
-                                <input class="form-control form-control-solid" placeholder="nome@exemplo.com.br"
-                                    name="outorgante_email" type="email" id="outorgante_email"
-                                    value="{{ old('outorgante_email', optional($patrimonio->escrituras->last())->outorgante_email ?? '') }}" />
-                                <!--end::Input-->
-                            </div>
-                            <!--end::Col-->
-                            <!--begin::Col-->
-                            <div class="col-md-5 fv-row">
-                                <!--begin::Label-->
-                                <label class="fs-6 fw-semibold mb-2" for="outorgante_telefone">Telefone</label>
-                                <!--end::Label-->
-                                <!--begin::Input-->
-                                <input class="form-control form-control-solid" type="text"
-                                    placeholder="(00) 0.0000-0000" id="telefone"
-                                    name="outorgante_telefone"
-                                    value="{{ old('outorgante_telefone', optional($patrimonio->escrituras->last())->outorgante_telefone ?? '') }}" />
-                                <!--end::Input-->
-                            </div>
-                            <!--end::Col-->
-                        </div>
-                        <!--end::Input group-->
-
-                        <!--begin::Input group-->
-                        <div class="row g-9 mb-7">
-                            <!--begin::Col-->
-                            <div class="col-md-8 fv-row">
-                                <!--begin::Label-->
-                                <label class="fs-6 fw-semibold mb-2" for="matricula">Número da Matrícula</label>
-                                <!--end::Label-->
-                                <!--begin::Input-->
-                                <input class="form-control form-control-solid" placeholder="Número da Matrícula"
-                                    value="{{ old('matricula', optional($patrimonio->escrituras->last())->matricula ?? '') }}"
-                                    name="matricula" id="matricula" />
-                                <!--end::Input-->
-                            </div>
-                            <!--end::Col-->
-                            <!--begin::Col-->
-                            <div class="col-md-4 fv-row">
-                                <!--begin::Label-->
-                                <label class="fs-6 fw-semibold mb-2" for="aquisicao">Data da Aquisição</label>
-                                <!--end::Label-->
-                                <!--begin::Input-->
-                                <input class="form-control form-control-solid" type="date"
-                                    placeholder="Selecione a data" id="aquisicao"
-                                    value="{{ old('aquisicao', optional($patrimonio->escrituras->last())->aquisicao ?? '') }}"
-                                    name="aquisicao" />
-                                <!--end::Input-->
-                            </div>
-                            <!--end::Col-->
-                        </div>
-                        <!--end::Input group-->
-
-                        <div class="separator separator-dashed border-secondary my-10"></div>
-
-                        <!--begin::Input group-->
-                        <div class="d-flex flex-column mb-8 fv-row">
-                            <!--begin::Label-->
-                            <label class="d-flex align-items-center fs-6 fw-semibold mb-2" for="outorgado">
-                                <span>Outorgado</span>
-                                <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
-                                    title="Especifique aqui os detalhes do patrimônios"></i>
-                            </label>
-                            <!--end::Label-->
-                            <input type="text" class="form-control form-control-solid"
-                                placeholder="Pessoa ou entidade que recebe (Comprador)" id="outorgado"
-                                name="outorgado"
-                                value="{{ old('outorgado', optional($patrimonio->escrituras->last())->outorgado ?? '') }}" />
-                        </div>
-                        <!--end::Input group-->
-
-                        <!--begin::Input group-->
-                        <div class="row g-9 mb-7">
-                            <!--begin::Col-->
-                            <div class="col-md-7 fv-row">
-                                <!--begin::Label-->
-                                <label class="fs-6 fw-semibold mb-2" for="outorgado_email">E-Mail</label>
-                                <!--end::Label-->
-                                <!--begin::Input-->
-                                <input class="form-control form-control-solid" name="outorgado_email"
-                                    type="email" id="outorgado_email" placeholder="nome@exemplo.com.br"
-                                    value="{{ old('outorgado_email', optional($patrimonio->escrituras->last())->outorgado_email ?? '') }}" />
-                                <!--end::Input-->
-                            </div>
-                            <!--end::Col-->
-                            <!--begin::Col-->
-                            <div class="col-md-5 fv-row">
-                                <!--begin::Label-->
-                                <label class="fs-6 fw-semibold mb-2" for="outorgado_telefone">Telefone</label>
-                                <!--end::Label-->
-                                <!--begin::Input-->
-                                <input class="form-control form-control-solid" type="text"
-                                    placeholder="(00) 0.0000-0000" id="telefone"
-                                    name="outorgado_telefone"
-                                    value="{{ old('outorgado_telefone', optional($patrimonio->escrituras->last())->outorgado_telefone ?? '') }}" />
-                                <!--end::Input-->
-                            </div>
-                            <!--end::Col-->
-                        </div>
-                        <!--end::Input group-->
-
-                        <!--begin::Input group-->
-                        <div class="row g-9 mb-7">
-                            <!--begin::Col-->
-                            <div class="col-md-4 fv-row">
-                                <!--begin::Label-->
-                                <label class="fs-6 fw-semibold mb-2" for="valor">Valor Aquisição</label>
-                                <!--end::Label-->
-                                <!--begin::Input-->
-                                <div class="position-relative d-flex align-items-center">
-                                    <!--begin::Icon-->
-                                    <span class="svg-icon svg-icon-2 position-absolute mx-4">
-                                        R$
-                                    </span>
-                                    <!--end::Icon-->
-                                    <!--begin::Input-->
-                                    <input class="form-control form-control-solid ps-12" placeholder="0,00"
-                                        name="valor" id="valor2"
-                                        value="{{ old('valor', optional($patrimonio->escrituras->last())->valor ?? '') }}" />
-                                    <!--end::Input-->
+                                <div class="mb-8">
+                                  <div class="form-floating">
+                                    <input type="text" class="form-control form-control-solid" id="outorgante" name="outorgante" placeholder="Nome do Outorgante" value="{{ old('outorgante', optional($patrimonio->escrituras->last())->outorgante ?? '') }}">
+                                    <label for="outorgante">
+                                      Nome do Outorgante
+                                      <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip" title="Informe os dados do Outorgante (quem concede ou transfere)"></i>
+                                    </label>
+                                  </div>
                                 </div>
-                            </div>
-                            <!--end::Col-->
-                            <!--begin::Col-->
-                            <div class="col-md-4 fv-row">
-                                <!--begin::Label-->
-                                <label class="fs-6 fw-semibold mb-2" for="area_total">Área Total</label>
-                                <!--end::Label-->
-                                <!--begin::Input-->
-                                <input class="form-control form-control-solid" placeholder="Área Total"
-                                    id="area_total" name="area_total"
-                                    value="{{ old('area_total', optional($patrimonio->escrituras->last())->area_total ?? '') }}" />
-                                <!--end::Input-->
-                            </div>
-                            <!--end::Col-->
-                            <!--begin::Col-->
-                            <div class="col-md-4 fv-row">
-                                <!--begin::Label-->
-                                <label class="fs-6 fw-semibold mb-2" for="area_privativa">Área Privativa</label>
-                                <!--end::Label-->
-                                <!--begin::Input-->
-                                <input class="form-control form-control-solid" placeholder="Área Privativa"
-                                    id="area_privativa" name="area_privativa"
-                                    value="{{ old('area_privativa', optional($patrimonio->escrituras->last())->area_privativa ?? '') }}" />
-                                <!--end::Input-->
-                            </div>
-                            <!--end::Col-->
-                        </div>
-                        <!--end::Input group-->
+                                <div class="row g-9 mb-7">
+                                  <div class="col-md-7">
+                                    <div class="form-floating">
+                                      <input type="email" class="form-control form-control-solid" id="outorgante_email" name="outorgante_email" placeholder="nome@exemplo.com.br" value="{{ old('outorgante_email', optional($patrimonio->escrituras->last())->outorgante_email ?? '') }}">
+                                      <label for="outorgante_email">nome@exemplo.com.br</label>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-5">
+                                    <div class="form-floating">
+                                      <input type="text" class="form-control form-control-solid" id="outorgante_telefone" name="outorgante_telefone" placeholder="(00) 0.0000-0000" value="{{ old('outorgante_telefone', optional($patrimonio->escrituras->last())->outorgante_telefone ?? '') }}">
+                                      <label for="outorgante_telefone">(00) 0.0000-0000</label>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="row g-9 mb-7">
+                                  <div class="col-md-8">
+                                    <div class="form-floating">
+                                      <input type="text" class="form-control form-control-solid" id="matricula" name="matricula" placeholder="Número da Matrícula" value="{{ old('matricula', optional($patrimonio->escrituras->last())->matricula ?? '') }}">
+                                      <label for="matricula">Número da Matrícula</label>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-4">
+                                    <div class="form-floating">
+                                      <input type="date" class="form-control form-control-solid" id="aquisicao" name="aquisicao" placeholder="Selecione a data" value="{{ old('aquisicao', optional($patrimonio->escrituras->last())->aquisicao ?? '') }}">
+                                      <label for="aquisicao">Selecione a data</label>
+                                    </div>
+                                  </div>
+                                </div>
+                                <hr class="separator separator-dashed border-secondary my-10" />
+                                <!-- Dados do Outorgado -->
+                                <div class="mb-8">
+                                  <div class="form-floating">
+                                    <input type="text" class="form-control form-control-solid" id="outorgado" name="outorgado" placeholder="Nome do Outorgado" value="{{ old('outorgado', optional($patrimonio->escrituras->last())->outorgado ?? '') }}">
+                                    <label for="outorgado">
+                                      Nome do Outorgado
+                                      <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip" title="Informe os dados do Outorgado (quem recebe ou compra)"></i>
+                                    </label>
+                                  </div>
+                                </div>
+                                <div class="row g-9 mb-7">
+                                  <div class="col-md-7">
+                                    <div class="form-floating">
+                                      <input type="email" class="form-control form-control-solid" id="outorgado_email" name="outorgado_email" placeholder="nome@exemplo.com.br" value="{{ old('outorgado_email', optional($patrimonio->escrituras->last())->outorgado_email ?? '') }}">
+                                      <label for="outorgado_email">nome@exemplo.com.br</label>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-5">
+                                    <div class="form-floating">
+                                      <input type="text" class="form-control form-control-solid" id="outorgado_telefone" name="outorgado_telefone" placeholder="(00) 0.0000-0000" value="{{ old('outorgado_telefone', optional($patrimonio->escrituras->last())->outorgado_telefone ?? '') }}">
+                                      <label for="outorgado_telefone">(00) 0.0000-0000</label>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="row g-9 mb-7">
+                                  <div class="col-md-4">
+                                    <div class="form-floating position-relative">
+                                        <input type="text" class="form-control form-control-solid" id="valor2" name="valor"
+                                        placeholder="0,00" value="{{ old('valor2', optional($patrimonio->escrituras->last())->valor ?? '') }}">
+                                      <label for="valor">Valor de Aquisição</label>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-4">
+                                    <div class="form-floating">
+                                      <input type="text" class="form-control form-control-solid" id="area_total" name="area_total" placeholder="Área Total" value="{{ old('area_total', optional($patrimonio->escrituras->last())->area_total ?? '') }}">
+                                      <label for="area_total">Área Total</label>
+                                    </div>
+                                  </div>
+                                  <div class="col-md-4">
+                                    <div class="form-floating">
+                                      <input type="text" class="form-control form-control-solid" id="area_privativa" name="area_privativa" placeholder="Área Privativa" value="{{ old('area_privativa', optional($patrimonio->escrituras->last())->area_privativa ?? '') }}">
+                                      <label for="area_privativa">Área Privativa</label>
+                                    </div>
+                                  </div>
+                                </div>
+                                <div class="mb-8">
+                                  <div class="form-floating">
+                                    <textarea class="form-control form-control-solid" id="informacoes" name="informacoes" placeholder="Mais detalhes sobre o cadastro (máx. 250 caracteres)" style="height: 100px;">{{ old('informacoes', optional($patrimonio->informacoes)->informacoes ?? 'Sem escritura') }}</textarea>
+                                    <label for="informacoes">Mais detalhes sobre o cadastro (máx. 250 caracteres)</label>
+                                  </div>
+                                  <small class="text-muted">Máximo 250 caracteres</small>
+                                </div>
+                                <!-- Modal Footer -->
+                                <div class="modal-footer flex-center">
+                                  <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">
+                                    <i class="bi bi-box-arrow-right"></i> Sair
+                                  </button>
+                                  <button type="submit" id="kt_modal_new_address_submit" class="btn btn-primary">
+                                    <i class="bi bi-arrow-repeat"></i> Atualizar
+                                  </button>
+                                </div>
+                              </form>
 
-                        <!--begin::Input group-->
-                        <div class="d-flex flex-column mb-8">
-                            <label class="fs-6 fw-semibold mb-2">[+] Informações</label>
-                            <textarea class="form-control form-control-solid" id="informacoes" name="informacoes" maxlength="250"
-                                rows="3" name="informacoes" placeholder="Mais detalhes sobre o foro">{{ old('informacoes', optional($patrimonio->informacoes)->informacoes ?? 'Sem escritura') }}</textarea>
-                            <span class="fs-6 text-muted">Insira no máximo 250 caracteres</span>
-                        </div>
-                        <!--end::Input group-->
-
-                    </div>
-                    <!--end::Scroll-->
-                </div>
-                <!--end::Modal body-->
-                <!--begin::Modal footer-->
-                <div class="modal-footer flex-center">
-                    <!-- Botão "Sair" (fecha o modal) -->
-                    <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">
-                        <i class="bi bi-box-arrow-right"></i> <!-- Ícone (Bootstrap Icons) -->
-                        <span>Sair</span>
-                    </button>
-
-                    <!-- Botão "Atualizar" (envia o form) -->
-                    <button type="submit" id="kt_modal_new_address_submit" class="btn btn-primary">
-                        <i class="bi bi-arrow-repeat"></i> <!-- Ícone (Bootstrap Icons) -->
-                        <span>Atualizar</span>
-                    </button>
-                </div>
-                <!--end::Modal footer-->
-
-            </form>
-            <!--end::Form-->
-        </div>
-    </div>
+						</div>
+						<!--end::Users-->
+					</div>
+					<!--end::Modal Body-->
+				</div>
+				<!--end::Modal content-->
+			</div>
+			<!--end::Modal dialog-->
 </div>

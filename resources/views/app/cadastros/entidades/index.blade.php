@@ -188,6 +188,9 @@
                                                     <option value="Inter"
                                                         data-icon="/assets/media/svg/bancos/inter.svg">Inter
                                                     </option>
+                                                    <option value="Inter"
+                                                        data-icon="/assets/media/svg/bancos/sicoob.svg">Sicoob
+                                                    </option>
                                                     <!-- ... e assim por diante -->
                                                 </select>
 

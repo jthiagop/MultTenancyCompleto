@@ -247,28 +247,28 @@ class PatrimonioController extends Controller
             $patrimonio->save();
 
             // Configura a mensagem flash de sucesso com título e RID
-       // Configura a mensagem flash de sucesso com título e RID
-       flash()
-       ->option('position', 'top-right')
-       ->option('offset', ['x' => 0, 'y' => 80]) // Desloca 80px para baixo
-       ->option('timeout', 4000)
-       ->success('Registro com RID ' . $patrimonio->codigo_rid . ' foi atualizado com sucesso!', [
-           'title' => 'Atualização Bem-Sucedida'
-       ]);
+            // Configura a mensagem flash de sucesso com título e RID
+            flash()
+                ->option('position', 'top-right')
+                ->option('offset', ['x' => 0, 'y' => 80]) // Desloca 80px para baixo
+                ->option('timeout', 4000)
+                ->success('Registro com RID ' . $patrimonio->codigo_rid . ' foi atualizado com sucesso!', [
+                    'title' => 'Atualização Bem-Sucedida'
+                ]);
 
-        // Redireciona de volta com a mensagem de sucesso
-        return redirect()->back();
-    } catch (\Exception $e) {
-        // Configura a mensagem flash de erro
-        flash()
-            ->option('position', 'top-right')
-            ->option('offset', ['x' => 0, 'y' => 80])
-            ->option('timeout', 4000)
-            ->error('Erro', 'Erro ao atualizar o registro: ' . $e->getMessage());
+            // Redireciona de volta com a mensagem de sucesso
+            return redirect()->back();
+        } catch (\Exception $e) {
+            // Configura a mensagem flash de erro
+            flash()
+                ->option('position', 'top-right')
+                ->option('offset', ['x' => 0, 'y' => 80])
+                ->option('timeout', 4000)
+                ->error('Erro', 'Erro ao atualizar o registro: ' . $e->getMessage());
 
-        // Redireciona de volta com a mensagem de erro
-        return redirect()->back();
-    }
+            // Redireciona de volta com a mensagem de erro
+            return redirect()->back();
+        }
     }
 
 
@@ -325,5 +325,24 @@ class PatrimonioController extends Controller
                 'patrimonios' => $patrimonios,
             ]
         );
+    }
+
+    public function updateLocation(Request $request)
+    {
+        // Validação dos dados
+        $data = $request->validate([
+            'id'        => 'required|exists:patrimonios,id',
+            'latitude'  => 'required|numeric',
+            'longitude' => 'required|numeric',
+        ]);
+
+
+        // Localiza o patrimônio e atualiza os campos
+        $patrimonio = Patrimonio::findOrFail($data['id']);
+        $patrimonio->latitude = $data['latitude'];
+        $patrimonio->longitude = $data['longitude'];
+        $patrimonio->save();
+
+        return redirect()->back()->with('Localização atualizada com sucesso!');
     }
 }

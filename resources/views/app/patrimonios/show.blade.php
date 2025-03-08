@@ -1,4 +1,6 @@
 <x-tenant-app-layout>
+    {{-- *** Modal para Emitir Ptam *** --}}
+    @include('app.components.modals.patrimonio.documentos.ptam')
     <!--begin::Main-->
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -251,6 +253,10 @@
                                     <div class="d-flex">
                                         <a href="#" class="btn btn-sm btn-light me-3"
                                             id="kt_drawer_chat_toggle">Send Message</a>
+                                        <!--begin::Action-->
+                                        <a href="#" class="btn btn-sm btn-light me-3" data-bs-toggle="modal"
+                                            data-bs-target="#kt_modal_create_app">Create App</a>
+                                        <!--end::Action-->
                                         <button class="btn btn-sm btn-primary me-3" data-bs-toggle="modal"
                                             data-bs-target="#kt_modal_upgrade_plan">
                                             <!--begin::Svg Icon | path: icons/duotune/arrows/arr012.svg-->
@@ -568,8 +574,7 @@
                                                 <div class="fs-6 text-gray-700">Por favor, revise os detalhes acima. Se
                                                     houver alguma inconsistência, entre em contato <br> com o suporte ou
                                                     faça as correções necessárias.
-                                                    <a class="fw-bold"
-                                                        href="#">Ajude-me</a>!
+                                                    <a class="fw-bold" href="#">Ajude-me</a>!
                                                 </div>
                                             </div>
                                             <!--end::Content-->
@@ -869,29 +874,52 @@
                                                 class="card-body d-flex flex-column justify-content-between mt-6 bgi-no-repeat bgi-size-cover bgi-position-x-center">
                                                 <!--begin::Wrapper-->
                                                 <div class="mb-10">
-                                                    <!--begin::Title-->
-                                                    <div class="fs-1 fw-bold text-white text-center mb-9">
-                                                        <span class="me-2">Analyse Your
-                                                            <br />
-                                                            <span class="position-relative d-inline-block">
-                                                                <a href="#"
-                                                                    class="text-success opacity-75-hover">Infrastructure</a>
-                                                                <!--begin::Separator-->
-                                                                <span
-                                                                    class="position-absolute opacity-25 bottom-0 start-0 border-4 border-success border-bottom w-100"></span>
-                                                                <!--end::Separator-->
-                                                            </span></span>with Keen
+                                                    <!--begin::Alerta de Cadastros Ausentes-->
+                                                    <div class="mb-10">
+                                                        <!--begin::Título-->
+                                                        <div class="fs-1 fw-bold text-white text-center mb-9">
+                                                            <span class="me-2">Cadastros não encontrados para o
+                                                                <br />
+                                                                <span class="position-relative d-inline-block">
+                                                                    <a href="#"
+                                                                        class="text-success opacity-75-hover">Outorgado</a>
+                                                                    <!--begin::Separator-->
+                                                                    <span
+                                                                        class="position-absolute opacity-25 bottom-0 start-0 border-4 border-success border-bottom w-100"></span>
+                                                                    <!--end::Separator-->
+                                                                </span>
+                                                                e
+                                                                <span class="position-relative d-inline-block">
+                                                                    <a href="#"
+                                                                        class="text-success opacity-75-hover">Outorgante</a>
+                                                                    <!--begin::Separator-->
+                                                                    <span
+                                                                        class="position-absolute opacity-25 bottom-0 start-0 border-4 border-success border-bottom w-100"></span>
+                                                                    <!--end::Separator-->
+                                                                </span>
+                                                            </span>
+                                                        </div>
+                                                        <!--end::Título-->
+                                                        <!--begin::Descrição-->
+                                                        <div class="fs-4 text-white text-center mb-6">
+                                                            Para dar continuidade ao processo de atualização do
+                                                            patrimônio, realize<br /> o cadastro destes dados.
+                                                        </div>
+                                                        <!--end::Descrição-->
+                                                        <!--begin::Ação-->
+                                                        <div class="text-center">
+                                                            <a href="#"
+                                                                class="btn btn-sm btn-color-white bg-body bg-opacity-15 bg-hover-opacity-25 fw-bold fs-7"
+                                                                data-bs-toggle="modal"
+                                                                data-bs-target="#DM_modal_store_escritura">
+                                                                Cadastrar Dados
+                                                            </a>
+                                                        </div>
+                                                        <!--end::Ação-->
                                                     </div>
-                                                    <!--end::Title-->
-                                                    <!--begin::Action-->
-                                                    <div class="text-center">
-                                                        <a href='#'
-                                                            class="btn btn-sm btn-color-white bg-body bg-opacity-15 bg-hover-opacity-25 fw-bold fs-7"
-                                                            data-bs-toggle="modal"
-                                                            data-bs-target="#DM_modal_store_escritura">Get Started</a>
-                                                    </div>
-                                                    <!--begin::Action-->
+                                                    <!--end::Alerta de Cadastros Ausentes-->
                                                 </div>
+
                                                 <!--begin::Wrapper-->
                                                 <!--begin::Illustration-->
                                                 <img class="mx-auto h-150px h-lg-200px mb-11"
@@ -905,59 +933,34 @@
                                     </div>
                                     <!--end::Col-->
                                 @endif
-                                <!--begin::Col-->
-                                <div class="col-xl-5 mb-5 mb-xl-10">
-                                    <!--begin::Engage widget 1-->
-                                    <div class="card h-md-100" dir="ltr">
-                                        <!--begin::Body-->
-                                        <div class="card-body d-flex flex-column flex-center"
-                                            style="position: relative; height: 400px; border-radius: 1px; overflow: hidden;">
-                                            <!--begin::Heading-->
-                                            <div id="map"
-                                                style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; border-radius: 5px;">
-                                            </div>
-                                            <script>
-                                                function initMap() {
-                                                    var location = {
-                                                        lat: {{ $patrimonio->latitude }},
-                                                        lng: {{ $patrimonio->longitude }}
-                                                    };
-                                                    var map = new google.maps.Map(document.getElementById('map'), {
-                                                        zoom: 15,
-                                                        center: location
-                                                    });
-                                                    var marker = new google.maps.Marker({
-                                                        position: location,
-                                                        map: map
-                                                    });
-                                                }
-                                            </script>
-                                            <script async defer
-                                                src="https://maps.googleapis.com/maps/api/js?key={{ env('GOOGLE_MAPS_API_KEY') }}&callback=initMap"></script>
-                                            <!--end::Heading-->
-                                            <!--begin::Links-->
-                                            <div class="text-center mb-1"
-                                                style="position: absolute; z-index: 10; bottom: 20px; width: 100%;">
-                                                <!--begin::Link-->
-                                                <a href="#" class="btn btn-primary er fs-6 px-8 py-4"
-                                                    data-bs-toggle="modal"
-                                                    data-bs-target="#kt_modal_select_location">Editar Localização</a>
-                                                <!--end::Link-->
-                                                <!--begin::Link-->
-                                                <a class="btn btn-sm btn-light"
-                                                    href="../../demo1/dist/apps/invoices/view/invoice-1.html">Learn
-                                                    more</a>
-                                                <!--end::Link-->
-                                            </div>
-                                            <!--end::Links-->
-                                        </div>
-                                        <!--end::Body-->
-                                    </div>
-                                    <!--end::Engage widget 1-->
-                                </div>
-                                <!--end::Col-->
+<!--begin::Col-->
+<div class="col-xl-5 mb-5 mb-xl-10">
+    <!--begin::Engage widget 1-->
+    <div class="card h-md-100" dir="ltr">
+      <!--begin::Body-->
+      <div class="card-body d-flex flex-column flex-center" style="position: relative; height: 400px; border-radius: 1px; overflow: hidden;">
+        <!--begin::Heading-->
+        <!-- Mapa da Página -->
+        <div id="map" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; border-radius: 5px;"></div>
+        <!-- Fim do Mapa da Página -->
+        <!--end::Heading-->
+        <!--begin::Links-->
+        <div class="text-center mb-1" style="position: absolute; z-index: 10; bottom: 20px; width: 100%;">
+          <!--begin::Link-->
+          <a href="#" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_select_location">Editar Localização</a>
+          <!--end::Link-->
+        </div>
+        <!--end::Links-->
+      </div>
+      <!--end::Body-->
+    </div>
+    <!--end::Engage widget 1-->
+  </div>
+  <!--end::Col-->
+
                             </div>
                             <!--end::Row-->
+
                             <!--begin::Row-->
                             <div class="row gy-5 g-xl-10">
 
@@ -1099,61 +1102,9 @@
                             </div>
                             <!--end::Row-->
 
-                            <!--begin::Modal - Selecionar Localização-->
-                            <div class="modal fade" id="kt_modal_select_location" tabindex="-1" aria-hidden="true">
-                                <!--begin::Modal dialog-->
-                                <div class="modal-dialog mw-1000px">
-                                    <!--begin::Modal content-->
-                                    <div class="modal-content">
-                                        <!--begin::Modal header-->
-                                        <div class="modal-header">
-                                            <h2>Selecionar Localização</h2>
-                                            <div class="btn btn-sm btn-icon btn-active-color-primary"
-                                                data-bs-dismiss="modal">
-                                                <span class="svg-icon svg-icon-1">
-                                                    <svg width="24" height="24" viewBox="0 0 24 24"
-                                                        fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                        <rect opacity="0.5" x="6" y="17.3137" width="16"
-                                                            height="2" rx="1"
-                                                            transform="rotate(-45 6 17.3137)" fill="currentColor" />
-                                                        <rect x="7.41422" y="6" width="16" height="2"
-                                                            rx="1" transform="rotate(45 7.41422 6)"
-                                                            fill="currentColor" />
-                                                    </svg>
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <!--end::Modal header-->
-                                        <!--begin::Modal body-->
-                                        <div class="modal-body">
-                                            <div id="kt_modal_select_location_map" class="w-100 rounded"
-                                                style="height:450px"></div>
-                                            <div class="mt-3">
-                                                <label for="latitude" class="form-label">Latitude</label>
-                                                <input type="text" id="latitude" class="form-control"
-                                                    value="{{ $patrimonio->latitude }}" readonly>
-
-                                                <label for="longitude" class="form-label mt-2">Longitude</label>
-                                                <input type="text" id="longitude" class="form-control"
-                                                    value="{{ $patrimonio->longitude }}" readonly>
-                                            </div>
-                                        </div>
-                                        <!--end::Modal body-->
-                                        <!--begin::Modal footer-->
-                                        <div class="modal-footer d-flex justify-content-end">
-                                            <a href="#" class="btn btn-active-light me-5"
-                                                data-bs-dismiss="modal">Cancelar</a>
-                                            <button type="button" id="kt_modal_select_location_button"
-                                                class="btn btn-primary" data-bs-dismiss="modal"
-                                                onclick="saveLocation()">Aplicar</button>
-                                        </div>
-                                        <!--end::Modal footer-->
-                                    </div>
-                                    <!--end::Modal content-->
-                                </div>
-                                <!--end::Modal dialog-->
-                            </div>
-                            <!--end::Modal - Selecionar Localização-->
+                             {{-- *** Begin -Modal de Edição do Mapa *** --}}
+                             @include('app.components.modals.patrimonio.mapas.mapa')
+                             {{-- *** End - Modal de Edição do Mapa *** --}}
                             <!--begin::Modal - Upgrade plan-->
                             <div class="modal fade" id="kt_modal_upgrade_plan" tabindex="-1" aria-hidden="true">
                                 <!--begin::Modal dialog-->
@@ -3058,9 +3009,9 @@
     <!--end::Modal - Dados do Patrimonio-->
 
     <!--begin::Modal - Dados do Editar Escritura-->
-        @include('app.components.modals.patrimonio.escrituras.edit-escritura')
-        <!--end::Modal - Dados do Editar Escritura-->
-        @include('app.components.modals.patrimonio.escrituras.store-escritura')
+    @include('app.components.modals.patrimonio.escrituras.edit-escritura')
+    <!--end::Modal - Dados do Editar Escritura-->
+    @include('app.components.modals.patrimonio.escrituras.store-escritura')
 
 
 
@@ -3074,6 +3025,9 @@
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="/assets/js/custom/apps/file-manager/patrimonioAnexo.js"></script>
 <script src="/assets/js/custom/apps/invoices/create.js"></script>
+
+<script src="/assets/js/custom/utilities/modals/patrimonio/ptam/ptam.js"></script>
+
 
 <script src="/assets/js/widgets.bundle.js"></script>
 <script src="/assets/js/custom/apps/chat/chat.js"></script>
