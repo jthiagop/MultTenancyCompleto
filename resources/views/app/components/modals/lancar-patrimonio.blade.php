@@ -395,7 +395,6 @@
             <!--end::Col-->
             </div>
             <!--end::Input group-->
-
             <div class="separator separator-dashed border-secondary my-10"></div>
             <!--begin::Input group-->
             <div class="d-flex flex-column mb-8 fv-row">
@@ -409,7 +408,7 @@
                 <input type="text" class="form-control form-control-solid"
                     placeholder="Pessoa ou entidade que recebe (comprador)" id="outorgado" name="outorgado" />
             </div>
-                                        <!--begin::Input group-->
+            <!--begin::Input group-->
             <div class="row g-9 mb-7">
                 <!--begin::Col-->
                 <div class="col-md-7 fv-row">

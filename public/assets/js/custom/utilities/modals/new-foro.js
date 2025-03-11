@@ -225,3 +225,4 @@ var KTModalNewTarget = function () {
 KTUtil.onDOMContentLoaded(function () {
 	KTModalNewTarget.init();
 });
+

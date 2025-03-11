@@ -95,12 +95,6 @@ Route::middleware([
     // Grupo de rotas protegido pelo middleware 'auth' e 'ensureUserHasAccess'
     Route::middleware(['auth', 'ensureUserHasAccess'])->group(function () {
 
-
-        Route::get('/atualizar-status', function () {
-            Artisan::call('contas:atualizar-status');
-            return 'Status atualizados!';
-        });
-
         // Rotas acessíveis apenas para administradores globais
         Route::middleware(['role:global'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
