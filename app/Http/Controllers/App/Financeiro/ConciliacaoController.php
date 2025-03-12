@@ -266,23 +266,20 @@ class ConciliacaoController extends Controller
     public function pivot(Request $request)
     {
         return DB::transaction(function () use ($request) {
-            // Busca os registros
-            $bankStatement = BankStatement::find($request->bank_statement_id);
-            $transacao = TransacaoFinanceira::find($request->transacao_financeira_id);
+            // ✅ Busca os registros corretamente
+            $bankStatement = BankStatement::findOrFail($request->bank_statement_id);
+            $transacao = TransacaoFinanceira::findOrFail($request->transacao_financeira_id);
 
-            if (!$bankStatement || !$transacao) {
-                return redirect()->back()->with('error', 'Erro ao buscar dados para conciliação.');
-            }
-
-            // Define o valor conciliado
+            // ✅ Define o valor conciliado
             $valorConciliado = $request->valor_conciliado ?? $transacao->valor;
 
-            // Chama o método direto do modelo
+            // ✅ Chama o método diretamente no modelo
             $bankStatement->conciliarCom($transacao, $valorConciliado);
 
             return redirect()->back()->with('success', 'Conciliação realizada com sucesso!');
         });
     }
+
 
 
 

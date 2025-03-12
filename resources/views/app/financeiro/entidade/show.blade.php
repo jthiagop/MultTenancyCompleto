@@ -148,7 +148,7 @@
                                             Conciliações Pendentes
                                             @if ($conciliacoesPendentes->count() > 0)
                                                 <span
-                                                    class="badge badge-danger">{{ $conciliacoesPendentes->count() }}</span>
+                                                    class="badge badge-danger">{{ $conciliacoesPendentes->total() }}</span>
                                             @endif
                                         </a>
                                     </li>
@@ -389,6 +389,7 @@
                                         @if ($conciliacoesPendentes->isEmpty())
                                             <p class="text-muted">Nenhuma conciliação pendente encontrada.</p>
                                         @else
+                                        <!-- Exemplo de exibição de transações -->
                                             @foreach ($conciliacoesPendentes as $conciliacao)
                                                 <!--begin::Row-->
                                                 <div class="row gx-5 gx-xl-10">
@@ -530,10 +531,10 @@
                                                                     <!-- Centraliza horizontal e verticalmente -->
                                                                     <button
                                                                         class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
-                                                                        type="submit" form="{{ $conciliacao->id }}">
+                                                                        type="submit" form="form-{{ $conciliacao->id }}">
                                                                         <span class="fs-1 me-2">🫱🏻‍🫲🏽</span>
                                                                         <!-- Emoji -->
-                                                                        <span>Conciliar</span> <!-- Texto -->
+                                                                        <span>Conciliar 123</span> <!-- Texto -->
                                                                     </button>
                                                                 </div>
                                                                 <!--end::Body-->
@@ -1161,6 +1162,10 @@
                                                 </div>
                                                 <!--end::Row-->
                                             @endforeach
+
+                                            <!-- Botões de paginação -->
+                                            {{ $conciliacoesPendentes->links('pagination::bootstrap-5') }}
+
                                         @endif
                                     </div>
                                 </div>

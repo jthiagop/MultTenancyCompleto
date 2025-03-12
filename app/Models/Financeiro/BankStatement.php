@@ -117,24 +117,32 @@ class BankStatement extends Model
      */
     public function conciliarCom(TransacaoFinanceira $transacao, $valorConciliado)
     {
-        // Define status de conciliação com base no valor conciliado
-        if (bccomp($valorConciliado, $this->amount, 2) === 0) {
-            $status = 'ok';
+        // ✅ Marca o registro como conciliado
+        $this->reconciled = true;
+
+        // ✅ Define o status de conciliação com base no valor
+        if ($valorConciliado == $this->amount) {
+            $this->status_conciliacao = 'ok'; // Conciliação perfeita
         } elseif ($valorConciliado < $this->amount) {
-            $status = 'parcial';
+            $this->status_conciliacao = 'parcial'; // Conciliação parcial (valor menor)
         } elseif ($valorConciliado > $this->amount) {
-            $status = 'divergente';
+            $this->status_conciliacao = 'divergente'; // Conciliação divergente (valor maior)
         } else {
-            $status = 'pendente';
+            $this->status_conciliacao = 'pendente'; // Valor não foi conciliado
         }
 
-        return BankStatementTransacao::create([
-            'bank_statement_id'       => $this->id,
-            'transacao_financeira_id' => $transacao->id,
-            'valor_conciliado'        => $valorConciliado,
-            'status_conciliacao'      => $status,
+        // ✅ Salva os campos diretamente na tabela
+        $this->save();
+
+        // ✅ Salva diretamente na tabela pivot o valor conciliado e o status
+        $this->transacoes()->attach($transacao->id, [
+            'valor_conciliado' => $valorConciliado,
+            'status_conciliacao' => $this->status_conciliacao,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
     }
+
 
     /**
      * 🕒 Método auxiliar para converter datas OFX para formato correto

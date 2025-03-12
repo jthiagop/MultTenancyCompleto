@@ -167,6 +167,8 @@ class EntidadeFinanceiraController extends Controller
      */
     public function show($id)
     {
+        ini_set('memory_limit', '512M');
+
         // 1. Recupera o ID da empresa do usuário logado
         $companyId = Auth::user()->company_id;
 
@@ -175,23 +177,23 @@ class EntidadeFinanceiraController extends Controller
         //    - transacoesFinanceiras (todas, ordenadas por data_competencia desc)
         //    - bankStatements (apenas as não conciliadas ou pendentes/divergentes, ordenadas por dtposted desc)
         $entidade = EntidadeFinanceira::where('company_id', $companyId)
-        ->with([
-            'transacoesFinanceiras' => function ($query) {
-                $query->orderBy('data_competencia', 'desc');
-            },
-            'bankStatements' => function ($query) {
-                $query->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
-                      ->whereDoesntHave('transacoes') // Exclui os que já possuem conciliação
-                      ->orderBy('dtposted', 'desc');
-            },
-        ])
-        ->findOrFail($id);
+            ->with([
+                'transacoesFinanceiras' => function ($query) {
+                    $query->orderBy('data_competencia', 'desc');
+                }
+            ])
+            ->findOrFail($id);
 
-
+        // Consulta paginada para bankStatements
+        $bankStatements = BankStatement::where('entidade_financeira_id', $id)
+            ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+            ->whereDoesntHave('transacoes')
+            ->orderBy('dtposted', 'desc')
+            ->paginate(20); // <-- quantidade por página
 
         // 3. Para cada lançamento bancário pendente (bankStatement),
         //    buscar possíveis transações financeiras compatíveis
-        foreach ($entidade->bankStatements as $lancamento) {
+        foreach ($bankStatements as $lancamento) {
             // Se o valor for negativo no extrato, definimos 'saida'; caso contrário, 'entrada'.
             $valorAbs = abs($lancamento->amount);
             $tipo = $lancamento->amount < 0 ? 'saida' : 'entrada';
@@ -213,12 +215,18 @@ class EntidadeFinanceiraController extends Controller
                 ->where('entidade_id', $id)
                 ->where('tipo', $tipo)
                 ->where('valor', $valorAbs)
+                // Tolerância de até 2 meses antes e 2 meses depois
                 ->whereBetween('data_competencia', [$dataInicio, $dataFim])
+                // ✅ Adiciona o filtro pelo número do documento
+                ->when($numeroDocumento, function ($query) use ($numeroDocumento) {
+                    $query->where('numero_documento', $numeroDocumento);
+                })
                 ->get();
 
             // Atribuímos essa coleção de possíveis transações na propriedade possiveisTransacoes do $lancamento
             $lancamento->possiveisTransacoes = $possiveis;
         }
+
 
         // 5. Carrega dados auxiliares (centros de custo, lançamentos padrão, etc.)
         $centrosAtivos = CostCenter::getCadastroCentroCusto();
@@ -245,7 +253,7 @@ class EntidadeFinanceiraController extends Controller
             // Movimentações gerais
             'transacoes' => $entidade->transacoesFinanceiras,
             // Lançamentos pendentes de conciliação
-            'conciliacoesPendentes' => $entidade->bankStatements,
+            'conciliacoesPendentes' => $bankStatements,        // <<-- Usar a coleção paginada
             // Auxiliares
             'centrosAtivos' => $centrosAtivos,
             'lps' => $lps,
@@ -255,6 +263,4 @@ class EntidadeFinanceiraController extends Controller
             'transacoesPorDia' => $transacoesPorDia,
         ]);
     }
-
-
 }
