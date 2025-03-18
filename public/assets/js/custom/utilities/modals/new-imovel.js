@@ -222,6 +222,59 @@ var KTModalNewTarget = function () {
 	};
 }();
 
+$(document).ready(function() {
+    // Quando o campo CEP perde o foco
+    $('#cep').on('blur', function() {
+        var cep = $(this).val().replace(/\D/g, '');
+
+        if (cep !== "") {
+            // Verifica se o CEP tem 8 dígitos
+            var validacep = /^[0-9]{8}$/;
+
+            if(validacep.test(cep)) {
+                // Preenche os campos com "..." enquanto carrega
+                $('#logradouro').val('...');
+                $('#bairro').val('...');
+                $('#localidade').val('...');
+                $('#uf').val('...');
+                $('#ibge').val('...');
+                $('#complemento').val('...');
+
+                // Faz a requisição para a API ViaCEP
+                $.getJSON("https://viacep.com.br/ws/"+ cep +"/json/?callback=?", function(dados) {
+
+                    if (!("erro" in dados)) {
+                        // Atualiza os campos com os valores da consulta
+                        $('#logradouro').val(dados.logradouro);
+                        $('#bairro').val(dados.bairro);
+                        $('#localidade').val(dados.localidade);
+                        $('#uf').val(dados.uf).trigger('change'); // Atualiza o select2
+                        $('#ibge').val(dados.ibge);
+                        $('#complemento').val(dados.complemento);
+                    } else {
+                        // CEP não encontrado
+                        alert("CEP não encontrado.");
+                    }
+                });
+            } else {
+                alert("Formato de CEP inválido.");
+            }
+        } else {
+            // CEP sem valor, limpa o formulário
+            limpaFormularioCEP();
+        }
+    });
+
+    function limpaFormularioCEP() {
+        // Limpa valores do formulário de CEP
+        $('#logradouro').val('');
+        $('#bairro').val('');
+        $('#localidade').val('');
+        $('#uf').val('').trigger('change');
+        $('#ibge').val('');
+        $('#complemento').val('');
+    }
+});
 // On document ready
 KTUtil.onDOMContentLoaded(function () {
 	KTModalNewTarget.init();

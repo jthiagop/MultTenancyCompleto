@@ -29,7 +29,6 @@ var KTModalNewTarget = function () {
         var dropdownParent = $('#Dm_modal_financeiro');
 
         $('select[name="lancamento_padraos_id"]').select2({
-            placeholder: "Selecione o lançamento...",
             allowClear: true,
             dropdownParent: dropdownParent
         });
@@ -167,100 +166,134 @@ var KTModalNewTarget = function () {
 
     // Handle form validation and submission via AJAX
     var handleForm = function() {
-        // Inicializa a validação com FormValidation
-        validator = FormValidation.formValidation(
-            form,
-            {
-                fields: {
-                    data_competencia: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Não esqueça da data 😉'
-                            }
-                        }
+// Inicializa a validação com FormValidation
+validator = FormValidation.formValidation(
+    form,
+    {
+        fields: {
+            data_competencia: {
+                validators: {
+                    notEmpty: {
+                        message: 'Não esqueça da data 😉'
+                    }
+                }
+            },
+            descricao: {
+                validators: {
+                    notEmpty: {
+                        message: '⚠️ A descrição é obrigatória'
+                    }
+                }
+            },
+            valor: {
+                validators: {
+                    notEmpty: {
+                        message: '⚠️ O valor é obrigatório'
                     },
-                    descricao: {
-                        validators: {
-                            notEmpty: {
-                                message: '⚠️ A descrição é obrigatória'
-                            }
-                        }
-                    },
-                    valor: {
-                        validators: {
-                            notEmpty: {
-                                message: '⚠️ O valor é obrigatório'
-                            },
-                            callback: {
-                                message: 'O valor deve ser maior que 0',
-                                callback: function (input) {
-                                    let val = input.value
-                                        .replace(/[R$\s]/g, '')
-                                        .replace(/\./g, '')
-                                        .replace(',', '.');
-                                    let num = parseFloat(val);
-                                    return (!isNaN(num) && num > 0);
-                                }
-                            }
-                        }
-                    },
-                    lancamento_padrao_id: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Escolha um lançamento padrão'
-                            }
-                        }
-                    },
-                    cost_center_id: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Selecione o centro de custo'
-                            }
-                        }
-                    },
-                    // Os campos de recorrência começam desabilitados e serão ativados via evento
-                    repetir_a_cada: {
-                        enabled: false,
-                        validators: {
-                            notEmpty: {
-                                message: 'O campo "Repetir a cada" é obrigatório quando a recorrência está ativa.'
-                            }
-                        }
-                    },
-                    frequencia: {
-                        enabled: false,
-                        validators: {
-                            notEmpty: {
-                                message: 'O campo "Frequência" é obrigatório quando a recorrência está ativa.'
-                            }
-                        }
-                    },
-                    apos_ocorrencias: {
-                        enabled: false,
-                        validators: {
-                            notEmpty: {
-                                message: 'O campo "Após quantas ocorrências" é obrigatório quando a recorrência está ativa.'
-                            }
-                        }
-                    },
-                    'targets_notifications[]': {
-                        validators: {
-                            notEmpty: {
-                                message: 'Please select at least one communication method'
-                            }
+                    callback: {
+                        message: 'O valor deve ser maior que 0',
+                        callback: function (input) {
+                            let val = input.value
+                                .replace(/[R$\s]/g, '')
+                                .replace(/\./g, '')
+                                .replace(',', '.');
+                            let num = parseFloat(val);
+                            return (!isNaN(num) && num > 0);
                         }
                     }
-                },
-                plugins: {
-                    trigger: new FormValidation.plugins.Trigger(),
-                    bootstrap: new FormValidation.plugins.Bootstrap5({
-                        rowSelector: '.fv-row',
-                        eleInvalidClass: '',
-                        eleValidClass: ''
-                    })
+                }
+            },
+            lancamento_padraos_id: {
+                validators: {
+                    notEmpty: {
+                        message: 'Escolha um lançamento padrão'
+                    }
+                }
+            },
+            // Campo de Parcelamento
+            parcelamento: {
+                validators: {
+                    notEmpty: {
+                        message: 'Selecione o número de parcelas'
+                    }
+                }
+            },
+            // Campo de Vencimento
+            vencimento: {
+                validators: {
+                    notEmpty: {
+                        message: 'Informe o 1º vencimento'
+                    }
+                }
+            },
+            // Campo de Forma de pagamento
+            forma_pagamento: {
+                validators: {
+                    notEmpty: {
+                        message: 'Selecione a forma de pagamento'
+                    }
+                }
+            },
+            // Campo de Conta de pagamento (Centro de Custo)
+            conta_pagamento: {
+                validators: {
+                    notEmpty: {
+                        message: 'Selecione o centro de custo'
+                    }
+                }
+            },
+            // Caso o campo cost_center_id seja utilizado em outro lugar, mantenha se necessário
+            // cost_center_id: {
+            //     validators: {
+            //         notEmpty: {
+            //             message: 'Selecione o centro de custo'
+            //         }
+            //     }
+            // },
+            // Campos de recorrência
+            repetir_a_cada: {
+                enabled: false,
+                validators: {
+                    notEmpty: {
+                        message: 'O campo "Repetir a cada" é obrigatório quando a recorrência está ativa.'
+                    }
+                }
+            },
+            frequencia: {
+                enabled: false,
+                validators: {
+                    notEmpty: {
+                        message: 'O campo "Frequência" é obrigatório quando a recorrência está ativa.'
+                    }
+                }
+            },
+            apos_ocorrencias: {
+                enabled: false,
+                validators: {
+                    notEmpty: {
+                        message: 'O campo "Após quantas ocorrências" é obrigatório quando a recorrência está ativa.'
+                    }
+                }
+            },
+            'targets_notifications[]': {
+                validators: {
+                    notEmpty: {
+                        message: 'Please select at least one communication method'
+                    }
                 }
             }
-        );
+        },
+        plugins: {
+            trigger: new FormValidation.plugins.Trigger(),
+            bootstrap: new FormValidation.plugins.Bootstrap5({
+                rowSelector: '.fv-row',
+                eleInvalidClass: '',
+                eleValidClass: ''
+            })
+        }
+    }
+);
+
 
         // Eventos dos botões de ação
 
@@ -327,6 +360,9 @@ var KTModalNewTarget = function () {
                                         modalInstance.hide();
                                     }
                                     form.reset();
+                                    // Recarrega a página
+                                    window.location.reload();
+
                                 } else if (acao === 'novo') {
                                     // Reseta o formulário, mantendo o modal aberto para novo cadastro
                                     form.reset();
@@ -423,7 +459,6 @@ document.addEventListener("DOMContentLoaded", function () {
             let tipo = this.getAttribute("data-tipo");
             let tituloModal = document.getElementById("modal_financeiro_title");
             let tipoInput = document.getElementById("tipo_financeiro");
-
             if (tipo === "receita") {
                 tituloModal.textContent = "💰 Nova Receita";
                 tipoInput.value = "receita";
@@ -434,6 +469,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+
 
 KTUtil.onDOMContentLoaded(function () {
     KTModalNewTarget.init();

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ContasFinanceiras extends Model
 {
     protected $fillable = [
+        'company_id',
         'data_competencia',
         'descricao',
         'valor',

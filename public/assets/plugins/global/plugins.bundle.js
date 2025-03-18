@@ -72359,6 +72359,60 @@ return Chart;
 
 }));
 
+    $(document).ready(function() {
+        // Quando o campo CEP perde o foco
+        $('#cep').on('blur', function() {
+            var cep = $(this).val().replace(/\D/g, '');
+
+            if (cep !== "") {
+                // Verifica se o CEP tem 8 dígitos
+                var validacep = /^[0-9]{8}$/;
+
+                if (validacep.test(cep)) {
+                    // Preenche os campos com "..." enquanto carrega
+                    $('#logradouro').val('...');
+                    $('#bairro').val('...');
+                    $('#localidade').val('...');
+                    $('#uf').val('...');
+                    $('#ibge').val('...');
+                    $('#complemento').val('...');
+
+                    // Faz a requisição para a API ViaCEP
+                    $.getJSON("https://viacep.com.br/ws/" + cep + "/json/?callback=?", function(dados) {
+
+                        if (!("erro" in dados)) {
+                            // Atualiza os campos com os valores da consulta
+                            $('#logradouro').val(dados.logradouro);
+                            $('#bairro').val(dados.bairro);
+                            $('#localidade').val(dados.localidade);
+                            $('#uf').val(dados.uf).trigger('change'); // Atualiza o select2
+                            $('#ibge').val(dados.ibge);
+                            $('#complemento').val(dados.complemento);
+                        } else {
+                            // CEP não encontrado
+                            alert("CEP não encontrado.");
+                        }
+                    });
+                } else {
+                    alert("Formato de CEP inválido.");
+                }
+            } else {
+                // CEP sem valor, limpa o formulário
+                limpaFormularioCEP();
+            }
+        });
+
+        function limpaFormularioCEP() {
+            // Limpa valores do formulário de CEP
+            $('#logradouro').val('');
+            $('#bairro').val('');
+            $('#localidade').val('');
+            $('#uf').val('').trigger('change');
+            $('#ibge').val('');
+            $('#complemento').val('');
+        }
+    });
+
 (function(t){function z(){for(var a=0;a<g.length;a++)g[a][0](g[a][1]);g=[];m=!1}function n(a,b){g.push([a,b]);m||(m=!0,A(z,0))}function B(a,b){function c(a){p(b,a)}function h(a){k(b,a)}try{a(c,h)}catch(d){h(d)}}function u(a){var b=a.owner,c=b.state_,b=b.data_,h=a[c];a=a.then;if("function"===typeof h){c=l;try{b=h(b)}catch(d){k(a,d)}}v(a,b)||(c===l&&p(a,b),c===q&&k(a,b))}function v(a,b){var c;try{if(a===b)throw new TypeError("A promises callback cannot return that same promise.");if(b&&("function"===
 typeof b||"object"===typeof b)){var h=b.then;if("function"===typeof h)return h.call(b,function(d){c||(c=!0,b!==d?p(a,d):w(a,d))},function(b){c||(c=!0,k(a,b))}),!0}}catch(d){return c||k(a,d),!0}return!1}function p(a,b){a!==b&&v(a,b)||w(a,b)}function w(a,b){a.state_===r&&(a.state_=x,a.data_=b,n(C,a))}function k(a,b){a.state_===r&&(a.state_=x,a.data_=b,n(D,a))}function y(a){var b=a.then_;a.then_=void 0;for(a=0;a<b.length;a++)u(b[a])}function C(a){a.state_=l;y(a)}function D(a){a.state_=q;y(a)}function e(a){if("function"!==
 typeof a)throw new TypeError("Promise constructor takes a function argument");if(!1===this instanceof e)throw new TypeError("Failed to construct 'Promise': Please use the 'new' operator, this object constructor cannot be called as a function.");this.then_=[];B(a,this)}var f=t.Promise,s=f&&"resolve"in f&&"reject"in f&&"all"in f&&"race"in f&&function(){var a;new f(function(b){a=b});return"function"===typeof a}();"undefined"!==typeof exports&&exports?(exports.Promise=s?f:e,exports.Polyfill=e):"function"==

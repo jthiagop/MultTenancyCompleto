@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('bank_statements', function (Blueprint $table) {
             $table->id();
-
             // Exemplo de relação com a company, se necessário
             $table->unsignedBigInteger('company_id')->nullable();
             // Adiciona a coluna para vincular com entidades_financeiras

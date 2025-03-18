@@ -500,7 +500,7 @@
                                     <div class="p-3">
                                         <!--begin::Table-->
                                         <table class="table align-middle table-row-dashed fs-6 gy-5"
-                                            id="contas_financeiras_table">
+                                            id="contas_financeirasReceita_table">
                                             <!--begin::Table head-->
                                             <thead>
                                                 <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
@@ -649,7 +649,7 @@
                                 <div class="p-3">
                                     <!--begin::Table-->
                                     <table class="table align-middle table-row-dashed fs-6 gy-5"
-                                        id="contas_financeiras_table">
+                                        id="contas_financeirasDespesa_table">
                                         <!--begin::Table head-->
                                         <thead>
                                             <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
@@ -773,9 +773,3 @@
 
 
 <!--end::Javascript-->
-
-<script>
-    var lpsData = @json($lps);
-</script>
-
-<script></script>

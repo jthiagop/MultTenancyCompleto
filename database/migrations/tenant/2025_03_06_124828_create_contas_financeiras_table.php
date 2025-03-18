@@ -10,6 +10,9 @@ class CreateContasFinanceirasTable extends Migration
     {
         Schema::create('contas_financeiras', function (Blueprint $table) {
             $table->id();
+
+            // Exemplo de relação com a company, se necessário
+            $table->unsignedBigInteger('company_id')->nullable();
             $table->foreignId('fornecedor_id')->nullable()->constrained('fornecedores')->onDelete('cascade');
             $table->date('data_competencia');
             $table->text('descricao');
@@ -31,6 +34,9 @@ class CreateContasFinanceirasTable extends Migration
             $table->decimal('multa', 15, 2)->nullable();
             $table->decimal('desconto', 15, 2)->nullable();
             $table->enum('status_pagamento', ['em aberto','pendente', 'pago', 'vencido', 'cancelado'])->default('pendente');
+
+            // Exemplo de relação com a company, se necessário
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('set null');
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->string('created_by_name')->nullable();
             $table->foreignId('updated_by')->nullable()->constrained('users')->onDelete('set null');

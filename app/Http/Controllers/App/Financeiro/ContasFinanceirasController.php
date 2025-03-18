@@ -4,6 +4,7 @@ namespace App\Http\Controllers\App\Financeiro;
 
 use App\Http\Controllers\Controller;
 use App\Models\ContasFinanceiras;
+use App\Models\User;
 use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -31,6 +32,9 @@ class ContasFinanceirasController extends Controller
      */
     public function store(Request $request)
     {
+        // Recupera a companhia associada ao usuário autenticado
+        $subsidiary = User::getCompany();
+
         // 1) Validação - Note que ajustamos os nomes para combinar com o que o front envia
         $validated = $request->validate([
             'tipo_financeiro'      => 'required|in:despesa,receita',
@@ -93,8 +97,11 @@ class ContasFinanceirasController extends Controller
         // 'conta_pagamento' -> 'entidade_financeira_id'
         $validated['entidade_financeira_id'] = $validated['conta_pagamento'] ?? null;
 
+        $validated['company_id'] = $subsidiary->company_id;
+
         // 5) Criar um novo registro em 'contas_financeiras'
         $conta = ContasFinanceiras::create([
+            'company_id'           => $validated['company_id'], // se houver
             'fornecedor_id'           => null, // se houver
             'data_competencia'        => $validated['data_competencia'],
             'descricao'               => $validated['descricao'],

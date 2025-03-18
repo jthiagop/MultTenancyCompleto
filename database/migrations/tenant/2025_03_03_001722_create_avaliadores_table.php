@@ -15,6 +15,9 @@ return new class extends Migration
             // Chave primária do avaliador
             $table->id();
 
+            // Exemplo de relação com a company, se necessário
+            $table->unsignedBigInteger('company_id')->nullable();
+
             // Caso o avaliador seja um usuário do sistema (com login)
             // se não precisar desse relacionamento, basta remover.
             $table->foreignId('user_id')->nullable()
@@ -43,7 +46,8 @@ return new class extends Migration
 
             // Campo para saber qual usuário do sistema criou este cadastro
             // e quem fez a última atualização (auditoria)
-
+            // Exemplo de relação com a company, se necessário
+            $table->foreign('company_id')->references('id')->on('companies')->onDelete('set null');
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null');
             $table->string('created_by_name')->nullable();
 

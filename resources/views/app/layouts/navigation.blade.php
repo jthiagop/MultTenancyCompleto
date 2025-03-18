@@ -1366,7 +1366,7 @@
                                                     <!--begin:Menu item-->
                                                     <div class="menu-item">
                                                         <!--begin:Menu link-->
-                                                        <a class="menu-link {{ Route::currentRouteName() == 'company.edit', ['company' => Auth::user()->companies->first()->id ?? ''] ? 'active' : '' }}"
+                                                        <a class="menu-link {{ Route::currentRouteName() == 'company.edit' && Route::current()->parameter('company') == (Auth::user()->companies->first()->id ?? '') ? 'active' : '' }}"
                                                             href="{{ route('company.edit', ['company' => Auth::user()->companies->first()->id ?? '']) }}">
                                                             <span class="menu-bullet">
                                                                 <span class="bullet bullet-dot"></span>

@@ -79,32 +79,30 @@
                                   <!--end::Input group - Valor-->
                               </div>
                               <!--begin::Input group - Assign & Due Date-->
-
                               <div class="row g-9 mb-8">
-                                  <div class="col-md-6 fv-row">
-                                      <label class="required fs-6 fw-semibold mb-2"> Lançamento Padrão </label>
-                                      <div class="input-group">
-                                          <select name="lancamento_padraos_id" id="lancamento_padrao_id"
-                                              data-control="select2" data-dropdown-css-class="auto"
-                                              class="form-select @error('lancamento_padraos_id') is-invalid @enderror"
-                                              data-placeholder="Escolha um Lançamento..." id="lancamento_padrao_caixa">
-                                              <option value=""></option>
-                                              @foreach ($lps as $lp)
-                                                  <option value="{{ $lp->id }}"
-                                                      data-description="{{ $lp->description }}">
-                                                      {{ $lp->description }}
-                                                  </option>
-                                              @endforeach
-                                          </select>
-                                      </div>
-                                      @error('lancamento_padrao_caixa')
-                                          <div class="text-danger">{{ $message }}</div>
-                                      @enderror
-                                  </div>
+                                <div class="col-md-6 fv-row">
+                                    <label class="required fs-6 fw-semibold mb-2">Lançamento Padrão</label>
+                                    <div class="input-group">
+                                        <select name="lancamento_padraos_id" id="lancamento_padraos_id"
+                                            data-control="select2" data-dropdown-css-class="auto"
+                                            class="form-select"
+                                            data-placeholder="Escolha um Lançamento...">
+                                            <option value=""></option> <!-- Opção vazia para o placeholder -->
+                                            @foreach ($lps as $lp)
+                                                <option value="{{ $lp->id }}" data-description="{{ $lp->description }}">
+                                                    {{ $lp->description }}
+                                                </option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                    @error('lancamento_padraos_id')
+                                        <div class="text-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
                                   <div class="col-md-4 fv-row">
                                       <label class="fs-5 fw-semibold mb-2">Centro de Custo</label>
                                       <div class="input-group">
-                                          <select name="cost_centers_id" id="banco_id"
+                                          <select name="cost_centers_i selectpicker" data-live-search="true"id="banco_id"
                                               class="form-select @error('cost_center_id') is-invalid @enderror"
                                               data-control="select2" data-dropdown-css-class="auto"
                                               data-placeholder="Selecione o Centro de Custo">
@@ -119,6 +117,7 @@
                                           <div class="text-danger">{{ $message }}</div>
                                       @enderror
                                   </div>
+
                               </div>
                               <!--end::Input group - Assign & Due Date-->
 
@@ -131,7 +130,7 @@
 
                               <!-- 1) Opção de "Repetir o Lançamento?" (se desejar manter) -->
                               <!-- Seção de "Repetir o Lançamento?" -->
-                              <div class="d-flex flex-stack mb-8">
+                              {{-- <div class="d-flex flex-stack mb-8">
                                   <div class="row g-9 w-100">
                                       <!-- Checkbox -->
                                       <div class="col-md-2 fv-row d-flex align-items-center">
@@ -173,7 +172,7 @@
                                           </div>
                                       </div>
                                   </div>
-                              </div>
+                              </div> --}}
                               <!--end::Opção de "Repetir o Lançamento?" -->
                               <!--end::Opção de "Repetir o Lançamento?" -->
 
@@ -224,7 +223,7 @@
                                   </div>
 
                                   <!-- Forma de pagamento -->
-                                  <div class="col-md-2 fv-row">
+                                  <div class="col-md-3 fv-row">
                                     <label class="fs-6 fw-semibold mb-2">Forma de pagamento</label>
                                     <select name="forma_pagamento" class="form-select" data-control="select2" data-placeholder="Selecione a forma de pagamento">
                                         <option value="">Selecione</option>
@@ -235,7 +234,7 @@
                                 </div>
 
                                   <!-- Conta de pagamento -->
-                                  <div class="col-md-2 fv-row">
+                                  <div class="col-md-3 fv-row">
                                       <label class="fs-6 fw-semibold mb-2">Centro de Custo</label>
                                       <select name="conta_pagamento" class="form-select">
                                           @foreach ($todasEntidades as $entidade)

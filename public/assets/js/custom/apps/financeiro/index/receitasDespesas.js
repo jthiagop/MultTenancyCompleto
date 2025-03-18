@@ -61,25 +61,24 @@ var KTAppEcommerceReportCustomerOrders = function () {
         return false;
     });
 
-    // 3) Inicializa o DateRangePicker
     var initDaterangepicker = () => {
-        // Define intervalo inicial: últimos 30 dias
-        var start = moment().subtract(29, "days");
-        var end = moment();
+        // Define o intervalo inicial como o MÊS ATUAL
+        var start = moment().startOf("month"); // ex: 01/Março/2025
+        var end = moment().endOf("month");     // ex: 31/Março/2025
+
         var input = $("#kt_ecommerce_report_customer_orders_daterangepicker");
 
-        // Função de callback que atualiza o input e faz o DataTable filtrar
         function cb(start, end) {
-            // Exibe o intervalo escolhido no input
+            // Exibe o intervalo escolhido
             input.val(start.format("DD/MM/YYYY") + " - " + end.format("DD/MM/YYYY"));
 
-            // Depois de selecionar datas, forçamos o DataTable a refiltrar
-            if (datatable) {
+            // Se quiser forçar o DataTable a filtrar novamente
+            if (typeof datatable !== "undefined") {
                 datatable.draw();
             }
         }
 
-        // Inicializa o daterangepicker
+        // Inicializa o DateRangePicker
         input.daterangepicker({
             startDate: start,
             endDate: end,
@@ -101,9 +100,10 @@ var KTAppEcommerceReportCustomerOrders = function () {
             }
         }, cb);
 
-        // Chamada inicial para exibir o intervalo padrão nos inputs
+        // Chamada inicial para exibir o intervalo padrão (mês atual) no input
         cb(start, end);
-    }
+    };
+
 
     // 4) Filtra a tabela por "Situação" (exemplo)
     var handleStatusFilter = () => {
