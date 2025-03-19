@@ -1119,16 +1119,20 @@
                                                                                             <!--begin::Switch-->
                                                                                             <label
                                                                                                 class="form-check form-switch form-check-custom form-check-solid">
+                                                                                            <span
+                                                                                                class="form-check-label fw-semibold text-muted">Possui
+                                                                                                Nota</span>
+
                                                                                                 <!-- Hidden default 0 -->
                                                                                                 <input type="hidden"
-                                                                                                    name="comprovacao_fiscal_{{ $conciliacao->id }}"
+                                                                                                    name="comprovacao_fiscal"
                                                                                                     value="0">
 
                                                                                                 <!-- Checkbox -->
                                                                                                 <input
                                                                                                     class="form-check-input"
                                                                                                     type="checkbox"
-                                                                                                    name="comprovacao_fiscal_{{ $conciliacao->id }}"
+                                                                                                    name="comprovacao_fiscal"
                                                                                                     id="comprovacaoFiscalCheckbox_{{ $conciliacao->id }}"
                                                                                                     value="1" />
                                                                                                 <span

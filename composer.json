@@ -24,7 +24,7 @@
         "php-flasher/flasher-toastr-laravel": "^2.1",
         "sopamo/laravel-filepond": "^1.4",
         "spatie/browsershot": "^5.0",
-        "spatie/laravel-permission": "^6.9",
+        "spatie/laravel-permission": "^6.16",
         "stancl/tenancy": "*",
         "webpatser/laravel-uuid": "^4.0",
         "yajra/laravel-datatables-oracle": "^11.1"
