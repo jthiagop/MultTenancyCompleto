@@ -1,3 +1,8 @@
+<link href="https://kendo.cdn.telerik.com/themes/8.0.1/default/default-main.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
+<script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
+
 <x-tenant-app-layout>
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -389,7 +394,7 @@
                                         @if ($conciliacoesPendentes->isEmpty())
                                             <p class="text-muted">Nenhuma conciliação pendente encontrada.</p>
                                         @else
-                                        <!-- Exemplo de exibição de transações -->
+                                            <!-- Exemplo de exibição de transações -->
                                             @foreach ($conciliacoesPendentes as $conciliacao)
                                                 <!--begin::Row-->
                                                 <div class="row gx-5 gx-xl-10">
@@ -531,10 +536,11 @@
                                                                     <!-- Centraliza horizontal e verticalmente -->
                                                                     <button
                                                                         class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
-                                                                        type="submit" form="form-{{ $conciliacao->id }}">
+                                                                        type="submit"
+                                                                        form="form-{{ $conciliacao->id }}">
                                                                         <span class="fs-1 me-2">🫱🏻‍🫲🏽</span>
                                                                         <!-- Emoji -->
-                                                                        <span>Conciliar 123</span> <!-- Texto -->
+                                                                        <span>Conciliar</span> <!-- Texto -->
                                                                     </button>
                                                                 </div>
                                                                 <!--end::Body-->
@@ -1088,49 +1094,105 @@
                                                                                 <!--begin::Footer-->
 
                                                                                 <!--begin::Input group-->
+                                                                                <!-- Exemplo para UM item de conciliação -->
                                                                                 <div class="row mb-3">
-                                                                                    <div class="col-md-12">
+                                                                                    <div class="col-md-12 mb-5">
                                                                                         <!--begin::Input group-->
                                                                                         <div class="d-flex flex-stack">
                                                                                             <!--begin::Label-->
                                                                                             <div class="me-5">
                                                                                                 <label
-                                                                                                    class="fs-12 fw-semibold form-label">Existe
-                                                                                                    comprovação
-                                                                                                    fiscal?</label>
+                                                                                                    class="fs-12 fw-semibold form-label">
+                                                                                                    Existe comprovação
+                                                                                                    fiscal para
+                                                                                                    {{ $conciliacao->id }}?
+                                                                                                </label>
                                                                                                 <div
                                                                                                     class="fs-7 fw-semibold text-muted">
                                                                                                     Documentos que
-                                                                                                    comprovam
-                                                                                                    transações
+                                                                                                    comprovam transações
                                                                                                     financeiras
                                                                                                 </div>
                                                                                             </div>
                                                                                             <!--end::Label-->
+
                                                                                             <!--begin::Switch-->
                                                                                             <label
                                                                                                 class="form-check form-switch form-check-custom form-check-solid">
-                                                                                                <!-- Checkbox para enviar 1 quando marcado -->
+                                                                                                <!-- Hidden default 0 -->
                                                                                                 <input type="hidden"
-                                                                                                    name="comprovacao_fiscal"
+                                                                                                    name="comprovacao_fiscal_{{ $conciliacao->id }}"
                                                                                                     value="0">
 
+                                                                                                <!-- Checkbox -->
                                                                                                 <input
                                                                                                     class="form-check-input"
                                                                                                     type="checkbox"
-                                                                                                    name="comprovacao_fiscal"
+                                                                                                    name="comprovacao_fiscal_{{ $conciliacao->id }}"
+                                                                                                    id="comprovacaoFiscalCheckbox_{{ $conciliacao->id }}"
                                                                                                     value="1" />
                                                                                                 <span
-                                                                                                    class="form-check-label fw-semibold text-muted">Possui
-                                                                                                    Nota</span>
+                                                                                                    class="form-check-label fw-semibold text-muted">
+                                                                                                    Possui Nota?
+                                                                                                </span>
                                                                                             </label>
                                                                                             <!--end::Switch-->
                                                                                         </div>
                                                                                         <!--end::Input group-->
-                                                                                        <!--end::Footer-->
                                                                                     </div>
-                                                                                    <!--end::Label-->
+
+                                                                                    <!-- Aqui entra o container que só aparece caso o checkbox seja marcado -->
+                                                                                    <div class="col-md-12"
+                                                                                        id="anexoInputContainer_{{ $conciliacao->id }}"
+                                                                                        style="display: none;">
+                                                                                        <input type="file"
+                                                                                            name="files_{{ $conciliacao->id }}[]"
+                                                                                            id="photos_{{ $conciliacao->id }}" />
+
+                                                                                        <script>
+                                                                                            // Inicializa o KendoUpload nesse ID específico
+                                                                                            $(document).ready(function() {
+                                                                                                $("#photos_{{ $conciliacao->id }}").kendoUpload({
+                                                                                                    async: {
+                                                                                                        removeUrl: "{{ url('/remove') }}",
+                                                                                                        removeField: "path",
+                                                                                                        withCredentials: false
+                                                                                                    },
+                                                                                                    multiple: true,
+                                                                                                    validation: {
+                                                                                                        allowedExtensions: ["jpg", "jpeg", "png", "pdf", "page"],
+                                                                                                        maxFileSize: 5242880, // 5 MB
+                                                                                                        minFileSize: 1024 // 1 KB
+                                                                                                    },
+                                                                                                    localization: {
+                                                                                                        uploadSuccess: "Upload bem-sucedido!",
+                                                                                                        uploadFail: "Falha no upload",
+                                                                                                        invalidFileExtension: "Tipo de arquivo não permitido",
+                                                                                                        invalidMaxFileSize: "O arquivo é muito grande",
+                                                                                                        invalidMinFileSize: "O arquivo é muito pequeno",
+                                                                                                        select: "Anexar Arquivos"
+                                                                                                    }
+                                                                                                });
+                                                                                            });
+                                                                                        </script>
+                                                                                    </div>
                                                                                 </div>
+
+                                                                                <script>
+                                                                                    document.addEventListener('DOMContentLoaded', function() {
+                                                                                        const checkbox = document.getElementById('comprovacaoFiscalCheckbox_{{ $conciliacao->id }}');
+                                                                                        const anexoInputContainer = document.getElementById('anexoInputContainer_{{ $conciliacao->id }}');
+
+                                                                                        checkbox.addEventListener('change', function() {
+                                                                                            if (this.checked) {
+                                                                                                anexoInputContainer.style.display = 'block';
+                                                                                            } else {
+                                                                                                anexoInputContainer.style.display = 'none';
+                                                                                            }
+                                                                                        });
+                                                                                    });
+                                                                                </script>
+
                                                                                 <!--end::Input group-->
                                                                             </form>
                                                                         </div>
