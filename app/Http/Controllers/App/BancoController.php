@@ -78,17 +78,19 @@ class BancoController extends Controller
         // 🟢 Obtém os dados do gráfico usando o Service
         $dadosGrafico = $this->transacaoService->getDadosGrafico($mesSelecionado, $anoSelecionado);
 
-
         $total  = EntidadeFinanceira::getValorTotalEntidadeBC();
 
         $entidadesBanco = Banco::getEntidadesBanco();
         // Filtrar as transações com origem "Banco"
         // Transações com anexos relacionados
         $transacoes = TransacaoFinanceira::with('modulos_anexos')
-            ->where('origem', 'Conciliação Bancária')
-            ->orWhere('origem', 'Banco')
-            ->where('company_id', $companyId)
-            ->get();
+        ->where(function ($query) {
+            $query->where('origem', 'Conciliação Bancária')
+                  ->orWhere('origem', 'Banco');
+        })
+        ->where('company_id', $companyId)
+        ->get();
+
 
         $valorEntrada = Banco::getBancoEntrada();
         $ValorSaidas = Banco::getBancoSaida();
