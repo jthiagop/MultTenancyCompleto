@@ -12,6 +12,7 @@ use App\Models\User;
 use Auth;
 use Carbon\Carbon;
 use DB;
+use Exception;
 use Illuminate\Http\Request;
 use Laracasts\Flash\Flash;
 
@@ -27,12 +28,16 @@ class PatrimonioController extends Controller
         $patrimonios = Patrimonio::all();
         $escrituras = Escritura::all();
 
+        $totalPatrimonios = Patrimonio::count(); // Conta a quantidade de registros
+
+
         return view(
             'app.patrimonios.index',
             [
                 'nameForos' => $nameForos,
                 'patrimonios' => $patrimonios,
                 'escrituras' => $escrituras,
+                'totalPatrimonios' => $totalPatrimonios, // Passa a contagem para a view
             ]
         );
     }
@@ -43,65 +48,101 @@ class PatrimonioController extends Controller
     public function create()
     {
         $nameForos = NamePatrimonio::all();
+        $totalPatrimonios = Patrimonio::count(); // Conta a quantidade de registros
 
         return view('app.patrimonios.create', [
             'nameForos' => $nameForos,
+            'totalPatrimonios' => $totalPatrimonios, // Passa a contagem para a view
         ]);
     }
 
     /**
      * Store a newly created resource in storage.
      */
-    public function store(ForoRequest $request)
+    // Função auxiliar para formatar valores numéricos (pode ficar fora do store)
+    private function formatNumber(?string $number): ?float
     {
-        try {
-            return DB::transaction(function () use ($request) {
-                $validatedData = $request->validated(); // Obtendo os dados validados
+        if (empty($number)) {
+            return null;
+        }
+        // Remove o separador de milhares (ponto) e substitui vírgula por ponto decimal
+        $cleaned_number = str_replace('.', '', $number);
+        $cleaned_number = str_replace(',', '.', $cleaned_number);
+        return (float) $cleaned_number;
+    }
 
-                // Conversão de datas para o formato Y-m-d
+
+    public function store(ForoRequest $request) // Use o seu ForoRequest
+    {
+        $isAjax = $request->ajax() || $request->wantsJson();
+        $saveAction = $request->input('save_action', 'submit'); // Pega a ação (default: submit)
+
+        try {
+            $patrimonio = null; // Inicializa para ter acesso fora da transação se precisar
+
+            DB::transaction(function () use ($request, &$patrimonio) { // Passa $patrimonio por referência
+                $validatedData = $request->validated();
+
+                // Conversão de datas
                 $validatedData['data'] = Carbon::createFromFormat('d/m/Y', $validatedData['data'])->format('Y-m-d');
-                if (!empty($validatedData['aquisicao'])) {
-                    $validatedData['aquisicao'] = Carbon::createFromFormat('d/m/Y', $validatedData['aquisicao'])->format('Y-m-d');
-                }
+                // Removido 'aquisicao' pois não está no formulário fornecido
+                // if (!empty($validatedData['aquisicao'])) {
+                //     $validatedData['aquisicao'] = Carbon::createFromFormat('d/m/Y', $validatedData['aquisicao'])->format('Y-m-d');
+                // }
 
                 // Criando o patrimônio
                 $patrimonio = new Patrimonio();
+                // Use 'fillable' no Model Patrimonio para os campos que podem ser preenchidos massivamente
                 $patrimonio->fill($validatedData);
-                $patrimonio->company_id = User::getCompany()->company_id;
+                // Ajuste os campos que não vêm diretamente do request ou não estão no fillable
+                $patrimonio->company_id = User::getCompany()->company_id; // Verifique se User::getCompany() existe e funciona como esperado
                 $patrimonio->created_by = Auth::id();
                 $patrimonio->updated_by = Auth::id();
-                $patrimonio->save();
 
-                // Gerando o código RID
-                $patrimonio->codigo_rid = $this->gerarRID($validatedData['numIbge'], $validatedData['numForo'], $patrimonio->id);
-                $patrimonio->save();
 
-                // Função auxiliar para formatar valores numéricos
-                function formatNumber(?string $number): ?float
-                {
-                    return empty($number) ? null : (float) str_replace(',', '.', str_replace('.', '', $number));
+                // Campos do endereço (CEP, Bairro, etc.) devem estar no fillable de Patrimonio ou serem atribuídos manualmente
+                $patrimonio->cep = $validatedData['cep'] ?? null;
+                $patrimonio->bairro = $validatedData['bairro'] ?? null;
+                $patrimonio->logradouro = $validatedData['logradouro'] ?? null;
+                $patrimonio->localidade = $validatedData['localidade'] ?? null;
+                $patrimonio->uf = $validatedData['uf'] ?? null;
+                $patrimonio->complemento = $validatedData['complemento'] ?? null;
+                // Campos Livro, Folha, Registro
+
+                $patrimonio->livro = $validatedData['livro'] ?? null;
+                $patrimonio->folha = $validatedData['folha'] ?? null;
+                $patrimonio->registro = $validatedData['registro'] ?? null;
+
+                // Adicione o patrimonios_id (vindo do select) se o nome do campo for 'patrimonio'
+                
+                $patrimonio->save(); // Salva para obter o ID
+
+                // Gerando e salvando o código RID
+                // Certifique-se que numIbge e numForo estão sendo enviados corretamente (estão como hidden no form)
+                if (!empty($validatedData['numIbge']) && !empty($validatedData['numForo'])) {
+                    $patrimonio->codigo_rid = $this->gerarRID($validatedData['numIbge'], $validatedData['numForo'], $patrimonio->id);
+                    $patrimonio->save(); // Salva novamente com o RID
+                } else {
+                    // Lidar com caso onde numIbge ou numForo estão vazios, se necessário
+                    \Log::warning('numIbge ou numForo não encontrados ao tentar gerar RID para patrimonio ID: ' . $patrimonio->id);
                 }
 
-                // Criando a escritura, independentemente de valores nulos
-                $escrituraData = collect($validatedData)->only([
-                    'outorgante',
-                    'matricula',
-                    'aquisicao',
-                    'outorgado',
-                    'valor',
-                    'area_total',
-                    'area_privativa',
-                    'informacoes',
-                    'outorgante_telefone',
-                    'outorgante_email',
-                    'outorgado_telefone',
-                    'outorgado_email',
-                ])->toArray();
 
-                // Convertendo valores numéricos
-                $escrituraData['valor'] = formatNumber($escrituraData['valor']);
-                $escrituraData['area_total'] = formatNumber($escrituraData['area_total']);
-                $escrituraData['area_privativa'] = formatNumber($escrituraData['area_privativa']);
+                // ----- Criando a Escritura (Removido pois campos não estão no form) -----
+                // Se você precisar salvar dados de escritura, adicione os campos
+                // correspondentes ao formulário e descomente/adapte esta seção.
+                /*
+            $escrituraData = collect($validatedData)->only([
+                'outorgante', 'matricula', 'aquisicao', 'outorgado', 'valor',
+                'area_total', 'area_privativa', 'informacoes', 'outorgante_telefone',
+                'outorgante_email', 'outorgado_telefone', 'outorgado_email',
+            ])->filter()->toArray(); // filter() remove nulos/vazios se necessário
+
+            if (!empty($escrituraData)) {
+                 // Convertendo valores numéricos
+                $escrituraData['valor'] = $this->formatNumber($escrituraData['valor'] ?? null);
+                $escrituraData['area_total'] = $this->formatNumber($escrituraData['area_total'] ?? null);
+                $escrituraData['area_privativa'] = $this->formatNumber($escrituraData['area_privativa'] ?? null);
 
                 $escritura = new Escritura();
                 $escritura->fill($escrituraData);
@@ -109,13 +150,38 @@ class PatrimonioController extends Controller
                 $escritura->created_by = Auth::id();
                 $escritura->updated_by = Auth::id();
                 $escritura->save();
+            }
+            */
+                // ----- Fim da Seção Escritura -----
 
-                session()->flash('success', 'Patrimônio salvo com sucesso!');
-                return redirect()->back();
-            });
-        } catch (\Exception $e) {
-            session()->flash('error', 'Erro ao salvar o Patrimônio: ' . $e->getMessage());
-            return response()->json(['success' => false, 'message' => 'Erro ao salvar o Patrimônio: ' . $e->getMessage()], 500);
+            }); // Fim da transação
+
+            // Resposta baseada no tipo de request
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Registro de localização salvo com sucesso!',
+                    // 'patrimonio_id' => $patrimonio->id // Opcional: retornar ID se precisar no frontend
+                ]);
+            } else {
+                session()->flash('success', 'Registro de localização salvo com sucesso!');
+                return redirect()->back(); // Ou para outra rota, como a de visualização
+            }
+        } catch (Exception $e) {
+            // Log do erro é importante
+            \Log::error("Erro ao salvar localização do patrimônio: " . $e->getMessage() . " Stack: " . $e->getTraceAsString());
+
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao salvar o registro: ' . $e->getMessage() // Seja cauteloso ao expor mensagens de erro detalhadas
+                    // 'message' => 'Ocorreu um erro inesperado ao salvar. Tente novamente.' // Mensagem mais genérica
+                ], 500); // Código 500 para erro interno do servidor
+            } else {
+                session()->flash('error', 'Erro ao salvar o registro: Verifique os dados e tente novamente.'); // Mensagem mais genérica para o usuário
+                // session()->flash('error_details', $e->getMessage()); // Para debug, opcional
+                return redirect()->back()->withInput(); // Volta com os dados preenchidos
+            }
         }
     }
 
@@ -193,7 +259,7 @@ class PatrimonioController extends Controller
 
             // Retorna a view padrão 'patrimonios.show' com os detalhes do patrimônio
             return view('app.patrimonios.show', compact('patrimonio', 'nameForos', 'escrituras', 'anexos'));
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Retorna uma view de erro caso o patrimônio não seja encontrado
             return redirect()->route('app.patrimonios.index')->with('error', 'Patrimônio não encontrado.');
         }
@@ -258,7 +324,7 @@ class PatrimonioController extends Controller
 
             // Redireciona de volta com a mensagem de sucesso
             return redirect()->back();
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Configura a mensagem flash de erro
             flash()
                 ->option('position', 'top-right')
@@ -317,12 +383,15 @@ class PatrimonioController extends Controller
     {
         $nameForos = NamePatrimonio::all();
         $patrimonios = Patrimonio::all();
+        $totalPatrimonios = Patrimonio::count(); // Conta a quantidade de registros
+
 
         return view(
             'app.patrimonios.imoveis',
             [
                 'nameForos' => $nameForos,
                 'patrimonios' => $patrimonios,
+                'totalPatrimonios' => $totalPatrimonios, // Passa a contagem para a view
             ]
         );
     }

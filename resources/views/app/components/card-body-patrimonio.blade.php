@@ -75,21 +75,9 @@
                                          Pesquisar...</a>
                                      <a href="#" class="btn btn-sm btn-primary me-3" data-bs-toggle="modal"
                                          data-bs-target="#kt_modal_new_foro">
-                                         <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm002.svg-->
-                                         <span class="svg-icon svg-icon-2">
-                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                 fill="currentColor" class="bi bi-building-add me-2"
-                                                 viewBox="0 0 16 16">
-                                                 <path
-                                                     d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 0 1-1 0v-1h-1a.5.5 0 0 1 0-1h1v-1a.5.5 0 0 1 1 0" />
-                                                 <path
-                                                     d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v6.5a.5.5 0 0 1-1 0V1H3v14h3v-2.5a.5.5 0 0 1 .5-.5H8v4H3a1 1 0 0 1-1-1z" />
-                                                 <path
-                                                     d="M4.5 2a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm-6 3a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm3 0a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" />
-                                             </svg>
-                                         </span>
-                                         <!--end::Svg Icon-->
-                                         Novo Foro</a>
+                                        <i class="bi bi-house-add-fill fs-2 me-1"></i>
+                                         <span class="fw-normal">Cadastro de Imóveis Foreiros</span>
+                                        </a>
                                  @else
                                  @endif
 
@@ -110,7 +98,8 @@
                                          <!--end::Heading-->
                                          <!--begin::Menu item-->
                                          <div class="menu-item px-3">
-                                             <a href="#" class="menu-link px-3 " data-bs-toggle="modal" data-bs-target="#Dm_modal_Avaliador" >Criar Avaliador</a>
+                                             <a href="#" class="menu-link px-3 " data-bs-toggle="modal"
+                                                 data-bs-target="#Dm_modal_Avaliador">Criar Avaliador</a>
                                          </div>
                                          <!--end::Menu item-->
                                          <!--begin::Menu item-->
@@ -195,14 +184,15 @@
                              <div class="d-flex flex-wrap">
                                  <!--begin::Stat-->
                                  <div
-                                     class="border border-gray-300 border-dashed rounded min-w-125px py-3 px-4 me-6 mb-3">
+                                     class="border border-gray-300 border-dashed rounded min-w-150px py-3 px-4 me-6 mb-3">
                                      <!--begin::Number-->
                                      <div class="d-flex align-items-center">
-                                         <div class="fs-4 fw-bold">29 Jan, 2023</div>
+                                         <i class="bi bi-calendar2-date-fill fs-4 me-2 text-success"></i>
+                                         <div class="fs-4 fw-bold">{{ now()->format('d M, Y') }}</div>
                                      </div>
                                      <!--end::Number-->
                                      <!--begin::Label-->
-                                     <div class="fw-semibold fs-6 text-gray-400">Due Date</div>
+                                     <div class="fw-semibold fs-6 text-gray-400">Data Atual</div>
                                      <!--end::Label-->
                                  </div>
                                  <!--end::Stat-->
@@ -212,25 +202,17 @@
                                      <!--begin::Number-->
                                      <div class="d-flex align-items-center">
                                          <!--begin::Svg Icon | path: icons/duotune/arrows/arr065.svg-->
-                                         <span class="svg-icon svg-icon-3 svg-icon-danger me-2">
-                                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                                 xmlns="http://www.w3.org/2000/svg">
-                                                 <rect opacity="0.5" x="11" y="18" width="13" height="2"
-                                                     rx="1" transform="rotate(-90 11 18)"
-                                                     fill="currentColor" />
-                                                 <path
-                                                     d="M11.4343 15.4343L7.25 11.25C6.83579 10.8358 6.16421 10.8358 5.75 11.25C5.33579 11.6642 5.33579 12.3358 5.75 12.75L11.2929 18.2929C11.6834 18.6834 12.3166 18.6834 12.7071 18.2929L18.25 12.75C18.6642 12.3358 18.6642 11.6642 18.25 11.25C17.8358 10.8358 17.1642 10.8358 16.75 11.25L12.5657 15.4343C12.2533 15.7467 11.7467 15.7467 11.4343 15.4343Z"
-                                                     fill="currentColor" />
-                                             </svg>
-                                         </span>
+                                         <i class="bi bi-house-fill fs-4 me-2 text-success"></i>
                                          <!--end::Svg Icon-->
-                                         <div class="fs-4 fw-bold" data-kt-countup="true" data-kt-countup-value="75">
-                                             0
+                                         <div class="fs-4 fw-bold" data-kt-countup="true"
+                                             data-kt-countup-value="{{ $totalPatrimonios }}">
+                                             {{ $totalPatrimonios }} <!-- Exibe o total dinamicamente -->
                                          </div>
                                      </div>
                                      <!--end::Number-->
                                      <!--begin::Label-->
-                                     <div class="fw-semibold fs-6 text-gray-400">Open Tasks</div>
+                                     <div class="fw-semibold fs-6 text-gray-400">Total de Patrimônios</div>
+                                     <!-- Atualize o label -->
                                      <!--end::Label-->
                                  </div>
                                  <!--end::Stat-->
@@ -263,66 +245,7 @@
                                  <!--end::Stat-->
                              </div>
                              <!--end::Stats-->
-                             <!--begin::Users-->
-                             <div class="symbol-group symbol-hover mb-3">
-                                 <!--begin::User-->
-                                 <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                     title="Alan Warden">
-                                     <span class="symbol-label bg-warning text-inverse-warning fw-bold">A</span>
-                                 </div>
-                                 <!--end::User-->
-                                 <!--begin::User-->
-                                 <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                     title="Michael Eberon">
-                                     <img alt="Pic" src="/assets/media/avatars/300-11.jpg" />
-                                 </div>
-                                 <!--end::User-->
-                                 <!--begin::User-->
-                                 <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                     title="Michelle Swanston">
-                                     <img alt="Pic" src="/assets/media/avatars/300-7.jpg" />
-                                 </div>
-                                 <!--end::User-->
-                                 <!--begin::User-->
-                                 <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                     title="Francis Mitcham">
-                                     <img alt="Pic" src="/assets/media/avatars/300-20.jpg" />
-                                 </div>
-                                 <!--end::User-->
-                                 <!--begin::User-->
-                                 <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                     title="Susan Redwood">
-                                     <span class="symbol-label bg-primary text-inverse-primary fw-bold">S</span>
-                                 </div>
-                                 <!--end::User-->
-                                 <!--begin::User-->
-                                 <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                     title="Melody Macy">
-                                     <img alt="Pic" src="/assets/media/avatars/300-2.jpg" />
-                                 </div>
-                                 <!--end::User-->
-                                 <!--begin::User-->
-                                 <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                     title="Perry Matthew">
-                                     <span class="symbol-label bg-info text-inverse-info fw-bold">P</span>
-                                 </div>
-                                 <!--end::User-->
-                                 <!--begin::User-->
-                                 <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
-                                     title="Barry Walter">
-                                     <img alt="Pic" src="/assets/media/avatars/300-12.jpg" />
-                                 </div>
-                                 <!--end::User-->
-                                 <!--begin::All users-->
-                                 <a href="#" class="symbol symbol-35px symbol-circle" data-bs-toggle="modal"
-                                     data-bs-target="#kt_modal_view_users">
-                                     <span class="symbol-label bg-dark text-inverse-dark fs-8 fw-bold"
-                                         data-bs-toggle="tooltip" data-bs-trigger="hover"
-                                         title="View more users">+42</span>
-                                 </a>
-                                 <!--end::All users-->
-                             </div>
-                             <!--end::Users-->
+
                          </div>
                          <!--end::Info-->
                      </div>
@@ -341,36 +264,8 @@
 
                      <!--begin::Nav item-->
                      <li class="nav-item">
-                         <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('apps/projects/targets*') ? 'active' : '' }}"
-                             href="../../demo1/dist/apps/projects/targets.html">Foros</a>
-                     </li>
-                     <!--end::Nav item-->
-
-                     <!--begin::Nav item-->
-                     <li class="nav-item">
                          <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('patrimonios/imoveis') ? 'active' : '' }}"
                              href="{{ route('patrimonio.imoveis') }}">Imóveis</a>
-                     </li>
-                     <!--end::Nav item-->
-
-                     <!--begin::Nav item-->
-                     <li class="nav-item">
-                         <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('apps/projects/users*') ? 'active' : '' }}"
-                             href="../../demo1/dist/apps/projects/users.html">Users</a>
-                     </li>
-                     <!--end::Nav item-->
-
-                     <!--begin::Nav item-->
-                     <li class="nav-item">
-                         <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('apps/projects/files*') ? 'active' : '' }}"
-                             href="../../demo1/dist/apps/projects/files.html">Files</a>
-                     </li>
-                     <!--end::Nav item-->
-
-                     <!--begin::Nav item-->
-                     <li class="nav-item">
-                         <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('apps/projects/activity*') ? 'active' : '' }}"
-                             href="../../demo1/dist/apps/projects/activity.html">Activity</a>
                      </li>
                      <!--end::Nav item-->
 

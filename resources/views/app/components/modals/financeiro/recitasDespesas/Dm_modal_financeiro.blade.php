@@ -14,7 +14,7 @@
 
               <!--begin::Modal body-->
               <div class="modal-body scroll-y px-10 px-lg-15 pb-15  bg-light pt-5">
-                <!-- Begin::Form -->
+                  <!-- Begin::Form -->
                   <form id="kt_modal_new_target_form" class="form" action="#">
                       @csrf
                       <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -48,8 +48,8 @@
                                               </svg>
                                           </span>
                                           <!--end::Icon-->
-                                          <input class="form-control ps-12" placeholder="Informe a data" name="data_competencia"
-                                              id="data" />
+                                          <input class="form-control ps-12" placeholder="Informe a data"
+                                              name="data_competencia" id="data" />
                                       </div>
                                   </div>
                                   <!--begin::Input group - Target Title-->
@@ -80,29 +80,30 @@
                               </div>
                               <!--begin::Input group - Assign & Due Date-->
                               <div class="row g-9 mb-8">
-                                <div class="col-md-6 fv-row">
-                                    <label class="required fs-6 fw-semibold mb-2">Lançamento Padrão</label>
-                                    <div class="input-group">
-                                        <select name="lancamento_padraos_id" id="lancamento_padraos_id"
-                                            data-control="select2" data-dropdown-css-class="auto"
-                                            class="form-select"
-                                            data-placeholder="Escolha um Lançamento...">
-                                            <option value=""></option> <!-- Opção vazia para o placeholder -->
-                                            @foreach ($lps as $lp)
-                                                <option value="{{ $lp->id }}" data-description="{{ $lp->description }}">
-                                                    {{ $lp->description }}
-                                                </option>
-                                            @endforeach
-                                        </select>
-                                    </div>
-                                    @error('lancamento_padraos_id')
-                                        <div class="text-danger">{{ $message }}</div>
-                                    @enderror
-                                </div>
+                                  <div class="col-md-6 fv-row">
+                                      <label class="required fs-6 fw-semibold mb-2">Lançamento Padrão</label>
+                                      <div class="input-group">
+                                          <select name="lancamento_padraos_id" id="lancamento_padraos_id"
+                                              data-control="select2" data-dropdown-css-class="auto" class="form-select"
+                                              data-placeholder="Escolha um Lançamento...">
+                                              <option value=""></option> <!-- Opção vazia para o placeholder -->
+                                              @foreach ($lps as $lp)
+                                                  <option value="{{ $lp->id }}"
+                                                      data-description="{{ $lp->description }}">
+                                                      {{ $lp->description }}
+                                                  </option>
+                                              @endforeach
+                                          </select>
+                                      </div>
+                                      @error('lancamento_padraos_id')
+                                          <div class="text-danger">{{ $message }}</div>
+                                      @enderror
+                                  </div>
                                   <div class="col-md-4 fv-row">
                                       <label class="fs-5 fw-semibold mb-2">Centro de Custo</label>
                                       <div class="input-group">
-                                          <select name="cost_centers_i selectpicker" data-live-search="true"id="banco_id"
+                                          <select name="cost_centers_i selectpicker"
+                                              data-live-search="true"id="banco_id"
                                               class="form-select @error('cost_center_id') is-invalid @enderror"
                                               data-control="select2" data-dropdown-css-class="auto"
                                               data-placeholder="Selecione o Centro de Custo">
@@ -224,14 +225,15 @@
 
                                   <!-- Forma de pagamento -->
                                   <div class="col-md-3 fv-row">
-                                    <label class="fs-6 fw-semibold mb-2">Forma de pagamento</label>
-                                    <select name="forma_pagamento" class="form-select" data-control="select2" data-placeholder="Selecione a forma de pagamento">
-                                        <option value="">Selecione</option>
-                                        @foreach ($formasPagamento as $forma)
-                                            <option value="{{ $forma->id }}">{{ $forma->nome }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                      <label class="fs-6 fw-semibold mb-2">Forma de pagamento</label>
+                                      <select name="forma_pagamento" class="form-select" data-control="select2"
+                                          data-placeholder="Selecione a forma de pagamento">
+                                          <option value="">Selecione</option>
+                                          @foreach ($formasPagamento as $forma)
+                                              <option value="{{ $forma->id }}">{{ $forma->nome }}</option>
+                                          @endforeach
+                                      </select>
+                                  </div>
 
                                   <!-- Conta de pagamento -->
                                   <div class="col-md-3 fv-row">
@@ -297,8 +299,6 @@
 
               <!--begin::Modal footer-->
               <div class="modal-footer me-10">
-
-
                   <div class="text-center">
                       <button type="reset" id="kt_modal_new_target_cancel"
                           class="btn btn-light me-3">Cancel</button>

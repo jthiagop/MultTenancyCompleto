@@ -44,16 +44,20 @@ class EntidadeFinanceiraController extends Controller
     // Salva uma nova entidade financeira
     public function store(Request $request)
     {
-        // 1) Remover formatação de milhar e substituir vírgulas por pontos nos campos de valor
+        // Recupera o ID da empresa do usuário logado
+        $companyId = Auth::user()->company_id;
+
+        // 1) Remover formatação de milhar e substituir vírgulas por pontos
         $request->merge([
             'saldo_inicial' => str_replace(['.', ','], ['', '.'], $request->saldo_inicial),
             'saldo_atual'   => str_replace(['.', ','], ['', '.'], $request->saldo_atual),
+            'company_id'    => $companyId // Adiciona o company_id ao request
         ]);
 
         // 2) Validação condicional
         $validatedData = $request->validate([
             'tipo'          => 'required|in:caixa,banco,dizimo,coleta,doacao',
-            'company_id'    => 'nullable|string|max:20',
+            'company_id' => 'required|integer|exists:companies,id',
             // Se tipo == 'banco', campo 'banco' é obrigatório; caso contrário, 'nome' é obrigatório.
             'nome' => 'required_unless:tipo,banco|nullable|string|max:100',
             'banco' => 'required_if:tipo,banco|nullable|string|max:100',
@@ -84,6 +88,7 @@ class EntidadeFinanceiraController extends Controller
         $validatedData['created_by_name']  = Auth::user()->name;
         $validatedData['updated_by']       = Auth::id();
         $validatedData['updated_by_name']  = Auth::user()->name;
+
 
         try {
             // 6) Criar a entidade no banco

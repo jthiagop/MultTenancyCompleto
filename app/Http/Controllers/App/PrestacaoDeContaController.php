@@ -5,6 +5,7 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\TransacaoFinanceira;
+use App\Services\PrestacaoContasService;
 use Auth;
 use Illuminate\Http\Request;
 use PDF;
@@ -33,84 +34,68 @@ class PrestacaoDeContaController extends Controller
 
     public function gerarPdf(Request $request)
     {
-        // 1) Capturar filtros
-        $dataInicial = $request->input('data_inicial');
-        $dataFinal   = $request->input('data_final');
+        // 1) Filtros
+        $dataInicial = $request->date('data_inicial');
+        $dataFinal   = $request->date('data_final');
         $costCenter  = $request->input('cost_center_id');
-
-        // 2) Montar query de transações
-        $query = TransacaoFinanceira::query();
-
-        // Filtro por data inicial e final
-        if ($dataInicial) {
-            $query->where('data_competencia', '>=', $dataInicial);
+    
+        // 2) Query otimizada
+        $query = TransacaoFinanceira::with(['entidadeFinanceira', 'lancamentoPadrao'])
+            ->when($dataInicial, fn($q) => $q->whereDate('data_competencia', '>=', $dataInicial))
+            ->when($dataFinal,   fn($q) => $q->whereDate('data_competencia', '<=', $dataFinal))
+            ->when($costCenter,  fn($q) => $q->where('cost_center_id', $costCenter))
+            ->orderBy('data_competencia');
+    
+        $transacoes = $query->get()
+            ->groupBy('origem');               // “Banco”, “Caixa” …
+    
+        // 3) Totais por origem + totais gerais
+        $dados         = [];
+        $totEntradaAll = $totSaidaAll = 0;
+    
+        foreach ($transacoes as $origem => $items) {
+            $totEntrada  = $items->where('tipo', 'entrada')->sum('valor');
+            $totSaida    = $items->where('tipo', 'saida')->sum('valor');
+    
+            $totEntradaAll += $totEntrada;
+            $totSaidaAll   += $totSaida;
+    
+            $dados[] = compact('origem', 'items', 'totEntrada', 'totSaida');
         }
-        if ($dataFinal) {
-            $query->where('data_competencia', '<=', $dataFinal);
-        }
-
-        // Filtro por centro de custo
-        if ($costCenter) {
-            $query->where('cost_center_id', $costCenter);
-        }
-
-        // 3) Obter os registros e agrupar por 'origem'
-        $transacoes = $query->orderBy('data_competencia', 'asc')->get();
-        $agrupadoPorOrigem = $transacoes->groupBy('origem');
-        // Ex.: dois grupos: "Banco" e "Caixa"
-
-        // 4) Calcular as somas por cada origem
-        //    e também podemos calcular um total geral de entradas/saídas
-        $dadosParaView = [];
-        $totalGeralEntrada = 0;
-        $totalGeralSaida   = 0;
-
-        foreach ($agrupadoPorOrigem as $origem => $items) {
-            // Somar entradas (tipo = 'E')
-            $entradaTotal = $items->where('tipo', 'entrada')->sum('valor');
-
-            // Somar saídas (tipo = 'S')
-            $saidaTotal   = $items->where('tipo', 'saida')->sum('valor');
-
-            // Atualiza total geral
-            $totalGeralEntrada += $entradaTotal;
-            $totalGeralSaida   += $saidaTotal;
-
-            // Guardar no array de resultados por origem
-            $dadosParaView[] = [
-                // 'origem' => 'Banco' ou 'Caixa'
-                'origem'         => $origem,
-                'movimentacoes'  => $items,          // todos os registros deste grupo
-                'total_entrada'  => $entradaTotal,
-                'total_saida'    => $saidaTotal,
-            ];
-        }
-
-        // 5) Montar o PDF
-        // Monta o HTML da sua View, sem renderizar ainda em PDF:
+    
+        // 4) HTML da view
         $html = view('app.relatorios.financeiro.prestacao_pdf', [
-            'dados'             => $dadosParaView,
-            'dataInicial'       => $dataInicial,
-            'dataFinal'         => $dataFinal,
-            'costCenter'        => $costCenter,
-            'totalGeralEntrada' => $totalGeralEntrada,
-            'totalGeralSaida'   => $totalGeralSaida,
+            'dados'           => $dados,
+            'dataInicial'     => $dataInicial?->format('d/m/Y'),
+            'dataFinal'       => $dataFinal?->format('d/m/Y'),
+            'costCenter'      => optional(CostCenter::find($costCenter))->descricao,
+            'totalEntradas'   => $totEntradaAll,
+            'totalSaidas'     => $totSaidaAll,
+            'company'         => auth()->user()->company,   // ajuste conforme seu tenant
         ])->render();
-
-        // Agora usamos o Browsershot para converter o HTML em PDF:
+    
+        // 5) PDF
         $pdf = Browsershot::html($html)
             ->format('A4')
-            ->landscape()         // se precisar de modo paisagem
-            ->margins(5, 5, 5, 5)
-            ->showBackground()     // se quiser renderizar background de CSS
+            ->landscape()
+            ->showBackground()
+            ->margins(8, 8, 8, 8)
             ->pdf();
-
-        // Retornar o PDF diretamente como resposta
-        return response($pdf)
-            ->withHeaders([
-                'Content-Type'        => 'application/pdf',
-                'Content-Disposition' => 'inline; filename="prestacao-de-contas.pdf"',
-            ]);
+    
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename=prestacao-de-contas.pdf',
+        ]);
+    }
+    
+    
+    protected function logoToBase64($company): ?string
+    {
+        $path = $company->avatar
+            ? storage_path('app/public/'.$company->avatar)
+            : public_path('assets/media/png/perfil.svg');
+    
+        return 'data:image/'.pathinfo($path, PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($path));
     }
 
     public function print(Request $request, $id)
