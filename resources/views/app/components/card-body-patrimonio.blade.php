@@ -75,9 +75,9 @@
                                          Pesquisar...</a>
                                      <a href="#" class="btn btn-sm btn-primary me-3" data-bs-toggle="modal"
                                          data-bs-target="#kt_modal_new_foro">
-                                        <i class="bi bi-house-add-fill fs-2 me-1"></i>
+                                         <i class="bi bi-house-add-fill fs-2 me-1"></i>
                                          <span class="fw-normal">Cadastro de Imóveis Foreiros</span>
-                                        </a>
+                                     </a>
                                  @else
                                  @endif
 
@@ -258,24 +258,31 @@
                      <!--begin::Nav item-->
                      <li class="nav-item">
                          <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('patrimonio') ? 'active' : '' }}"
-                             href="{{ route('patrimonio.index') }}">Resumo</a>
+                             href="{{ route('patrimonio.index') }}">
+                             <i class="bi bi-speedometer2 me-1"></i> Resumo
+                         </a>
                      </li>
                      <!--end::Nav item-->
 
                      <!--begin::Nav item-->
                      <li class="nav-item">
                          <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('patrimonios/imoveis') ? 'active' : '' }}"
-                             href="{{ route('patrimonio.imoveis') }}">Imóveis</a>
+                             href="{{ route('patrimonio.imoveis') }}">
+                             <i class="bi bi-search me-1"></i> Relatórios e Busca
+                         </a>
                      </li>
                      <!--end::Nav item-->
 
                      <!--begin::Nav item-->
                      <li class="nav-item">
                          <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('patrimonio/create') ? 'active' : '' }}"
-                             href="{{ route('patrimonio.create') }}">Acessórios</a>
+                             href="{{ route('patrimonio.create') }}">
+                             <i class="bi bi-tools me-1"></i> Acessórios
+                         </a>
                      </li>
                      <!--end::Nav item-->
                  </ul>
+
                  <!--end::Nav-->
 
              </div>

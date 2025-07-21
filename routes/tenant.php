@@ -103,7 +103,6 @@ Route::middleware([
             Route::resource('telaLogin', TelaDeLoginController::class);
 
             Route::resource('formas-pagamento', FormasPagamentoController::class);
-
         });
 
         // Rotas acessíveis apenas para administradores
@@ -161,7 +160,7 @@ Route::middleware([
             Route::resource('cemiterio', CemeteryController::class);
             Route::resource('sepultura', SepulturaController::class);
 
-            Route::resource('avaliador',AvaliadorController::class);
+            Route::resource('avaliador', AvaliadorController::class);
 
             Route::post('/upload-ofx', [OfxController::class, 'upload'])->name('upload.ofx');
 
@@ -185,12 +184,12 @@ Route::middleware([
 
                 Route::get('/prestacao-de-contas', [PrestacaoDeContaController::class, 'index'])
                     ->name('relatorios.prestacao.de.contas');
-                Route::post('bill/{id}/print', [ PrestacaoDeContaController::class, 'print'])->name('bill.print');
+                Route::post('bill/{id}/print', [PrestacaoDeContaController::class, 'print'])->name('bill.print');
 
                 Route::get('/prestacao-de-contas/pdf', [PrestacaoDeContaController::class, 'gerarPdf'])
                     ->name('relatorios.prestacao.de.contas.gerar');
 
-                Route::post('/filter', [ PrestacaoDeContaController::class, 'generateReport']);
+                Route::post('/filter', [PrestacaoDeContaController::class, 'generateReport']);
 
                 Route::resource('fieis', FielController::class);
 
@@ -206,11 +205,13 @@ Route::middleware([
 
                 Route::resource('transacoes-financeiras', TransacaoFinanceiraController::class);
                 Route::get('/transacao-financeira/grafico', [TransacaoFinanceiraController::class, 'grafico'])
-                        ->name('transacao.grafico');
+                    ->name('transacao.grafico');
 
 
                 Route::get('/transacoes/data', [TransacaoFinanceiraController::class, 'getData'])
                     ->name('transacoes.data');
+
+                Route::get('/patrimonios/imprimir', [PatrimonioController::class, 'imprimirPDF'])->name('patrimonio.imprimir');
             });
         });
     });

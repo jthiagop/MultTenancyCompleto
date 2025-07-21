@@ -1,327 +1,229 @@
 "use strict";
 
-// Class definition
-var KTCreateApp = function () {
-	// Elements
-	var modal;	
-	var modalEl;
+const KTCreateApp = (function () {
+    let modalEl, modal, stepper, form, formSubmitButton, formContinueButton, stepperObj, validations = [];
 
-	var stepper;
-	var form;
-	var formSubmitButton;
-	var formContinueButton;
+    const initStepper = function () {
+        if (!window.KTStepper) {
+            console.error('KTStepper dependency is missing.');
+            return;
+        }
+        stepperObj = new KTStepper(stepper);
 
-	// Variables
-	var stepperObj;
-	var validations = [];
-
-	// Private Functions
-	var initStepper = function () {
-		// Initialize Stepper
-		stepperObj = new KTStepper(stepper);
-
-		// Stepper change event(handle hiding submit button for the last step)
-		stepperObj.on('kt.stepper.changed', function (stepper) {
-			if (stepperObj.getCurrentStepIndex() === 4) {
-				formSubmitButton.classList.remove('d-none');
-				formSubmitButton.classList.add('d-inline-block');
-				formContinueButton.classList.add('d-none');
-			} else if (stepperObj.getCurrentStepIndex() === 5) {
-				formSubmitButton.classList.add('d-none');
-				formContinueButton.classList.add('d-none');
-			} else {
-				formSubmitButton.classList.remove('d-inline-block');
-				formSubmitButton.classList.remove('d-none');
-				formContinueButton.classList.remove('d-none');
-			}
-		});
-
-		// Validation before going to next page
-		stepperObj.on('kt.stepper.next', function (stepper) {
-			console.log('stepper.next');
-
-			// Validate form before change stepper step
-			var validator = validations[stepper.getCurrentStepIndex() - 1]; // get validator for currnt step
-
-			if (validator) {
-				validator.validate().then(function (status) {
-					console.log('validated!');
-
-					if (status == 'Valid') {
-						stepper.goNext();
-
-						//KTUtil.scrollTop();
-					} else {
-						// Show error message popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
-						Swal.fire({
-							text: "Sorry, looks like there are some errors detected, please try again.",
-							icon: "error",
-							buttonsStyling: false,
-							confirmButtonText: "Ok, got it!",
-							customClass: {
-								confirmButton: "btn btn-light"
-							}
-						}).then(function () {
-							//KTUtil.scrollTop();
-						});
-					}
-				});
-			} else {
-				stepper.goNext();
-
-				KTUtil.scrollTop();
-			}
-		});
-
-		// Prev event
-		stepperObj.on('kt.stepper.previous', function (stepper) {
-			console.log('stepper.previous');
-
-			stepper.goPrevious();
-			KTUtil.scrollTop();
-		});
-
-		formSubmitButton.addEventListener('click', function (e) {
-			// Validate form before change stepper step
-			var validator = validations[3]; // get validator for last form
-
-			validator.validate().then(function (status) {
-				console.log('validated!');
-
-				if (status == 'Valid') {
-					// Prevent default button action
-					e.preventDefault();
-
-					// Disable button to avoid multiple click 
-					formSubmitButton.disabled = true;
-
-					// Show loading indication
-					formSubmitButton.setAttribute('data-kt-indicator', 'on');
-
-					// Simulate form submission
-					setTimeout(function() {
-						// Hide loading indication
-						formSubmitButton.removeAttribute('data-kt-indicator');
-
-						// Enable button
-						formSubmitButton.disabled = false;
-
-						stepperObj.goNext();
-						//KTUtil.scrollTop();
-					}, 2000);
-				} else {
-					Swal.fire({
-						text: "Sorry, looks like there are some errors detected, please try again.",
-						icon: "error",
-						buttonsStyling: false,
-						confirmButtonText: "Ok, got it!",
-						customClass: {
-							confirmButton: "btn btn-light"
-						}
-					}).then(function () {
-						KTUtil.scrollTop();
-					});
-				}
-			});
-		});
-	}
-
-	// Init form inputs
-	var initForm = function() {
-		// Expiry month. For more info, plase visit the official plugin site: https://select2.org/
-        $(form.querySelector('[name="card_expiry_month"]')).on('change', function() {
-            // Revalidate the field when an option is chosen
-            validations[3].revalidateField('card_expiry_month');
+        stepperObj.on('kt.stepper.changed', function (stepper) {
+            const stepIndex = stepperObj.getCurrentStepIndex();
+            console.log(`Stepper changed to step: ${stepIndex}`);
+            formSubmitButton.classList.toggle('d-none', stepIndex !== 4);
+            formSubmitButton.classList.toggle('d-inline-block', stepIndex === 4);
+            formContinueButton.classList.toggle('d-none', stepIndex === 5);
         });
 
-		// Expiry year. For more info, plase visit the official plugin site: https://select2.org/
-        $(form.querySelector('[name="card_expiry_year"]')).on('change', function() {
-            // Revalidate the field when an option is chosen
-            validations[3].revalidateField('card_expiry_year');
+        stepperObj.on('kt.stepper.next', function (stepper) {
+            const currentStepIndex = stepper.getCurrentStepIndex();
+            console.log(`Attempting to move to next step from step ${currentStepIndex}`);
+
+            if (currentStepIndex === 1) {
+                const validator = validations[0];
+                if (validator) {
+                    const selectedTipoParecer = form.querySelector('[name="tipo_parecer"]:checked')?.value;
+                    console.log(`Selected tipo_parecer: ${selectedTipoParecer || 'none'}`);
+                    validator.validate().then(function (status) {
+                        console.log(`Validation status for step 1: ${status}`);
+                        if (status === 'Valid') {
+                            console.log('Validation passed, moving to next step');
+                            stepper.goNext();
+                        } else {
+                            console.error('Validation failed');
+                            Swal.fire({
+                                text: "Selecione um tipo de parecer antes de continuar.",
+                                icon: "error",
+                                buttonsStyling: false,
+                                confirmButtonText: "Ok",
+                                customClass: { confirmButton: "btn btn-light" }
+                            });
+                        }
+                    }).catch(error => {
+                        console.error('Validation error:', error);
+                    });
+                } else {
+                    console.log('No validator for step 1, moving to next step');
+                    stepper.goNext();
+                }
+            } else if (currentStepIndex === 2) {
+                const solicitanteTipo = form.querySelector('[name="solicitante_tipo"]:checked')?.value;
+                console.log(`Selected solicitante_tipo: ${solicitanteTipo || 'none'}`);
+                if (!solicitanteTipo) {
+                    Swal.fire({
+                        text: "Selecione quem é o solicitante.",
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok",
+                        customClass: { confirmButton: "btn btn-light" }
+                    });
+                    return;
+                }
+                if (solicitanteTipo === 'terceiro') {
+                    const terceiroNome = form.querySelector('[name="terceiro_nome"]').value;
+                    const terceiroCpf = form.querySelector('[name="terceiro_cpf"]').value;
+                    const terceiroContato = form.querySelector('[name="terceiro_contato"]').value;
+                    console.log(`Terceiro fields: nome=${terceiroNome}, cpf=${terceiroCpf}, contato=${terceiroContato}`);
+                    if (!terceiroNome || !terceiroCpf || !terceiroContato) {
+                        Swal.fire({
+                            text: "Preencha todos os campos do solicitante terceiro.",
+                            icon: "error",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok",
+                            customClass: { confirmButton: "btn btn-light" }
+                        });
+                        return;
+                    }
+                }
+                stepper.goNext();
+            } else if (currentStepIndex === 3) {
+                const valorMetroQuadrado = form.querySelector('[name="valor_metro_quadrado"]').value;
+                const dataAvaliacao = form.querySelector('[name="data_avaliacao"]').value;
+                console.log(`Avaliação fields: valor_metro_quadrado=${valorMetroQuadrado}, data_avaliacao=${dataAvaliacao}`);
+                if (!valorMetroQuadrado || !dataAvaliacao) {
+                    Swal.fire({
+                        text: "Preencha todos os campos da avaliação.",
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok",
+                        customClass: { confirmButton: "btn btn-light" }
+                    });
+                    return;
+                }
+                if (isNaN(valorMetroQuadrado) || valorMetroQuadrado <= 0) {
+                    Swal.fire({
+                        text: "Insira um valor válido para o metro quadrado (ex: 800.00).",
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok",
+                        customClass: { confirmButton: "btn btn-light" }
+                    });
+                    return;
+                }
+                stepper.goNext();
+            } else {
+                stepper.goNext();
+            }
         });
-	}
 
-	var initValidation = function () {
-		// Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
-		// Step 1
-		validations.push(FormValidation.formValidation(
-			form,
-			{
-				fields: {
-					name: {
-						validators: {
-							notEmpty: {
-								message: 'App name is required'
-							}
-						}
-					},
-					category: {
-						validators: {
-							notEmpty: {
-								message: 'Category is required'
-							}
-						}
-					}
-				},
-				plugins: {
-					trigger: new FormValidation.plugins.Trigger(),
-					bootstrap: new FormValidation.plugins.Bootstrap5({
-						rowSelector: '.fv-row',
-                        eleInvalidClass: '',
-                        eleValidClass: ''
-					})
-				}
-			}
-		));
+        stepperObj.on('kt.stepper.previous', function (stepper) {
+            console.log('Moving to previous step');
+            stepper.goPrevious();
+        });
 
-		// Step 2
-		validations.push(FormValidation.formValidation(
-			form,
-			{
-				fields: {
-					framework: {
-						validators: {
-							notEmpty: {
-								message: 'Framework is required'
-							}
-						}
-					}
-				},
-				plugins: {
-					trigger: new FormValidation.plugins.Trigger(),
-					// Bootstrap Framework Integration
-					bootstrap: new FormValidation.plugins.Bootstrap5({
-						rowSelector: '.fv-row',
-                        eleInvalidClass: '',
-                        eleValidClass: ''
-					})
-				}
-			}
-		));
+        formSubmitButton.addEventListener('click', function (e) {
+            e.preventDefault();
+            console.log('Form submit button clicked');
+            formSubmitButton.disabled = true;
+            formSubmitButton.setAttribute('data-kt-indicator', 'on');
 
-		// Step 3
-		validations.push(FormValidation.formValidation(
-			form,
-			{
-				fields: {
-					dbname: {
-						validators: {
-							notEmpty: {
-								message: 'Database name is required'
-							}
-						}
-					},
-					dbengine: {
-						validators: {
-							notEmpty: {
-								message: 'Database engine is required'
-							}
-						}
-					}
-				},
-				plugins: {
-					trigger: new FormValidation.plugins.Trigger(),
-					// Bootstrap Framework Integration
-					bootstrap: new FormValidation.plugins.Bootstrap5({
-						rowSelector: '.fv-row',
-                        eleInvalidClass: '',
-                        eleValidClass: ''
-					})
-				}
-			}
-		));
+            fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form)
+            })
+            .then(response => {
+                console.log('Form submission response:', response);
+                if (!response.ok) throw new Error('Erro ao gerar o documento.');
+                return response;
+            })
+            .then(() => {
+                console.log('Form submission successful');
+                formSubmitButton.removeAttribute('data-kt-indicator');
+                formSubmitButton.disabled = false;
+                stepperObj.goNext();
+                form.reset();
+                stepperObj.goTo(1);
+            })
+            .catch(error => {
+                console.error('Form submission error:', error);
+                Swal.fire({
+                    text: error.message,
+                    icon: 'error',
+                    buttonsStyling: false,
+                    confirmButtonText: 'Ok',
+                    customClass: { confirmButton: 'btn btn-light' }
+                });
+                formSubmitButton.removeAttribute('data-kt-indicator');
+                formSubmitButton.disabled = false;
+            });
+        });
 
-		// Step 4
-		validations.push(FormValidation.formValidation(
-			form,
-			{
-				fields: {
-					'card_name': {
-						validators: {
-							notEmpty: {
-								message: 'Name on card is required'
-							}
-						}
-					},
-					'card_number': {
-						validators: {
-							notEmpty: {
-								message: 'Card member is required'
-							},
-                            creditCard: {
-                                message: 'Card number is not valid'
-                            }
-						}
-					},
-					'card_expiry_month': {
-						validators: {
-							notEmpty: {
-								message: 'Month is required'
-							}
-						}
-					},
-					'card_expiry_year': {
-						validators: {
-							notEmpty: {
-								message: 'Year is required'
-							}
-						}
-					},
-					'card_cvv': {
-						validators: {
-							notEmpty: {
-								message: 'CVV is required'
-							},
-							digits: {
-								message: 'CVV must contain only digits'
-							},
-							stringLength: {
-								min: 3,
-								max: 4,
-								message: 'CVV must contain 3 to 4 digits only'
-							}
-						}
-					}
-				},
+        form.querySelectorAll('[name="solicitante_tipo"]').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                console.log(`Solicitante tipo changed to: ${this.value}`);
+                const isTerceiro = this.value === 'terceiro';
+                document.getElementById('dados_proprietario_div').classList.toggle('d-none', isTerceiro);
+                document.getElementById('form_terceiro_div').classList.toggle('d-none', !isTerceiro);
+            });
+        });
 
-				plugins: {
-					trigger: new FormValidation.plugins.Trigger(),
-					// Bootstrap Framework Integration
-					bootstrap: new FormValidation.plugins.Bootstrap5({
-						rowSelector: '.fv-row',
-                        eleInvalidClass: '',
-                        eleValidClass: ''
-					})
-				}
-			}
-		));
-	}
+        form.querySelectorAll('[name="tipo_parecer"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                console.log(`Tipo parecer changed to: ${radio.value}`);
+            });
+        });
+    };
 
-	return {
-		// Public Functions
-		init: function () {
-			// Elements
-			modalEl = document.querySelector('#kt_modal_create_app');
+    const initValidation = function () {
+        if (!window.FormValidation) {
+            console.error('FormValidation dependency is missing.');
+            return;
+        }
 
-			if (!modalEl) {
-				return;
-			}
+        // Step 1: Use notEmpty validator to match original code
+        validations.push(FormValidation.formValidation(form, {
+            fields: {
+                'tipo_parecer': {
+                    validators: {
+                        notEmpty: { message: 'A natureza do PTAM é obrigatória.' }
+                    }
+                }
+            },
+            plugins: {
+                trigger: new FormValidation.plugins.Trigger(),
+                bootstrap: new FormValidation.plugins.Bootstrap5({
+                    rowSelector: '.fv-row',
+                    eleInvalidClass: 'is-invalid',
+                    eleValidClass: ''
+                })
+            }
+        }));
 
-			modal = new bootstrap.Modal(modalEl);
+        // Step 2: Manual validation (no FormValidation)
+        // Step 3: Manual validation (no FormValidation)
+        // Step 4: No validation needed
+    };
 
-			stepper = document.querySelector('#kt_modal_create_app_stepper');
-			form = document.querySelector('#kt_modal_create_app_form');
-			formSubmitButton = stepper.querySelector('[data-kt-stepper-action="submit"]');
-			formContinueButton = stepper.querySelector('[data-kt-stepper-action="next"]');
+    return {
+        init: function () {
+            console.log('Initializing KTCreateApp');
+            modalEl = document.querySelector('#kt_modal_create_app');
+            if (!modalEl) {
+                console.error('Modal element not found.');
+                return;
+            }
+            modal = new bootstrap.Modal(modalEl);
+            stepper = document.querySelector('#kt_modal_create_app_stepper');
+            form = stepper.querySelector('#kt_modal_create_app_form');
+            formSubmitButton = stepper.querySelector('[data-kt-stepper-action="submit"]');
+            formContinueButton = stepper.querySelector('[data-kt-stepper-action="next"]');
+            if (!form || !formSubmitButton || !formContinueButton) {
+                console.error('Form or button elements not found.');
+                return;
+            }
+            initValidation();
+            initStepper();
+        }
+    };
+})();
 
-			initStepper();
-			initForm();
-			initValidation();
-		}
-	};
-}();
-
-// On document ready
-KTUtil.onDOMContentLoaded(function() {
+KTUtil.onDOMContentLoaded(function () {
+    if (!window.KTUtil || !window.bootstrap || !window.Swal || !window.FormValidation) {
+        console.error('Required dependencies (KTUtil, Bootstrap, Swal, or FormValidation) are missing.');
+        return;
+    }
     KTCreateApp.init();
 });

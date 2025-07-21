@@ -27,11 +27,23 @@ class Patrimonio extends Model
         'complemento',
         'latitude',
         'longitude',
-
     ];
 
+    /**
+     * Relacionamento com Escritura.
+     * Um patrimônio pode ter várias escrituras.
+     */
     public function escrituras()
     {
         return $this->hasMany(Escritura::class, 'patrimonio_id');
+    }
+
+    /**
+     * Relacionamento com PatrimonioAnexo.
+     * Um patrimônio pode ter vários anexos.
+     */
+    public function anexos()
+    {
+        return $this->hasMany(PatrimonioAnexo::class, 'patrimonio_id');
     }
 }

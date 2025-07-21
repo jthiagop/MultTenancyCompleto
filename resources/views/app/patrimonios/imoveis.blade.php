@@ -57,153 +57,69 @@
                     <!--begin::Navbar-->
                     @include('app.components.card-body-patrimonio', ['active' => true])
                     <!--end::Navbar-->
-                    <!--begin::Row-->
 
-                    {{-- <div class="row g-6 g-xl-9">
-                        <!--begin::Col-->
-                        <div class="col-lg-6">
-                            <!--begin::Summary-->
-                            <div class="card card-flush h-lg-100">
-                                <!--begin::Card header-->
-                                <div class="card-header mt-6">
-                                    <!--begin::Card title-->
-                                    <div class="card-title flex-column">
-                                        <h3 class="fw-bold mb-1">Foro e Laudêmio</h3>
-                                        <div class="fs-6 fw-semibold text-gray-400">24 Overdue Tasks</div>
-                                    </div>
-                                    <!--end::Card title-->
-                                    <!--begin::Card toolbar-->
-                                    <div class="card-toolbar">
-                                        <a href="#" class="btn btn-light btn-sm">View Tasks</a>
-                                    </div>
-                                    <!--end::Card toolbar-->
-                                </div>
-                                <!--end::Card header-->
-                                <!--begin::Card body-->
-                                <div class="card-body p-9 pt-5">
-                                    <!--begin::Wrapper-->
-                                    <div class="d-flex flex-wrap">
-                                        <!--begin::Chart-->
-                                        <div class="position-relative d-flex flex-center h-175px w-175px me-15 mb-7">
-                                            <div
-                                                class="position-absolute translate-middle start-50 top-50 d-flex flex-column flex-center">
-                                                <span class="fs-2qx fw-bold">75</span>
-                                                <span class="fs-6 fw-semibold text-gray-400">Total</span>
-                                            </div>
-                                            <canvas id="project_overview_chart"></canvas>
-                                        </div>
-                                        <!--end::Chart-->
-                                        <!--begin::Labels-->
-                                        <div
-                                            class="d-flex flex-column justify-content-center flex-row-fluid pe-11 mb-5">
-                                            <!--begin::Label-->
-                                            <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
-                                                <div class="bullet bg-primary me-3"></div>
-                                                <div class="text-gray-400">Laudêmio</div>
-                                                <div class="ms-auto fw-bold text-gray-700">30</div>
-                                            </div>
-                                            <!--end::Label-->
-                                            <!--begin::Label-->
-                                            <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
-                                                <div class="bullet bg-success me-3"></div>
-                                                <div class="text-gray-400">Foro</div>
-                                                <div class="ms-auto fw-bold text-gray-700">145</div>
-                                            </div>
-                                            <!--end::Label-->
-                                            <!--begin::Label-->
-                                            <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
-                                                <div class="bullet bg-danger me-3"></div>
-                                                <div class="text-gray-400">Domínio pleno</div>
-                                                <div class="ms-auto fw-bold text-gray-700">0</div>
-                                            </div>
-                                            <!--end::Label-->
-                                        </div>
-                                        <!--end::Labels-->
-                                    </div>
-                                    <!--end::Wrapper-->
-                                    <!--begin::Notice-->
-                                    <div
-                                        class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6">
-                                        <!--begin::Wrapper-->
-                                        <div class="d-flex flex-stack flex-grow-1">
-                                            <!--begin::Content-->
-                                            <div class="fw-semibold">
-                                                <div class="fs-6 text-gray-700">
-                                                    <a href="#" class="fw-bold me-1">Invite New .NET
-                                                        Collaborators</a>to create great outstanding business to
-                                                    business .jsp modutr class scripts
-                                                </div>
-                                            </div>
-                                            <!--end::Content-->
-                                        </div>
-                                        <!--end::Wrapper-->
-                                    </div>
-                                    <!--end::Notice-->
-                                </div>
-                                <!--end::Card body-->
-                            </div>
-                            <!--end::Summary-->
-                        </div>
-                        <!--end::Col-->
-                        <!--begin::Col-->
-                        <div class="col-lg-6">
-                            <!--begin::Graph-->
-                            <div class="card card-flush h-lg-100">
-                                <!--begin::Card header-->
-                                <div class="card-header mt-6">
-                                    <!--begin::Card title-->
-                                    <div class="card-title flex-column">
-                                        <h3 class="fw-bold mb-1">Tasks Over Time</h3>
-                                        <!--begin::Labels-->
-                                        <div class="fs-6 d-flex text-gray-400 fs-6 fw-semibold">
-                                            <!--begin::Label-->
-                                            <div class="d-flex align-items-center me-6">
-                                                <span class="menu-bullet d-flex align-items-center me-2">
-                                                    <span class="bullet bg-success"></span>
-                                                </span>Complete
-                                            </div>
-                                            <!--end::Label-->
-                                            <!--begin::Label-->
-                                            <div class="d-flex align-items-center">
-                                                <span class="menu-bullet d-flex align-items-center me-2">
-                                                    <span class="bullet bg-primary"></span>
-                                                </span>Incomplete
-                                            </div>
-                                            <!--end::Label-->
-                                        </div>
-                                        <!--end::Labels-->
-                                    </div>
-                                    <!--end::Card title-->
-                                    <!--begin::Card toolbar-->
-                                    <div class="card-toolbar">
-                                        <!--begin::Select-->
-                                        <select name="status" data-control="select2" data-hide-search="true"
-                                            class="form-select form-select-solid form-select-sm fw-bold w-100px">
-                                            <option value="1">2020 Q1</option>
-                                            <option value="2">2020 Q2</option>
-                                            <option value="3" selected="selected">2020 Q3</option>
-                                            <option value="4">2020 Q4</option>
-                                        </select>
-                                        <!--end::Select-->
-                                    </div>
-                                    <!--end::Card toolbar-->
-                                </div>
-                                <!--end::Card header-->
-                                <!--begin::Card body-->
-                                <div class="card-body pt-10 pb-0 px-5">
-                                    <!--begin::Chart-->
-                                    <div id="kt_project_overview_graph" class="card-rounded-bottom"
-                                        style="height: 300px"></div>
-                                    <!--end::Chart-->
-                                </div>
-                                <!--end::Card body-->
-                            </div>
-                            <!--end::Graph-->
-                        </div>
-                        <!--end::Col-->
-                    </div> --}}
-                    <!--end::Row-->
+                    <div class="card mb-7">
+                        <div class="card-body">
+                            <h3 class="card-title mb-5">Filtrar Patrimônios</h3>
 
+                            <form action="{{ route('patrimonio.imoveis') }}" method="GET"
+                                class="row g-3 align-items-end">
+
+                                <div class="col-md-4">
+                                    <label for="filter_field" class="form-label">Campo</label>
+                                    <select name="filter_field" id="filter_field" class="form-select form-select-solid">
+                                        <option value="descricao"
+                                            {{ request('filter_field') == 'descricao' ? 'selected' : '' }}>Descrição
+                                        </option>
+                                        <option value="codigo_rid"
+                                            {{ request('filter_field') == 'codigo_rid' ? 'selected' : '' }}>Código RID
+                                        </option>
+                                        <option value="patrimonio"
+                                            {{ request('filter_field') == 'patrimonio' ? 'selected' : '' }}>Patrimônio
+                                        </option>
+                                        <option value="localidade"
+                                            {{ request('filter_field') == 'localidade' ? 'selected' : '' }}>Cidade
+                                        </option>
+                                        <option value="bairro"
+                                            {{ request('filter_field') == 'bairro' ? 'selected' : '' }}>Bairro</option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="filter_condition" class="form-label">Condição</label>
+                                    <select name="filter_condition" id="filter_condition"
+                                        class="form-select form-select-solid">
+                                        <option value="contains"
+                                            {{ request('filter_condition') == 'contains' ? 'selected' : '' }}>Contém
+                                        </option>
+                                        <option value="equals"
+                                            {{ request('filter_condition') == 'equals' ? 'selected' : '' }}>Igual a
+                                        </option>
+                                    </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <label for="filter_value" class="form-label">Busca</label>
+                                    <input type="text" name="filter_value" id="filter_value"
+                                        class="form-control form-control-solid" value="{{ request('filter_value') }}"
+                                        placeholder="Digite aqui...">
+                                </div>
+
+                                <div class="col-md-2">
+
+                                    <button type="submit" class="btn btn-primary w-100"> <span
+                                            class="svg-icon svg-icon-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                fill="currentColor" class="bi bi-search me-2" viewBox="0 0 16 16">
+                                                <path
+                                                    d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
+                                            </svg>
+                                        </span>Pesquisar</button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
                     <!--begin::Table-->
                     <div class="card card-flush mt-6 mt-xl-9">
                         <!--begin::Card header-->
@@ -217,17 +133,17 @@
                             <!--begin::Card toolbar-->
                             <div class="card-toolbar my-1">
                                 <!--begin::Select-->
-                                {{-- <div class="me-6 my-1">
-                                        <select id="kt_filter_year" name="year" data-control="select2"
-                                            data-hide-search="true"
-                                            class="w-125px form-select form-select-solid form-select-sm">
-                                            <option value="All" selected="selected">All time</option>
-                                            <option value="thisyear">This year</option>
-                                            <option value="thismonth">This month</option>
-                                            <option value="lastmonth">Last month</option>
-                                            <option value="last90days">Last 90 days</option>
-                                        </select>
-                                    </div> --}}
+                                <div class="me-6 my-1">
+                                    <select id="kt_filter_year" name="year" data-control="select2"
+                                        data-hide-search="true"
+                                        class="w-125px form-select form-select-solid form-select-sm">
+                                        <option value="All" selected="selected">All time</option>
+                                        <option value="thisyear">This year</option>
+                                        <option value="thismonth">This month</option>
+                                        <option value="lastmonth">Last month</option>
+                                        <option value="last90days">Last 90 days</option>
+                                    </select>
+                                </div>
                                 <!--end::Select-->
                                 <!--begin::Select-->
                                 <div class="me-4 my-1">
@@ -243,7 +159,7 @@
                                 </div>
                                 <!--end::Select-->
                                 <!--begin::Search-->
-                                <div class="d-flex align-items-center position-relative my-1">
+                                <div class="d-flex align-items-center position-relative me-4">
                                     <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
                                     <span class="svg-icon svg-icon-3 position-absolute ms-3">
                                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -262,6 +178,12 @@
                                         placeholder="Pesquisar..." />
                                 </div>
                                 <!--end::Search-->
+                                <div class=" my-1">
+                                    <a href="{{ route('patrimonio.imprimir', request()->query()) }}" target="_blank"
+                                        class="btn btn-sm btn-primary me-3">
+                                        <i class="bi bi-printer"></i> Imprimir PDF
+                                    </a>
+                                </div>
                             </div>
                             <!--begin::Card toolbar-->
                         </div>
@@ -528,7 +450,8 @@
                                         title="número de registro atribuído a um imóvel ou a uma empresa por uma prefeitura ou órgão municipal."></i>
                                 </label>
                                 <input type="text" class="form-control form-control-solid"
-                                placeholder="Número da inscrição" id="inscricaoMunicipal" name="inscricaoMunicipal" />
+                                    placeholder="Número da inscrição" id="inscricaoMunicipal"
+                                    name="inscricaoMunicipal" />
                             </div>
                             <!-- Inputs ocultos para armazenar os valores adicionais -->
                             <input type="hidden" id="selected-num-foro" name="selected-num-foro">
@@ -568,12 +491,12 @@
                                 <label class=" fs-6 fw-semibold mb-2">Origem</label>
 
                                 <select class="form-select form-select-solid" data-control="select2"
-                                data-hide-search="true" id="origem" data-placeholder="Selecione o patrimônio"
-                                name="origem">
+                                    data-hide-search="true" id="origem" data-placeholder="Selecione o patrimônio"
+                                    name="origem">
                                     <option value="Aquisição">Aquisição</option>
                                     <option value="Doação">Doação</option>
                                     <option value="Aquisição">Outro</option>
-                            </select><br>
+                                </select><br>
                             </div>
                         </div>
                         <!--end::Input group-->
@@ -756,7 +679,8 @@
                                 </label>
                                 <!--end::Label-->
                                 <input type="text" class="form-control form-control-solid"
-                                    placeholder="Pessoa ou entidade que concede ou transfere(Vendedor)" id="outorgante" name="outorgante" />
+                                    placeholder="Pessoa ou entidade que concede ou transfere(Vendedor)"
+                                    id="outorgante" name="outorgante" />
                             </div>
                             <!--end::Input group-->
                             <!--begin::Input group-->
@@ -796,8 +720,8 @@
                                         <!--end::Svg Icon-->
                                         <!--end::Icon-->
                                         <!--begin::Datepicker-->
-                                        <input class="form-control form-control-solid ps-12" placeholder="Secione a data"
-                                            name="dataAquisicao" />
+                                        <input class="form-control form-control-solid ps-12"
+                                            placeholder="Secione a data" name="dataAquisicao" />
                                         <!--end::Datepicker-->
                                     </div>
                                     <!--end::Input-->
@@ -817,7 +741,8 @@
                                 </label>
                                 <!--end::Label-->
                                 <input type="text" class="form-control form-control-solid"
-                                    placeholder="Pessoa ou entidade que recebe (comprador)" id="outorgado" name="outorgado" />
+                                    placeholder="Pessoa ou entidade que recebe (comprador)" id="outorgado"
+                                    name="outorgado" />
                             </div>
                             <!--end::Input group-->
                             <!--begin::Input group-->
@@ -829,19 +754,19 @@
                                     <!--end::Label-->
                                     <!--begin::Input-->
                                     <!--begin::Input-->
-                                <div class="position-relative d-flex align-items-center">
-                                    <!--begin::Icon-->
-                                    <!--begin::Svg Icon | path: icons/duotune/general/gen014.svg-->
-                                    <span class="svg-icon svg-icon-2 position-absolute mx-4">
-                                        R$
-                                    </span>
-                                    <!--end::Svg Icon-->
-                                    <!--end::Icon-->
-                                    <!--begin::Datepicker-->
-                                    <input class="form-control form-control-solid ps-12" placeholder="" name="valor"
-                                    id="valor" />
-                                    <!--end::Datepicker-->
-                                </div>
+                                    <div class="position-relative d-flex align-items-center">
+                                        <!--begin::Icon-->
+                                        <!--begin::Svg Icon | path: icons/duotune/general/gen014.svg-->
+                                        <span class="svg-icon svg-icon-2 position-absolute mx-4">
+                                            R$
+                                        </span>
+                                        <!--end::Svg Icon-->
+                                        <!--end::Icon-->
+                                        <!--begin::Datepicker-->
+                                        <input class="form-control form-control-solid ps-12" placeholder=""
+                                            name="valor" id="valor" />
+                                        <!--end::Datepicker-->
+                                    </div>
                                 </div>
                                 <!--end::Col-->
                                 <!--begin::Col-->
@@ -913,8 +838,8 @@
                         <span class="svg-icon svg-icon-1">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2"
-                                    rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
+                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
+                                    transform="rotate(-45 6 17.3137)" fill="currentColor" />
                                 <rect x="7.41422" y="6" width="16" height="2" rx="1"
                                     transform="rotate(45 7.41422 6)" fill="currentColor" />
                             </svg>
@@ -1465,8 +1390,8 @@
                         <span class="svg-icon svg-icon-1">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                                 xmlns="http://www.w3.org/2000/svg">
-                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2"
-                                    rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
+                                <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
+                                    transform="rotate(-45 6 17.3137)" fill="currentColor" />
                                 <rect x="7.41422" y="6" width="16" height="2" rx="1"
                                     transform="rotate(45 7.41422 6)" fill="currentColor" />
                             </svg>
@@ -2223,4 +2148,3 @@
 <script src="/assets/js/toasts.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->
-

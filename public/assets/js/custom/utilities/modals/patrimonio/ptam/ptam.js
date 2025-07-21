@@ -1,353 +1,227 @@
+
 "use strict";
 
 // Class definition
-var KTCreateApp = function () {
-	// Elements
-	var modal;
-	var modalEl;
+var KTModalEmitirPtam = function () {
+    var submitButton;
+    var cancelButton;
+    var validator;
+    var form;
+    var modal;
+    var modalEl;
 
-	var stepper;
-	var form;
-	var formSubmitButton;
-	var formContinueButton;
-
-	// Variables
-	var stepperObj;
-	var validations = [];
-
-	// Private Functions
-	var initStepper = function () {
-		// Initialize Stepper
-		stepperObj = new KTStepper(stepper);
-
-		// Stepper change event(handle hiding submit button for the last step)
-		stepperObj.on('kt.stepper.changed', function (stepper) {
-			if (stepperObj.getCurrentStepIndex() === 4) {
-				formSubmitButton.classList.remove('d-none');
-				formSubmitButton.classList.add('d-inline-block');
-				formContinueButton.classList.add('d-none');
-			} else if (stepperObj.getCurrentStepIndex() === 5) {
-				formSubmitButton.classList.add('d-none');
-				formContinueButton.classList.add('d-none');
-			} else {
-				formSubmitButton.classList.remove('d-inline-block');
-				formSubmitButton.classList.remove('d-none');
-				formContinueButton.classList.remove('d-none');
-			}
-		});
-
-		// Validation before going to next page
-		stepperObj.on('kt.stepper.next', function (stepper) {
-			console.log('stepper.next');
-
-			// Validate form before change stepper step
-			var validator = validations[stepper.getCurrentStepIndex() - 1]; // get validator for currnt step
-
-			if (validator) {
-				validator.validate().then(function (status) {
-					console.log('validated!');
-
-					if (status == 'Valid') {
-						stepper.goNext();
-
-						//KTUtil.scrollTop();
-					} else {
-						// Show error message popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
-						Swal.fire({
-							text: "Desculpe, parece que alguns erros foram detectados. Tente novamente.",
-							icon: "error",
-							buttonsStyling: false,
-							confirmButtonText: "Ok, got it!",
-							customClass: {
-								confirmButton: "btn btn-light"
-							}
-						}).then(function () {
-							//KTUtil.scrollTop();
-						});
-					}
-				});
-			} else {
-				stepper.goNext();
-
-				KTUtil.scrollTop();
-			}
-		});
-
-		// Prev event
-		stepperObj.on('kt.stepper.previous', function (stepper) {
-			console.log('stepper.previous');
-
-			stepper.goPrevious();
-			KTUtil.scrollTop();
-		});
-
-		formSubmitButton.addEventListener('click', function (e) {
-			// Validate form before change stepper step
-			var validator = validations[3]; // get validator for last form
-
-			validator.validate().then(function (status) {
-				console.log('validated!');
-
-				if (status == 'Valid') {
-					// Prevent default button action
-					e.preventDefault();
-
-					// Disable button to avoid multiple click
-					formSubmitButton.disabled = true;
-
-					// Show loading indication
-					formSubmitButton.setAttribute('data-kt-indicator', 'on');
-
-					// Simulate form submission
-					setTimeout(function() {
-						// Hide loading indication
-						formSubmitButton.removeAttribute('data-kt-indicator');
-
-						// Enable button
-						formSubmitButton.disabled = false;
-
-						stepperObj.goNext();
-						//KTUtil.scrollTop();
-					}, 2000);
-				} else {
-					Swal.fire({
-						text: "Sorry, looks like there are some errors detected, please try again.",
-						icon: "error",
-						buttonsStyling: false,
-						confirmButtonText: "Ok, got it!",
-						customClass: {
-							confirmButton: "btn btn-light"
-						}
-					}).then(function () {
-						KTUtil.scrollTop();
-					});
-				}
-			});
-		});
-	}
-
-	// Init form inputs
-	var initForm = function() {
-		// Expiry month. For more info, plase visit the official plugin site: https://select2.org/
-        $(form.querySelector('[name="card_expiry_month"]')).on('change', function() {
-            // Revalidate the field when an option is chosen
-            validations[3].revalidateField('card_expiry_month');
+    // Init form inputs
+    var initForm = function() {
+        // Initialize Select2 for PTAM type in the main form
+        $('#ptam_type').select2({
+            minimumResultsForSearch: Infinity,
+            dropdownCssClass: 'w-250px'
         });
 
-		// Expiry year. For more info, plase visit the official plugin site: https://select2.org/
-        $(form.querySelector('[name="card_expiry_year"]')).on('change', function() {
-            // Revalidate the field when an option is chosen
-            validations[3].revalidateField('card_expiry_year');
-        });
-	}
+        // Handle PTAM type change for dynamic calculation
+        document.getElementById('ptam_type').addEventListener('change', function () {
+            const valorImovel = parseFloat(document.getElementById('valor_imovel').value) || 0;
+            const ptamType = this.value;
+            const dominioDiretoPercentage = document.getElementById('dominio_direto_percentage');
+            let valorCalculado = 0;
 
-	var initValidation = function () {
-		// Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
-		// Step 1
-		validations.push(FormValidation.formValidation(
-			form,
-			{
-				fields: {
-					category: {
-						validators: {
-							notEmpty: {
-								message: 'Informe a natureza do Ptam'
-							}
-						}
-					}
-				},
-				plugins: {
-					trigger: new FormValidation.plugins.Trigger(),
-					bootstrap: new FormValidation.plugins.Bootstrap5({
-						rowSelector: '.fv-row',
+            if (ptamType === 'foro') {
+                valorCalculado = valorImovel * 0.0023;
+                dominioDiretoPercentage.style.display = 'none';
+            } else if (ptamType === 'laudemio') {
+                valorCalculado = valorImovel * 0.025;
+                dominioDiretoPercentage.style.display = 'none';
+            } else if (ptamType === 'dominio_direto') {
+                dominioDiretoPercentage.style.display = 'block';
+                const customPercentage = parseFloat(document.getElementById('custom_percentage').value) || 8;
+                valorCalculado = valorImovel * (customPercentage / 100);
+            } else {
+                dominioDiretoPercentage.style.display = 'none';
+            }
+
+            const formattedValor = valorCalculado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('valor_calculado').textContent = formattedValor;
+            document.getElementById('valor_calculado_input').value = valorCalculado.toFixed(2);
+        });
+
+        // Handle custom percentage input for Domínio Direto
+        document.getElementById('custom_percentage').addEventListener('input', function () {
+            const ptamType = document.getElementById('ptam_type').value;
+            if (ptamType === 'dominio_direto') {
+                const valorImovel = parseFloat(document.getElementById('valor_imovel').value) || 0;
+                const customPercentage = parseFloat(this.value) || 8;
+                const valorCalculado = valorImovel * (customPercentage / 100);
+                const formattedValor = valorCalculado.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                document.getElementById('valor_calculado').textContent = formattedValor;
+                document.getElementById('valor_calculado_input').value = valorCalculado.toFixed(2);
+            }
+        });
+
+        // Populate modal fields when opened
+        $('#kt_modal_emitir_ptam').on('show.bs.modal', function () {
+            const ptamType = document.getElementById('ptam_type').value;
+            const valorCalculado = document.getElementById('valor_calculado_input').value;
+            const customPercentage = document.getElementById('custom_percentage').value;
+
+            document.getElementById('ptam_type_display').value = ptamType ? ptamType.charAt(0).toUpperCase() + ptamType.slice(1) : '';
+            document.getElementById('ptam_type_confirm').value = ptamType;
+            document.getElementById('valor_calculado_display').value = valorCalculado ? parseFloat(valorCalculado).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) : 'R$ 0,00';
+            document.getElementById('valor_calculado_confirm').value = valorCalculado;
+
+            if (ptamType === 'dominio_direto') {
+                document.getElementById('dominio_direto_percentage_confirm').style.display = 'block';
+                document.getElementById('custom_percentage_display').value = customPercentage ? customPercentage + '%' : '8%';
+                document.getElementById('custom_percentage_confirm').value = customPercentage;
+            } else {
+                document.getElementById('dominio_direto_percentage_confirm').style.display = 'none';
+            }
+        });
+    }
+
+    // Handle form validation and submission
+    var handleForm = function() {
+        // Init form validation rules
+        validator = FormValidation.formValidation(
+            form,
+            {
+                fields: {
+                    ptam_type: {
+                        validators: {
+                            notEmpty: {
+                                message: 'O tipo de PTAM é obrigatório'
+                            }
+                        }
+                    },
+                    observacoes: {
+                        validators: {
+                            notEmpty: {
+                                message: 'As observações são obrigatórias'
+                            }
+                        }
+                    },
+                    custom_percentage: {
+                        validators: {
+                            callback: {
+                                message: 'O percentual deve estar entre 8% e 12%',
+                                callback: function(input) {
+                                    if (form.querySelector('[name="ptam_type"]').value === 'dominio_direto') {
+                                        const value = parseFloat(input.value);
+                                        return value >= 8 && value <= 12;
+                                    }
+                                    return true;
+                                }
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    trigger: new FormValidation.plugins.Trigger(),
+                    bootstrap: new FormValidation.plugins.Bootstrap5({
+                        rowSelector: '.fv-row',
                         eleInvalidClass: '',
                         eleValidClass: ''
-					})
-				}
-			}
-		));
-
-		// Step 2
-// Adicionando validação ao Step 2
-validations.push(FormValidation.formValidation(
-    form,
-    {
-        fields: {
-            owner_type: {
-                validators: {
-                    notEmpty: {
-                        message: 'Selecione o tipo de proprietário'
-                    }
-                }
-            },
-            nome_proprietario_atual: {
-                validators: {
-                    notEmpty: {
-                        message: 'O nome do proprietário atual é obrigatório'
-                    }
-                }
-            },
-            nome_terceiro: {
-                validators: {
-                    notEmpty: {
-                        message: 'O nome do terceiro é obrigatório'
-                    }
-                }
-            },
-            cpf_terceiro: {
-                validators: {
-                    notEmpty: {
-                        message: 'O CPF do terceiro é obrigatório'
-                    },
-                    stringLength: {
-                        min: 11,
-                        max: 14,
-                        message: 'CPF deve ter entre 11 e 14 caracteres'
-                    }
-                }
-            },
-            telefone_terceiro: {
-                validators: {
-                    notEmpty: {
-                        message: 'O telefone do terceiro é obrigatório'
-                    }
+                    })
                 }
             }
-        },
-        plugins: {
-            trigger: new FormValidation.plugins.Trigger(),
-            bootstrap: new FormValidation.plugins.Bootstrap5({
-                rowSelector: '.fv-row',
-                eleInvalidClass: '',
-                eleValidClass: ''
-            })
-        }
-    }
-));
+        );
 
-		// Step 3
-		validations.push(FormValidation.formValidation(
-			form,
-			{
-				fields: {
-					dbname: {
-						validators: {
-							notEmpty: {
-								message: 'Database name is required'
-							}
-						}
-					},
-					dbengine: {
-						validators: {
-							notEmpty: {
-								message: 'Database engine is required'
-							}
-						}
-					}
-				},
-				plugins: {
-					trigger: new FormValidation.plugins.Trigger(),
-					// Bootstrap Framework Integration
-					bootstrap: new FormValidation.plugins.Bootstrap5({
-						rowSelector: '.fv-row',
-                        eleInvalidClass: '',
-                        eleValidClass: ''
-					})
-				}
-			}
-		));
+        // Action buttons
+        submitButton.addEventListener('click', function (e) {
+            e.preventDefault();
 
-		// Step 4
-		validations.push(FormValidation.formValidation(
-			form,
-			{
-				fields: {
-					'card_name': {
-						validators: {
-							notEmpty: {
-								message: 'Name on card is required'
-							}
-						}
-					},
-					'card_number': {
-						validators: {
-							notEmpty: {
-								message: 'Card member is required'
-							},
-                            creditCard: {
-                                message: 'Card number is not valid'
+            // Validate form before submit
+            if (validator) {
+                validator.validate().then(function (status) {
+                    if (status === 'Valid') {
+                        submitButton.setAttribute('data-kt-indicator', 'on');
+                        submitButton.disabled = true;
+
+                        setTimeout(function() {
+                            submitButton.removeAttribute('data-kt-indicator');
+                            submitButton.disabled = false;
+
+                            Swal.fire({
+                                text: "PTAM gerado com sucesso!",
+                                icon: "success",
+                                buttonsStyling: false,
+                                confirmButtonText: "Ok, entendi!",
+                                customClass: {
+                                    confirmButton: "btn btn-primary"
+                                }
+                            }).then(function (result) {
+                                if (result.isConfirmed) {
+                                    modal.hide();
+                                    form.submit();
+                                }
+                            });
+                        }, 2000);
+                    } else {
+                        Swal.fire({
+                            text: "Desculpe, foram detectados alguns erros. Por favor, tente novamente.",
+                            icon: "error",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok, entendi!",
+                            customClass: {
+                                confirmButton: "btn btn-primary"
                             }
-						}
-					},
-					'card_expiry_month': {
-						validators: {
-							notEmpty: {
-								message: 'Month is required'
-							}
-						}
-					},
-					'card_expiry_year': {
-						validators: {
-							notEmpty: {
-								message: 'Year is required'
-							}
-						}
-					},
-					'card_cvv': {
-						validators: {
-							notEmpty: {
-								message: 'CVV is required'
-							},
-							digits: {
-								message: 'CVV must contain only digits'
-							},
-							stringLength: {
-								min: 3,
-								max: 4,
-								message: 'CVV must contain 3 to 4 digits only'
-							}
-						}
-					}
-				},
+                        });
+                    }
+                });
+            }
+        });
 
-				plugins: {
-					trigger: new FormValidation.plugins.Trigger(),
-					// Bootstrap Framework Integration
-					bootstrap: new FormValidation.plugins.Bootstrap5({
-						rowSelector: '.fv-row',
-                        eleInvalidClass: '',
-                        eleValidClass: ''
-					})
-				}
-			}
-		));
-	}
+        cancelButton.addEventListener('click', function (e) {
+            e.preventDefault();
 
-	return {
-		// Public Functions
-		init: function () {
-			// Elements
-			modalEl = document.querySelector('#kt_modal_create_app');
+            Swal.fire({
+                text: "Tem certeza que deseja cancelar?",
+                icon: "warning",
+                showCancelButton: true,
+                buttonsStyling: false,
+                confirmButtonText: "Sim, cancelar!",
+                cancelButtonText: "Não, voltar",
+                customClass: {
+                    confirmButton: "btn btn-primary",
+                    cancelButton: "btn btn-active-light"
+                }
+            }).then(function (result) {
+                if (result.value) {
+                    form.reset();
+                    modal.hide();
+                } else if (result.dismiss === 'cancel') {
+                    Swal.fire({
+                        text: "O formulário não foi cancelado!",
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok, entendi!",
+                        customClass: {
+                            confirmButton: "btn btn-primary"
+                        }
+                    });
+                }
+            });
+        });
+    }
 
-			if (!modalEl) {
-				return;
-			}
+    return {
+        init: function () {
+            modalEl = document.querySelector('#kt_modal_emitir_ptam');
+            if (!modalEl) {
+                return;
+            }
 
-			modal = new bootstrap.Modal(modalEl);
+            modal = new bootstrap.Modal(modalEl);
+            form = document.querySelector('#kt_modal_emitir_ptam_confirm_form');
+            submitButton = document.getElementById('kt_modal_emitir_ptam_submit');
+            cancelButton = document.getElementById('kt_modal_emitir_ptam_cancel');
 
-			stepper = document.querySelector('#kt_modal_create_app_stepper');
-			form = document.querySelector('#kt_modal_create_app_form');
-			formSubmitButton = stepper.querySelector('[data-kt-stepper-action="submit"]');
-			formContinueButton = stepper.querySelector('[data-kt-stepper-action="next"]');
-
-			initStepper();
-			initForm();
-			initValidation();
-		}
-	};
+            initForm();
+            handleForm();
+        }
+    };
 }();
 
 // On document ready
-KTUtil.onDOMContentLoaded(function() {
-    KTCreateApp.init();
+KTUtil.onDOMContentLoaded(function () {
+    KTModalEmitirPtam.init();
 });

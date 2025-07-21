@@ -221,7 +221,7 @@
                                             id="kt_drawer_chat_toggle">Send Message</a>
                                         <!--begin::Action-->
                                         <a href="#" class="btn btn-sm btn-light me-3" data-bs-toggle="modal"
-                                            data-bs-target="#kt_modal_create_app">Create App</a>
+                                            data-bs-target="#kt_modal_emitir_ptam">Create App</a>
                                         <!--end::Action-->
                                     </div>
                                     <!--end::Actions-->
@@ -249,7 +249,7 @@
                             <!--begin::Nav item-->
                             <li class="nav-item my-1">
                                 <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-                                    data-bs-toggle="tab" href="#kt_customer_view_overview_statements">Dados Escritura
+                                    data-bs-toggle="tab" href="#kt_customer_view_overview_statements">Gerar Ptam
                                 </a>
                             </li>
                             <!--end::Nav item-->
@@ -1556,831 +1556,86 @@
                                 </div>
                             </div>
                             <!--end::Modal - Upload File-->
-
-                            <!--begin::Modal - New Product-->
-                            <div class="modal fade" id="kt_modal_move_to_folder" tabindex="-1"
-                                aria-hidden="true">
-                                <!--begin::Modal dialog-->
-                                <div class="modal-dialog modal-dialog-centered mw-650px">
-                                    <!--begin::Modal content-->
-                                    <div class="modal-content">
-                                        <!--begin::Form-->
-                                        <form class="form" action="#" id="kt_modal_move_to_folder_form">
-                                            <!--begin::Modal header-->
-                                            <div class="modal-header">
-                                                <!--begin::Modal title-->
-                                                <h2 class="fw-bold">Move to folder</h2>
-                                                <!--end::Modal title-->
-                                                <!--begin::Close-->
-                                                <div class="btn btn-icon btn-sm btn-active-icon-primary"
-                                                    data-bs-dismiss="modal">
-                                                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-                                                    <span class="svg-icon svg-icon-1">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <rect opacity="0.5" x="6" y="17.3137" width="16"
-                                                                height="2" rx="1"
-                                                                transform="rotate(-45 6 17.3137)"
-                                                                fill="currentColor" />
-                                                            <rect x="7.41422" y="6" width="16" height="2"
-                                                                rx="1" transform="rotate(45 7.41422 6)"
-                                                                fill="currentColor" />
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                </div>
-                                                <!--end::Close-->
-                                            </div>
-                                            <!--end::Modal header-->
-                                            <!--begin::Modal body-->
-                                            <div class="modal-body pt-10 pb-15 px-lg-17">
-                                                <!--begin::Input group-->
-                                                <div class="form-group fv-row">
-                                                    <!--begin::Item-->
-                                                    <div class="d-flex">
-                                                        <!--begin::Checkbox-->
-                                                        <div class="form-check form-check-custom form-check-solid">
-                                                            <!--begin::Input-->
-                                                            <input class="form-check-input me-3"
-                                                                name="move_to_folder" type="radio"
-                                                                value="0" id="kt_modal_move_to_folder_0" />
-                                                            <!--end::Input-->
-                                                            <!--begin::Label-->
-                                                            <label class="form-check-label"
-                                                                for="kt_modal_move_to_folder_0">
-                                                                <div class="fw-bold">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/files/fil012.svg-->
-                                                                    <span
-                                                                        class="svg-icon svg-icon-2 svg-icon-primary me-2">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M9.2 3H3C2.4 3 2 3.4 2 4V19C2 19.6 2.4 20 3 20H21C21.6 20 22 19.6 22 19V7C22 6.4 21.6 6 21 6H12L10.4 3.60001C10.2 3.20001 9.7 3 9.2 3Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->account
-                                                                </div>
-                                                            </label>
-                                                            <!--end::Label-->
-                                                        </div>
-                                                        <!--end::Checkbox-->
-                                                    </div>
-                                                    <!--end::Item-->
-                                                    <div class='separator separator-dashed my-5'></div>
-                                                    <!--begin::Item-->
-                                                    <div class="d-flex">
-                                                        <!--begin::Checkbox-->
-                                                        <div class="form-check form-check-custom form-check-solid">
-                                                            <!--begin::Input-->
-                                                            <input class="form-check-input me-3"
-                                                                name="move_to_folder" type="radio"
-                                                                value="1" id="kt_modal_move_to_folder_1" />
-                                                            <!--end::Input-->
-                                                            <!--begin::Label-->
-                                                            <label class="form-check-label"
-                                                                for="kt_modal_move_to_folder_1">
-                                                                <div class="fw-bold">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/files/fil012.svg-->
-                                                                    <span
-                                                                        class="svg-icon svg-icon-2 svg-icon-primary me-2">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M9.2 3H3C2.4 3 2 3.4 2 4V19C2 19.6 2.4 20 3 20H21C21.6 20 22 19.6 22 19V7C22 6.4 21.6 6 21 6H12L10.4 3.60001C10.2 3.20001 9.7 3 9.2 3Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->apps
-                                                                </div>
-                                                            </label>
-                                                            <!--end::Label-->
-                                                        </div>
-                                                        <!--end::Checkbox-->
-                                                    </div>
-                                                    <!--end::Item-->
-                                                    <div class='separator separator-dashed my-5'></div>
-                                                    <!--begin::Item-->
-                                                    <div class="d-flex">
-                                                        <!--begin::Checkbox-->
-                                                        <div class="form-check form-check-custom form-check-solid">
-                                                            <!--begin::Input-->
-                                                            <input class="form-check-input me-3"
-                                                                name="move_to_folder" type="radio"
-                                                                value="2" id="kt_modal_move_to_folder_2" />
-                                                            <!--end::Input-->
-                                                            <!--begin::Label-->
-                                                            <label class="form-check-label"
-                                                                for="kt_modal_move_to_folder_2">
-                                                                <div class="fw-bold">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/files/fil012.svg-->
-                                                                    <span
-                                                                        class="svg-icon svg-icon-2 svg-icon-primary me-2">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M9.2 3H3C2.4 3 2 3.4 2 4V19C2 19.6 2.4 20 3 20H21C21.6 20 22 19.6 22 19V7C22 6.4 21.6 6 21 6H12L10.4 3.60001C10.2 3.20001 9.7 3 9.2 3Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->widgets
-                                                                </div>
-                                                            </label>
-                                                            <!--end::Label-->
-                                                        </div>
-                                                        <!--end::Checkbox-->
-                                                    </div>
-                                                    <!--end::Item-->
-                                                    <div class='separator separator-dashed my-5'></div>
-                                                    <!--begin::Item-->
-                                                    <div class="d-flex">
-                                                        <!--begin::Checkbox-->
-                                                        <div class="form-check form-check-custom form-check-solid">
-                                                            <!--begin::Input-->
-                                                            <input class="form-check-input me-3"
-                                                                name="move_to_folder" type="radio"
-                                                                value="3" id="kt_modal_move_to_folder_3" />
-                                                            <!--end::Input-->
-                                                            <!--begin::Label-->
-                                                            <label class="form-check-label"
-                                                                for="kt_modal_move_to_folder_3">
-                                                                <div class="fw-bold">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/files/fil012.svg-->
-                                                                    <span
-                                                                        class="svg-icon svg-icon-2 svg-icon-primary me-2">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M9.2 3H3C2.4 3 2 3.4 2 4V19C2 19.6 2.4 20 3 20H21C21.6 20 22 19.6 22 19V7C22 6.4 21.6 6 21 6H12L10.4 3.60001C10.2 3.20001 9.7 3 9.2 3Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->assets
-                                                                </div>
-                                                            </label>
-                                                            <!--end::Label-->
-                                                        </div>
-                                                        <!--end::Checkbox-->
-                                                    </div>
-                                                    <!--end::Item-->
-                                                    <div class='separator separator-dashed my-5'></div>
-                                                    <!--begin::Item-->
-                                                    <div class="d-flex">
-                                                        <!--begin::Checkbox-->
-                                                        <div class="form-check form-check-custom form-check-solid">
-                                                            <!--begin::Input-->
-                                                            <input class="form-check-input me-3"
-                                                                name="move_to_folder" type="radio"
-                                                                value="4" id="kt_modal_move_to_folder_4" />
-                                                            <!--end::Input-->
-                                                            <!--begin::Label-->
-                                                            <label class="form-check-label"
-                                                                for="kt_modal_move_to_folder_4">
-                                                                <div class="fw-bold">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/files/fil012.svg-->
-                                                                    <span
-                                                                        class="svg-icon svg-icon-2 svg-icon-primary me-2">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M9.2 3H3C2.4 3 2 3.4 2 4V19C2 19.6 2.4 20 3 20H21C21.6 20 22 19.6 22 19V7C22 6.4 21.6 6 21 6H12L10.4 3.60001C10.2 3.20001 9.7 3 9.2 3Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->documentation
-                                                                </div>
-                                                            </label>
-                                                            <!--end::Label-->
-                                                        </div>
-                                                        <!--end::Checkbox-->
-                                                    </div>
-                                                    <!--end::Item-->
-                                                    <div class='separator separator-dashed my-5'></div>
-                                                    <!--begin::Item-->
-                                                    <div class="d-flex">
-                                                        <!--begin::Checkbox-->
-                                                        <div class="form-check form-check-custom form-check-solid">
-                                                            <!--begin::Input-->
-                                                            <input class="form-check-input me-3"
-                                                                name="move_to_folder" type="radio"
-                                                                value="5" id="kt_modal_move_to_folder_5" />
-                                                            <!--end::Input-->
-                                                            <!--begin::Label-->
-                                                            <label class="form-check-label"
-                                                                for="kt_modal_move_to_folder_5">
-                                                                <div class="fw-bold">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/files/fil012.svg-->
-                                                                    <span
-                                                                        class="svg-icon svg-icon-2 svg-icon-primary me-2">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M9.2 3H3C2.4 3 2 3.4 2 4V19C2 19.6 2.4 20 3 20H21C21.6 20 22 19.6 22 19V7C22 6.4 21.6 6 21 6H12L10.4 3.60001C10.2 3.20001 9.7 3 9.2 3Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->layouts
-                                                                </div>
-                                                            </label>
-                                                            <!--end::Label-->
-                                                        </div>
-                                                        <!--end::Checkbox-->
-                                                    </div>
-                                                    <!--end::Item-->
-                                                    <div class='separator separator-dashed my-5'></div>
-                                                    <!--begin::Item-->
-                                                    <div class="d-flex">
-                                                        <!--begin::Checkbox-->
-                                                        <div class="form-check form-check-custom form-check-solid">
-                                                            <!--begin::Input-->
-                                                            <input class="form-check-input me-3"
-                                                                name="move_to_folder" type="radio"
-                                                                value="6" id="kt_modal_move_to_folder_6" />
-                                                            <!--end::Input-->
-                                                            <!--begin::Label-->
-                                                            <label class="form-check-label"
-                                                                for="kt_modal_move_to_folder_6">
-                                                                <div class="fw-bold">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/files/fil012.svg-->
-                                                                    <span
-                                                                        class="svg-icon svg-icon-2 svg-icon-primary me-2">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M9.2 3H3C2.4 3 2 3.4 2 4V19C2 19.6 2.4 20 3 20H21C21.6 20 22 19.6 22 19V7C22 6.4 21.6 6 21 6H12L10.4 3.60001C10.2 3.20001 9.7 3 9.2 3Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->modals
-                                                                </div>
-                                                            </label>
-                                                            <!--end::Label-->
-                                                        </div>
-                                                        <!--end::Checkbox-->
-                                                    </div>
-                                                    <!--end::Item-->
-                                                    <div class='separator separator-dashed my-5'></div>
-                                                    <!--begin::Item-->
-                                                    <div class="d-flex">
-                                                        <!--begin::Checkbox-->
-                                                        <div class="form-check form-check-custom form-check-solid">
-                                                            <!--begin::Input-->
-                                                            <input class="form-check-input me-3"
-                                                                name="move_to_folder" type="radio"
-                                                                value="7" id="kt_modal_move_to_folder_7" />
-                                                            <!--end::Input-->
-                                                            <!--begin::Label-->
-                                                            <label class="form-check-label"
-                                                                for="kt_modal_move_to_folder_7">
-                                                                <div class="fw-bold">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/files/fil012.svg-->
-                                                                    <span
-                                                                        class="svg-icon svg-icon-2 svg-icon-primary me-2">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M9.2 3H3C2.4 3 2 3.4 2 4V19C2 19.6 2.4 20 3 20H21C21.6 20 22 19.6 22 19V7C22 6.4 21.6 6 21 6H12L10.4 3.60001C10.2 3.20001 9.7 3 9.2 3Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->authentication
-                                                                </div>
-                                                            </label>
-                                                            <!--end::Label-->
-                                                        </div>
-                                                        <!--end::Checkbox-->
-                                                    </div>
-                                                    <!--end::Item-->
-                                                    <div class='separator separator-dashed my-5'></div>
-                                                    <!--begin::Item-->
-                                                    <div class="d-flex">
-                                                        <!--begin::Checkbox-->
-                                                        <div class="form-check form-check-custom form-check-solid">
-                                                            <!--begin::Input-->
-                                                            <input class="form-check-input me-3"
-                                                                name="move_to_folder" type="radio"
-                                                                value="8" id="kt_modal_move_to_folder_8" />
-                                                            <!--end::Input-->
-                                                            <!--begin::Label-->
-                                                            <label class="form-check-label"
-                                                                for="kt_modal_move_to_folder_8">
-                                                                <div class="fw-bold">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/files/fil012.svg-->
-                                                                    <span
-                                                                        class="svg-icon svg-icon-2 svg-icon-primary me-2">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M9.2 3H3C2.4 3 2 3.4 2 4V19C2 19.6 2.4 20 3 20H21C21.6 20 22 19.6 22 19V7C22 6.4 21.6 6 21 6H12L10.4 3.60001C10.2 3.20001 9.7 3 9.2 3Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->dashboards
-                                                                </div>
-                                                            </label>
-                                                            <!--end::Label-->
-                                                        </div>
-                                                        <!--end::Checkbox-->
-                                                    </div>
-                                                    <!--end::Item-->
-                                                    <div class='separator separator-dashed my-5'></div>
-                                                    <!--begin::Item-->
-                                                    <div class="d-flex">
-                                                        <!--begin::Checkbox-->
-                                                        <div class="form-check form-check-custom form-check-solid">
-                                                            <!--begin::Input-->
-                                                            <input class="form-check-input me-3"
-                                                                name="move_to_folder" type="radio"
-                                                                value="9" id="kt_modal_move_to_folder_9" />
-                                                            <!--end::Input-->
-                                                            <!--begin::Label-->
-                                                            <label class="form-check-label"
-                                                                for="kt_modal_move_to_folder_9">
-                                                                <div class="fw-bold">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/files/fil012.svg-->
-                                                                    <span
-                                                                        class="svg-icon svg-icon-2 svg-icon-primary me-2">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M9.2 3H3C2.4 3 2 3.4 2 4V19C2 19.6 2.4 20 3 20H21C21.6 20 22 19.6 22 19V7C22 6.4 21.6 6 21 6H12L10.4 3.60001C10.2 3.20001 9.7 3 9.2 3Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->pages
-                                                                </div>
-                                                            </label>
-                                                            <!--end::Label-->
-                                                        </div>
-                                                        <!--end::Checkbox-->
-                                                    </div>
-                                                    <!--end::Item-->
-                                                </div>
-                                                <!--end::Input group-->
-                                                <!--begin::Action buttons-->
-                                                <div class="d-flex flex-center mt-12">
-                                                    <!--begin::Button-->
-                                                    <button type="button" class="btn btn-primary"
-                                                        id="kt_modal_move_to_folder_submit">
-                                                        <span class="indicator-label">Save</span>
-                                                        <span class="indicator-progress">Please wait...
-                                                            <span
-                                                                class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                                                    </button>
-                                                    <!--end::Button-->
-                                                </div>
-                                                <!--begin::Action buttons-->
-                                            </div>
-                                            <!--end::Modal body-->
-                                        </form>
-                                        <!--end::Form-->
-                                    </div>
-                                </div>
-                            </div>
-                            <!--end::Modal - Move file-->
-                            <!--end::Modals-->
                         </div>
                         <!--end:::Tab pane-->
-                        <!--begin:::Tab pane-->
-                        <div class="tab-pane fade" id="kt_customer_view_overview_statements" role="tabpanel">
-                            <!--begin::Earnings-->
-                            <div class="card mb-6 mb-xl-9">
-                                <!--begin::Header-->
-                                <div class="card-header border-0">
-                                    <div class="card-title">
-                                        <h2>Dados Escritura</h2>
-                                    </div>
-                                </div>
-                                <!--end::Header-->
-                                <!--begin::Body-->
-                                <div class="card-body py-0">
-                                    <div class="fs-5 fw-semibold text-gray-500 mb-4">Last 30 day earnings calculated.
-                                        Apart from arranging the order of topics.</div>
-                                    <!--begin::Left Section-->
-                                    <div class="d-flex flex-wrap flex-stack mb-5">
-                                        <!--begin::Row-->
-                                        <div class="d-flex flex-wrap">
-                                            <!--begin::Col-->
-                                            <div
-                                                class="border border-dashed border-gray-300 w-150px rounded my-3 p-4 me-6">
-                                                <span class="fs-1 fw-bold text-gray-800 lh-1">
-                                                    <span data-kt-countup="true" data-kt-countup-value="6,840"
-                                                        data-kt-countup-prefix="$">0</span>
-                                                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr066.svg-->
-                                                    <span class="svg-icon svg-icon-1 svg-icon-success">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <rect opacity="0.5" x="13" y="6" width="13"
-                                                                height="2" rx="1"
-                                                                transform="rotate(90 13 6)" fill="currentColor" />
-                                                            <path
-                                                                d="M12.5657 8.56569L16.75 12.75C17.1642 13.1642 17.8358 13.1642 18.25 12.75C18.6642 12.3358 18.6642 11.6642 18.25 11.25L12.7071 5.70711C12.3166 5.31658 11.6834 5.31658 11.2929 5.70711L5.75 11.25C5.33579 11.6642 5.33579 12.3358 5.75 12.75C6.16421 13.1642 6.83579 13.1642 7.25 12.75L11.4343 8.56569C11.7467 8.25327 12.2533 8.25327 12.5657 8.56569Z"
-                                                                fill="currentColor" />
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                </span>
-                                                <span class="fs-6 fw-semibold text-muted d-block lh-1 pt-2">Net
-                                                    Earnings</span>
-                                            </div>
-                                            <!--end::Col-->
-                                            <!--begin::Col-->
-                                            <div
-                                                class="border border-dashed border-gray-300 w-125px rounded my-3 p-4 me-6">
-                                                <span class="fs-1 fw-bold text-gray-800 lh-1">
-                                                    <span class="" data-kt-countup="true"
-                                                        data-kt-countup-value="16">0</span>%
-                                                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr065.svg-->
-                                                    <span class="svg-icon svg-icon-1 svg-icon-danger">
-                                                        <svg width="24" height="24" viewBox="0 0 24 24"
-                                                            fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                            <rect opacity="0.5" x="11" y="18" width="13"
-                                                                height="2" rx="1"
-                                                                transform="rotate(-90 11 18)" fill="currentColor" />
-                                                            <path
-                                                                d="M11.4343 15.4343L7.25 11.25C6.83579 10.8358 6.16421 10.8358 5.75 11.25C5.33579 11.6642 5.33579 12.3358 5.75 12.75L11.2929 18.2929C11.6834 18.6834 12.3166 18.6834 12.7071 18.2929L18.25 12.75C18.6642 12.3358 18.6642 11.6642 18.25 11.25C17.8358 10.8358 17.1642 10.8358 16.75 11.25L12.5657 15.4343C12.2533 15.7467 11.7467 15.7467 11.4343 15.4343Z"
-                                                                fill="currentColor" />
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon--></span>
-                                                <span
-                                                    class="fs-6 fw-semibold text-muted d-block lh-1 pt-2">Change</span>
-                                            </div>
-                                            <!--end::Col-->
-                                            <!--begin::Col-->
-                                            <div
-                                                class="border border-dashed border-gray-300 w-150px rounded my-3 p-4 me-6">
-                                                <span class="fs-1 fw-bold text-gray-800 lh-1">
-                                                    <span data-kt-countup="true" data-kt-countup-value="1,240"
-                                                        data-kt-countup-prefix="$">0</span>
-                                                    <span class="text-primary">--</span>
-                                                </span>
-                                                <span
-                                                    class="fs-6 fw-semibold text-muted d-block lh-1 pt-2">Fees</span>
-                                            </div>
-                                            <!--end::Col-->
-                                        </div>
-                                        <!--end::Row-->
-                                        <a href="#"
-                                            class="btn btn-sm btn-light-primary flex-shrink-0">Withdraw
-                                            Earnings</a>
-                                    </div>
-                                    <!--end::Left Section-->
-                                </div>
-                                <!--end::Body-->
-                            </div>
-                            <!--end::Earnings-->
-                            <!--begin::Statements-->
-                            <div class="card mb-6 mb-xl-9">
-                                <!--begin::Header-->
-                                <div class="card-header">
-                                    <!--begin::Title-->
-                                    <div class="card-title">
-                                        <h2>Statement</h2>
-                                    </div>
-                                    <!--end::Title-->
-                                    <!--begin::Toolbar-->
-                                    <div class="card-toolbar">
-                                        <!--begin::Tab nav-->
-                                        <ul class="nav nav-stretch fs-5 fw-semibold nav-line-tabs nav-line-tabs-2x border-transparent"
-                                            role="tablist">
-                                            <li class="nav-item" role="presentation">
-                                                <a class="nav-link text-active-primary active" data-bs-toggle="tab"
-                                                    role="tab" href="#kt_customer_view_statement_1">This
-                                                    Year</a>
-                                            </li>
-                                            <li class="nav-item" role="presentation">
-                                                <a class="nav-link text-active-primary ms-3" data-bs-toggle="tab"
-                                                    role="tab" href="#kt_customer_view_statement_2">2020</a>
-                                            </li>
-                                            <li class="nav-item" role="presentation">
-                                                <a class="nav-link text-active-primary ms-3" data-bs-toggle="tab"
-                                                    role="tab" href="#kt_customer_view_statement_3">2019</a>
-                                            </li>
-                                            <li class="nav-item" role="presentation">
-                                                <a class="nav-link text-active-primary ms-3" data-bs-toggle="tab"
-                                                    role="tab" href="#kt_customer_view_statement_4">2018</a>
-                                            </li>
-                                        </ul>
-                                        <!--end::Tab nav-->
-                                    </div>
-                                    <!--end::Toolbar-->
-                                </div>
-                                <!--end::Header-->
-                                <!--begin::Card body-->
-                                <div class="card-body pb-5">
-                                    <!--begin::Tab Content-->
-                                    <div id="kt_customer_view_statement_tab_content" class="tab-content">
-                                        <!--begin::Tab panel-->
-                                        <div id="kt_customer_view_statement_1"
-                                            class="py-0 tab-pane fade show active" role="tabpanel">
-                                            <!--begin::Table-->
-                                            <table id="kt_customer_view_statement_table_1"
-                                                class="table align-middle table-row-dashed fs-6 text-gray-600 fw-semibold gy-4">
-                                                <!--begin::Table head-->
-                                                <thead class="border-bottom border-gray-200">
-                                                    <!--begin::Table row-->
-                                                    <tr
-                                                        class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
-                                                        <th class="w-125px">Date</th>
-                                                        <th class="w-100px">Order ID</th>
-                                                        <th class="w-300px">Details</th>
-                                                        <th class="w-100px">Amount</th>
-                                                        <th class="w-100px text-end pe-7">Invoice</th>
-                                                    </tr>
-                                                    <!--end::Table row-->
-                                                </thead>
-                                                <!--end::Table head-->
-                                                <!--begin::Table body-->
-                                                <tbody>
-                                                    <tr>
-                                                        <td>Nov 01, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">102445788</a>
-                                                        </td>
-                                                        <td>Darknight transparency 36 Icons Pack</td>
-                                                        <td class="text-success">$38.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Oct 24, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">423445721</a>
-                                                        </td>
-                                                        <td>Seller Fee</td>
-                                                        <td class="text-danger">$-2.60</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Oct 08, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">312445984</a>
-                                                        </td>
-                                                        <td>Cartoon Mobile Emoji Phone Pack</td>
-                                                        <td class="text-success">$76.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Sep 15, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">312445984</a>
-                                                        </td>
-                                                        <td>Iphone 12 Pro Mockup Mega Bundle</td>
-                                                        <td class="text-success">$5.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>May 30, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">523445943</a>
-                                                        </td>
-                                                        <td>Seller Fee</td>
-                                                        <td class="text-danger">$-1.30</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Apr 22, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">231445943</a>
-                                                        </td>
-                                                        <td>Parcel Shipping / Delivery Service App</td>
-                                                        <td class="text-success">$204.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Feb 09, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">426445943</a>
-                                                        </td>
-                                                        <td>Visual Design Illustration</td>
-                                                        <td class="text-success">$31.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Nov 01, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">984445943</a>
-                                                        </td>
-                                                        <td>Abstract Vusial Pack</td>
-                                                        <td class="text-success">$52.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Jan 04, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">324442313</a>
-                                                        </td>
-                                                        <td>Seller Fee</td>
-                                                        <td class="text-danger">$-0.80</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Nov 01, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">102445788</a>
-                                                        </td>
-                                                        <td>Darknight transparency 36 Icons Pack</td>
-                                                        <td class="text-success">$38.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Oct 24, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">423445721</a>
-                                                        </td>
-                                                        <td>Seller Fee</td>
-                                                        <td class="text-danger">$-2.60</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Oct 08, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">312445984</a>
-                                                        </td>
-                                                        <td>Cartoon Mobile Emoji Phone Pack</td>
-                                                        <td class="text-success">$76.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Sep 15, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">312445984</a>
-                                                        </td>
-                                                        <td>Iphone 12 Pro Mockup Mega Bundle</td>
-                                                        <td class="text-success">$5.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>May 30, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">523445943</a>
-                                                        </td>
-                                                        <td>Seller Fee</td>
-                                                        <td class="text-danger">$-1.30</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Apr 22, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">231445943</a>
-                                                        </td>
-                                                        <td>Parcel Shipping / Delivery Service App</td>
-                                                        <td class="text-success">$204.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Feb 09, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">426445943</a>
-                                                        </td>
-                                                        <td>Visual Design Illustration</td>
-                                                        <td class="text-success">$31.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Nov 01, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">984445943</a>
-                                                        </td>
-                                                        <td>Abstract Vusial Pack</td>
-                                                        <td class="text-success">$52.00</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                    <tr>
-                                                        <td>Jan 04, 2021</td>
-                                                        <td>
-                                                            <a href="#"
-                                                                class="text-gray-600 text-hover-primary">324442313</a>
-                                                        </td>
-                                                        <td>Seller Fee</td>
-                                                        <td class="text-danger">$-0.80</td>
-                                                        <td class="text-end">
-                                                            <button
-                                                                class="btn btn-sm btn-light btn-active-light-primary">Download</button>
-                                                        </td>
-                                                    </tr>
-                                                </tbody>
-                                                <!--end::Table body-->
-                                            </table>
-                                            <!--end::Table-->
-                                        </div>
-                                        <!--end::Tab panel-->
-                                    </div>
-                                    <!--end::Tab Content-->
-                                </div>
-                                <!--end::Card body-->
-                            </div>
-                            <!--end::Statements-->
+<!--begin::Tab pane - Gerar Ptam-->
+<div class="tab-pane fade" id="kt_customer_view_overview_statements" role="tabpanel">
+    <div class="card mb-6 mb-xl-9">
+        <div class="card-header border-0">
+            <div class="card-title">
+                <h2 class="fw-bold m-0">Gerar PTAM</h2>
+            </div>
+        </div>
+        <div class="card-body py-0">
+            <div class="fs-5 fw-semibold text-gray-500 mb-7">Gere o Parecer Técnico de Avaliação de Matrícula (PTAM) com base nos dados do imóvel.</div>
+            @if ($escrituraAtual)
+                <form id="kt_modal_emitir_ptam_form" action="{{ route('patrimonio.ptam.generate') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="patrimonio_id" value="{{ $patrimonio->id }}">
+                    <input type="hidden" name="escritura_id" value="{{ $escrituraAtual->id }}">
+                    <div class="row mb-7 fv-row">
+                        <label class="col-lg-4 fw-semibold text-muted">Tipo de PTAM
+                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip" title="Selecione o tipo de PTAM para cálculo"></i>
+                        </label>
+                        <div class="col-lg-8">
+                            <select name="ptam_type" id="ptam_type" class="form-select form-select-solid" data-control="select2" data-placeholder="Selecione o tipo de PTAM" required>
+                                <option value="">Selecione o tipo de PTAM</option>
+                                <option value="foro">Foro (0,23%)</option>
+                                <option value="laudemio">Laudêmio (2,5%)</option>
+                                <option value="dominio_direto">Domínio Direto (8-12%)</option>
+                            </select>
                         </div>
-                        <!--end:::Tab pane-->
+                    </div>
+                    <div class="row mb-7 fv-row" id="dominio_direto_percentage" style="display: none;">
+                        <label class="col-lg-4 fw-semibold text-muted">Percentual (Domínio Direto)
+                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip" title="Entre com um valor entre 8% e 12%"></i>
+                        </label>
+                        <div class="col-lg-8">
+                            <input type="number" name="custom_percentage" id="custom_percentage" class="form-control form-control-solid"
+                                   min="8" max="12" step="0.01" placeholder="Entre 8 e 12%">
+                        </div>
+                    </div>
+                    <div class="row mb-7">
+                        <label class="col-lg-4 fw-semibold text-muted">Valor do Imóvel</label>
+                        <div class="col-lg-8">
+                            <span class="fw-bold fs-6 text-gray-800">
+                                {{ $escrituraAtual->valor ? 'R$ ' . number_format($escrituraAtual->valor, 2, ',', '.') : 'Sem valor' }}
+                            </span>
+                            <input type="hidden" id="valor_imovel" value="{{ $escrituraAtual->valor ?? 0 }}">
+                        </div>
+                    </div>
+                    <div class="row mb-7">
+                        <label class="col-lg-4 fw-semibold text-muted">Valor Calculado</label>
+                        <div class="col-lg-8">
+                            <span id="valor_calculado" class="fw-bold fs-6 text-gray-800">R$ 0,00</span>
+                            <input type="hidden" name="valor_calculado" id="valor_calculado_input">
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_emitir_ptam">
+                            <span class="indicator-label">Gerar PTAM</span>
+                        </button>
+                    </div>
+                </form>
+            @else
+                <div class="alert alert-warning d-flex align-items-center p-5">
+                    <span class="svg-icon svg-icon-2hx svg-icon-warning me-4">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect opacity="0.3" x="2" y="2" width="20" height="20" rx="10" fill="currentColor" />
+                            <rect x="11" y="14" width="7" height="2" rx="1" transform="rotate(-90 11 14)" fill="currentColor" />
+                            <rect x="11" y="17" width="2" height="2" rx="1" transform="rotate(-90 11 17)" fill="currentColor" />
+                        </svg>
+                    </span>
+                    <div class="d-flex flex-column">
+                        <h4 class="mb-1 text-warning">Atenção!</h4>
+                        <span>Nenhuma escritura recente encontrada. Cadastre uma escritura para gerar o PTAM.</span>
+                    </div>
+                </div>
+            @endif
+        </div>
+    </div>
+</div>
+<!--end::Tab pane-->
                     </div>
                     <!--end:::Tab content-->
                 </div>

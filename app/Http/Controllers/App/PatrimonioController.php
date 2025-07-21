@@ -9,12 +9,13 @@ use App\Models\NamePatrimonio;
 use App\Models\Patrimonio;
 use App\Models\PatrimonioAnexo;
 use App\Models\User;
-use Auth;
 use Carbon\Carbon;
 use DB;
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Laracasts\Flash\Flash;
+use Spatie\Browsershot\Browsershot;
 
 
 class PatrimonioController extends Controller
@@ -114,7 +115,7 @@ class PatrimonioController extends Controller
                 $patrimonio->registro = $validatedData['registro'] ?? null;
 
                 // Adicione o patrimonios_id (vindo do select) se o nome do campo for 'patrimonio'
-                
+
                 $patrimonio->save(); // Salva para obter o ID
 
                 // Gerando e salvando o código RID
@@ -185,7 +186,81 @@ class PatrimonioController extends Controller
         }
     }
 
+    /**
+     * Gera e exibe um relatório em PDF dos patrimônios.
+     */
+    public function imprimirPDF(Request $request)
+    {
+        // INÍCIO - LÓGICA DE FILTRO (IDÊNTICA AO MÉTODO ACIMA)
+        $query = Patrimonio::query();
+        if ($request->filled('filter_field') && $request->filled('filter_value')) {
+            $field = $request->input('filter_field');
+            $condition = $request->input('filter_condition');
+            $value = $request->input('filter_value');
 
+            $allowedFields = ['codigo_rid', 'descricao', 'patrimonio', 'localidade', 'bairro'];
+            if (in_array($field, $allowedFields)) {
+                if ($condition == 'contains') {
+                    $query->where($field, 'LIKE', '%' . $value . '%');
+                } elseif ($condition == 'equals') {
+                    $query->where($field, $value);
+                }
+            }
+        }
+        // FIM - LÓGICA DE FILTRO
+
+        // Para o PDF, pegamos TODOS os resultados do filtro, sem paginar
+        $patrimonios = $query->get();
+
+        // Carrega a empresa do usuário logado E o seu endereço relacionado
+        $company = Auth::user()->companies()->with('addresses')->first();
+
+        // Converte o logo para Base64 para embutir no PDF
+        $companyLogo = $this->logoToBase64($company);
+
+        $totalRegistros = $patrimonios->count();
+
+        $company = Auth::user()->companies()->first();
+
+        $html = view('app.patrimonios.pdf', [
+            'patrimonios'    => $patrimonios,
+            'totalRegistros' => $totalRegistros,
+            'company'        => $company,
+            'companyLogo'    => $companyLogo, // <-- Nova variável
+
+        ])->render();
+
+        $pdf = Browsershot::html($html)
+            ->format('A4')
+            ->showBackground()
+            ->margins(10, 10, 10, 10)
+            ->pdf();
+
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="relatorio-de-patrimonios.pdf"',
+        ]);
+    }
+
+    /**
+     * Converte o caminho de uma imagem em uma string Base64.
+     * (Função auxiliar que você já tinha no outro controller)
+     */
+    protected function logoToBase64($company): ?string
+    {
+        if (!$company || !$company->avatar) {
+            // Caminho para uma imagem padrão caso a empresa não tenha logo
+            $path = public_path('assets/media/png/perfil.svg');
+        } else {
+            $path = storage_path('app/public/' . $company->avatar);
+        }
+
+        if (!file_exists($path)) {
+            return null; // Retorna nulo se o arquivo não for encontrado
+        }
+
+        return 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($path));
+    }
 
     /**
      * Função para gerar o código RID.
@@ -247,23 +322,42 @@ class PatrimonioController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
-    {
-        try {
-            // Busca o patrimônio pelo ID
-            $patrimonio = Patrimonio::findOrFail($id);
-            $nameForos = NamePatrimonio::all();
-            $escrituras = Escritura::where('patrimonio_id', $id)->get();
-            $anexos = PatrimonioAnexo::where('patrimonio_id', $id)->get();
+    // Em PatrimonioController.php
 
+public function show(string $id)
+{
+    try {
+        // Eager load escrituras and anexos with uploader to avoid N+1 queries
+        $patrimonio = Patrimonio::with(['escrituras', 'anexos.uploader'])->findOrFail($id);
 
-            // Retorna a view padrão 'patrimonios.show' com os detalhes do patrimônio
-            return view('app.patrimonios.show', compact('patrimonio', 'nameForos', 'escrituras', 'anexos'));
-        } catch (Exception $e) {
-            // Retorna uma view de erro caso o patrimônio não seja encontrado
-            return redirect()->route('app.patrimonios.index')->with('error', 'Patrimônio não encontrado.');
+        // Fetch the most recent Escritura for the current deed value
+        $escrituraAtual = $patrimonio->escrituras()->latest('created_at')->first();
+
+        // Fetch the history of all Escrituras (already loaded via eager loading)
+        $escrituras = $patrimonio->escrituras;
+
+        // Fetch anexos (already loaded via eager loading)
+        $anexos = $patrimonio->anexos;
+
+        // Fetch NamePatrimonio only if needed (e.g., for a dropdown)
+        $nameForos = NamePatrimonio::select('id', 'name')->get(); // Adjust fields as needed
+
+        // Log warning if escrituraAtual is missing or valor is null
+        if (!$escrituraAtual) {
+            \Log::warning("Nenhuma escritura encontrada para patrimônio ID {$id}.");
+        } elseif (is_null($escrituraAtual->valor)) {
+            \Log::warning("Escritura atual para patrimônio ID {$id} não possui valor definido.");
         }
+
+        return view('app.patrimonios.show', compact('patrimonio', 'nameForos', 'escrituras', 'anexos', 'escrituraAtual'));
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        \Log::error("Patrimônio com ID {$id} não encontrado.");
+        return redirect()->route('patrimonios.index')->with('error', "Patrimônio com ID {$id} não encontrado.");
+    } catch (\Exception $e) {
+        \Log::error("Erro ao exibir patrimônio ID {$id}: {$e->getMessage()}");
+        return redirect()->route('patrimonios.index')->with('error', 'Ocorreu um erro ao carregar o patrimônio. Tente novamente.');
     }
+}
 
 
     /**
@@ -379,21 +473,38 @@ class PatrimonioController extends Controller
     }
 
 
-    public function imoveis()
+    public function imoveis(Request $request)
     {
-        $nameForos = NamePatrimonio::all();
-        $patrimonios = Patrimonio::all();
+        // Inicia a query builder
+        $query = Patrimonio::query();
         $totalPatrimonios = Patrimonio::count(); // Conta a quantidade de registros
 
 
-        return view(
-            'app.patrimonios.imoveis',
-            [
-                'nameForos' => $nameForos,
-                'patrimonios' => $patrimonios,
-                'totalPatrimonios' => $totalPatrimonios, // Passa a contagem para a view
-            ]
-        );
+        // Aplica os filtros se eles existirem na requisição
+        if ($request->filled('filter_field') && $request->filled('filter_value')) {
+            $field = $request->input('filter_field');
+            $condition = $request->input('filter_condition');
+            $value = $request->input('filter_value');
+
+            // Valida para evitar injeção de SQL em nomes de colunas
+            $allowedFields = ['codigo_rid', 'descricao', 'patrimonio', 'localidade', 'bairro'];
+            if (in_array($field, $allowedFields)) {
+                if ($condition == 'contains') {
+                    $query->where($field, 'LIKE', '%' . $value . '%');
+                } elseif ($condition == 'equals') {
+                    $query->where($field, $value);
+                }
+            }
+        }
+
+        // Pagina os resultados em vez de carregar todos de uma vez
+        $patrimonios = $query->latest()->paginate(15);
+
+        return view('app.patrimonios.imoveis', [
+            'patrimonios' => $patrimonios,
+            'totalPatrimonios' => $totalPatrimonios, // Passa a contagem para a view
+
+        ]);
     }
 
     public function updateLocation(Request $request)
