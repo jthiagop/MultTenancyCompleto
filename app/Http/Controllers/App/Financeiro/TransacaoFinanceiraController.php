@@ -11,7 +11,7 @@ use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use App\Models\User;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Flasher;
 use Illuminate\Http\Request;

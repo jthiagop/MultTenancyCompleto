@@ -4,7 +4,7 @@ namespace App\Http\Controllers\App\Anexos;
 
 use App\Http\Controllers\Controller;
 use App\Models\Anexos\ModulosAnexos;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Flasher;
 use Illuminate\Http\Request;
 use Log;

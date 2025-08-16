@@ -4,7 +4,7 @@ namespace App\Http\Controllers\App\Financeiro;
 
 use App\Http\Controllers\Controller;
 use App\Models\FormasPagamento;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class FormasPagamentoController extends Controller

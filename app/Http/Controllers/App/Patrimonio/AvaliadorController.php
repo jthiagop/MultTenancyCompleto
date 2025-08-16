@@ -4,7 +4,7 @@ namespace App\Http\Controllers\App\Patrimonio;
 
 use App\Http\Controllers\Controller;
 use App\Models\Patrimonio\Avaliador;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 
 class AvaliadorController extends Controller

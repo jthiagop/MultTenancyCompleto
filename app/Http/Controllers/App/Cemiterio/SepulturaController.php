@@ -5,7 +5,7 @@ namespace App\Http\Controllers\App\Cemiterio;
 use App\Http\Controllers\Controller;
 use App\Models\Cemiterio\Sepultura;
 use App\Models\User;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\Request;

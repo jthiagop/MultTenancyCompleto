@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
@@ -70,48 +71,50 @@ class User extends Authenticatable
     }
 
 
-        // Adicionar um acessor para `last_login_formatted`
-        public function getLastLoginFormattedAttribute()
-        {
-            return $this->last_login ? Carbon::parse($this->last_login)->diffForHumans() : 'Nunca';
-        }
+    // Adicionar um acessor para `last_login_formatted`
+    public function getLastLoginFormattedAttribute()
+    {
+        return $this->last_login ? Carbon::parse($this->last_login)->diffForHumans() : 'Nunca';
+    }
 
-        public function companies()
-        {
-            return $this->belongsToMany(Company::class, 'company_user', 'user_id', 'company_id');
-        }
+    /**
+     * As empresas às quais o usuário tem acesso.
+     */
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'company_user');
+    }
 
-        public function company()
-        {
-            return $this->belongsTo(Company::class, 'company_id');
-        }
+    public function company()
+    {
+        return $this->belongsTo(Company::class, 'company_id');
+    }
 
 
-        public function bancos()
-        {
-            return $this->hasMany(CadastroBanco::class, 'created_by');
-        }
+    public function bancos()
+    {
+        return $this->hasMany(CadastroBanco::class, 'created_by');
+    }
 
-        static public function getCompany()
-        {
-            // Recupere o usuário logado
-            $user = auth()->user();
+    static public function getCompany()
+    {
+        // Recupere o usuário logado
+        $user = Auth::user();
 
-            $subsidiaryId = DB::table('users')
+        $subsidiaryId = DB::table('users')
             ->join('company_user', 'users.id', '=', 'company_user.user_id')
             ->join('companies', 'company_user.company_id', '=', 'companies.id')
             ->where('users.id', $user->id) // Filtra pelo usuário logado
             ->select('company_user.company_id')
             ->first();
 
-            return $subsidiaryId;
+        return $subsidiaryId;
+    }
 
-        }
-
-        static public function getCompanyName()
-        {
-                    // Recupere o usuário logado
-        $user = auth()->user();
+    static public function getCompanyName()
+    {
+        // Recupere o usuário logado
+        $user = Auth::user();
 
         // Filtrar os usuários pelo usuário logado
         $company = DB::table('users')
@@ -121,6 +124,7 @@ class User extends Authenticatable
             ->select('users.*', 'company_user.company_id', 'companies.name as companies_name')
             ->get();
 
-            return $company;
-        }
+        return $company;
+    }
+
 }

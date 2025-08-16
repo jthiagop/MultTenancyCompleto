@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
+use App\Models\Company;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class SessionController extends Controller
@@ -69,50 +71,27 @@ class SessionController extends Controller
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Define a empresa ativa na sessão do usuário.
      */
-    public function create()
+    public function switchCompany(Company $company)
     {
-        //
-    }
+        // 1. Pega o usuário autenticado
+        $user = Auth::user();
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        // 2. VERIFICAÇÃO DE SEGURANÇA: Checa se o usuário realmente tem acesso a essa empresa
+        if ($user->companies()->where('id', $company->id)->exists()) {
+            
+            // 3. Se tiver acesso, armazena o ID da empresa na sessão
+            session(['active_company_id' => $company->id]);
+            session()->flash('info', "Você agora está trabalhando na empresa: {$company->name}");
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        } else {
+            // 4. Se não tiver acesso, retorna um erro ou redireciona com uma mensagem
+            session()->flash('error', 'Você não tem permissão para acessar esta empresa.');
+            abort(403, 'Acesso não autorizado a esta empresa.');
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        // 5. Redireciona para o dashboard ou para a página anterior
+        return redirect()->route('dashboard'); // Ou outra rota de sua preferência
     }
 }

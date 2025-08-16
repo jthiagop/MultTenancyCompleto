@@ -22,9 +22,7 @@ class UserController extends Controller
      */
 
 
-    public function showProfile()
-    {
-    }
+    public function showProfile() {}
 
     public function index()
     {
@@ -79,9 +77,7 @@ class UserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Exemplo de regras para o campo avatar
             'roles' => 'required|array',
-            'company_id' => 'required',
             'filiais' => 'array', // Certifique-se de que 'filiais' é um array
-            'details' => 'nullable|string|max:5000', // Detalhes do usuário, texto opcional com limite
             'status' => 'nullable|boolean', // Status como um campo booleano
             'notifications' => 'nullable|array', // Deve ser um array, opcional (email/telefone)
         ]);
@@ -105,27 +101,27 @@ class UserController extends Controller
                 'name' => $validatedData['name'],
                 'password' => bcrypt($validatedData['password']),
                 'avatar' => $validatedData['avatar'],
-                'company_id' => $validatedData['company_id'],
-                'details' => $validatedData['details'],
                 'active' => json_encode($validatedData['status'] ?? [0]),
                 'notifications' => json_encode($validatedData['notifications'] ?? []),
-                ]
+            ]
         );
         // Sincronizar permissões (roles) se estiverem presentes
         if (isset($validatedData['roles'])) {
             $user->roles()->sync($request->input('roles'));
         }
+        // --- A LÓGICA PRINCIPAL ESTÁ AQUI ---
+        // Junta a empresa principal com as filiais
+        $companiesToSync = $request->input('filiais', []);
 
-        // Relacionar o usuário à empresa na tabela pivot company_user
-        $user->companies()->attach($validatedData['company_id'], [
-            'created_at' => now(),
-            'updated_at' => now()
-        ]);
-    // Adicionar mensagem de sucesso ao Flasher
-    session()->flash('success', 'Usuário criado ou atualizado com sucesso.');
+        // Remove duplicatas e sincroniza com a tabela pivot
+        $user->companies()->sync(array_unique($companiesToSync));
 
-    // Retornar para a página anterior
-    return redirect()->back();
+
+        // Adicionar mensagem de sucesso ao Flasher
+        session()->flash('success', 'Usuário criado ou atualizado com sucesso.');
+
+        // Retornar para a página anterior
+        return redirect()->back();
     }
     /**
      * Display the specified resource.
@@ -187,24 +183,24 @@ class UserController extends Controller
     }
 
     /**
- * Processa o upload do avatar.
- *
- * @param Request $request
- * @return string Caminho do avatar salvo
- */
-private function handleAvatarUpload(Request $request)
-{
-    if ($request->hasFile('avatar')) {
-        $avatar = $request->file('avatar');
-        $avatarName = time() . '_' . $avatar->getClientOriginalName();
+     * Processa o upload do avatar.
+     *
+     * @param Request $request
+     * @return string Caminho do avatar salvo
+     */
+    private function handleAvatarUpload(Request $request)
+    {
+        if ($request->hasFile('avatar')) {
+            $avatar = $request->file('avatar');
+            $avatarName = time() . '_' . $avatar->getClientOriginalName();
 
-        if (!Storage::exists('perfis')) {
-            Storage::makeDirectory('perfis');
+            if (!Storage::exists('perfis')) {
+                Storage::makeDirectory('perfis');
+            }
+
+            return Storage::putFileAs('perfis', $avatar, $avatarName);
         }
 
-        return Storage::putFileAs('perfis', $avatar, $avatarName);
+        return 'tenant/blank.png'; // Imagem padrão se não houver upload
     }
-
-    return 'tenant/blank.png'; // Imagem padrão se não houver upload
-}
 }

@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\Financeiro\BankStatement;
 use App\Models\Financeiro\TransacaoFinanceira;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;

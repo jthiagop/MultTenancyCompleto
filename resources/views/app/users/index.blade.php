@@ -122,10 +122,9 @@
                                         <!--begin::Input group-->
                                         <div class="mb-10">
                                             <label class="form-label fs-6 fw-semibold">Two Step Verification:</label>
-                                            <select class="form-select form-select-solid fw-bold"
-                                                data-kt-select2="true" data-placeholder="Select option"
-                                                data-allow-clear="true" data-kt-user-table-filter="two-step"
-                                                data-hide-search="true">
+                                            <select class="form-select form-select-solid fw-bold" data-kt-select2="true"
+                                                data-placeholder="Select option" data-allow-clear="true"
+                                                data-kt-user-table-filter="two-step" data-hide-search="true">
                                                 <option></option>
                                                 <option value="Enabled">Enabled</option>
                                             </select>
@@ -403,9 +402,9 @@
                                                     </div>
                                                     <!--end::Input group-->
                                                     @foreach ($errors->all() as $error)
-                                                    <div class="alert alert-danger mt-2">
-                                                        {{ $error }}
-                                                    </div>
+                                                        <div class="alert alert-danger mt-2">
+                                                            {{ $error }}
+                                                        </div>
                                                     @endforeach
                                                     <!--begin::Input group-->
                                                     <div class="fv-row mb-7">
@@ -472,142 +471,81 @@
                                                     </div>
 
                                                     <div class="fv-row mb-7">
-                                                        <select class="form-select form-select-solid"
-                                                            data-control="select2" name="company_id"
-                                                            data-placeholder="Selecione um organismo">
-                                                            <option value="" disabled selected>Selecione um
-                                                                organismo</option>
+                                                        <label class="fw-semibold fs-6 mb-2" for="filiais">Outros
+                                                            Organismos com Acesso</label>
+                                                        <select id="filiais" name="filiais[]"
+                                                            class="form-select form-select-solid"
+                                                            data-control="select2"
+                                                            data-placeholder="Selecione organismos adicionais..."
+                                                            multiple="multiple"
+                                                            data-dropdown-parent="#kt_modal_add_user">
+                                                            <option></option>
                                                             @foreach ($companies as $company)
                                                                 <option value="{{ $company->id }}">
                                                                     {{ $company->name }}</option>
                                                             @endforeach
                                                         </select>
+                                                        @error('filiais')
+                                                            <div class="text-danger mt-2">{{ $message }}</div>
+                                                        @enderror
                                                     </div>
 
-                                                    <!--end::Input group-->
+                                                    <div class='separator separator-dashed my-5'></div>
 
-                                                    <!--begin::Input group-->
                                                     <div class="mb-7">
-                                                        <!--begin::Label-->
-                                                        <label class="required fw-semibold fs-6 mb-5">Permições</label>
-                                                        <!--end::Label-->
-                                                        <!--begin::Roles-->
-                                                        <!--begin::Input row-->
-                                                        <div class="d-flex fv-row">
-                                                            <!--begin::Checkbox-->
-                                                            <div class="form-check form-check-custom form-check-solid">
-                                                                <!--begin::Input-->
-                                                                <input class="form-check-input me-3" name="roles[]"
-                                                                    type="checkbox" value="1"
-                                                                    id="kt_modal_update_role_option_0" />
-                                                                <!--end::Input-->
-                                                                <!--begin::Label-->
-                                                                <label class="form-check-label"
-                                                                    for="kt_modal_update_role_option_0">
-                                                                    <div class="fw-bold text-gray-800">Global</div>
-                                                                    <div class="text-gray-600">Melhor para
-                                                                        desenvolvedores ou pessoas que usam
-                                                                        principalmente a API</div>
-                                                                </label>
-                                                                <!--end::Label-->
+                                                        <label class="required fw-semibold fs-6 mb-5">Permissões
+                                                            (Roles)</label>
+                                                        @php
+                                                            // Supondo que você passe uma variável $roles do seu controller
+                                                            // Exemplo: $roles = \Spatie\Permission\Models\Role::all();
+                                                            // Se os nomes estão fixos, você pode criar um array associativo.
+                                                            $rolesExemplo = [
+                                                                1 => [
+                                                                    'name' => 'Global',
+                                                                    'description' =>
+                                                                        'Acesso total para desenvolvedores.',
+                                                                ],
+                                                                2 => [
+                                                                    'name' => 'Administrador',
+                                                                    'description' =>
+                                                                        'Acesso total aos dados da empresa.',
+                                                                ],
+                                                                3 => [
+                                                                    'name' => 'Admin User',
+                                                                    'description' => 'Gerencia usuários e filiais.',
+                                                                ],
+                                                                4 => [
+                                                                    'name' => 'Usuário Comum',
+                                                                    'description' => 'Trata dados da organização.',
+                                                                ],
+                                                                5 => [
+                                                                    'name' => 'Sub Usuário',
+                                                                    'description' => 'Apenas visualização de dados.',
+                                                                ],
+                                                            ];
+                                                        @endphp
+
+                                                        @foreach ($rolesExemplo as $id => $role)
+                                                            <div class="d-flex fv-row mb-5">
+                                                                <div
+                                                                    class="form-check form-check-custom form-check-solid">
+                                                                    <input class="form-check-input me-3"
+                                                                        name="roles[]" type="checkbox"
+                                                                        value="{{ $id }}"
+                                                                        id="role_option_{{ $id }}" />
+                                                                    <label class="form-check-label"
+                                                                        for="role_option_{{ $id }}">
+                                                                        <div class="fw-bold text-gray-800">
+                                                                            {{ $role['name'] }}</div>
+                                                                        <div class="text-gray-600">
+                                                                            {{ $role['description'] }}</div>
+                                                                    </label>
+                                                                </div>
                                                             </div>
-                                                            <!--end::Checkbox-->
-                                                        </div>
-                                                        <!--end::Input row-->
-                                                        <div class='separator separator-dashed my-5'></div>
-                                                        <!--begin::Input row-->
-                                                        <div class="d-flex fv-row">
-                                                            <!--begin::Checkbox-->
-                                                            <div class="form-check form-check-custom form-check-solid">
-                                                                <!--begin::Input-->
-                                                                <input class="form-check-input me-3" name="roles[]"
-                                                                    type="checkbox" value="2"
-                                                                    id="kt_modal_update_role_option_1" />
-                                                                <!--end::Input-->
-                                                                <!--begin::Label-->
-                                                                <label class="form-check-label"
-                                                                    for="kt_modal_update_role_option_1">
-                                                                    <div class="fw-bold text-gray-800">Administrador
-                                                                    </div>
-                                                                    <div class="text-gray-600">Ideal para pessoas que
-                                                                        precisam de acesso total aos dados da empresa.
-                                                                    </div>
-                                                                </label>
-                                                                <!--end::Label-->
-                                                            </div>
-                                                            <!--end::Checkbox-->
-                                                        </div>
-                                                        <!--end::Input row-->
-                                                        <div class='separator separator-dashed my-5'></div>
-                                                        <!--begin::Input row-->
-                                                        <div class="d-flex fv-row">
-                                                            <!--begin::Checkbox-->
-                                                            <div class="form-check form-check-custom form-check-solid">
-                                                                <!--begin::Input-->
-                                                                <input class="form-check-input me-3" name="roles[]"
-                                                                    type="checkbox" value="3"
-                                                                    id="kt_modal_update_role_option_2" />
-                                                                <!--end::Input-->
-                                                                <!--begin::Label-->
-                                                                <label class="form-check-label"
-                                                                    for="kt_modal_update_role_option_2">
-                                                                    <div class="fw-bold text-gray-800">Admin User</div>
-                                                                    <div class="text-gray-600">Ideal para funcionários
-                                                                        que gerencia as filias </div>
-                                                                </label>
-                                                                <!--end::Label-->
-                                                            </div>
-                                                            <!--end::Checkbox-->
-                                                        </div>
-                                                        <!--end::Input row-->
-                                                        <div class='separator separator-dashed my-5'></div>
-                                                        <!--begin::Input row-->
-                                                        <div class="d-flex fv-row">
-                                                            <!--begin::Checkbox-->
-                                                            <div class="form-check form-check-custom form-check-solid">
-                                                                <!--begin::Input-->
-                                                                <input class="form-check-input me-3" name="roles[]"
-                                                                    type="checkbox" value="4"
-                                                                    id="kt_modal_update_role_option_3" />
-                                                                <!--end::Input-->
-                                                                <!--begin::Label-->
-                                                                <label class="form-check-label"
-                                                                    for="kt_modal_update_role_option_3">
-                                                                    <div class="fw-bold text-gray-800">Usuários Comuns
-                                                                    </div>
-                                                                    <div class="text-gray-600">Para usuários que tratam
-                                                                        dos dados da organização</div>
-                                                                </label>
-                                                                <!--end::Label-->
-                                                            </div>
-                                                            <!--end::Checkbox-->
-                                                        </div>
-                                                        <!--end::Input row-->
-                                                        <div class='separator separator-dashed my-5'></div>
-                                                        <!--begin::Input row-->
-                                                        <div class="d-flex fv-row">
-                                                            <!--begin::Checkbox-->
-                                                            <div class="form-check form-check-custom form-check-solid">
-                                                                <!--begin::Input-->
-                                                                <input class="form-check-input me-3" name="roles[]"
-                                                                    type="checkbox" value="5"
-                                                                    id="kt_modal_update_role_option_4" />
-                                                                <!--end::Input-->
-                                                                <!--begin::Label-->
-                                                                <label class="form-check-label"
-                                                                    for="kt_modal_update_role_option_4">
-                                                                    <div class="fw-bold text-gray-800">Sub Usuário
-                                                                    </div>
-                                                                    <div class="text-gray-600">Ideal para pessoas que
-                                                                        precisam visualizar dados de conteúdo, mas não
-                                                                        precisa fazer quaisquer atualizações</div>
-                                                                </label>
-                                                                <!--end::Label-->
-                                                            </div>
-                                                            <!--end::Checkbox-->
-                                                        </div>
-                                                        <!--end::Input row-->
-                                                        <!--end::Roles-->
+                                                        @endforeach
+                                                        @error('roles')
+                                                            <div class="text-danger mt-2">{{ $message }}</div>
+                                                        @enderror
                                                     </div>
 
                                                     <!--end::Input group-->

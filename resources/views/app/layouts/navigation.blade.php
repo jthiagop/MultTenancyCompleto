@@ -196,155 +196,6 @@
                                                         <!--end:Menu item-->
                                                     </div>
                                                     <!--end:Col-->
-
-                                                    <!--begin:Col-->
-                                                    <div class="col-lg-6 py-1">
-                                                        <!--begin:Menu item-->
-                                                        <div class="menu-item p-0 m-0">
-                                                            <!--begin:Menu link-->
-                                                            <a href="/#dashboards/projects.html" class="menu-link">
-                                                                <span
-                                                                    class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/abstract/abs045.svg-->
-                                                                    <span class="svg-icon svg-icon-info svg-icon-1">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path
-                                                                                d="M2 11.7127L10 14.1127L22 11.7127L14 9.31274L2 11.7127Z"
-                                                                                fill="currentColor" />
-                                                                            <path opacity="0.3"
-                                                                                d="M20.9 7.91274L2 11.7127V6.81275C2 6.11275 2.50001 5.61274 3.10001 5.51274L20.6 2.01274C21.3 1.91274 22 2.41273 22 3.11273V6.61273C22 7.21273 21.5 7.81274 20.9 7.91274ZM22 16.6127V11.7127L3.10001 15.5127C2.50001 15.6127 2 16.2127 2 16.8127V20.3127C2 21.0127 2.69999 21.6128 3.39999 21.4128L20.9 17.9128C21.5 17.8128 22 17.2127 22 16.6127Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->
-                                                                </span>
-                                                                <span class="d-flex flex-column">
-                                                                    <span
-                                                                        class="fs-6 fw-semibold text-gray-800">Projects</span>
-                                                                    <span class="fs-7 fw-semibold text-muted">Tasts,
-                                                                        graphs
-                                                                        & charts</span>
-                                                                </span>
-                                                            </a>
-                                                            <!--end:Menu link-->
-                                                        </div>
-                                                        <!--end:Menu item-->
-                                                    </div>
-                                                    <!--end:Col-->
-
-
-                                                    <!--begin:Col-->
-                                                    <div class="col-lg-6 py-1">
-                                                        <!--begin:Menu item-->
-                                                        <div class="menu-item p-0 m-0">
-                                                            <!--begin:Menu link-->
-                                                            <a href="/#dashboards/social.html" class="menu-link">
-                                                                <span
-                                                                    class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/communication/com001.svg-->
-                                                                    <span class="svg-icon svg-icon-success svg-icon-1">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M19 10.4C19 10.3 19 10.2 19 10C19 8.9 18.1 8 17 8H16.9C15.6 6.2 14.6 4.29995 13.9 2.19995C13.3 2.09995 12.6 2 12 2C11.9 2 11.8 2 11.7 2C12.4 4.6 13.5 7.10005 15.1 9.30005C15 9.50005 15 9.7 15 10C15 11.1 15.9 12 17 12C17.1 12 17.3 12 17.4 11.9C18.6 13 19.9 14 21.4 14.8C21.4 14.8 21.5 14.8 21.5 14.9C21.7 14.2 21.8 13.5 21.9 12.7C20.9 12.1 19.9 11.3 19 10.4Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M12 15C11 13.1 10.2 11.2 9.60001 9.19995C9.90001 8.89995 10 8.4 10 8C10 7.1 9.40001 6.39998 8.70001 6.09998C8.40001 4.99998 8.20001 3.90005 8.00001 2.80005C7.30001 3.10005 6.70001 3.40002 6.20001 3.90002C6.40001 4.80002 6.50001 5.6 6.80001 6.5C6.40001 6.9 6.10001 7.4 6.10001 8C6.10001 9 6.80001 9.8 7.80001 10C8.30001 11.6 9.00001 13.2 9.70001 14.7C7.10001 13.2 4.70001 11.5 2.40001 9.5C2.20001 10.3 2.10001 11.1 2.10001 11.9C4.60001 13.9 7.30001 15.7 10.1 17.2C10.2 18.2 11 19 12 19C12.6 20 13.2 20.9 13.9 21.8C14.6 21.7 15.3 21.5 15.9 21.2C15.4 20.5 14.9 19.8 14.4 19.1C15.5 19.5 16.5 19.9 17.6 20.2C18.3 19.8 18.9 19.2 19.4 18.6C17.6 18.1 15.7 17.5 14 16.7C13.9 15.8 13.1 15 12 15Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->
-                                                                </span>
-                                                                <span class="d-flex flex-column">
-                                                                    <span
-                                                                        class="fs-6 fw-semibold text-gray-800">Social</span>
-                                                                    <span class="fs-7 fw-semibold text-muted">Feeds &
-                                                                        Activities</span>
-                                                                </span>
-                                                            </a>
-                                                            <!--end:Menu link-->
-                                                        </div>
-                                                        <!--end:Menu item-->
-                                                    </div>
-                                                    <!--end:Col-->
-                                                    <!--begin:Col-->
-                                                    <div class="col-lg-6 py-1">
-                                                        <!--begin:Menu item-->
-                                                        <div class="menu-item p-0 m-0">
-                                                            <!--begin:Menu link-->
-                                                            <a href="/#dashboards/bidding.html" class="menu-link">
-                                                                <span
-                                                                    class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/general/gen019.svg-->
-                                                                    <span class="svg-icon svg-icon-warning svg-icon-1">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path
-                                                                                d="M17.5 11H6.5C4 11 2 9 2 6.5C2 4 4 2 6.5 2H17.5C20 2 22 4 22 6.5C22 9 20 11 17.5 11ZM15 6.5C15 7.9 16.1 9 17.5 9C18.9 9 20 7.9 20 6.5C20 5.1 18.9 4 17.5 4C16.1 4 15 5.1 15 6.5Z"
-                                                                                fill="currentColor" />
-                                                                            <path opacity="0.3"
-                                                                                d="M17.5 22H6.5C4 22 2 20 2 17.5C2 15 4 13 6.5 13H17.5C20 13 22 15 22 17.5C22 20 20 22 17.5 22ZM4 17.5C4 18.9 5.1 20 6.5 20C7.9 20 9 18.9 9 17.5C9 16.1 7.9 15 6.5 15C5.1 15 4 16.1 4 17.5Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->
-                                                                </span>
-                                                                <span class="d-flex flex-column">
-                                                                    <span
-                                                                        class="fs-6 fw-semibold text-gray-800">Bidding</span>
-                                                                    <span class="fs-7 fw-semibold text-muted">Deals &
-                                                                        stock
-                                                                        exchange</span>
-                                                                </span>
-                                                            </a>
-                                                            <!--end:Menu link-->
-                                                        </div>
-                                                        <!--end:Menu item-->
-                                                    </div>
-                                                    <!--end:Col-->
-                                                    <!--begin:Col-->
-                                                    <div class="col-lg-6 py-1">
-                                                        <!--begin:Menu item-->
-                                                        <div class="menu-item p-0 m-0">
-                                                            <!--begin:Menu link-->
-                                                            <a href="/#dashboards/logistics.html" class="menu-link">
-                                                                <span
-                                                                    class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm006.svg-->
-                                                                    <span class="svg-icon svg-icon-info svg-icon-1">
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path
-                                                                                d="M20 8H16C15.4 8 15 8.4 15 9V16H10V17C10 17.6 10.4 18 11 18H16C16 16.9 16.9 16 18 16C19.1 16 20 16.9 20 18H21C21.6 18 22 17.6 22 17V13L20 8Z"
-                                                                                fill="currentColor" />
-                                                                            <path opacity="0.3"
-                                                                                d="M20 18C20 19.1 19.1 20 18 20C16.9 20 16 19.1 16 18C16 16.9 16.9 16 18 16C19.1 16 20 16.9 20 18ZM15 4C15 3.4 14.6 3 14 3H3C2.4 3 2 3.4 2 4V13C2 13.6 2.4 14 3 14H15V4ZM6 16C4.9 16 4 16.9 4 18C4 19.1 4.9 20 6 20C7.1 20 8 19.1 8 18C8 16.9 7.1 16 6 16Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->
-                                                                </span>
-                                                                <span class="d-flex flex-column">
-                                                                    <span
-                                                                        class="fs-6 fw-semibold text-gray-800">Logistics</span>
-                                                                    <span class="fs-7 fw-semibold text-muted">Shipments
-                                                                        and
-                                                                        delivery</span>
-                                                                </span>
-                                                            </a>
-                                                            <!--end:Menu link-->
-                                                        </div>
-                                                        <!--end:Menu item-->
-                                                    </div>
-                                                    <!--end:Col-->
                                                 </div>
                                                 <!--end:Row-->
                                             </div>
@@ -1268,19 +1119,16 @@
                                                 <!--begin:Menu sub-->
                                                 <div
                                                     class="menu-sub menu-sub-lg-down-accordion menu-sub-lg-dropdown menu-active-bg px-lg-2 py-lg-4 w-lg-225px">
-                                                    <!--begin:Menu item-->
                                                     <div class="menu-item">
-                                                        <!--begin:Menu link-->
-                                                        <a class="menu-link {{ Route::currentRouteName() == 'company.edit' && Route::current()->parameter('company') == (Auth::user()->companies->first()->id ?? '') ? 'active' : '' }}"
-                                                            href="{{ route('company.edit', ['company' => Auth::user()->companies->first()->id ?? '']) }}">
+                                                        {{-- O link agora não passa mais parâmetros e a verificação da classe 'active' foi simplificada --}}
+                                                        <a class="menu-link {{ Route::currentRouteName() == 'company.edit' ? 'active' : '' }}"
+                                                            href="{{ route('company.edit') }}">
                                                             <span class="menu-bullet">
                                                                 <span class="bullet bullet-dot"></span>
                                                             </span>
                                                             <span class="menu-title">Personalização</span>
                                                         </a>
-                                                        <!--end:Menu link-->
                                                     </div>
-                                                    <!--end:Menu item-->
                                                 </div>
                                                 <!--end:Menu sub-->
                                             </div>
@@ -1382,8 +1230,8 @@
                                         id="kt_app_header_menu_toggle">
                                         <!--begin::Svg Icon | path: icons/duotune/text/txt001.svg-->
                                         <span class="svg-icon svg-icon-1">
-                                            <svg width="24" height="24" viewBox="0 0 24 24"
-                                                fill="none" xmlns="http://www.w3.org/2000/svg">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                xmlns="http://www.w3.org/2000/svg">
                                                 <path
                                                     d="M13 11H3C2.4 11 2 10.6 2 10V9C2 8.4 2.4 8 3 8H13C13.6 8 14 8.4 14 9V10C14 10.6 13.6 11 13 11ZM22 5V4C22 3.4 21.6 3 21 3H3C2.4 3 2 3.4 2 4V5C2 5.6 2.4 6 3 6H21C21.6 6 22 5.6 22 5Z"
                                                     fill="currentColor" />

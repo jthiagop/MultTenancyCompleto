@@ -343,7 +343,6 @@
                             </div>
                         </div>
                     </form>
-
                 </div>
                 <!--end::Content container-->
             </div>

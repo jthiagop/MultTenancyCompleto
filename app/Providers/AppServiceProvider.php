@@ -2,11 +2,11 @@
 
 namespace App\Providers;
 
+use App\View\Components\UserMenu;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Blade;
-
-
+use Illuminate\Support\Facades\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -23,8 +23,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-                // Registrar o namespace 'app' para componentes personalizados
-                Blade::componentNamespace('App\\Components', 'app');
-    }
+        // Registrar o namespace 'app' para componentes personalizados
+        Blade::componentNamespace('App\\Components', 'app');
 
+        // 3. Adicione esta linha para registrar o Composer
+        View::composer('app.layouts.userMenu', UserMenu::class);
+    }
 }

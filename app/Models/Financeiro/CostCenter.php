@@ -2,10 +2,10 @@
 
 namespace App\Models\Financeiro;
 
-use Auth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Auth;
 
 class CostCenter extends Model
 {
@@ -44,19 +44,24 @@ class CostCenter extends Model
         return $this->hasMany(TransacaoFinanceira::class, 'cost_center_id');
     }
 
-    public static function getCadastroCentroCusto()
+    /**
+     * Scope a query to only include records for the currently active company.
+     *
+     * @param  \Illuminate\Database\Eloquent\Builder  $query
+     * @return \Illuminate\Database\Eloquent\Builder
+     */
+    public function scopeForActiveCompany($query)
     {
-        $userId = Auth::id(); // Recupere o ID do usuário logado
+        $activeCompanyId = session('active_company_id');
 
-        // Exemplo de associação via "company_user"
-        // Ajuste conforme a estrutura das suas tabelas e colunas
-        $centrosAtivos = self::join('company_user', 'cost_centers.company_id', '=', 'company_user.company_id')
-            ->where('company_user.user_id', $userId)
-            ->where('cost_centers.status', 1) // 1 = Ativo
-            ->select('cost_centers.*')       // Selecione as colunas de cost_centers
-            ->get();
+        // Se houver uma empresa ativa, aplica o filtro.
+        if ($activeCompanyId) {
+            return $query->where('company_id', $activeCompanyId);
+        }
 
-        return $centrosAtivos;
+        // Se não houver, retorna uma consulta que não trará resultados.
+        // Isso previne vazamento de dados caso a sessão se perca.
+        return $query->whereRaw('1 = 0'); 
     }
 
 }

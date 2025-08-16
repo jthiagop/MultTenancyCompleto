@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\TransacaoFinanceira;
 use App\Services\PrestacaoContasService;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use PDF;
 use Spatie\Browsershot\Browsershot;

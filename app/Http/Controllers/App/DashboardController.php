@@ -6,9 +6,9 @@ use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
 use App\Models\TenantFilial;
 use App\Models\User;
-use Auth;
 use Flasher\Laravel\Facade\Flasher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use SebastianBergmann\CodeCoverage\Report\Html\Dashboard;
 
@@ -29,8 +29,24 @@ class DashboardController extends Controller
         $selectedYear = $request->input('year', now()->year);
 
         // Recupera a empresa do usuário logado
-        $company = $user->companies()->first(); // Ou qualquer método que obtenha a empresa
+        // 1. Pega o ID da empresa ativa que guardamos na sessão
+        $activeCompanyId = session('active_company_id');
 
+        // 2. Busca o objeto da empresa correspondente a esse ID
+        //    É importante também verificar se o usuário realmente tem acesso a ela.
+        $company = $user->companies()->find($activeCompanyId);
+
+        // 3. (Opcional, mas recomendado) Adiciona uma lógica de fallback caso a sessão esteja vazia
+        if (!$company && $user->companies()->exists()) {
+            $company = $user->companies()->first();
+            session(['active_company_id' => $company->id]); // Atualiza a sessão para o próximo request
+        }
+
+        // Se mesmo assim não houver empresa, algo está errado.
+        if (!$company) {
+            // Você pode redirecionar o usuário ou mostrar uma mensagem de erro.
+            abort(403, 'Nenhuma empresa associada ou selecionada para este usuário.');
+        }
         // Define as categorias de lançamento que queremos filtrar
         $categoriasLancamento = ['Doações', 'Coletas', 'Intenções'];
 
@@ -95,7 +111,6 @@ class DashboardController extends Controller
         }
         // Retorna para a view
         return view('app.dashboard', [
-            'company' => $company,
             'areaChartData' => $areaChartData,
             'selectedYear' => $selectedYear
         ]);

@@ -10,6 +10,7 @@ use App\Http\Controllers\App\CompanyController;
 use App\Http\Controllers\App\DashboardController;
 use App\Http\Controllers\App\PostController;
 use App\Http\Controllers\App\ProfileController;
+use App\Http\Controllers\App\SessionController;
 use App\Http\Controllers\App\UserController;
 use App\Http\Controllers\App\TenantFilialController;
 use App\Http\Controllers\App\CaixaController;
@@ -105,6 +106,8 @@ Route::middleware([
             Route::resource('formas-pagamento', FormasPagamentoController::class);
         });
 
+        Route::get('/session/switch-company/{company}', [SessionController::class, 'switchCompany'])->name('session.switch-company');
+
         // Rotas acessíveis apenas para administradores
         Route::middleware(['role:admin'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
@@ -112,7 +115,8 @@ Route::middleware([
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
             Route::resource('users', UserController::class);
             Route::resource('company', CompanyController::class);
-            Route::get('/company/edit/{company}', [CompanyController::class, 'editCompany'])->name('company.editCompany');
+            Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
+            Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
             Route::post('/filter', [RebortController::class, 'generateReport']);
         });
 
@@ -137,6 +141,8 @@ Route::middleware([
             Route::resource('modulosAnexos', ModulosAnexosController::class);
             Route::resource('post', PostController::class);
             Route::get('/lancamento_padrao/tipo/{tipo}', [LancamentoPadraoController::class, 'getLancamentosByTipo']);
+
+
 
             // *** Editar Patrimônio ***
             Route::resource('patrimonio', PatrimonioController::class);

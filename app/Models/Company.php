@@ -54,10 +54,12 @@ class Company extends Model
         return $this->belongsTo(Company::class, 'parent_id');
     }
 
-    // Relação com os usuários
+    /**
+     * Os usuários que têm acesso a esta empresa.
+     */
     public function users()
     {
-        return $this->hasMany(User::class, 'company_id');
+        return $this->belongsToMany(User::class, 'company_user');
     }
 
     // Company.php

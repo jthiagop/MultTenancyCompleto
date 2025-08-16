@@ -4,7 +4,7 @@ namespace App\Models;
 
 use App\Models\Financeiro\ModulosAnexo;
 use App\Models\Financeiro\TransacaoFinanceira;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use File;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

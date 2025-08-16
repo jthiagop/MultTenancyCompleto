@@ -7,9 +7,9 @@ use App\Http\Requests\StoreCostCenterRequest;
 use App\Http\Requests\UpdateCostCenterRequest;
 use App\Models\Financeiro\CostCenter;
 use App\Models\User;
-use Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class CostCenterController extends Controller
 {
@@ -23,7 +23,7 @@ class CostCenterController extends Controller
         // Busca todos os centros de custo
         $centroCustos = CostCenter::where('company_id', $companyId)->get();
 
-            // Adiciona o progresso ao resultado
+        // Adiciona o progresso ao resultado
         $centroCustos->transform(function ($centro) {
             $centro->progresso = $this->calcularProgresso($centro->start_date, $centro->end_date);
             return $centro;
@@ -48,18 +48,34 @@ class CostCenterController extends Controller
      */
     public function store(StoreCostCenterRequest $request)
     {
-        // Recupera a companhia associada ao usuário autenticado
-        $subsidiary = User::getCompany();
+        // ++ Lógica correta adicionada ++
+        // 1. Recupera o ID da companhia ativa na sessão do usuário.
+        $activeCompanyId = session('active_company_id');
 
-        // Recupera os dados já validados
+        // 2. Verificação de segurança: garante que há uma empresa ativa na sessão.
+        if (!$activeCompanyId) {
+            return redirect()->back()
+                ->with('error', 'Nenhuma empresa selecionada. Por favor, escolha uma empresa antes de continuar.');
+        }
+
+        // -> Linha antiga removida
+        // $subsidiary = User::getCompany();
+
+        // Recupera os dados já validados pelo StoreCostCenterRequest
         $data = $request->validated();
 
-        // Exemplo: ajustando data (caso precise formatar antes de salvar)
-        // $data['start_date'] = Carbon::createFromFormat('d/m/Y', $data['start_date'])->format('Y-m-d');
-        $data['start_date'] = Carbon::createFromFormat('d/m/Y', $data['start_date'])->format('Y/m/d');
-        $data['end_date'] = Carbon::createFromFormat('d/m/Y', $data['end_date'])->format('Y/m/d');
+        // Converte as datas para o formato padrão do banco de dados (boa prática)
+        $data['start_date'] = Carbon::createFromFormat('d/m/Y', $data['start_date'])->format('Y-m-d'); // Y-m-d é o padrão
+        $data['end_date'] = Carbon::createFromFormat('d/m/Y', $data['end_date'])->format('Y-m-d'); // Y-m-d é o padrão
+
+        // Converte o formato do orçamento para salvar no banco
         $data['budget'] = str_replace(',', '.', str_replace('.', '', $data['budget']));
-        $data['company_id'] = $subsidiary->company_id;
+
+        // ++ Lógica correta adicionada ++
+        // 3. Associa o centro de custo à empresa ativa da sessão.
+        $data['company_id'] = $activeCompanyId;
+
+        // Associa o usuário que criou o registro
         $data['created_by'] = Auth::id();
         $data['created_by_name'] = Auth::user()->name;
         $data['updated_by'] = Auth::id();

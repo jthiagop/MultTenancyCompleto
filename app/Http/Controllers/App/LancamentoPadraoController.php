@@ -4,9 +4,9 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\LancamentoPadrao;
-use Auth;
 use Flasher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class LancamentoPadraoController extends Controller
 {

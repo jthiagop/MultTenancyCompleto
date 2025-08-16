@@ -7,7 +7,7 @@ use App\Models\Cemiterio\Sepultado;
 use App\Models\Cemiterio\Sepultura;
 use App\Models\ModulosAnexo;
 use App\Models\User;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Flasher;
 use Illuminate\Http\Request;
 use Storage;

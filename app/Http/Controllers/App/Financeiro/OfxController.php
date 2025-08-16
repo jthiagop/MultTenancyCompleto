@@ -8,7 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Financeiro\BankStatement;
 use App\Services\OfxService;
-use Auth;
+use Illuminate\Support\Facades\Auth;
 use Endeken\OFX\OFX;
 
 class OfxController extends Controller
