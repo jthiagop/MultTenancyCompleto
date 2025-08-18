@@ -5,7 +5,7 @@ namespace App\View\Components;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 
-class UserMenu
+class UserMenuComposer
 {
     /**
      * Bind data to the view.
