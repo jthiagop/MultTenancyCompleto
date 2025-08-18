@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\App\Financeiro;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreTransacaoFinanceiraRequest;
 use App\Models\Anexo;
 use App\Models\Banco;
 use App\Models\Financeiro\ModulosAnexo;

@@ -35,29 +35,6 @@
                     <!--begin::Actions-->
                     <!--begin::Actions-->
                     <div class="d-flex my-0">
-                        @auth
-                            <li class="nav-item dropdown me-3">
-                                <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownCompany" role="button"
-                                    data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-building"></i>
-                                    @if (session('active_company_id'))
-                                        {{ Auth::user()->companies()->find(session('active_company_id'))->name ?? 'Selecionar Empresa' }}
-                                    @else
-                                        Selecionar Empresa
-                                    @endif
-                                </a>
-                                <ul class="dropdown-menu" aria-labelledby="navbarDropdownCompany">
-                                    @foreach (Auth::user()->companies as $company)
-                                        <li>
-                                            <a class="dropdown-item @if (session('active_company_id') == $company->id) active @endif"
-                                                href="{{ route('session.switch-company', $company->id) }}">
-                                                {{ $company->name }}
-                                            </a>
-                                        </li>
-                                    @endforeach
-                                </ul>
-                            </li>
-                        @endauth
                         <a href="#" class="btn btn-sm btn-primary me-3" data-bs-toggle="modal"
                             data-bs-target="#kt_modal_new_target">Novo Organismo</a>
 

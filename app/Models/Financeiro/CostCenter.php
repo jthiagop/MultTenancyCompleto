@@ -45,7 +45,8 @@ class CostCenter extends Model
     }
 
     /**
-     * Scope a query to only include records for the currently active company.
+     * Scope: Filtra a busca para incluir apenas os registros da empresa ativa na sessão.
+     * Este é o método correto para lidar com o contexto da sessão.
      *
      * @param  \Illuminate\Database\Eloquent\Builder  $query
      * @return \Illuminate\Database\Eloquent\Builder
@@ -61,7 +62,21 @@ class CostCenter extends Model
 
         // Se não houver, retorna uma consulta que não trará resultados.
         // Isso previne vazamento de dados caso a sessão se perca.
-        return $query->whereRaw('1 = 0'); 
+        return $query->whereRaw('1 = 0');
     }
 
+    public static function getCadastroCentroCusto()
+    {
+        $userId = Auth::id(); // Recupere o ID do usuário logado
+
+        // Exemplo de associação via "company_user"
+        // Ajuste conforme a estrutura das suas tabelas e colunas
+        $centrosAtivos = self::join('company_user', 'cost_centers.company_id', '=', 'company_user.company_id')
+            ->where('company_user.user_id', $userId)
+            ->where('cost_centers.status', 1) // 1 = Ativo
+            ->select('cost_centers.*')       // Selecione as colunas de cost_centers
+            ->get();
+
+        return $centrosAtivos;
+    }
 }

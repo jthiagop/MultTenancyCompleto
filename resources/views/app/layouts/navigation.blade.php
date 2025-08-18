@@ -85,41 +85,87 @@
                                                         <!--end:Menu item-->
                                                     </div>
                                                     <!--end:Col-->
-                                                    <!--begin:Col-->
-                                                    <div class="col-lg-6 py-1">
-                                                        <!--begin:Menu item-->
-                                                        <div class="menu-item p-0 m-0">
-                                                            <!--begin:Menu link-->
-                                                            <a href="{{ route('company.index') }}" class="menu-link">
-                                                                <span
-                                                                    class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
-                                                                    <!--begin::Svg Icon | path: icons/duotune/art/art002.svg-->
-                                                                    <span class="svg-icon svg-icon-success svg-icon-1">
-                                                                        <svg width="24" height="25"
-                                                                            viewBox="0 0 24 25" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path opacity="0.3"
-                                                                                d="M8.9 21L7.19999 22.6999C6.79999 23.0999 6.2 23.0999 5.8 22.6999L4.1 21H8.9ZM4 16.0999L2.3 17.8C1.9 18.2 1.9 18.7999 2.3 19.1999L4 20.9V16.0999ZM19.3 9.1999L15.8 5.6999C15.4 5.2999 14.8 5.2999 14.4 5.6999L9 11.0999V21L19.3 10.6999C19.7 10.2999 19.7 9.5999 19.3 9.1999Z"
-                                                                                fill="currentColor" />
-                                                                            <path
-                                                                                d="M21 15V20C21 20.6 20.6 21 20 21H11.8L18.8 14H20C20.6 14 21 14.4 21 15ZM10 21V4C10 3.4 9.6 3 9 3H4C3.4 3 3 3.4 3 4V21C3 21.6 3.4 22 4 22H9C9.6 22 10 21.6 10 21ZM7.5 18.5C7.5 19.1 7.1 19.5 6.5 19.5C5.9 19.5 5.5 19.1 5.5 18.5C5.5 17.9 5.9 17.5 6.5 17.5C7.1 17.5 7.5 17.9 7.5 18.5Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
-                                                                    </span>
-                                                                    <!--end::Svg Icon-->
-                                                                </span>
-                                                                <span class="d-flex flex-column">
+
+                                                    @if (auth()->user()->hasRole('admin'))
+                                                        <!--begin::Col - Organismos (DESBLOQUEADO)-->
+                                                        <div class="col-lg-6 py-1">
+                                                            <!--begin:Menu item-->
+                                                            <div class="menu-item p-0 m-0">
+                                                                <!--begin:Menu link-->
+                                                                <a href="{{ route('company.index') }}"
+                                                                    class="menu-link">
                                                                     <span
-                                                                        class="fs-6 fw-semibold text-gray-800">Organismos</span>
-                                                                    <span class="fs-7 fw-semibold text-muted">Student
-                                                                        progress</span>
-                                                                </span>
-                                                            </a>
-                                                            <!--end:Menu link-->
+                                                                        class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
+                                                                        <span
+                                                                            class="svg-icon svg-icon-success svg-icon-1">
+                                                                            <svg width="24" height="25"
+                                                                                viewBox="0 0 24 25" fill="none"
+                                                                                xmlns="http://www.w3.org/2000/svg">
+                                                                                <path opacity="0.3"
+                                                                                    d="M8.9 21L7.19999 22.6999C6.79999 23.0999 6.2 23.0999 5.8 22.6999L4.1 21H8.9ZM4 16.0999L2.3 17.8C1.9 18.2 1.9 18.7999 2.3 19.1999L4 20.9V16.0999ZM19.3 9.1999L15.8 5.6999C15.4 5.2999 14.8 5.2999 14.4 5.6999L9 11.0999V21L19.3 10.6999C19.7 10.2999 19.7 9.5999 19.3 9.1999Z"
+                                                                                    fill="currentColor" />
+                                                                                <path
+                                                                                    d="M21 15V20C21 20.6 20.6 21 20 21H11.8L18.8 14H20C20.6 14 21 14.4 21 15ZM10 21V4C10 3.4 9.6 3 9 3H4C3.4 3 3 3.4 3 4V21C3 21.6 3.4 22 4 22H9C9.6 22 10 21.6 10 21ZM7.5 18.5C7.5 19.1 7.1 19.5 6.5 19.5C5.9 19.5 5.5 19.1 5.5 18.5C5.5 17.9 5.9 17.5 6.5 17.5C7.1 17.5 7.5 17.9 7.5 18.5Z"
+                                                                                    fill="currentColor" />
+                                                                            </svg>
+                                                                        </span>
+                                                                    </span>
+                                                                    <span class="d-flex flex-column">
+                                                                        <span
+                                                                            class="fs-6 fw-semibold text-gray-800">Organismos</span>
+                                                                        <span
+                                                                            class="fs-7 fw-semibold text-muted">Gerenciar
+                                                                            empresas e filiais</span>
+                                                                    </span>
+                                                                </a>
+                                                                <!--end:Menu link-->
+                                                            </div>
+                                                            <!--end:Menu item-->
                                                         </div>
-                                                        <!--end:Menu item-->
-                                                    </div>
-                                                    <!--end:Col-->
+                                                        <!--end:Col-->
+                                                    @else
+                                                        <!--begin::Col - Organismos (BLOQUEADO)-->
+                                                        <div class="col-lg-6 py-1">
+                                                            <!--begin:Menu item-->
+                                                            <div class="menu-item p-0 m-0">
+                                                                <!--begin:Menu link-->
+                                                                <a href="#" class="menu-link disabled"
+                                                                    aria-disabled="true">
+                                                                    <span
+                                                                        class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
+                                                                        <span
+                                                                            class="svg-icon svg-icon-gray-400 svg-icon-1">
+                                                                            <svg width="24" height="25"
+                                                                                viewBox="0 0 24 25" fill="none"
+                                                                                xmlns="http://www.w3.org/2000/svg">
+                                                                                <path opacity="0.3"
+                                                                                    d="M8.9 21L7.19999 22.6999C6.79999 23.0999 6.2 23.0999 5.8 22.6999L4.1 21H8.9ZM4 16.0999L2.3 17.8C1.9 18.2 1.9 18.7999 2.3 19.1999L4 20.9V16.0999ZM19.3 9.1999L15.8 5.6999C15.4 5.2999 14.8 5.2999 14.4 5.6999L9 11.0999V21L19.3 10.6999C19.7 10.2999 19.7 9.5999 19.3 9.1999Z"
+                                                                                    fill="currentColor" />
+                                                                                <path
+                                                                                    d="M21 15V20C21 20.6 20.6 21 20 21H11.8L18.8 14H20C20.6 14 21 14.4 21 15ZM10 21V4C10 3.4 9.6 3 9 3H4C3.4 3 3 3.4 3 4V21C3 21.6 3.4 22 4 22H9C9.6 22 10 21.6 10 21ZM7.5 18.5C7.5 19.1 7.1 19.5 6.5 19.5C5.9 19.5 5.5 19.1 5.5 18.5C5.5 17.9 5.9 17.5 6.5 17.5C7.1 17.5 7.5 17.9 7.5 18.5Z"
+                                                                                    fill="currentColor" />
+                                                                            </svg>
+                                                                        </span>
+                                                                    </span>
+                                                                    <span class="d-flex flex-column">
+                                                                        <span
+                                                                            class="fs-6 fw-semibold text-gray-800">Organismos</span>
+                                                                        <span
+                                                                            class="fs-7 fw-semibold text-muted">Acesso
+                                                                            restrito</span>
+                                                                    </span>
+                                                                    <span class="ms-auto">
+                                                                        <i
+                                                                            class="fa-solid fa-lock fs-4 text-danger"></i>
+                                                                    </span>
+                                                                </a>
+                                                                <!--end:Menu link-->
+                                                            </div>
+                                                            <!--end:Menu item-->
+                                                        </div>
+                                                        <!--end:Col-->
+                                                    @endif
+
 
                                                     <!--begin:Col-->
                                                     <div class="col-lg-6 py-1">
@@ -130,7 +176,8 @@
                                                                 <span
                                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                                     <!--begin::Svg Icon | path: /var/www/preview.keenthemes.com/keenthemes/keen/docs/core/html/src/media/icons/duotune/finance/fin003.svg-->
-                                                                    <span class="svg-icon svg-icon-dark svg-icon-1"><svg
+                                                                    <span
+                                                                        class="svg-icon svg-icon-dark svg-icon-1"><svg
                                                                             width="24" height="24"
                                                                             viewBox="0 0 24 24" fill="none"
                                                                             xmlns="http://www.w3.org/2000/svg">
@@ -162,7 +209,7 @@
                                                         <div class="menu-item p-0 m-0">
                                                             <!--begin:Menu link-->
                                                             <a href="{{ route('patrimonio.index') }}"
-                                                                class="menu-link active">
+                                                                class="menu-link">
                                                                 <span
                                                                     class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">
                                                                     <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm002.svg-->

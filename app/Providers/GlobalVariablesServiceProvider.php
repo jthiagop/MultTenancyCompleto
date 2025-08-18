@@ -2,10 +2,9 @@
 
 namespace App\Providers;
 
-use App\Models\Company;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
 
 class GlobalVariablesServiceProvider extends ServiceProvider
@@ -21,26 +20,46 @@ class GlobalVariablesServiceProvider extends ServiceProvider
     /**
      * Bootstrap services.
      */
-    public function boot()
+    public function boot(): void
     {
-        // Composer para compartilhar variáveis globais com todas as views
+        // Compartilha variáveis com todas as views usando a lógica correta da sessão.
         View::composer('*', function ($view) {
-            $currentUser = Auth::user(); // Usuário autenticado, se existir
-            $defaultAvatar = 'assets/media/avatars/300-6.jpg'; // Avatar padrão
-            // Inicializa a variável $company como null
-            $company = null;
+            
+            // 1. Inicia as variáveis com valores padrão
+            $currentUser = Auth::user();
+            $activeCompany = null;
+            $allCompanies = collect(); // Uma coleção vazia
+            $defaultAvatar = 'assets/media/avatars/300-6.jpg';
 
+            // 2. Apenas executa a lógica se o usuário estiver logado
             if ($currentUser && Schema::hasTable('companies')) {
-                // Obtém a empresa associada ao usuário autenticado, se existir
-                $company = $currentUser->companies()->first(); // Use a relação entre User e Company
+                
+                $allCompanies = $currentUser->companies; // Pega todas as empresas de uma vez
+
+                if ($allCompanies->isNotEmpty()) {
+                    // 3. Pega o ID da empresa ativa da sessão
+                    $activeCompanyId = session('active_company_id');
+
+                    // 4. Tenta encontrar a empresa ativa na coleção que já buscamos
+                    $activeCompany = $allCompanies->find($activeCompanyId);
+
+                    // 5. Lógica de Fallback: Se não encontrou (sessão vazia ou inválida),
+                    //    define a primeira empresa como ativa e ATUALIZA a sessão para o futuro.
+                    if (!$activeCompany) {
+                        $activeCompany = $allCompanies->first();
+                        session(['active_company_id' => $activeCompany->id]);
+                    }
+                }
             }
-            // Compartilha as variáveis com as views
+
+            // 6. Compartilha as variáveis CORRETAS com todas as views
             $view->with([
-                'currentUser' => $currentUser,
+                'currentUser'   => $currentUser,
                 'defaultAvatar' => $defaultAvatar,
-                'company' => $company,
+                'company'       => $activeCompany, // Pode continuar usando 'company' ou mudar para 'activeCompany'
+                'activeCompany' => $activeCompany, // Compartilhando com o nome novo e mais claro
+                'allCompanies'  => $allCompanies,
             ]);
         });
     }
-    }
-
+}

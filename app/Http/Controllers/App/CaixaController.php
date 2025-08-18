@@ -39,11 +39,14 @@ class CaixaController extends Controller
      */
     public function index()
     {
-        // Supondo que você tenha uma forma de obter o company_id, por exemplo, do usuário autenticado
-        $companyId = Auth::user()->company_id; // Ajuste conforme sua lógica
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return redirect()->route('dashboard')->with('error', 'Selecione uma empresa.');
+        }
 
+        // Todas as buscas agora são filtradas
         $transacoesFinanceiras = TransacaoFinanceira::with('entidadeFinanceira') // Eager Load
-            ->where('company_id', $companyId) // Filtro pelo company_id
+            ->where('company_id', $activeCompanyId) // Filtro pelo company_id
             ->orderBy('id', 'DESC')
             ->paginate(10);
 
@@ -61,7 +64,6 @@ class CaixaController extends Controller
         $entidadesBanco = Caixa::getEntidadesBanco();
 
         $lps = LancamentoPadrao::all();
-        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
 
         list($somaEntradas, $somaSaida) = caixa::getCaixa();
         $total = $somaEntradas - $somaSaida;
@@ -102,7 +104,6 @@ class CaixaController extends Controller
             'lps',
             'centrosAtivos',
             'todasEntidades',
-            'bancos',
             'total',
             'entidades',
             'entidadesBanco',
@@ -119,65 +120,61 @@ class CaixaController extends Controller
 
     public function list(Request $request)
     {
-        // Obter o valor da aba ativa da URL, se presente
-        $activeTab = $request->input('tab', 'overview'); // 'overview' é o padrão caso não haja o parâmetro 'tab'
+        // 1. CONFIGURAÇÃO INICIAL E SEGURANÇA (A fonte da verdade é a SESSÃO)
+        $activeTab = $request->input('tab', 'overview');
+        $activeCompanyId = session('active_company_id');
 
-        $user = Auth::user();
+        if (!$activeCompanyId) {
+            return redirect()->route('dashboard')->with('error', 'Por favor, selecione uma empresa para visualizar os dados.');
+        }
+
+        // 2. BUSCA DE DADOS, AGORA TODOS FILTRADOS PELA EMPRESA ATIVA
+
+        // Lançamentos Padrão da empresa ativa
         $lps = LancamentoPadrao::all();
-        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
-        $entidades = Caixa::getEntidadesCaixa();
-        $entidadesBanco = Caixa::getEntidadesBanco();
 
-        // Verifica se o usuário está autenticado
-        if (!$user) {
-            return redirect()->route('login')->with('error', 'Usuário não autenticado');
-        }
 
-        // Obter o ID da empresa associada ao usuário autenticado
-        $companyId = $user->company_id;
+        // Entidades do tipo 'Caixa' da empresa ativa
+        $entidades = EntidadeFinanceira::where('company_id', $activeCompanyId)->where('tipo', 'caixa')->get();
 
-        // Verifica se a empresa foi encontrada
-        if (!$companyId) {
-            return redirect()->back()->with('error', 'Empresa não encontrada para o usuário autenticado.');
-        }
+        // Entidades do tipo 'Banco' da empresa ativa (parece repetido, mas corrigindo a lógica)
+        $entidadesBanco = EntidadeFinanceira::where('company_id', $activeCompanyId)->where('tipo', 'banco')->get();
+        // Somando entradas e saídas do Caixa da empresa ativa
+        $somaEntradas = TransacaoFinanceira::where('company_id', $activeCompanyId)->where('origem', 'Caixa')->where('tipo', 'entrada')->sum('valor');
+        $somaSaidas = TransacaoFinanceira::where('company_id', $activeCompanyId)->where('origem', 'Caixa')->where('tipo', 'saida')->sum('valor');
 
-        // Obter as somas de entradas e saídas utilizando métodos no modelo Caixa
-        list($somaEntradas, $somaSaidas) = Caixa::getCaixa($companyId);
 
-        // Calcular o total (entradas - saídaƒs)
-        $total = EntidadeFinanceira::getValorTotalEntidade();
-        // Listar todos os registros de caixa para a empresa do usuário
+
+        // Total das Entidades Financeiras da empresa ativa
+        $total = EntidadeFinanceira::where('company_id', $activeCompanyId)
+            ->where('tipo', 'caixa') // Mantendo o filtro por 'caixa' que você tinha
+            ->sum('saldo_atual');
+
+        // Transações de Caixa da empresa ativa (sua consulta já estava quase correta, só precisava usar a variável certa)
         $transacoes = TransacaoFinanceira::where('origem', 'Caixa')
-            ->where('company_id', $companyId)
+            ->where('company_id', $activeCompanyId) // Usando a variável correta
             ->get();
 
-        $centrosAtivos = CostCenter::getCadastroCentroCusto();
 
-        // Obter os valores de entrada e saída de caixa para a empresa
-        $valorEntrada = Caixa::getCaixaEntrada($companyId);
+        // Busca todos os centros de custo ativos DA EMPRESA ATIVA NA SESSÃO
+        $centrosAtivos = CostCenter::forActiveCompany()->get();
 
-        /** @var TYPE_NAME $valorSaidas */
-        $valorSaidas = Caixa::getCaixaSaida($companyId);
 
-        // Obter informações da empresa associada ao usuário (ajustando para relacionamento)
-        $company = $user->company;
+        // A variável $company agora é a empresa ativa na sessão
+        $company = Auth::user()->companies()->find($activeCompanyId);
 
-        $entidadesBanco = Caixa::getEntidadesBanco();
-
+        // 3. RETORNO PARA A VIEW com os dados corretos e filtrados
         return view('app.financeiro.caixa.list', [
             'transacoes' => $transacoes,
-            'valorEntrada' => $valorEntrada,
-            'valorSaidas' => $valorSaidas,
+            'valorEntrada' => $somaEntradas, // Usando a variável já calculada
+            'valorSaidas' => $somaSaidas,   // Usando a variável já calculada
             'total' => $total,
             'lps' => $lps,
-            'bancos' => $bancos,
             'company' => $company,
             'entidades' => $entidades,
             'entidadesBanco' => $entidadesBanco,
             'activeTab' => $activeTab,
             'centrosAtivos' => $centrosAtivos,
-
-
         ]);
     }
 
@@ -186,26 +183,15 @@ class CaixaController extends Controller
      */
     public function create()
     {
-        $lps = LancamentoPadrao::orderBy('created_at', 'desc')->take(6)->get();
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return redirect()->back()->with('error', 'Selecione uma empresa.');
+        }
 
-        $company = User::getCompanyName();
+        $lps = LancamentoPadrao::forActiveCompany()->get(); // Usando scope
+        $totalCaixa = EntidadeFinanceira::forActiveCompany()->where('tipo', 'caixa')->sum('saldo_atual');
 
-        list($somaEntradas, $somaSaida) = caixa::getCaixa();
-
-        $total = $somaEntradas - $somaSaida;
-
-        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
-
-
-        return view(
-            'app.financeiro.caixa.create',
-            [
-                'company' => $company,
-                'lps' => $lps,
-                'bancos' => $bancos,
-                'total' => $total,
-            ]
-        );
+        return view('app.financeiro.caixa.create', compact('lps', 'totalCaixa'));
     }
 
     /**
@@ -214,10 +200,13 @@ class CaixaController extends Controller
     public function store(StoreTransacaoFinanceiraRequest $request)
     {
         // Recupera a companhia associada ao usuário autenticado
-        $subsidiary = User::getCompany();
+        $activeCompanyId = session('active_company_id');
 
-        if (!$subsidiary) {
-            return redirect()->back()->with('error', 'Companhia não encontrada.');
+        // 2. Verificação de segurança para garantir que uma empresa está ativa.
+        if (!$activeCompanyId) {
+            // É melhor usar um Flasher ou uma mensagem de erro mais específica
+            flash()->error('Nenhuma empresa selecionada. Por favor, escolha uma empresa antes de criar uma transação.');
+            return redirect()->back();
         }
 
         // Validação automática com StoreTransacaoFinanceiraRequest
@@ -228,7 +217,7 @@ class CaixaController extends Controller
         $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
 
         // Adiciona informações padrão
-        $validatedData['company_id'] = $subsidiary->company_id;
+        $validatedData['company_id'] = $activeCompanyId;
         $validatedData['created_by'] = Auth::id();
         $validatedData['created_by_name'] = Auth::user()->name;
         $validatedData['updated_by'] = Auth::id();
@@ -272,6 +261,7 @@ class CaixaController extends Controller
 
         // Mensagem de sucesso
         Flasher::addSuccess('Lançamento criado com sucesso!');
+
         return redirect()->back()->with('message', 'Lançamento criado com sucesso!');
     }
 
@@ -367,33 +357,20 @@ class CaixaController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
+    // O edit fica mais seguro
     public function edit($id)
     {
-        // Obter o ID da empresa do usuário autenticado
-        $companyId = Auth::user()->company_id;
-
-        // Buscar o banco com o ID e verificar se pertence à empresa do usuário
-        $caixa = TransacaoFinanceira::with('modulos_anexos', 'recibo.address')
-            ->where('company_id', $companyId) // Filtrar pelo company_id do usuário
+        // SEGURANÇA: Garante que a transação pertence à empresa ativa
+        $caixa = TransacaoFinanceira::forActiveCompany()
+            ->with('modulos_anexos', 'recibo.address')
             ->findOrFail($id);
 
-
+        // SEGURANÇA: Garante que os dados de apoio também são da empresa ativa
         $lps = LancamentoPadrao::all();
-        $entidadesBanco = Banco::getEntidadesBanco();
-        $entidades = Caixa::getEntidadesCaixa();
-        $centrosAtivos = CostCenter::where('company_id', $companyId)->get();
+        $entidades = EntidadeFinanceira::forActiveCompany()->get();
+        $centrosAtivos = CostCenter::forActiveCompany()->get();
 
-        // Retornar a view com os dados filtrados
-        return view(
-            'app.financeiro.caixa.edit',
-            [
-                'caixa' => $caixa,
-                'lps' => $lps,
-                'entidades' => $entidades,
-                'entidadesBanco' => $entidadesBanco,
-                'centrosAtivos' => $centrosAtivos,
-            ]
-        );
+        return view('app.financeiro.caixa.edit', compact('caixa', 'lps', 'entidades', 'centrosAtivos'));
     }
 
     /**
@@ -403,7 +380,7 @@ class CaixaController extends Controller
     {
         try {
             // Obtenha a empresa do usuário autenticado
-            $subsidiaryId = User::getCompany();
+            $transacao = TransacaoFinanceira::forActiveCompany()->findOrFail($id);
 
             // Tratar o valor do campo "valor"
             if ($request->has('valor')) {
@@ -488,7 +465,7 @@ class CaixaController extends Controller
 
             // Atualiza os dados do banco
             $validatedData['movimentacao_id'] = $movimentacao->id; // Mantém o vínculo com a movimentação
-            $banco->update($validatedData);
+            $transacao->update($validatedData);
 
             // Verifica se há anexos enviados
             if ($request->hasFile('anexos')) {
@@ -638,5 +615,54 @@ class CaixaController extends Controller
             Flasher::addError('Erro ao excluir transação: ' . $e->getMessage());
             return redirect()->back();
         }
+    }
+
+    public function getDespesasChartData(Request $request)
+    {
+        // 1. Validação da requisição (opcional, mas recomendado)
+        $request->validate([
+            'range' => 'nullable|integer',
+            'start_date' => 'nullable|date_format:Y-m-d',
+            'end_date' => 'nullable|date_format:Y-m-d',
+        ]);
+
+        // 2. Determina o período
+        $activeCompanyId = session('active_company_id');
+        $query = TransacaoFinanceira::forActiveCompany()->where('tipo', 'saida');
+
+        if ($request->has('start_date') && $request->has('end_date')) {
+            $startDate = Carbon::parse($request->start_date)->startOfDay();
+            $endDate = Carbon::parse($request->end_date)->endOfDay();
+            $query->whereBetween('data_competencia', [$startDate, $endDate]);
+        } else {
+            $days = $request->input('range', 30); // Padrão de 30 dias
+            $query->where('data_competencia', '>=', now()->subDays($days)->startOfDay());
+        }
+
+        // 3. Agrupa os dados por dia e soma os valores
+        $despesas = $query->select(
+            DB::raw('DATE(data_competencia) as data'),
+            DB::raw('SUM(valor) as total')
+        )
+            ->groupBy('data')
+            ->orderBy('data', 'asc')
+            ->get();
+
+        // 4. Formata os dados para o ApexCharts
+        $categories = $despesas->pluck('data')->map(function ($date) {
+            return Carbon::parse($date)->format('d/m');
+        });
+
+        $seriesData = $despesas->pluck('total');
+        $totalGeral = $despesas->sum('total');
+
+        // 5. Retorna a resposta em JSON
+        return response()->json([
+            'categories' => $categories,
+            'series' => [
+                ['name' => 'Despesas', 'data' => $seriesData]
+            ],
+            'total' => 'R$ ' . number_format($totalGeral, 2, ',', '.')
+        ]);
     }
 }

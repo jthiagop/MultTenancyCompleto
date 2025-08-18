@@ -200,8 +200,8 @@
                                         <!--begin::Image-->
                                         <div
                                             class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-                                            <img class="img-fluid w-100 h-100 rounded" src="/assets/media/png/banco3.png"
-                                                alt="image" />
+                                            <img class="img-fluid w-100 h-100 rounded"
+                                                src="/assets/media/png/banco3.png" alt="image" />
                                         </div>
                                         <!--end::Image-->
                                         <!--begin::Wrapper-->
@@ -552,20 +552,33 @@
                                                         <div class="d-flex align-items-center mb-9">
                                                             <!--begin::Symbol-->
                                                             <div class="symbol symbol-70px symbol-circle me-5">
-                                                                <span class="symbol-label bg-light-primary">
-                                                                    <!-- Exibir o Icone do Banco -->
-                                                                    <span
-                                                                        class="svg-icon svg-icon-3x svg-icon-primary">
-                                                                        <!-- You can add a custom icon or keep it as is -->
-                                                                        <svg width="24" height="24"
-                                                                            viewBox="0 0 24 24" fill="none"
-                                                                            xmlns="http://www.w3.org/2000/svg">
-                                                                            <path
-                                                                                d="M12 2L9 5H15L12 2ZM4 8H20L12 22L4 8Z"
-                                                                                fill="currentColor" />
-                                                                        </svg>
+                                                                {{-- 
+                                                                        Verifica se a entidade tem um banco relacionado 
+                                                                        e se esse banco tem um caminho de logo definido.
+                                                                    --}}
+                                                                @if ($entidade->bank && $entidade->bank->logo_path)
+                                                                    {{-- Usa o caminho do logo salvo no banco de dados --}}
+                                                                    <img src="{{ $entidade->bank->logo_path}}"
+                                                                        alt="{{ $entidade->bank->name }}"
+                                                                        class="p-3" />
+                                                                @else
+                                                                    {{-- Fallback: Mostra um ícone genérico se não houver logo --}}
+                                                                    <span class="symbol-label bg-light-primary">
+                                                                        <span
+                                                                            class="svg-icon svg-icon-3x svg-icon-primary">
+                                                                            <svg width="24" height="24"
+                                                                                viewBox="0 0 24 24" fill="none"
+                                                                                xmlns="http://www.w3.org/2000/svg">
+                                                                                <path
+                                                                                    d="M20 14H18V10H20V14ZM10 14H8V10H10V14ZM15 14H13V10H15V14Z"
+                                                                                    fill="currentColor" />
+                                                                                <path opacity="0.3"
+                                                                                    d="M22 18V6C22 5.4 21.6 5 21 5H3C2.4 5 2 5.4 2 6V18C2 18.6 2.4 19 3 19H21C21.6 19 22 18.6 22 18ZM5 14H7V10H5V14ZM12 14H10V10H12V14ZM17 14H15V10H17V14Z"
+                                                                                    fill="currentColor" />
+                                                                            </svg>
+                                                                        </span>
                                                                     </span>
-                                                                </span>
+                                                                @endif
                                                             </div>
                                                             <!--end::Symbol-->
 
@@ -658,11 +671,11 @@
         </div>
         <!--end::Content wrapper-->
     </div>
-        @include('app.components.modals.lancar-banco')
-        <!--end::Modal - Upgrade plan-->
-        <script>
-            var lpsData = @json($lps);
-        </script>
+    @include('app.components.modals.lancar-banco')
+    <!--end::Modal - Upgrade plan-->
+    <script>
+        var lpsData = @json($lps);
+    </script>
 </x-tenant-app-layout>
 
 <script src="/assets/js/custom_script.js"></script>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
+use App\Models\Bank;
 use App\Models\EntidadeFinanceira;
 use App\Models\Financeiro\BankStatement;
 use App\Models\Financeiro\CostCenter;
@@ -20,19 +21,14 @@ class EntidadeFinanceiraController extends Controller
     // Lista todas as entidades financeiras
     public function index()
     {
-        $user = Auth::user();
-        // Obter o ID da empresa associada ao usuário autenticado
-        $companyId = $user->company_id;
-
-        // Verifica se a empresa foi encontrada
-        if (!$companyId) {
-            return redirect()->back()->with('error', 'Empresa não encontrada para o usuário autenticado.');
-        }
-
+        // Busca as entidades da empresa ativa E carrega as movimentações.
         $entidades = EntidadeFinanceira::with('movimentacoes')
-            ->where('company_id', $companyId)
+            ->forActiveCompany() // <-- Mágica do Scope!
             ->get();
-        return view('app.cadastros.entidades.index', compact('entidades'));
+
+        $banks = Bank::all();
+
+        return view('app.cadastros.entidades.index', compact('entidades', 'banks'));
     }
 
     // Mostra o formulário de criação
@@ -42,82 +38,70 @@ class EntidadeFinanceiraController extends Controller
     }
 
     // Salva uma nova entidade financeira
-    public function store(Request $request)
-    {
-        // Recupera o ID da empresa do usuário logado
-        $companyId = Auth::user()->company_id;
-
-        // 1) Remover formatação de milhar e substituir vírgulas por pontos
-        $request->merge([
-            'saldo_inicial' => str_replace(['.', ','], ['', '.'], $request->saldo_inicial),
-            'saldo_atual'   => str_replace(['.', ','], ['', '.'], $request->saldo_atual),
-            'company_id'    => $companyId // Adiciona o company_id ao request
-        ]);
-
-        // 2) Validação condicional
-        $validatedData = $request->validate([
-            'tipo'          => 'required|in:caixa,banco,dizimo,coleta,doacao',
-            'company_id' => 'required|integer|exists:companies,id',
-            // Se tipo == 'banco', campo 'banco' é obrigatório; caso contrário, 'nome' é obrigatório.
-            'nome' => 'required_unless:tipo,banco|nullable|string|max:100',
-            'banco' => 'required_if:tipo,banco|nullable|string|max:100',
-
-
-            'agencia'       => 'nullable|string|max:20',
-            'conta'         => 'nullable|string|max:20',
-
-            'saldo_inicial' => 'required|numeric',
-            'saldo_atual'   => 'nullable|numeric',
-            'descricao'     => 'nullable|string|max:255',
-        ], [
-            'nome.required_if'  => 'O campo "Nome da Entidade" é obrigatório quando o tipo não for "banco".',
-            'banco.required_if' => 'Selecione um banco quando o tipo for "banco".',
-        ]);
-
-        // 3) Ajustar “nome” conforme o tipo
-        //    Se for "banco", usamos o campo 'banco' como o nome da entidade; caso contrário, usamos 'nome'.
-        if ($request->tipo === 'banco') {
-            $validatedData['nome'] = $validatedData['banco']; // Atribui o campo 'banco' como nome
-        }
-
-        // 4) Se saldo_atual não for informado, usar saldo_inicial como valor padrão
-        $validatedData['saldo_atual'] = $validatedData['saldo_atual'] ?? $validatedData['saldo_inicial'];
-
-        // 5) Adicionar campos de auditoria / company
-        $validatedData['created_by']       = Auth::id();
-        $validatedData['created_by_name']  = Auth::user()->name;
-        $validatedData['updated_by']       = Auth::id();
-        $validatedData['updated_by_name']  = Auth::user()->name;
-
-
-        try {
-            // 6) Criar a entidade no banco
-            $entidade = EntidadeFinanceira::create($validatedData);
-
-            // 7) Criar a movimentação inicial (opcional, conforme sua lógica)
-            Movimentacao::create([
-                'entidade_id'   => $entidade->id,
-                'tipo'          => 'entrada',
-                'valor'         => $validatedData['saldo_inicial'],
-                'descricao'     => 'Saldo inicial da entidade financeira',
-                'company_id'    => $validatedData['company_id'],
-                'created_by'    => Auth::id(),
-                'created_by_name' => Auth::user()->name,
-                'updated_by'    => Auth::id(),
-                'updated_by_name' => Auth::user()->name,
-            ]);
-
-            // 8) Mensagem de sucesso e redirecionamento
-            flash()->success('O lançamento foi salvo com sucesso!');
-            return redirect()->back();
-        } catch (\Exception $e) {
-            // 9) Em caso de erro, registra log (opcional) e retorna com mensagem de erro
-            \Log::error('Ocorreu um erro ao processar o lançamento: ' . $e->getMessage());
-
-            Flasher::addError('Ocorreu um erro: ' . $e->getMessage());
-            return redirect()->back()->withInput();
-        }
+public function store(Request $request)
+{
+    // 1. Pega a empresa ativa da sessão (seu código aqui está perfeito)
+    $activeCompanyId = session('active_company_id');
+    if (!$activeCompanyId) {
+        Flasher::addError('Nenhuma empresa selecionada.');
+        return redirect()->back();
     }
+
+    // 2. Formata o saldo e adiciona o company_id (seu código aqui está perfeito)
+    $request->merge([
+        'saldo_inicial' => str_replace(['.', ','], ['', '.'], $request->saldo_inicial),
+        'company_id'    => $activeCompanyId
+    ]);
+
+    // 3. Validação CORRIGIDA
+    $validatedData = $request->validate([
+        'tipo'          => 'required|in:caixa,banco',
+        'company_id'    => 'required|integer|exists:companies,id',
+        'nome'          => 'required_unless:tipo,banco|nullable|string|max:100',
+        'bank_id'       => 'required_if:tipo,banco|nullable|integer|exists:banks,id', // CORREÇÃO: Valida 'bank_id' em vez de 'banco'
+        'agencia'       => 'nullable|string|max:20',
+        'conta'         => 'nullable|string|max:20',
+        'saldo_inicial' => 'required|numeric',
+        'descricao'     => 'nullable|string|max:255',
+    ]);
+
+    // 4. Lógica para gerar o nome da entidade (A CORREÇÃO PRINCIPAL)
+    if ($request->tipo === 'banco') {
+        // Busca o nome do banco no banco de dados usando o ID
+        $bank = Bank::find($validatedData['bank_id']);
+        
+        // Cria um nome descritivo para a entidade
+        $validatedData['nome'] = "{$bank->name} - Ag. {$validatedData['agencia']} C/C {$validatedData['conta']}";
+    }
+
+    // O resto da sua lógica continua igual...
+    $validatedData['saldo_atual'] = $validatedData['saldo_inicial'];
+
+    $validatedData['created_by'] = Auth::id();
+    $validatedData['created_by_name'] = Auth::user()->name;
+    $validatedData['updated_by'] = Auth::id();
+    $validatedData['updated_by_name'] = Auth::user()->name;
+
+    try {
+        $entidade = EntidadeFinanceira::create($validatedData);
+
+        // Lógica para criar a primeira movimentação... (seu código aqui está ótimo)
+        Movimentacao::create([
+            'entidade_id'   => $entidade->id,
+            'tipo'          => 'entrada',
+            'valor'         => $validatedData['saldo_inicial'],
+            'descricao'     => 'Saldo inicial da entidade financeira',
+            'company_id'    => $validatedData['company_id'],
+        ]);
+
+        flash()->success('A entidade financeira foi criada com sucesso!');
+        return redirect()->route('entidades.index');
+    } catch (\Exception $e) {
+        \Log::error('Erro ao criar entidade: ' . $e->getMessage());
+        Flasher::addError('Ocorreu um erro ao criar a entidade.');
+        return redirect()->back()->withInput();
+    }
+}
 
     // Adiciona uma movimentação
     public function addMovimentacao(Request $request, $id)
@@ -128,7 +112,7 @@ class EntidadeFinanceiraController extends Controller
             'descricao' => 'nullable|string|max:255',
         ]);
 
-        $entidade = EntidadeFinanceira::findOrFail($id);
+        $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
 
         // Cria a movimentação
         Movimentacao::create([
@@ -148,7 +132,8 @@ class EntidadeFinanceiraController extends Controller
     {
         try {
             // 1) Localiza a entidade financeira pelo ID
-            $entidade = EntidadeFinanceira::findOrFail($id);
+            // CORREÇÃO DE SEGURANÇA: Busca a entidade dentro do escopo da empresa ativa
+            $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
             // 2) Exclui as movimentações associadas (se necessário)
             $movimentacao = Movimentacao::where('entidade_id', $entidade->id)->delete();
 
@@ -172,8 +157,6 @@ class EntidadeFinanceiraController extends Controller
      */
     public function show($id)
     {
-        ini_set('memory_limit', '512M');
-
         // 1. Recupera o ID da empresa do usuário logado
         $companyId = Auth::user()->company_id;
 

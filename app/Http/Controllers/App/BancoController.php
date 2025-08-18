@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Financer\StoreTransacaoFinanceiraRequest;
 use App\Models\Anexo;
 use App\Models\Banco;
-use App\Models\CadastroBanco;
 use App\Models\EntidadeFinanceira;
 use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\ModulosAnexo;
@@ -46,13 +45,12 @@ class BancoController extends Controller
 
 
         $lps = LancamentoPadrao::all();
-        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
 
+        
         return view('app.financeiro.index', [
             'valorEntradaBanco' => $valorEntradaBanco,
             'ValorSaidasBanco' => $ValorSaidasBanco,
             'lps' => $lps,
-            'bancos' => $bancos,
             'entidadesBanco' => $entidadesBanco,
         ]);
     }
@@ -64,10 +62,15 @@ class BancoController extends Controller
         $activeTab = $request->input('tab', 'overview'); // 'overview' é o padrão caso não haja o parâmetro 'tab'
 
         // Suponha que você já tenha o ID da empresa disponível
-        $companyId = Auth::user()->company_id; // ou $companyId = 1; se o ID for fixo
+        $companyId = session('active_company_id'); // ou $companyId = 1; se o ID for fixo
+
+        if (!$companyId) {
+            return redirect()->route('dashboard')->with('error', 'Por favor, selecione uma empresa para visualizar os dados.');
+        }
 
         $lps = LancamentoPadrao::all();
-        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
+
+        
 
         // Filtrar as entradas e saídas pelos bancos relacionados à empresa
         list($somaEntradas, $somaSaida) = Banco::getBanco();
@@ -80,21 +83,25 @@ class BancoController extends Controller
 
         $total  = EntidadeFinanceira::getValorTotalEntidadeBC();
 
-        $entidadesBanco = Banco::getEntidadesBanco();
+        $entidadesBanco = EntidadeFinanceira::forActiveCompany() // 1. Usa o scope para filtrar pela empresa
+                                   ->where('tipo', 'banco')  // 2. Adiciona o filtro específico para bancos
+                                   ->with('bankStatements')  // 3. (Opcional, mas recomendado) Otimiza a consulta
+                                   ->get();
+
         // Filtrar as transações com origem "Banco"
         // Transações com anexos relacionados
         $transacoes = TransacaoFinanceira::with('modulos_anexos')
-        ->where(function ($query) {
-            $query->where('origem', 'Conciliação Bancária')
-                  ->orWhere('origem', 'Banco');
-        })
-        ->where('company_id', $companyId)
-        ->get();
+            ->where(function ($query) {
+                $query->where('origem', 'Conciliação Bancária')
+                    ->orWhere('origem', 'Banco');
+            })
+            ->where('company_id', $companyId)
+            ->get();
 
 
         $valorEntrada = Banco::getBancoEntrada();
         $ValorSaidas = Banco::getBancoSaida();
-        $centrosAtivos = CostCenter::getCadastroCentroCusto();
+        $centrosAtivos = CostCenter::forActiveCompany()->get();
 
         // Carregar bancos com entidades financeiras relacionadas
         $IfBancos = TransacaoFinanceira::where('company_id', $companyId)
@@ -148,7 +155,6 @@ class BancoController extends Controller
 
         // 🟢 Retorna a View com todos os dados
         return view('app.financeiro.banco.list', array_merge([
-            'bancos' => $bancos,
             'valorEntrada' => $valorEntrada,
             'ValorSaidas' => $ValorSaidas,
             'total' => $total,
@@ -170,11 +176,10 @@ class BancoController extends Controller
     {
         $company = User::getCompanyName();
         $lps = LancamentoPadrao::all();
-        $bancos = CadastroBanco::getCadastroBanco(); // Chama o método para obter os bancos
 
+        
         return view('app.financeiro.banco.create', [
             'lps' => $lps,
-            'bancos' => $bancos,
             'company' => $company,
 
         ]);
@@ -453,7 +458,6 @@ class BancoController extends Controller
             ->findOrFail($id);
 
         // Garantir que apenas dados da mesma empresa sejam carregados
-        $bancosCadastro = CadastroBanco::where('company_id', $companyId)->get();
         $lps = LancamentoPadrao::all();
         $entidadesBanco = Banco::getEntidadesBanco();
         $centrosAtivos = CostCenter::where('company_id', $companyId)->get();
@@ -464,13 +468,12 @@ class BancoController extends Controller
             [
                 'banco' => $banco,
                 'lps' => $lps,
-                'bancosCadastro' => $bancosCadastro,
                 'entidadesBanco' => $entidadesBanco,
                 'centrosAtivos' => $centrosAtivos,
             ]
         );
     }
-    
+
     /**
      * Remove the specified resource from storage.
      */

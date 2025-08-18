@@ -29,18 +29,18 @@ class CadastroBanco extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
-    static public function getCadastroBanco()
+    /**
+     * Scope: Filtra a busca para incluir apenas os registros da empresa ativa na sessão.
+     */
+    public function scopeForActiveCompany($query)
     {
-    // Recupere o usuário logado
-    $userId = Auth::user()->id; // Recupere o ID do usuário logado
+        $activeCompanyId = session('active_company_id');
 
-    // Recupera o ID da companhia associada ao usuário logado
-    $saidas = DB::table('cadastro_bancos')
-    ->join('company_user', 'cadastro_bancos.company_id', '=', 'company_user.company_id')
-    ->where('company_user.user_id', $userId)
-    ->select('cadastro_bancos.*') // Selecione todas as colunas da tabela 'cadastro_bancos'
-    ->get();
+        if ($activeCompanyId) {
+            return $query->where('company_id', $activeCompanyId);
+        }
 
-        return $saidas;
+        // Não retorna nada se nenhuma empresa estiver ativa
+        return $query->whereRaw('1 = 0');
     }
 }

@@ -27,7 +27,8 @@
                             <!--end::Item-->
                             <!--begin::Item-->
                             <li class="breadcrumb-item text-muted">
-                                <a href="{{ route('caixa.index') }}" class="text-muted text-hover-primary">Financeiro</a>
+                                <a href="{{ route('caixa.index') }}"
+                                    class="text-muted text-hover-primary">Financeiro</a>
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
@@ -85,7 +86,6 @@
                                             <!--end::Description-->
                                         </div>
                                         <!--end::Heading-->
-
                                         <div class="row mb-5">
                                             <!--begin::Col-->
                                             <div class="col-md-4 fv-row">
@@ -97,12 +97,6 @@
                                                         {{ old('tipo') == 'caixa' ? 'selected' : '' }}>Caixa</option>
                                                     <option value="banco"
                                                         {{ old('tipo') == 'banco' ? 'selected' : '' }}>Banco</option>
-                                                    <option value="dizimo"
-                                                        {{ old('tipo') == 'dizimo' ? 'selected' : '' }}>Dízimo</option>
-                                                    <option value="coleta"
-                                                        {{ old('tipo') == 'coleta' ? 'selected' : '' }}>Coleta</option>
-                                                    <option value="doacao"
-                                                        {{ old('tipo') == 'doacao' ? 'selected' : '' }}>Doação</option>
                                                 </select>
                                                 @error('tipo')
                                                     <div class="text-danger mt-2">{{ $message }}</div>
@@ -126,44 +120,27 @@
                                             <!-- Grupo de Banco (Oculto por padrão) -->
                                             <div class="col-md-8 fv-row d-none" id="banco-group">
                                                 <label class="fs-5 fw-semibold mb-2">Banco</label>
-                                                <select id="banco-select" name="banco"
+                                                <select id="banco-select" name="bank_id"
                                                     class="form-select form-select-solid" data-control="select2"
                                                     data-placeholder="Selecione um banco">
                                                     <option></option> <!-- para placeholder vazio -->
-                                                    <!-- Exemplo manual: -->
-                                                    <option value="Bradesco"
-                                                        data-icon="/assets/media/svg/bancos/bradesco.svg">
-                                                        Bradesco
-                                                    </option>
-                                                    <option value="Caixa"
-                                                        data-icon="/assets/media/svg/bancos/caixa.svg">
-                                                        Caixa
-                                                    </option>
-                                                    <option value="Nubank"
-                                                        data-icon="/assets/media/svg/bancos/nubank.svg">Nubank
-                                                    </option>
-                                                    <option value="Itau"
-                                                        data-icon="/assets/media/svg/bancos/itau.svg">Itaú
-                                                    </option>
-                                                    <option value="Brasil"
-                                                        data-icon="/assets/media/svg/bancos/brasil.svg">
-                                                        Brasil</option>
-                                                    <option value="stone"
-                                                        data-icon="/assets/media/svg/bancos/stone.svg">Stone
-                                                    </option>
-                                                    <option value="Unicred"
-                                                        data-icon="/assets/media/svg/bancos/unicred.svg">Unicred
-                                                    </option>
-                                                    <option value="Inter"
-                                                        data-icon="/assets/media/svg/bancos/inter.svg">Inter
-                                                    </option>
-                                                    <option value="Inter"
-                                                        data-icon="/assets/media/svg/bancos/sicoob.svg">Sicoob
-                                                    </option>
-                                                    <!-- ... e assim por diante -->
+
+                                                    {{-- A lista de bancos agora vem do controller --}}
+                                                    @isset($banks)
+                                                        @foreach ($banks as $bank)
+                                                            {{-- 
+                                                                A CORREÇÃO ESTÁ AQUI:
+                                                                Removemos a função asset() e passamos o $bank->logo_path diretamente.
+                                                            --}}
+                                                            <option value="{{ $bank->id }}"
+                                                                data-icon="{{ $bank->logo_path }}">
+                                                                {{ $bank->name }}
+                                                            </option>
+                                                        @endforeach
+                                                    @endisset
                                                 </select>
 
-                                                @error('banco')
+                                                @error('bank_id')
                                                     <div class="text-danger mt-2">{{ $message }}</div>
                                                 @enderror
                                             </div>
@@ -267,8 +244,8 @@
                                                     <!--begin::Input-->
                                                     <input type="text"
                                                         class="form-control form-control-solid ps-12 money"
-                                                        placeholder="Ex: 1.000,00" id="valor2"
-                                                        name="saldo_atual" />
+                                                        placeholder="Ex: 1.000,00" id="valor2" name="saldo_atual"
+                                                        disabled />
                                                     <!--end::Input-->
                                                     @error('saldo_atual')
                                                         <div class="text-danger mt-2">{{ $message }}</div>
@@ -351,8 +328,6 @@
                                         <!--end::Actions-->
                                     </form>
                                     <!--end:Form-->
-
-
                                 </div>
                             </div>
                             <!--end::Chart widget 5-->
@@ -601,27 +576,27 @@
 </script>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-    const submitButton = document.getElementById('kt_modal_submit_button');
-    const form = document.querySelector('form'); // Seleciona o formulário
+    document.addEventListener('DOMContentLoaded', function() {
+        const submitButton = document.getElementById('kt_modal_submit_button');
+        const form = document.querySelector('form'); // Seleciona o formulário
 
-    form.addEventListener('submit', function (e) {
-        // Impede o envio do formulário até que o JavaScript seja executado
-        e.preventDefault();
+        form.addEventListener('submit', function(e) {
+            // Impede o envio do formulário até que o JavaScript seja executado
+            e.preventDefault();
 
-        // Mostra o indicador de carregamento
-        submitButton.setAttribute('data-kt-indicator', 'on');
-        submitButton.disabled = true;
+            // Mostra o indicador de carregamento
+            submitButton.setAttribute('data-kt-indicator', 'on');
+            submitButton.disabled = true;
 
-        // Simula um atraso (substitua isso pelo envio real do formulário)
-        setTimeout(function () {
-            // Oculta o indicador de carregamento
-            submitButton.removeAttribute('data-kt-indicator');
-            submitButton.disabled = false;
+            // Simula um atraso (substitua isso pelo envio real do formulário)
+            setTimeout(function() {
+                // Oculta o indicador de carregamento
+                submitButton.removeAttribute('data-kt-indicator');
+                submitButton.disabled = false;
 
-            // Envia o formulário (substitua isso pelo envio real do formulário)
-            form.submit();
-        }, 2000); // 2 segundos de atraso (apenas para simulação)
+                // Envia o formulário (substitua isso pelo envio real do formulário)
+                form.submit();
+            }, 2000); // 2 segundos de atraso (apenas para simulação)
+        });
     });
-});
 </script>

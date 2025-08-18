@@ -53,11 +53,6 @@
                             <div class="d-flex flex-stack pb-3">
                                 <!--begin::Info-->
                                 <div class="d-flex">
-                                    <!--begin::Avatar-->
-                                    <div class="symbol symbol-circle symbol-45px">
-                                        <img src="assets/media/avatars/300-11.jpg" alt="" />
-                                    </div>
-                                    <!--end::Avatar-->
                                     <!--begin::Details-->
                                     <div class="ms-5">
                                         <!--begin::Name-->

@@ -38,7 +38,8 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Adicione o middleware ao grupo 'web' aqui
         $middleware->appendToGroup('web', [
-            \App\Http\Middleware\SetActiveCompany::class,
+            //\App\Http\Middleware\SetActiveCompany::class,
+
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

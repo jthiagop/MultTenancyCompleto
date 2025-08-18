@@ -24,6 +24,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/inputmask/5.0.7-beta.19/inputmask.min.js"></script>
     <!--end::Fonts-->
+    <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <!--begin::Vendor Stylesheets(used for this page only)-->
     <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
@@ -64,14 +65,15 @@
     </script>
 
     <style>
-
-/* Flash Messages */
-.flash-messages {
-    position: fixed;
-    z-index: 999; /* Garante que esteja acima da navbar */
-    top: 80px; /* Coloca abaixo da navbar */
-    right: 20px;
-}
+        /* Flash Messages */
+        .flash-messages {
+            position: fixed;
+            z-index: 999;
+            /* Garante que esteja acima da navbar */
+            top: 80px;
+            /* Coloca abaixo da navbar */
+            right: 20px;
+        }
     </style>
     <!--end::Theme mode setup on page load-->
     <!--begin::App-->

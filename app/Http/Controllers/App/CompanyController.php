@@ -230,7 +230,9 @@ class CompanyController extends Controller
             // ... suas regras de validação aqui ...
             'name' => ['required', 'string', 'max:255'],
             'cnpj' => ['required', 'string', 'size:18'],
-            // etc...
+            'data_fundacao' => ['nullable', 'date_format:d/m/Y'],
+            'data_cnpj' => ['nullable', 'date_format:d/m/Y'],
+            'email' => ['nullable', 'email', Rule::unique('companies')->ignore($company->id)],
         ]);
 
         if ($validator->fails()) {

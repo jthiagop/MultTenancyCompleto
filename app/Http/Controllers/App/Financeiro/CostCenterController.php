@@ -14,22 +14,22 @@ use Illuminate\Support\Facades\Auth;
 class CostCenterController extends Controller
 {
     /**
-     * Display a listing of the resource.
+     * Exibe a lista de centros de custo da empresa ativa na sessão.
      */
     public function index()
     {
-        // Suponha que você já tenha o ID da empresa disponível
-        $companyId = Auth::user()->company_id; // ou $companyId = 1; se o ID for fixo
-        // Busca todos os centros de custo
-        $centroCustos = CostCenter::where('company_id', $companyId)->get();
+        // 1. A consulta agora usa o scope 'forActiveCompany' para filtrar automaticamente
+        //    pela empresa que está ativa na sessão. É a forma mais limpa e segura.
+        $centroCustos = CostCenter::forActiveCompany()->get();
 
-        // Adiciona o progresso ao resultado
+        // 2. A sua lógica para calcular o progresso continua perfeita.
+        //    O método 'transform' é uma ótima maneira de adicionar dados à coleção.
         $centroCustos->transform(function ($centro) {
             $centro->progresso = $this->calcularProgresso($centro->start_date, $centro->end_date);
             return $centro;
         });
 
-        // Retorna para a view passando o array "centroCustos" já atualizado
+        // 3. Retorna a view com os dados já filtrados e formatados.
         return view('app.cadastros.costCenter.index', [
             'centroCustos' => $centroCustos
         ]);

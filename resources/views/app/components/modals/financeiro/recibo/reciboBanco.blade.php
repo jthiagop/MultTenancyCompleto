@@ -57,12 +57,10 @@
                            <!--begin::Title-->
                            <h1 class="mb-3">Gerar Recibo</h1>
                            <!--end::Title-->
-                           <!--begin::Description-->
-                           <div class="text-gray-400 fw-semibold fs-5">If you need more info, please
-                               check
-                               <a href="" class="fw-bold link-primary">Support Guidelines</a>.
-                           </div>
-                           <!--end::Description-->
+                        <!--begin::Description-->
+                        <div class="text-gray-400 fw-semibold fs-5">
+                            Preencha os dados abaixo para emitir o recibo referente a esta transação. Após a emissão, você poderá imprimir ou excluir o recibo conforme necessário.
+                        </div>       <!--end::Description-->
                        </div>
                        <!--end::Heading-->
                        <!--begin:Form-->
@@ -76,7 +74,7 @@
                            <div class="d-flex flex-column align-items-start flex-xxl-row">
                                <!--begin::Input group-->
                                <div class="d-flex align-items-center flex-equal fw-row me-4 order-2"
-                                   data-bs-toggle="tooltip" data-bs-trigger="hover" title="Specify invoice date">
+                                   data-bs-toggle="tooltip" data-bs-trigger="hover" title="Especificar data do recibo">
                                    <!--begin::Date-->
                                    <div class="fs-6 fw-bold text-gray-700 text-nowrap">Data:</div>
                                    <!--end::Date-->
@@ -88,25 +86,14 @@
                                            value="{{ \Carbon\Carbon::parse($banco->data_competencia)->format('d/m/Y') }}" />
                                        <!--end::Datepicker-->
                                        <!--begin::Icon-->
-                                       <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
-                                       <span class="svg-icon svg-icon-2 position-absolute ms-4 end-0">
-                                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                               xmlns="http://www.w3.org/2000/svg">
-                                               <path
-                                                   d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z"
-                                                   fill="currentColor" />
-                                           </svg>
-                                       </span>
-                                       <!--end::Svg Icon-->
-                                       <!--end::Icon-->
                                    </div>
                                    <!--end::Input-->
                                </div>
                                <!--end::Input group-->
                                <!--begin::Input group-->
                                <div class="d-flex flex-center flex-equal fw-row text-nowrap order-1 order-xxl-2 me-4"
-                                   data-bs-toggle="tooltip" data-bs-trigger="hover" title="Enter invoice number">
-                                   <span class="fs-2x fw-bold readonly text-gray-800">Número #</span>
+                                   data-bs-toggle="tooltip" data-bs-trigger="hover" title="Número do recibo">
+                                   <span class=" fw-bold readonly text-gray-800">Número #</span>
                                    <input type="text" class="form-control form-control-solid"
                                        value="{{ $banco->recibo->id ?? 'Não Emitido' }}" readonly placeholder="...">
 
@@ -114,7 +101,7 @@
                                <!--end::Input group-->
                                <!--begin::Input group-->
                                <div class="d-flex align-items-center justify-content-end flex-equal order-3 fw-row"
-                                   data-bs-toggle="tooltip" data-bs-trigger="hover" title="Valor recefernte ao recibo">
+                                   data-bs-toggle="tooltip" data-bs-trigger="hover" title="Valor referente ao recibo">
                                    <!--begin::Date-->
                                    <div class="fs-6 fw-bold text-gray-700 text-nowrap">Valor: R$
                                    </div>
@@ -126,18 +113,6 @@
                                            placeholder="Select date" name="valor" readonly
                                            value="{{ number_format($banco->valor, 2, ',', '.') }}" />
                                        <!--end::Datepicker-->
-                                       <!--begin::Icon-->
-                                       <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
-                                       <span class="svg-icon svg-icon-2 position-absolute end-0 ms-4">
-                                           <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                               xmlns="http://www.w3.org/2000/svg">
-                                               <path
-                                                   d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z"
-                                                   fill="currentColor" />
-                                           </svg>
-                                       </span>
-                                       <!--end::Svg Icon-->
-                                       <!--end::Icon-->
                                    </div>
                                    <!--end::Input-->
                                </div>

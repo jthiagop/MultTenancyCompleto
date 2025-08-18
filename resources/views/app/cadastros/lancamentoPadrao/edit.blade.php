@@ -75,7 +75,8 @@
 
                         <!-- Rodapé -->
                         <div class="modal-footer justify-content-center">
-                            <form id="delete-form" method="POST" action="{{ route('lancamentoPadrao.destroy', $lp->id) }}">
+                            <form id="delete-form" method="POST"
+                                action="{{ route('lancamentoPadrao.destroy', $lp->id) }}">
                                 @csrf
                                 @method('DELETE')
                                 <button type="button" class="btn btn-secondary px-4"
@@ -113,11 +114,11 @@
                                     <!--begin::Description-->
                                     <div class="mb-7">
                                         <!--begin::Title-->
-                                        <h4 class="fs-1 text-gray-800 w-bolder mb-6">Editar - {{ $lp->description }}
-                                        </h4>
+                                        <h3 class="fs-1 text-gray-800 w-bolder mb-6">Editar - {{ $lp->description }}
+                                        </h3>
                                         <!--end::Title-->
                                         <!--begin::Text-->
-                                        <p class="fw-semibold fs-4 text-gray-600 mb-2">
+                                        <p class=" fs-4 text-gray-600 mb-2">
                                             O <strong>Lançamento Padrão</strong> é um conjunto pré-definido de
                                             informações
                                             contábeis ou financeiras que se repetem de forma recorrente, como pagamentos
@@ -148,8 +149,7 @@
                                             <select class="form-select form-select-solid" name="type"
                                                 data-control="select2" data-placeholder="Selecione o tipo">
                                                 <option></option>
-                                                <option value="entrada"
-                                                    {{ $lp->type === 'entrada' ? 'selected' : '' }}>
+                                                <option value="entrada" {{ $lp->type === 'entrada' ? 'selected' : '' }}>
                                                     Entrada</option>
                                                 <option value="saida" {{ $lp->type === 'saida' ? 'selected' : '' }}>
                                                     Saída</option>
@@ -254,25 +254,24 @@
                                     <!--begin::Separator-->
                                     <div class="separator mb-8"></div>
                                     <!--end::Separator-->
+                                    <!-- Botão Sair (Voltar) -->
+                                    <a href="{{ url()->previous() }}" class="btn btn-light me-3">
+                                        <i class="bi bi-box-arrow-left me-2"></i> Sair
+                                    </a>
 
-                                    <!--begin::Button-->
-                                    <button type="reset" id="kt_modal_add_customer_cancel"
-                                        class="btn btn-light me-3">Sair</button>
-                                    <!--end::Button-->
-                                    <!--begin::Button-->
-                                    <button type="submit" id="kt_modal_add_customer_submit" class="btn btn-primary">
-                                        <span class="indicator-label">Salvar</span>
-                                        <span class="indicator-progress">Please wait...
-                                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                    <!-- Botão Salvar (Ação Principal) -->
+                                    <button type="submit" id="kt_modal_add_customer_submit"
+                                        class="btn btn-primary me-3">
+                                        <span class="indicator-label">
+                                            <i class="bi bi-save me-2"></i> Salvar
                                         </span>
                                     </button>
-                                    <!--end::Button-->
-                                    <!--begin::Button-->
-                                    <a href="#" class="btn btn-light-danger" data-bs-toggle="modal"
-                                    data-bs-target="#kt_modal_delete_card">
-                                    <i class="fas fa-trash-alt"></i> Excluir
-                                </a>
-                                    <!--end::Button-->
+
+                                    <!-- Botão Excluir (Ação Perigosa) -->
+                                    <button type="button" class="btn btn-light-danger" data-bs-toggle="modal"
+                                        data-bs-target="#kt_modal_delete_card">
+                                        <i class="bi bi-trash3 me-2"></i> Excluir
+                                    </button>
                                 </form>
                                 <!--end::Form-->
                             </div>

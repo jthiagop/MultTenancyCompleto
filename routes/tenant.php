@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+use App\Http\Controllers\App\Contabilidade\AccountMappingController;
+use App\Http\Controllers\App\Contabilidade\ChartOfAccountController;
 use App\Http\Controllers\App\PrestacaoDeContaController;
 use App\Http\Controllers\App\AnexoController;
 use App\Http\Controllers\App\Anexos\ModulosAnexosController;
@@ -15,9 +17,10 @@ use App\Http\Controllers\App\UserController;
 use App\Http\Controllers\App\TenantFilialController;
 use App\Http\Controllers\App\CaixaController;
 use App\Http\Controllers\App\LancamentoPadraoController;
-use App\Http\Controllers\App\CadastroBancoController;
+use App\Http\Controllers\App\BankController;
 use App\Http\Controllers\App\Cemiterio\CemeteryController;
 use App\Http\Controllers\App\Cemiterio\SepulturaController;
+use App\Http\Controllers\App\Contabilidade\ContabilidadeController;
 use App\Http\Controllers\App\EntidadeFinanceiraController;
 use App\Http\Controllers\App\EscrituraController;
 use App\Http\Controllers\App\FielController;
@@ -107,6 +110,8 @@ Route::middleware([
         });
 
         Route::get('/session/switch-company/{company}', [SessionController::class, 'switchCompany'])->name('session.switch-company');
+        Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
+        Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
 
         // Rotas acessíveis apenas para administradores
         Route::middleware(['role:admin'])->group(function () {
@@ -114,10 +119,26 @@ Route::middleware([
             Route::resource('caixa', CaixaController::class);
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
             Route::resource('users', UserController::class);
-            Route::resource('company', CompanyController::class);
-            Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
-            Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
+            Route::resource('company', CompanyController::class)->except(['edit', 'update']);
+
             Route::post('/filter', [RebortController::class, 'generateReport']);
+
+            Route::prefix('contabilidade')->name('contabilidade.')->group(function () {
+
+                // Rota principal que exibe a página com as abas.
+                Route::get('/', [ContabilidadeController::class, 'index'])->name('index');
+
+                // Rotas para o CRUD do Plano de Contas.
+                // O Laravel criará rotas como: /contabilidade/plano-contas, /contabilidade/plano-contas/create, etc.
+                Route::resource('plano-contas', ChartOfAccountController::class)->names('plano-contas');
+
+                // Rotas para o CRUD do Mapeamento (DE/PARA).
+                Route::resource('mapeamento', AccountMappingController::class)->only([
+                    'index',
+                    'store',
+                    'destroy'
+                ])->names('mapeamento');
+            });
         });
 
         // Rotas acessíveis apenas para administradores e usuários específicos
@@ -125,7 +146,7 @@ Route::middleware([
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
             Route::resource('lancamentoPadrao', LancamentoPadraoController::class);
-            Route::resource('cadastroBancos', CadastroBancoController::class);
+            Route::resource('cadastroBancos', BankController::class);
             Route::resource('users', UserController::class);
         });
 
@@ -136,6 +157,8 @@ Route::middleware([
         Route::middleware(['role:user'])->group(function () {
             Route::delete('/caixas/{id}', [CaixaController::class, 'destroySelected'])->name('caixas.destroySelected');
             Route::resource('caixa', CaixaController::class);
+            Route::get('/charts/despesas', [CaixaController::class, 'getDespesasChartData'])->name('charts.despesas.data');
+
             Route::resource('banco', BancoController::class);
             Route::resource('anexos', AnexoController::class);
             Route::resource('modulosAnexos', ModulosAnexosController::class);

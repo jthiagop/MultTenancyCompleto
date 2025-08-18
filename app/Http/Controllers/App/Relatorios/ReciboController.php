@@ -13,54 +13,6 @@ use Validator;
 class ReciboController extends Controller
 {
     /**
-     * Display a listing of the resource.
-     */
-    public function index()
-    {
-        //
-    }
-
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
-
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
-
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
-
-    /**
      * Remove the specified resource from storage.
      */
     public function destroy($id)
@@ -83,28 +35,38 @@ class ReciboController extends Controller
         return redirect()->back()->with('message', 'Recibo excluídos com sucesso!');
     }
 
-        // *** Gerar Recibo ***
+    // *** Gerar Recibo ***
 
     public function imprimirRecibo($reciboId)
     {
         // 1) Buscar o recibo com seus relacionamentos
         $recibo = Recibo::with(['address', 'transacao'])->findOrFail($reciboId);
+        $activeCompanyId = session('active_company_id');
+        $company = \App\Models\Company::with('addresses')->find($activeCompanyId);
+
+        if (!$company) {
+            abort(404, 'Empresa não encontrada ou não selecionada.');
+        }
+        // Chama a nossa nova função para obter o logo em Base64
+        $companyLogo = $this->logoToBase64($company);
 
         // 2) Preparar a view para o PDF (Ex: 'app.financeiro.recibo.pdf')
         //    Você pode criar um arquivo Blade que contenha o layout do recibo
         //    e enviar o objeto $recibo para ele.
         $html = view('app.relatorios.financeiro.recibo', [
             'recibo' => $recibo,
+            'company' => $company,
+            'companyLogo' => $companyLogo, // A variável agora existe e está sendo passada
         ])->render();
 
         $pdf = Browsershot::html($html)
-        ->format('A4')                 // Define o formato como A4
-        ->margins(5, 5, 5, 5)           // Margens menores para melhor aproveitamento
-        ->showBackground()               // Garante que fundos CSS sejam renderizados
-        ->deviceScaleFactor(2)           // Simula uma tela de alta resolução
-        ->quality(100) // Garante máxima qualidade para imagens
-        ->emulateMedia('screen') // Melhora a renderização do CSS no PDF
-        ->pdf();
+            ->format('A4')                 // Define o formato como A4
+            ->margins(5, 5, 5, 5)           // Margens menores para melhor aproveitamento
+            ->showBackground()               // Garante que fundos CSS sejam renderizados
+            ->deviceScaleFactor(2)           // Simula uma tela de alta resolução
+            ->quality(100) // Garante máxima qualidade para imagens
+            ->emulateMedia('screen') // Melhora a renderização do CSS no PDF
+            ->pdf();
 
         // 4) Retornar o PDF diretamente como resposta ao navegador
         return response($pdf)
@@ -159,5 +121,25 @@ class ReciboController extends Controller
         ]);
 
         return redirect()->back()->with('message', 'Recibo criado com sucesso!');
+    }
+
+    /**
+     * Converte o caminho de uma imagem em uma string Base64.
+     * (Função auxiliar que você já tinha no outro controller)
+     */
+    protected function logoToBase64($company): ?string
+    {
+        if (!$company || !$company->avatar) {
+            // Caminho para uma imagem padrão caso a empresa não tenha logo
+            $path = public_path('assets/media/png/perfil.svg');
+        } else {
+            $path = storage_path('app/public/' . $company->avatar);
+        }
+
+        if (!file_exists($path)) {
+            return null; // Retorna nulo se o arquivo não for encontrado
+        }
+
+        return 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($path));
     }
 }

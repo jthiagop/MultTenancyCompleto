@@ -67,6 +67,19 @@ class Banco extends Model
         return $this->belongsTo(LancamentoPadrao::class, 'lancamento_padrao_id');
     }
 
+        /**
+     * Scope: Filtra a busca para incluir apenas os registros da empresa ativa na sessão.
+     */
+    public function scopeForActiveCompany($query)
+    {
+        $activeCompanyId = session('active_company_id');
+        if ($activeCompanyId) {
+            return $query->where('company_id', $activeCompanyId);
+        }
+        // Não retorna nada se nenhuma empresa estiver ativa para proteger os dados
+        return $query->whereRaw('1 = 0');
+    }
+
     static public function getBancoList()
     {
         $userId = Auth::user()->id; // Recupere o ID do usuário logado

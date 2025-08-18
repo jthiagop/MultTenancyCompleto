@@ -31,9 +31,9 @@ class EntidadeFinanceira extends Model
         'updated_by',
     ];
     public function podeConciliarCom(BankStatement $outraTransacao, $tolerancia = 5.00)
-{
-    return abs($this->amount + $outraTransacao->amount) <= $tolerancia;
-}
+    {
+        return abs($this->amount + $outraTransacao->amount) <= $tolerancia;
+    }
 
 
     // Relacionamento com movimentações
@@ -60,10 +60,12 @@ class EntidadeFinanceira extends Model
     // Método para atualizar o saldo atual
     public function atualizarSaldo()
     {
-        $this->saldo_atual = $this->movimentacoes()->sum(
-            DB::raw("CASE WHEN tipo = 'entrada' THEN valor ELSE -valor END")
-        );
-        $this->save();
+        // Soma todas as entradas e subtrai todas as saídas
+        $totalMovimentacoes = $this->movimentacoes()->where('tipo', 'entrada')->sum('valor') - $this->movimentacoes()->where('tipo', 'saida')->sum('valor');
+
+        // O saldo atual é o saldo inicial (que não muda) mais o total de movimentações
+        $this->saldo_atual = $this->saldo_inicial + $totalMovimentacoes;
+        $this->save(); // Salva o novo saldo no banco
     }
 
     static public function getValorTotalEntidade()
@@ -92,5 +94,28 @@ class EntidadeFinanceira extends Model
 
         // Soma os saldos atuais das entidades financeiras do tipo 'caixa'
         return EntidadeFinanceira::where('company_id', $companyId)->get();
+    }
+
+    /**
+     * Scope: Filtra a busca para incluir apenas os registros da empresa ativa na sessão.
+     */
+    public function scopeForActiveCompany($query)
+    {
+        $activeCompanyId = session('active_company_id');
+
+        if ($activeCompanyId) {
+            return $query->where('company_id', $activeCompanyId);
+        }
+
+        // Se nenhuma empresa estiver ativa, não retorna nada para proteger os dados.
+        return $query->whereRaw('1 = 0');
+    }
+
+        /**
+     * Uma entidade financeira (conta) pertence a um banco (instituição).
+     */
+    public function bank()
+    {
+        return $this->belongsTo(Bank::class, 'banco_id');
     }
 }

@@ -352,301 +352,65 @@
                         <div class="modal-dialog modal-dialog-centered mw-650px">
                             <!--begin::Modal content-->
                             <div class="modal-content">
-                                <!--begin::Form-->
-                                <form class="form" method="POST" id="kt_modal_form"
-                                    action="{{ route('cadastroBancos.store') }}">
-                                    @csrf
-                                    @method('POST') <!-- Ou PUT, DELETE para edição e exclusão -->
+<!--begin::Form-->
+<form class="form" method="POST" id="kt_modal_form" action="{{ route('banco.store') }}">
+    @csrf
+    <input type="hidden" name="_method" id="method_field" value="POST">
+    <input type="hidden" name="banco_id" id="banco_id" value="">
 
-                                    <input type="hidden" name="_method" id="method_field" value="POST">
-                                    <input type="hidden" name="banco_id" id="banco_id" value="">
+    <!--begin::Modal header-->
+    <div class="modal-header">
+        <h2 class="fw-bold" id="modal-title">Adicionar Nova Instituição Bancária</h2>
+        <div data-bs-dismiss="modal" class="btn btn-icon btn-sm btn-active-icon-primary">
+            <span class="svg-icon svg-icon-1">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
+                    <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor" />
+                </svg>
+            </span>
+        </div>
+    </div>
+    <!--end::Modal header-->
 
-                                    <!--begin::Modal header-->
-                                    <div class="modal-header" id="kt_modal_add_customer_header">
-                                        <!--begin::Modal title-->
-                                        <h2 class="fw-bold" id="modal-title">Add Banco</h2>
-                                        <!--end::Modal title-->
-                                        <!--begin::Close-->
-                                        <div data-bs-dismiss="modal"
-                                            class="btn btn-icon btn-sm btn-active-icon-primary">
-                                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-                                            <span class="svg-icon svg-icon-1">
-                                                <svg width="24" height="24" viewBox="0 0 24 24"
-                                                    fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <rect opacity="0.5" x="6" y="17.3137" width="16"
-                                                        height="2" rx="1"
-                                                        transform="rotate(-45 6 17.3137)" fill="currentColor" />
-                                                    <rect x="7.41422" y="6" width="16" height="2"
-                                                        rx="1" transform="rotate(45 7.41422 6)"
-                                                        fill="currentColor" />
-                                                </svg>
-                                            </span>
-                                            <!--end::Svg Icon-->
-                                        </div>
-                                        <!--end::Close-->
-                                    </div>
-                                    <!--end::Modal header-->
-                                    <!--begin::Modal body-->
-                                    <div class="modal-body py-10 px-lg-17">
-                                        <!-- Exibir Erros de Validação -->
-                                        @if ($errors->any())
-                                            <div class="alert alert-danger">
-                                                <ul>
-                                                    @foreach ($errors->all() as $error)
-                                                        <li>{{ $error }}</li>
-                                                    @endforeach
-                                                </ul>
-                                            </div>
-                                        @endif
-                                        <!--begin::Scroll-->
-                                        <div class="scroll-y me-n7 pe-7" id="kt_modal_add_customer_scroll"
-                                            data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}"
-                                            data-kt-scroll-max-height="auto"
-                                            data-kt-scroll-dependencies="#kt_modal_add_customer_header"
-                                            data-kt-scroll-wrappers="#kt_modal_add_customer_scroll"
-                                            data-kt-scroll-offset="300px">
-                                            <!--begin::Input group-->
-                                            <div class="d-flex flex-column mb-7 fv-row">
-                                                <!--begin::Label-->
-                                                <label class="fs-6 fw-semibold mb-2">
-                                                    <span class="required">Qual o Banco?</span>
-                                                    <i class="fas fa-exclamation-circle ms-1 fs-7"
-                                                        data-bs-toggle="tooltip" title="Country of origination"></i>
-                                                </label>
-                                                <!--end::Label-->
-                                                <!--begin::Input-->
-                                                <select id="bank_select" name="banco"
-                                                    aria-label="Selecione seu banco" data-control="select2"
-                                                    data-placeholder="Selecione seu banco..."
-                                                    data-dropdown-parent="#kt_modal_add_customer"
-                                                    class="form-select fw-bold">
-                                                    <option value=""></option>
-                                                    <option value="Banco do Brasil S.A" data-logo="brasil.svg"
-                                                        data-name="Banco do Brasil S.A">Banco do Brasil S.A</option>
-                                                    <option value="Banco Santander Brasil S.A"
-                                                        data-logo="santander.svg"
-                                                        data-name="Banco Santander Brasil S.A">Banco Santander Brasil
-                                                        S.A</option>
-                                                    <option value="Bradesco S.A" data-logo="bradesco.svg"
-                                                        data-name="Bradesco S.A">Bradesco S.A</option>
-                                                    <option value="Caixa Econômica Federal" data-logo="caixa.svg"
-                                                        data-name="Caixa Econômica Federal">Caixa Econômica Federal
-                                                    </option>
-                                                    <option value="Itaú Unibanco S.A" data-logo="itau.svg"
-                                                        data-name="Itaú Unibanco S.A">Itaú Unibanco S.A</option>
-                                                    <option value="Lets Bank S.A" data-logo="lets-bank.svg"
-                                                        data-name="Lets Bank S.A">Lets Bank S.A</option>
-                                                    <option value="Mercado Pago" data-logo="mercadopago.svg"
-                                                        data-name="Mercado Pago">Mercado Pago</option>
-                                                    <option value="Nu Pagamentos S.A (Nubank)" data-logo="nubank.svg"
-                                                        data-name="Nu Pagamentos S.A (Nubank)">Nu Pagamentos S.A
-                                                        (Nubank)</option>
-                                                    <option value="Unicred" data-logo="unicred.svg"
-                                                        data-name="Unicred">Unicred</option>
-                                                    <option value="PagSeguro Internet S.A" data-logo="pagseguro.svg"
-                                                        data-name="PagSeguro Internet S.A">PagSeguro Internet S.A
-                                                    </option>
-                                                    <option value="Sicredi" data-logo="sicredi.svg"
-                                                        data-name="Sicredi">Sicredi</option>
-                                                    <option value="Stone Pagamentos S.A" data-logo="stone.svg"
-                                                        data-name="Stone Pagamentos S.A">Stone Pagamentos S.A</option>
-                                                    <option value="Ailos" data-logo="ailos.svg" data-name="Ailos">
-                                                        Ailos</option>
-                                                    <option value="Sicoob" data-logo="sicoob.svg" data-name="Sicoob">
-                                                        Sicoob</option>
-                                                    <option value="Quality Digital Bank - temporária"
-                                                        data-logo="quality-digital-bank.svg"
-                                                        data-name="Quality Digital Bank - temporária">Quality Digital
-                                                        Bank - temporária</option>
-                                                    <option value="Asaas IP S.A" data-logo="asaas.svg"
-                                                        data-name="Asaas IP S.A">Asaas IP S.A</option>
-                                                    <option value="BRB - Banco de Brasília" data-logo="brb.svg"
-                                                        data-name="BRB - Banco de Brasília">BRB - Banco de Brasília
-                                                    </option>
-                                                    <option value="Banco BS2 S.A" data-logo="banco-bs2.svg"
-                                                        data-name="Banco BS2 S.A">Banco BS2 S.A</option>
-                                                    <option value="Banco BTG Pactual" data-logo="btg-pactual.svg"
-                                                        data-name="Banco BTG Pactual">Banco BTG Pactual</option>
-                                                    <option value="Banco C6 S.A" data-logo="banco-c6.svg"
-                                                        data-name="Banco C6 S.A">Banco C6 S.A</option>
-                                                    <option value="Banco Daycoval" data-logo="banco-daycoval.svg"
-                                                        data-name="Banco Daycoval">Banco Daycoval</option>
-                                                    <option value="Banco Industrial do Brasil S.A"
-                                                        data-logo="banco-industrial-do-brasil.svg"
-                                                        data-name="Banco Industrial do Brasil S.A">Banco Industrial do
-                                                        Brasil S.A</option>
-                                                    <option value="Banco Inter S.A" data-logo="banco-inter.svg"
-                                                        data-name="Banco Inter S.A">Banco Inter S.A</option>
-                                                    <option value="Banco Mercantil do Brasil S.A"
-                                                        data-logo="banco-mercantil.svg"
-                                                        data-name="Banco Mercantil do Brasil S.A">Banco Mercantil do
-                                                        Brasil S.A</option>
-                                                    <option value="Banco Original S.A" data-logo="banco-original.svg"
-                                                        data-name="Banco Original S.A">Banco Original S.A</option>
-                                                    <option value="Banco Pine" data-logo="banco-pine.svg"
-                                                        data-name="Banco Pine">Banco Pine</option>
-                                                    <option value="Banco Rendimento" data-logo="banco-rendimento.svg"
-                                                        data-name="Banco Rendimento">Banco Rendimento</option>
-                                                    <option value="Banco Safra S.A" data-logo="banco-safra.svg"
-                                                        data-name="Banco Safra S.A">Banco Safra S.A</option>
-                                                    <option value="Banco Sofisa" data-logo="banco-sofisa.svg"
-                                                        data-name="Banco Sofisa">Banco Sofisa</option>
-                                                    <option value="Banco Topazio" data-logo="banco-topazio.svg"
-                                                        data-name="Banco Topazio">Banco Topazio</option>
-                                                    <option value="Banco Triângulo - Tribanco"
-                                                        data-logo="banco-triangulo.svg"
-                                                        data-name="Banco Triângulo - Tribanco">Banco Triângulo -
-                                                        Tribanco</option>
-                                                    <option value="ABC Brasil" data-logo="abc-brasil.svg"
-                                                        data-name="ABC Brasil">ABC Brasil</option>
-                                                    <option value="Banco da Amazônia S.A"
-                                                        data-logo="banco-da-amazonia.svg"
-                                                        data-name="Banco da Amazônia S.A">Banco da Amazônia S.A
-                                                    </option>
-                                                    <option value="Banco do Estado do Espírito Santo"
-                                                        data-logo="banco-estado-espirito-santo.svg"
-                                                        data-name="Banco do Estado do Espírito Santo">Banco do Estado
-                                                        do Espírito Santo</option>
-                                                    <option value="Banco do Estado do Pará"
-                                                        data-logo="banco-estado-para.svg"
-                                                        data-name="Banco do Estado do Pará">Banco do Estado do Pará
-                                                    </option>
-                                                    <option value="Banco do Estado do Sergipe"
-                                                        data-logo="banco-estado-sergipe.svg"
-                                                        data-name="Banco do Estado do Sergipe">Banco do Estado do
-                                                        Sergipe</option>
-                                                    <option value="Banco do Nordeste do Brasil S.A"
-                                                        data-logo="banco-nordeste.svg"
-                                                        data-name="Banco do Nordeste do Brasil S.A">Banco do Nordeste
-                                                        do Brasil S.A</option>
-                                                    <option value="Bancos Escuros" data-logo="bancos-escuros.svg"
-                                                        data-name="Bancos Escuros">Bancos Escuros</option>
-                                                    <option value="Bank of America" data-logo="bank-of-america.svg"
-                                                        data-name="Bank of America">Bank of America</option>
-                                                    <option value="Banrisul" data-logo="banrisul.svg"
-                                                        data-name="Banrisul">Banrisul</option>
-                                                    <option value="Capitual" data-logo="capitual.svg"
-                                                        data-name="Capitual">Capitual</option>
-                                                    <option value="Conta Simples Soluções em Pagamentos"
-                                                        data-logo="conta-simples.svg"
-                                                        data-name="Conta Simples Soluções em Pagamentos">Conta Simples
-                                                        Soluções em Pagamentos</option>
-                                                    <option value="Cora Sociedade Crédito Direto S.A"
-                                                        data-logo="cora-credito.svg"
-                                                        data-name="Cora Sociedade Crédito Direto S.A">Cora Sociedade
-                                                        Crédito Direto S.A</option>
-                                                    <option value="Credisis" data-logo="credisis.svg"
-                                                        data-name="Credisis">Credisis</option>
-                                                    <option value="Cresol" data-logo="cresol.svg" data-name="Cresol">
-                                                        Cresol</option>
-                                                    <option value="Efí - Gerencianet" data-logo="efi-gerencianet.svg"
-                                                        data-name="Efí - Gerencianet">Efí - Gerencianet</option>
-                                                    <option value="Grafeno" data-logo="grafeno.svg"
-                                                        data-name="Grafeno">Grafeno</option>
-                                                    <option value="Omie.Cash" data-logo="omie-cash.svg"
-                                                        data-name="Omie.Cash">Omie.Cash</option>
-                                                    <option value="Uniprime" data-logo="uniprime.svg"
-                                                        data-name="Uniprime">Uniprime</option>
-                                                </select>
-                                                <!--end::Input-->
+    <!--begin::Modal body-->
+    <div class="modal-body py-10 px-lg-17">
+        <!-- Exibir Erros de Validação -->
+        @if ($errors->any())
+            <div class="alert alert-danger">
+                <ul>
+                    @foreach ($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
+        <div class="scroll-y me-n7 pe-7" data-kt-scroll="true" data-kt-scroll-max-height="auto">
+            <!--begin::Input group-->
+            <div class="fv-row mb-7">
+                <label class="required fs-6 fw-semibold mb-2">Nome do Banco</label>
+                <input type="text" class="form-control form-control-solid" placeholder="Ex: Bradesco S.A." name="name" value="{{ old('name') }}" />
+                @error('name')
+                    <div class="text-danger mt-2">{{ $message }}</div>
+                @enderror
+            </div>
+            <!--end::Input group-->
+        </div>
+    </div>
+    <!--end::Modal body-->
 
-                                            </div>
-                                            <!-- Campo oculto para armazenar o nome do banco -->
-                                            <input type="hidden" id="banco_nome" name="banco_nome" value="">
-                                            <!--end::Input group-->
-                                            <!--begin::Input group-->
-                                            <div class="row g-9 mb-7">
-                                                <!--begin::Col-->
-                                                <div class="col-md-6 fv-row">
-                                                    <!--begin::Label-->
-                                                    <label class="required fs-6 fw-semibold mb-2">Número da
-                                                        Conta</label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Input-->
-                                                    <input class="form-control" placeholder="02548-4"
-                                                        name="conta" />
-                                                    <!--end::Input-->
-                                                </div>
-                                                <!--end::Col-->
-                                                <!--begin::Col-->
-                                                <div class="col-md-6 fv-row">
-                                                    <!--begin::Label-->
-                                                    <label class="required fs-6 fw-semibold mb-2">Número da
-                                                        Agencia</label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Input-->
-                                                    <input class="form-control" placeholder="24525-0"
-                                                        name="agencia" />
-                                                    <!--end::Input-->
-                                                </div>
-                                                <!--end::Col-->
-                                            </div>
-                                            <!--end::Input group-->
-                                            <!--begin::Input group-->
-                                            <div class="row g-9 mb-7">
-                                                <!--begin::Col-->
-                                                <div class="col-md-4 fv-row">
-                                                    <!--begin::Label-->
-                                                    <label class="fs-6 fw-semibold mb-2">
-                                                        <span class="">Digito agência</span>
-                                                        <i class="fas fa-exclamation-circle ms-1 fs-7"
-                                                            data-bs-toggle="tooltip" title="Se tiver digito"></i>
-                                                    </label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Input-->
-                                                    <input class="form-control" placeholder="001" name="digito" />
-                                                    <!--end::Input-->
-                                                </div>
-                                                <!--end::Col-->
-                                                <!--begin::Col-->
-                                                <div class="col-md-8 fv-row">
-                                                    <!--begin::Label-->
-                                                    <label class="required fs-6 fw-semibold mb-2">Tipo de Conta</label>
-                                                    <!--end::Label-->
-                                                    <!--begin::Input-->
-                                                    <select class="form-select fw-bold" name="account_type" required>
-                                                        <option value="corrente">Corrente</option>
-                                                        <option value="poupanca">Poupança</option>
-                                                        <option value="aplicacao">Aplicação</option>
-                                                    </select>
-                                                    <!--end::Input-->
-                                                </div>
-                                                <!--end::Col-->
-                                            </div>
-                                            <!--end::Input group-->
-                                            <!--begin::Input group-->
-                                            <div class="fv-row mb-15">
-                                                <!--begin::Label-->
-                                                <label class="fs-6 fw-semibold mb-2">Descrição da Conta</label>
-                                                <!--end::Label-->
-                                                <!--begin::Input-->
-                                                <textarea type="text" class="form-control" placeholder="Breve descrição da conta" name="description"></textarea>
-                                                <!--end::Input-->
-                                            </div>
-                                            <!--end::Input group-->
-                                        </div>
-                                        <!--end::Scroll-->
-                                    </div>
-                                    <!--end::Modal body-->
-                                    <!--begin::Modal footer-->
-                                    <div class="modal-footer flex-center">
-                                        <!--begin::Button-->
-                                        <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">
-                                            <img src="/assets/media/icons/duotune/arrows/arr092.svg" />
-                                            Sair
-                                        </button>
-                                        <!--end::Button-->
-                                        <!--begin::Button-->
-                                        <button type="submit" class="btn btn-primary">
-                                            <img src="/assets/media/icons/duotune/general/gen035.svg" />
-                                            <span class="indicator-label">Salvar</span>
-                                        </button>
-                                        <!--end::Button-->
-                                    </div>
-                                    <!--end::Modal footer-->
-                                </form>
-                                <!--end::Form-->
+    <!--begin::Modal footer-->
+    <div class="modal-footer flex-center">
+        <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">
+            Sair
+        </button>
+        <button type="submit" class="btn btn-primary">
+            <span class="indicator-label">Salvar</span>
+        </button>
+    </div>
+    <!--end::Modal footer-->
+</form>
+<!--end::Form-->
                             </div>
                         </div>
                     </div>
