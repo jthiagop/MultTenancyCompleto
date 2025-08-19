@@ -318,7 +318,6 @@
 
 <!--begin::Custom Javascript-->
 <script src="{{ url('assets/js/widgets.bundle.js') }}"></script>
-<script src="{{ url('assets/js/custom/apps/dashboard/grafico_doacoes.js') }}"></script>
 <!--end::Custom Javascript-->
 
 <!--begin::Custom CSS-->

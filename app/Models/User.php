@@ -30,6 +30,8 @@ class User extends Authenticatable
         'password',
         'avatar',
         'company_id',
+        'last_login',
+        'active',
     ];
 
     /**
@@ -52,6 +54,8 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'active' => 'boolean', // <-- ADICIONE ESTA LINHA
+
         ];
     }
 
@@ -126,5 +130,4 @@ class User extends Authenticatable
 
         return $company;
     }
-
 }

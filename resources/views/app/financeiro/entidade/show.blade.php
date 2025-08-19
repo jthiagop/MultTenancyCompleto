@@ -291,22 +291,26 @@
                                                     <div class="d-flex">
                                                         <!--begin::Avatar-->
                                                         <div class="symbol symbol-circle symbol-45px">
-                                                            <img src="/assets/media/svg/bancos/brasil.svg"
-                                                                alt="" />
+                                                            @if ($entidade->bank && $entidade->bank->logo_path)
+                                                                {{-- Usa o caminho do logo salvo no banco de dados --}}
+                                                                <img src="{{ asset($entidade->bank->logo_path) }}"
+                                                                    alt="{{ $entidade->bank->name }}" />
+                                                            @else
+                                                                {{-- Fallback: Mostra as iniciais do nome da entidade se não houver logo --}}
+                                                                <span
+                                                                    class="symbol-label bg-light-primary text-primary fs-6 fw-bold">{{ strtoupper(substr($entidade->nome, 0, 1)) }}</span>
+                                                            @endif
                                                         </div>
                                                         <!--end::Avatar-->
                                                         <!--begin::Details-->
                                                         <div class="ms-5">
                                                             <!--begin::Desc-->
                                                             <span class="text-muted fw-semibold mb-3">Lançamentos
-                                                                Importantes
-                                                            </span>
+                                                                Importantes</span>
                                                             <!--end::Desc-->
                                                             <!--begin::Name-->
                                                             <div class="d-flex align-items-center">
-                                                                <a
-                                                                    class="text-dark fw-bold text-hover-primary fs-5 me-4">{{ $entidade->nome }}
-                                                                    - {{ $entidade->conta }} </a>
+                                                                <a class="text-dark fw-bold text-hover-primary fs-5 me-4">{{ $entidade->nome }}</a>
                                                             </div>
                                                             <!--end::Name-->
                                                         </div>
@@ -1088,9 +1092,9 @@
                                                                                             <!--begin::Switch-->
                                                                                             <label
                                                                                                 class="form-check form-switch form-check-custom form-check-solid">
-                                                                                            <span
-                                                                                                class="form-check-label fw-semibold text-muted">Possui
-                                                                                                Nota</span>
+                                                                                                <span
+                                                                                                    class="form-check-label fw-semibold text-muted">Possui
+                                                                                                    Nota</span>
 
                                                                                                 <!-- Hidden default 0 -->
                                                                                                 <input type="hidden"

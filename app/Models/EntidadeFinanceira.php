@@ -19,6 +19,7 @@ class EntidadeFinanceira extends Model
     protected $fillable = [
         'nome',
         'tipo',
+        'banco_id', 
         'agencia',
         'conta',
         'saldo_inicial',

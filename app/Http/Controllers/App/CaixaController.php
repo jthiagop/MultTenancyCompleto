@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Financer\UpdateTransacaoFinanceiraRequest;
 use App\Http\Requests\Financer\StoreTransacaoFinanceiraRequest;
 use App\Models\Anexo;
 use App\Models\Banco;
-use App\Models\CadastroBanco;
 use App\Models\Caixa;
 use App\Models\Company;
 use App\Models\ContasFinanceiras;
@@ -18,19 +16,15 @@ use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\FormasPagamento;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
-use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Spatie\Activitylog\Facades\Activity; // Importe a facade Activity
 use Illuminate\Support\Str;
 use Flasher\Laravel\Facade\Flasher;
 use Illuminate\Support\Facades\Log;
-use Flasher\Prime\FlasherInterface;
-
 
 class CaixaController extends Controller
 {

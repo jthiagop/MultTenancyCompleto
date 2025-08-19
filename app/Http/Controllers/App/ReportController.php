@@ -4,6 +4,8 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\Caixa;
+use App\Models\Financeiro\TransacaoFinanceira;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class ReportController extends Controller
@@ -42,59 +44,100 @@ class ReportController extends Controller
             ->rawColumns(['tipo', 'acoes'])
             ->make(true);
     }
-    /**
-     * Display a listing of the resource.
-     */
-    public function index()
+
+    public function getFinancialData(Request $request)
     {
-        //
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return response()->json(['data' => []]); // Retorna vazio se não houver empresa
+        }
+
+        $query = TransacaoFinanceira::with(['lancamentoPadrao', 'modulos_anexos'])
+            ->where('company_id', $activeCompanyId);
+
+        // Aplica o filtro de status (entrada/saída)
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('tipo', $request->status);
+        }
+
+        // Aplica o filtro de período
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay();
+            $endDate = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay();
+            $query->whereBetween('data_competencia', [$startDate, $endDate]);
+        }
+
+        // Aplica a busca geral
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('descricao', 'like', "%{$search}%")
+                    ->orWhere('tipo_documento', 'like', "%{$search}%")
+                    ->orWhere('origem', 'like', "%{$search}%");
+            });
+        }
+
+        $transacoes = $query->latest('data_competencia')->get();
+
+        // Formata os dados para a view (pode ser feito com API Resources para projetos maiores)
+        $data = $transacoes->map(function ($transacao) {
+            // A lógica para formatar cada linha da tabela vai aqui
+            return [
+                'id' => $transacao->id,
+                'data_competencia' => Carbon::parse($transacao->data_competencia)->format('d/m/Y'),
+                'tipo_documento' => $transacao->tipo_documento,
+                'comprovacao_fiscal' => $transacao->comprovacao_fiscal,
+                'descricao' => $transacao->descricao,
+                'lancamento_padrao' => optional($transacao->lancamentoPadrao)->description,
+                'tipo' => $transacao->tipo,
+                'valor' => number_format($transacao->valor, 2, ',', '.'),
+                'origem' => $transacao->origem,
+                'anexos' => $transacao->modulos_anexos, // Passa a coleção de anexos
+                'edit_url' => route('banco.edit', $transacao->id) // Exemplo de URL para o botão de editar
+            ];
+        });
+
+        return response()->json(['data' => $data]);
     }
 
     /**
-     * Show the form for creating a new resource.
+     * Busca os dados financeiros filtrados para serem usados na análise da IA.
      */
-    public function create()
+    public function getDataForGeminiAnalysis(Request $request)
     {
-        //
-    }
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return response()->json(['error' => 'Nenhuma empresa selecionada'], 403);
+        }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request)
-    {
-        //
-    }
+        $query = TransacaoFinanceira::with('lancamentoPadrao')
+                                    ->where('company_id', $activeCompanyId);
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
-    {
-        //
-    }
+        // Aplica os mesmos filtros da DataTable
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('tipo', $request->status);
+        }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay();
+            $endDate = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay();
+            $query->whereBetween('data_competencia', [$startDate, $endDate]);
+        }
+        
+        if ($request->filled('search')) {
+            $search = $request->search['value']; // A busca do datatable vem em search[value]
+            if(!empty($search)){
+                 $query->where(function($q) use ($search) {
+                    $q->where('descricao', 'like', "%{$search}%")
+                      ->orWhere('tipo_documento', 'like', "%{$search}%")
+                      ->orWhere('origem', 'like', "%{$search}%");
+                });
+            }
+        }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
-    {
-        //
-    }
+        $transacoes = $query->latest('data_competencia')->get();
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        //
+        // Retorna os dados brutos. O frontend irá formatar o prompt.
+        return response()->json($transacoes);
     }
 }

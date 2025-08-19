@@ -11,6 +11,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rules;
 use Spatie\Permission\Models\Role;
@@ -39,7 +40,7 @@ class UserController extends Controller
         $companies = Company::all();
 
         $users = User::all()->map(function ($user) {
-            $user->last_login_formatted = $user->last_login ? Carbon::parse($user->last_login)->diffForHumans() : 'Nunca';
+            $user->getLastLoginFormattedAttribute = $user->last_login ? Carbon::parse($user->last_login)->diffForHumans() : 'Nunca';
             return $user;
         });
 
@@ -144,9 +145,18 @@ class UserController extends Controller
 
         $roles = Role::get();
 
+        $companies = Company::all();
 
 
-        return view('app.users.edit', ['user' => $user, 'roles' => $roles, 'tenantFiliais' => $tenantFiliais]);
+        return view(
+            'app.users.edit',
+            [
+                'user' => $user,
+                'roles' => $roles,
+                'tenantFiliais' => $tenantFiliais,
+                'companies' => $companies
+            ]
+        );
     }
 
     /**
@@ -202,5 +212,80 @@ class UserController extends Controller
         }
 
         return 'tenant/blank.png'; // Imagem padrão se não houver upload
+    }
+
+    /**
+     * Atualiza apenas as permissões (roles) de um usuário específico.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateRoles(Request $request, User $user)
+    {
+        // Validação para garantir que os dados recebidos são seguros
+        $request->validate([
+            'roles' => 'nullable|array',
+            'roles.*' => 'integer|exists:roles,id' // Garante que cada item no array é um ID de role válido
+        ]);
+
+        // Pega o array de IDs de roles do formulário (ex: ['1', '4'])
+        $roles = $request->input('roles', []);
+
+        // O syncRoles entende que você está passando IDs e vai sincronizar corretamente.
+        if (isset($roles)) {
+            $user->roles()->sync($roles);
+        }
+        return redirect()->back()->with('success', 'Permissões atualizadas com sucesso!');
+    }
+
+    /**
+     * Atualiza apenas o acesso às filiais (companhias) de um usuário específico.
+     */
+    public function updateFiliais(Request $request, User $user)
+    {
+        // Validação
+        $request->validate([
+            'filiais' => 'nullable|array',
+            'filiais.*' => 'integer|exists:companies,id' // Garante que cada item é um ID de companhia válido
+        ]);
+
+        // Pega o array de IDs das filiais do formulário
+        $filiais = $request->input('filiais', []);
+
+        // Sincroniza o acesso. O método sync() cuida de adicionar e remover os acessos.
+        // Assumindo que a relação no seu modelo User se chama 'companies'
+        $user->companies()->sync($filiais);
+
+        return redirect()->back()->with('success', 'Acesso às filiais atualizado com sucesso!');
+    }
+
+    /**
+     * Ativa ou desativa a conta de um usuário.
+     *
+     * @param  \Illuminate\Http\Request  $request
+     * @param  \App\Models\User  $user
+     * @return \Illuminate\Http\RedirectResponse
+     */
+    public function updateStatus(Request $request, User $user)
+    {
+        try {
+            // Inverte o status atual do usuário.
+            // Se 'active' for true, se tornará false, e vice-versa (graças ao cast no modelo).
+            $newStatus = !$user->active;
+
+            $user->update(['active' => $newStatus]);
+
+            $message = $newStatus ? 'Usuário ativado com sucesso!' : 'Usuário desativado com sucesso!';
+
+            return redirect()->back()->with('success', $message);
+
+        } catch (\Exception $e) {
+            // Registra o erro detalhado no log para o desenvolvedor.
+            Log::error('Erro ao atualizar o status do usuário: ' . $e->getMessage());
+
+            // Retorna uma mensagem de erro amigável para o usuário.
+            return redirect()->back()->with('error', 'Ocorreu um erro inesperado. Por favor, tente novamente.');
+        }
     }
 }

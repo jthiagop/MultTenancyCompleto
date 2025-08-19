@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Anexos\ModulosAnexos;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -174,5 +175,96 @@ class Caixa extends Model implements Auditable
 
         return ([$somaEntradas, $somaSaida]); // Retorna o valor para o controlador
 
+    }
+
+        /**
+     * Retorna os ícones correspondentes para cada tipo de arquivo
+     */
+    public static function getFileIcons()
+    {
+        return [
+            'pdf' => [
+                'icon' => 'bi-file-earmark-pdf-fill',
+                'color' => 'text-danger',
+            ],
+            'jpg' => [
+                'icon' => 'bi-file-earmark-image-fill',
+                'color' => 'text-warning',
+            ],
+            'jpeg' => [
+                'icon' => 'bi-file-earmark-image-fill',
+                'color' => 'text-primary',
+            ],
+            'png' => [
+                'icon' => 'bi-file-earmark-image-fill',
+                'color' => 'text-warning',
+            ],
+            'doc' => [
+                'icon' => 'bi-file-earmark-word-fill',
+                'color' => 'text-info',
+            ],
+            'docx' => [
+                'icon' => 'bi-file-earmark-word-fill',
+                'color' => 'text-info',
+            ],
+            'xls' => [
+                'icon' => 'bi-file-earmark-spreadsheet-fill',
+                'color' => 'text-warning',
+            ],
+            'xlsx' => [
+                'icon' => 'bi-file-earmark-spreadsheet-fill',
+                'color' => 'text-warning',
+            ],
+            'txt' => [
+                'icon' => 'bi-file-earmark-text-fill',
+                'color' => 'text-muted',
+            ],
+        ];
+    }
+
+    /**
+     * Retorna o ícone padrão para arquivos desconhecidos
+     */
+    public static function getDefaultFileIcon()
+    {
+        return [
+            'icon' => 'bi-file-earmark-fill',
+            'color' => 'text-secondary',
+        ];
+    }
+
+    /**
+     * Retorna os dados do ícone para um arquivo específico
+     */
+    public static function getIconForFile($filename)
+    {
+        $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+        $icons = self::getFileIcons();
+        
+        return $icons[$extension] ?? self::getDefaultFileIcon();
+    }
+
+    /**
+     * Relacionamento com anexos
+     */
+    public function modulos_anexos()
+    {
+        return $this->hasMany(ModulosAnexos::class);
+    }
+
+    /**
+     * Retorna os primeiros anexos (para visualização)
+     */
+    public function getPreviewAnexos($limit = 3)
+    {
+        return $this->modulos_anexos->take($limit);
+    }
+
+    /**
+     * Conta anexos restantes além do preview
+     */
+    public function countRemainingAnexos($limit = 3)
+    {
+        return max(0, $this->modulos_anexos->count() - $limit);
     }
 }

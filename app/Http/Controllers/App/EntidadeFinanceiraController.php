@@ -38,70 +38,68 @@ class EntidadeFinanceiraController extends Controller
     }
 
     // Salva uma nova entidade financeira
-public function store(Request $request)
-{
-    // 1. Pega a empresa ativa da sessão (seu código aqui está perfeito)
-    $activeCompanyId = session('active_company_id');
-    if (!$activeCompanyId) {
-        Flasher::addError('Nenhuma empresa selecionada.');
-        return redirect()->back();
-    }
+    public function store(Request $request)
+    {
+        // 1. Pega a empresa ativa da sessão (seu código aqui está perfeito)
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            Flasher::addError('Nenhuma empresa selecionada.');
+            return redirect()->back();
+        }
 
-    // 2. Formata o saldo e adiciona o company_id (seu código aqui está perfeito)
-    $request->merge([
-        'saldo_inicial' => str_replace(['.', ','], ['', '.'], $request->saldo_inicial),
-        'company_id'    => $activeCompanyId
-    ]);
-
-    // 3. Validação CORRIGIDA
-    $validatedData = $request->validate([
-        'tipo'          => 'required|in:caixa,banco',
-        'company_id'    => 'required|integer|exists:companies,id',
-        'nome'          => 'required_unless:tipo,banco|nullable|string|max:100',
-        'bank_id'       => 'required_if:tipo,banco|nullable|integer|exists:banks,id', // CORREÇÃO: Valida 'bank_id' em vez de 'banco'
-        'agencia'       => 'nullable|string|max:20',
-        'conta'         => 'nullable|string|max:20',
-        'saldo_inicial' => 'required|numeric',
-        'descricao'     => 'nullable|string|max:255',
-    ]);
-
-    // 4. Lógica para gerar o nome da entidade (A CORREÇÃO PRINCIPAL)
-    if ($request->tipo === 'banco') {
-        // Busca o nome do banco no banco de dados usando o ID
-        $bank = Bank::find($validatedData['bank_id']);
-        
-        // Cria um nome descritivo para a entidade
-        $validatedData['nome'] = "{$bank->name} - Ag. {$validatedData['agencia']} C/C {$validatedData['conta']}";
-    }
-
-    // O resto da sua lógica continua igual...
-    $validatedData['saldo_atual'] = $validatedData['saldo_inicial'];
-
-    $validatedData['created_by'] = Auth::id();
-    $validatedData['created_by_name'] = Auth::user()->name;
-    $validatedData['updated_by'] = Auth::id();
-    $validatedData['updated_by_name'] = Auth::user()->name;
-
-    try {
-        $entidade = EntidadeFinanceira::create($validatedData);
-
-        // Lógica para criar a primeira movimentação... (seu código aqui está ótimo)
-        Movimentacao::create([
-            'entidade_id'   => $entidade->id,
-            'tipo'          => 'entrada',
-            'valor'         => $validatedData['saldo_inicial'],
-            'descricao'     => 'Saldo inicial da entidade financeira',
-            'company_id'    => $validatedData['company_id'],
+        // 2. Formata o saldo e adiciona o company_id (seu código aqui está perfeito)
+        $request->merge([
+            'saldo_inicial' => str_replace(['.', ','], ['', '.'], $request->saldo_inicial),
+            'company_id'    => $activeCompanyId
         ]);
 
-        flash()->success('A entidade financeira foi criada com sucesso!');
-        return redirect()->route('entidades.index');
-    } catch (\Exception $e) {
-        \Log::error('Erro ao criar entidade: ' . $e->getMessage());
-        Flasher::addError('Ocorreu um erro ao criar a entidade.');
-        return redirect()->back()->withInput();
+        // 3. Validação CORRIGIDA
+        $validatedData = $request->validate([
+            'tipo'          => 'required|in:caixa,banco',
+            'company_id'    => 'required|integer|exists:companies,id',
+            'nome'          => 'required_unless:tipo,banco|nullable|string|max:100',
+            'bank_id'       => 'required_if:tipo,banco|nullable|integer|exists:banks,id', // CORREÇÃO: Valida 'bank_id' em vez de 'banco'
+            'agencia'       => 'nullable|string|max:20',
+            'conta'         => 'nullable|string|max:20',
+            'saldo_inicial' => 'required|numeric',
+            'descricao'     => 'nullable|string|max:255',
+        ]);
+
+        // 4. Lógica para gerar o nome da entidade (A CORREÇÃO PRINCIPAL)
+        if ($request->tipo === 'banco') {
+            // Busca o nome do banco no banco de dados usando o ID
+            $bank = Bank::find($validatedData['bank_id']);
+
+            // Cria um nome descritivo para a entidade
+            $validatedData['nome'] = "{$bank->name} - Ag. {$validatedData['agencia']} C/C {$validatedData['conta']}";
+        }
+
+        $validatedData['banco_id'] = $request->tipo === 'banco' ? $validatedData['bank_id'] : null; // Adiciona o banco_id se for do tipo 'banco'
+        $validatedData['created_by'] = Auth::id();
+        $validatedData['created_by_name'] = Auth::user()->name;
+        $validatedData['updated_by'] = Auth::id();
+        $validatedData['updated_by_name'] = Auth::user()->name;
+
+        try {
+            $entidade = EntidadeFinanceira::create($validatedData);
+
+            // Lógica para criar a primeira movimentação... (seu código aqui está ótimo)
+            Movimentacao::create([
+                'entidade_id'   => $entidade->id,
+                'tipo'          => 'entrada',
+                'valor'         => $validatedData['saldo_inicial'],
+                'descricao'     => 'Saldo inicial da entidade financeira',
+                'company_id'    => $validatedData['company_id'],
+            ]);
+
+            flash()->success('A entidade financeira foi criada com sucesso!');
+            return redirect()->route('entidades.index');
+        } catch (\Exception $e) {
+            \Log::error('Erro ao criar entidade: ' . $e->getMessage());
+            Flasher::addError('Ocorreu um erro ao criar a entidade.');
+            return redirect()->back()->withInput();
+        }
     }
-}
 
     // Adiciona uma movimentação
     public function addMovimentacao(Request $request, $id)
@@ -152,102 +150,70 @@ public function store(Request $request)
         }
     }
 
-    /**
-     * Display the specified resource.
-     */
     public function show($id)
     {
-        // 1. Recupera o ID da empresa do usuário logado
-        $companyId = Auth::user()->company_id;
+        // 1. A fonte da verdade é a SESSÃO.
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return redirect()->route('dashboard')->with('error', 'Nenhuma empresa selecionada.');
+        }
 
-        // 2. Carrega a entidade financeira (banco) do usuário logado,
-        //    junto com duas relações:
-        //    - transacoesFinanceiras (todas, ordenadas por data_competencia desc)
-        //    - bankStatements (apenas as não conciliadas ou pendentes/divergentes, ordenadas por dtposted desc)
-        $entidade = EntidadeFinanceira::where('company_id', $companyId)
-            ->with([
-                'transacoesFinanceiras' => function ($query) {
-                    $query->orderBy('data_competencia', 'desc');
-                }
-            ])
+        // 2. Carrega a entidade financeira usando o scope para garantir segurança.
+        //    O 'with' já carrega as transações de forma otimizada.
+        $entidade = EntidadeFinanceira::forActiveCompany()
+            ->with(['transacoesFinanceiras' => function ($query) {
+                $query->orderBy('data_competencia', 'desc');
+            }])
             ->findOrFail($id);
 
-        // Consulta paginada para bankStatements
+        // 3. Busca os lançamentos do extrato pendentes para esta entidade.
+        //    Esta consulta já está correta, pois filtra pelo 'entidade_financeira_id'.
         $bankStatements = BankStatement::where('entidade_financeira_id', $id)
             ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
             ->whereDoesntHave('transacoes')
             ->orderBy('dtposted', 'desc')
-            ->paginate(20); // <-- quantidade por página
+            ->paginate(20);
 
-        // 3. Para cada lançamento bancário pendente (bankStatement),
-        //    buscar possíveis transações financeiras compatíveis
+        // 4. Para cada lançamento do extrato, busca possíveis correspondências.
         foreach ($bankStatements as $lancamento) {
-            // Se o valor for negativo no extrato, definimos 'saida'; caso contrário, 'entrada'.
             $valorAbs = abs($lancamento->amount);
             $tipo = $lancamento->amount < 0 ? 'saida' : 'entrada';
-
-            // Criamos um intervalo de tolerância de 2 meses antes e 2 meses depois da data do extrato
-            $dataInicio = Carbon::parse($lancamento->dtposted)
-                ->startOfDay()
-                ->subMonths(2);
-
-            $dataFim = Carbon::parse($lancamento->dtposted)
-                ->endOfDay()
-                ->addMonths(2);
-
-            // Exemplo de comparação com numero_documento do extrato
+            $dataInicio = Carbon::parse($lancamento->dtposted)->startOfDay()->subMonths(2);
+            $dataFim = Carbon::parse($lancamento->dtposted)->endOfDay()->addMonths(2);
             $numeroDocumento = $lancamento->checknum;
 
-            // 4. Busca em transacoes_financeiras as candidatas
-            $possiveis = TransacaoFinanceira::where('company_id', $companyId)
+            // CORREÇÃO: A busca por transações agora também usa o scope.
+            $possiveis = TransacaoFinanceira::forActiveCompany()
                 ->where('entidade_id', $id)
                 ->where('tipo', $tipo)
                 ->where('valor', $valorAbs)
-                // Tolerância de até 2 meses antes e 2 meses depois
                 ->whereBetween('data_competencia', [$dataInicio, $dataFim])
-                // ✅ Adiciona o filtro pelo número do documento
                 ->when($numeroDocumento, function ($query) use ($numeroDocumento) {
                     $query->where('numero_documento', $numeroDocumento);
                 })
                 ->get();
 
-            // Atribuímos essa coleção de possíveis transações na propriedade possiveisTransacoes do $lancamento
             $lancamento->possiveisTransacoes = $possiveis;
         }
 
-
-        // 5. Carrega dados auxiliares (centros de custo, lançamentos padrão, etc.)
-        $centrosAtivos = CostCenter::getCadastroCentroCusto();
+        // 5. CORREÇÃO: Carrega dados auxiliares usando os scopes.
+        $centrosAtivos = CostCenter::forActiveCompany()->where('status', 'active')->get();
         $lps = LancamentoPadrao::all();
 
-        // 6. Calcula o percentual de conciliação (exemplo)
+        // 6. A sua lógica de cálculo de percentual e agrupamento por dia está ótima.
         $totalTransacoes = $entidade->transacoesFinanceiras->count();
-        $totalConciliadas = $entidade->transacoesFinanceiras
-            ->where('status_conciliacao', 'ok')
-            ->count();
-        $percentualConciliado = $totalTransacoes > 0
-            ? ($totalConciliadas / $totalTransacoes) * 100
-            : 0;
+        $totalConciliadas = $entidade->transacoesFinanceiras->where('status_conciliacao', 'ok')->count();
+        $percentualConciliado = $totalTransacoes > 0 ? ($totalConciliadas / $totalTransacoes) * 100 : 0;
+        $transacoesPorDia = $entidade->transacoesFinanceiras->groupBy(fn($item) => Carbon::parse($item->data_competencia)->format('Y-m-d'));
 
-        // 7. Agrupa as transacoesFinanceiras por dia, se quiser exibir em layout “por data”
-        //    (opcional, dependendo de como você exibirá no Blade)
-        $transacoesPorDia = $entidade->transacoesFinanceiras->groupBy(function ($item) {
-            return Carbon::parse($item->data_competencia)->format('Y-m-d');
-        });
-
-        // 8. Retorna a view com os dados necessários
+        // 7. Retorna a view com todos os dados corretamente filtrados.
         return view('app.financeiro.entidade.show', [
             'entidade' => $entidade,
-            // Movimentações gerais
             'transacoes' => $entidade->transacoesFinanceiras,
-            // Lançamentos pendentes de conciliação
-            'conciliacoesPendentes' => $bankStatements,        // <<-- Usar a coleção paginada
-            // Auxiliares
+            'conciliacoesPendentes' => $bankStatements,
             'centrosAtivos' => $centrosAtivos,
             'lps' => $lps,
-            // Percentual conciliado
             'percentualConciliado' => round($percentualConciliado),
-            // Transações agrupadas por dia (se quiser exibir estilo timeline/por data)
             'transacoesPorDia' => $transacoesPorDia,
         ]);
     }

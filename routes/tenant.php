@@ -119,6 +119,12 @@ Route::middleware([
             Route::resource('caixa', CaixaController::class);
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
             Route::resource('users', UserController::class);
+            // Rota dedicada APENAS para atualizar as permissões de um usuário
+            Route::put('/users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.roles.update');
+            Route::put('/users/{user}/filiais', [UserController::class, 'updateFiliais'])->name('users.filiais.update');
+            // Rota dedicada APENAS para ativar ou desativar um usuário
+            Route::put('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status.update');
+
             Route::resource('company', CompanyController::class)->except(['edit', 'update']);
 
             Route::post('/filter', [RebortController::class, 'generateReport']);
@@ -235,6 +241,18 @@ Route::middleware([
                 Route::resource('transacoes-financeiras', TransacaoFinanceiraController::class);
                 Route::get('/transacao-financeira/grafico', [TransacaoFinanceiraController::class, 'grafico'])
                     ->name('transacao.grafico');
+
+                // Rota dedicada para fornecer dados para o gráfico do dashboard financeiro
+                Route::get('/charts/financial-summary', [CaixaController::class, 'getFinancialSummaryChartData'])->name('charts.financial_summary.data');
+
+                // Rota que fornecerá os dados em formato JSON para a DataTable
+                Route::get('/reports/financial-data', [ReportController::class, 'getFinancialData'])->name('reports.financial.data');
+
+                // NOVA ROTA: Fornece os dados brutos para a análise da IA
+                Route::post('/reports/gemini-analysis', [ReportController::class, 'getDataForGeminiAnalysis'])->name('reports.gemini.analysis');
+
+                // NOVA ROTA: Fornece os dados brutos para a análise da IA
+                Route::post('/reports/gemini-analysis', [ReportController::class, 'getDataForGeminiAnalysis'])->name('reports.gemini.analysis');
 
 
                 Route::get('/transacoes/data', [TransacaoFinanceiraController::class, 'getData'])
