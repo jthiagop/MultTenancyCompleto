@@ -14,11 +14,31 @@ class TenantDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        Role::create(['name' => 'global'], ['descript'=>'Acesso global à todos os recursos']);
-        Role::create(['name' => 'admin'], ['descript'=>'Acesso global à maioria dos recursos']);
-        Role::create(['name' => 'admin_user'], ['descript'=>'Acesso acessa a filial como um administrador local']);
-        Role::create(['name' => 'user'], ['descript'=> 'Eles podem visualizar suas próprias transações, gerar relatórios e acompanhar seu histórico financeiro.']);
-        Role::create(['name' => 'sub_user'], ['descript'=>'Ideal para pessoas que precisam visualizar dados de conteúdo, mas não precisa fazer quaisquer atualizações']);
+        // Usar firstOrCreate para evitar duplicatas
+        Role::firstOrCreate(
+            ['name' => 'global', 'guard_name' => 'web'],
+            ['description' => 'Acesso global à todos os recursos']
+        );
+        
+        Role::firstOrCreate(
+            ['name' => 'admin', 'guard_name' => 'web'],
+            ['description' => 'Acesso global à maioria dos recursos']
+        );
+        
+        Role::firstOrCreate(
+            ['name' => 'admin_user', 'guard_name' => 'web'],
+            ['description' => 'Acesso acessa a filial como um administrador local']
+        );
+        
+        Role::firstOrCreate(
+            ['name' => 'user', 'guard_name' => 'web'],
+            ['description' => 'Eles podem visualizar suas próprias transações, gerar relatórios e acompanhar seu histórico financeiro.']
+        );
+        
+        Role::firstOrCreate(
+            ['name' => 'sub_user', 'guard_name' => 'web'],
+            ['description' => 'Ideal para pessoas que precisam visualizar dados de conteúdo, mas não precisa fazer quaisquer atualizações']
+        );
 
         // Chama o nosso novo seeder de bancos
         $this->call(BankSeeder::class);
