@@ -270,6 +270,7 @@
                                             <!--end::Svg Icon-->
                                         </a>
                                         <!--end::Button-->
+                                    </div>
                                 </td>
                                 <!--end::Action=-->
                             </tr>
