@@ -197,8 +197,8 @@ class EntidadeFinanceiraController extends Controller
         }
 
         // 5. CORREÇÃO: Carrega dados auxiliares usando os scopes.
-        //$centrosAtivos = CostCenter::forActiveCompany()->get();
-
+        $centrosAtivos = CostCenter::forActiveCompany()->get();
+        
         $lps = LancamentoPadrao::all();
 
         // 6. A sua lógica de cálculo de percentual e agrupamento por dia está ótima.
@@ -212,7 +212,7 @@ class EntidadeFinanceiraController extends Controller
             'entidade' => $entidade,
             'transacoes' => $entidade->transacoesFinanceiras,
             'conciliacoesPendentes' => $bankStatements,
-            //'centrosAtivos' => $centrosAtivos,
+            'centrosAtivos' => $centrosAtivos,
             'lps' => $lps,
             'percentualConciliado' => round($percentualConciliado),
             'transacoesPorDia' => $transacoesPorDia,
