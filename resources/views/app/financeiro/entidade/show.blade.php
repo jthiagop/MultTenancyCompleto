@@ -888,8 +888,7 @@
                                                                                     <div class="col-md-6">
 
                                                                                         <label for="categoria"
-                                                                                            class="required form-label fw-semibold">Centro
-                                                                                            de Custo</label>
+                                                                                            class="required form-label fw-semibold">Centro de Custo</label>
                                                                                         <select name="cost_center_id"
                                                                                             id="banco_id"
                                                                                             class="form-select form-select-solid @error('cost_center_id') is-invalid @enderror"
@@ -947,9 +946,7 @@
                                                                                         <input type="hidden"
                                                                                             name="bank_statement_id"
                                                                                             value="{{ $conciliacao->id }}">
-                                                                                        <input type="hidden"
-                                                                                            name="transacao_id"
-                                                                                            value="{{ $transacao->id }}">
+
 
                                                                                         <label for="descricao"
                                                                                             class="required form-label fw-semibold">Lançamento

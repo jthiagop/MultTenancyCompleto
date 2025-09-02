@@ -197,7 +197,7 @@ class EntidadeFinanceiraController extends Controller
         }
 
         // 5. CORREÇÃO: Carrega dados auxiliares usando os scopes.
-        $centrosAtivos = CostCenter::forActiveCompany()->where('status', 'active')->get();
+        $centrosAtivos = CostCenter::where('company_id', $activeCompanyId)->get();
         $lps = LancamentoPadrao::all();
 
         // 6. A sua lógica de cálculo de percentual e agrupamento por dia está ótima.

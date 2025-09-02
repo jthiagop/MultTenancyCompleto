@@ -196,8 +196,8 @@ class ConciliacaoController extends Controller
             // Processa os dados validados
             $validatedData = $request->validated();
 
-                        // Verifica se "descricao2" foi enviado e atribui a "descricao"
-        $validatedData['descricao'] = $validatedData['descricao2'] ;
+            // Verifica se "descricao2" foi enviado e atribui a "descricao"
+            $validatedData['descricao'] = $validatedData['descricao2'] ;
 
 
             // **Garante que o valor sempre seja positivo**
@@ -224,8 +224,8 @@ class ConciliacaoController extends Controller
             $this->processarAnexos($request, $caixa);
 
             // Recupera os registros necessários
-            $bankStatement = BankStatement::find($request->bank_statement_id);
-            $transacao = TransacaoFinanceira::find($request->transacao_id);
+            $bankStatement = BankStatement::find($request->input('bank_statement_id'));
+            $transacao = TransacaoFinanceira::find($request->input('transacao_id'));
 
             if (!$bankStatement || !$transacao) {
                 return redirect()->back()->with('error', 'Erro ao buscar dados para conciliação.');

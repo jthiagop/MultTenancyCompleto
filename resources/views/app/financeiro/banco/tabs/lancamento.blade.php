@@ -216,8 +216,8 @@
                                                 data-control="select2" data-dropdown-css-class="auto" data-placeholder="Selecione o Centro de Custo">
                                                 <option value="" disabled selected>Selecione o Centro de Custo</option>
                                                 <!-- Placeholder configurado aqui -->
-                                                @foreach ($centrosAtivos as $centrosAtivos)
-                                                    <option value="{{ $centrosAtivos->id }}">{{ $centrosAtivos->name }}</option>
+                                                @foreach ($centrosAtivos as $centrosAtivo)
+                                                    <option value="{{ $centrosAtivo->id }}">{{ $centrosAtivo->name }}</option>
                                                 @endforeach
                                             </select>
                                         </div>

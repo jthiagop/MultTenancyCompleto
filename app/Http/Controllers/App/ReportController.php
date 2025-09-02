@@ -140,4 +140,85 @@ class ReportController extends Controller
         // Retorna os dados brutos. O frontend irá formatar o prompt.
         return response()->json($transacoes);
     }
+
+    /**
+     * Fornece os dados para a DataTable com processamento do lado do servidor.
+     */
+    public function getFinancialDataServerSide(Request $request)
+    {
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return response()->json(['data' => []]); // Retorna vazio se não houver empresa
+        }
+        $query = TransacaoFinanceira::with(['lancamentoPadrao'])
+                                    ->where('company_id', $activeCompanyId);
+
+        // Contagem total de registros antes de qualquer filtro
+        $recordsTotal = $query->count();
+
+        // Aplicar filtros personalizados (status e data)
+        if ($request->filled('status') && $request->status !== 'all') {
+            $query->where('tipo', $request->status);
+        }
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            $startDate = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay();
+            $endDate = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay();
+            $query->whereBetween('data_competencia', [$startDate, $endDate]);
+        }
+        
+        // Aplicar busca geral (do campo de pesquisa)
+        if ($request->filled('search') && !empty($request->search['value'])) {
+            $search = $request->search['value'];
+            $query->where(function($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                  ->orWhere('descricao', 'like', "%{$search}%")
+                  ->orWhere('tipo_documento', 'like', "%{$search}%")
+                  ->orWhere('origem', 'like', "%{$search}%");
+            });
+        }
+
+        // Contagem de registros após aplicar os filtros
+        $recordsFiltered = $query->count();
+
+        // Aplicar ordenação
+        if ($request->has('order') && count($request->order)) {
+            $order = $request->order[0];
+            $columnIndex = $order['column'];
+            $columnName = $request->columns[$columnIndex]['data'];
+            $direction = $order['dir'];
+            if($request->columns[$columnIndex]['orderable'] == 'true'){
+                 $query->orderBy($columnName, $direction);
+            }
+        } else {
+            $query->latest('data_competencia');
+        }
+
+        // Aplicar paginação
+        $transacoes = $query->skip($request->start)->take($request->length)->get();
+
+        // Formatar os dados para a resposta JSON
+        $data = $transacoes->map(function($transacao) {
+            return [
+                'id' => $transacao->id,
+                'data_competencia' => Carbon::parse($transacao->data_competencia)->format('d/m/Y'),
+                'tipo_documento' => $transacao->tipo_documento,
+                'comprovacao_fiscal' => $transacao->comprovacao_fiscal,
+                'descricao' => $transacao->descricao,
+                'lancamento_padrao' => optional($transacao->lancamentoPadrao)->description,
+                'tipo' => $transacao->tipo,
+                'valor' => number_format($transacao->valor, 2, ',', '.'),
+                'origem' => $transacao->origem,
+                'anexos' => $transacao->modulos_anexos->count(),
+                'actions' => route('banco.edit', $transacao->id)
+            ];
+        });
+
+        // Retorna a resposta no formato que a DataTable espera
+        return response()->json([
+            "draw"            => intval($request->draw),
+            "recordsTotal"    => intval($recordsTotal),
+            "recordsFiltered" => intval($recordsFiltered),
+            "data"            => $data
+        ]);
+    }
 }

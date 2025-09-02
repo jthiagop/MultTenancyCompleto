@@ -4,6 +4,7 @@ namespace App\Http\Controllers\App;
 
 use App\Helpers\DateHelper;
 use App\Http\Controllers\Controller;
+use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\TenantFilial;
 use App\Models\User;
 use Flasher\Laravel\Facade\Flasher;
@@ -19,96 +20,60 @@ class DashboardController extends Controller
      */
     public function index(Request $request)
     {
-        $dateHelper = new DateHelper();
-
-        // Recupere o usuário logado
         $user = Auth::user();
-
-
-        // Define o ano selecionado, com o ano atual como padrão
         $selectedYear = $request->input('year', now()->year);
 
-        // Recupera a empresa do usuário logado
-        // 1. Pega o ID da empresa ativa que guardamos na sessão
+        // Pega a empresa ativa da sessão
         $activeCompanyId = session('active_company_id');
-
-        // 2. Busca o objeto da empresa correspondente a esse ID
-        //    É importante também verificar se o usuário realmente tem acesso a ela.
         $company = $user->companies()->find($activeCompanyId);
 
-        // 3. (Opcional, mas recomendado) Adiciona uma lógica de fallback caso a sessão esteja vazia
+        // Fallback se nenhuma empresa estiver na sessão
         if (!$company && $user->companies()->exists()) {
             $company = $user->companies()->first();
-            session(['active_company_id' => $company->id]); // Atualiza a sessão para o próximo request
+            session(['active_company_id' => $company->id]);
+            $activeCompanyId = $company->id;
         }
 
-        // Se mesmo assim não houver empresa, algo está errado.
         if (!$company) {
-            // Você pode redirecionar o usuário ou mostrar uma mensagem de erro.
-            abort(403, 'Nenhuma empresa associada ou selecionada para este usuário.');
+            abort(403, 'Nenhuma empresa associada a este usuário.');
         }
-        // Define as categorias de lançamento que queremos filtrar
-        $categoriasLancamento = ['Doações', 'Coletas', 'Intenções'];
 
-        // Consulta para lançamentos na tabela caixas
-        $lancamentosCaixas = DB::table('caixas')
-            ->join('lancamento_padraos', 'caixas.lancamento_padrao_id', '=', 'lancamento_padraos.id')
-            ->where('caixas.company_id', $company->company_id)
-            ->whereIn('lancamento_padraos.category', $categoriasLancamento)
-            ->whereYear('caixas.data_competencia', $selectedYear)
+        // Busca TODAS as transações financeiras (entradas e saídas) para o ano selecionado
+        $lancamentos = TransacaoFinanceira::where('company_id', $activeCompanyId)
+            ->whereIn('tipo', ['entrada', 'saida']) // Apenas entradas e saídas
+            ->whereYear('data_competencia', $selectedYear)
             ->select(
-                DB::raw('MONTH(caixas.data_competencia) as mes'),
-                'lancamento_padraos.category as lancamento_padrao_id',
-                DB::raw('SUM(caixas.valor) as total_valor')
+                DB::raw('MONTH(data_competencia) as mes'),
+                'tipo',
+                DB::raw('SUM(valor) as total_valor')
             )
-            ->groupBy('mes', 'lancamento_padrao_id');
-
-        // Consulta para lançamentos na tabela bancos
-        $lancamentosBancos = DB::table('bancos')
-            ->join('lancamento_padraos', 'bancos.lancamento_padrao_id', '=', 'lancamento_padraos.id')
-            ->where('bancos.company_id', $company->company_id)
-            ->whereIn('lancamento_padraos.category', $categoriasLancamento)
-            ->whereYear('bancos.data_competencia', $selectedYear)
-            ->select(
-                DB::raw('MONTH(bancos.data_competencia) as mes'),
-                'lancamento_padraos.category as lancamento_padrao_id',
-                DB::raw('SUM(bancos.valor) as total_valor')
-            )
-            ->groupBy('mes', 'lancamento_padrao_id');
-
-        // Combina os resultados das duas consultas com union
-        $lancamentos = $lancamentosCaixas->union($lancamentosBancos)
-            ->orderBy('mes')
+            ->groupBy('mes', 'tipo')
             ->get();
 
-
-        // Organiza os dados para o gráfico
-        $areaChartData = [
-            'series' => [
-                ['name' => 'Doações', 'data' => []],
-                ['name' => 'Coletas', 'data' => []],
-                ['name' => 'Intenções', 'data' => []]
-            ],
-            'categories' => []
+        // Prepara os dados para o gráfico
+        $series = [
+            'Entradas' => array_fill(0, 12, 0), // Inicializa um array com 12 zeros
+            'Saídas'   => array_fill(0, 12, 0), // Inicializa um array com 12 zeros
         ];
-        // Definir meses do ano
-        $meses = ['Jan', 'Feb', 'Mar', 'Apr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
-        foreach ($meses as $index => $mes) {
-            $mesNumero = $index + 1;
-
-            // Adiciona o nome do mês na categoria
-            $areaChartData['categories'][] = $mes;
-
-            // Filtra lançamentos por mês e tipo
-            foreach (['Doações', 'Coletas', 'Intenções'] as $i => $tipo) {
-                $valor = $lancamentos
-                    ->where('mes', $mesNumero)
-                    ->where('lancamento_padrao_id', $tipo)
-                    ->sum('total_valor'); // Calcula o total para o mês e tipo
-                $areaChartData['series'][$i]['data'][] = $valor ?: 0; // Insere 0 se não houver valor
+        foreach ($lancamentos as $lancamento) {
+            $mesIndex = $lancamento->mes - 1; // Ajusta o mês (1-12) para o índice do array (0-11)
+            if ($lancamento->tipo === 'entrada') {
+                $series['Entradas'][$mesIndex] = (float) $lancamento->total_valor;
+            } elseif ($lancamento->tipo === 'saida') {
+                $series['Saídas'][$mesIndex] = (float) $lancamento->total_valor;
             }
         }
+
+        // Formata os dados no padrão que o ApexCharts espera
+        $areaChartData = [
+            'series' => [
+                ['name' => 'Entradas', 'data' => $series['Entradas']],
+                ['name' => 'Saídas', 'data' => $series['Saídas']],
+            ],
+            'categories' => ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+        ];
+
         // Retorna para a view
         return view('app.dashboard', [
             'areaChartData' => $areaChartData,

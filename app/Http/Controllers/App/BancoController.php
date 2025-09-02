@@ -46,7 +46,7 @@ class BancoController extends Controller
 
         $lps = LancamentoPadrao::all();
 
-        
+
         return view('app.financeiro.index', [
             'valorEntradaBanco' => $valorEntradaBanco,
             'ValorSaidasBanco' => $ValorSaidasBanco,
@@ -68,9 +68,11 @@ class BancoController extends Controller
             return redirect()->route('dashboard')->with('error', 'Por favor, selecione uma empresa para visualizar os dados.');
         }
 
-        $lps = LancamentoPadrao::all();
 
-        
+        $perPage = (int) $request->input('per_page', 25);
+        $perPage = max(5, min($perPage, 200)); // limites úteis
+
+        $lps = LancamentoPadrao::all();
 
         // Filtrar as entradas e saídas pelos bancos relacionados à empresa
         list($somaEntradas, $somaSaida) = Banco::getBanco();
@@ -84,9 +86,9 @@ class BancoController extends Controller
         $total  = EntidadeFinanceira::getValorTotalEntidadeBC();
 
         $entidadesBanco = EntidadeFinanceira::forActiveCompany() // 1. Usa o scope para filtrar pela empresa
-                                   ->where('tipo', 'banco')  // 2. Adiciona o filtro específico para bancos
-                                   ->with('bankStatements')  // 3. (Opcional, mas recomendado) Otimiza a consulta
-                                   ->get();
+            ->where('tipo', 'banco')  // 2. Adiciona o filtro específico para bancos
+            ->with('bankStatements')  // 3. (Opcional, mas recomendado) Otimiza a consulta
+            ->get();
 
         // Filtrar as transações com origem "Banco"
         // Transações com anexos relacionados
@@ -96,26 +98,13 @@ class BancoController extends Controller
                     ->orWhere('origem', 'Banco');
             })
             ->where('company_id', $companyId)
-            ->get();
+            ->paginate($perPage);
 
 
         $valorEntrada = Banco::getBancoEntrada();
         $ValorSaidas = Banco::getBancoSaida();
         $centrosAtivos = CostCenter::forActiveCompany()->get();
 
-        // Carregar bancos com entidades financeiras relacionadas
-        $IfBancos = TransacaoFinanceira::where('company_id', $companyId)
-            ->get();
-
-        // Exemplo no Controller
-        $bancosIcones = [
-            'Bradesco' => 'bradesco.svg',
-            'Itaú' => 'itau.svg',
-            'Santander' => 'santander.svg',
-            'Caixa' => 'caixa.svg',
-            'Banco Nubank' => 'nubank.svg',
-            // ...
-        ];
 
         // Lista de prioridades para os status de conciliação
         $prioridadeStatus = ['divergente', 'em análise', 'parcial', 'pendente', 'ajustado', 'ignorado', 'ok'];
@@ -153,6 +142,7 @@ class BancoController extends Controller
             $entidade->badge_class = $statusClasses[strtolower($entidade->status_conciliacao)] ?? 'badge-light-secondary';
         }
 
+
         // 🟢 Retorna a View com todos os dados
         return view('app.financeiro.banco.list', array_merge([
             'valorEntrada' => $valorEntrada,
@@ -165,6 +155,7 @@ class BancoController extends Controller
             'centrosAtivos' => $centrosAtivos,
             'mesSelecionado' => $mesSelecionado,
             'anoSelecionado' => $anoSelecionado,
+            'perPage' => $perPage,
         ], $dadosGrafico));
     }
 
@@ -177,7 +168,7 @@ class BancoController extends Controller
         $company = User::getCompanyName();
         $lps = LancamentoPadrao::all();
 
-        
+
         return view('app.financeiro.banco.create', [
             'lps' => $lps,
             'company' => $company,
@@ -357,7 +348,7 @@ class BancoController extends Controller
             // Se a validação falhar
             if ($validator->fails()) {
                 foreach ($validator->errors()->all() as $error) {
-                    \Flasher\Laravel\Facade\Flasher::addError($error);
+                    Flasher::addError($error);
                 }
                 return redirect()->back()->withInput();
             }

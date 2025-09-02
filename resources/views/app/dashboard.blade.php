@@ -312,9 +312,12 @@
     <!--end::Main-->
 </x-tenant-app-layout>
 
+
+
 <!--begin::Vendors Javascript-->
 <script src="{{ url('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
 <!--end::Vendors Javascript-->
+<script src="{{ url('assets/js/custom/apps/dashboard/grafico_doacoes.js') }}"></script>
 
 <!--begin::Custom Javascript-->
 <script src="{{ url('assets/js/widgets.bundle.js') }}"></script>

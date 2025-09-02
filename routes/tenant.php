@@ -99,6 +99,10 @@ Route::middleware([
     // Grupo de rotas protegido pelo middleware 'auth' e 'ensureUserHasAccess'
     Route::middleware(['auth', 'ensureUserHasAccess'])->group(function () {
 
+            // Rota que fornecerá os dados em formato JSON para a DataTable
+    // Usaremos POST para enviar os filtros de forma mais robusta
+    Route::post('/reports/financial-data', [ReportController::class, 'getFinancialDataServerSide'])->name('reports.financial.data');
+
         // Rotas acessíveis apenas para administradores globais
         Route::middleware(['role:global'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
@@ -110,6 +114,8 @@ Route::middleware([
         });
 
         Route::get('/session/switch-company/{company}', [SessionController::class, 'switchCompany'])->name('session.switch-company');
+        Route::delete('/profile/sessions/{sessionId}', [SessionController::class, 'destroy'])->name('profile.sessions.destroy');
+
         Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
         Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
 

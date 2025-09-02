@@ -12,6 +12,7 @@
         "doctrine/dbal": "*",
         "endeken/ofx-php-parser": "^0.1.1",
         "guzzlehttp/guzzle": "^7.8",
+        "jenssegers/agent": "^2.6",
         "knplabs/knp-snappy": "^1.5",
         "laravel-lang/common": "*",
         "laravel-lang/lang": "*",
