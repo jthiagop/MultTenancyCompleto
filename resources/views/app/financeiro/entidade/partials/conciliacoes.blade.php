@@ -255,9 +255,9 @@
                                                                             value="{{ $conciliacao->id }}">
                                                                         <input type="hidden"
                                                                             name="transacao_financeira_id"
-                                                                            value="{{ $transacaoSugerida->id }}">
+                                                                            value="{{ $transacaoSugerida->id ?? '' }}">
                                                                         <input type="hidden" name="valor"
-                                                                            value="{{ $transacaoSugerida->valor }}">
+                                                                            value="{{ $transacaoSugerida->valor ?? $conciliacao->amount }}">
 
                                                                         <div
                                                                             class="card card-flush border border-hover-primary py-4 p-7 rounded flex-row-fluid overflow-hidden mb-3 h-xl-100">
@@ -275,15 +275,15 @@
                                                                                             class="d-flex align-items-center">
                                                                                             <a href="#"
                                                                                                 class="text-dark fw-bold text-hover-primary fs-5 me-4">
-                                                                                                {{ \Carbon\Carbon::parse($transacaoSugerida->data_competencia)->format('d/m/Y') }}
+                                                                                                {{ $transacaoSugerida ? \Carbon\Carbon::parse($transacaoSugerida->data_competencia)->format('d/m/Y') : 'N/A' }}
                                                                                             </a>
                                                                                         </div>
                                                                                         <span
                                                                                             class="text-muted fw-semibold mb-3">
-                                                                                            @if ($transacaoSugerida->tipo == 'entrada')
+                                                                                            @if ($transacaoSugerida && $transacaoSugerida->tipo == 'entrada')
                                                                                                 <span
                                                                                                     style="color: green;">Receita</span>
-                                                                                            @elseif($transacaoSugerida->tipo == 'saida')
+                                                                                            @elseif($transacaoSugerida && $transacaoSugerida->tipo == 'saida')
                                                                                                 <span
                                                                                                     class="text-danger">Despesa</span>
                                                                                             @else
@@ -296,15 +296,18 @@
 
                                                                                 <div clas="d-flex">
                                                                                     <div class="text-end pb-3">
-                                                                                        @if ($transacaoSugerida->tipo == 'entrada')
+                                                                                        @if ($transacaoSugerida && $transacaoSugerida->tipo == 'entrada')
                                                                                             <span class="fw-bold fs-5"
                                                                                                 style="color: green;">
                                                                                                 R$
                                                                                                 {{ number_format($transacaoSugerida->valor, 2, ',', '.') }}</span>
-                                                                                        @elseif($transacaoSugerida->tipo == 'saida')
+                                                                                        @elseif($transacaoSugerida && $transacaoSugerida->tipo == 'saida')
                                                                                             <span
                                                                                                 class="fw-bold fs-5 text-danger">R$
                                                                                                 {{ number_format($transacaoSugerida->valor, 2, ',', '.') }}</span>
+                                                                                        @else
+                                                                                            <span class="fw-bold fs-5 text-muted">R$
+                                                                                                {{ number_format($conciliacao->amount, 2, ',', '.') }}</span>
                                                                                         @endif
                                                                                     </div>
                                                                                 </div>
@@ -314,7 +317,7 @@
                                                                                 <p
                                                                                     class="text-gray-700 fw-semibold fs-6 mb-4">
                                                                                     <strong>Descrição:</strong>
-                                                                                    {{ $transacaoSugerida->descricao }}
+                                                                                    {{ $transacaoSugerida->descricao ?? 'Nenhuma descrição disponível' }}
                                                                                 </p>
 
                                                                                 <div class="d-flex flex-stack">
@@ -392,7 +395,7 @@
                                                                                         class="form-control"
                                                                                         id="data_competencia-{{ $conciliacao->id }}"
                                                                                         name="data_competencia"
-                                                                                        value="{{ old('data_competencia', \Carbon\Carbon::parse($transacaoSugerida->data_competencia)->format('Y-m-d')) }}">
+                                                                                        value="{{ old('data_competencia', $transacaoSugerida ? \Carbon\Carbon::parse($transacaoSugerida->data_competencia)->format('Y-m-d') : \Carbon\Carbon::now()->format('Y-m-d')) }}">
                                                                                 </div>
 
                                                                                 <div class="col-md-6">
@@ -403,7 +406,7 @@
                                                                                         class="form-control"
                                                                                         id="valor2-{{ $conciliacao->id }}"
                                                                                         name="valor"
-                                                                                        value="{{ old('valor', number_format($transacaoSugerida->valor, 2, ',', '.')) }}">
+                                                                                        value="{{ old('valor', $transacaoSugerida ? number_format($transacaoSugerida->valor, 2, ',', '.') : number_format($conciliacao->amount, 2, ',', '.')) }}">
                                                                                 </div>
                                                                             </div>
 
@@ -414,10 +417,10 @@
                                                                                         value="{{ $conciliacao->id }}">
                                                                                     <input type="hidden"
                                                                                         name="transacao_financeira_id"
-                                                                                        value="{{ $transacaoSugerida->id }}">
+                                                                                        value="{{ $transacaoSugerida->id ?? '' }}">
                                                                                     <input type="hidden"
                                                                                         name="valor_conciliado"
-                                                                                        value="{{ $transacaoSugerida->valor }}">
+                                                                                        value="{{ $transacaoSugerida->valor ?? $conciliacao->amount }}">
                                                                                     <label
                                                                                         for="numero_documento-{{ $conciliacao->id }}"
                                                                                         class="required form-label fw-semibold">Código</label>
@@ -436,7 +439,7 @@
                                                                                         class="form-control"
                                                                                         id="descricao-{{ $conciliacao->id }}"
                                                                                         name="descricao"
-                                                                                        value="{{ old('descricao', $transacaoSugerida->descricao) }}">
+                                                                                        value="{{ old('descricao', $transacaoSugerida->descricao ?? $conciliacao->memo) }}">
                                                                                 </div>
                                                                             </div>
 
@@ -585,7 +588,6 @@
                                                                                     data-bs-dismiss="alert"
                                                                                     aria-label="Close"></button>
                                                                             </div>
-                                                                            @if($transacaoSugerida)
                                                                             <form id="{{ $conciliacao->id }}"
                                                                                 action="{{ route('conciliacao.pivot') }}"
                                                                                 method="POST">
@@ -672,21 +674,12 @@
                                                                                         <input type="hidden"
                                                                                             name="bank_statement_id"
                                                                                             value="{{ $conciliacao->id }}">
-                                                                                        @if($transacaoSugerida)
                                                                                         <input type="hidden"
                                                                                             name="transacao_financeira_id"
-                                                                                            value="{{ $transacaoSugerida->id }}">
+                                                                                            value="{{ $transacaoSugerida->id ?? '' }}">
                                                                                         <input type="hidden"
                                                                                             name="valor_conciliado"
-                                                                                            value="{{ $transacaoSugerida->valor }}">
-                                                                                        @else
-                                                                                        <input type="hidden"
-                                                                                            name="transacao_financeira_id"
-                                                                                            value="">
-                                                                                        <input type="hidden"
-                                                                                            name="valor_conciliado"
-                                                                                            value="{{ $conciliacao->amount }}">
-                                                                                        @endif
+                                                                                            value="{{ $transacaoSugerida->valor ?? $conciliacao->amount }}">
 
 
                                                                                         <label for="descricao"
@@ -910,12 +903,6 @@
 
                                                                                 <!--end::Input group-->
                                                                             </form>
-                                                                            @else
-                                                                            <div class="alert alert-warning">
-                                                                                <h5>Nenhuma transação sugerida encontrada</h5>
-                                                                                <p>Não há transações financeiras correspondentes para esta conciliação.</p>
-                                                                            </div>
-                                                                            @endif
                                                                         </div>
                                                                         <!-- Aba Transferência -->
                                                                         <div class="tab-pane fade"
