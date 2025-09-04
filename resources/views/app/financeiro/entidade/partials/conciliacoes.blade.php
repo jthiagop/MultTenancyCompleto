@@ -379,7 +379,7 @@
                                                                         </div>
                                                                         <form
                                                                             id="formularioEdicao-{{ $conciliacao->id }}"
-                                                                            action="{{ route('conciliacao.update', $transacao->id) }}"
+                                                                            action="{{ route('conciliacao.update', $transacaoSugerida->id) }}"
                                                                             method="POST">
                                                                             @csrf
                                                                             @method('PUT')
