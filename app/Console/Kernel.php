@@ -14,6 +14,7 @@ class Kernel extends ConsoleKernel
      */
     protected $commands = [
         \App\Console\Commands\AtualizarStatusContas::class,
+        \App\Console\Commands\SeedFormasPagamento::class,
     ];
 
     /**

@@ -23,11 +23,11 @@ class ContabilidadeController extends Controller
 
         // 2. Agrupa todas as contas pelo ID do pai.
         // O resultado será um array onde a chave é o parent_id e o valor é uma coleção de filhos.
-        $groupedAccounts = $allAccounts->groupBy('parent_id');
+        $allGroupedAccounts = $allAccounts->groupBy('parent_id');
 
         // 3. Pega as contas raiz (aquelas que não têm pai).
         // Usamos o operador '??' para garantir que, se não houver contas raiz, teremos uma coleção vazia.
-        $rootAccounts = $groupedAccounts[null] ?? collect();
+        $rootAccounts = $allGroupedAccounts[null] ?? collect();
 
         // Busca todas as contas da empresa ativa para a listagem e para o dropdown do modal.
         $contas = ChartOfAccount::forActiveCompany()->orderBy('code')->get();
@@ -39,13 +39,14 @@ class ContabilidadeController extends Controller
         // Dados para popular os dropdowns do modal de mapeamento.
         $lancamentosPadrao = LancamentoPadrao::all();
 
-        return view('app.contabilidade.index', [
-            'rootAccounts' => $rootAccounts,
-            'allGroupedAccounts' => $groupedAccounts,
-            'mapeamentos' => $mapeamentos,
-            'activeTab' => $activeTab,
-            'lancamentosPadrao' => $lancamentosPadrao,
-        ], compact('contas'));
+        return view('app.contabilidade.index', compact(
+            'rootAccounts',
+            'allGroupedAccounts',
+            'mapeamentos',
+            'activeTab',
+            'lancamentosPadrao',
+            'contas'
+        ));
     }
 
     /**

@@ -89,9 +89,72 @@ Route::middleware([
         Route::match(['put', 'patch'], '/', [ProfileController::class, 'update'])->name('profile.update');
     });
 
+    // Rota específica para avatars
+    Route::get('/avatar/{id}', function ($id) {
+        $filePath = Storage::disk('public')->path($id);
+        
+        // Verificar se o arquivo existe
+        if (!file_exists($filePath)) {
+            $defaultAvatar = public_path('assets/images/avatars/default-avatar.png');
+            
+            // Se o avatar padrão não existir, criar um simples
+            if (!file_exists($defaultAvatar)) {
+                // Criar diretório se não existir
+                if (!is_dir(dirname($defaultAvatar))) {
+                    mkdir(dirname($defaultAvatar), 0755, true);
+                }
+                
+                // Criar um avatar padrão simples (SVG)
+                $svgContent = '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                    <rect width="100" height="100" fill="#e5e7eb"/>
+                    <circle cx="50" cy="35" r="15" fill="#9ca3af"/>
+                    <path d="M20 80 Q50 60 80 80" stroke="#9ca3af" stroke-width="3" fill="none"/>
+                </svg>';
+                
+                file_put_contents($defaultAvatar, $svgContent);
+            }
+            
+            return response()->file($defaultAvatar);
+        }
+        
+        return response()->file($filePath);
+    })->name('avatar');
+
     // Rota para servir arquivos públicos
     Route::get('/file/{path}', function ($path) {
-        return response()->file(Storage::disk('public')->path($path));
+        $filePath = Storage::disk('public')->path($path);
+        
+        // Verificar se o arquivo existe
+        if (!file_exists($filePath)) {
+            // Se for um avatar, retornar avatar padrão
+            if (str_contains($path, 'avatar') || is_numeric($path)) {
+                $defaultAvatar = public_path('assets/images/avatars/default-avatar.png');
+                
+                // Se o avatar padrão não existir, criar um simples
+                if (!file_exists($defaultAvatar)) {
+                    // Criar diretório se não existir
+                    if (!is_dir(dirname($defaultAvatar))) {
+                        mkdir(dirname($defaultAvatar), 0755, true);
+                    }
+                    
+                    // Criar um avatar padrão simples (SVG)
+                    $svgContent = '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
+                        <rect width="100" height="100" fill="#e5e7eb"/>
+                        <circle cx="50" cy="35" r="15" fill="#9ca3af"/>
+                        <path d="M20 80 Q50 60 80 80" stroke="#9ca3af" stroke-width="3" fill="none"/>
+                    </svg>';
+                    
+                    file_put_contents($defaultAvatar, $svgContent);
+                }
+                
+                return response()->file($defaultAvatar);
+            }
+            
+            // Para outros arquivos, retornar erro 404
+            return response()->json(['error' => 'Arquivo não encontrado'], 404);
+        }
+        
+        return response()->file($filePath);
     })->where('path', '.*')->name('file');
 
 

@@ -42,5 +42,8 @@ class TenantDatabaseSeeder extends Seeder
 
         // Chama o nosso novo seeder de bancos
         $this->call(BankSeeder::class);
+        
+        // Chama o seeder de formas de pagamento
+        $this->call(FormasPagamentoSeeder::class);
     }
 }

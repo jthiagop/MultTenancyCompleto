@@ -7,7 +7,7 @@
                      <!--begin::Modal header-->
                      <div class="modal-header">
                          <!--begin::Modal title-->
-                         <h2 class="fw-bold">Add Forma de Pagamento</h2>
+                         <h2 class="fw-bold">Forma de Pagamento</h2>
                          <!--end::Modal title-->
                          <!--begin::Close-->
                          <div id="kt_modal_add_payment_close" class="btn btn-icon btn-sm btn-active-icon-primary">
@@ -31,69 +31,6 @@
                          <!--begin::Form-->
                          <form id="kt_modal_add_form" method="POST" action="{{ route('formas-pagamento.store') }}">
                             @csrf
-                             <!--begin::Input group-->
-                             <div class="mb-7">
-                                 <!--begin::Label-->
-                                 <label class="fs-6 fw-semibold mb-3">
-                                     <span>Add Icone</span>
-                                     <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                         title="Allowed file types: png, jpg, jpeg."></i>
-                                 </label>
-                                 <!--end::Label-->
-                                 <!--begin::Image input wrapper-->
-                                 <div class="mt-1">
-                                     <!--begin::Image placeholder-->
-                                     <style>
-                                         .image-input-placeholder {
-                                             background-image: url('assets/media/svg/files/blank-image.svg');
-                                         }
-
-                                         [data-bs-theme="dark"] .image-input-placeholder {
-                                             background-image: url('assets/media/svg/files/blank-image-dark.svg');
-                                         }
-                                     </style>
-                                     <!--end::Image placeholder-->
-                                     <!--begin::Image input-->
-                                     <div class="image-input image-input-outline image-input-placeholder image-input-empty image-input-empty"
-                                         data-kt-image-input="true">
-                                         <!--begin::Preview existing avatar-->
-                                         <div class="image-input-wrapper w-100px h-100px"
-                                             style="background-image: url('')"></div>
-                                         <!--end::Preview existing avatar-->
-                                         <!--begin::Edit-->
-                                         <label
-                                             class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-                                             data-kt-image-input-action="change" data-bs-toggle="tooltip"
-                                             title="Change avatar">
-                                             <i class="bi bi-pencil-fill fs-7"></i>
-                                             <!--begin::Inputs-->
-                                             <input type="file" name="avatar" accept=".png, .jpg, .jpeg" />
-                                             <input type="hidden" name="avatar_remove" />
-                                             <!--end::Inputs-->
-                                         </label>
-                                         <!--end::Edit-->
-                                         <!--begin::Cancel-->
-                                         <span
-                                             class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-                                             data-kt-image-input-action="cancel" data-bs-toggle="tooltip"
-                                             title="Cancel avatar">
-                                             <i class="bi bi-x fs-2"></i>
-                                         </span>
-                                         <!--end::Cancel-->
-                                         <!--begin::Remove-->
-                                         <span
-                                             class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-                                             data-kt-image-input-action="remove" data-bs-toggle="tooltip"
-                                             title="Remove avatar">
-                                             <i class="bi bi-x fs-2"></i>
-                                         </span>
-                                         <!--end::Remove-->
-                                     </div>
-                                     <!--end::Image input-->
-                                 </div>
-                                 <!--end::Image input wrapper-->
-                             </div>
-                             <!--end::Input group-->
                              <!--begin::Row-->
                              <div class="row">
                                  <!--begin::Col-->
@@ -239,21 +176,66 @@
                                  <!--end::Col-->
                              </div>
                              <!--end::Row-->
-
+                             
+                             <!--begin::Row-->
+                             <div class="row">
+                                 <!--begin::Col-->
+                                 <div class="col-md-6">
+                                     <!--begin::Input group-->
+                                     <div class="fv-row mb-7">
+                                         <!--begin::Label-->
+                                         <label class="fs-6 fw-semibold form-label mb-2">
+                                             <span class="">Prazo de Liberação (dias)</span>
+                                             <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
+                                                 title="Prazo em dias para liberação do pagamento."></i>
+                                         </label>
+                                         <!--end::Label-->
+                                         <!--begin::Input-->
+                                         <input type="number" class="form-control form-control-solid"
+                                             placeholder="0" name="prazo_liberacao" id="prazo_liberacao" value="0" min="0" />
+                                         <!--end::Input-->
+                                     </div>
+                                     <!--end::Input group-->
+                                 </div>
+                                 <!--end::Col-->
+                                 <!--begin::Col-->
+                                 <div class="col-md-6">
+                                     <!--begin::Input group-->
+                                     <div class="fv-row mb-7">
+                                         <!--begin::Label-->
+                                         <label class="fs-6 fw-semibold form-label mb-2">
+                                             <span class="">Método de Integração</span>
+                                             <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
+                                                 title="Método de integração com sistemas externos."></i>
+                                         </label>
+                                         <!--end::Label-->
+                                         <!--begin::Input-->
+                                         <input type="text" class="form-control form-control-solid"
+                                             placeholder="Ex: API, Webhook" name="metodo_integracao" id="metodo_integracao" />
+                                         <!--end::Input-->
+                                     </div>
+                                     <!--end::Input group-->
+                                 </div>
+                                 <!--end::Col-->
+                             </div>
+                             <!--end::Row-->
+                             
                              <!--begin::Input group-->
-                             <div class="fv-row mb-15">
+                             <div class="fv-row mb-7">
                                  <!--begin::Label-->
                                  <label class="fs-6 fw-semibold form-label mb-2">
-                                     <span class="required">Informações</span>
+                                     <span class="">Observações</span>
                                      <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                         title="Information such as description of invoice or product purchased."></i>
+                                         title="Observações adicionais sobre a forma de pagamento."></i>
                                  </label>
                                  <!--end::Label-->
                                  <!--begin::Input-->
-                                 <textarea class="form-control form-control-solid rounded-3" name="observacao"></textarea>
+                                 <textarea class="form-control form-control-solid" rows="3" 
+                                     placeholder="Digite observações adicionais..." name="observacao" id="observacao"></textarea>
                                  <!--end::Input-->
                              </div>
                              <!--end::Input group-->
+                             
                              <!--begin::Actions-->
                              <div class="text-center">
                                  <button type="reset" id="kt_modal_add_payment_cancel"
@@ -276,3 +258,72 @@
              <!--end::Modal dialog-->
          </div>
          <!--end::Modal - New Card-->
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Função para atualizar o símbolo da taxa baseado no tipo selecionado
+    function updateTaxaSymbol() {
+        const tipoTaxa = document.querySelector('input[name="tipo_taxa"]:checked').value;
+        const simboloElement = document.getElementById('simbolo');
+        const taxaInput = document.getElementById('valor2');
+        
+        if (tipoTaxa === 'valor_fixo') {
+            simboloElement.textContent = 'R$';
+            taxaInput.placeholder = '0,00';
+        } else {
+            simboloElement.textContent = '%';
+            taxaInput.placeholder = '0,00';
+        }
+    }
+
+    // Adicionar event listeners para os radio buttons
+    const radioButtons = document.querySelectorAll('input[name="tipo_taxa"]');
+    radioButtons.forEach(radio => {
+        radio.addEventListener('change', updateTaxaSymbol);
+    });
+
+    // Formatação de moeda para o campo taxa
+    const taxaInput = document.getElementById('valor2');
+    taxaInput.addEventListener('input', function(e) {
+        let value = e.target.value.replace(/\D/g, '');
+        value = (parseFloat(value) / 100).toFixed(2);
+        e.target.value = value.replace('.', ',');
+    });
+
+    // Validação do formulário
+    const form = document.getElementById('kt_modal_add_form');
+    form.addEventListener('submit', function(e) {
+        const nome = document.getElementById('nome').value.trim();
+        const codigo = document.getElementById('codigo').value.trim();
+        const taxa = document.getElementById('valor2').value.trim();
+        const ativo = document.getElementById('ativo').value;
+
+        if (!nome) {
+            e.preventDefault();
+            alert('Por favor, preencha o nome da forma de pagamento.');
+            return false;
+        }
+
+        if (!codigo) {
+            e.preventDefault();
+            alert('Por favor, preencha o código da forma de pagamento.');
+            return false;
+        }
+
+        if (!taxa || parseFloat(taxa.replace(',', '.')) <= 0) {
+            e.preventDefault();
+            alert('Por favor, preencha um valor válido para a taxa.');
+            return false;
+        }
+
+        if (!ativo) {
+            e.preventDefault();
+            alert('Por favor, selecione se a forma de pagamento está ativa ou não.');
+            return false;
+        }
+    });
+
+    // Inicializar o símbolo
+    updateTaxaSymbol();
+});
+</script>

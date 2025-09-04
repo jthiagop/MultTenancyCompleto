@@ -79,6 +79,20 @@ class ChartOfAccountController extends Controller
     }
 
     /**
+     * Exibe o formulário para editar uma conta.
+     */
+    public function edit($id)
+    {
+        $conta = ChartOfAccount::forActiveCompany()->findOrFail($id);
+        
+        // Sempre retorna JSON, pois a edição é feita via modal
+        return response()->json([
+            'success' => true,
+            'conta' => $conta
+        ]);
+    }
+
+    /**
      * Atualiza uma conta contábil existente.
      */
     public function update(Request $request, $id)

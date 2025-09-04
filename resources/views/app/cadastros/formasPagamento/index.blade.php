@@ -187,3 +187,4 @@
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="/assets/js/custom/apps/company/add-formaPagamento.js"></script>
 <script src="/assets/js/custom/apps/customers/view/payment-table.js"></script>
+

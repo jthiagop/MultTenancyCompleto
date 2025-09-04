@@ -1,4 +1,4 @@
-<!--begin::Modal - Cadastrar Conta Contábil-->
+<!--begin::Modal - Cadastrar/Editar Conta Contábil-->
 <div class="modal fade" id="kt_modal_new_account" tabindex="-1" aria-hidden="true">
     <!--begin::Modal dialog-->
     <div class="modal-dialog modal-dialog-centered mw-650px">
@@ -25,14 +25,12 @@
             <!--begin::Modal body-->
             <div class="modal-body scroll-y px-10 px-lg-15 pt-0 pb-15">
                 <!--begin:Form-->
-                {{-- Certifique-se de que a rota ''contabilidade.plano-contas.store')' existe no seu arquivo de rotas --}}
-                <form id="kt_modal_new_account_form" class="form" method="POST"
-                    action="{{ route('contabilidade.plano-contas.store') }}">
+                <form id="kt_modal_new_account_form" class="form" method="POST">
                     @csrf
                     <!--begin::Heading-->
                     <div class="mb-13 text-center">
-                        <h1 class="mb-3">Cadastrar Nova Conta Contábil</h1>
-                        <div class="text-muted fw-semibold fs-5">Adicione uma nova conta ao seu plano de contas.</div>
+                        <h1 class="mb-3" id="modal-title">Cadastrar Nova Conta Contábil</h1>
+                        <div class="text-muted fw-semibold fs-5" id="modal-subtitle">Adicione uma nova conta ao seu plano de contas.</div>
                     </div>
                     <!--end::Heading-->
 
@@ -43,31 +41,22 @@
                             <label class="required fs-6 fw-semibold mb-2">Código da Conta</label>
                             <input type="text" id="account_code_mask" class="form-control form-control-solid"
                                 placeholder="Ex: 1.01.01.001" name="code" value="{{ old('code') }}" />
-                            @error('code')
-                                <div class="text-danger mt-2">{{ $message }}</div>
-                            @enderror
+                            <div class="fv-plugins-message-container invalid-feedback" id="code-error"></div>
                         </div>
                         <!--end::Col-->
                         <!--begin::Col-->
                         <div class="col-md-6 fv-row">
                             <label class="required fs-6 fw-semibold mb-2">Tipo</label>
                             <select class="form-select form-select-solid" data-control="select2" data-hide-search="true"
-                                data-placeholder="Selecione o tipo" name="type">
+                                data-dropdown-parent="#kt_modal_new_account" data-placeholder="Selecione o tipo" name="type">
                                 <option></option>
                                 <option value="ativo" {{ old('type') == 'ativo' ? 'selected' : '' }}>Ativo</option>
-                                <option value="passivo" {{ old('type') == 'passivo' ? 'selected' : '' }}>Passivo
-                                </option>
-                                <option value="patrimonio_liquido"
-                                    {{ old('type') == 'patrimonio_liquido' ? 'selected' : '' }}>Patrimônio Líquido
-                                </option>
-                                <option value="receita" {{ old('type') == 'receita' ? 'selected' : '' }}>Receita
-                                </option>
-                                <option value="despesa" {{ old('type') == 'despesa' ? 'selected' : '' }}>Despesa
-                                </option>
+                                <option value="passivo" {{ old('type') == 'passivo' ? 'selected' : '' }}>Passivo</option>
+                                <option value="patrimonio_liquido" {{ old('type') == 'patrimonio_liquido' ? 'selected' : '' }}>Patrimônio Líquido</option>
+                                <option value="receita" {{ old('type') == 'receita' ? 'selected' : '' }}>Receita</option>
+                                <option value="despesa" {{ old('type') == 'despesa' ? 'selected' : '' }}>Despesa</option>
                             </select>
-                            @error('type')
-                                <div class="text-danger mt-2">{{ $message }}</div>
-                            @enderror
+                            <div class="fv-plugins-message-container invalid-feedback" id="type-error"></div>
                         </div>
                         <!--end::Col-->
                     </div>
@@ -78,9 +67,7 @@
                         <label class="required d-flex align-items-center fs-6 fw-semibold mb-2">Nome da Conta</label>
                         <input type="text" class="form-control form-control-solid"
                             placeholder="Ex: Caixa Geral da Matriz" name="name" value="{{ old('name') }}" />
-                        @error('name')
-                            <div class="text-danger mt-2">{{ $message }}</div>
-                        @enderror
+                        <div class="fv-plugins-message-container invalid-feedback" id="name-error"></div>
                     </div>
                     <!--end::Input group-->
 
@@ -90,31 +77,26 @@
                         <select class="form-select form-select-solid" data-control="select2"
                             data-dropdown-parent="#kt_modal_new_account" data-placeholder="Selecione uma conta pai (opcional)" name="parent_id">
                             <option></option>
-                            {{-- 
-                                Você precisará passar a variável '$contas' do seu controller.
-                                Exemplo: $contas = ChartOfAccount::forActiveCompany()->get();
-                            --}}
                             @isset($contas)
                                 @foreach ($contas as $conta)
-                                    <option value="{{ $conta->id }}"
-                                        {{ old('parent_id') == $conta->id ? 'selected' : '' }}>
+                                    <option value="{{ $conta->id }}" {{ old('parent_id') == $conta->id ? 'selected' : '' }}>
                                         {{ $conta->code }} - {{ $conta->name }}
                                     </option>
                                 @endforeach
                             @endisset
                         </select>
-                        <div class="text-muted fs-7 mt-2">Selecione uma conta pai se esta for uma sub-conta. Deixe em
-                            branco se for uma conta principal.</div>
+                        <div class="fv-plugins-message-container invalid-feedback" id="parent_id-error"></div>
                     </div>
                     <!--end::Input group-->
 
                     <!--begin::Actions-->
                     <div class="text-center">
-                        <button type="reset" data-bs-dismiss="modal" class="btn btn-light me-3">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">
-                            <span class="indicator-label">Salvar</span>
-                            <span class="indicator-progress">Aguarde...
-                                <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                        <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Cancelar</button>
+                        <button type="submit" class="btn btn-primary" id="submit-btn">
+                            <span class="indicator-label">Salvar Conta</span>
+                            <span class="indicator-progress">Por favor, aguarde...
+                                <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                            </span>
                         </button>
                     </div>
                     <!--end::Actions-->
@@ -127,103 +109,170 @@
     </div>
     <!--end::Modal dialog-->
 </div>
-<!--end::Modal - Cadastrar Conta Contábil-->
+<!--end::Modal-->
 
-{{-- Coloque este script no final da sua view index.blade.php --}}
-@section('scripts')
+<!--begin::Scripts-->
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        // --- CORREÇÃO PRINCIPAL AQUI ---
-        // Verifique se o ID '#plano_contas_tabela' corresponde ao ID da sua tabela no HTML.
-        const tableBody = document.querySelector('#plano_contas_tabela tbody');
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('kt_modal_new_account_form');
+    const submitBtn = document.getElementById('submit-btn');
+    const indicator = submitBtn.querySelector('.indicator-progress');
+    const label = submitBtn.querySelector('.indicator-label');
+
+    // Inicializa o modal para criação
+    function initCreateModal() {
+        form.action = "{{ route('contabilidade.plano-contas.store') }}";
+        form.method = 'POST';
         
-        // --- LOG DE DEPURAÇÃO 1 ---
-        // Verifique no console do navegador (F12) se a tabela foi encontrada.
-        if (!tableBody) {
-            console.error("ERRO: A tabela com o seletor '#plano_contas_tabela tbody' não foi encontrada. Verifique o ID da sua tabela.");
-            return; // Para o script se a tabela não for encontrada.
+        // Remove campo _method se existir
+        const methodField = form.querySelector('input[name="_method"]');
+        if (methodField) methodField.remove();
+        
+        // Limpa os campos
+        form.reset();
+        
+        // Atualiza título
+        document.getElementById('modal-title').textContent = 'Cadastrar Nova Conta Contábil';
+        document.getElementById('modal-subtitle').textContent = 'Adicione uma nova conta ao seu plano de contas.';
+        
+        // Limpa erros
+        clearErrors();
+    }
+
+    // Inicializa o modal para edição
+    function initEditModal(contaData) {
+        form.action = `/contabilidade/plano-contas/${contaData.id}`;
+        form.method = 'POST';
+        
+        // Adiciona método PUT
+        let methodField = form.querySelector('input[name="_method"]');
+        if (!methodField) {
+            methodField = document.createElement('input');
+            methodField.type = 'hidden';
+            methodField.name = '_method';
+            form.appendChild(methodField);
         }
-        console.log("SUCESSO: Tabela encontrada, o script de ações está ativo.", tableBody);
+        methodField.value = 'PUT';
+        
+        // Preenche os campos
+        document.getElementById('account_code_mask').value = contaData.code;
+        form.querySelector('select[name="type"]').value = contaData.type;
+        form.querySelector('input[name="name"]').value = contaData.name;
+        form.querySelector('select[name="parent_id"]').value = contaData.parent_id || '';
+        
+        // Atualiza título
+        document.getElementById('modal-title').textContent = 'Editar Conta Contábil';
+        document.getElementById('modal-subtitle').textContent = 'Edite os dados da conta contábil.';
+        
+        // Limpa erros
+        clearErrors();
+    }
 
+    // Limpa mensagens de erro
+    function clearErrors() {
+        document.querySelectorAll('.invalid-feedback').forEach(el => {
+            el.textContent = '';
+            el.style.display = 'none';
+        });
+        document.querySelectorAll('.is-invalid').forEach(el => {
+            el.classList.remove('is-invalid');
+        });
+    }
 
-        const modalElement = document.getElementById('kt_modal_new_account');
-        const modal = new bootstrap.Modal(modalElement);
-        const form = document.getElementById('kt_modal_new_account_form');
-        const modalTitle = document.getElementById('modal-title'); // Dê este ID ao seu <h2> do título do modal
-        const createButton = document.querySelector('[data-bs-target="#kt_modal_new_account"]');
-
-        const resetModalToCreate = () => {
-            form.reset();
-            form.action = "{{ route('contabilidade.plano-contas.store') }}";
-            if (form.querySelector('input[name="_method"]')) {
-                form.querySelector('input[name="_method"]').remove();
-            }
-            modalTitle.innerText = "Cadastrar Nova Conta Contábil";
-            $(form.querySelector('[name="parent_id"]')).val(null).trigger('change');
-        };
-
-        if (createButton) {
-            createButton.addEventListener('click', resetModalToCreate);
-        }
-
-        tableBody.addEventListener('click', function (e) {
-            const button = e.target.closest('.edit-btn, .delete-btn');
-
-            if (!button) {
-                return; // Se o clique não foi em um dos nossos botões, ignora.
-            }
-
-            e.preventDefault();
-            const id = button.dataset.id;
+    // Exibe erros de validação
+    function showErrors(errors) {
+        clearErrors();
+        
+        Object.keys(errors).forEach(field => {
+            const input = form.querySelector(`[name="${field}"]`);
+            const errorDiv = document.getElementById(`${field}-error`);
             
-            // --- LOG DE DEPURAÇÃO 2 ---
-            console.log(`Botão clicado! Ação: ${button.classList.contains('edit-btn') ? 'Editar' : 'Excluir'}, ID: ${id}`);
-
-            // --- LÓGICA DE EDIÇÃO ---
-            if (button.classList.contains('edit-btn')) {
-                const url = `/plano-contas/${id}/edit`;
-
-                fetch(url, { headers: { 'Accept': 'application/json' } })
-                .then(response => response.json())
-                .then(data => {
-                    console.log("Dados recebidos para edição:", data); // LOG DE DEPURAÇÃO 3
-                    
-                    resetModalToCreate();
-                    modalTitle.innerText = "Editar Conta Contábil";
-                    form.action = `/plano-contas/${id}`;
-
-                    if (!form.querySelector('input[name="_method"]')) {
-                        const hiddenMethod = document.createElement('input');
-                        hiddenMethod.type = 'hidden';
-                        hiddenMethod.name = '_method';
-                        hiddenMethod.value = 'PUT';
-                        form.appendChild(hiddenMethod);
-                    } else {
-                        form.querySelector('input[name="_method"]').value = 'PUT';
-                    }
-
-                    form.querySelector('[name="code"]').value = data.code;
-                    form.querySelector('[name="name"]').value = data.name;
-                    form.querySelector('[name="type"]').value = data.type;
-                    $(form.querySelector('[name="parent_id"]')).val(data.parent_id).trigger('change');
-
-                    console.log("Modal pronto para ser exibido."); // LOG DE DEPURAÇÃO 4
-                    modal.show();
-                });
-            }
-
-            // --- LÓGICA DE EXCLUSÃO ---
-            if (button.classList.contains('delete-btn')) {
-                const name = button.dataset.name;
-                const url = `/plano-contas/${id}`;
-
-                Swal.fire({ /* ... seu código do Swal ... */ }).then(function (result) {
-                    if (result.isConfirmed) {
-                        // ... sua lógica de fetch para DELETE ...
-                    }
-                });
+            if (input && errorDiv) {
+                input.classList.add('is-invalid');
+                errorDiv.textContent = errors[field][0];
+                errorDiv.style.display = 'block';
             }
         });
+    }
+
+    // Manipula o envio do formulário
+    form.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // Mostra loading
+        submitBtn.setAttribute('data-kt-indicator', 'on');
+        indicator.style.display = 'inline-block';
+        label.style.display = 'none';
+        
+        // Limpa erros anteriores
+        clearErrors();
+        
+        const formData = new FormData(form);
+        
+        fetch(form.action, {
+            method: form.method,
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(Object.fromEntries(formData))
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                // Sucesso
+                Swal.fire({
+                    text: data.message,
+                    icon: "success",
+                    buttonsStyling: false,
+                    confirmButtonText: "Ok!",
+                    customClass: {
+                        confirmButton: "btn btn-primary"
+                    }
+                }).then(() => {
+                    if (data.redirect) {
+                        window.location.href = data.redirect;
+                    } else {
+                        window.location.reload();
+                    }
+                });
+            } else if (data.errors) {
+                // Erros de validação
+                showErrors(data.errors);
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            Swal.fire({
+                text: "Ocorreu um erro inesperado. Tente novamente.",
+                icon: "error",
+                buttonsStyling: false,
+                confirmButtonText: "Ok!",
+                customClass: {
+                    confirmButton: "btn btn-primary"
+                }
+            });
+        })
+        .finally(() => {
+            // Remove loading
+            submitBtn.removeAttribute('data-kt-indicator');
+            indicator.style.display = 'none';
+            label.style.display = 'inline-block';
+        });
     });
+
+    // Inicializa modal para criação quando aberto
+    document.querySelector('[data-bs-target="#kt_modal_new_account"]').addEventListener('click', function() {
+        initCreateModal();
+    });
+
+    // Função global para edição (chamada pelo JavaScript da tabela)
+    window.editPlanoConta = function(contaData) {
+        initEditModal(contaData);
+        const modal = new bootstrap.Modal(document.getElementById('kt_modal_new_account'));
+        modal.show();
+    };
+});
 </script>
-@endsection
+<!--end::Scripts-->

@@ -33,13 +33,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'ensureUserHasAccess' => \App\Http\Middleware\EnsureUserHasAccess::class,
             'CheckSessionExpiration' => \App\Http\Middleware\CheckSessionExpiration::class,
             'set.active.company' => \App\Http\Middleware\SetActiveCompany::class, // Adicione o alias aqui
-
+            'ensure.tenant.setup' => \App\Http\Middleware\EnsureTenantSetup::class, // Middleware para garantir setup do tenant
         ]);
 
         // Adicione o middleware ao grupo 'web' aqui
         $middleware->appendToGroup('web', [
             //\App\Http\Middleware\SetActiveCompany::class,
-
+            \App\Http\Middleware\EnsureTenantSetup::class, // Verificar setup do tenant automaticamente
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

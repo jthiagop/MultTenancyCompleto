@@ -19,8 +19,10 @@ class FormasPagamento extends Model
         'codigo',
         'ativo',
         'taxa',
+        'tipo_taxa',
         'prazo_liberacao',
         'metodo_integracao',
+        'icone',
         'observacao',
     ];
 

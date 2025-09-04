@@ -41,14 +41,16 @@ class FormasPagamentoController extends Controller
             'codigo' => 'required|string|max:10|unique:formas_pagamento',
             'ativo' => 'required|boolean|in:1,0',
             'tipo_taxa' => 'required|in:valor_fixo,porcentagem',
-            'taxa' => 'required',
-            'observacao' => 'nullable'
+            'taxa' => 'required|numeric|min:0',
+            'prazo_liberacao' => 'nullable|integer|min:0',
+            'metodo_integracao' => 'nullable|string|max:100',
+            'icone' => 'nullable|string|max:255',
+            'observacao' => 'nullable|string'
         ]);
 
         // Campos de auditoria
-        $validatedData['created_by'] = Auth::id();
-        $validatedData['created_by_name'] = Auth::user()->name;
-
+        $validated['created_by'] = Auth::id();
+        $validated['created_by_name'] = Auth::user()->name;
 
         // Cria a forma de pagamento
         $formaPagamento = FormasPagamento::create($validated);
@@ -68,18 +70,25 @@ class FormasPagamentoController extends Controller
     {
         $formaPagamento = FormasPagamento::findOrFail($id);
 
-        $request->validate([
-            'nome' => 'string|max:100',
-            'codigo' => 'string|max:10|unique:formas_pagamento,codigo,' . $formaPagamento->id,
-            'ativo' => 'boolean',
-            'taxa' => 'numeric',
-            'prazo_liberacao' => 'integer',
+        $validated = $request->validate([
+            'nome' => 'required|string|max:100',
+            'codigo' => 'required|string|max:10|unique:formas_pagamento,codigo,' . $formaPagamento->id,
+            'ativo' => 'required|boolean|in:1,0',
+            'tipo_taxa' => 'required|in:valor_fixo,porcentagem',
+            'taxa' => 'required|numeric|min:0',
+            'prazo_liberacao' => 'nullable|integer|min:0',
             'metodo_integracao' => 'nullable|string|max:100',
+            'icone' => 'nullable|string|max:255',
+            'observacao' => 'nullable|string'
         ]);
 
-        $formaPagamento->update($request->all());
+        // Campos de auditoria
+        $validated['updated_by'] = Auth::id();
+        $validated['updated_by_name'] = Auth::user()->name;
 
-        return $formaPagamento;
+        $formaPagamento->update($validated);
+
+        return redirect()->back()->with('success', 'Forma de Pagamento atualizada com sucesso!');
     }
 
     /**
