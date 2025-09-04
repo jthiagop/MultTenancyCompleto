@@ -227,7 +227,21 @@ class ConciliacaoController extends Controller
             $bankStatement = BankStatement::find($request->input('bank_statement_id'));
             $transacao = TransacaoFinanceira::find($request->input('transacao_id'));
 
+            Log::info('Tentativa de buscar registros no método conciliar', [
+                'bank_statement_id' => $request->input('bank_statement_id'),
+                'transacao_id' => $request->input('transacao_id'),
+                'bank_statement_found' => $bankStatement ? 'sim' : 'não',
+                'transacao_found' => $transacao ? 'sim' : 'não',
+                'request_all' => $request->all()
+            ]);
+
             if (!$bankStatement || !$transacao) {
+                Log::error('Erro: Registros não encontrados no método conciliar', [
+                    'bank_statement_id' => $request->input('bank_statement_id'),
+                    'transacao_id' => $request->input('transacao_id'),
+                    'bank_statement_found' => $bankStatement ? 'sim' : 'não',
+                    'transacao_found' => $transacao ? 'sim' : 'não'
+                ]);
                 return redirect()->back()->with('error', 'Erro ao buscar dados para conciliação.');
             }
 
