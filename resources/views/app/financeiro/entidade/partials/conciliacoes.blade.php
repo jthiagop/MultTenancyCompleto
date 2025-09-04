@@ -379,10 +379,9 @@
                                                                         </div>
                                                                         <form
                                                                             id="formularioEdicao-{{ $conciliacao->id }}"
-                                                                            action="{{ route('conciliacao.update', $transacaoSugerida->id) }}"
+                                                                            action="{{ route('conciliacao.pivot') }}"
                                                                             method="POST">
                                                                             @csrf
-                                                                            @method('PUT')
 
                                                                             <div class="row mb-3">
                                                                                 <div class="col-md-6">
@@ -413,6 +412,12 @@
                                                                                     <input type="hidden"
                                                                                         name="bank_statement_id"
                                                                                         value="{{ $conciliacao->id }}">
+                                                                                    <input type="hidden"
+                                                                                        name="transacao_financeira_id"
+                                                                                        value="{{ $transacaoSugerida->id }}">
+                                                                                    <input type="hidden"
+                                                                                        name="valor_conciliado"
+                                                                                        value="{{ $transacaoSugerida->valor }}">
                                                                                     <label
                                                                                         for="numero_documento-{{ $conciliacao->id }}"
                                                                                         class="required form-label fw-semibold">Código</label>
