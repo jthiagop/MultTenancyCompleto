@@ -26,9 +26,20 @@ class CheckSessionExpiration
             if (time() - $lastActivity > $sessionLifetime) {
                 // A sessão expirou
                 Auth::logout(); // Faz logout
+                $request->session()->invalidate(); // Invalida a sessão
+                $request->session()->regenerateToken(); // Regenera o token CSRF
+
+                // Verificar se é uma requisição AJAX
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Sua sessão expirou por inatividade. Faça login novamente.',
+                        'error' => 'SESSION_EXPIRED',
+                        'redirect' => route('login')
+                    ], 401);
+                }
 
                 // Redireciona para a página de login com uma mensagem de sessão expirada
-                return redirect()->route('login')->with('status', 'Sua sessão expirou. Faça login novamente para continuar usando o aplicativo.');
+                return redirect()->route('login')->with('error', 'Sua sessão expirou por inatividade. Faça login novamente para continuar.');
             }
         }
 

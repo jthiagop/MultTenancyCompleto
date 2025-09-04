@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.filesystems' => TenantFilesystems::class,
             'ensureUserHasAccess' => \App\Http\Middleware\EnsureUserHasAccess::class,
             'CheckSessionExpiration' => \App\Http\Middleware\CheckSessionExpiration::class,
+            'HandleSessionExpiration' => \App\Http\Middleware\HandleSessionExpiration::class,
             'set.active.company' => \App\Http\Middleware\SetActiveCompany::class, // Adicione o alias aqui
             'ensure.tenant.setup' => \App\Http\Middleware\EnsureTenantSetup::class, // Middleware para garantir setup do tenant
         ]);
@@ -40,8 +41,27 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->appendToGroup('web', [
             //\App\Http\Middleware\SetActiveCompany::class,
             \App\Http\Middleware\EnsureTenantSetup::class, // Verificar setup do tenant automaticamente
+            \App\Http\Middleware\CheckSessionExpiration::class, // Verificar expiração de sessão
+            \App\Http\Middleware\HandleSessionExpiration::class, // Tratar erros 419 de forma elegante
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {
-        //
+        // Interceptar erro 419 (Page Expired) e redirecionar para login
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Sua sessão expirou. Faça login novamente.',
+                    'error' => 'SESSION_EXPIRED'
+                ], 419);
+            }
+            
+            // Verificar se estamos em um contexto de tenant
+            $isTenant = $request->is('app/*') || $request->routeIs('tenant.*');
+            
+            if ($isTenant) {
+                return redirect()->route('login')->with('error', 'Sua sessão expirou por inatividade. Faça login novamente para continuar.');
+            } else {
+                return redirect()->route('login')->with('error', 'Sua sessão expirou por inatividade. Faça login novamente para continuar.');
+            }
+        });
     })->create();
