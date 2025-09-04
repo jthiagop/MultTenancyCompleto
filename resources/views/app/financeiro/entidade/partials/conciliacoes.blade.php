@@ -248,16 +248,18 @@
                                                                 <!--begin::Header-->
                                                                 <div id="viewData-{{ $conciliacao->id }}">
                                                                     <form id="form-{{ $conciliacao->id }}"
-                                                                        action="{{ route('conciliacao.pivot') }}"
+                                                                        action="{{ $transacaoSugerida ? route('conciliacao.pivot') : route('conciliacao.conciliar') }}"
                                                                         method="POST">
                                                                         @csrf
                                                                         <input type="hidden" name="bank_statement_id"
                                                                             value="{{ $conciliacao->id }}">
+                                                                        @if($transacaoSugerida)
                                                                         <input type="hidden"
                                                                             name="transacao_financeira_id"
-                                                                            value="{{ $transacaoSugerida->id ?? '' }}">
+                                                                            value="{{ $transacaoSugerida->id }}">
                                                                         <input type="hidden" name="valor"
-                                                                            value="{{ $transacaoSugerida->valor ?? $conciliacao->amount }}">
+                                                                            value="{{ $transacaoSugerida->valor }}">
+                                                                        @endif
 
                                                                         <div
                                                                             class="card card-flush border border-hover-primary py-4 p-7 rounded flex-row-fluid overflow-hidden mb-3 h-xl-100">
@@ -382,7 +384,7 @@
                                                                         </div>
                                                                         <form
                                                                             id="formularioEdicao-{{ $conciliacao->id }}"
-                                                                            action="{{ route('conciliacao.pivot') }}"
+                                                                            action="{{ $transacaoSugerida ? route('conciliacao.pivot') : route('conciliacao.conciliar') }}"
                                                                             method="POST">
                                                                             @csrf
 
@@ -415,12 +417,14 @@
                                                                                     <input type="hidden"
                                                                                         name="bank_statement_id"
                                                                                         value="{{ $conciliacao->id }}">
+                                                                                    @if($transacaoSugerida)
                                                                                     <input type="hidden"
                                                                                         name="transacao_financeira_id"
-                                                                                        value="{{ $transacaoSugerida->id ?? '' }}">
+                                                                                        value="{{ $transacaoSugerida->id }}">
                                                                                     <input type="hidden"
                                                                                         name="valor_conciliado"
-                                                                                        value="{{ $transacaoSugerida->valor ?? $conciliacao->amount }}">
+                                                                                        value="{{ $transacaoSugerida->valor }}">
+                                                                                    @endif
                                                                                     <label
                                                                                         for="numero_documento-{{ $conciliacao->id }}"
                                                                                         class="required form-label fw-semibold">Código</label>
@@ -589,7 +593,7 @@
                                                                                     aria-label="Close"></button>
                                                                             </div>
                                                                             <form id="{{ $conciliacao->id }}"
-                                                                                action="{{ route('conciliacao.pivot') }}"
+                                                                                action="{{ $transacaoSugerida ? route('conciliacao.pivot') : route('conciliacao.conciliar') }}"
                                                                                 method="POST">
                                                                                 @csrf
                                                                                 <!-- Exemplo simples de formulário -->
@@ -674,12 +678,14 @@
                                                                                         <input type="hidden"
                                                                                             name="bank_statement_id"
                                                                                             value="{{ $conciliacao->id }}">
+                                                                                        @if($transacaoSugerida)
                                                                                         <input type="hidden"
                                                                                             name="transacao_financeira_id"
-                                                                                            value="{{ $transacaoSugerida->id ?? '' }}">
+                                                                                            value="{{ $transacaoSugerida->id }}">
                                                                                         <input type="hidden"
                                                                                             name="valor_conciliado"
-                                                                                            value="{{ $transacaoSugerida->valor ?? $conciliacao->amount }}">
+                                                                                            value="{{ $transacaoSugerida->valor }}">
+                                                                                        @endif
 
 
                                                                                         <label for="descricao"
