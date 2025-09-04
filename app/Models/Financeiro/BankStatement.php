@@ -117,30 +117,68 @@ class BankStatement extends Model
      */
     public function conciliarCom(TransacaoFinanceira $transacao, $valorConciliado)
     {
-        // ✅ Marca o registro como conciliado
-        $this->reconciled = true;
-
-        // ✅ Define o status de conciliação com base no valor
-        if ($valorConciliado == $this->amount) {
-            $this->status_conciliacao = 'ok'; // Conciliação perfeita
-        } elseif ($valorConciliado < $this->amount) {
-            $this->status_conciliacao = 'parcial'; // Conciliação parcial (valor menor)
-        } elseif ($valorConciliado > $this->amount) {
-            $this->status_conciliacao = 'divergente'; // Conciliação divergente (valor maior)
-        } else {
-            $this->status_conciliacao = 'pendente'; // Valor não foi conciliado
-        }
-
-        // ✅ Salva os campos diretamente na tabela
-        $this->save();
-
-        // ✅ Salva diretamente na tabela pivot o valor conciliado e o status
-        $this->transacoes()->attach($transacao->id, [
+        \Log::info('Iniciando conciliação no modelo BankStatement', [
+            'bank_statement_id' => $this->id,
+            'transacao_id' => $transacao->id,
             'valor_conciliado' => $valorConciliado,
-            'status_conciliacao' => $this->status_conciliacao,
-            'created_at' => now(),
-            'updated_at' => now(),
+            'amount_bank_statement' => $this->amount,
+            'valor_transacao' => $transacao->valor
         ]);
+
+        try {
+            // ✅ Marca o registro como conciliado
+            $this->reconciled = true;
+
+            // ✅ Define o status de conciliação com base no valor
+            if ($valorConciliado == $this->amount) {
+                $this->status_conciliacao = 'ok'; // Conciliação perfeita
+                \Log::info('Status definido como: ok (conciliação perfeita)');
+            } elseif ($valorConciliado < $this->amount) {
+                $this->status_conciliacao = 'parcial'; // Conciliação parcial (valor menor)
+                \Log::info('Status definido como: parcial (valor menor)');
+            } elseif ($valorConciliado > $this->amount) {
+                $this->status_conciliacao = 'divergente'; // Conciliação divergente (valor maior)
+                \Log::info('Status definido como: divergente (valor maior)');
+            } else {
+                $this->status_conciliacao = 'pendente'; // Valor não foi conciliado
+                \Log::warning('Status definido como: pendente (valor não conciliado)');
+            }
+
+            // ✅ Salva os campos diretamente na tabela
+            $this->save();
+
+            \Log::info('BankStatement atualizado com sucesso', [
+                'reconciled' => $this->reconciled,
+                'status_conciliacao' => $this->status_conciliacao
+            ]);
+
+            // ✅ Salva diretamente na tabela pivot o valor conciliado e o status
+            $this->transacoes()->attach($transacao->id, [
+                'valor_conciliado' => $valorConciliado,
+                'status_conciliacao' => $this->status_conciliacao,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+
+            \Log::info('Relacionamento pivot criado com sucesso', [
+                'bank_statement_id' => $this->id,
+                'transacao_id' => $transacao->id,
+                'valor_conciliado' => $valorConciliado,
+                'status_conciliacao' => $this->status_conciliacao
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Erro ao conciliar no modelo BankStatement', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'bank_statement_id' => $this->id,
+                'transacao_id' => $transacao->id,
+                'valor_conciliado' => $valorConciliado
+            ]);
+            
+            throw $e; // Re-lança a exceção para ser capturada pelo controller
+        }
     }
 
 

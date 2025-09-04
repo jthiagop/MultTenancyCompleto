@@ -265,18 +265,112 @@ class ConciliacaoController extends Controller
 
     public function pivot(Request $request)
     {
+        // Log da requisição recebida
+        Log::info('Iniciando processo de conciliação', [
+            'user_id' => Auth::id(),
+            'request_data' => $request->all(),
+            'ip' => $request->ip(),
+            'user_agent' => $request->userAgent()
+        ]);
+
         return DB::transaction(function () use ($request) {
-            // ✅ Busca os registros corretamente
-            $bankStatement = BankStatement::findOrFail($request->bank_statement_id);
-            $transacao = TransacaoFinanceira::findOrFail($request->transacao_financeira_id);
+            try {
+                // Validação dos dados de entrada
+                $request->validate([
+                    'bank_statement_id' => 'required|exists:bank_statements,id',
+                    'transacao_financeira_id' => 'required|exists:transacoes_financeiras,id',
+                    'valor_conciliado' => 'nullable|numeric|min:0'
+                ]);
 
-            // ✅ Define o valor conciliado
-            $valorConciliado = $request->valor_conciliado ?? $transacao->valor;
+                Log::info('Validação dos dados de entrada passou', [
+                    'bank_statement_id' => $request->bank_statement_id,
+                    'transacao_financeira_id' => $request->transacao_financeira_id,
+                    'valor_conciliado' => $request->valor_conciliado
+                ]);
 
-            // ✅ Chama o método diretamente no modelo
-            $bankStatement->conciliarCom($transacao, $valorConciliado);
+                // ✅ Busca os registros corretamente
+                $bankStatement = BankStatement::findOrFail($request->bank_statement_id);
+                $transacao = TransacaoFinanceira::findOrFail($request->transacao_financeira_id);
 
-            return redirect()->back()->with('success', 'Conciliação realizada com sucesso!');
+                Log::info('Registros encontrados', [
+                    'bank_statement' => [
+                        'id' => $bankStatement->id,
+                        'amount' => $bankStatement->amount,
+                        'dtposted' => $bankStatement->dtposted,
+                        'memo' => $bankStatement->memo,
+                        'reconciled' => $bankStatement->reconciled
+                    ],
+                    'transacao' => [
+                        'id' => $transacao->id,
+                        'valor' => $transacao->valor,
+                        'data_competencia' => $transacao->data_competencia,
+                        'descricao' => $transacao->descricao
+                    ]
+                ]);
+
+                // ✅ Define o valor conciliado
+                $valorConciliado = $request->valor_conciliado ?? $transacao->valor;
+
+                Log::info('Valor conciliado definido', [
+                    'valor_conciliado' => $valorConciliado,
+                    'valor_original_transacao' => $transacao->valor,
+                    'valor_bank_statement' => $bankStatement->amount
+                ]);
+
+                // Verificar se já existe conciliação
+                $conciliacaoExistente = $bankStatement->transacoes()->where('transacao_financeira_id', $transacao->id)->exists();
+                
+                if ($conciliacaoExistente) {
+                    Log::warning('Tentativa de conciliar transação já conciliada', [
+                        'bank_statement_id' => $bankStatement->id,
+                        'transacao_id' => $transacao->id
+                    ]);
+                    
+                    return redirect()->back()->with('warning', 'Esta transação já foi conciliada anteriormente.');
+                }
+
+                // ✅ Chama o método diretamente no modelo
+                $bankStatement->conciliarCom($transacao, $valorConciliado);
+
+                Log::info('Conciliação realizada com sucesso', [
+                    'bank_statement_id' => $bankStatement->id,
+                    'transacao_id' => $transacao->id,
+                    'valor_conciliado' => $valorConciliado,
+                    'status_conciliacao' => $bankStatement->status_conciliacao
+                ]);
+
+                return redirect()->back()->with('success', 'Conciliação realizada com sucesso!');
+
+            } catch (\Illuminate\Validation\ValidationException $e) {
+                Log::error('Erro de validação na conciliação', [
+                    'errors' => $e->errors(),
+                    'request_data' => $request->all()
+                ]);
+                
+                return redirect()->back()
+                    ->withErrors($e->errors())
+                    ->withInput()
+                    ->with('error', 'Dados inválidos para conciliação.');
+
+            } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+                Log::error('Registro não encontrado na conciliação', [
+                    'message' => $e->getMessage(),
+                    'request_data' => $request->all()
+                ]);
+                
+                return redirect()->back()->with('error', 'Erro ao buscar dados para conciliação.');
+
+            } catch (\Exception $e) {
+                Log::error('Erro inesperado na conciliação', [
+                    'message' => $e->getMessage(),
+                    'file' => $e->getFile(),
+                    'line' => $e->getLine(),
+                    'trace' => $e->getTraceAsString(),
+                    'request_data' => $request->all()
+                ]);
+                
+                return redirect()->back()->with('error', 'Erro interno do servidor. Verifique os logs para mais detalhes.');
+            }
         });
     }
 
