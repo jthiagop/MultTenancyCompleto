@@ -585,6 +585,7 @@
                                                                                     data-bs-dismiss="alert"
                                                                                     aria-label="Close"></button>
                                                                             </div>
+                                                                            @if($transacaoSugerida)
                                                                             <form id="{{ $conciliacao->id }}"
                                                                                 action="{{ route('conciliacao.pivot') }}"
                                                                                 method="POST">
@@ -671,12 +672,21 @@
                                                                                         <input type="hidden"
                                                                                             name="bank_statement_id"
                                                                                             value="{{ $conciliacao->id }}">
+                                                                                        @if($transacaoSugerida)
                                                                                         <input type="hidden"
                                                                                             name="transacao_financeira_id"
                                                                                             value="{{ $transacaoSugerida->id }}">
                                                                                         <input type="hidden"
                                                                                             name="valor_conciliado"
                                                                                             value="{{ $transacaoSugerida->valor }}">
+                                                                                        @else
+                                                                                        <input type="hidden"
+                                                                                            name="transacao_financeira_id"
+                                                                                            value="">
+                                                                                        <input type="hidden"
+                                                                                            name="valor_conciliado"
+                                                                                            value="{{ $conciliacao->amount }}">
+                                                                                        @endif
 
 
                                                                                         <label for="descricao"
@@ -900,6 +910,12 @@
 
                                                                                 <!--end::Input group-->
                                                                             </form>
+                                                                            @else
+                                                                            <div class="alert alert-warning">
+                                                                                <h5>Nenhuma transação sugerida encontrada</h5>
+                                                                                <p>Não há transações financeiras correspondentes para esta conciliação.</p>
+                                                                            </div>
+                                                                            @endif
                                                                         </div>
                                                                         <!-- Aba Transferência -->
                                                                         <div class="tab-pane fade"
