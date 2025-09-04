@@ -659,4 +659,174 @@ class CaixaController extends Controller
             'total' => 'R$ ' . number_format($totalGeral, 2, ',', '.')
         ]);
     }
+
+    /**
+     * Get financial data for AJAX requests
+     */
+    public function getFinancialData(Request $request)
+    {
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return response()->json(['error' => 'Empresa não selecionada'], 400);
+        }
+
+        $tipo = $request->input('tipo', 'receita'); // receita ou despesa
+        $month = $request->input('month', Carbon::now()->month);
+        $year = $request->input('year', Carbon::now()->year);
+        $status = $request->input('status', '');
+        $fornecedor = $request->input('fornecedor', '');
+        $conta = $request->input('conta', '');
+
+        $query = ContasFinanceiras::with(['fornecedor', 'lancamentoPadrao'])
+            ->where('tipo_financeiro', $tipo)
+            ->whereMonth('data_primeiro_vencimento', $month)
+            ->whereYear('data_primeiro_vencimento', $year);
+
+        // Aplicar filtros
+        if ($status) {
+            $query->where('status_pagamento', $status);
+        }
+
+        if ($fornecedor) {
+            $query->where('fornecedor_id', $fornecedor);
+        }
+
+        if ($conta) {
+            $query->where('entidade_financeira_id', $conta);
+        }
+
+        $data = $query->get();
+
+        // Calcular totais para cards
+        $vencidos = $data->where('status_pagamento', 'vencido')->sum('valor');
+        $vencemHoje = $data->where('status_pagamento', 'em aberto')
+            ->where('data_primeiro_vencimento', Carbon::today()->format('Y-m-d'))
+            ->sum('valor');
+        $aVencer = $data->whereIn('status_pagamento', ['em aberto', 'pendente'])
+            ->where('data_primeiro_vencimento', '>', Carbon::today())
+            ->sum('valor');
+        $pagos = $data->where('status_pagamento', 'pago')->sum('valor');
+        $total = $data->sum('valor');
+
+        return response()->json([
+            'data' => $data,
+            'cards' => [
+                'vencidos' => $vencidos,
+                'vencemHoje' => $vencemHoje,
+                'aVencer' => $aVencer,
+                'pagos' => $pagos,
+                'total' => $total
+            ]
+        ]);
+    }
+
+    /**
+     * Mark financial entries as paid
+     */
+    public function markAsPaid(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:contas_financeiras,id'
+        ]);
+
+        try {
+            $ids = $request->input('ids');
+            $dataPagamento = $request->input('data_pagamento', Carbon::today()->format('Y-m-d'));
+
+            ContasFinanceiras::whereIn('id', $ids)->update([
+                'status_pagamento' => 'pago',
+                'data_pagamento' => $dataPagamento,
+                'updated_by' => Auth::id(),
+                'updated_by_name' => Auth::user()->name
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => count($ids) . ' registro(s) marcado(s) como pago(s)'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao marcar como pago: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Export financial data
+     */
+    public function export(Request $request)
+    {
+        $request->validate([
+            'tipo' => 'required|in:receita,despesa',
+            'format' => 'required|in:pdf,excel,csv'
+        ]);
+
+        $tipo = $request->input('tipo');
+        $format = $request->input('format');
+        $ids = $request->input('ids', []);
+
+        $query = ContasFinanceiras::with(['fornecedor', 'lancamentoPadrao'])
+            ->where('tipo_financeiro', $tipo);
+
+        if (!empty($ids)) {
+            $query->whereIn('id', $ids);
+        }
+
+        $data = $query->get();
+
+        // Aqui você implementaria a lógica de exportação
+        // Por enquanto, retornamos os dados em JSON
+        return response()->json([
+            'success' => true,
+            'data' => $data,
+            'message' => 'Exportação preparada para ' . strtoupper($format)
+        ]);
+    }
+
+    /**
+     * Delete financial entries
+     */
+    public function deleteEntries(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'exists:contas_financeiras,id'
+        ]);
+
+        try {
+            $ids = $request->input('ids');
+            
+            ContasFinanceiras::whereIn('id', $ids)->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => count($ids) . ' registro(s) excluído(s) com sucesso'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao excluir: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Get filter options for dropdowns
+     */
+    public function getFilterOptions(Request $request)
+    {
+        $activeCompanyId = session('active_company_id');
+        
+        $fornecedores = \App\Models\Fornecedor::orderBy('nome')->get(['id', 'nome']);
+        $contas = EntidadeFinanceira::where('company_id', $activeCompanyId)
+            ->orderBy('nome')
+            ->get(['id', 'nome']);
+
+        return response()->json([
+            'fornecedores' => $fornecedores,
+            'contas' => $contas
+        ]);
+    }
 }

@@ -233,6 +233,13 @@ Route::middleware([
             Route::delete('/caixas/{id}', [CaixaController::class, 'destroySelected'])->name('caixas.destroySelected');
             Route::resource('caixa', CaixaController::class);
             Route::get('/charts/despesas', [CaixaController::class, 'getDespesasChartData'])->name('charts.despesas.data');
+            
+            // Rotas AJAX para funcionalidades da interface financeira
+            Route::get('/financeiro/data', [CaixaController::class, 'getFinancialData'])->name('financeiro.data');
+            Route::post('/financeiro/mark-as-paid', [CaixaController::class, 'markAsPaid'])->name('financeiro.mark-as-paid');
+            Route::post('/financeiro/export', [CaixaController::class, 'export'])->name('financeiro.export');
+            Route::delete('/financeiro/delete', [CaixaController::class, 'deleteEntries'])->name('financeiro.delete');
+            Route::get('/financeiro/filter-options', [CaixaController::class, 'getFilterOptions'])->name('financeiro.filter-options');
 
             Route::resource('banco', BancoController::class);
             Route::resource('anexos', AnexoController::class);
