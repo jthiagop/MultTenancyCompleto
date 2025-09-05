@@ -8,6 +8,12 @@ var KTAppBancoChartCombined = function () {
 
     // Private functions
     var initChart = function () {
+        // Verificar se já foi inicializado
+        if (chart) {
+            console.log('Gráfico já inicializado, pulando...');
+            return;
+        }
+        
         chartElement = document.getElementById('kt_charts_widget_combined');
         
         if (!chartElement) {
@@ -115,26 +121,30 @@ var KTAppBancoChartCombined = function () {
 
         console.log('Carregando dados do gráfico:', { mes, ano, bancoId });
 
-        // Mostrar loading
-        if (chart) {
-            chart.showLoading();
-        }
+        // Mostrar loading (ApexCharts não tem showLoading, vamos usar uma abordagem diferente)
+        console.log('Iniciando carregamento de dados...');
 
         // Fazer requisição AJAX
-        fetch('/banco/chart-data?' + new URLSearchParams({
+        var url = '/banco/chart-data?' + new URLSearchParams({
             mes: mes,
             ano: ano,
             entidade_id: bancoId
-        }), {
+        });
+        
+        console.log('Fazendo requisição para:', url);
+        
+        fetch(url, {
             method: 'GET',
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
             }
         })
         .then(response => {
-            console.log('Resposta recebida:', response.status);
+            console.log('Resposta recebida:', response.status, response.statusText);
             if (!response.ok) {
+                console.error('Erro na resposta:', response.status, response.statusText);
                 throw new Error('Erro na resposta: ' + response.status);
             }
             return response.json();
@@ -156,9 +166,7 @@ var KTAppBancoChartCombined = function () {
             console.error('Erro na requisição:', error);
         })
         .finally(() => {
-            if (chart) {
-                chart.hideLoading();
-            }
+            console.log('Carregamento de dados finalizado');
         });
     };
 
