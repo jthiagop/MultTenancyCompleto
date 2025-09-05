@@ -210,4 +210,29 @@ var initDaterangepicker = function () {
 // On document ready
 KTUtil.onDOMContentLoaded(function () {
     KTAppEcommerceReportShipping.init();
+    
+    // Inicializar gráfico combinado se estiver na aba overview
+    if (document.getElementById('kt_charts_widget_combined')) {
+        console.log('Elemento do gráfico encontrado, inicializando...');
+        
+        // Carregar ApexCharts se não estiver carregado
+        if (typeof ApexCharts === 'undefined') {
+            console.log('ApexCharts não encontrado, carregando...');
+            var script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/apexcharts@latest';
+            script.onload = function() {
+                console.log('ApexCharts carregado, inicializando gráfico...');
+                KTAppBancoChartCombined.init();
+            };
+            script.onerror = function() {
+                console.error('Erro ao carregar ApexCharts');
+            };
+            document.head.appendChild(script);
+        } else {
+            console.log('ApexCharts já carregado, inicializando gráfico...');
+            KTAppBancoChartCombined.init();
+        }
+    } else {
+        console.log('Elemento do gráfico não encontrado');
+    }
 });

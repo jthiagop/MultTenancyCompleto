@@ -264,6 +264,7 @@ Route::middleware([
             Route::post('/validar-num-foro', [NamePatrimonioController::class, 'validarNumForo']);
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
             Route::get('app/financeiro/banco/list', [BancoController::class, 'list'])->name('banco.list');
+            Route::get('/banco/chart-data', [BancoController::class, 'getChartData'])->name('banco.chart.data');
             Route::get('/patrimonios/search', [PatrimonioController::class, 'search'])->name('patrimonios.search');
             Route::get('/patrimonios/grafico', [PatrimonioController::class, 'grafico']);
             Route::get('/report/shipping', [ReportController::class, 'shippingReport'])->name('report.shipping');

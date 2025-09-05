@@ -159,6 +159,105 @@ class BancoController extends Controller
         ], $dadosGrafico));
     }
 
+    /**
+     * Retorna dados para os gráficos de transações bancárias
+     */
+    public function getChartData(Request $request)
+    {
+        Log::info('getChartData chamado - INÍCIO');
+        
+        $companyId = session('active_company_id');
+        
+        Log::info('getChartData chamado', [
+            'company_id' => $companyId,
+            'mes' => $request->input('mes'),
+            'ano' => $request->input('ano'),
+            'entidade_id' => $request->input('entidade_id')
+        ]);
+        
+        if (!$companyId) {
+            Log::error('Empresa não encontrada na sessão');
+            return response()->json(['error' => 'Empresa não encontrada'], 400);
+        }
+
+        // Parâmetros de filtro
+        $mes = $request->input('mes', Carbon::now()->month);
+        $ano = $request->input('ano', Carbon::now()->year);
+        $entidadeId = $request->input('entidade_id'); // Filtro opcional por banco específico
+
+        // Construir query base
+        $query = TransacaoFinanceira::where('company_id', $companyId)
+            ->where(function ($q) {
+                $q->where('origem', 'Conciliação Bancária')
+                  ->orWhere('origem', 'Banco');
+            })
+            ->whereYear('data_competencia', $ano)
+            ->whereMonth('data_competencia', $mes);
+
+        // Filtrar por entidade específica se fornecida
+        if ($entidadeId) {
+            $query->where('entidade_id', $entidadeId);
+        }
+
+        $transacoes = $query->orderBy('data_competencia')->get();
+        
+        Log::info('Transações encontradas', [
+            'total' => $transacoes->count(),
+            'primeiras_5' => $transacoes->take(5)->toArray()
+        ]);
+
+        // Agrupar por dia do mês
+        $diasNoMes = Carbon::create($ano, $mes, 1)->daysInMonth;
+        $dados = [];
+
+        for ($dia = 1; $dia <= $diasNoMes; $dia++) {
+            $dataAtual = Carbon::create($ano, $mes, $dia);
+            $dataFormatada = $dataAtual->format('Y-m-d');
+            
+            $transacoesDia = $transacoes->filter(function ($transacao) use ($dataFormatada) {
+                return Carbon::parse($transacao->data_competencia)->format('Y-m-d') === $dataFormatada;
+            });
+
+            $entradas = $transacoesDia->where('tipo', 'entrada')->sum('valor');
+            $saidas = $transacoesDia->where('tipo', 'saida')->sum('valor');
+
+            $dados[] = [
+                'dia' => $dia,
+                'data' => $dataAtual->format('d/m'),
+                'entradas' => (float) $entradas,
+                'saidas' => (float) $saidas,
+                'saldo_dia' => (float) ($entradas - $saidas)
+            ];
+        }
+
+        // Calcular totais do período
+        $totalEntradas = $transacoes->where('tipo', 'entrada')->sum('valor');
+        $totalSaidas = $transacoes->where('tipo', 'saida')->sum('valor');
+        $saldoTotal = $totalEntradas - $totalSaidas;
+
+        $response = [
+            'dados' => $dados,
+            'totais' => [
+                'entradas' => (float) $totalEntradas,
+                'saidas' => (float) $totalSaidas,
+                'saldo' => (float) $saldoTotal
+            ],
+            'periodo' => [
+                'mes' => $mes,
+                'ano' => $ano,
+                'mes_nome' => Carbon::create($ano, $mes, 1)->locale('pt_BR')->monthName
+            ]
+        ];
+        
+        Log::info('Dados do gráfico preparados', [
+            'total_dados' => count($dados),
+            'totais' => $response['totais'],
+            'primeiros_3_dados' => array_slice($dados, 0, 3)
+        ]);
+
+        return response()->json($response);
+    }
+
 
     /**
      * Show the form for creating a new resource.

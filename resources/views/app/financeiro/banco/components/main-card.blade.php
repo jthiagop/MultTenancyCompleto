@@ -1,4 +1,3 @@
-<!--begin::Navbar-->
 <div class="row no-gutters">
     <div class="12 col-sm-12 col-md-8">
         <div class="card mb-6 mb-xl-9">
@@ -307,4 +306,5 @@
             </div>
         </div>
     </div>
+    @include('app.financeiro.banco.components.side-card')
 </div>
