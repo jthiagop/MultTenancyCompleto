@@ -135,6 +135,7 @@ var KTAppBancoChartCombined = function () {
         
         fetch(url, {
             method: 'GET',
+            credentials: 'include', // Incluir cookies de autenticação
             headers: {
                 'X-Requested-With': 'XMLHttpRequest',
                 'Accept': 'application/json',
