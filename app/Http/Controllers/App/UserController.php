@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Spatie\Permission\Models\Role;
 
@@ -286,6 +287,105 @@ class UserController extends Controller
 
             // Retorna uma mensagem de erro amigável para o usuário.
             return redirect()->back()->with('error', 'Ocorreu um erro inesperado. Por favor, tente novamente.');
+        }
+    }
+
+    /**
+     * Atualiza o email do usuário com validação de senha
+     */
+    public function updateEmail(Request $request, User $user)
+    {
+        try {
+            // Validação dos dados
+            $request->validate([
+                'email' => 'required|email|unique:users,email,' . $user->id,
+                'password' => 'required|string|min:6',
+            ], [
+                'email.required' => 'O email é obrigatório.',
+                'email.email' => 'O email deve ter um formato válido.',
+                'email.unique' => 'Este email já está sendo usado por outro usuário.',
+                'password.required' => 'A senha é obrigatória.',
+                'password.min' => 'A senha deve ter pelo menos 6 caracteres.',
+            ]);
+
+            // Verificar se a senha está correta
+            if (!Hash::check($request->password, $user->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Senha incorreta. Verifique e tente novamente.'
+                ], 422);
+            }
+
+            // Verificar se o email é diferente do atual
+            if ($request->email === $user->email) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'O novo email deve ser diferente do email atual.'
+                ], 422);
+            }
+
+            // Atualizar o email
+            $user->email = $request->email;
+            $user->email_verified_at = null; // Marcar como não verificado
+            $user->save();
+
+            Log::info('Email do usuário atualizado', [
+                'user_id' => $user->id,
+                'old_email' => $user->getOriginal('email'),
+                'new_email' => $request->email,
+                'updated_by' => auth()->id()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Email atualizado com sucesso! Você precisará verificar o novo email na próxima vez que fizer login.',
+                'new_email' => $user->email
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dados inválidos.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Erro ao atualizar email do usuário: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocorreu um erro inesperado. Por favor, tente novamente.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Verifica se a senha está correta (para validação em tempo real)
+     */
+    public function verifyPassword(Request $request, User $user)
+    {
+        try {
+            $request->validate([
+                'password' => 'required|string',
+            ]);
+
+            $isCorrect = Hash::check($request->password, $user->password);
+
+            return response()->json([
+                'success' => true,
+                'is_correct' => $isCorrect,
+                'message' => $isCorrect ? 'Senha correta' : 'Senha incorreta'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao verificar senha: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao verificar senha'
+            ], 500);
         }
     }
 }

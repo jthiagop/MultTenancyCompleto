@@ -90,6 +90,12 @@ class BancoController extends Controller
             ->with('bankStatements')  // 3. (Opcional, mas recomendado) Otimiza a consulta
             ->get();
 
+        // Entidades para o relatório de prestação de contas
+        $entidades = EntidadeFinanceira::forActiveCompany() // 1. Usa o scope para filtrar pela empresa
+            ->where('tipo', 'banco')  // 2. Adiciona o filtro específico para bancos
+            ->with('bankStatements')  // 3. (Opcional, mas recomendado) Otimiza a consulta
+            ->get();
+
         // Filtrar as transações com origem "Banco"
         // Transações com anexos relacionados
         $transacoes = TransacaoFinanceira::with('modulos_anexos')
@@ -156,6 +162,7 @@ class BancoController extends Controller
             'mesSelecionado' => $mesSelecionado,
             'anoSelecionado' => $anoSelecionado,
             'perPage' => $perPage,
+            'entidades' => $entidades,
         ], $dadosGrafico));
     }
 
@@ -164,7 +171,7 @@ class BancoController extends Controller
      */
     public function getChartData(Request $request)
     {
-        Log::info('getChartData chamado - INÍCIO');
+        Log::info('getChartData chamado - INÍCIO - TENANT CONTEXT');
         
         $companyId = session('active_company_id');
         

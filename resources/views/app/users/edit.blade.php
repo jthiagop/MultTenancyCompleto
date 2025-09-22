@@ -198,7 +198,7 @@
                         <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse"
                             data-bs-target="#kt_account_signin_method">
                             <div class="card-title m-0">
-                                <h3 class="fw-bold m-0">Sign-in Method</h3>
+                                <h3 class="fw-bold m-0">Redefinir</h3>
                             </div>
                         </div>
                         <!--end::Card header-->
@@ -210,42 +210,48 @@
                                 <div class="d-flex flex-wrap align-items-center">
                                     <!--begin::Label-->
                                     <div id="kt_signin_email">
-                                        <div class="fs-6 fw-bold mb-1">Email Address</div>
-                                        <div class="fw-semibold text-gray-600">support@keenthemes.com</div>
+                                        <div class="fs-6 fw-bold mb-1">Email</div>
+                                        <div class="fw-semibold text-gray-600">{{ $user->email }}</div>
                                     </div>
                                     <!--end::Label-->
                                     <!--begin::Edit-->
                                     <div id="kt_signin_email_edit" class="flex-row-fluid d-none">
                                         <!--begin::Form-->
                                         <form id="kt_signin_change_email" class="form" novalidate="novalidate">
+                                            @csrf
                                             <div class="row mb-6">
                                                 <div class="col-lg-6 mb-4 mb-lg-0">
                                                     <div class="fv-row mb-0">
                                                         <label for="emailaddress"
-                                                            class="form-label fs-6 fw-bold mb-3">Enter New Email
-                                                            Address</label>
+                                                            class="form-label fs-6 fw-bold mb-3">Informe o novo email</label>
                                                         <input type="email"
                                                             class="form-control form-control-lg form-control-solid"
-                                                            id="emailaddress" placeholder="Email Address"
-                                                            name="emailaddress" value="support@keenthemes.com" />
+                                                            id="emailaddress" placeholder="Email"
+                                                            name="email" value="{{ $user->email }}" />
+                                                        <div class="fv-plugins-message-container invalid-feedback" id="email-error"></div>
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-6">
                                                     <div class="fv-row mb-0">
                                                         <label for="confirmemailpassword"
-                                                            class="form-label fs-6 fw-bold mb-3">Confirm
-                                                            Password</label>
+                                                            class="form-label fs-6 fw-bold mb-3">Confirme a senha</label>
                                                         <input type="password"
                                                             class="form-control form-control-lg form-control-solid"
-                                                            name="confirmemailpassword" id="confirmemailpassword" />
+                                                            name="password" id="confirmemailpassword" 
+                                                            placeholder="Digite sua senha atual" />
+                                                        <div class="fv-plugins-message-container invalid-feedback" id="password-error"></div>
                                                     </div>
                                                 </div>
                                             </div>
                                             <div class="d-flex">
                                                 <button id="kt_signin_submit" type="button"
-                                                    class="btn btn-primary me-2 px-6">Update Email</button>
+                                                    class="btn btn-primary me-2 px-6">
+                                                    <span class="indicator-label">Atualizar Email</span>
+                                                    <span class="indicator-progress">Aguarde...
+                                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                                </button>
                                                 <button id="kt_signin_cancel" type="button"
-                                                    class="btn btn-color-gray-400 btn-active-light-primary px-6">Cancel</button>
+                                                    class="btn btn-color-gray-400 btn-active-light-primary px-6">Cancelar</button>
                                             </div>
                                         </form>
                                         <!--end::Form-->
@@ -858,3 +864,190 @@
     <!--end:::Main-->
     </div>
 </x-tenant-app-layout>
+
+<script src="/assets/js/custom/account/settings/signin-methods.js"></script>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos do formulário
+    const form = document.getElementById('kt_signin_change_email');
+    const emailInput = document.getElementById('emailaddress');
+    const passwordInput = document.getElementById('confirmemailpassword');
+    const submitBtn = document.getElementById('kt_signin_submit');
+    const cancelBtn = document.getElementById('kt_signin_cancel');
+    
+    // Elementos de exibição
+    const emailDisplay = document.getElementById('kt_signin_email');
+    const emailEdit = document.getElementById('kt_signin_email_edit');
+    const emailButton = document.getElementById('kt_signin_email_button');
+    
+    // Elementos de erro
+    const emailError = document.getElementById('email-error');
+    const passwordError = document.getElementById('password-error');
+    
+    // Estado do botão
+    let isSubmitting = false;
+    
+    // Função para mostrar/ocultar formulário
+    function toggleEmailForm(show) {
+        if (show) {
+            emailDisplay.classList.add('d-none');
+            emailEdit.classList.remove('d-none');
+            emailButton.classList.add('d-none');
+            emailInput.focus();
+        } else {
+            emailDisplay.classList.remove('d-none');
+            emailEdit.classList.add('d-none');
+            emailButton.classList.remove('d-none');
+            clearForm();
+        }
+    }
+    
+    // Função para limpar formulário
+    function clearForm() {
+        form.reset();
+        clearErrors();
+        setButtonState(false);
+    }
+    
+    // Função para limpar erros
+    function clearErrors() {
+        emailError.textContent = '';
+        passwordError.textContent = '';
+        emailInput.classList.remove('is-invalid');
+        passwordInput.classList.remove('is-invalid');
+    }
+    
+    // Função para mostrar erro
+    function showError(field, message) {
+        const errorElement = field === 'email' ? emailError : passwordError;
+        const inputElement = field === 'email' ? emailInput : passwordInput;
+        
+        errorElement.textContent = message;
+        inputElement.classList.add('is-invalid');
+    }
+    
+    // Função para definir estado do botão
+    function setButtonState(submitting) {
+        isSubmitting = submitting;
+        submitBtn.disabled = submitting;
+        
+        if (submitting) {
+            submitBtn.setAttribute('data-kt-indicator', 'on');
+        } else {
+            submitBtn.removeAttribute('data-kt-indicator');
+        }
+    }
+    
+    // Event listener para o botão de editar
+    emailButton.addEventListener('click', function() {
+        toggleEmailForm(true);
+    });
+    
+    // Event listener para o botão de cancelar
+    cancelBtn.addEventListener('click', function() {
+        toggleEmailForm(false);
+    });
+    
+    // Event listener para o botão de submit
+    submitBtn.addEventListener('click', function() {
+        if (isSubmitting) return;
+        
+        clearErrors();
+        
+        // Validação básica
+        const email = emailInput.value.trim();
+        const password = passwordInput.value.trim();
+        
+        if (!email) {
+            showError('email', 'O email é obrigatório.');
+            return;
+        }
+        
+        if (!password) {
+            showError('password', 'A senha é obrigatória.');
+            return;
+        }
+        
+        if (email === '{{ $user->email }}') {
+            showError('email', 'O novo email deve ser diferente do email atual.');
+            return;
+        }
+        
+        // Enviar requisição
+        setButtonState(true);
+        
+        fetch('{{ route("users.email.update", $user->id) }}', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                email: email,
+                password: password
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Atualizar o email exibido
+                const emailText = emailDisplay.querySelector('.fw-semibold.text-gray-600');
+                emailText.textContent = data.new_email;
+                
+                // Mostrar mensagem de sucesso
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso!',
+                    text: data.message,
+                    confirmButtonText: 'OK'
+                });
+                
+                // Fechar formulário
+                toggleEmailForm(false);
+            } else {
+                // Mostrar erros
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        showError(field, data.errors[field][0]);
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro!',
+                        text: data.message,
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro!',
+                text: 'Ocorreu um erro inesperado. Tente novamente.',
+                confirmButtonText: 'OK'
+            });
+        })
+        .finally(() => {
+            setButtonState(false);
+        });
+    });
+    
+    // Validação em tempo real do email
+    emailInput.addEventListener('blur', function() {
+        const email = this.value.trim();
+        if (email && email !== '{{ $user->email }}') {
+            // Verificar se o email é válido
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                showError('email', 'Digite um email válido.');
+            } else {
+                clearErrors();
+            }
+        }
+    });
+});
+</script>

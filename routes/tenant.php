@@ -193,6 +193,8 @@ Route::middleware([
             Route::put('/users/{user}/filiais', [UserController::class, 'updateFiliais'])->name('users.filiais.update');
             // Rota dedicada APENAS para ativar ou desativar um usuário
             Route::put('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status.update');
+            Route::put('/users/{user}/email', [UserController::class, 'updateEmail'])->name('users.email.update');
+            Route::post('/users/{user}/verify-password', [UserController::class, 'verifyPassword'])->name('users.password.verify');
 
             Route::resource('company', CompanyController::class)->except(['edit', 'update']);
 

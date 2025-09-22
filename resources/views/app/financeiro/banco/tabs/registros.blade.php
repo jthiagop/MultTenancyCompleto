@@ -64,9 +64,10 @@
                         <!--end::Select2-->
                     </div>
                     <!--end::Filter-->
+                    @include('app.components.modals.relatorio.prestacao')
                     <!--begin::Export dropdown-->
-                    <button type="button" class="btn btn-light-primary" data-kt-menu-trigger="click"
-                        data-kt-menu-placement="bottom-end">
+                    <button type="button" class="btn btn-light-primary"  data-bs-toggle="modal"
+                    data-bs-target="#prestacaoConta">
                         <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
                         <span class="svg-icon svg-icon-2">
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
@@ -82,27 +83,6 @@
                             </svg>
                         </span>
                         <!--end::Svg Icon-->Relatório</button>
-                    <!--begin::Menu-->
-                    <div id="kt_ecommerce_report_shipping_export_menu"
-                        class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-200px py-4"
-                        data-kt-menu="true">
-                        <!--begin::Menu item-->
-                        <div class="menu-item px-3">
-                            <a href="#" class="menu-link px-3" data-kt-ecommerce-export="excel">Exporta Excel</a>
-                        </div>
-                        <!--end::Menu item-->
-                        <!--begin::Menu item-->
-                        <div class="menu-item px-3">
-                            <a href="#" class="menu-link px-3" data-kt-ecommerce-export="csv">Exporta CSV</a>
-                        </div>
-                        <!--end::Menu item-->
-                        <!--begin::Menu item-->
-                        <div class="menu-item px-3">
-                            <a href="#" class="menu-link px-3" data-kt-ecommerce-export="pdf">Exporta PDF</a>
-                        </div>
-                        <!--end::Menu item-->
-                    </div>
-                    <!--end::Menu-->
                     <!--end::Export dropdown-->
                 </div>
                 <!--end::Card toolbar-->
