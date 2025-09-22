@@ -259,7 +259,7 @@
                                     <!--end::Edit-->
                                     <!--begin::Action-->
                                     <div id="kt_signin_email_button" class="ms-auto">
-                                        <button class="btn btn-light btn-active-light-primary">Change Email</button>
+                                        <button class="btn btn-light btn-active-light-primary">Mudar Email</button>
                                     </div>
                                     <!--end::Action-->
                                 </div>
@@ -271,7 +271,7 @@
                                 <div class="d-flex flex-wrap align-items-center mb-10">
                                     <!--begin::Label-->
                                     <div id="kt_signin_password">
-                                        <div class="fs-6 fw-bold mb-1">Password</div>
+                                        <div class="fs-6 fw-bold mb-1">Senha</div>
                                         <div class="fw-semibold text-gray-600">************</div>
                                     </div>
                                     <!--end::Label-->
@@ -279,44 +279,62 @@
                                     <div id="kt_signin_password_edit" class="flex-row-fluid d-none">
                                         <!--begin::Form-->
                                         <form id="kt_signin_change_password" class="form" novalidate="novalidate">
-                                            <div class="row mb-1">
-                                                <div class="col-lg-4">
-                                                    <div class="fv-row mb-0">
-                                                        <label for="currentpassword"
-                                                            class="form-label fs-6 fw-bold mb-3">Current
-                                                            Password</label>
-                                                        <input type="password"
-                                                            class="form-control form-control-lg form-control-solid"
-                                                            name="currentpassword" id="currentpassword" />
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-4">
+                                            @csrf
+                                            <div class="row mb-6">
+                                                <div class="col-lg-6 mb-4 mb-lg-0">
                                                     <div class="fv-row mb-0">
                                                         <label for="newpassword"
-                                                            class="form-label fs-6 fw-bold mb-3">New Password</label>
+                                                            class="form-label fs-6 fw-bold mb-3">Nova Senha *</label>
                                                         <input type="password"
                                                             class="form-control form-control-lg form-control-solid"
-                                                            name="newpassword" id="newpassword" />
+                                                            name="password" id="newpassword" 
+                                                            placeholder="Digite a nova senha" />
+                                                        <div class="fv-plugins-message-container invalid-feedback" id="password-error"></div>
                                                     </div>
                                                 </div>
-                                                <div class="col-lg-4">
+                                                <div class="col-lg-6">
                                                     <div class="fv-row mb-0">
                                                         <label for="confirmpassword"
-                                                            class="form-label fs-6 fw-bold mb-3">Confirm New
-                                                            Password</label>
+                                                            class="form-label fs-6 fw-bold mb-3">Confirmar Nova Senha *</label>
                                                         <input type="password"
                                                             class="form-control form-control-lg form-control-solid"
-                                                            name="confirmpassword" id="confirmpassword" />
+                                                            name="password_confirmation" id="confirmpassword" 
+                                                            placeholder="Confirme a nova senha" />
+                                                        <div class="fv-plugins-message-container invalid-feedback" id="password_confirmation-error"></div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            <div class="form-text mb-5">Password must be at least 8 character and
-                                                contain symbols</div>
+                                            
+                                            <!-- Política de senha -->
+                                            <div class="alert alert-light-primary d-flex align-items-center p-5 mb-5">
+                                                <i class="ki-duotone ki-shield-tick fs-2hx text-primary me-4">
+                                                    <span class="path1"></span>
+                                                    <span class="path2"></span>
+                                                </i>
+                                                <div class="d-flex flex-column">
+                                                    <h4 class="mb-1 text-primary">Política de Senha</h4>
+                                                    <span>As senhas devem ter entre 8 e 256 caracteres e usar uma combinação de pelo menos três dos seguintes itens: letras maiúsculas, letras minúsculas, números e símbolos.</span>
+                                                </div>
+                                            </div>
+                                            
+                                            <!-- Checkbox para obrigar alteração no próximo login -->
+                                            <div class="form-check mb-5">
+                                                <input class="form-check-input" type="checkbox" 
+                                                    name="require_change" id="require_change" checked />
+                                                <label class="form-check-label fw-semibold" for="require_change">
+                                                    Exigir que este usuário altere a senha quando entrar pela primeira vez
+                                                </label>
+                                            </div>
+                                            
                                             <div class="d-flex">
                                                 <button id="kt_password_submit" type="button"
-                                                    class="btn btn-primary me-2 px-6">Update Password</button>
+                                                    class="btn btn-primary me-2 px-6">
+                                                    <span class="indicator-label">Redefinir Senha</span>
+                                                    <span class="indicator-progress">Aguarde...
+                                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                                </button>
                                                 <button id="kt_password_cancel" type="button"
-                                                    class="btn btn-color-gray-400 btn-active-light-primary px-6">Cancel</button>
+                                                    class="btn btn-color-gray-400 btn-active-light-primary px-6">Cancelar</button>
                                             </div>
                                         </form>
                                         <!--end::Form-->
@@ -324,7 +342,7 @@
                                     <!--end::Edit-->
                                     <!--begin::Action-->
                                     <div id="kt_signin_password_button" class="ms-auto">
-                                        <button class="btn btn-light btn-active-light-primary">Reset Password</button>
+                                        <button class="btn btn-light btn-active-light-primary">Redefinir Senha</button>
                                     </div>
                                     <!--end::Action-->
                                 </div>
@@ -1047,6 +1065,225 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 clearErrors();
             }
+        }
+    });
+});
+
+// Script para redefinição de senha
+document.addEventListener('DOMContentLoaded', function() {
+    // Elementos do formulário de senha
+    const passwordForm = document.getElementById('kt_signin_change_password');
+    const passwordInput = document.getElementById('newpassword');
+    const confirmPasswordInput = document.getElementById('confirmpassword');
+    const submitPasswordBtn = document.getElementById('kt_password_submit');
+    const cancelPasswordBtn = document.getElementById('kt_password_cancel');
+    
+    // Elementos de exibição
+    const passwordDisplay = document.getElementById('kt_signin_password');
+    const passwordEdit = document.getElementById('kt_signin_password_edit');
+    const passwordButton = document.getElementById('kt_signin_password_button');
+    
+    // Elementos de erro
+    const passwordError = document.getElementById('password-error');
+    const confirmPasswordError = document.getElementById('password_confirmation-error');
+    
+    // Estado do botão
+    let isSubmittingPassword = false;
+    
+    // Função para mostrar/ocultar formulário de senha
+    function togglePasswordForm(show) {
+        if (show) {
+            passwordDisplay.classList.add('d-none');
+            passwordEdit.classList.remove('d-none');
+            passwordButton.classList.add('d-none');
+            passwordInput.focus();
+        } else {
+            passwordDisplay.classList.remove('d-none');
+            passwordEdit.classList.add('d-none');
+            passwordButton.classList.remove('d-none');
+            clearPasswordForm();
+        }
+    }
+    
+    // Função para limpar formulário de senha
+    function clearPasswordForm() {
+        passwordForm.reset();
+        clearPasswordErrors();
+        setPasswordButtonState(false);
+    }
+    
+    // Função para limpar erros de senha
+    function clearPasswordErrors() {
+        passwordError.textContent = '';
+        confirmPasswordError.textContent = '';
+        passwordInput.classList.remove('is-invalid');
+        confirmPasswordInput.classList.remove('is-invalid');
+    }
+    
+    // Função para mostrar erro de senha
+    function showPasswordError(field, message) {
+        const errorElement = field === 'password' ? passwordError : confirmPasswordError;
+        const inputElement = field === 'password' ? passwordInput : confirmPasswordInput;
+        
+        errorElement.textContent = message;
+        inputElement.classList.add('is-invalid');
+    }
+    
+    // Função para definir estado do botão de senha
+    function setPasswordButtonState(submitting) {
+        isSubmittingPassword = submitting;
+        submitPasswordBtn.disabled = submitting;
+        
+        if (submitting) {
+            submitPasswordBtn.setAttribute('data-kt-indicator', 'on');
+        } else {
+            submitPasswordBtn.removeAttribute('data-kt-indicator');
+        }
+    }
+    
+    // Função para validar complexidade da senha
+    function validatePasswordComplexity(password) {
+        const hasUppercase = /[A-Z]/.test(password);
+        const hasLowercase = /[a-z]/.test(password);
+        const hasNumbers = /[0-9]/.test(password);
+        const hasSymbols = /[^A-Za-z0-9]/.test(password);
+        
+        const complexityCount = hasUppercase + hasLowercase + hasNumbers + hasSymbols;
+        
+        return {
+            isValid: complexityCount >= 3,
+            count: complexityCount,
+            hasUppercase,
+            hasLowercase,
+            hasNumbers,
+            hasSymbols
+        };
+    }
+    
+    // Event listener para o botão de redefinir senha
+    passwordButton.addEventListener('click', function() {
+        togglePasswordForm(true);
+    });
+    
+    // Event listener para o botão de cancelar senha
+    cancelPasswordBtn.addEventListener('click', function() {
+        togglePasswordForm(false);
+    });
+    
+    // Event listener para o botão de submit de senha
+    submitPasswordBtn.addEventListener('click', function() {
+        if (isSubmittingPassword) return;
+        
+        clearPasswordErrors();
+        
+        // Validação básica
+        const password = passwordInput.value.trim();
+        const confirmPassword = confirmPasswordInput.value.trim();
+        const requireChange = document.getElementById('require_change').checked;
+        
+        if (!password) {
+            showPasswordError('password', 'A senha é obrigatória.');
+            return;
+        }
+        
+        if (!confirmPassword) {
+            showPasswordError('password_confirmation', 'A confirmação da senha é obrigatória.');
+            return;
+        }
+        
+        if (password !== confirmPassword) {
+            showPasswordError('password_confirmation', 'As senhas não conferem.');
+            return;
+        }
+        
+        // Validar complexidade
+        const passwordValidation = validatePasswordComplexity(password);
+        if (!passwordValidation.isValid) {
+            showPasswordError('password', 'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.');
+            return;
+        }
+        
+        // Enviar requisição
+        setPasswordButtonState(true);
+        
+        fetch('{{ route("users.password.reset", $user->id) }}', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({
+                password: password,
+                password_confirmation: confirmPassword,
+                require_change: requireChange
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Mostrar mensagem de sucesso
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Sucesso!',
+                    text: data.message,
+                    confirmButtonText: 'OK'
+                });
+                
+                // Fechar formulário
+                togglePasswordForm(false);
+            } else {
+                // Mostrar erros
+                if (data.errors) {
+                    Object.keys(data.errors).forEach(field => {
+                        showPasswordError(field, data.errors[field][0]);
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro!',
+                        text: data.message,
+                        confirmButtonText: 'OK'
+                    });
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            Swal.fire({
+                icon: 'error',
+                title: 'Erro!',
+                text: 'Ocorreu um erro inesperado. Tente novamente.',
+                confirmButtonText: 'OK'
+            });
+        })
+        .finally(() => {
+            setPasswordButtonState(false);
+        });
+    });
+    
+    // Validação em tempo real da senha
+    passwordInput.addEventListener('input', function() {
+        const password = this.value;
+        if (password.length > 0) {
+            const validation = validatePasswordComplexity(password);
+            if (!validation.isValid) {
+                showPasswordError('password', 'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.');
+            } else {
+                clearPasswordErrors();
+            }
+        }
+    });
+    
+    // Validação em tempo real da confirmação
+    confirmPasswordInput.addEventListener('input', function() {
+        const password = passwordInput.value;
+        const confirmPassword = this.value;
+        
+        if (confirmPassword.length > 0 && password !== confirmPassword) {
+            showPasswordError('password_confirmation', 'As senhas não conferem.');
+        } else if (confirmPassword.length > 0 && password === confirmPassword) {
+            clearPasswordErrors();
         }
     });
 });

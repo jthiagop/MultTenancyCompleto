@@ -28,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
+            'password.change.required' => \App\Http\Middleware\CheckPasswordChangeRequired::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'tenant.filesystems' => TenantFilesystems::class,
             'ensureUserHasAccess' => \App\Http\Middleware\EnsureUserHasAccess::class,

@@ -159,8 +159,8 @@ Route::middleware([
 
 
 
-    // Grupo de rotas protegido pelo middleware 'auth' e 'ensureUserHasAccess'
-    Route::middleware(['auth', 'ensureUserHasAccess'])->group(function () {
+    // Grupo de rotas protegido pelo middleware 'auth', 'ensureUserHasAccess' e 'password.change.required'
+    Route::middleware(['auth', 'ensureUserHasAccess', 'password.change.required'])->group(function () {
 
             // Rota que fornecerá os dados em formato JSON para a DataTable
     // Usaremos POST para enviar os filtros de forma mais robusta
@@ -195,6 +195,11 @@ Route::middleware([
             Route::put('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status.update');
             Route::put('/users/{user}/email', [UserController::class, 'updateEmail'])->name('users.email.update');
             Route::post('/users/{user}/verify-password', [UserController::class, 'verifyPassword'])->name('users.password.verify');
+            Route::put('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.password.reset');
+            
+            // Rotas para alteração obrigatória de senha
+            Route::get('/password/change', [UserController::class, 'showPasswordChange'])->name('password.change.show');
+            Route::post('/password/change', [UserController::class, 'updatePasswordChange'])->name('password.change');
 
             Route::resource('company', CompanyController::class)->except(['edit', 'update']);
 

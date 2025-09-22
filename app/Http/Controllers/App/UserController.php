@@ -388,4 +388,153 @@ class UserController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Redefine a senha do usuário (administrativo - sem senha atual)
+     */
+    public function resetPassword(Request $request, User $user)
+    {
+        try {
+            // Validação dos dados
+            $request->validate([
+                'password' => 'required|string|min:8|max:256|confirmed',
+                'require_change' => 'boolean'
+            ], [
+                'password.required' => 'A senha é obrigatória.',
+                'password.min' => 'A senha deve ter pelo menos 8 caracteres.',
+                'password.max' => 'A senha deve ter no máximo 256 caracteres.',
+                'password.confirmed' => 'A confirmação da senha não confere.',
+            ]);
+
+            // Validar complexidade da senha
+            $password = $request->password;
+            $hasUppercase = preg_match('/[A-Z]/', $password);
+            $hasLowercase = preg_match('/[a-z]/', $password);
+            $hasNumbers = preg_match('/[0-9]/', $password);
+            $hasSymbols = preg_match('/[^A-Za-z0-9]/', $password);
+
+            $complexityCount = $hasUppercase + $hasLowercase + $hasNumbers + $hasSymbols;
+
+            if ($complexityCount < 3) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.'
+                ], 422);
+            }
+
+            // Atualizar a senha
+            $user->password = Hash::make($password);
+            $user->must_change_password = $request->boolean('require_change', true);
+            $user->password_changed_at = now();
+            $user->save();
+
+            Log::info('Senha do usuário redefinida administrativamente', [
+                'user_id' => $user->id,
+                'user_email' => $user->email,
+                'must_change_password' => $user->must_change_password,
+                'reset_by' => auth()->id()
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Senha redefinida com sucesso! ' . 
+                    ($user->must_change_password ? 'O usuário será obrigado a alterar a senha no próximo login.' : ''),
+                'must_change_password' => $user->must_change_password
+            ]);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dados inválidos.',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Erro ao redefinir senha do usuário: ' . $e->getMessage(), [
+                'user_id' => $user->id,
+                'request_data' => $request->all()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Ocorreu um erro inesperado. Por favor, tente novamente.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Exibe a tela de alteração obrigatória de senha
+     */
+    public function showPasswordChange()
+    {
+        return view('app.auth.change-password');
+    }
+
+    /**
+     * Processa a alteração obrigatória de senha
+     */
+    public function updatePasswordChange(Request $request)
+    {
+        try {
+            $user = auth()->user();
+
+            // Validação dos dados
+            $request->validate([
+                'current_password' => 'required|string',
+                'password' => 'required|string|min:8|max:256|confirmed',
+            ], [
+                'current_password.required' => 'A senha atual é obrigatória.',
+                'password.required' => 'A nova senha é obrigatória.',
+                'password.min' => 'A nova senha deve ter pelo menos 8 caracteres.',
+                'password.max' => 'A nova senha deve ter no máximo 256 caracteres.',
+                'password.confirmed' => 'A confirmação da senha não confere.',
+            ]);
+
+            // Verificar se a senha atual está correta
+            if (!Hash::check($request->current_password, $user->password)) {
+                return back()->withErrors([
+                    'current_password' => 'A senha atual está incorreta.'
+                ])->withInput();
+            }
+
+            // Validar complexidade da senha
+            $password = $request->password;
+            $hasUppercase = preg_match('/[A-Z]/', $password);
+            $hasLowercase = preg_match('/[a-z]/', $password);
+            $hasNumbers = preg_match('/[0-9]/', $password);
+            $hasSymbols = preg_match('/[^A-Za-z0-9]/', $password);
+
+            $complexityCount = $hasUppercase + $hasLowercase + $hasNumbers + $hasSymbols;
+
+            if ($complexityCount < 3) {
+                return back()->withErrors([
+                    'password' => 'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.'
+                ])->withInput();
+            }
+
+            // Atualizar a senha
+            $user->password = Hash::make($password);
+            $user->must_change_password = false;
+            $user->password_changed_at = now();
+            $user->save();
+
+            Log::info('Usuário alterou senha obrigatória', [
+                'user_id' => $user->id,
+                'user_email' => $user->email
+            ]);
+
+            return redirect()->route('dashboard')->with('success', 'Senha alterada com sucesso!');
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            Log::error('Erro ao alterar senha obrigatória: ' . $e->getMessage(), [
+                'user_id' => auth()->id(),
+                'request_data' => $request->all()
+            ]);
+
+            return back()->withErrors([
+                'password' => 'Ocorreu um erro inesperado. Tente novamente.'
+            ])->withInput();
+        }
+    }
 }

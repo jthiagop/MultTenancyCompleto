@@ -28,6 +28,8 @@ class User extends Authenticatable
         'name',
         'email',
         'password',
+        'must_change_password',
+        'password_changed_at',
         'avatar',
         'company_id',
         'last_login',
@@ -54,7 +56,9 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
-            'active' => 'boolean', // <-- ADICIONE ESTA LINHA
+            'active' => 'boolean',
+            'must_change_password' => 'boolean',
+            'password_changed_at' => 'datetime',
 
         ];
     }
