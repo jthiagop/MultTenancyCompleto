@@ -9,6 +9,7 @@ use App\Models\Tenant_user;
 use App\Models\TenantFilial;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Config;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -165,13 +166,19 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-
         $validateData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-            'roles' => 'required|array',
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'roles' => 'nullable|array',
             'filiais' => 'array', // Adicione esta linha para validar o campo 'filiais'
         ]);
+
+
+        // Processar upload do avatar se fornecido
+        if ($request->hasFile('avatar')) {
+            $validateData['avatar'] = $this->handleAvatarUpload($request);
+        }
 
         $user->update($validateData);
 
@@ -333,7 +340,7 @@ class UserController extends Controller
                 'user_id' => $user->id,
                 'old_email' => $user->getOriginal('email'),
                 'new_email' => $request->email,
-                'updated_by' => auth()->id()
+                'updated_by' => Auth::user()->id
             ]);
 
             return response()->json([
@@ -432,7 +439,7 @@ class UserController extends Controller
                 'user_id' => $user->id,
                 'user_email' => $user->email,
                 'must_change_password' => $user->must_change_password,
-                'reset_by' => auth()->id()
+                'reset_by' => Auth::user()->id
             ]);
 
             return response()->json([
@@ -475,7 +482,7 @@ class UserController extends Controller
     public function updatePasswordChange(Request $request)
     {
         try {
-            $user = auth()->user();
+            $user = Auth::user();
 
             // Validação dos dados
             $request->validate([
@@ -528,7 +535,7 @@ class UserController extends Controller
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             Log::error('Erro ao alterar senha obrigatória: ' . $e->getMessage(), [
-                'user_id' => auth()->id(),
+                'user_id' => Auth::user()->id,
                 'request_data' => $request->all()
             ]);
 

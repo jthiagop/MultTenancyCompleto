@@ -57,7 +57,7 @@
                             aria-controls="kt_account_profile_details">
                             <!--begin::Card title-->
                             <div class="card-title m-0">
-                                <h3 class="fw-bold m-0">Profile Details</h3>
+                                <h3 class="fw-bold m-0">Detalhes do Usuário</h3>
                             </div>
                             <!--end::Card title-->
                         </div>
@@ -65,7 +65,7 @@
                         <!--begin::Content-->
                         <div id="kt_account_settings_profile_details" class="collapse show">
                             <!--begin::Form-->
-                            <form method="POST" action="{{ route('users.update', $user->id) }}">
+                            <form method="POST" action="{{ route('users.update', $user->id) }}" enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
                                 <!--begin::Card body-->
@@ -149,7 +149,7 @@
                                             <div class="row">
                                                 <!--begin::Col-->
                                                 <div class="col-lg-12 fv-row">
-                                                    <input type="text" name="fname"
+                                                    <input type="text" name="name"
                                                         class="form-control form-control-lg form-control-solid mb-3 mb-lg-0"
                                                         placeholder="Nome" value="{{ old('name', $user->name) }}"
                                                         required autofocus autocomplete="name" />
@@ -183,7 +183,7 @@
                                 <!--end::Card body-->
                                 <!--begin::Actions-->
                                 <div class="card-footer d-flex justify-content-end py-6 px-9">
-                                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                                    <button type="submit" class="btn btn-primary">Salvar</button>
                                 </div>
                                 <!--end::Actions-->
                             </form>
@@ -760,8 +760,7 @@
                                 <!--end::Card body-->
                                 <!--begin::Card footer-->
                                 <div class="card-footer d-flex justify-content-end py-6 px-9">
-                                    <button class="btn btn-light btn-active-light-primary me-2">Discard</button>
-                                    <button class="btn btn-primary px-6">Save Changes</button>
+                                    <button class="btn btn-primary px-6">Salvar</button>
                                 </div>
                                 <!--end::Card footer-->
                             </form>
