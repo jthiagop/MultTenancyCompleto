@@ -7,7 +7,6 @@
     "require": {
         "php": "^8.2",
         "asgrim/ofxparser": "^1.1",
-        "barryvdh/laravel-dompdf": "^3.1",
         "davidhsianturi/blade-bootstrap-icons": "^1.5",
         "doctrine/dbal": "*",
         "endeken/ofx-php-parser": "^0.1.1",
@@ -32,6 +31,7 @@
         "yajra/laravel-datatables-oracle": "^11.1"
     },
     "require-dev": {
+        "barryvdh/laravel-dompdf": "^3.1",
         "barryvdh/laravel-debugbar": "^3.13",
         "barryvdh/laravel-ide-helper": "^3.2",
         "fakerphp/faker": "^1.23",
