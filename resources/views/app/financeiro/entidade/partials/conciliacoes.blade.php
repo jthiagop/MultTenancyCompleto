@@ -1,5 +1,5 @@
                             <div class="tab-pane fade show active" id="kt_tab_pane_conciliacoes" role="tabpanel">
-                                <div class="card">
+                                <div class="card mt-5">
                                     <div class="card-body">
                                         <div class="row gx-5 gx-xl-10">
                                             <!--begin::Nome do Banco e do Dominus-->
@@ -13,7 +13,7 @@
                                                         <div class="symbol symbol-circle symbol-45px">
                                                             @if ($entidade->bank && $entidade->bank->logo_path)
                                                                 {{-- Usa o caminho do logo salvo no banco de dados --}}
-                                                                <img src="{{ asset($entidade->bank->logo_path) }}"
+                                                                <img src="{{ $entidade->bank->logo_path }}"
                                                                     alt="{{ $entidade->bank->name }}" />
                                                             @else
                                                                 {{-- Fallback: Mostra as iniciais do nome da entidade se não houver logo --}}
@@ -25,8 +25,7 @@
                                                         <!--begin::Details-->
                                                         <div class="ms-5">
                                                             <!--begin::Desc-->
-                                                            <span class="text-muted fw-semibold mb-3">Lançamentos
-                                                                Importantes</span>
+                                                            <span class="text-muted fw-semibold mb-3">Lançamentos Importantes</span>
                                                             <!--end::Desc-->
                                                             <!--begin::Name-->
                                                             <div class="d-flex align-items-center">
@@ -938,10 +937,8 @@
                                                 </div>
                                                 <!--end::Row-->
                                             @endforeach
-
                                             <!-- Botões de paginação -->
                                             {{ $conciliacoesPendentes->links('pagination::bootstrap-5') }}
-
                                         @endif
                                     </div>
                                 </div>

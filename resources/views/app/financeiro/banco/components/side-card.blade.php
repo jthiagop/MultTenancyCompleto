@@ -1,5 +1,5 @@
 <div class="col-12 col-sm-12 col-md-4"> <!--begin::Row-->
-    <div class="card mb-6 mb-xl-9">
+    <div class="row mb-5 mb-xl-9">
         <!--begin::Col-->
         <div class="col-xl-12 mb-xl-6">
             <!--begin::Slider Widget 2-->
@@ -40,7 +40,7 @@
                 <!--end::Header-->
 
                 <!--begin::Body-->
-                <div class="card-body py-6">
+                <div class="card-body py-3">
                     <!--begin::Carousel-->
                     <div class="carousel-inner">
                         <!--begin::Itens do Carrossel-->
@@ -48,11 +48,10 @@
                             <div
                                 class="carousel-item @if ($key == 0) active show @endif">
                                 <!--begin::Wrapper-->
-                                <div class="d-flex align-items-center mb-9">
+                                <div class="d-flex align-items-center mb-8">
                                     <!--begin::Symbol-->
                                     <div class="symbol symbol-70px symbol-circle me-5">
-                                        {{-- 
-                                                Verifica se a entidade tem um banco relacionado 
+                                        {{-- Verifica se a entidade tem um banco relacionado
                                                 e se esse banco tem um caminho de logo definido.
                                             --}}
                                         @if ($entidade->bank && $entidade->bank->logo_path)
@@ -82,7 +81,7 @@
                                     <!--end::Symbol-->
 
                                     <!--begin::Info-->
-                                    <div class="m-0">
+                                    <div class="m-0 ">
                                         <!--begin::Subtitle-->
                                         <h4 class="fw-bold text-gray-800 mb-3">
                                             {{ $entidade->nome }} <span
@@ -125,7 +124,9 @@
                                                                     fill="currentColor" />
                                                             </svg>
                                                         </span>
-                                                        <!--end::Svg Icon-->2.2%</span>
+                                                        <!--end::Svg Icon-->
+                                                        2.2%
+                                                    </span>
                                                     <!--end::Badge-->
                                                 </div>
                                                 <!--end::Info-->
@@ -137,13 +138,12 @@
                                     <!--end::Info-->
                                 </div>
                                 <!--end::Wrapper-->
+                                <div class="separator my-4 py-2 border-muted "></div>
 
                                 <!--begin::Action-->
                                 <div class="m-0">
-                                    <a href="#"
-                                        class="btn btn-sm btn-light me-2 mb-2">Detalhes</a>
                                     <a href="{{ route('entidades.show', $entidade->id) }}"
-                                        class="btn btn-sm btn-success mb-2">Entrar no Banco</a>
+                                        class="btn btn-sm btn-success mb-2"><i class="bi bi-arrow-right fs-2"></i> Entrar no Banco</a>
                                 </div>
                                 <!--end::Action-->
                             </div>

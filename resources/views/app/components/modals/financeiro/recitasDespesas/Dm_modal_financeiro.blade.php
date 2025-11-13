@@ -29,7 +29,7 @@
                               <div class="row g-9 mb-8">
                                   <div class="col-md-2 fv-row">
                                       <label class="required fs-6 fw-semibold mb-2">
-                                          Data de competência
+                                          Data de competênciasss
                                       </label>
                                       <div class="position-relative d-flex align-items-center">
                                           <!--begin::Icon-->

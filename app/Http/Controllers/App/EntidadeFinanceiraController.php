@@ -198,7 +198,7 @@ class EntidadeFinanceiraController extends Controller
 
         // 5. CORREÇÃO: Carrega dados auxiliares usando os scopes.
         $centrosAtivos = CostCenter::forActiveCompany()->get();
-        
+
         $lps = LancamentoPadrao::all();
 
         // 6. A sua lógica de cálculo de percentual e agrupamento por dia está ótima.
@@ -216,6 +216,130 @@ class EntidadeFinanceiraController extends Controller
             'lps' => $lps,
             'percentualConciliado' => round($percentualConciliado),
             'transacoesPorDia' => $transacoesPorDia,
+        ]);
+    }
+
+    /**
+     * Retorna os dados da entidade financeira em formato JSON
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function showJson($id, Request $request)
+    {
+        // 1. A fonte da verdade é a SESSÃO.
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa selecionada.'
+            ], 403);
+        }
+
+        // Filtros de data (opcionais)
+        $dataInicio = $request->input('data_inicio');
+        $dataFim = $request->input('data_fim');
+
+        // 2. Carrega a entidade financeira usando o scope para garantir segurança.
+        //    O 'with' já carrega as transações de forma otimizada.
+        $entidade = EntidadeFinanceira::forActiveCompany()
+            ->with(['transacoesFinanceiras' => function ($query) use ($dataInicio, $dataFim) {
+                if ($dataInicio) {
+                    $query->whereDate('data_competencia', '>=', Carbon::parse($dataInicio)->startOfDay());
+                }
+                if ($dataFim) {
+                    $query->whereDate('data_competencia', '<=', Carbon::parse($dataFim)->endOfDay());
+                }
+                $query->orderBy('data_competencia', 'desc');
+            }])
+            ->findOrFail($id);
+
+        // 3. Busca os lançamentos do extrato pendentes para esta entidade.
+        //    Esta consulta já está correta, pois filtra pelo 'entidade_financeira_id'.
+        $bankStatements = BankStatement::where('entidade_financeira_id', $id)
+            ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+            ->whereDoesntHave('transacoes')
+            ->when($dataInicio, function ($query) use ($dataInicio) {
+                $query->whereDate('dtposted', '>=', Carbon::parse($dataInicio)->startOfDay());
+            })
+            ->when($dataFim, function ($query) use ($dataFim) {
+                $query->whereDate('dtposted', '<=', Carbon::parse($dataFim)->endOfDay());
+            })
+            ->orderBy('dtposted', 'desc')
+            ->paginate(20);
+
+        // 4. Para cada lançamento do extrato, busca possíveis correspondências.
+        foreach ($bankStatements as $lancamento) {
+            $valorAbs = abs($lancamento->amount);
+            $tipo = $lancamento->amount < 0 ? 'saida' : 'entrada';
+            $dataInicio = Carbon::parse($lancamento->dtposted)->startOfDay()->subMonths(2);
+            $dataFim = Carbon::parse($lancamento->dtposted)->endOfDay()->addMonths(2);
+            $numeroDocumento = $lancamento->checknum;
+
+            // CORREÇÃO: A busca por transações agora também usa o scope.
+            $possiveis = TransacaoFinanceira::forActiveCompany()
+                ->where('entidade_id', $id)
+                ->where('tipo', $tipo)
+                ->where('valor', $valorAbs)
+                ->whereBetween('data_competencia', [$dataInicio, $dataFim])
+                ->when($numeroDocumento, function ($query) use ($numeroDocumento) {
+                    $query->where('numero_documento', $numeroDocumento);
+                })
+                ->get();
+
+            $lancamento->possiveisTransacoes = $possiveis;
+        }
+
+        // 5. CORREÇÃO: Carrega dados auxiliares usando os scopes.
+        $centrosAtivos = CostCenter::forActiveCompany()->get();
+
+        $lps = LancamentoPadrao::all();
+
+        // 6. A sua lógica de cálculo de percentual e agrupamento por dia está ótima.
+        $totalTransacoes = $entidade->transacoesFinanceiras->count();
+        $totalConciliadas = $entidade->transacoesFinanceiras->where('status_conciliacao', 'ok')->count();
+        $percentualConciliado = $totalTransacoes > 0 ? ($totalConciliadas / $totalTransacoes) * 100 : 0;
+        $transacoesPorDia = $entidade->transacoesFinanceiras->groupBy(fn($item) => Carbon::parse($item->data_competencia)->format('Y-m-d'));
+
+        // 7. Calcula informações adicionais
+        // Data da última atualização (updated_at da entidade)
+        $dataUltimaAtualizacao = $entidade->updated_at;
+
+        // Data do último lançamento importado (dtposted mais recente ou imported_at mais recente)
+        $ultimoLancamentoImportado = BankStatement::where('entidade_financeira_id', $id)
+            ->orderBy('dtposted', 'desc')
+            ->first();
+        $dataUltimoLancamento = $ultimoLancamentoImportado ? $ultimoLancamentoImportado->dtposted : null;
+
+        // Valor pendente de conciliação (soma dos amounts dos bank statements pendentes)
+        $valorPendenteConciliacao = BankStatement::where('entidade_financeira_id', $id)
+            ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+            ->whereDoesntHave('transacoes')
+            ->sum('amount');
+
+        // 8. Retorna os dados em formato JSON.
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'entidade' => $entidade,
+                'transacoes' => $entidade->transacoesFinanceiras,
+                'conciliacoesPendentes' => $bankStatements,
+                'centrosAtivos' => $centrosAtivos,
+                'lancamentosPadrao' => $lps,
+                'percentualConciliado' => round($percentualConciliado),
+                'transacoesPorDia' => $transacoesPorDia,
+                'estatisticas' => [
+                    'total_transacoes' => $totalTransacoes,
+                    'total_conciliadas' => $totalConciliadas,
+                    'total_pendentes' => $totalTransacoes - $totalConciliadas,
+                ],
+                'informacoesAdicionais' => [
+                    'data_ultima_atualizacao' => $dataUltimaAtualizacao,
+                    'data_ultimo_lancamento_importado' => $dataUltimoLancamento,
+                    'valor_pendente_conciliacao' => abs($valorPendenteConciliacao),
+                    'saldo_atual' => $entidade->saldo_atual ?? 0,
+                ]
+            ]
         ]);
     }
 }

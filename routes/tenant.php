@@ -317,6 +317,9 @@ Route::middleware([
                 Route::post('entidades/{id}/movimentacao', [EntidadeFinanceiraController::class, 'addMovimentacao'])
                     ->name('entidades.movimentacao');
 
+                Route::get('entidades/{id}/json', [EntidadeFinanceiraController::class, 'showJson'])
+                    ->name('entidades.show.json');
+
                 Route::resource('car_insurance', CarInsuranceController::class);
 
                 Route::post('car_insurance/{id}/sell', [CarInsuranceController::class, 'sell'])

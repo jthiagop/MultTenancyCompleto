@@ -128,7 +128,7 @@
                                                     {{-- A lista de bancos agora vem do controller --}}
                                                     @isset($banks)
                                                         @foreach ($banks as $bank)
-                                                            {{-- 
+                                                            {{--
                                                                 A CORREÇÃO ESTÁ AQUI:
                                                                 Removemos a função asset() e passamos o $bank->logo_path diretamente.
                                                             --}}

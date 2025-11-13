@@ -62,7 +62,7 @@
         <!--end::Daterangepicker-->
         <!--begin::New Button-->
         <button type="button" class="btn btn-light-success" data-kt-menu-trigger="click"
-            data-kt-menu-placement="bottom-end" aria-label="Adicionar novo lançamento">
+            data-kt-menu-placement="bottom-end" title="Adicionar novo lançamento" aria-label="Adicionar novo lançamento">
             <span class="svg-icon svg-icon-2">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
                     xmlns="http://www.w3.org/2000/svg">
