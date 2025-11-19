@@ -173,16 +173,16 @@ class BancoController extends Controller
     public function getChartData(Request $request)
     {
         Log::info('getChartData chamado - INÍCIO - TENANT CONTEXT');
-        
+
         $companyId = session('active_company_id');
-        
+
         Log::info('getChartData chamado', [
             'company_id' => $companyId,
             'mes' => $request->input('mes'),
             'ano' => $request->input('ano'),
             'entidade_id' => $request->input('entidade_id')
         ]);
-        
+
         if (!$companyId) {
             Log::error('Empresa não encontrada na sessão');
             return response()->json(['error' => 'Empresa não encontrada'], 400);
@@ -208,7 +208,7 @@ class BancoController extends Controller
         }
 
         $transacoes = $query->orderBy('data_competencia')->get();
-        
+
         Log::info('Transações encontradas', [
             'total' => $transacoes->count(),
             'primeiras_5' => $transacoes->take(5)->toArray()
@@ -221,7 +221,7 @@ class BancoController extends Controller
         for ($dia = 1; $dia <= $diasNoMes; $dia++) {
             $dataAtual = Carbon::create($ano, $mes, $dia);
             $dataFormatada = $dataAtual->format('Y-m-d');
-            
+
             $transacoesDia = $transacoes->filter(function ($transacao) use ($dataFormatada) {
                 return Carbon::parse($transacao->data_competencia)->format('Y-m-d') === $dataFormatada;
             });
@@ -256,7 +256,7 @@ class BancoController extends Controller
                 'mes_nome' => Carbon::create($ano, $mes, 1)->locale('pt_BR')->monthName
             ]
         ];
-        
+
         Log::info('Dados do gráfico preparados', [
             'total_dados' => count($dados),
             'totais' => $response['totais'],
@@ -277,11 +277,11 @@ class BancoController extends Controller
             'start_date' => $request->input('start_date'),
             'end_date' => $request->input('end_date'),
         ]);
-        
+
         $companyId = session('active_company_id');
-        
+
         Log::info('getFluxoBancoChartData - companyId', ['company_id' => $companyId]);
-        
+
         if (!$companyId) {
             Log::error('getFluxoBancoChartData - Empresa não encontrada na sessão');
             return response()->json(['error' => 'Empresa não encontrada'], 400);
@@ -319,7 +319,7 @@ class BancoController extends Controller
         while ($currentDate <= $end) {
             $dataFormatada = $currentDate->format('Y-m-d');
             $diaFormatado = $currentDate->format('d/m');
-            
+
             $transacoesDia = $transacoes->filter(function ($transacao) use ($dataFormatada) {
                 return Carbon::parse($transacao->data_competencia)->format('Y-m-d') === $dataFormatada;
             });
@@ -371,7 +371,7 @@ class BancoController extends Controller
     public function getConciliacoesPendentes(Request $request)
     {
         $activeCompanyId = session('active_company_id');
-        
+
         if (!$activeCompanyId) {
             Log::warning('getConciliacoesPendentes: Nenhuma empresa selecionada na sessão');
             return response()->json([
@@ -425,7 +425,7 @@ class BancoController extends Controller
                 'message' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao buscar conciliações pendentes.',
@@ -716,7 +716,7 @@ class BancoController extends Controller
     public function edit($id)
     {
         // Obter o ID da empresa do usuário autenticado
-        $companyId = Auth::user()->company_id;
+        $companyId = session('active_company_id');
 
         // Buscar o banco com o ID e verificar se pertence à empresa do usuário
         $banco = TransacaoFinanceira::with('modulos_anexos')

@@ -94,7 +94,7 @@ class Banco extends Model
 
     static public function getEntidadesBanco()
     {
-        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
+        $companyId = session('active_company_id'); // Recupere a empresa do usuário logado
 
         return EntidadeFinanceira::where('tipo', 'banco') // Filtra apenas pelo tipo banco
             ->where('company_id', $companyId) // Filtra pela empresa do usuário
@@ -105,10 +105,13 @@ class Banco extends Model
     {
         $userId = Auth::user()->id; // Recupere o ID do usuário logado
 
+        $companyId = session('active_company_id'); // Recupere a empresa do usuário logado
+
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
 
         $entradas = DB::table('transacoes_financeiras')
+        ->where('transacoes_financeiras.company_id', $companyId)
         ->join('company_user', 'transacoes_financeiras.company_id', '=', 'company_user.company_id')
         ->where('company_user.user_id', $userId)
         ->where('transacoes_financeiras.tipo', 'entrada') // Filtra apenas as saídas (S para saída, E para entrada)
@@ -128,12 +131,13 @@ class Banco extends Model
     {
 
         $userId = Auth::user()->id; // Recupere o ID do usuário logado
-
+        $companyId = session('active_company_id'); // Recupere a empresa do usuário logado
         $currentYear = Carbon::now()->year;
         $currentMonth = Carbon::now()->month;
 
     // Consulta principal na tabela transacoes_financeiras
     $saidas = DB::table('transacoes_financeiras')
+    ->where('transacoes_financeiras.company_id', $companyId)
         ->join('company_user', 'transacoes_financeiras.company_id', '=', 'company_user.company_id')
         ->where('company_user.user_id', $userId)
         ->where('transacoes_financeiras.tipo', 'saida') // Filtra apenas as saídas (S para saída, E para entrada)

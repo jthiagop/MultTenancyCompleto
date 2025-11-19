@@ -38,31 +38,31 @@ class PrestacaoDeContaController extends Controller
         $dataInicial = $request->date('data_inicial');
         $dataFinal   = $request->date('data_final');
         $costCenter  = $request->input('cost_center_id');
-    
+
         // 2) Query otimizada
         $query = TransacaoFinanceira::with(['entidadeFinanceira', 'lancamentoPadrao'])
             ->when($dataInicial, fn($q) => $q->whereDate('data_competencia', '>=', $dataInicial))
             ->when($dataFinal,   fn($q) => $q->whereDate('data_competencia', '<=', $dataFinal))
             ->when($costCenter,  fn($q) => $q->where('cost_center_id', $costCenter))
             ->orderBy('data_competencia');
-    
+
         $transacoes = $query->get()
             ->groupBy('origem');               // “Banco”, “Caixa” …
-    
+
         // 3) Totais por origem + totais gerais
         $dados         = [];
         $totEntradaAll = $totSaidaAll = 0;
-    
+
         foreach ($transacoes as $origem => $items) {
             $totEntrada  = $items->where('tipo', 'entrada')->sum('valor');
             $totSaida    = $items->where('tipo', 'saida')->sum('valor');
-    
+
             $totEntradaAll += $totEntrada;
             $totSaidaAll   += $totSaida;
-    
+
             $dados[] = compact('origem', 'items', 'totEntrada', 'totSaida');
         }
-    
+
         // 4) HTML da view
         $html = view('app.relatorios.financeiro.prestacao_pdf', [
             'dados'           => $dados,
@@ -73,7 +73,7 @@ class PrestacaoDeContaController extends Controller
             'totalSaidas'     => $totSaidaAll,
             'company'         => auth()->user()->company,   // ajuste conforme seu tenant
         ])->render();
-    
+
         // 5) PDF
         $pdf = Browsershot::html($html)
             ->format('A4')
@@ -81,27 +81,27 @@ class PrestacaoDeContaController extends Controller
             ->showBackground()
             ->margins(8, 8, 8, 8)
             ->pdf();
-    
+
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename=prestacao-de-contas.pdf',
         ]);
     }
-    
-    
+
+
     protected function logoToBase64($company): ?string
     {
         $path = $company->avatar
             ? storage_path('app/public/'.$company->avatar)
             : public_path('assets/media/png/perfil.svg');
-    
+
         return 'data:image/'.pathinfo($path, PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($path));
     }
 
     public function print(Request $request, $id)
     {
         // Obter o ID da empresa do usuário autenticado
-        $companyId = Auth::user()->company_id;
+        $companyId = session('active_company_id');
 
         // Buscar o banco com o ID e verificar se pertence à empresa do usuário
         $caixa = TransacaoFinanceira::with('modulos_anexos')

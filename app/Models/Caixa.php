@@ -81,7 +81,7 @@ class Caixa extends Model implements Auditable
 
     static public function getEntidadesCaixa()
     {
-        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
+        $companyId = session('active_company_id'); // Recupere a empresa do usuário logado
 
         return EntidadeFinanceira::where('tipo', 'caixa') // Filtra apenas pelo tipo banco
             ->where('company_id', $companyId) // Filtra pela empresa do usuário
@@ -90,7 +90,7 @@ class Caixa extends Model implements Auditable
 
     static public function getEntidadesBanco()
     {
-        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
+        $companyId = session('active_company_id'); // Recupere a empresa do usuário logado
 
         return EntidadeFinanceira::where('tipo', 'banco') // Filtra apenas pelo tipo banco
             ->where('company_id', $companyId) // Filtra pela empresa do usuário
@@ -240,7 +240,7 @@ class Caixa extends Model implements Auditable
     {
         $extension = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
         $icons = self::getFileIcons();
-        
+
         return $icons[$extension] ?? self::getDefaultFileIcon();
     }
 

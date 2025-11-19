@@ -18,7 +18,7 @@ class FielController extends Controller
     public function index()
     {
         // Obtém o ID da empresa do usuário autenticado
-        $companyId = Auth::user()->company_id;
+        $companyId = session('active_company_id');
 
         // Busca apenas os fiéis que pertencem à empresa do usuário autenticado
         $fieis = Fiel::where('company_id', $companyId)->get();
@@ -41,7 +41,7 @@ class FielController extends Controller
     {
         try {
             // Obter o ID da empresa do usuário autenticado
-            $companyId = Auth::user()->company_id;
+            $companyId = session('active_company_id');
 
             // Capturar os dados do formulário
             $data = $request->only([

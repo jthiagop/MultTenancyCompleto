@@ -23,7 +23,7 @@ class CemeteryController extends Controller
         $activeTab = $request->input('tab', 'overview'); // 'overview' é o padrão caso não haja o parâmetro 'tab'
 
         // Obter o ID da empresa do usuário autenticado (ou de outra fonte se necessário)
-        $companyId = Auth::user()->company_id;  // Supondo que o modelo User tenha o relacionamento com company_id
+        $companyId = session('active_company_id');  // Supondo que o modelo User tenha o relacionamento com company_id
 
         // Consultar as sepulturas relacionadas ao company_id
         $sepulturas = Sepultura::where('company_id', $companyId)->get();
@@ -150,7 +150,7 @@ class CemeteryController extends Controller
         $sepulturaEdit = Sepultura::findOrFail($id);
 
         // Obter o ID da empresa do usuário autenticado (ou de outra fonte se necessário)
-        $companyId = Auth::user()->company_id;  // Supondo que o modelo User tenha o relacionamento com company_id
+        $companyId = session('active_company_id');  // Supondo que o modelo User tenha o relacionamento com company_id
 
         // Consultar as sepulturas relacionadas ao company_id
         $sepulturas = Sepultura::where('company_id', $companyId)->get();

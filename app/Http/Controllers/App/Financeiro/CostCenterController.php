@@ -108,7 +108,7 @@ class CostCenterController extends Controller
     public function edit(string $id)
     {
         // Suponha que você já tenha o ID da empresa disponível
-        $companyId = Auth::user()->company_id; // ou $companyId = 1; se o ID for fixo
+        $companyId = session('active_company_id'); // ou $companyId = 1; se o ID for fixo
         // Busca todos os centros de custo
         $centroCustos = CostCenter::where('company_id', $companyId)->get();
         $centroCusto = CostCenter::findOrFail($id);

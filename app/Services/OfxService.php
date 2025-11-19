@@ -33,7 +33,7 @@ class OfxService
         foreach ($parsedData->bankAccounts as $account) {
             $bancoId      = $account->routingNumber;   // BANKID do OFX
             $conta        = $account->accountNumber;   // ACCTID do OFX
-            $companyId    = Auth::user()->company_id; // Empresa do usuário logado
+            $companyId    = session('active_company_id'); // Empresa do usuário logado
 
             //5. Verifica se a conta está cadastrada no banco de dados (REMOVENDO A CHECAGEM DA AGÊNCIA)
             $entidade = EntidadeFinanceira::where('conta', $conta)
