@@ -118,6 +118,9 @@
     <!--end::Modal - Upgrade plan-->
     <script>
         var lpsData = @json($lps);
+        // Gerar apenas o caminho da rota (sem domínio)
+        var bancoFluxoChartDataUrl = '{{ route("banco.fluxo.chart.data", [], false) }}';
+        console.log('[Blade] URL da rota banco.fluxo.chart.data:', bancoFluxoChartDataUrl);
     </script>
 </x-tenant-app-layout>
 
@@ -136,12 +139,15 @@
 
 <!--begin::Custom Javascript(used for this page only)-->
 
-<!--end::Custom Javascript chats--> 
+<!--end::Custom Javascript chats-->
 <script src="/assets/js/custom/apps/bancos/shipping.js"></script>
 <!--end::Custom Javascript chats bancos-->
 
+@if($activeTab === 'overview')
+<script src="/assets/js/custom/apps/bancos/banco-fluxo-widget-36.js"></script>
+@endif
 <script src="/assets/js/custom/apps/bancos/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/bancos/chart-combined.js"></script>
+<script src="/assets/js/custom/apps/bancos/fluxo-banco-chart.js"></script>
 <!--end::Custom Javascript-->
 
 <script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>

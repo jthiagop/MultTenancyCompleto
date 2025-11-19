@@ -117,63 +117,307 @@ var DMModalNewBanco = function () {
 			}
 		);
 
+		// Função para enviar formulário via AJAX (tornada acessível globalmente)
+		var enviarFormulario = function(mode) {
+			if (!validator) return;
+
+			validator.validate().then(function (status) {
+				if (status == 'Valid') {
+					// Prepara os dados do formulário
+					var formData = new FormData(form);
+
+					// Garante que o tipo seja sempre enviado (mesmo se o select estiver desabilitado)
+					var tipoSelect = form.querySelector('[name="tipo"]');
+					var tipoHidden = form.querySelector('[name="tipo_hidden"]');
+					var tipoValue = null;
+
+					// Tenta obter do campo hidden primeiro (mais confiável quando desabilitado)
+					if (tipoHidden && tipoHidden.value) {
+						tipoValue = tipoHidden.value;
+					}
+
+					if (tipoSelect && !tipoValue) {
+						// Tenta obter do select2 (mais confiável)
+						var tipoSelect2 = $('#tipo_select_banco');
+						if (tipoSelect2.length > 0 && tipoSelect2.hasClass('select2-hidden-accessible')) {
+							tipoValue = tipoSelect2.val();
+						}
+
+						// Se não obteve do select2, tenta do elemento nativo
+						if (!tipoValue) {
+							tipoValue = tipoSelect.value;
+						}
+
+						// Se ainda não tem valor, tenta obter da opção selecionada
+						if (!tipoValue && tipoSelect.options.length > 0) {
+							var selectedOption = tipoSelect.options[tipoSelect.selectedIndex];
+							if (selectedOption && selectedOption.value) {
+								tipoValue = selectedOption.value;
+							}
+						}
+					}
+
+					// Atualiza o campo hidden com o valor obtido
+					if (tipoHidden && tipoValue) {
+						tipoHidden.value = tipoValue;
+					}
+
+					// Se o select estiver desabilitado, habilita temporariamente para garantir envio
+					var wasDisabled = tipoSelect ? tipoSelect.disabled : false;
+					if (tipoSelect && wasDisabled && tipoValue) {
+						tipoSelect.disabled = false;
+					}
+
+					// Sempre envia o tipo (usando o campo hidden como fallback se necessário)
+					formData.delete('tipo');
+					formData.delete('tipo_hidden'); // Remove o campo hidden para não enviar duplicado
+
+					if (tipoValue) {
+						formData.append('tipo', tipoValue);
+					} else {
+						// Se não tem valor, envia vazio para que a validação mostre o erro
+						formData.append('tipo', '');
+					}
+
+					// Restaura o estado desabilitado se necessário
+					if (tipoSelect && wasDisabled) {
+						tipoSelect.disabled = true;
+					}
+
+					// Garante que comprovacao_fiscal seja enviado como 0 ou 1
+					var comprovacaoFiscal = form.querySelector('[name="comprovacao_fiscal"]');
+					if (comprovacaoFiscal) {
+						formData.delete('comprovacao_fiscal');
+						formData.append('comprovacao_fiscal', comprovacaoFiscal.checked ? '1' : '0');
+					}
+
+					// Formata a data para o formato esperado pelo backend (d-m-Y)
+					var dataInput = form.querySelector('[name="data_competencia"]');
+					if (dataInput && dataInput.value) {
+						var dataValue = dataInput.value;
+						// Remove a data antiga e adiciona a formatada
+						formData.delete('data_competencia');
+
+						// O flatpickr está configurado com dateFormat: "d-m-Y", então já deve estar no formato correto
+						// Mas vamos garantir que está no formato d-m-Y
+						if (dataValue.includes('-')) {
+							var partes = dataValue.split('-');
+							if (partes.length === 3) {
+								if (partes[0].length === 4) {
+									// Formato Y-m-d, converte para d-m-Y
+									formData.append('data_competencia', partes[2] + '-' + partes[1] + '-' + partes[0]);
+								} else {
+									// Já está em d-m-Y ou d/m/Y
+									formData.append('data_competencia', dataValue.replace(/\//g, '-'));
+								}
+							} else {
+								formData.append('data_competencia', dataValue);
+							}
+						} else if (dataValue.includes('/')) {
+							// Formato d/m/Y, converte para d-m-Y
+							formData.append('data_competencia', dataValue.replace(/\//g, '-'));
+						} else {
+							formData.append('data_competencia', dataValue);
+						}
+					}
+					var submitBtn = document.getElementById('Dm_modal_financeiro_submit');
+					var cloneBtn = document.getElementById('Dm_modal_financeiro_clone');
+					var novoBtn = document.getElementById('Dm_modal_financeiro_novo');
+
+					// Desabilita todos os botões
+					submitBtn.disabled = true;
+					if (cloneBtn) cloneBtn.style.pointerEvents = 'none';
+					if (novoBtn) novoBtn.style.pointerEvents = 'none';
+					submitBtn.setAttribute('data-kt-indicator', 'on');
+
+					// Obtém a URL do formulário
+					var formAction = form.getAttribute('action');
+					if (!formAction || formAction === '#') {
+						// Tenta obter a rota do atributo data-action ou usa padrão
+						formAction = form.getAttribute('data-action') || window.location.pathname + '/banco';
+					}
+
+					// Envia via AJAX
+					fetch(formAction, {
+						method: 'POST',
+						body: formData,
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
+							'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+						},
+						redirect: 'follow'
+					})
+					.then(response => {
+						// Verifica se a resposta é OK (status 200-299)
+						if (response.ok) {
+							// Tenta parsear como JSON, se falhar assume sucesso
+							return response.json().catch(() => ({ success: true }));
+						}
+						// Se for redirect (302), assume sucesso
+						if (response.status === 302 || response.redirected) {
+							return { success: true };
+						}
+						// Se for erro 422 (validação), tenta obter as mensagens de erro
+						if (response.status === 422) {
+							return response.json().then(data => {
+								var errorMessages = [];
+								if (data.errors) {
+									// Extrai todas as mensagens de erro
+									Object.keys(data.errors).forEach(function(key) {
+										if (Array.isArray(data.errors[key])) {
+											errorMessages = errorMessages.concat(data.errors[key]);
+										} else {
+											errorMessages.push(data.errors[key]);
+										}
+									});
+								}
+								if (data.message) {
+									errorMessages.push(data.message);
+								}
+								if (errorMessages.length === 0) {
+									errorMessages.push('Erro de validação. Verifique os campos preenchidos.');
+								}
+								throw new Error(errorMessages.join('\n'));
+							});
+						}
+						// Se houver outro erro, tenta obter a mensagem
+						return response.text().then(text => {
+							throw new Error(text || 'Erro ao salvar');
+						});
+					})
+					.then(data => {
+						submitBtn.removeAttribute('data-kt-indicator');
+						submitBtn.disabled = false;
+						if (cloneBtn) cloneBtn.style.pointerEvents = 'auto';
+						if (novoBtn) novoBtn.style.pointerEvents = 'auto';
+
+						Swal.fire({
+							text: "O lançamento foi salvo com sucesso!",
+							icon: "success",
+							buttonsStyling: false,
+							confirmButtonText: "Ok, entendi!",
+							customClass: {
+								confirmButton: "btn btn-primary"
+							}
+						}).then(function (result) {
+							if (mode === 'enviar') {
+								// Modo 1: Enviar - Fecha o modal
+								modal.hide();
+								// Recarrega a página para atualizar a lista
+								window.location.reload();
+							} else if (mode === 'clonar') {
+								// Modo 2: Salvar e Clonar - Mantém dados e modal aberto
+								// Não faz nada, mantém tudo como está
+							} else if (mode === 'branco') {
+								// Modo 3: Salvar e em Branco - Limpa formulário mantendo data e tipo
+								limparFormularioMantendoDataTipo();
+							}
+						});
+					})
+					.catch(error => {
+						submitBtn.removeAttribute('data-kt-indicator');
+						submitBtn.disabled = false;
+						if (cloneBtn) cloneBtn.style.pointerEvents = 'auto';
+						if (novoBtn) novoBtn.style.pointerEvents = 'auto';
+
+						// Mostra mensagem de erro mais detalhada
+						var errorMessage = error.message || "Erro ao salvar o lançamento. Por favor, tente novamente.";
+
+						Swal.fire({
+							title: "Erro ao salvar",
+							html: errorMessage.replace(/\n/g, '<br>'),
+							icon: "error",
+							buttonsStyling: false,
+							confirmButtonText: "Ok, entendi!",
+							customClass: {
+								confirmButton: "btn btn-primary"
+							}
+						});
+					});
+				} else {
+					// Mostrar mensagem de erro de validação
+					Swal.fire({
+						text: "Desculpe, parece que alguns erros foram detectados, por favor tente novamente.",
+						icon: "error",
+						buttonsStyling: false,
+						confirmButtonText: "Ok, entendi!",
+						customClass: {
+							confirmButton: "btn btn-primary"
+						}
+					});
+				}
+			});
+		};
+
+		// Função para limpar formulário mantendo data e tipo
+		var limparFormularioMantendoDataTipo = function() {
+			// Salva os valores de data e tipo
+			var dataCompetencia = form.querySelector('[name="data_competencia"]').value;
+			var tipo = form.querySelector('[name="tipo"]').value;
+			var tipoFinanceiro = form.querySelector('[name="tipo_financeiro"]').value;
+
+			// Limpa todos os campos exceto data e tipo
+			form.querySelector('[name="descricao"]').value = '';
+			form.querySelector('[name="valor"]').value = '';
+			form.querySelector('[name="numero_documento"]').value = '';
+			form.querySelector('[name="historico_complementar"]').value = '';
+			form.querySelector('[name="comprovacao_fiscal"]').checked = false;
+
+			// Limpa os selects
+			$('#lancamento_padraos_id').val('').trigger('change');
+			$('#entidade_id').val('').trigger('change');
+			$('#cost_center_id').val('').trigger('change');
+			$('#tipo_documento').val('').trigger('change');
+			$('#bancoSelect').val('').trigger('change');
+
+			// Mantém data e tipo
+			if (dataCompetencia) {
+				form.querySelector('[name="data_competencia"]').value = dataCompetencia;
+			}
+			if (tipo) {
+				form.querySelector('[name="tipo"]').value = tipo;
+				// Atualiza o select2 se estiver inicializado
+				var tipoSelect = $('#tipo_select_banco');
+				if (tipoSelect.hasClass('select2-hidden-accessible')) {
+					tipoSelect.val(tipo).trigger('change');
+				}
+			}
+			if (tipoFinanceiro) {
+				form.querySelector('[name="tipo_financeiro"]').value = tipoFinanceiro;
+			}
+
+			// Restaura status_pagamento
+			form.querySelector('[name="status_pagamento"]').value = 'em aberto';
+
+			// Limpa erros de validação
+			if (validator) {
+				validator.resetForm();
+			}
+
+			// Esconde campo de banco de depósito se estiver visível
+			$('#banco-deposito').hide();
+		};
+
 		// Action buttons
+		// Botão Enviar (modo 1: Salvar e fechar)
 		submitButton.addEventListener('click', function (e) {
 			e.preventDefault();
-			// Validate form before submit
-			if (validator) {
-				validator.validate().then(function (status) {
-					console.log('validated!');
-					if (status == 'Valid') {
-						submitButton.setAttribute('data-kt-indicator', 'on');
-						// Disable button to avoid multiple click
-						submitButton.disabled = true;
-						setTimeout(function() {
-							submitButton.removeAttribute('data-kt-indicator');
-							// Enable button
-							submitButton.disabled = false;
-							// Mostrar mensagem de sucesso. Para mais informações, consulte a documentação oficial do plugin: https://sweetalert2.github.io/
-                            Swal.fire({
-                                text: "O lançamento foi enviado com sucesso!",
-                                icon: "success",
-                                buttonsStyling: false,
-                                confirmButtonText: "Ok, entendi!",
-                                customClass: {
-                                    confirmButton: "btn btn-primary"
-                                }
-                            }).then(function (result) {
-                                if (result.isConfirmed) {
-                                    modal.hide();
-                                    form.submit(); // Enviar formulário
-                                }
-                            });
-                            }, 2000);
-                            } else {
-                            // Mostrar mensagem de erro.
-                            Swal.fire({
-                                text: "Desculpe, parece que alguns erros foram detectados, por favor tente novamente.",
-                                icon: "error",
-                                buttonsStyling: false,
-                                confirmButtonText: "Ok, entendi!",
-                                customClass: {
-                                    confirmButton: "btn btn-primary"
-                                }
-                            });
-                            }
-				});
-			}
+			enviarFormulario('enviar');
 		});
+
+		// Torna a função acessível globalmente para os outros botões
+		window.enviarFormularioBanco = enviarFormulario;
 
 		cancelButton.addEventListener('click', function (e) {
 			e.preventDefault();
 
 			Swal.fire({
-				text: "Are you sure you would like to cancel?",
+				text: "Tem certeza de que deseja cancelar?",
 				icon: "warning",
 				showCancelButton: true,
 				buttonsStyling: false,
-				confirmButtonText: "Yes, cancel it!",
-				cancelButtonText: "No, return",
+				confirmButtonText: "Sim, cancelar!",
+				cancelButtonText: "Não, voltar",
 				customClass: {
 					confirmButton: "btn btn-primary",
 					cancelButton: "btn btn-active-light"
@@ -184,10 +428,10 @@ var DMModalNewBanco = function () {
 					modal.hide(); // Hide modal
 				} else if (result.dismiss === 'cancel') {
 					Swal.fire({
-						text: "Your form has not been cancelled!.",
+						text: "Seu formulário não foi cancelado!!!!",
 						icon: "error",
 						buttonsStyling: false,
-						confirmButtonText: "Ok, got it!",
+						confirmButtonText: "Ok, entendi!",
 						customClass: {
 							confirmButton: "btn btn-primary",
 						}
@@ -201,7 +445,7 @@ var DMModalNewBanco = function () {
 		// Public functions
 		init: function () {
 			// Elements
-			modalEl = document.querySelector('#dm_modal_novo_lancamento_banco');
+			modalEl = document.querySelector('#Dm_modal_financeiro');
 
 			if (!modalEl) {
 				return;
@@ -209,9 +453,9 @@ var DMModalNewBanco = function () {
 
 			modal = new bootstrap.Modal(modalEl);
 
-			form = document.querySelector('#dm_modal_novo_lancamento_banco_form');
-			submitButton = document.getElementById('dm_modal_novo_lancamento_banco_submit');
-			cancelButton = document.getElementById('kt_modal_new_target_cancel');
+			form = document.querySelector('#Dm_modal_financeiro_form');
+			submitButton = document.getElementById('Dm_modal_financeiro_submit');
+			cancelButton = document.getElementById('Dm_modal_financeiro_cancel');
 
 			initForm();
 			handleForm();
@@ -222,6 +466,241 @@ var DMModalNewBanco = function () {
 // On document ready
 KTUtil.onDOMContentLoaded(function () {
 	DMModalNewBanco.init();
+
+	// Adiciona event listeners para os botões de ação adicional
+	$(document).on('click', '#Dm_modal_financeiro_clone', function(e) {
+		e.preventDefault();
+		if (typeof window.enviarFormularioBanco === 'function') {
+			window.enviarFormularioBanco('clonar');
+		}
+	});
+
+	$(document).on('click', '#Dm_modal_financeiro_novo', function(e) {
+		e.preventDefault();
+		if (typeof window.enviarFormularioBanco === 'function') {
+			window.enviarFormularioBanco('branco');
+		}
+	});
+});
+
+// Manipulação do modal baseado no tipo de lançamento (Receita/Despesa)
+$(document).ready(function() {
+	var tipoLancamento = null; // Variável para armazenar o tipo do lançamento
+
+	// Captura o evento de abertura do modal
+	$('#Dm_modal_financeiro').on('show.bs.modal', function(event) {
+		// Obtém o botão que acionou o modal
+		var button = $(event.relatedTarget);
+		// Obtém o tipo do atributo data-tipo e armazena
+		tipoLancamento = button.data('tipo');
+		var modal = $(this);
+		var modalTitle = modal.find('#modal_financeiro_title');
+		var tipoFinanceiroInput = modal.find('#tipo_financeiro');
+
+		// Define o título e configura o tipo baseado no botão clicado
+		if (tipoLancamento === 'receita') {
+			modalTitle.text('Nova Receita');
+			// Define o valor no campo hidden
+			tipoFinanceiroInput.val('receita');
+		} else if (tipoLancamento === 'despesa') {
+			modalTitle.text('Nova Despesa');
+			// Define o valor no campo hidden
+			tipoFinanceiroInput.val('despesa');
+		} else {
+			// Se não houver tipo definido, mantém o padrão
+			modalTitle.text('Novo Lançamento');
+			tipoFinanceiroInput.val('');
+		}
+	});
+
+	// Aguarda o modal ser completamente exibido para manipular o select2
+	$('#Dm_modal_financeiro').on('shown.bs.modal', function() {
+		var modal = $(this);
+		var tipoSelect = modal.find('#tipo_select_banco');
+		var lancamentoPadraoSelect = modal.find('#lancamento_padraos_id');
+
+		// Aguarda um pequeno delay para garantir que o select2 foi inicializado
+		setTimeout(function() {
+			var tipoHidden = modal.find('#tipo_hidden');
+
+			if (tipoLancamento === 'receita') {
+				// Seleciona "entrada" no select
+				tipoSelect.val('entrada').trigger('change');
+				// Atualiza o campo hidden
+				if (tipoHidden.length > 0) {
+					tipoHidden.val('entrada');
+				}
+				// Desabilita o select e atualiza o select2
+				tipoSelect.prop('disabled', true);
+				if (tipoSelect.hasClass('select2-hidden-accessible')) {
+					tipoSelect.select2('enable', false);
+				}
+				// Filtra os lançamentos padrão para entrada
+				filtrarLancamentosPadrao('entrada', lancamentoPadraoSelect);
+			} else if (tipoLancamento === 'despesa') {
+				// Seleciona "saida" no select
+				tipoSelect.val('saida').trigger('change');
+				// Atualiza o campo hidden
+				if (tipoHidden.length > 0) {
+					tipoHidden.val('saida');
+				}
+				// Desabilita o select e atualiza o select2
+				tipoSelect.prop('disabled', true);
+				if (tipoSelect.hasClass('select2-hidden-accessible')) {
+					tipoSelect.select2('enable', false);
+				}
+				// Filtra os lançamentos padrão para saída
+				filtrarLancamentosPadrao('saida', lancamentoPadraoSelect);
+			} else {
+				// Se não houver tipo definido, mantém habilitado
+				tipoSelect.prop('disabled', false);
+				if (tipoSelect.hasClass('select2-hidden-accessible')) {
+					tipoSelect.select2('enable', true);
+				}
+				// Limpa o campo hidden
+				if (tipoHidden.length > 0) {
+					tipoHidden.val('');
+				}
+			}
+
+			// Configura o select2 de lançamento padrão para permitir busca
+			configurarSelect2LancamentoPadrao(lancamentoPadraoSelect);
+		}, 100);
+	});
+
+	// Função para filtrar lançamentos padrão baseado no tipo
+	function filtrarLancamentosPadrao(tipo, $select) {
+		// Verifica se existe lpsData (dados dos lançamentos padrão)
+		if (typeof lpsData === 'undefined') {
+			// Se não existir, filtra usando as opções existentes no DOM
+			var todasOpcoes = $select.find('option');
+			todasOpcoes.each(function() {
+				var $option = $(this);
+				if ($option.val() !== '') {
+					var optionType = $option.data('type');
+					if (optionType === tipo) {
+						$option.prop('disabled', false);
+					} else {
+						$option.prop('disabled', true);
+					}
+				}
+			});
+		} else {
+			// Se existir lpsData, recria as opções
+			// Salva o valor selecionado antes de limpar
+			var valorSelecionado = $select.val();
+
+			// Limpa todas as opções exceto a vazia
+			$select.find('option:not([value=""])').remove();
+
+			// Adiciona apenas as opções do tipo correspondente
+			lpsData.forEach(function(lp) {
+				if (lp.type === tipo) {
+					var option = $('<option></option>')
+						.attr('value', lp.id)
+						.attr('data-description', lp.description)
+						.attr('data-type', lp.type)
+						.text(lp.id + ' - ' + lp.description);
+					$select.append(option);
+				}
+			});
+
+			// Restaura o valor selecionado se ainda existir
+			if (valorSelecionado && $select.find('option[value="' + valorSelecionado + '"]').length > 0) {
+				$select.val(valorSelecionado);
+			}
+		}
+
+		// Limpa a seleção atual se não houver valor válido
+		if (!$select.val() || $select.find('option[value="' + $select.val() + '"]:not(:disabled)').length === 0) {
+			$select.val('').trigger('change');
+		}
+
+		// Atualiza o select2
+		if ($select.hasClass('select2-hidden-accessible')) {
+			$select.select2('destroy');
+		}
+		$select.removeAttr('data-kt-initialized');
+		configurarSelect2LancamentoPadrao($select);
+	}
+
+	// Função para configurar o select2 de lançamento padrão com busca
+	function configurarSelect2LancamentoPadrao($select) {
+		$select.select2({
+			placeholder: "Escolha um Lançamento...",
+			allowClear: true,
+			dropdownParent: $('#Dm_modal_financeiro'),
+			minimumResultsForSearch: 0, // Permite busca mesmo com poucas opções
+			language: {
+				noResults: function() {
+					return "Nenhum lançamento encontrado";
+				},
+				searching: function() {
+					return "Buscando...";
+				}
+			}
+		});
+	}
+
+	// Monitora mudanças no select de tipo (caso seja habilitado no futuro)
+	$('#Dm_modal_financeiro').on('change', '#tipo_select_banco', function() {
+		var tipoSelecionado = $(this).val();
+		var lancamentoPadraoSelect = $('#lancamento_padraos_id');
+		var tipoHidden = $('#tipo_hidden');
+
+		// Atualiza o campo hidden quando o tipo muda
+		if (tipoHidden.length > 0) {
+			tipoHidden.val(tipoSelecionado || '');
+		}
+
+		if (tipoSelecionado === 'entrada' || tipoSelecionado === 'saida') {
+			filtrarLancamentosPadrao(tipoSelecionado, lancamentoPadraoSelect);
+		}
+	});
+
+	// Quando o modal é fechado, reseta os valores
+	$('#Dm_modal_financeiro').on('hidden.bs.modal', function() {
+		var modal = $(this);
+		var tipoSelect = modal.find('#tipo_select_banco');
+		var tipoFinanceiroInput = modal.find('#tipo_financeiro');
+		var modalTitle = modal.find('#modal_financeiro_title');
+		var lancamentoPadraoSelect = modal.find('#lancamento_padraos_id');
+
+		// Reseta o select de tipo
+		tipoSelect.val('').trigger('change');
+		tipoSelect.prop('disabled', false);
+		// Habilita o select2 novamente
+		if (tipoSelect.hasClass('select2-hidden-accessible')) {
+			tipoSelect.select2('enable', true);
+		}
+
+		// Restaura todas as opções de lançamento padrão
+		if (typeof lpsData !== 'undefined') {
+			// Se existir lpsData, recria todas as opções
+			lancamentoPadraoSelect.find('option:not([value=""])').remove();
+			lpsData.forEach(function(lp) {
+				var option = $('<option></option>')
+					.attr('value', lp.id)
+					.attr('data-description', lp.description)
+					.attr('data-type', lp.type)
+					.text(lp.id + ' - ' + lp.description);
+				lancamentoPadraoSelect.append(option);
+			});
+		} else {
+			// Se não existir, apenas habilita todas as opções
+			lancamentoPadraoSelect.find('option').each(function() {
+				$(this).prop('disabled', false);
+			});
+		}
+		lancamentoPadraoSelect.val('').trigger('change');
+
+		// Limpa o campo hidden
+		tipoFinanceiroInput.val('');
+		// Reseta o título
+		modalTitle.text('Novo Lançamento');
+		// Reseta a variável
+		tipoLancamento = null;
+	});
 });
 
 
@@ -278,5 +757,76 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Inicializa o Select2 ao carregar a página
     initializeSelect2();
+});
+
+// Configuração do Select2 para exibir ícones dos bancos
+$(document).ready(function() {
+    // Aguarda o modal ser aberto para inicializar o select2 com ícones
+    $('#Dm_modal_financeiro').on('shown.bs.modal', function() {
+        // Aguarda um pequeno delay para garantir que o select2 automático já foi inicializado
+        setTimeout(function() {
+            var $select = $('#entidade_id');
+
+            // Verifica se o select2 já foi inicializado e destrói
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+
+            // Remove o atributo de inicialização para evitar reinicialização automática
+            $select.removeAttr('data-kt-initialized');
+
+            // Inicializa o Select2 com configuração de ícones
+            $select.select2({
+                placeholder: "Selecione o Banco",
+                allowClear: true,
+                dropdownParent: $('#Dm_modal_financeiro'),
+                minimumResultsForSearch: Infinity, // Esconde a busca conforme configurado no HTML
+
+                // Exibir ícone no menu suspenso
+                templateResult: function(state) {
+                    // Se for placeholder ou sem valor, retornar o texto normal
+                    if (!state.id) {
+                        return state.text;
+                    }
+
+                    // Recupera o caminho do ícone do atributo data-icon
+                    let iconUrl = $(state.element).attr('data-icon');
+                    if (!iconUrl) {
+                        return state.text;
+                    }
+
+                    // Monta um elemento com img + texto
+                    let $state = $(`
+                        <span class="d-flex align-items-center">
+                            <img src="${iconUrl}" class="me-2" style="width:24px; height:24px; object-fit: contain;" />
+                            <span>${state.text}</span>
+                        </span>
+                    `);
+
+                    return $state;
+                },
+
+                // Exibir ícone na opção selecionada
+                templateSelection: function(state) {
+                    if (!state.id) {
+                        return state.text;
+                    }
+
+                    let iconUrl = $(state.element).attr('data-icon');
+                    if (!iconUrl) {
+                        return state.text;
+                    }
+
+                    let $state = $(`
+                        <span class="d-flex align-items-center">
+                            <img src="${iconUrl}" class="me-2" style="width:24px; height:24px; object-fit: contain;" />
+                            <span>${state.text}</span>
+                        </span>
+                    `);
+                    return $state;
+                },
+            });
+        }, 100);
+    });
 });
 

@@ -210,11 +210,11 @@ var initDaterangepicker = function () {
 // On document ready
 KTUtil.onDOMContentLoaded(function () {
     KTAppEcommerceReportShipping.init();
-    
+
     // Inicializar gráfico combinado se estiver na aba overview
     if (document.getElementById('kt_charts_widget_combined')) {
         console.log('Elemento do gráfico encontrado, inicializando...');
-        
+
         // Carregar ApexCharts se não estiver carregado
         if (typeof ApexCharts === 'undefined') {
             console.log('ApexCharts não encontrado, carregando...');

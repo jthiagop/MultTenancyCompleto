@@ -138,22 +138,12 @@
                     <!--end::Nav item-->
                     <!--begin::Nav item-->
                     <li class="nav-item">
-                        <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'lancamento' ? 'active' : '' }}"
-                            href="{{ route('banco.list', ['tab' => 'lancamento']) }}">
+                        <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'registros' ? 'active' : '' }}"
+                            href="{{ route('banco.list', ['tab' => 'registros']) }}">
                             Lançamento / Registros
                         </a>
                     </li>
                     <!--end::Nav item-->
-
-                    <!--begin::Nav item-->
-                    <li class="nav-item">
-                        <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'registros' ? 'active' : '' }}"
-                            href="{{ route('banco.list', ['tab' => 'registros']) }}">
-                            Registros
-                        </a>
-                    </li>
-                    <!--end::Nav item-->
-
                     <!--begin::Nav item-->
                     <li class="nav-item">
                         <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'bancos' ? 'active' : '' }}"

@@ -15,13 +15,17 @@
             <!--begin::Modal body-->
             <div class="modal-body scroll-y px-10 px-lg-15 pb-15  bg-light pt-5">
                 <!-- Begin::Form -->
-                <form id="kt_modal_new_target_form" class="form" action="#">
+                <form id="Dm_modal_financeiro_form" class="form" action="{{ route('banco.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <meta name="csrf-token" content="{{ csrf_token() }}">
 
                     <!-- Campo oculto para identificar o tipo (receita ou despesa) -->
                     <input type="hidden" name="tipo_financeiro" id="tipo_financeiro" value="">
                     <input type="hidden" name="status_pagamento" id="status_pagamento" value="em aberto">
+                    <input type="hidden" name="origem" id="origem" value="Banco">
+                    <!-- Campo hidden para garantir que o tipo seja sempre enviado -->
+                    <input type="hidden" name="tipo_hidden" id="tipo_hidden" value="">
+
                     <div class="card mb-xl-10 ">
                         <div class="card-body px-10">
                             <!--begin::Form-->
@@ -58,17 +62,12 @@
                                     <label
                                         class="required d-flex align-items-center fs-5 fw-semibold mb-2">Banco</label>
                                     <div class="input-group">
-                                        <select name="entidade_id" id="banco_id"
-                                            class="form-select form-select-solid @error('entidade_id') is-invalid @enderror"
-                                            data-control="select" data-dropdown-css-class="w-200px"
-                                            data-placeholder="Selecione o Banco">
+                                        <select class="form-select" data-control="select2" data-dropdown-parent="#Dm_modal_financeiro"
+                                        data-placeholder="Selecione o Banco" name="entidade_id" data-hide-search="true"
+                                        id="entidade_id">
                                             <option value="" disabled selected>Selecione o Banco</option>
-                                            <!-- Placeholder configurado aqui -->
                                             @foreach ($entidadesBanco as $entidade)
-                                                <option value="{{ $entidade->id }}"
-                                                    data-icon="{{ $entidade->logo_path }}">{{ $entidade->nome }}
-                                                    ({{ ucfirst($entidade->conta) }})
-                                                </option>
+                                                <option value="{{ $entidade->id }}" data-icon="{{ $entidade->bank->logo_path }}">{{ $entidade->agencia }} - {{ $entidade->conta }}</option>
                                             @endforeach
                                         </select>
                                     </div>
@@ -107,33 +106,52 @@
                             </div>
                             <!--begin::Input group - Assign & Due Date-->
                             <div class="row g-9 mb-8">
+                                <div class="col-md-2 fv-row">
+                                    <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
+                                        <span class="required">Entrada/Saída</span>
+                                        <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                            title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
+                                    </label>
+                                    <select class="form-select" data-control="select2"
+                                        data-placeholder="Selecione o tipo" data-hide-search="true"
+                                        name="tipo" id="tipo_select_banco">
+                                        <option value="" disabled selected>Defina o tipo</option>
+                                        <option value="entrada" {{ old('tipo') == 'entrada' ? 'selected' : '' }}>
+                                            Entrada</option>
+                                        <option value="saida" {{ old('tipo') == 'saida' ? 'selected' : '' }}>
+                                            Saída</option>
+                                    </select>
+                                    @error('tipo')
+                                        <div class="text-danger">{{ $message }}</div>
+                                    @enderror
+                                </div>
                                 <div class="col-md-6 fv-row">
                                     <label class="required fs-6 fw-semibold mb-2">Lançamento Padrão</label>
                                     <div class="input-group">
-                                        <select name="lancamento_padraos_id" id="lancamento_padraos_id"
-                                            data-control="select2" data-dropdown-css-class="auto" class="form-select"
-                                            data-placeholder="Escolha um Lançamento...">
+                                        <select class="form-select" data-control="select2" data-dropdown-parent="#Dm_modal_financeiro" name="lancamento_padrao_id" id="lancamento_padraos_id"
+                                            data-placeholder="Escolha um Lançamento..." data-allow-clear="true"
+                                            data-minimum-results-for-search="0">
                                             <option value=""></option> <!-- Opção vazia para o placeholder -->
                                             @foreach ($lps as $lp)
                                                 <option value="{{ $lp->id }}"
-                                                    data-description="{{ $lp->description }}">
-                                                    {{ $lp->description }}
+                                                    data-description="{{ $lp->description }}"
+                                                    data-type="{{ $lp->type }}"> {{ $lp->id }} - {{ $lp->description }}
                                                 </option>
                                             @endforeach
                                         </select>
                                     </div>
-                                    @error('lancamento_padraos_id')
+                                    @error('lancamento_padrao_id')
                                         <div class="text-danger">{{ $message }}</div>
                                     @enderror
                                 </div>
                                 <div class="col-md-4 fv-row">
                                     <label class="fs-5 fw-semibold mb-2">Centro de Custo</label>
                                     <div class="input-group">
-                                        <select name="cost_centers_i selectpicker"
-                                            data-live-search="true"id="banco_id"
+                                        <select name="cost_center_id" id="cost_center_id"
                                             class="form-select @error('cost_center_id') is-invalid @enderror"
-                                            data-control="select2" data-dropdown-css-class="auto"
-                                            data-placeholder="Selecione o Centro de Custo">
+                                            data-control="select2" data-dropdown-parent="#Dm_modal_financeiro" data-dropdown-css-class="auto"
+                                            data-placeholder="Selecione o Centro de Custo" data-allow-clear="true"
+                                            data-minimum-results-for-search="0">
                                             <!-- Placeholder configurado aqui -->
                                             @foreach ($centrosAtivos as $centrosAtivos)
                                                 <option value="{{ $centrosAtivos->id }}">{{ $centrosAtivos->name }}
@@ -155,7 +173,8 @@
                                     <label class="required fs-6 fw-semibold mb-2">Tipo de Documento</label><i
                                         class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
                                         title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
-                                    <select class="form-select form-select-solid" data-control="select2"
+                                    <select class="form-select" data-control="select2"
+                                    data-dropdown-parent="#kt_modal_new_address"
                                         data-hide-search="true" data-placeholder="Select a Team Member"
                                         name="tipo_documento" id="tipo_documento">
                                         <option value="Pix" {{ old('tipo_documento') == 'Pix' ? 'selected' : '' }}>
@@ -218,8 +237,9 @@
                                 <div class="col-md-4 fv-row ">
                                     <label class="fs-5 fw-semibold mb-2">Número do Documento</label>
                                     <div class="input-group">
-                                        <input type="text" class="form-control form-control-solid" placeholder="1234567890"
-                                            name="numero_documento" value="{{ old('numero_documento') }}" />
+                                        <input type="text" class="form-control"
+                                            placeholder="1234567890" name="numero_documento"
+                                            value="{{ old('numero_documento') }}" />
                                     </div>
                                     @error('numero_documento')
                                         <div class="text-danger">{{ $message }}</div>
@@ -306,13 +326,14 @@
             <!--begin::Modal footer-->
             <div class="modal-footer">
                 <div class="text-center">
-                    <button type="reset" id="kt_modal_new_target_cancel" class="btn btn-sm btn-light me-3">Cancel</button>
+                    <button type="reset" id="Dm_modal_financeiro_cancel"
+                        class="btn btn-sm btn-light me-3">Cancelar</button>
                     <!-- Split dropup button -->
                     <div class="btn-group dropup">
                         <!-- Botão principal -->
-                        <button type="submit" id="kt_modal_new_target_submit" class="btn btn-sm btn-primary">
+                        <button type="submit" id="Dm_modal_financeiro_submit" class="btn btn-sm btn-primary">
                             <span class="indicator-label">Enviar</span>
-                            <span class="indicator-progress">Please wait...
+                            <span class="indicator-progress">Aguarde...
                                 <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
 
                         </button>
@@ -323,9 +344,9 @@
                         </button>
                         <!-- Opções do dropup -->
                         <div class="dropdown-menu">
-                            <a class="dropdown-item btn-sm" href="#" id="kt_modal_new_target_clone">Salvar e
+                            <a class="dropdown-item btn-sm" href="#" id="Dm_modal_financeiro_clone">Salvar e
                                 Clonar</a>
-                            <a class="dropdown-item btn-sm" href="#" id="kt_modal_new_target_novo">Salvar e em
+                            <a class="dropdown-item btn-sm" href="#" id="Dm_modal_financeiro_novo">Salvar e em
                                 Branco</a>
                         </div>
                     </div>

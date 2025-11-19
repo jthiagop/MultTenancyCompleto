@@ -12690,8 +12690,8 @@ var KTChartsWidget36 = function () {
         var height = parseInt(KTUtil.css(element, 'height'));
         var labelColor = KTUtil.getCssVariableValue('--bs-gray-500');
         var borderColor = KTUtil.getCssVariableValue('--bs-border-dashed-color');
-        var baseprimaryColor = KTUtil.getCssVariableValue('--bs-primary');
-        var lightprimaryColor = KTUtil.getCssVariableValue('--bs-primary');
+        var basedangerColor = KTUtil.getCssVariableValue('--bs-danger');
+        var lightdangerColor = KTUtil.getCssVariableValue('--bs-danger');
         var basesuccessColor = KTUtil.getCssVariableValue('--bs-success');
         var lightsuccessColor = KTUtil.getCssVariableValue('--bs-success');
 
@@ -12733,7 +12733,7 @@ var KTChartsWidget36 = function () {
                 curve: 'smooth',
                 show: true,
                 width: 3,
-                colors: [baseprimaryColor, basesuccessColor]
+                colors: [basedangerColor, basesuccessColor]
             },
             xaxis: {
                 categories: ['', '8 AM', '81 AM', '9 AM', '10 AM', '11 AM', '12 PM', '13 PM', '14 PM', '15 PM', '16 PM', '17 PM', '18 PM', '18:20 PM', '18:20 PM', '19 PM', '20 PM', '21 PM', ''],
@@ -12755,7 +12755,7 @@ var KTChartsWidget36 = function () {
                 crosshairs: {
                     position: 'front',
                     stroke: {
-                        color: [baseprimaryColor, basesuccessColor],
+                        color: [basedangerColor, basesuccessColor],
                         width: 1,
                         dashArray: 3
                     }
@@ -12806,7 +12806,7 @@ var KTChartsWidget36 = function () {
                     fontSize: '12px'
                 }
             },
-            colors: [lightprimaryColor, lightsuccessColor],
+            colors: [lightdangerColor, lightsuccessColor],
             grid: {
                 borderColor: borderColor,
                 strokeDashArray: 4,
@@ -12817,7 +12817,7 @@ var KTChartsWidget36 = function () {
                 }
             },
             markers: {
-                strokeColor: [baseprimaryColor, basesuccessColor],
+                strokeColor: [basedangerColor, basesuccessColor],
                 strokeWidth: 3
             }
         };
@@ -14181,7 +14181,7 @@ var KTChartsWidget42 = function () {
         var height = parseInt(KTUtil.css(element, 'height'));
         var labelColor = KTUtil.getCssVariableValue('--bs-gray-500');
         var borderColor = KTUtil.getCssVariableValue('--bs-border-dashed-color');
-        var baseprimaryColor = KTUtil.getCssVariableValue('--bs-primary');
+        var basedangerColor = KTUtil.getCssVariableValue('--bs-primary');
         var basesuccessColor = KTUtil.getCssVariableValue('--bs-success');
 
         var options = {
@@ -14210,7 +14210,7 @@ var KTChartsWidget42 = function () {
                 curve: 'smooth',
                 show: true,
                 width: 3,
-                colors: [baseprimaryColor, basesuccessColor]
+                colors: [basedangerColor, basesuccessColor]
             },
             xaxis: {
                 categories: ['', '29 Sep', '1 Aug', '2 Aug', '3 Aug', '4 Aug', '5 Aug', '6 Aug', '7 Aug', '8 Aug', '9 Aug', '10 Aug', '11 Aug', '12 Aug', '13 Aug','14 Aug', '15 Aug', '16 Aug', ''],
@@ -14232,7 +14232,7 @@ var KTChartsWidget42 = function () {
                 crosshairs: {
                     position: 'front',
                     stroke: {
-                        color: [baseprimaryColor, basesuccessColor],
+                        color: [basedangerColor, basesuccessColor],
                         width: 1,
                         dashArray: 3
                     }
@@ -14283,7 +14283,7 @@ var KTChartsWidget42 = function () {
                     fontSize: '12px'
                 }
             },
-            colors: [baseprimaryColor, basesuccessColor],
+            colors: [basedangerColor, basesuccessColor],
             grid: {
                 borderColor: borderColor,
                 strokeDashArray: 4,
@@ -14294,7 +14294,7 @@ var KTChartsWidget42 = function () {
                 }
             },
             markers: {
-                strokeColor: [baseprimaryColor, basesuccessColor],
+                strokeColor: [basedangerColor, basesuccessColor],
                 strokeWidth: 3
             }
         };

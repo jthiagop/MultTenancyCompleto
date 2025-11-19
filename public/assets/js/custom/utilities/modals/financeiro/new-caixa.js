@@ -177,10 +177,10 @@ var DMModalNewCaixa = function () {
 					modal.hide(); // Hide modal
 				} else if (result.dismiss === 'cancel') {
 					Swal.fire({
-						text: "Your form has not been cancelled!.",
+						text: "Seu formulário não foi cancelado!",
 						icon: "error",
 						buttonsStyling: false,
-						confirmButtonText: "Ok, got it!",
+						confirmButtonText: "Ok, entendi!",
 						customClass: {
 							confirmButton: "btn btn-primary",
 						}

@@ -19,7 +19,7 @@ class EntidadeFinanceira extends Model
     protected $fillable = [
         'nome',
         'tipo',
-        'banco_id', 
+        'banco_id',
         'agencia',
         'conta',
         'saldo_inicial',
@@ -71,7 +71,7 @@ class EntidadeFinanceira extends Model
 
     static public function getValorTotalEntidade()
     {
-        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
+        $companyId = session('active_company_id'); // Recupere a empresa do usuário logado
 
         // Soma os saldos atuais das entidades financeiras do tipo 'caixa'
         return EntidadeFinanceira::where('tipo', 'caixa') // Filtra pelo tipo desejado
@@ -81,7 +81,7 @@ class EntidadeFinanceira extends Model
 
     static public function getValorTotalEntidadeBC()
     {
-        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
+        $companyId = session('active_company_id'); // Recupere a empresa do usuário logado
 
         // Soma os saldos atuais das entidades financeiras do tipo 'caixa'
         return EntidadeFinanceira::where('tipo', 'banco') // Filtra pelo tipo desejado
@@ -91,7 +91,7 @@ class EntidadeFinanceira extends Model
 
     static public function getEntidadeFinanceira()
     {
-        $companyId = Auth::user()->company_id; // Recupere a empresa do usuário logado
+        $companyId = session('active_company_id'); // Recupere a empresa do usuário logado
 
         // Soma os saldos atuais das entidades financeiras do tipo 'caixa'
         return EntidadeFinanceira::where('company_id', $companyId)->get();

@@ -1,6 +1,9 @@
 // Aguarda o DOM carregar antes de tentar inicializar
 $(document).ready(function() {
-    $("#s").kendoUpload({
+    // Verifica se o elemento existe e se o Kendo UI está carregado
+    var uploadElement = $("#s");
+    if (uploadElement.length > 0 && typeof kendo !== 'undefined' && typeof kendo.ui !== 'undefined') {
+        uploadElement.kendoUpload({
         async: {
             removeUrl: "/remove",  // ou "{{ url('/remove') }}"
             removeField: "path",
@@ -19,7 +22,9 @@ $(document).ready(function() {
             invalidMaxFileSize: "O arquivo é muito grande",
             invalidMinFileSize: "O arquivo é muito pequeno",
             select: "Anexar Arquivos"
-        }
-    });
+        });
+    } else {
+        console.warn('Kendo Upload: Elemento #s não encontrado ou Kendo UI não está carregado');
+    }
 });
 

@@ -7,6 +7,7 @@ use App\Http\Requests\Financer\StoreTransacaoFinanceiraRequest;
 use App\Models\Anexo;
 use App\Models\Banco;
 use App\Models\EntidadeFinanceira;
+use App\Models\Financeiro\BankStatement;
 use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\ModulosAnexo;
 use App\Models\Financeiro\TransacaoFinanceira;
@@ -263,6 +264,174 @@ class BancoController extends Controller
         ]);
 
         return response()->json($response);
+    }
+
+    /**
+     * Retorna dados para o gráfico de fluxo de banco por intervalo de datas
+     */
+    public function getFluxoBancoChartData(Request $request)
+    {
+        Log::info('getFluxoBancoChartData chamado', [
+            'url' => $request->fullUrl(),
+            'method' => $request->method(),
+            'start_date' => $request->input('start_date'),
+            'end_date' => $request->input('end_date'),
+        ]);
+        
+        $companyId = session('active_company_id');
+        
+        Log::info('getFluxoBancoChartData - companyId', ['company_id' => $companyId]);
+        
+        if (!$companyId) {
+            Log::error('getFluxoBancoChartData - Empresa não encontrada na sessão');
+            return response()->json(['error' => 'Empresa não encontrada'], 400);
+        }
+
+        // Parâmetros de filtro por intervalo de datas
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
+        // Se não fornecido, usa o período padrão (últimos 30 dias)
+        if (!$startDate || !$endDate) {
+            $endDate = Carbon::now()->format('Y-m-d');
+            $startDate = Carbon::now()->subDays(29)->format('Y-m-d');
+        }
+
+        // Converter strings para Carbon
+        $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
+        $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
+
+        // Construir query base - apenas transações de banco
+        $query = TransacaoFinanceira::where('company_id', $companyId)
+            ->where(function ($q) {
+                $q->where('origem', 'Conciliação Bancária')
+                  ->orWhere('origem', 'Banco');
+            })
+            ->whereBetween('data_competencia', [$start, $end])
+            ->orderBy('data_competencia');
+
+        $transacoes = $query->get();
+
+        // Agrupar por dia
+        $dadosPorDia = [];
+        $currentDate = $start->copy();
+
+        while ($currentDate <= $end) {
+            $dataFormatada = $currentDate->format('Y-m-d');
+            $diaFormatado = $currentDate->format('d/m');
+            
+            $transacoesDia = $transacoes->filter(function ($transacao) use ($dataFormatada) {
+                return Carbon::parse($transacao->data_competencia)->format('Y-m-d') === $dataFormatada;
+            });
+
+            $entradas = $transacoesDia->where('tipo', 'entrada')->sum('valor');
+            $saidas = $transacoesDia->where('tipo', 'saida')->sum('valor');
+
+            $dadosPorDia[] = [
+                'data' => $diaFormatado,
+                'data_completa' => $dataFormatada,
+                'entradas' => (float) $entradas,
+                'saidas' => (float) $saidas
+            ];
+
+            $currentDate->addDay();
+        }
+
+        // Calcular totais do período
+        $totalEntradas = $transacoes->where('tipo', 'entrada')->sum('valor');
+        $totalSaidas = $transacoes->where('tipo', 'saida')->sum('valor');
+        $saldoTotal = $totalEntradas - $totalSaidas;
+
+        // Preparar dados para o gráfico (arrays separados)
+        $categorias = array_column($dadosPorDia, 'data');
+        $dadosEntradas = array_column($dadosPorDia, 'entradas');
+        $dadosSaidas = array_column($dadosPorDia, 'saidas');
+
+        $response = [
+            'categorias' => $categorias,
+            'entradas' => $dadosEntradas,
+            'saidas' => $dadosSaidas,
+            'totais' => [
+                'entradas' => (float) $totalEntradas,
+                'saidas' => (float) $totalSaidas,
+                'saldo' => (float) $saldoTotal
+            ],
+            'periodo' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate
+            ]
+        ];
+
+        return response()->json($response);
+    }
+
+    /**
+     * Retorna o total de conciliações pendentes para todas as entidades bancárias
+     */
+    public function getConciliacoesPendentes(Request $request)
+    {
+        $activeCompanyId = session('active_company_id');
+        
+        if (!$activeCompanyId) {
+            Log::warning('getConciliacoesPendentes: Nenhuma empresa selecionada na sessão');
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa selecionada.',
+                'total' => 0
+            ], 403);
+        }
+
+        try {
+            // Busca todas as entidades financeiras do tipo banco
+            $entidadesBanco = EntidadeFinanceira::forActiveCompany()
+                ->where('tipo', 'banco')
+                ->pluck('id');
+
+            Log::info('getConciliacoesPendentes', [
+                'company_id' => $activeCompanyId,
+                'entidades_count' => $entidadesBanco->count(),
+                'entidades_ids' => $entidadesBanco->toArray()
+            ]);
+
+            // Se não houver entidades bancárias, retorna 0
+            if ($entidadesBanco->isEmpty()) {
+                return response()->json([
+                    'success' => true,
+                    'total' => 0
+                ]);
+            }
+
+            // Conta os bank statements pendentes de conciliação
+            // IMPORTANTE: Busca TODAS as conciliações pendentes de TODO o período (sem filtro de data)
+            // Filtra por company_id para garantir segurança em multitenancy
+            $totalPendentes = BankStatement::where('company_id', $activeCompanyId)
+                ->whereIn('entidade_financeira_id', $entidadesBanco)
+                ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                ->whereDoesntHave('transacoes')
+                // Não aplica filtro de data - busca de todo o período histórico
+                ->count();
+
+            Log::info('getConciliacoesPendentes: Total encontrado (todo o período histórico)', [
+                'total' => $totalPendentes,
+                'observacao' => 'Contagem inclui todas as conciliações pendentes de todo o período, sem filtro de data'
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'total' => $totalPendentes
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro em getConciliacoesPendentes', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao buscar conciliações pendentes.',
+                'total' => 0
+            ], 500);
+        }
     }
 
 

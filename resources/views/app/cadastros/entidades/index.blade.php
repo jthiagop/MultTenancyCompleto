@@ -115,7 +115,6 @@
                                                 @enderror
                                             </div>
                                             <!--end::Col-->
-
                                             <!-- Campos para Banco (inicialmente ocultos) -->
                                             <!-- Grupo de Banco (Oculto por padrão) -->
                                             <div class="col-md-8 fv-row d-none" id="banco-group">

@@ -12,7 +12,7 @@
     }
 </style>
 
-<div class="tab-content mt-5">
+<div class="tab-content">
     <!-- Conteúdo da Aba Resumo -->
     <div class="tab-pane fade show active" id="resumo">
         <!--begin::Products-->
@@ -69,10 +69,10 @@
                     <!--begin::Export dropdown-->
                     <!--begin::Menu-->
                     <div class="me-0">
-                        <button class="btn btn-sm btn-light-success" data-kt-menu-trigger="click"
+                        <button class="btn btn-sm btn-light-warning" data-kt-menu-trigger="click"
                             data-kt-menu-placement="bottom-end">
                             <i class="bi bi-plus-circle fs-3"></i>
-                            Novo
+                            Novo Lançamento
                         </button>
 
                         <!--begin::Menu Dropdown-->

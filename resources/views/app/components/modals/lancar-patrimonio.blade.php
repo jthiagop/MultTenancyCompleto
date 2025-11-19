@@ -28,7 +28,7 @@
                     title="Especifique aqui os detalhes do patrimônios"></i>
             </label>
             <!--end::Label-->
-            <input type="text" class="form-control form-control-solid" placeholder="Informações de patrimônio"
+            <input type="text" class="form-control" placeholder="Informações de patrimônio"
                 id="descricao" name="descricao" />
         </div>
         <!--end::Input group-->
@@ -41,15 +41,10 @@
                     <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
                         title="A que patrimônio pertence?"></i>
                 </label>
-                <select class="form-select form-select-solid" data-control="select2" id="patrimonio"
+                <select class="form-select"
                     data-placeholder="Selecione o patrimônio" name="patrimonio">
                     <option value="">Selecione o patrimônio...</option>
-                    @foreach ($nameForos as $nameForo)
-                        <option value="{{ $nameForo->name }}" data-num-foro="{{ $nameForo->numForo }}"
-                            data-ibge="{{ $nameForo->ibge }}">
-                            {{ $nameForo->name }} - {{ $nameForo->numForo }}
-                        </option>
-                    @endforeach
+
                 </select><br>
 
                 {{-- Inputs ocultos para numForo e numIbge --}}
@@ -102,7 +97,7 @@
                     <!--end::Svg Icon-->
                     <!--end::Icon-->
                     <!--begin::Datepicker-->
-                    <input class="form-control form-control-solid ps-12" placeholder="Secione a data" name="data" />
+                    <input class="form-control ps-12" placeholder="Secione a data" name="data" />
                     <!--end::Datepicker-->
                 </div>
                 <!--end::Input-->
@@ -118,7 +113,7 @@
                 <label class="fs-6 fw-semibold mb-2">Livro</label>
                 <!--end::Label-->
                 <!--begin::Input-->
-                <input class="form-control form-control-solid" placeholder="L-0001" name="livro" />
+                <input class="form-control" placeholder="L-0001" name="livro" />
                 <!--end::Input-->
             </div>
             <!--end::Col-->
@@ -128,7 +123,7 @@
                 <label class="fs-6 fw-semibold mb-2">Folha</label>
                 <!--end::Label-->
                 <!--begin::Input-->
-                <input class="form-control form-control-solid" placeholder="F-0002" name="folha" />
+                <input class="form-control" placeholder="F-0002" name="folha" />
                 <!--end::Input-->
             </div>
             <!--end::Col-->
@@ -138,7 +133,7 @@
                 <label class="fs-6 fw-semibold mb-2">Registro</label>
                 <!--end::Label-->
                 <!--begin::Input-->
-                <input class="form-control form-control-solid" placeholder="R-23423" name="registro" />
+                <input class="form-control" placeholder="R-23423" name="registro" />
                 <!--end::Input-->
             </div>
             <!--end::Col-->
@@ -154,7 +149,7 @@
                         title="Specify a target priorty"></i>
                 </label>
                 <!--end::Label-->
-                <input class="form-control form-control-solid" value="Important, Urgent"
+                <input class="form-control" value="Important, Urgent"
                     name="tags" />
             </div>
             <!--end::Input group--> --}}
@@ -193,7 +188,7 @@
                         <label class="required fs-6 fw-semibold mb-2">CEP</label>
                         <!--end::Label-->
                         <!--begin::Input-->
-                        <input class="form-control form-control-solid" placeholder="00000-000" name="cep"
+                        <input class="form-control" placeholder="00000-000" name="cep"
                             id="cep" />
                         <!--end::Input-->
                     </div>
@@ -204,7 +199,7 @@
                         <label class="required fs-6 fw-semibold mb-2">Bairro</label>
                         <!--end::Label-->
                         <!--begin::Input-->
-                        <input class="form-control form-control-solid" placeholder="São Francisco" id="bairro"
+                        <input class="form-control" placeholder="São Francisco" id="bairro"
                             name="bairro" />
                         <!--end::Input-->
                     </div>
@@ -217,7 +212,7 @@
                     <label class="fs-6 fw-semibold mb-2">Rua</label>
                     <!--end::Label-->
                     <!--begin::Input-->
-                    <input class="form-control form-control-solid" placeholder="Rua Bento XVI" id="logradouro"
+                    <input class="form-control" placeholder="Rua Bento XVI" id="logradouro"
                         name="logradouro" value="" />
                     <!--end::Input-->
                 </div>
@@ -230,7 +225,7 @@
                         <label class=" fs-6 fw-semibold mb-2">Cidade</label>
                         <!--end::Label-->
                         <!--begin::Input-->
-                        <input class="form-control form-control-solid" placeholder="Caruaru"id="localidade"
+                        <input class="form-control" placeholder="Caruaru"id="localidade"
                             name="localidade" value="" />
                         <!--end::Input-->
                     </div>
@@ -245,7 +240,7 @@
                         </label>
                         <!--end::Label-->
                         <!--begin::Select-->
-                        <select id="uf" name="uf" class="form-select form-select-solid"
+                        <select id="uf" name="uf" class="form-select"
                             data-control="select2" data-hide-search="true" data-placeholder="Escolha a cidade">
                             <option value="">Selecione a cidade</option>
                             <option value="AC">Acre</option>
@@ -284,7 +279,7 @@
                 <!--begin::Input group-->
                 <div class="d-flex flex-column mb-8">
                     <label class="fs-6 fw-semibold mb-2">[+] Informações</label>
-                    <textarea class="form-control form-control-solid" id="complemento" name="complemento" maxlength="250"
+                    <textarea class="form-control" id="complemento" name="complemento" maxlength="250"
                         rows="3" name="target_details" placeholder="Mais detalhes sobre o foro"></textarea>
                     <span class="fs-6 text-muted">Insira no máximo 250 caracteres</span>
                 </div>

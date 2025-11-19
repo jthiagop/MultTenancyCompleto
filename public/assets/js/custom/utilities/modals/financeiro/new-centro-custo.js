@@ -167,10 +167,10 @@ var KTModalNewTarget = function () {
 					} else {
 						// Show error message.
 						Swal.fire({
-							text: "Sorry, looks like there are some errors detected, please try again.",
+							text: "Desculpe, parece que alguns erros foram detectados, por favor tente novamente.",
 							icon: "error",
 							buttonsStyling: false,
-							confirmButtonText: "Ok, got it!",
+							confirmButtonText: "Ok, entendi!",
 							customClass: {
 								confirmButton: "btn btn-primary"
 							}
@@ -184,12 +184,12 @@ var KTModalNewTarget = function () {
 			e.preventDefault();
 
 			Swal.fire({
-				text: "Are you sure you would like to cancel?",
+				text: "Tem certeza de que deseja cancelar?",
 				icon: "warning",
 				showCancelButton: true,
 				buttonsStyling: false,
-				confirmButtonText: "Yes, cancel it!",
-				cancelButtonText: "No, return",
+				confirmButtonText: "Sim, cancelar!",
+				cancelButtonText: "Não, voltar",
 				customClass: {
 					confirmButton: "btn btn-primary",
 					cancelButton: "btn btn-active-light"
@@ -200,10 +200,10 @@ var KTModalNewTarget = function () {
 					modal.hide(); // Hide modal
 				} else if (result.dismiss === 'cancel') {
 					Swal.fire({
-						text: "Your form has not been cancelled!.",
+						text: "Seu formulário não foi cancelado!",
 						icon: "error",
 						buttonsStyling: false,
-						confirmButtonText: "Ok, got it!",
+						confirmButtonText: "Ok, entendi!",
 						customClass: {
 							confirmButton: "btn btn-primary",
 						}

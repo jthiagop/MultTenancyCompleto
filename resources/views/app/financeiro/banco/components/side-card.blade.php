@@ -50,7 +50,7 @@
                                 <!--begin::Wrapper-->
                                 <div class="d-flex align-items-center mb-8">
                                     <!--begin::Symbol-->
-                                    <div class="symbol symbol-70px symbol-circle me-5">
+                                    <div class="symbol symbol-70px me-5">
                                         {{-- Verifica se a entidade tem um banco relacionado
                                                 e se esse banco tem um caminho de logo definido.
                                             --}}
@@ -84,8 +84,7 @@
                                     <div class="m-0 ">
                                         <!--begin::Subtitle-->
                                         <h4 class="fw-bold text-gray-800 mb-3">
-                                            {{ $entidade->nome }} <span
-                                                class="badge badge-info fs-base">{{ $entidade->conta }}</span>
+                                            {{ $entidade->agencia }} - {{ $entidade->conta }} <span class="badge badge-info fs-base">{{ $entidade->conta }}</span>
                                         </h4>
                                         <!--end::Subtitle-->
 

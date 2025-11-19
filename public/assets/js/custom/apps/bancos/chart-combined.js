@@ -13,9 +13,9 @@ var KTAppBancoChartCombined = function () {
             console.log('Gráfico já inicializado, pulando...');
             return;
         }
-        
+
         chartElement = document.getElementById('kt_charts_widget_combined');
-        
+
         if (!chartElement) {
             console.log('Elemento kt_charts_widget_combined não encontrado');
             return;
@@ -107,7 +107,7 @@ var KTAppBancoChartCombined = function () {
 
         chart = new ApexCharts(chartElement, options);
         chart.render();
-        
+
         console.log('Gráfico criado e renderizado');
 
         // Carregar dados iniciais
@@ -130,9 +130,9 @@ var KTAppBancoChartCombined = function () {
             ano: ano,
             entidade_id: bancoId
         });
-        
+
         console.log('Fazendo requisição para:', url);
-        
+
         fetch(url, {
             method: 'GET',
             credentials: 'include', // Incluir cookies de autenticação
@@ -159,7 +159,7 @@ var KTAppBancoChartCombined = function () {
 
             // Atualizar gráfico
             updateChart(data);
-            
+
             // Atualizar totais
             updateTotals(data.totais);
         })
@@ -199,20 +199,20 @@ var KTAppBancoChartCombined = function () {
                 categories: categories
             }
         });
-        
+
         console.log('Gráfico atualizado');
     };
 
     var updateTotals = function (totais) {
         // Atualizar total de entradas
-        document.getElementById('total-entradas').textContent = 
+        document.getElementById('total-entradas').textContent =
             totais.entradas.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
 
         // Atualizar total de saídas
-        document.getElementById('total-saidas').textContent = 
+        document.getElementById('total-saidas').textContent =
             totais.saidas.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
@@ -220,14 +220,14 @@ var KTAppBancoChartCombined = function () {
 
         // Atualizar saldo total
         var saldoElement = document.getElementById('saldo-total');
-        saldoElement.textContent = 
+        saldoElement.textContent =
             totais.saldo.toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
                 maximumFractionDigits: 2
             });
 
         // Aplicar cor baseada no saldo
-        saldoElement.className = 'fs-2hx fw-bold me-2 lh-1 ls-n2 ' + 
+        saldoElement.className = 'fs-2hx fw-bold me-2 lh-1 ls-n2 ' +
             (totais.saldo >= 0 ? 'text-success' : 'text-danger');
     };
 
