@@ -114,7 +114,7 @@
                                         <!--begin::Menu Item-->
                                         <div class="menu-item px-3">
                                             <a href="#" class="menu-link px-3" data-bs-toggle="modal"
-                                                data-bs-target="#Dm_modal_financeiro" data-tipo="receita" data-origem="Caixa"
+                                                data-bs-target="#Dm_modal_caixa" data-tipo="receita"
                                                 aria-label="Adicionar nova receita">
                                                 <span class="me-2">💰</span> Nova Receita
                                             </a>
@@ -123,7 +123,7 @@
                                         <!--begin::Menu Item-->
                                         <div class="menu-item px-3">
                                             <a href="#" class="menu-link px-3" data-bs-toggle="modal"
-                                                data-bs-target="#Dm_modal_financeiro" data-tipo="despesa" data-origem="Caixa"
+                                                data-bs-target="#Dm_modal_caixa" data-tipo="despesa"
                                                 aria-label="Adicionar nova despesa">
                                                 <span class="me-2">💸</span> Nova Despesa
                                             </a>
@@ -238,7 +238,7 @@
                                                         @php
                                                             $formaAnexo = $anexo->forma_anexo ?? 'arquivo';
                                                             $isLink = $formaAnexo === 'link';
-                                                            
+
                                                             if ($isLink) {
                                                                 $href = $anexo->link ?? '#';
                                                                 $tooltip = $anexo->link ?? 'Link';
@@ -250,7 +250,7 @@
                                                                 );
                                                                 $iconData = $icons[strtolower($extension)] ?? $defaultIcon;
                                                                 $tooltip = $anexo->nome_arquivo ?? 'Arquivo';
-                                                                
+
                                                                 if ($anexo->caminho_arquivo) {
                                                                     $href = route('file', ['path' => $anexo->caminho_arquivo]);
                                                                 } else {
@@ -333,4 +333,4 @@
                     <!--end::Products-->
 
                     <!-- Modal de Lançamento -->
-                    @include('app.components.modals.financeiro.lancamento.modal_lacamento')
+                    @include('app.components.modals.financeiro.lancamento.modal_lancamento_caixa')

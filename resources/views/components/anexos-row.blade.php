@@ -34,40 +34,11 @@
             <label class="d-md-none fs-7 fw-semibold text-muted mb-2">Anexo</label>
             <div class="anexo-input-group">
                 @if($formaAnexo === 'arquivo')
-                    <div class="file-input-wrapper">
-                        <input type="file"
-                               class="form-control form-control-sm anexo-file-input"
-                               name="{{ $name }}[{{ $index }}][arquivo]"
-                               accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
-                               data-index="{{ $index }}">
-                        @if($nomeArquivo)
-                            <div class="file-preview mt-2">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-paperclip text-primary me-2"></i>
-                                    <span class="file-name text-gray-700">{{ $nomeArquivo }}</span>
-                                    @if($tamanhoArquivo > 0)
-                                        <span class="file-size text-muted ms-2">
-                                            ({{ number_format($tamanhoArquivo / 1024, 0) }}Kb)
-                                        </span>
-                                    @endif
-                                    <button type="button" class="btn btn-sm btn-icon btn-light-danger ms-2 remove-file">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        @else
-                            <div class="file-preview d-none mt-2">
-                                <div class="d-flex align-items-center">
-                                    <i class="fas fa-paperclip text-primary me-2"></i>
-                                    <span class="file-name text-gray-700"></span>
-                                    <span class="file-size text-muted ms-2"></span>
-                                    <button type="button" class="btn btn-sm btn-icon btn-light-danger ms-2 remove-file">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </div>
-                            </div>
-                        @endif
-                    </div>
+                    <input type="file"
+                           class="form-control form-control-sm anexo-file-input"
+                           name="{{ $name }}[{{ $index }}][arquivo]"
+                           accept=".jpg,.jpeg,.png,.pdf,.doc,.docx"
+                           data-index="{{ $index }}">
                 @else
                     <input type="url"
                            class="form-control form-control-sm anexo-link-input"

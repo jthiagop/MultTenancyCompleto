@@ -98,12 +98,11 @@ class BancoController extends Controller
             ->with('bankStatements')  // 3. (Opcional, mas recomendado) Otimiza a consulta
             ->get();
 
-        // Filtrar as transações com origem "Banco"
+        // Filtrar as transações de banco através do relacionamento com entidades_financeiras
         // Transações com anexos relacionados
         $transacoes = TransacaoFinanceira::with('modulos_anexos')
-            ->where(function ($query) {
-                $query->where('origem', 'Conciliação Bancária')
-                    ->orWhere('origem', 'Banco');
+            ->whereHas('entidadeFinanceira', function ($query) {
+                $query->where('tipo', 'banco');
             })
             ->where('company_id', $companyId)
             ->paginate($perPage);
@@ -203,11 +202,10 @@ class BancoController extends Controller
         $ano = $request->input('ano', Carbon::now()->year);
         $entidadeId = $request->input('entidade_id'); // Filtro opcional por banco específico
 
-        // Construir query base
+        // Construir query base - filtrar por entidades do tipo 'banco'
         $query = TransacaoFinanceira::where('company_id', $companyId)
-            ->where(function ($q) {
-                $q->where('origem', 'Conciliação Bancária')
-                  ->orWhere('origem', 'Banco');
+            ->whereHas('entidadeFinanceira', function ($q) {
+                $q->where('tipo', 'banco');
             })
             ->whereYear('data_competencia', $ano)
             ->whereMonth('data_competencia', $mes);
@@ -311,11 +309,10 @@ class BancoController extends Controller
         $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
         $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
 
-        // Construir query base - apenas transações de banco
+        // Construir query base - apenas transações de banco através do relacionamento
         $query = TransacaoFinanceira::where('company_id', $companyId)
-            ->where(function ($q) {
-                $q->where('origem', 'Conciliação Bancária')
-                  ->orWhere('origem', 'Banco');
+            ->whereHas('entidadeFinanceira', function ($q) {
+                $q->where('tipo', 'banco');
             })
             ->whereBetween('data_competencia', [$start, $end])
             ->orderBy('data_competencia');
@@ -875,10 +872,13 @@ class BancoController extends Controller
         $validated = $request->validate([
             'data_inicial' => 'required|date',
             'data_final' => 'required|date|after_or_equal:data_inicial',
-            'entidade_id' => 'required|exists:entidades_financeiras,id',
+            'entidade_id' => 'required|array|min:1',
+            'entidade_id.*' => 'required|string',
             'cost_center_id' => 'nullable|exists:cost_centers,id',
             'tipo' => 'nullable|in:entrada,saida,ambos',
             'orientacao' => 'nullable|in:horizontal,vertical',
+            'lancamentos_padrao' => 'nullable|array',
+            'lancamentos_padrao.*' => 'nullable|string',
         ]);
 
         $companyId = session('active_company_id');
@@ -886,11 +886,32 @@ class BancoController extends Controller
             return redirect()->route('dashboard')->with('error', 'Por favor, selecione uma empresa.');
         }
 
-        // Verificar se a entidade pertence à empresa e é do tipo 'banco'
-        $entidade = EntidadeFinanceira::forActiveCompany()
-            ->where('id', $validated['entidade_id'])
-            ->where('tipo', 'banco')
-            ->firstOrFail();
+        // Processar entidades selecionadas
+        $entidadesIds = array_filter($validated['entidade_id'], function($value) {
+            return $value !== 'todos' && !empty($value);
+        });
+
+        // Se "Todos" foi selecionado ou nenhum ID específico, buscar todas as entidades do tipo 'banco'
+        if (empty($entidadesIds) || in_array('todos', $validated['entidade_id'])) {
+            $entidadesIds = EntidadeFinanceira::forActiveCompany()
+                ->where('tipo', 'banco')
+                ->pluck('id')
+                ->toArray();
+        } else {
+            // Verificar se todas as entidades selecionadas pertencem à empresa e são do tipo 'banco'
+            $entidadesValidas = EntidadeFinanceira::forActiveCompany()
+                ->where('tipo', 'banco')
+                ->whereIn('id', $entidadesIds)
+                ->pluck('id')
+                ->toArray();
+
+            if (count($entidadesValidas) !== count($entidadesIds)) {
+                return redirect()->back()->with('error', 'Uma ou mais entidades financeiras selecionadas são inválidas.');
+            }
+        }
+
+        // Buscar informações das entidades para exibir no relatório
+        $entidades = EntidadeFinanceira::whereIn('id', $entidadesIds)->get();
 
         // Converter datas
         $dataInicial = Carbon::createFromFormat('Y-m-d', $validated['data_inicial'])->startOfDay();
@@ -898,15 +919,12 @@ class BancoController extends Controller
         $tipo = $validated['tipo'] ?? 'ambos';
         $orientacao = $validated['orientacao'] ?? 'horizontal';
 
-        // Buscar transações
+        // Buscar transações - as entidades já foram validadas como tipo 'banco' acima
+        // Não precisa filtrar novamente por origem, pois já filtramos por entidade_id que são todas do tipo 'banco'
         $query = TransacaoFinanceira::with(['entidadeFinanceira', 'lancamentoPadrao', 'costCenter'])
             ->where('company_id', $companyId)
-            ->where('entidade_id', $entidade->id)
-            ->whereBetween('data_competencia', [$dataInicial, $dataFinal])
-            ->where(function ($q) {
-                $q->where('origem', 'Banco')
-                  ->orWhere('origem', 'Conciliação Bancária');
-            });
+            ->whereIn('entidade_id', $entidadesIds)
+            ->whereBetween('data_competencia', [$dataInicial, $dataFinal]);
 
         // Filtro por centro de custo
         if (!empty($validated['cost_center_id'])) {
@@ -918,7 +936,42 @@ class BancoController extends Controller
             $query->where('tipo', $tipo);
         }
 
+        // Filtro por lançamentos padrão
+        if (!empty($validated['lancamentos_padrao']) && is_array($validated['lancamentos_padrao'])) {
+            $lancamentosIds = array_filter($validated['lancamentos_padrao'], function($value) {
+                return $value !== 'todos' && !empty($value);
+            });
+            
+            if (!empty($lancamentosIds)) {
+                $query->whereIn('lancamento_padrao_id', $lancamentosIds);
+            }
+            // Se tiver apenas "todos" ou estiver vazio, não aplica filtro (mostra todos)
+        }
+
         $transacoes = $query->orderBy('data_competencia')->get();
+
+        // Calcular saldos anteriores para cada origem
+        $origens = $transacoes->pluck('origem')->unique();
+        $saldosAnteriores = [];
+        
+        foreach ($origens as $origem) {
+            // Buscar todas as transações anteriores ao período para esta origem
+            $transacoesAnteriores = TransacaoFinanceira::where('company_id', $companyId)
+                ->where('origem', $origem)
+                ->where('data_competencia', '<', $dataInicial)
+                ->get();
+            
+            $saldoAnterior = 0;
+            foreach ($transacoesAnteriores as $trans) {
+                if ($trans->tipo === 'entrada') {
+                    $saldoAnterior += $trans->valor;
+                } else {
+                    $saldoAnterior -= $trans->valor;
+                }
+            }
+            
+            $saldosAnteriores[$origem] = $saldoAnterior;
+        }
 
         // Agrupar por origem
         $dados = [];
@@ -936,6 +989,7 @@ class BancoController extends Controller
                 'items' => $items,
                 'totEntrada' => $totEntrada,
                 'totSaida' => $totSaida,
+                'saldoAnterior' => $saldosAnteriores[$origem] ?? 0,
             ];
         }
 
@@ -947,7 +1001,8 @@ class BancoController extends Controller
             'dados' => $dados,
             'dataInicial' => $dataInicial->format('d/m/Y'),
             'dataFinal' => $dataFinal->format('d/m/Y'),
-            'entidade' => $entidade,
+            'entidade' => count($entidades) === 1 ? $entidades->first() : null, // Para compatibilidade
+            'entidades' => $entidades, // Todas as entidades selecionadas
             'costCenter' => !empty($validated['cost_center_id'])
                 ? CostCenter::find($validated['cost_center_id'])
                 : null,
@@ -962,7 +1017,7 @@ class BancoController extends Controller
         $browsershot = Browsershot::html($html)
             ->format('A4')
             ->showBackground()
-            ->margins(8, 8, 8, 8);
+            ->margins(8, 8, 25, 8); // Margem inferior maior para o rodapé
 
         if ($orientacao === 'horizontal') {
             $browsershot->landscape();
@@ -972,7 +1027,13 @@ class BancoController extends Controller
 
         $pdf = $browsershot->pdf();
 
-        $filename = 'relatorio-banco-' . $entidade->nome . '-' . $dataInicial->format('Y-m-d') . '-' . $dataFinal->format('Y-m-d') . '.pdf';
+        // Gerar nome do arquivo
+        if (count($entidades) === 1) {
+            $entidadeNome = $entidades->first()->nome;
+        } else {
+            $entidadeNome = count($entidades) . '-entidades';
+        }
+        $filename = 'relatorio-banco-' . $entidadeNome . '-' . $dataInicial->format('Y-m-d') . '-' . $dataFinal->format('Y-m-d') . '.pdf';
         $filename = preg_replace('/[^a-zA-Z0-9\-_\.]/', '_', $filename);
 
         return response($pdf, 200, [

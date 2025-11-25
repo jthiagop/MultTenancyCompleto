@@ -215,9 +215,9 @@ var DMModalNewCaixa = function () {
 						}
 					}
 
-					var submitBtn = document.getElementById('kt_modal_new_target_submit');
-					var cloneBtn = document.getElementById('kt_modal_new_target_clone');
-					var novoBtn = document.getElementById('kt_modal_new_target_novo');
+					var submitBtn = document.getElementById('Dm_modal_caixa_submit');
+					var cloneBtn = document.getElementById('Dm_modal_caixa_clone');
+					var novoBtn = document.getElementById('Dm_modal_caixa_novo');
 
 					// Desabilita todos os botões
 					submitBtn.disabled = true;
@@ -380,10 +380,10 @@ var DMModalNewCaixa = function () {
 
 			// Limpa os selects usando Select2
 			var selectsToClear = [
-				'#lancamento_padrao_caixa',
-				'#entidade_id',
-				'#tipo_documento',
-				'#bancoSelect'
+				'#lancamento_padraos_id_caixa',
+				'#entidade_id_caixa',
+				'#tipo_documento_caixa',
+				'#bancoSelect_caixa'
 			];
 
 			// Nota: O campo centro (centro de custo) no caixa é readonly e não precisa ser limpo
@@ -439,11 +439,11 @@ var DMModalNewCaixa = function () {
 			}
 
 			// Esconde campo de banco de depósito se estiver visível
-			$('#banco-deposito').hide();
+			$('#banco-deposito-caixa').hide();
 
 			// Refiltra os lançamentos padrão baseado no tipo mantido
 			if (tipoValue) {
-				var lancamentoPadraoSelect = $('#lancamento_padrao_caixa');
+				var lancamentoPadraoSelect = $('#lancamento_padraos_id_caixa');
 				if (lancamentoPadraoSelect.length > 0) {
 					// Filtra usando as opções existentes no DOM
 					lancamentoPadraoSelect.find('option').each(function() {
@@ -533,7 +533,7 @@ var DMModalNewCaixa = function () {
 		// Public functions
 		init: function () {
 			// Elements
-			modalEl = document.querySelector('#kt_modal_new_target');
+			modalEl = document.querySelector('#Dm_modal_caixa');
 
 			if (!modalEl) {
 				return;
@@ -541,9 +541,9 @@ var DMModalNewCaixa = function () {
 
 			modal = new bootstrap.Modal(modalEl);
 
-			form = document.querySelector('#kt_modal_new_target_form');
-			submitButton = document.getElementById('kt_modal_new_target_submit');
-			cancelButton = document.getElementById('kt_modal_new_target_cancel');
+			form = document.querySelector('#Dm_modal_caixa_form');
+			submitButton = document.getElementById('Dm_modal_caixa_submit');
+			cancelButton = document.getElementById('Dm_modal_caixa_cancel');
 
 			initForm();
 			handleForm();
@@ -556,14 +556,14 @@ KTUtil.onDOMContentLoaded(function () {
 	DMModalNewCaixa.init();
 
 	// Adiciona event listeners para os botões de ação adicional
-	$(document).on('click', '#kt_modal_new_target_clone', function(e) {
+	$(document).on('click', '#Dm_modal_caixa_clone', function(e) {
 		e.preventDefault();
 		if (typeof window.enviarFormularioCaixa === 'function') {
 			window.enviarFormularioCaixa('clonar');
 		}
 	});
 
-	$(document).on('click', '#kt_modal_new_target_novo', function(e) {
+	$(document).on('click', '#Dm_modal_caixa_novo', function(e) {
 		e.preventDefault();
 		if (typeof window.enviarFormularioCaixa === 'function') {
 			window.enviarFormularioCaixa('branco');

@@ -1,28 +1,3 @@
-    <!--end::Toolbar container-->
-    <div class="app-container container-xxl">
-        <div class="separator"></div>
-        <!--begin::Nav-->
-        <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold">
-            <!--begin::Nav item-->
-            <li class="nav-item">
-                <a class="nav-link text-active-primary py-5 me-6 {{ (!request()->has('tab') || request('tab') !== 'relatorios') ? 'active' : '' }}"
-                    href="{{ route('caixa.index') }}">
-                    Receita/Despesa
-                </a>
-            </li>
-            <!--end::Nav item-->
-            <!--begin::Nav item-->
-            <li class="nav-item">
-                <a class="nav-link text-active-primary py-5 me-6 {{ request('tab') === 'relatorios' ? 'active' : '' }}"
-                    href="{{ route('caixa.index', ['tab' => 'relatorios']) }}">
-                    Relatórios
-                </a>
-            </li>
-            <!--end::Nav item-->
-        </ul>
-        <!--end::Nav-->
-    </div>
-<!--end::Toolbar-->
 <!--begin::Card header-->
 <div class="card-header align-items-center py-5 gap-2 gap-md-5">
 
