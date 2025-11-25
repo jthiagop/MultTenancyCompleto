@@ -1,9 +1,9 @@
 <div class="row no-gutters">
     <div class="12 col-sm-12 col-md-8">
-        <div class="card mb-6 mb-xl-9">
+        <div class="card mb-1 mb-xl-9">
             <div class="card-body pt-9 pb-0">
                 <!--begin::Details-->
-                <div class="d-flex flex-wrap flex-sm-nowrap mb-6">
+                <div class="d-flex flex-wrap flex-sm-nowrap mb-1">
                     <!--begin::Image-->
                     <div
                         class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
@@ -26,8 +26,7 @@
                                 <!--end::Status-->
                                 <!--begin::Description-->
                                 <div class="d-flex flex-wrap fw-semibold mb-4 fs-5 text-gray-400">
-                                    Todos os
-                                    lançamentos relacionados ao Banco</div>
+                                    Todos os lançamentos relacionados ao Banco</div>
                                 <!--end::Description-->
                             </div>
                             <!--end::Details-->
@@ -149,6 +148,14 @@
                         <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'bancos' ? 'active' : '' }}"
                             href="{{ route('banco.list', ['tab' => 'bancos']) }}">
                             Bancos
+                        </a>
+                    </li>
+                    <!--end::Nav item-->
+                    <!--begin::Nav item-->
+                    <li class="nav-item">
+                        <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'relatorios' ? 'active' : '' }}"
+                            href="{{ route('banco.list', ['tab' => 'relatorios']) }}">
+                            Relatórios
                         </a>
                     </li>
                     <!--end::Nav item-->

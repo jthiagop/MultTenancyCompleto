@@ -88,7 +88,7 @@
                             <!--begin::Menu Item-->
                             <div class="menu-item px-3">
                                 <a href="#" class="menu-link px-3" data-bs-toggle="modal"
-                                    data-bs-target="#Dm_modal_financeiro" data-tipo="receita"
+                                    data-bs-target="#Dm_modal_financeiro" data-tipo="receita" data-origem="Banco"
                                     aria-label="Adicionar nova receita">
                                     <span class="me-2">💰</span> Nova Receita
                                 </a>
@@ -97,7 +97,7 @@
                             <!--begin::Menu Item-->
                             <div class="menu-item px-3">
                                 <a href="#" class="menu-link px-3" data-bs-toggle="modal"
-                                    data-bs-target="#Dm_modal_financeiro" data-tipo="despesa"
+                                    data-bs-target="#Dm_modal_financeiro" data-tipo="despesa" data-origem="Banco"
                                     aria-label="Adicionar nova despesa">
                                     <span class="me-2">💸</span> Nova Despesa
                                 </a>

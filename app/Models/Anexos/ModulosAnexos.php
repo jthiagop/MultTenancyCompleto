@@ -16,9 +16,12 @@ class ModulosAnexos extends Model
     protected $fillable = [
         'anexavel_id',
         'anexavel_type',
+        'forma_anexo',
         'nome_arquivo',
         'caminho_arquivo',
+        'link',
         'tipo_arquivo',
+        'tipo_anexo',
         'extensao_arquivo',
         'mime_type',
         'tamanho_arquivo',

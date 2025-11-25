@@ -22,6 +22,7 @@ class EntidadeFinanceira extends Model
         'banco_id',
         'agencia',
         'conta',
+        'account_type',
         'saldo_inicial',
         'saldo_atual',
         'descricao',

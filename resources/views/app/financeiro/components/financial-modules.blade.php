@@ -1,9 +1,6 @@
 <!--begin::Financial Modules-->
-<div class="card mb-5 mb-xl-10">
-    <div class="card-body py-10">
-        <div class="card-title mb-10">
-            <h2>Módulos de Movimentação Financeira</h2>
-        </div>
+    <div class="card-body ">
+
         <div class="row">
             <!--begin::Caixa Card-->
             <div class="col-12 col-md-6 hover-elevate-up">
@@ -70,7 +67,6 @@
             <!--end::Banco Card-->
         </div>
     </div>
-</div>
 <!--end::Financial Modules-->
 
 <script>

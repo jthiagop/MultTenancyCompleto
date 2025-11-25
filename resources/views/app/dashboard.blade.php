@@ -7,181 +7,203 @@
             <x-toolbar :company="$company" />
             <!--end::Toolbar-->
             <!--begin::DateTime-->
-            <div class="text-center mb-5">
+            <div class="text-center">
                 <span id="datetime" class="fs-6 fw-semibold text-gray-600"></span>
             </div>
             <!--end::DateTime-->
             <!--begin::Content container-->
             <div id="kt_app_content_container" class="app-container container-xxl">
                 <!--begin::Input group-->
-                <div id="kt_app_content" class="app-content flex-column-xxl">
-                    <!--begin::Graph-->
-                    <div class="card card-flush h-lg-100">
-                        <!--begin::Card header-->
-                        <div class="card-header mt-6 text-center">
-                            <div class="card-title flex-column text-center">
-                                <h3 class="fw-bold mb-1">Módulos do Sistema</h3>
-                            </div>
+                <div id="kt_app_content" class="app-content">
 
-                            <!--begin::Row-->
-                            <div class="row mb-5 mt-6">
-                                <!--begin::Col - Financeiro-->
-                                <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
-                                    <a href="{{ route('caixa.index') }}"
-                                        class="btn btn-outline btn-outline-dashed btn-active-light-primary p-4 d-flex align-items-center"
-                                        aria-label="Acessar módulo Financeiro">
-                                        <div class="icon-container me-5">
+                    <!--begin::Card header-->
+                    <div class="card-header text-center">
+                        <!--begin::Row-->
+                        <div class="row">
+                            <!--begin::Col - Financeiro-->
+                            <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
+                                <a href="{{ route('caixa.index') }}"
+                                    class="card card-flush card-dashed btn btn-outline btn-dashed btn-active-light-primary d-flex align-items-center"
+                                    aria-label="Acessar módulo Financeiro">
+                                    <div class="d-flex align-items-center w-100">
+                                        <!--begin::Imagem - Lado Esquerdo-->
+                                        <div class="icon-container me-4 flex-shrink-0">
                                             <img loading="lazy" width="75px" height="75px"
                                                 src="/assets/media/png/financeiro.svg" alt="Ícone Financeiro">
                                         </div>
-                                        <span class="d-block fw-semibold text-start">
+                                        <!--end::Imagem-->
+                                        <!--begin::Texto - Lado Direito-->
+                                        <div class="flex-grow-1 text-start">
                                             <span class="text-dark fw-bold d-block fs-4 mb-2">Financeiro</span>
                                             <span class="text-gray-600 fw-semibold fs-6">Cadastros financeiros,
                                                 movimentações</span>
-                                        </span>
-                                    </a>
-                                </div>
-                                <!--end::Col - Financeiro-->
+                                        </div>
+                                        <!--end::Texto-->
+                                    </div>
+                                </a>
+                            </div>
+                            <!--end::Col - Financeiro-->
 
-                                <!--begin::Col - Patrimônio-->
-                                <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
-                                    <a href="{{ route('patrimonio.index') }}"
-                                        class="btn btn-outline btn-outline-dashed btn-active-light-primary p-4 d-flex align-items-center"
-                                        aria-label="Acessar módulo Patrimônio">
-                                        <div class="icon-container me-5">
+                            <!--begin::Col - Patrimônio-->
+                            <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
+                                <a href="{{ route('patrimonio.index') }}"
+                                    class="card card-flush card-dashed btn btn-outline btn-dashed btn-active-light-primary  d-flex align-items-center"
+                                    aria-label="Acessar módulo Patrimônio">
+                                    <div class="d-flex align-items-center w-100">
+                                        <!--begin::Imagem - Lado Esquerdo-->
+                                        <div class="icon-container me-4 flex-shrink-0">
                                             <img loading="lazy" width="75px" height="75px"
                                                 src="/assets/media/png/house3d.png" alt="Ícone Patrimônio">
                                         </div>
-                                        <span class="d-block fw-semibold text-start">
+                                        <!--end::Imagem-->
+                                        <!--begin::Texto - Lado Direito-->
+                                        <div class="flex-grow-1 text-start">
                                             <span class="text-dark fw-bold d-block fs-4 mb-2">Patrimônio</span>
                                             <span class="text-gray-600 fw-semibold fs-6">Gestão patrimonial, foro e
                                                 laudêmio</span>
-                                        </span>
-                                    </a>
-                                </div>
-                                <!--end::Col - Patrimônio-->
+                                        </div>
+                                        <!--end::Texto-->
+                                    </div>
+                                </a>
+                            </div>
+                            <!--end::Col - Patrimônio-->
 
-                                {{-- 
-                                    Vamos assumir que a permissão para acessar a contabilidade 
-                                    é a role 'admin'. Você pode mudar para qualquer outra role, 
+                            {{--
+                                    Vamos assumir que a permissão para acessar a contabilidade
+                                    é a role 'admin'. Você pode mudar para qualquer outra role,
                                     como 'contador', se preferir.
                                 --}}
-                                @if (auth()->user()->hasRole('admin'))
-                                    <!--begin::Col - Contabilidade (DESBLOQUEADO)-->
-                                    <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
-                                        {{-- O link agora é funcional e aponta para a rota da contabilidade --}}
-                                        <a href="{{ route('contabilidade.index') }}"
-                                            class="btn btn-outline btn-outline-dashed btn-active-light-primary p-4 d-flex align-items-center"
-                                            aria-label="Acessar Módulo Contabilidade">
-                                            <div class="icon-container me-5">
+                            @if (auth()->user()->hasRole('admin'))
+                                <!--begin::Col - Contabilidade (DESBLOQUEADO)-->
+                                <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
+                                    {{-- O link agora é funcional e aponta para a rota da contabilidade --}}
+                                    <a href="{{ route('contabilidade.index') }}"
+                                        class="card card-flush card-dashed btn btn-outline btn-dashed btn-active-light-primary  d-flex align-items-center"
+                                        aria-label="Acessar Módulo Contabilidade">
+                                        <div class="d-flex align-items-center w-100">
+                                            <!--begin::Imagem - Lado Esquerdo-->
+                                            <div class="icon-container me-4 flex-shrink-0">
                                                 <img loading="lazy" width="75px" height="75px"
                                                     src="/assets/media/png/contabilidade.png" alt="Ícone Contabilidade">
                                             </div>
-                                            <span class="d-block fw-semibold text-start">
+                                            <!--end::Imagem-->
+                                            <!--begin::Texto - Lado Direito-->
+                                            <div class="flex-grow-1 text-start">
                                                 <span class="text-dark fw-bold d-block fs-4 mb-2">Contabilidade</span>
                                                 {{-- O texto agora indica que o módulo está acessível --}}
                                                 <span class="text-gray-600 fw-semibold fs-6">Gerenciar plano de contas e
                                                     DE/PARA.</span>
-                                            </span>
-                                        </a>
-                                    </div>
-                                    <!--end::Col - Contabilidade-->
-                                @else
-                                    <!--begin::Col - Contabilidade (BLOQUEADO)-->
-                                    <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
-                                        {{-- O link está desabilitado e não leva a lugar nenhum --}}
-                                        <a href="#"
-                                            class="btn btn-outline btn-outline-dashed btn-outline-danger disabled p-4 d-flex align-items-center"
-                                            aria-label="Módulo Contabilidade bloqueado" aria-disabled="true">
-                                            <div class="icon-container me-5">
-                                                <img loading="lazy" width="75px" height="75px"
-                                                    src="/assets/media/png/contabilidade.png" alt="Ícone Contabilidade">
                                             </div>
-                                            <span class="d-block fw-semibold text-start">
-                                                <span class="text-dark fw-bold d-block fs-4 mb-2">Contabilidade</span>
-                                                <span class="text-gray-600 fw-semibold fs-6">Módulo bloqueado</span>
-                                            </span>
-                                            <div class="d-flex justify-content-end ms-auto">
-                                                {{-- O ícone é um cadeado fechado e vermelho --}}
-                                                <i class="fa-solid fa-lock fs-2 text-danger"
-                                                    aria-label="Módulo Contabilidade bloqueado"></i>
-                                            </div>
-                                        </a>
-                                    </div>
-                                    <!--end::Col - Contabilidade-->
-                                @endif
-                                <!--begin::Col - Dízimo e Doações-->
+                                            <!--end::Texto-->
+                                        </div>
+                                    </a>
+                                </div>
+                                <!--end::Col - Contabilidade-->
+                            @else
+                                <!--begin::Col - Contabilidade (BLOQUEADO)-->
                                 <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
+                                    {{-- O link está desabilitado e não leva a lugar nenhum --}}
                                     <a href="#"
-                                        class="btn btn-outline btn-outline-dashed btn-active-light-primary disabled p-4 d-flex align-items-center"
-                                        aria-label="Módulo Dízimo e Doações em desenvolvimento" aria-disabled="true">
+                                        class="btn btn-outline btn-outline-dashed btn-outline-danger disabled p-4 d-flex align-items-center"
+                                        aria-label="Módulo Contabilidade bloqueado" aria-disabled="true">
                                         <div class="icon-container me-5">
+                                            <img loading="lazy" width="75px" height="75px"
+                                                src="/assets/media/png/contabilidade.png" alt="Ícone Contabilidade">
+                                        </div>
+                                        <span class="d-block fw-semibold text-start">
+                                            <span class="text-dark fw-bold d-block fs-4 mb-2">Contabilidade</span>
+                                            <span class="text-gray-600 fw-semibold fs-6">Módulo bloqueado</span>
+                                        </span>
+                                        <div class="d-flex justify-content-end ms-auto">
+                                            {{-- O ícone é um cadeado fechado e vermelho --}}
+                                            <i class="fa-solid fa-lock fs-2 text-danger"
+                                                aria-label="Módulo Contabilidade bloqueado"></i>
+                                        </div>
+                                    </a>
+                                </div>
+                                <!--end::Col - Contabilidade-->
+                            @endif
+                            <!--begin::Col - Dízimo e Doações-->
+                            <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
+                                <a href="#"
+                                    class="card card-flush card-dashed btn btn-outline btn-dashed btn-active-light-primary  d-flex align-items-center disabled"
+                                    aria-label="Acessar Módulo Contabilidade">
+                                    <div class="d-flex align-items-center w-100">
+                                        <!--begin::Imagem - Lado Esquerdo-->
+                                        <div class="icon-container me-4 flex-shrink-0">
                                             <img loading="lazy" width="75px" height="75px"
                                                 src="/assets/media/png/dizimo.png" alt="Ícone Dízimo e Doações">
                                         </div>
-                                        <span class="d-block fw-semibold text-start">
+                                        <!--end::Imagem-->
+                                        <!--begin::Texto - Lado Direito-->
+                                        <div class="flex-grow-1 text-start">
                                             <span class="text-dark fw-bold d-block fs-4 mb-2">Dízimo e Doações</span>
-                                            <span class="text-gray-600 fw-semibold fs-6">Em desenvolvimento</span>
-                                        </span>
-                                    </a>
-                                </div>
-                                <!--end::Col - Dízimo e Doações-->
+                                            <span class="text-gray-600 fw-semibold fs-6">Gerenciamento de dízimo e
+                                                doações</span>
+                                        </div>
+                                        <!--end::Texto-->
+                                    </div>
+                                </a>
+                            </div>
+                            <!--end::Col - Dízimo e Doações-->
 
-                                <!--begin::Col - Cadastro de Fiéis-->
-                                <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
-                                    <a href="{{ route('fieis.index') }}"
-                                        class="btn btn-outline btn-outline-dashed btn-active-light-primary p-4 d-flex align-items-center"
-                                        aria-label="Acessar módulo Cadastro de Fiéis">
-                                        <div class="icon-container me-5">
+                            <!--begin::Col - Cadastro de Fiéis-->
+                            <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
+                                <a href="{{ route('fieis.index') }}"
+                                    class="card card-flush card-dashed btn btn-outline btn-dashed btn-active-light-primary  d-flex align-items-center"
+                                    aria-label="Acessar módulo Cadastro de Fiéis">
+                                    <div class="d-flex align-items-center w-100">
+                                        <!--begin::Imagem - Lado Esquerdo-->
+                                        <div class="icon-container me-4 flex-shrink-0">
                                             <img loading="lazy" width="75px" height="75px"
                                                 src="/assets/media/png/fieis.png" alt="Ícone Cadastro de Fiéis">
                                         </div>
-                                        <span class="d-block fw-semibold text-start">
+                                        <!--end::Imagem-->
+                                        <!--begin::Texto - Lado Direito-->
+                                        <div class="flex-grow-1 text-start">
                                             <span class="text-dark fw-bold d-block fs-4 mb-2">Cadastro de Fiéis</span>
                                             <span class="text-gray-600 fw-semibold fs-6">Gerenciamento de membros e
                                                 contribuições</span>
-                                        </span>
-                                    </a>
-                                </div>
-                                <!--end::Col - Cadastro de Fiéis-->
+                                        </div>
+                                        <!--end::Texto-->
+                                    </div>
+                                </a>
+                            </div>
+                            <!--end::Col - Cadastro de Fiéis-->
 
-                                <!--begin::Col - Cadastro de Sepulturas-->
-                                <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
-                                    <a href="{{ route('cemiterio.index') }}"
-                                        class="btn btn-outline btn-outline-dashed btn-active-light-primary p-4 d-flex align-items-center"
-                                        aria-label="Acessar módulo Cadastro de Sepulturas">
-                                        <div class="icon-container me-5">
+                            <!--begin::Col - Cadastro de Sepulturas-->
+                            <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
+                                <a href="{{ route('cemiterio.index') }}"
+                                    class="card card-flush card-dashed btn btn-outline btn-dashed btn-active-light-primary  d-flex align-items-center"
+                                    aria-label="Acessar módulo Cadastro de Sepulturas">
+                                    <div class="d-flex align-items-center w-100">
+                                        <!--begin::Imagem - Lado Esquerdo-->
+                                        <div class="icon-container me-4 flex-shrink-0">
                                             <img loading="lazy" width="75px" height="75px"
                                                 src="/assets/media/png/lapide2.png"
                                                 alt="Ícone Cadastro de Sepulturas">
                                         </div>
-                                        <span class="d-block fw-semibold text-start">
+                                        <!--end::Imagem-->
+                                        <!--begin::Texto - Lado Direito-->
+                                        <div class="flex-grow-1 text-start">
                                             <span class="text-dark fw-bold d-block fs-4 mb-2">Cadastro de
                                                 Sepulturas</span>
                                             <span class="text-gray-600 fw-semibold fs-6">Gerenciamento de
-                                                sepultamentos, manutenção e pagamentos</span>
-                                        </span>
-                                    </a>
-                                </div>
-                                <!--end::Col - Cadastro de Sepulturas-->
+                                                sepultamentos,
+                                                manutenção e pagamentos</span>
+                                        </div>
+                                        <!--end::Texto-->
+                                    </div>
+                                </a>
                             </div>
-                            <!--end::Row-->
+                            <!--end::Col - Cadastro de Sepulturas-->
                         </div>
-                        <!--end::Card header-->
+                        <!--end::Row-->
                     </div>
-                    <!--end::Graph-->
-
-                    <!--begin::Separator-->
-                    <div class="separator separator-dotted separator-content my-5 d-flex align-items-center">
-                        <span class="me-2">
-                            <i class="fa-solid fa-clock-rotate-left fa-3x"></i>
-                        </span>
-                        <span class="h1 mb-0">Resumo</span>
-                    </div>
-                    <!--end::Separator-->
+                    <!--end::Card header-->
 
                     <!--begin::Row-->
-                    <div class="row g-6 g-xl-9 mt-xl-1">
+                    <div class="row g-6 g-xl-9 mt-1">
                         <!--begin::Col - Resumo Financeiro-->
                         <div class="col-12 col-lg-5">
                             <div class="card card-flush h-lg-100">
@@ -271,20 +293,16 @@
                                         </div>
                                     </div>
                                     <div class="card-toolbar">
-                                        <select id="yearSelector" name="year" data-control="select2"
-                                            data-hide-search="true"
-                                            class="form-select form-select-solid form-select-sm fw-bold w-100px">
-                                            <option value="2025" {{ $selectedYear == 2025 ? 'selected' : '' }}>2025
-                                            </option>
-                                            <option value="2024" {{ $selectedYear == 2024 ? 'selected' : '' }}>2024
-                                            </option>
-                                            <option value="2022" {{ $selectedYear == 2022 ? 'selected' : '' }}>2022
-                                            </option>
-                                            <option value="2021" {{ $selectedYear == 2021 ? 'selected' : '' }}>2021
-                                            </option>
-                                            <option value="2020" {{ $selectedYear == 2020 ? 'selected' : '' }}>2020
-                                            </option>
-                                        </select>
+                                        <!--begin::Daterangepicker-->
+                                        <div data-kt-daterangepicker="true" data-kt-daterangepicker-opens="left"
+                                            data-kt-daterangepicker-range="this year"
+                                            class="btn btn-sm btn-light d-flex align-items-center px-4">
+                                            <!--begin::Display range-->
+                                            <i class="bi bi-calendar-date me-1 text-primary"></i>
+                                            <div class="text-gray-600 fw-bold">Selecione um período</div>
+                                            <!--end::Display range-->
+                                        </div>
+                                        <!--end::Daterangepicker-->
                                     </div>
                                 </div>
                                 <!--end::Card header-->
@@ -374,34 +392,127 @@
     // Dados do gráfico de área
     const areaChartData = @json($areaChartData);
 
-    // Atualização dinâmica do gráfico via AJAX
+    // Inicialização do Daterangepicker para o gráfico
     document.addEventListener('DOMContentLoaded', function() {
-        const yearSelector = document.getElementById('yearSelector');
-        yearSelector.addEventListener('change', function() {
-            const selectedYear = this.value;
-            // Tenta atualizar o gráfico via AJAX
-            fetch(`/api/data?year=${selectedYear}`, {
-                    method: 'GET'
-                })
-                .then(response => {
-                    if (!response.ok) throw new Error('Erro na requisição');
-                    return response.json();
-                })
-                .then(data => {
-                    // Função fictícia para atualizar o gráfico (substitua pelo código real do gráfico)
-                    updateChart(data);
-                })
-                .catch(error => {
-                    // Fallback para redirecionamento completo
-                    window.location.href = `?year=${selectedYear}`;
-                });
+        // Verificar se jQuery e daterangepicker estão disponíveis
+        if (typeof jQuery === 'undefined' || typeof $.fn.daterangepicker === 'undefined') {
+            console.error('jQuery ou daterangepicker não estão disponíveis');
+            return;
+        }
+
+        var element = document.querySelector('[data-kt-daterangepicker="true"]');
+        if (!element) {
+            return;
+        }
+
+        // Verificar se já foi inicializado
+        var isInitialized = element.getAttribute("data-kt-initialized");
+        if (isInitialized === "1") {
+            return;
+        }
+
+        var display = element.querySelector('.text-gray-600.fw-bold');
+        var attrOpens = element.hasAttribute('data-kt-daterangepicker-opens')
+            ? element.getAttribute('data-kt-daterangepicker-opens')
+            : 'left';
+        var range = element.getAttribute('data-kt-daterangepicker-range');
+
+        // Configurar datas iniciais baseadas no range
+        var start = moment().startOf('year');
+        var end = moment().endOf('year');
+
+        if (range === "this year") {
+            start = moment().startOf('year');
+            end = moment().endOf('year');
+        } else if (range === "this month") {
+            start = moment().startOf('month');
+            end = moment().endOf('month');
+        }
+
+        var cb = function(start, end) {
+            if (display) {
+                if (start.isSame(end, "day")) {
+                    display.innerHTML = start.format('D MMM YYYY');
+                } else {
+                    display.innerHTML = start.format('D MMM YYYY') + ' - ' + end.format('D MMM YYYY');
+                }
+            }
+        };
+
+        $(element).daterangepicker({
+            startDate: start,
+            endDate: end,
+            opens: attrOpens,
+            ranges: {
+                'Este Ano': [moment().startOf('year'), moment().endOf('year')],
+                'Ano Passado': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')],
+                'Este Mês': [moment().startOf('month'), moment().endOf('month')],
+                'Mês Passado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                'Últimos 7 Dias': [moment().subtract(6, 'days'), moment()],
+                'Últimos 30 Dias': [moment().subtract(29, 'days'), moment()],
+                'Hoje': [moment(), moment()],
+                'Ontem': [moment().subtract(1, 'days'), moment().subtract(1, 'days')]
+            },
+            locale: {
+                format: "DD/MM/YYYY",
+                applyLabel: "Aplicar",
+                cancelLabel: "Cancelar",
+                fromLabel: "De",
+                toLabel: "Até",
+                customRangeLabel: "Personalizado",
+                weekLabel: "S",
+                daysOfWeek: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
+                monthNames: [
+                    "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+                    "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+                ],
+                firstDay: 0
+            }
+        }, cb);
+
+        // Callback quando o período é alterado
+        $(element).on('apply.daterangepicker', function(ev, picker) {
+            var startDate = picker.startDate.format('YYYY-MM-DD');
+            var endDate = picker.endDate.format('YYYY-MM-DD');
+
+            // Atualizar o gráfico via AJAX
+            fetch(`/dashboard?start_date=${startDate}&end_date=${endDate}`, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    // Se não for JSON, fazer reload da página
+                    window.location.href = `?start_date=${startDate}&end_date=${endDate}`;
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data) {
+                    // Atualizar os dados do gráfico
+                    if (typeof areaChartData !== 'undefined' && typeof KTProjectOverview !== 'undefined') {
+                        areaChartData = data.areaChartData;
+                        // Recriar o gráfico com os novos dados
+                        if (typeof KTProjectOverview !== 'undefined' && typeof KTProjectOverview.initGraph === 'function') {
+                            KTProjectOverview.initGraph();
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                // Fallback para redirecionamento completo
+                var startDate = picker.startDate.format('YYYY-MM-DD');
+                var endDate = picker.endDate.format('YYYY-MM-DD');
+                window.location.href = `?start_date=${startDate}&end_date=${endDate}`;
+            });
         });
 
-        // Função fictícia para atualizar o gráfico (substitua pela lógica real do gráfico)
-        function updateChart(data) {
-            console.log('Atualizando gráfico com dados:', data);
-            // Exemplo: Atualize o canvas Dm_project_overview_graph com os novos dados
-        }
+        cb(start, end);
+        element.setAttribute("data-kt-initialized", "1");
     });
 </script>
 <!--end::Custom Javascript-->

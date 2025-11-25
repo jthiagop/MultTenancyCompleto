@@ -24,6 +24,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Browsershot\Browsershot;
 
 
 class BancoController extends Controller
@@ -112,6 +113,14 @@ class BancoController extends Controller
         $ValorSaidas = Banco::getBancoSaida();
         $centrosAtivos = CostCenter::forActiveCompany()->get();
 
+        // Se a tab ativa for 'relatorios', buscar entidades financeiras do tipo 'banco' para o select
+        $entidadesRelatorio = [];
+        if ($activeTab === 'relatorios') {
+            $entidadesRelatorio = EntidadeFinanceira::forActiveCompany()
+                ->where('tipo', 'banco')
+                ->orderBy('nome')
+                ->get();
+        }
 
         // Lista de prioridades para os status de conciliação
         $prioridadeStatus = ['divergente', 'em análise', 'parcial', 'pendente', 'ajustado', 'ignorado', 'ok'];
@@ -164,6 +173,7 @@ class BancoController extends Controller
             'anoSelecionado' => $anoSelecionado,
             'perPage' => $perPage,
             'entidades' => $entidades,
+            'entidadesRelatorio' => $entidadesRelatorio,
         ], $dadosGrafico));
     }
 
@@ -556,24 +566,83 @@ class BancoController extends Controller
      */
     private function processarAnexos(Request $request, TransacaoFinanceira $caixa)
     {
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $file) {
-                // Nome original do arquivo (sem caminho completo)
-                $nomeOriginal = $file->getClientOriginalName();
-                $anexoName = time() . '_' . $file->getClientOriginalName();
-                $anexoPath = $file->storeAs('anexos', $anexoName, 'public');
+        // Verifica se há anexos no formato anexos[index][arquivo] ou anexos[index][link]
+        if (!$request->has('anexos') || !is_array($request->input('anexos'))) {
+            return;
+        }
 
-                ModulosAnexo::create([
-                    'anexavel_id'   => $caixa->id,                   // ID da transacao_financeira
-                    'anexavel_type' => TransacaoFinanceira::class,   // caminho da classe do Model
-                    'nome_arquivo'  => $nomeOriginal,
-                    'caminho_arquivo' => $anexoPath,
-                    'tamanho_arquivo' => $file->getSize(),
-                    'tipo_arquivo'  => $file->getMimeType() ?? '',  // se quiser
-                    'created_by'    => Auth::id(),
-                    'created_by_name' => Auth::user()->name,
-                    // etc., se tiver mais campos
-                ]);
+        $anexos = $request->input('anexos');
+        $allFiles = $request->allFiles();
+
+        foreach ($anexos as $index => $anexoData) {
+            $formaAnexo = $anexoData['forma_anexo'] ?? 'arquivo';
+            $tipoAnexo = $anexoData['tipo_anexo'] ?? null;
+            $descricao = $anexoData['descricao'] ?? null;
+
+            if ($formaAnexo === 'arquivo') {
+                // Tenta encontrar o arquivo usando diferentes chaves
+                $file = null;
+
+                // Tenta com notação de ponto
+                $fileKey = "anexos.{$index}.arquivo";
+                if ($request->hasFile($fileKey)) {
+                    $file = $request->file($fileKey);
+                }
+
+                // Se não encontrou, tenta buscar em allFiles
+                if (!$file && isset($allFiles['anexos'][$index]['arquivo'])) {
+                    $file = $allFiles['anexos'][$index]['arquivo'];
+                }
+
+                if ($file && $file->isValid()) {
+                    try {
+                        $nomeOriginal = $file->getClientOriginalName();
+                        $anexoName = time() . '_' . $nomeOriginal;
+                        $anexoPath = $file->storeAs('anexos', $anexoName, 'public');
+
+                        ModulosAnexo::create([
+                            'anexavel_id'     => $caixa->id,
+                            'anexavel_type'   => TransacaoFinanceira::class,
+                            'forma_anexo'     => 'arquivo',
+                            'nome_arquivo'    => $nomeOriginal,
+                            'caminho_arquivo' => $anexoPath,
+                            'tipo_arquivo'    => $file->getMimeType() ?? '',
+                            'extensao_arquivo' => $file->getClientOriginalExtension(),
+                            'mime_type'       => $file->getMimeType() ?? '',
+                            'tamanho_arquivo' => $file->getSize(),
+                            'tipo_anexo'      => $tipoAnexo,
+                            'descricao'       => $descricao,
+                            'status'          => 'ativo',
+                            'data_upload'     => now(),
+                            'created_by'     => Auth::id(),
+                            'created_by_name' => Auth::user()->name,
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Erro ao salvar anexo', ['error' => $e->getMessage()]);
+                    }
+                }
+            } elseif ($formaAnexo === 'link') {
+                // Processa link
+                $link = $anexoData['link'] ?? null;
+
+                if ($link) {
+                    try {
+                        ModulosAnexo::create([
+                            'anexavel_id'     => $caixa->id,
+                            'anexavel_type'   => TransacaoFinanceira::class,
+                            'forma_anexo'     => 'link',
+                            'link'            => $link,
+                            'tipo_anexo'      => $tipoAnexo,
+                            'descricao'       => $descricao,
+                            'status'          => 'ativo',
+                            'data_upload'     => now(),
+                            'created_by'     => Auth::id(),
+                            'created_by_name' => Auth::user()->name,
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('Erro ao salvar link', ['error' => $e->getMessage()]);
+                    }
+                }
             }
         }
     }
@@ -795,5 +864,120 @@ class BancoController extends Controller
             Flasher::addError('Erro ao excluir transação: ' . $e->getMessage());
             return redirect()->back();
         }
+    }
+
+    /**
+     * Gera relatório PDF de transações bancárias
+     */
+    public function gerarRelatorio(Request $request)
+    {
+        // Validação
+        $validated = $request->validate([
+            'data_inicial' => 'required|date',
+            'data_final' => 'required|date|after_or_equal:data_inicial',
+            'entidade_id' => 'required|exists:entidades_financeiras,id',
+            'cost_center_id' => 'nullable|exists:cost_centers,id',
+            'tipo' => 'nullable|in:entrada,saida,ambos',
+            'orientacao' => 'nullable|in:horizontal,vertical',
+        ]);
+
+        $companyId = session('active_company_id');
+        if (!$companyId) {
+            return redirect()->route('dashboard')->with('error', 'Por favor, selecione uma empresa.');
+        }
+
+        // Verificar se a entidade pertence à empresa e é do tipo 'banco'
+        $entidade = EntidadeFinanceira::forActiveCompany()
+            ->where('id', $validated['entidade_id'])
+            ->where('tipo', 'banco')
+            ->firstOrFail();
+
+        // Converter datas
+        $dataInicial = Carbon::createFromFormat('Y-m-d', $validated['data_inicial'])->startOfDay();
+        $dataFinal = Carbon::createFromFormat('Y-m-d', $validated['data_final'])->endOfDay();
+        $tipo = $validated['tipo'] ?? 'ambos';
+        $orientacao = $validated['orientacao'] ?? 'horizontal';
+
+        // Buscar transações
+        $query = TransacaoFinanceira::with(['entidadeFinanceira', 'lancamentoPadrao', 'costCenter'])
+            ->where('company_id', $companyId)
+            ->where('entidade_id', $entidade->id)
+            ->whereBetween('data_competencia', [$dataInicial, $dataFinal])
+            ->where(function ($q) {
+                $q->where('origem', 'Banco')
+                  ->orWhere('origem', 'Conciliação Bancária');
+            });
+
+        // Filtro por centro de custo
+        if (!empty($validated['cost_center_id'])) {
+            $query->where('cost_center_id', $validated['cost_center_id']);
+        }
+
+        // Filtro por tipo
+        if ($tipo !== 'ambos') {
+            $query->where('tipo', $tipo);
+        }
+
+        $transacoes = $query->orderBy('data_competencia')->get();
+
+        // Agrupar por origem
+        $dados = [];
+        $totalEntradas = 0;
+        $totalSaidas = 0;
+
+        foreach ($transacoes->groupBy('origem') as $origem => $items) {
+            $totEntrada = $items->where('tipo', 'entrada')->sum('valor');
+            $totSaida = $items->where('tipo', 'saida')->sum('valor');
+            $totalEntradas += $totEntrada;
+            $totalSaidas += $totSaida;
+
+            $dados[] = [
+                'origem' => $origem,
+                'items' => $items,
+                'totEntrada' => $totEntrada,
+                'totSaida' => $totSaida,
+            ];
+        }
+
+        // Buscar empresa
+        $company = \App\Models\Company::with('addresses')->find($companyId);
+
+        // Renderizar HTML
+        $html = view('app.financeiro.banco.tabs.relatorio_pdf', [
+            'dados' => $dados,
+            'dataInicial' => $dataInicial->format('d/m/Y'),
+            'dataFinal' => $dataFinal->format('d/m/Y'),
+            'entidade' => $entidade,
+            'costCenter' => !empty($validated['cost_center_id'])
+                ? CostCenter::find($validated['cost_center_id'])
+                : null,
+            'tipo' => $tipo,
+            'orientacao' => $orientacao,
+            'totalEntradas' => $totalEntradas,
+            'totalSaidas' => $totalSaidas,
+            'company' => $company,
+        ])->render();
+
+        // Gerar PDF
+        $browsershot = Browsershot::html($html)
+            ->format('A4')
+            ->showBackground()
+            ->margins(8, 8, 8, 8);
+
+        if ($orientacao === 'horizontal') {
+            $browsershot->landscape();
+        } else {
+            $browsershot->portrait();
+        }
+
+        $pdf = $browsershot->pdf();
+
+        $filename = 'relatorio-banco-' . $entidade->nome . '-' . $dataInicial->format('Y-m-d') . '-' . $dataFinal->format('Y-m-d') . '.pdf';
+        $filename = preg_replace('/[^a-zA-Z0-9\-_\.]/', '_', $filename);
+
+        return response($pdf, 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $filename . '"',
+        ]);
     }
 }

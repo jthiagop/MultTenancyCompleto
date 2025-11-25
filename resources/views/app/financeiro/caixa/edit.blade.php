@@ -585,7 +585,7 @@
                                                                 {{ $file->id }}</td>
                                                             <!-- Nome -->
                                                             <td>
-                                                                <x-file-icon :file="$file->caminho_arquivo" />
+                                                                <x-file-icon :anexo="$file" />
                                                             </td>
                                                             <!-- Tamanho -->
                                                             <td>

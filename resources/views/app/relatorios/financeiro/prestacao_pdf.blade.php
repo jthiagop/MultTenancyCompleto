@@ -18,21 +18,121 @@
         .page-break { page-break-after: always; }
         /* zebra na tabela */
         table tbody tr:nth-child(odd) { background: #f8f9fa; }
+
+        /* Estilo do cabeçalho similar à imagem */
+        .header-container {
+            border-top: 1px solid #000;
+            border-bottom: 1px solid #000;
+            padding: 15px 0;
+            margin-bottom: 20px;
+        }
+        .header-content {
+            display: table;
+            width: 100%;
+            table-layout: fixed;
+        }
+        .header-logo {
+            display: table-cell;
+            width: 100px;
+            vertical-align: middle;
+            text-align: center;
+        }
+        .header-logo img {
+            max-width: 100px;
+            max-height: 100px;
+            width: auto;
+            height: auto;
+        }
+        .header-text {
+            display: table-cell;
+            text-align: center;
+            vertical-align: middle;
+            padding: 0 15px;
+        }
+        .header-text h4 {
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0;
+            font-size: 1rem;
+            line-height: 1.3;
+            letter-spacing: 0.5px;
+        }
+        .header-text .subtitle {
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            margin-top: 3px;
+            line-height: 1.2;
+        }
+        .header-text small {
+            display: block;
+            font-size: 0.7rem;
+            line-height: 1.5;
+            margin-top: 3px;
+        }
     </style>
 </head>
 
 <body>
-    {{-- Cabeçalho --}}
-    <div class="text-center mb-2">
-        <img class="logo mb-1"
-             src="{{ public_path($company->avatar ?? 'assets/media/png/perfil.svg') }}"
-             alt="Logo">
-        <h4 class="mb-0">{{ $company->name }}</h4>
-        <small>CNPJ: {{ $company->cnpj }}</small><br>
-        <small>{{ $company->addresses->rua ?? '' }} –
-               {{ $company->addresses->cidade ?? '' }}/{{ $company->addresses->uf ?? '' }}</small><br>
-        <small>Fone: {{ $company->phone }} – E-mail: {{ $company->email }}</small>
-        <hr>
+    {{-- Cabeçalho estilo imagem --}}
+    <div class="header-container">
+        <div class="header-content">
+            {{-- Logo esquerdo --}}
+            <div class="header-logo">
+                @php
+                    $logoPath = $company->avatar
+                        ? storage_path('app/public/' . $company->avatar)
+                        : public_path('assets/media/png/perfil.svg');
+                @endphp
+                @if(file_exists($logoPath))
+                    <img src="{{ $logoPath }}"
+                         alt="Logo"
+                         style="width: 100%; height: auto; max-height: 100px;">
+                @endif
+            </div>
+
+            {{-- Texto centralizado --}}
+            <div class="header-text">
+                <h4>{{ strtoupper($company->name) }}</h4>
+                <div class="subtitle">{{ strtoupper($company->name) }}</div>
+                <small>CNPJ: {{ $company->cnpj ?? '' }}</small>
+                <small>
+                    @if($company->addresses->rua ?? '')
+                        {{ $company->addresses->rua }}
+                        @if($company->addresses->numero ?? '')
+                            , {{ $company->addresses->numero }}
+                        @endif
+                        @if($company->addresses->bairro ?? '')
+                            - {{ $company->addresses->bairro }}
+                        @endif
+                        / {{ $company->addresses->cidade ?? '' }}-{{ $company->addresses->uf ?? '' }}
+                    @endif
+                </small>
+                <small>
+                    Fone: {{ $company->phone ?? '' }}
+                    @if($company->website ?? '')
+                        - Site: {{ $company->website }}
+                    @else
+                        - Site: -
+                    @endif
+                    - E-mail: {{ $company->email ?? '' }}
+                </small>
+            </div>
+
+            {{-- Logo direito --}}
+            <div class="header-logo">
+                @php
+                    $logoPath = $company->avatar
+                        ? storage_path('app/public/' . $company->avatar)
+                        : public_path('assets/media/png/perfil.svg');
+                @endphp
+                @if(file_exists($logoPath))
+                    <img src="{{ $logoPath }}"
+                         alt="Logo"
+                         style="width: 100%; height: auto; max-height: 100px;">
+                @endif
+            </div>
+        </div>
     </div>
 
     {{-- Filtros --}}

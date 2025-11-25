@@ -153,7 +153,10 @@
                                                     Entrada</option>
                                                 <option value="saida" {{ $lp->type === 'saida' ? 'selected' : '' }}>
                                                     Saída</option>
+                                                <option value="ambos" {{ $lp->type === 'ambos' ? 'selected' : '' }}>
+                                                    Ambos (Entrada e Saída)</option>
                                             </select>
+                                            <div class="form-text">Use "Ambos" para lançamentos que servem para entrada e saída (ex: Transferências)</div>
                                             @error('type')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror
@@ -338,14 +341,23 @@
                                                                 @php
                                                                     // Define a cor (classe) e o ícone com base no tipo
                                                                     $isEntrada = $lp->type === 'entrada';
-                                                                    $colorClass = $isEntrada ? 'success' : 'danger';
+                                                                    $isAmbos = $lp->type === 'ambos';
+                                                                    $colorClass = $isEntrada ? 'success' : ($isAmbos ? 'primary' : 'danger');
                                                                 @endphp
 
                                                                 <span
                                                                     class="badge badge-light-{{ $colorClass }} fs-base">
                                                                     <span
                                                                         class="svg-icon svg-icon-5 svg-icon-{{ $colorClass }} ms-n1">
-                                                                        @if ($isEntrada)
+                                                                        @if ($isAmbos)
+                                                                            <!-- Ícone de SETAS DUPLAS (azul) para Ambos -->
+                                                                            <svg width="24" height="24"
+                                                                                viewBox="0 0 24 24" fill="none"
+                                                                                xmlns="http://www.w3.org/2000/svg">
+                                                                                <path d="M12 4L8 8H11V16H13V8H16L12 4Z" fill="currentColor" />
+                                                                                <path d="M12 20L16 16H13V8H11V16H8L12 20Z" fill="currentColor" />
+                                                                            </svg>
+                                                                        @elseif ($isEntrada)
                                                                             <!-- Ícone de SETA PARA CIMA (verde) -->
                                                                             <svg width="24" height="24"
                                                                                 viewBox="0 0 24 24" fill="none"
@@ -387,7 +399,7 @@
                                                                             </svg>
                                                                         @endif
                                                                     </span>
-                                                                    {{ $lp->type }}
+                                                                    {{ $lp->type === 'ambos' ? 'Ambos' : ucfirst($lp->type) }}
                                                                 </span>
 
                                                                 <!--end::Label-->

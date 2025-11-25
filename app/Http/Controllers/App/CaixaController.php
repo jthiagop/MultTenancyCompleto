@@ -317,24 +317,64 @@ class CaixaController extends Controller
      */
     private function processarAnexos(Request $request, TransacaoFinanceira $caixa)
     {
-        if ($request->hasFile('files')) {
-            foreach ($request->file('files') as $file) {
-                // Nome original do arquivo (sem caminho completo)
-                $nomeOriginal = $file->getClientOriginalName();
-                $anexoName = time() . '_' . $file->getClientOriginalName();
-                $anexoPath = $file->storeAs('anexos', $anexoName, 'public');
+        // Verifica se há anexos no formato anexos[index][arquivo] ou anexos[index][link]
+        if (!$request->has('anexos') || !is_array($request->input('anexos'))) {
+            return;
+        }
 
-                ModulosAnexo::create([
-                    'anexavel_id'   => $caixa->id,                   // ID da transacao_financeira
-                    'anexavel_type' => TransacaoFinanceira::class,   // caminho da classe do Model
-                    'nome_arquivo'  => $nomeOriginal,
-                    'caminho_arquivo' => $anexoPath,
-                    'tamanho_arquivo' => $file->getSize(),
-                    'tipo_arquivo'  => $file->getMimeType() ?? '',  // se quiser
-                    'created_by'    => Auth::id(),
-                    'created_by_name' => Auth::user()->name,
-                    // etc., se tiver mais campos
-                ]);
+        $anexos = $request->input('anexos');
+
+        foreach ($anexos as $index => $anexoData) {
+            $formaAnexo = $anexoData['forma_anexo'] ?? 'arquivo';
+            $tipoAnexo = $anexoData['tipo_anexo'] ?? null;
+            $descricao = $anexoData['descricao'] ?? null;
+
+            if ($formaAnexo === 'arquivo') {
+                // Processa arquivo
+                $fileKey = "anexos.{$index}.arquivo";
+
+                if ($request->hasFile($fileKey)) {
+                    $file = $request->file($fileKey);
+                    $nomeOriginal = $file->getClientOriginalName();
+                    $anexoName = time() . '_' . $nomeOriginal;
+                    $anexoPath = $file->storeAs('anexos', $anexoName, 'public');
+
+                    ModulosAnexo::create([
+                        'anexavel_id'     => $caixa->id,
+                        'anexavel_type'   => TransacaoFinanceira::class,
+                        'forma_anexo'     => 'arquivo',
+                        'nome_arquivo'    => $nomeOriginal,
+                        'caminho_arquivo' => $anexoPath,
+                        'tipo_arquivo'    => $file->getMimeType() ?? '',
+                        'extensao_arquivo' => $file->getClientOriginalExtension(),
+                        'mime_type'       => $file->getMimeType() ?? '',
+                        'tamanho_arquivo' => $file->getSize(),
+                        'tipo_anexo'      => $tipoAnexo,
+                        'descricao'       => $descricao,
+                        'status'          => 'ativo',
+                        'data_upload'     => now(),
+                        'created_by'     => Auth::id(),
+                        'created_by_name' => Auth::user()->name,
+                    ]);
+                }
+            } elseif ($formaAnexo === 'link') {
+                // Processa link
+                $link = $anexoData['link'] ?? null;
+
+                if ($link) {
+                    ModulosAnexo::create([
+                        'anexavel_id'     => $caixa->id,
+                        'anexavel_type'   => TransacaoFinanceira::class,
+                        'forma_anexo'     => 'link',
+                        'link'            => $link,
+                        'tipo_anexo'      => $tipoAnexo,
+                        'descricao'       => $descricao,
+                        'status'          => 'ativo',
+                        'data_upload'     => now(),
+                        'created_by'     => Auth::id(),
+                        'created_by_name' => Auth::user()->name,
+                    ]);
+                }
             }
         }
     }
@@ -797,7 +837,7 @@ class CaixaController extends Controller
 
         try {
             $ids = $request->input('ids');
-            
+
             ContasFinanceiras::whereIn('id', $ids)->delete();
 
             return response()->json([
@@ -818,7 +858,7 @@ class CaixaController extends Controller
     public function getFilterOptions(Request $request)
     {
         $activeCompanyId = session('active_company_id');
-        
+
         $fornecedores = \App\Models\Fornecedor::orderBy('nome')->get(['id', 'nome']);
         $contas = EntidadeFinanceira::where('company_id', $activeCompanyId)
             ->orderBy('nome')

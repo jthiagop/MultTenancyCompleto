@@ -122,7 +122,10 @@
                                                     {{ old('type') === 'entrada' ? 'selected' : '' }}>Entrada</option>
                                                 <option value="saida" {{ old('type') === 'saida' ? 'selected' : '' }}>
                                                     Saída</option>
+                                                <option value="ambos" {{ old('type') === 'ambos' ? 'selected' : '' }}>
+                                                    Ambos (Entrada e Saída)</option>
                                             </select>
+                                            <div class="form-text">Use "Ambos" para lançamentos que servem para entrada e saída (ex: Transferências)</div>
                                             @error('type')
                                                 <div class="invalid-feedback">{{ $message }}</div>
                                             @enderror

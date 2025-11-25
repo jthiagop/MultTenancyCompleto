@@ -197,8 +197,8 @@
                                             <td>
                                                 <!--begin::Badges-->
                                                 <div
-                                                    class="badge {{ $lp->type === 'entrada' ? 'badge-light-success' : 'badge-light-danger' }}">
-                                                    {{ $lp->type }}
+                                                    class="badge {{ $lp->type === 'entrada' ? 'badge-light-success' : ($lp->type === 'ambos' ? 'badge-light-primary' : 'badge-light-danger') }}">
+                                                    {{ $lp->type === 'ambos' ? 'Ambos' : $lp->type }}
                                                 </div>
                                                 <!--end::Badges-->
                                             </td>

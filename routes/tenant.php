@@ -92,68 +92,68 @@ Route::middleware([
     // Rota específica para avatars
     Route::get('/avatar/{id}', function ($id) {
         $filePath = Storage::disk('public')->path($id);
-        
+
         // Verificar se o arquivo existe
         if (!file_exists($filePath)) {
             $defaultAvatar = public_path('assets/images/avatars/default-avatar.png');
-            
+
             // Se o avatar padrão não existir, criar um simples
             if (!file_exists($defaultAvatar)) {
                 // Criar diretório se não existir
                 if (!is_dir(dirname($defaultAvatar))) {
                     mkdir(dirname($defaultAvatar), 0755, true);
                 }
-                
+
                 // Criar um avatar padrão simples (SVG)
                 $svgContent = '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
                     <rect width="100" height="100" fill="#e5e7eb"/>
                     <circle cx="50" cy="35" r="15" fill="#9ca3af"/>
                     <path d="M20 80 Q50 60 80 80" stroke="#9ca3af" stroke-width="3" fill="none"/>
                 </svg>';
-                
+
                 file_put_contents($defaultAvatar, $svgContent);
             }
-            
+
             return response()->file($defaultAvatar);
         }
-        
+
         return response()->file($filePath);
     })->name('avatar');
 
     // Rota para servir arquivos públicos
     Route::get('/file/{path}', function ($path) {
         $filePath = Storage::disk('public')->path($path);
-        
+
         // Verificar se o arquivo existe
         if (!file_exists($filePath)) {
             // Se for um avatar, retornar avatar padrão
             if (str_contains($path, 'avatar') || is_numeric($path)) {
                 $defaultAvatar = public_path('assets/images/avatars/default-avatar.png');
-                
+
                 // Se o avatar padrão não existir, criar um simples
                 if (!file_exists($defaultAvatar)) {
                     // Criar diretório se não existir
                     if (!is_dir(dirname($defaultAvatar))) {
                         mkdir(dirname($defaultAvatar), 0755, true);
                     }
-                    
+
                     // Criar um avatar padrão simples (SVG)
                     $svgContent = '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
                         <rect width="100" height="100" fill="#e5e7eb"/>
                         <circle cx="50" cy="35" r="15" fill="#9ca3af"/>
                         <path d="M20 80 Q50 60 80 80" stroke="#9ca3af" stroke-width="3" fill="none"/>
                     </svg>';
-                    
+
                     file_put_contents($defaultAvatar, $svgContent);
                 }
-                
+
                 return response()->file($defaultAvatar);
             }
-            
+
             // Para outros arquivos, retornar erro 404
             return response()->json(['error' => 'Arquivo não encontrado'], 404);
         }
-        
+
         return response()->file($filePath);
     })->where('path', '.*')->name('file');
 
@@ -196,7 +196,7 @@ Route::middleware([
             Route::put('/users/{user}/email', [UserController::class, 'updateEmail'])->name('users.email.update');
             Route::post('/users/{user}/verify-password', [UserController::class, 'verifyPassword'])->name('users.password.verify');
             Route::put('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.password.reset');
-            
+
             // Rotas para alteração obrigatória de senha
             Route::get('/password/change', [UserController::class, 'showPasswordChange'])->name('password.change.show');
             Route::post('/password/change', [UserController::class, 'updatePasswordChange'])->name('password.change');
@@ -240,7 +240,7 @@ Route::middleware([
             Route::delete('/caixas/{id}', [CaixaController::class, 'destroySelected'])->name('caixas.destroySelected');
             Route::resource('caixa', CaixaController::class);
             Route::get('/charts/despesas', [CaixaController::class, 'getDespesasChartData'])->name('charts.despesas.data');
-            
+
             // Rotas AJAX para funcionalidades da interface financeira
             Route::get('/financeiro/data', [CaixaController::class, 'getFinancialData'])->name('financeiro.data');
             Route::post('/financeiro/mark-as-paid', [CaixaController::class, 'markAsPaid'])->name('financeiro.mark-as-paid');
@@ -274,6 +274,7 @@ Route::middleware([
             Route::get('/banco/chart-data', [BancoController::class, 'getChartData'])->name('banco.chart.data');
             Route::get('/banco/fluxo-chart-data', [BancoController::class, 'getFluxoBancoChartData'])->name('banco.fluxo.chart.data');
             Route::get('/banco/conciliacoes-pendentes', [BancoController::class, 'getConciliacoesPendentes'])->name('banco.conciliacoes.pendentes');
+            Route::post('/banco/relatorio/gerar', [BancoController::class, 'gerarRelatorio'])->name('banco.relatorio.gerar');
             Route::get('/patrimonios/search', [PatrimonioController::class, 'search'])->name('patrimonios.search');
             Route::get('/patrimonios/grafico', [PatrimonioController::class, 'grafico']);
             Route::get('/report/shipping', [ReportController::class, 'shippingReport'])->name('report.shipping');
@@ -291,6 +292,8 @@ Route::middleware([
             Route::post('/conciliacao/conciliar', [ConciliacaoController::class, 'conciliar'])->name('conciliacao.conciliar');
             Route::post('/conciliacao', [ConciliacaoController::class, 'pivot'])->name('conciliacao.pivot');
             Route::put('/transacoes-financeiras/{id}', [ConciliacaoController::class, 'update'])->name('conciliacao.update');
+            Route::get('/conciliacao/contas-disponiveis', [ConciliacaoController::class, 'contasDisponiveis'])->name('conciliacao.contas-disponiveis');
+            Route::post('/conciliacao/transferir', [ConciliacaoController::class, 'transferir'])->name('conciliacao.transferir');
 
 
 

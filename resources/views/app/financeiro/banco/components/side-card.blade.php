@@ -1,5 +1,5 @@
 <div class="col-12 col-sm-12 col-md-4"> <!--begin::Row-->
-    <div class="row mb-5 mb-xl-9">
+    <div class="row">
         <!--begin::Col-->
         <div class="col-xl-12 mb-xl-6">
             <!--begin::Slider Widget 2-->
@@ -25,7 +25,7 @@
                     <div class="card-toolbar">
                         <!--begin::Carousel Indicators-->
                         <ol
-                            class="p-0 m-0 carousel-indicators carousel-indicators-bullet carousel-indicators-active-success">
+                            class="p-0 m-0 carousel-indicators carousel-indicators-dots carousel-indicators-active-success">
                             @foreach ($entidadesBanco as $key => $entidade)
                                 <li data-bs-target="#kt_sliders_widget_2_slider"
                                     data-bs-slide-to="{{ $key }}"
@@ -40,7 +40,33 @@
                 <!--end::Header-->
 
                 <!--begin::Body-->
-                <div class="card-body py-3">
+                <div class="card-body py-3 position-relative">
+                    <!--begin::Carousel Controls-->
+                    @if (count($entidadesBanco) > 1)
+                        <!--begin::Seta Anterior-->
+                        <button class="carousel-control-prev position-absolute start-0 top-25 translate-middle-y"
+                            type="button"
+                            data-bs-target="#kt_sliders_widget_2_slider"
+                            data-bs-slide="prev"
+                            style="border-radius: 50%; margin-left: -20px; z-index: 10;">
+                            <i class="bi bi-chevron-compact-left fs-1"></i>
+                            <span class="visually-hidden">Anterior</span>
+                        </button>
+                        <!--end::Seta Anterior-->
+
+                        <!--begin::Seta Próximo-->
+                        <button class="carousel-control-next position-absolute end-0 top-25 translate-middle-y"
+                            type="button"
+                            data-bs-target="#kt_sliders_widget_2_slider"
+                            data-bs-slide="next"
+                            style="border-radius: 50%; margin-right: -20px; z-index: 10;">
+                            <i class="bi bi-chevron-compact-right fs-1"></i>
+                            <span class="visually-hidden">Próximo</span>
+                        </button>
+                        <!--end::Seta Próximo-->
+                    @endif
+                    <!--end::Carousel Controls-->
+
                     <!--begin::Carousel-->
                     <div class="carousel-inner">
                         <!--begin::Itens do Carrossel-->
@@ -85,6 +111,10 @@
                                         <!--begin::Subtitle-->
                                         <h4 class="fw-bold text-gray-800 mb-3">
                                             {{ $entidade->agencia }} - {{ $entidade->conta }} <span class="badge badge-info fs-base">{{ $entidade->conta }}</span>
+
+                                            @if (strtolower($entidade->status_conciliacao) == 'pendente')
+                                                <i class="bi bi-flag-fill text-warning" data-bs-toggle="popover" data-bs-dismiss="true" title="Conciliação Pendente" data-bs-content="A conciliação está pendente."></i>
+                                            @endif
                                         </h4>
                                         <!--end::Subtitle-->
 

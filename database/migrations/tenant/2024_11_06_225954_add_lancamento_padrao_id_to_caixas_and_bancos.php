@@ -31,13 +31,13 @@ return new class extends Migration
     public function down()
     {
         Schema::table('caixas', function (Blueprint $table) {
-            $table->dropForeign(['lancamento_padrao_id']);
-            $table->dropColumn('lancamento_padrao_id');
+            $table->dropForeign(['lancamento_padrao_id']);// Remove a chave estrangeira
+            $table->dropColumn('lancamento_padrao_id');// Remove a coluna
         });
 
         Schema::table('bancos', function (Blueprint $table) {
-            $table->dropForeign(['lancamento_padrao_id']);
-            $table->dropColumn('lancamento_padrao_id');
+            $table->dropForeign(['lancamento_padrao_id']);// Remove a chave estrangeira
+            $table->dropColumn('lancamento_padrao_id'); // Remove a coluna
         });
     }
 };

@@ -6,8 +6,7 @@
             <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
                 Lançamentos Financeiros
             </h1>
-            <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1"
-                aria-label="Navegação do site">
+            <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1" aria-label="Navegação do site">
                 <li class="breadcrumb-item text-muted">
                     <a href="{{ route('dashboard') }}" class="text-muted text-hover-primary">Home</a>
                 </li>
@@ -25,19 +24,21 @@
                 data-kt-menu="true">
                 <div class="menu-item px-3">
                     <a href="#" class="menu-link px-3" data-bs-toggle="modal"
-                        data-bs-target="#modalLancarCaixa" aria-label="Adicionar lançamento de caixa">
+                        data-bs-target="#Dm_modal_financeiro" data-origem="Caixa"
+                        aria-label="Adicionar lançamento de caixa">
                         <span class="me-2">💰</span> Lançar Caixa
                     </a>
                 </div>
                 <div class="menu-item px-3">
                     <a href="#" class="menu-link px-3" data-bs-toggle="modal"
-                        data-bs-target="#modalLancarBanco" aria-label="Adicionar lançamento bancário">
+                        data-bs-target="#Dm_modal_financeiro" data-origem="Banco"
+                        aria-label="Adicionar lançamento bancário">
                         <span class="me-2">🏦</span> Lançar Banco
                     </a>
                 </div>
             </div>
         </div>
-        <!--end::Actions-->
-    </div>
+        </div>
+
 </div>
 <!--end::Toolbar-->

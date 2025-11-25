@@ -1,5 +1,31 @@
+    <!--end::Toolbar container-->
+    <div class="app-container container-xxl">
+        <div class="separator"></div>
+        <!--begin::Nav-->
+        <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold">
+            <!--begin::Nav item-->
+            <li class="nav-item">
+                <a class="nav-link text-active-primary py-5 me-6 {{ (!request()->has('tab') || request('tab') !== 'relatorios') ? 'active' : '' }}"
+                    href="{{ route('caixa.index') }}">
+                    Receita/Despesa
+                </a>
+            </li>
+            <!--end::Nav item-->
+            <!--begin::Nav item-->
+            <li class="nav-item">
+                <a class="nav-link text-active-primary py-5 me-6 {{ request('tab') === 'relatorios' ? 'active' : '' }}"
+                    href="{{ route('caixa.index', ['tab' => 'relatorios']) }}">
+                    Relatórios
+                </a>
+            </li>
+            <!--end::Nav item-->
+        </ul>
+        <!--end::Nav-->
+    </div>
+<!--end::Toolbar-->
 <!--begin::Card header-->
 <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+
     <!--begin::Card title-->
     <div class="card-title">
         <!--begin::Tabs-->
@@ -108,12 +134,12 @@
                 <button class="btn btn-icon btn-light-primary" type="button" id="prevMonth">
                     <i class="fas fa-chevron-left"></i>
                 </button>
-                <input type="text" class="form-control text-center" id="monthSelector" 
+                <input type="text" class="form-control text-center" id="monthSelector"
                     value="{{ now()->format('F Y') }}" readonly>
                 <button class="btn btn-icon btn-light-primary" type="button" id="nextMonth">
                     <i class="fas fa-chevron-right"></i>
                 </button>
-                <button class="btn btn-icon btn-light-primary dropdown-toggle" type="button" 
+                <button class="btn btn-icon btn-light-primary dropdown-toggle" type="button"
                     data-bs-toggle="dropdown">
                     <i class="fas fa-calendar"></i>
                 </button>
@@ -123,7 +149,7 @@
             </div>
         </div>
         <!--end::Filtro de Vencimento-->
-        
+
         <!--begin::Filtro de Status-->
         <div class="col-md-2">
             <label class="form-label fw-semibold">Status</label>
@@ -137,7 +163,7 @@
             </select>
         </div>
         <!--end::Filtro de Status-->
-        
+
         <!--begin::Filtro de Conta-->
         <div class="col-md-3">
             <label class="form-label fw-semibold">Conta</label>
@@ -147,7 +173,7 @@
             </select>
         </div>
         <!--end::Filtro de Conta-->
-        
+
         <!--begin::Filtro de Fornecedor-->
         <div class="col-md-2">
             <label class="form-label fw-semibold">Fornecedor</label>
@@ -157,12 +183,12 @@
             </select>
         </div>
         <!--end::Filtro de Fornecedor-->
-        
+
         <!--begin::Mais Filtros-->
         <div class="col-md-2">
             <label class="form-label fw-semibold">&nbsp;</label>
             <div class="dropdown">
-                <button class="btn btn-light-primary dropdown-toggle w-100" type="button" 
+                <button class="btn btn-light-primary dropdown-toggle w-100" type="button"
                     data-bs-toggle="dropdown">
                     <i class="fas fa-filter me-2"></i>Mais filtros
                 </button>
@@ -205,7 +231,7 @@
             </div>
         </div>
         <!--end::Vencidos-->
-        
+
         <!--begin::Vencem Hoje-->
         <div class="col-md-2">
             <div class="card card-flush h-100 border border-warning border-dashed">
@@ -220,7 +246,7 @@
             </div>
         </div>
         <!--end::Vencem Hoje-->
-        
+
         <!--begin::A Vencer-->
         <div class="col-md-2">
             <div class="card card-flush h-100 border border-primary border-dashed">
@@ -235,7 +261,7 @@
             </div>
         </div>
         <!--end::A Vencer-->
-        
+
         <!--begin::Pagos-->
         <div class="col-md-2">
             <div class="card card-flush h-100 border border-success border-dashed">
@@ -250,14 +276,14 @@
             </div>
         </div>
         <!--end::Pagos-->
-        
+
         <!--begin::Total do Período-->
         <div class="col-md-4">
             <div class="card card-flush h-100 border border-info border-dashed">
                 <div class="card-body text-center p-4">
                     <div class="text-muted small mb-2">
                         Total do período (R$)
-                        <i class="fas fa-question-circle ms-1" data-bs-toggle="tooltip" 
+                        <i class="fas fa-question-circle ms-1" data-bs-toggle="tooltip"
                             title="Total de movimentações do período selecionado"></i>
                     </div>
                     <div class="fw-bold text-info fs-3">{{ number_format($valorTotal ?? 0, 2, ',', '.') }}</div>
@@ -291,7 +317,7 @@
                 <span id="actionButtonText">Receber</span>
             </button>
             <div class="dropdown">
-                <button class="btn btn-light-primary dropdown-toggle" type="button" 
+                <button class="btn btn-light-primary dropdown-toggle" type="button"
                     data-bs-toggle="dropdown" disabled id="batchActionsButton">
                     <i class="fas fa-tasks me-2"></i>
                     Ações em lote

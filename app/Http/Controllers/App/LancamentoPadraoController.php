@@ -64,13 +64,13 @@ class LancamentoPadraoController extends Controller
         // Validação dos dados
         $request->validate([
             'description' => 'required|string|max:255',
-            'type' => 'required|in:entrada,saida',
+            'type' => 'required|in:entrada,saida,ambos',
             'date' => 'required|date',
             'category' => 'required|string|max:255',
         ], [
             'description.required' => 'O nome do lançamento é obrigatório.',
             'type.required' => 'O tipo do lançamento é obrigatório.',
-            'type.in' => 'O tipo deve ser "entrada" ou "saída".',
+            'type.in' => 'O tipo deve ser "entrada", "saída" ou "ambos".',
             'category.required' => 'A categoria é obrigatória.'
         ]);
 
@@ -121,13 +121,13 @@ class LancamentoPadraoController extends Controller
         // Validação dos dados
         $request->validate([
             'description' => 'required|string|max:255',
-            'type' => 'required|in:entrada,saida',
+            'type' => 'required|in:entrada,saida,ambos',
             'date' => 'required|date',
             'category' => 'required|string|max:255',
         ], [
             'description.required' => 'O nome do lançamento é obrigatório.',
             'type.required' => 'O tipo do lançamento é obrigatório.',
-            'type.in' => 'O tipo deve ser "entrada" ou "saída".',
+            'type.in' => 'O tipo deve ser "entrada", "saída" ou "ambos".',
             'category.required' => 'A categoria é obrigatória.'
         ]);
 

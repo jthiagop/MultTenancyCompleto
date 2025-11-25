@@ -32,9 +32,10 @@ var DMModalNewBanco = function () {
         dueDates.forEach(function(dueDate) {
             flatpickr(dueDate, {
                 enableTime: true,
-                dateFormat: "d-m-Y", // Formato pt-BR para exibição
+                dateFormat: "d/m/Y", // Formato pt-BR para exibição
                 locale: "pt", // Define a localidade como português do Brasil
-                defaultDate: new Date() // Define a data atual como padrão
+                defaultDate: new Date(), // Define a data atual como padrão
+                maxDate: new Date(), // Não permite datas futuras, apenas até a data atual
             });
         });
 
@@ -62,13 +63,48 @@ var DMModalNewBanco = function () {
 							}
 						}
 					},
-                    banco_id: {
+                        entidade_id: {
 						validators: {
 							notEmpty: {
 								message: 'O banco é requerida!'
 							}
 						}
 					},
+                    data_competencia: {
+                        validators: {
+                            notEmpty: {
+                                message: 'A data de competência é requerida!'
+                            }
+                        }
+                    },
+                    descricao: {
+                        validators: {
+                            notEmpty: {
+                                message: 'A descrição é requerida!'
+                            }
+                        }
+                    },
+                    lancamento_padrao_id: {
+                        validators: {
+                            notEmpty: {
+                                message: 'O lançamento padrão é requerido!'
+                            }
+                        }
+                    },
+                    cost_center_id: {
+                        validators: {
+                            notEmpty: {
+                                message: 'O centro de custo é requerido!'
+                            }
+                        }
+                    },
+                    tipo_documento: {
+                        validators: {
+                            notEmpty: {
+                                message: 'O tipo de documento é requerido!'
+                            }
+                        }
+                    },
 					valor: {
                         validators: {
                             notEmpty: {
@@ -300,17 +336,22 @@ var DMModalNewBanco = function () {
 								confirmButton: "btn btn-primary"
 							}
 						}).then(function (result) {
-							if (mode === 'enviar') {
-								// Modo 1: Enviar - Fecha o modal
-								modal.hide();
-								// Recarrega a página para atualizar a lista
-								window.location.reload();
-							} else if (mode === 'clonar') {
-								// Modo 2: Salvar e Clonar - Mantém dados e modal aberto
-								// Não faz nada, mantém tudo como está
-							} else if (mode === 'branco') {
-								// Modo 3: Salvar e em Branco - Limpa formulário mantendo data e tipo
-								limparFormularioMantendoDataTipo();
+							if (result.isConfirmed || result.value) {
+								if (mode === 'enviar') {
+									// Modo 1: Enviar - Fecha o modal e recarrega a página
+									modal.hide();
+									// Recarrega a página para atualizar a lista
+									setTimeout(function() {
+										window.location.reload();
+									}, 300);
+								} else if (mode === 'clonar') {
+									// Modo 2: Salvar e Clonar - Mantém dados e modal aberto
+									// Não faz nada, mantém tudo como está para permitir novo envio
+									// Apenas remove o indicador de loading
+								} else if (mode === 'branco') {
+									// Modo 3: Salvar e em Branco - Limpa formulário mantendo data e tipo
+									limparFormularioMantendoDataTipo();
+								}
 							}
 						});
 					})
@@ -351,43 +392,115 @@ var DMModalNewBanco = function () {
 
 		// Função para limpar formulário mantendo data e tipo
 		var limparFormularioMantendoDataTipo = function() {
-			// Salva os valores de data e tipo
+			// Salva os valores de data e tipo antes de limpar
 			var dataCompetencia = form.querySelector('[name="data_competencia"]').value;
-			var tipo = form.querySelector('[name="tipo"]').value;
+			var tipoSelect = $('#tipo_select_banco');
+			var tipoValue = tipoSelect.val() || form.querySelector('[name="tipo"]').value;
+			var tipoHidden = form.querySelector('[name="tipo_hidden"]');
 			var tipoFinanceiro = form.querySelector('[name="tipo_financeiro"]').value;
+			var origem = form.querySelector('[name="origem"]').value;
 
-			// Limpa todos os campos exceto data e tipo
-			form.querySelector('[name="descricao"]').value = '';
-			form.querySelector('[name="valor"]').value = '';
-			form.querySelector('[name="numero_documento"]').value = '';
-			form.querySelector('[name="historico_complementar"]').value = '';
-			form.querySelector('[name="comprovacao_fiscal"]').checked = false;
+			// Limpa todos os campos de texto
+			var descricaoField = form.querySelector('[name="descricao"]');
+			if (descricaoField) descricaoField.value = '';
 
-			// Limpa os selects
-			$('#lancamento_padraos_id').val('').trigger('change');
-			$('#entidade_id').val('').trigger('change');
-			$('#cost_center_id').val('').trigger('change');
-			$('#tipo_documento').val('').trigger('change');
-			$('#bancoSelect').val('').trigger('change');
+			var valorField = form.querySelector('[name="valor"]');
+			if (valorField) valorField.value = '';
 
-			// Mantém data e tipo
-			if (dataCompetencia) {
-				form.querySelector('[name="data_competencia"]').value = dataCompetencia;
+			var numeroDocField = form.querySelector('[name="numero_documento"]');
+			if (numeroDocField) numeroDocField.value = '';
+
+			var historicoField = form.querySelector('[name="historico_complementar"]');
+			if (historicoField) historicoField.value = '';
+
+			// Limpa checkbox de comprovação fiscal
+			var comprovacaoCheckbox = form.querySelector('[name="comprovacao_fiscal"][type="checkbox"]');
+			if (comprovacaoCheckbox) {
+				comprovacaoCheckbox.checked = false;
+				// Esconde a tab de anexos se estava visível
+				$('#tab_anexos_item').hide();
+				// Volta para a tab de histórico
+				$('#kt_tab_pane_1').addClass('show active');
+				$('#kt_tab_pane_2').removeClass('show active');
+				$('a[href="#kt_tab_pane_1"]').addClass('active');
+				$('a[href="#kt_tab_pane_2"]').removeClass('active');
 			}
-			if (tipo) {
-				form.querySelector('[name="tipo"]').value = tipo;
-				// Atualiza o select2 se estiver inicializado
-				var tipoSelect = $('#tipo_select_banco');
-				if (tipoSelect.hasClass('select2-hidden-accessible')) {
-					tipoSelect.val(tipo).trigger('change');
+
+			// Limpa os selects usando Select2
+			var selectsToClear = [
+				'#lancamento_padraos_id',
+				'#entidade_id',
+				'#cost_center_id',
+				'#tipo_documento',
+				'#bancoSelect'
+			];
+
+			selectsToClear.forEach(function(selector) {
+				var $select = $(selector);
+				if ($select.length > 0) {
+					if ($select.hasClass('select2-hidden-accessible')) {
+						$select.val(null).trigger('change');
+					} else {
+						$select.val('');
+					}
+				}
+			});
+
+			// Limpa anexos se existir o componente
+			var anexosContainer = form.querySelector('.anexos-container');
+			if (anexosContainer) {
+				var anexosRows = anexosContainer.querySelectorAll('.anexo-row');
+				anexosRows.forEach(function(row) {
+					row.remove();
+				});
+			}
+
+			// Restaura data e tipo
+			if (dataCompetencia) {
+				var dataField = form.querySelector('[name="data_competencia"]');
+				if (dataField) dataField.value = dataCompetencia;
+			}
+
+			// Restaura tipo (entrada/saída)
+			if (tipoValue) {
+				var tipoNativeField = form.querySelector('[name="tipo"]');
+				if (tipoNativeField) {
+					tipoNativeField.value = tipoValue;
+				}
+				if (tipoHidden) {
+					tipoHidden.value = tipoValue;
+				}
+				// Atualiza o Select2 do tipo
+				if (tipoSelect.length > 0) {
+					if (tipoSelect.hasClass('select2-hidden-accessible')) {
+						tipoSelect.val(tipoValue).trigger('change');
+					} else {
+						tipoSelect.val(tipoValue);
+					}
 				}
 			}
+
+			// Restaura tipo financeiro (receita/despesa)
 			if (tipoFinanceiro) {
-				form.querySelector('[name="tipo_financeiro"]').value = tipoFinanceiro;
+				var tipoFinanceiroField = form.querySelector('[name="tipo_financeiro"]');
+				if (tipoFinanceiroField) {
+					tipoFinanceiroField.value = tipoFinanceiro;
+				}
+			}
+
+			// Restaura origem
+			if (origem) {
+				var origemField = form.querySelector('[name="origem"]');
+				if (origemField) {
+					origemField.value = origem;
+				}
 			}
 
 			// Restaura status_pagamento
-			form.querySelector('[name="status_pagamento"]').value = 'em aberto';
+			var statusField = form.querySelector('[name="status_pagamento"]');
+			if (statusField) {
+				statusField.value = 'em aberto';
+			}
 
 			// Limpa erros de validação
 			if (validator) {
@@ -396,6 +509,50 @@ var DMModalNewBanco = function () {
 
 			// Esconde campo de banco de depósito se estiver visível
 			$('#banco-deposito').hide();
+
+			// Refiltra os lançamentos padrão baseado no tipo mantido
+			if (tipoValue) {
+				var lancamentoPadraoSelect = $('#lancamento_padraos_id');
+				if (lancamentoPadraoSelect.length > 0) {
+					// Filtra usando as opções existentes no DOM
+					lancamentoPadraoSelect.find('option').each(function() {
+						var $option = $(this);
+						var optionType = $option.data('type');
+
+						// Se for a opção vazia, mantém visível
+						if ($option.val() === '' || !optionType) {
+							$option.prop('disabled', false).show();
+						} else if (optionType === tipoValue) {
+							// Mostra opções do tipo correto
+							$option.prop('disabled', false).show();
+						} else {
+							// Esconde opções de outro tipo
+							$option.prop('disabled', true).hide();
+						}
+					});
+
+					// Atualiza o Select2
+					setTimeout(function() {
+						if (lancamentoPadraoSelect.hasClass('select2-hidden-accessible')) {
+							lancamentoPadraoSelect.select2('destroy');
+						}
+						// Reinicializa o Select2
+						if (typeof KTSelect2 !== 'undefined') {
+							new KTSelect2(lancamentoPadraoSelect[0]);
+						} else if (typeof lancamentoPadraoSelect.select2 !== 'undefined') {
+							lancamentoPadraoSelect.select2();
+						}
+					}, 50);
+				}
+			}
+
+			// Foca no primeiro campo após limpar
+			setTimeout(function() {
+				var firstField = form.querySelector('[name="descricao"]') || form.querySelector('[name="entidade_id"]');
+				if (firstField) {
+					firstField.focus();
+				}
+			}, 200);
 		};
 
 		// Action buttons

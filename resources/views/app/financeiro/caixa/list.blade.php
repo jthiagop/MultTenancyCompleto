@@ -402,7 +402,7 @@
         </div>
         <!--end::Content wrapper-->
 
-        @include('app.components.modals.lancar-caixa')
+        @include('app.components.modals.financeiro.lancamento.modal_lacamento')
 
 </x-tenant-app-layout>
 
@@ -482,7 +482,7 @@
             // Monta a URL com os parâmetros
             const url = new URL("{{ route('charts.despesas.data') }}");
             url.search = new URLSearchParams(params).toString();
-            
+
             // Faz a chamada AJAX
             fetch(url)
                 .then(response => response.json())
@@ -497,7 +497,7 @@
                         },
                         series: data.series
                     });
-                    
+
                     overlay.hide(); // Esconde o loading
                 })
                 .catch(error => {
@@ -579,13 +579,13 @@
         // Configuração dos botões e do seletor de data
         const setupEventListeners = () => {
             const rangeButtons = document.querySelectorAll('.card-toolbar .btn-group [data-range]');
-            
+
             rangeButtons.forEach(button => {
                 button.addEventListener('click', function(e) {
                     // Remove a classe 'active' de todos os botões e adiciona no clicado
                     rangeButtons.forEach(btn => btn.classList.remove('active'));
                     this.classList.add('active');
-                    
+
                     // Limpa o seletor de data
                     $('#despesas_date_range_picker').val('');
 
@@ -609,13 +609,13 @@
             datePicker.on('apply.daterangepicker', function(ev, picker) {
                 $(this).val(picker.startDate.format('DD/MM/YYYY') + ' - ' + picker.endDate.format('DD/MM/YYYY'));
                 rangeButtons.forEach(btn => btn.classList.remove('active'));
-                
+
                 updateChart({
                     start_date: picker.startDate.format('YYYY-MM-DD'),
                     end_date: picker.endDate.format('YYYY-MM-DD')
                 });
             });
-            
+
             datePicker.on('cancel.daterangepicker', function(ev, picker) {
                 $(this).val('');
             });
@@ -627,7 +627,7 @@
                 document.querySelector('[data-range="30"]').click();
             });
         }
-        
+
         // Retorna os métodos públicos
         return {
             init: function() {

@@ -1154,22 +1154,45 @@
                                                     <!--begin::Name=-->
                                                     <td>
                                                         <div class="d-flex align-items-center">
+                                                            @php
+                                                                $formaAnexo = $anexo->forma_anexo ?? 'arquivo';
+                                                                $isLink = $formaAnexo === 'link';
+                                                                
+                                                                if ($isLink) {
+                                                                    $href = $anexo->link ?? '#';
+                                                                    $nomeExibicao = $anexo->link ?? 'Link';
+                                                                    $iconClass = 'bi-link-45deg';
+                                                                } else {
+                                                                    $nomeExibicao = $anexo->nome_arquivo ?? 'Arquivo';
+                                                                    $iconClass = 'bi-file-earmark';
+                                                                    
+                                                                    if ($anexo->caminho_arquivo) {
+                                                                        $href = route('file', ['path' => $anexo->caminho_arquivo]);
+                                                                    } else {
+                                                                        $href = '#';
+                                                                    }
+                                                                }
+                                                            @endphp
                                                             <!--begin::Svg Icon | path: icons/duotune/files/fil003.svg-->
                                                             <span class="svg-icon svg-icon-2x svg-icon-primary me-4">
-                                                                <svg width="24" height="24"
-                                                                    viewBox="0 0 24 24" fill="none"
-                                                                    xmlns="http://www.w3.org/2000/svg">
-                                                                    <path opacity="0.3"
-                                                                        d="M19 22H5C4.4 22 4 21.6 4 21V3C4 2.4 4.4 2 5 2H14L20 8V21C20 21.6 19.6 22 19 22Z"
-                                                                        fill="currentColor" />
-                                                                    <path d="M15 8H20L14 2V7C14 7.6 14.4 8 15 8Z"
-                                                                        fill="currentColor" />
-                                                                </svg>
+                                                                @if($isLink)
+                                                                    <i class="bi {{ $iconClass }} fs-2x"></i>
+                                                                @else
+                                                                    <svg width="24" height="24"
+                                                                        viewBox="0 0 24 24" fill="none"
+                                                                        xmlns="http://www.w3.org/2000/svg">
+                                                                        <path opacity="0.3"
+                                                                            d="M19 22H5C4.4 22 4 21.6 4 21V3C4 2.4 4.4 2 5 2H14L20 8V21C20 21.6 19.6 22 19 22Z"
+                                                                            fill="currentColor" />
+                                                                        <path d="M15 8H20L14 2V7C14 7.6 14.4 8 15 8Z"
+                                                                            fill="currentColor" />
+                                                                    </svg>
+                                                                @endif
                                                             </span>
                                                             <!--end::Svg Icon-->
-                                                            <a href="{{ route('file', ['path' => $anexo->caminho_arquivo]) }}"
+                                                            <a href="{{ $href }}"
                                                                 target="_blank"
-                                                                class="text-gray-800 text-hover-primary">{{ $anexo->nome_arquivo }}</a>
+                                                                class="text-gray-800 text-hover-primary">{{ $nomeExibicao }}</a>
                                                         </div>
                                                     </td>
                                                     <!--end::Name=-->

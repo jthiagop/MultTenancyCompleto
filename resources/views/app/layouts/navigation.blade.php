@@ -1,7 +1,7 @@
                 <!--begin::Header-->
                 <div id="kt_app_header" class="app-header">
                     <!--begin::Header container-->
-                    <div class="app-container container-xxl d-flex align-items-stretch justify-content-between"
+                    <div class="app-container container-fluid px-4 d-flex align-items-stretch justify-content-between"
                         id="kt_app_header_container">
                         <!--begin::Logo-->
                         <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0 me-lg-15">
@@ -31,9 +31,8 @@
                                         data-kt-menu-placement="bottom-start"
                                         class="menu-item menu-here-bg menu-lg-down-accordion me-0 me-lg-2">
                                         <!--begin:Menu link-->
-                                        <span class="menu-link">
+                                        <span class="menu-link btn btn-sm ">
                                             <span class="menu-title">Dashboard</span>
-                                            <span class="menu-arrow d-lg-none"></span>
                                         </span>
                                         <!--end:Menu link-->
                                         <!--begin:Menu sub-->
@@ -257,9 +256,8 @@
                                         class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2 here show here show">
 
                                         <!--begin:Menu link-->
-                                        <span class="menu-link">
+                                        <span class="menu-link btn btn-sm">
                                             <span class="menu-title">Serviços</span>
-                                            <span class="menu-arrow d-lg-none"></span>
                                         </span>
                                         <!--end:Menu link-->
                                         <!--begin:Menu sub-->
@@ -1143,9 +1141,8 @@
                                         data-kt-menu-placement="bottom-start"
                                         class="menu-item menu-lg-down-accordion menu-sub-lg-down-indention me-0 me-lg-2">
                                         <!--begin:Menu link-->
-                                        <span class="menu-link">
+                                        <span class="menu-link btn btn-sm">
                                             <span class="menu-title">Configuração</span>
-                                            <span class="menu-arrow d-lg-none"></span>
                                         </span>
                                         <!--end:Menu link-->
                                         <!--begin:Menu sub-->

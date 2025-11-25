@@ -7,7 +7,7 @@
 <!-- Kendo UI (JS principal) -->
 <script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
 
-@include('app.components.modals.lancar-banco')
+@include('app.components.modals.financeiro.lancamento.modal_lacamento')
 <!--end::Modal - Upgrade plan-->
 <script>
     var lpsData = @json($lps);

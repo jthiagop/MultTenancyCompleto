@@ -61,6 +61,7 @@ class EntidadeFinanceiraController extends Controller
             'bank_id'       => 'required_if:tipo,banco|nullable|integer|exists:banks,id', // CORREÇÃO: Valida 'bank_id' em vez de 'banco'
             'agencia'       => 'nullable|string|max:20',
             'conta'         => 'nullable|string|max:20',
+            'account_type'  => 'required_if:tipo,banco|nullable|in:corrente,poupanca,aplicacao,renda_fixa,tesouro_direto',
             'saldo_inicial' => 'required|numeric',
             'descricao'     => 'nullable|string|max:255',
         ]);
@@ -70,8 +71,19 @@ class EntidadeFinanceiraController extends Controller
             // Busca o nome do banco no banco de dados usando o ID
             $bank = Bank::find($validatedData['bank_id']);
 
-            // Cria um nome descritivo para a entidade
-            $validatedData['nome'] = "{$bank->name} - Ag. {$validatedData['agencia']} C/C {$validatedData['conta']}";
+            // Mapeia o account_type para o nome em português
+            $accountTypeNames = [
+                'corrente' => 'Conta Corrente',
+                'poupanca' => 'Poupança',
+                'aplicacao' => 'Aplicação',
+                'renda_fixa' => 'Renda Fixa',
+                'tesouro_direto' => 'Tesouro Direto',
+            ];
+
+            $accountTypeName = $accountTypeNames[$validatedData['account_type']] ?? 'Conta';
+
+            // Cria um nome descritivo para a entidade incluindo o tipo de conta
+            $validatedData['nome'] = "{$bank->name} - {$accountTypeName} - Ag. {$validatedData['agencia']} C/C {$validatedData['conta']}";
         }
 
         $validatedData['banco_id'] = $request->tipo === 'banco' ? $validatedData['bank_id'] : null; // Adiciona o banco_id se for do tipo 'banco'
@@ -124,6 +136,94 @@ class EntidadeFinanceiraController extends Controller
         $entidade->atualizarSaldo();
 
         return redirect()->route('entidades.index')->with('success', 'Movimentação adicionada com sucesso!');
+    }
+
+    // Mostra o formulário de edição
+    public function edit(string $id)
+    {
+        // Verifica se o usuário é admin ou global
+        if (!Auth::user()->hasRole(['admin', 'global'])) {
+            Flasher::addError('Você não tem permissão para editar entidades financeiras.');
+            return redirect()->route('entidades.index');
+        }
+
+        $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+        $banks = Bank::all();
+
+        return view('app.cadastros.entidades.index', compact('entidade', 'banks'));
+    }
+
+    // Atualiza uma entidade financeira
+    public function update(Request $request, string $id)
+    {
+        // Verifica se o usuário é admin ou global
+        if (!Auth::user()->hasRole(['admin', 'global'])) {
+            Flasher::addError('Você não tem permissão para editar entidades financeiras.');
+            return redirect()->route('entidades.index');
+        }
+
+        $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+
+        // Validação baseada no tipo da entidade existente
+        $rules = [];
+        
+        if ($entidade->tipo === 'caixa') {
+            $rules = [
+                'nome'      => 'required|string|max:100',
+                'descricao' => 'nullable|string|max:255',
+            ];
+        } else {
+            $rules = [
+                'bank_id'      => 'required|integer|exists:banks,id',
+                'agencia'      => 'required|string|max:20',
+                'conta'        => 'required|string|max:20',
+                'account_type' => 'required|in:corrente,poupanca,aplicacao,renda_fixa,tesouro_direto',
+                'descricao'    => 'nullable|string|max:255',
+            ];
+        }
+
+        $validatedData = $request->validate($rules);
+
+        try {
+            // Atualiza os campos permitidos
+            if ($entidade->tipo === 'caixa') {
+                // Para caixa, atualiza apenas nome e descrição
+                $entidade->nome = $validatedData['nome'];
+                $entidade->descricao = $validatedData['descricao'] ?? null;
+            } else {
+                // Para banco, atualiza banco_id, agencia, conta, account_type e descrição
+                $entidade->banco_id = $validatedData['bank_id'];
+                $entidade->agencia = $validatedData['agencia'];
+                $entidade->conta = $validatedData['conta'];
+                $entidade->account_type = $validatedData['account_type'];
+                $entidade->descricao = $validatedData['descricao'] ?? null;
+
+                // Regenera o nome com os novos dados
+                $bank = Bank::find($entidade->banco_id);
+                if ($bank) {
+                    $accountTypeNames = [
+                        'corrente' => 'Conta Corrente',
+                        'poupanca' => 'Poupança',
+                        'aplicacao' => 'Aplicação',
+                        'renda_fixa' => 'Renda Fixa',
+                        'tesouro_direto' => 'Tesouro Direto',
+                    ];
+                    $accountTypeName = $accountTypeNames[$entidade->account_type] ?? 'Conta';
+                    $entidade->nome = "{$bank->name} - {$accountTypeName} - Ag. {$entidade->agencia} C/C {$entidade->conta}";
+                }
+            }
+
+            $entidade->updated_by = Auth::id();
+            $entidade->updated_by_name = Auth::user()->name;
+            $entidade->save();
+
+            Flasher::addSuccess('Entidade financeira atualizada com sucesso!');
+            return redirect()->route('entidades.index');
+        } catch (\Exception $e) {
+            \Log::error('Erro ao atualizar entidade: ' . $e->getMessage());
+            Flasher::addError('Ocorreu um erro ao atualizar a entidade.');
+            return redirect()->back()->withInput();
+        }
     }
 
     public function destroy(string $id)

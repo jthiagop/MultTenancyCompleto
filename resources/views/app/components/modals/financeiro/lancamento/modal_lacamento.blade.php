@@ -5,8 +5,8 @@
         <!--begin::Modal content-->
         <div class="modal-content rounded">
             <!--begin::Modal header-->
-            <div class="modal-header">
-                <h2 class="modal-title" id="modal_financeiro_title">Novo Lançamento</h2>
+            <div class="modal-header btn btn-sm  ">
+                <h3 class="modal-title" id="modal_financeiro_title">Novo Lançamento</h3>
 
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
@@ -15,7 +15,8 @@
             <!--begin::Modal body-->
             <div class="modal-body scroll-y px-10 px-lg-15 pb-15  bg-light pt-5">
                 <!-- Begin::Form -->
-                <form id="Dm_modal_financeiro_form" class="form" action="{{ route('banco.store') }}" method="POST" enctype="multipart/form-data">
+                <form id="Dm_modal_financeiro_form" class="form" action="{{ route('banco.store') }}" method="POST"
+                    enctype="multipart/form-data">
                     @csrf
                     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -25,6 +26,189 @@
                     <input type="hidden" name="origem" id="origem" value="Banco">
                     <!-- Campo hidden para garantir que o tipo seja sempre enviado -->
                     <input type="hidden" name="tipo_hidden" id="tipo_hidden" value="">
+
+                    <script>
+                        // Configura o modal dinamicamente baseado na origem (Banco ou Caixa) e tipo (receita/despesa)
+                        $(document).ready(function() {
+                            var tipoLancamento = null; // Variável para armazenar o tipo do lançamento
+
+                            $('#Dm_modal_financeiro').on('show.bs.modal', function(event) {
+                                var button = $(event.relatedTarget);
+                                var origem = button.data('origem') || 'Banco'; // Padrão: Banco
+                                tipoLancamento = button.data('tipo'); // Receita ou Despesa
+                                var modal = $(this);
+                                var form = modal.find('#Dm_modal_financeiro_form');
+                                var origemInput = modal.find('#origem');
+                                var entidadeSelect = modal.find('#entidade_id');
+                                var labelEntidade = modal.find('#label_entidade');
+                                var modalTitle = modal.find('#modal_financeiro_title');
+                                var tipoFinanceiroInput = modal.find('#tipo_financeiro');
+
+                                // Atualiza o título do modal baseado no tipo
+                                if (tipoLancamento === 'receita') {
+                                    modalTitle.text('Nova Receita');
+                                    tipoFinanceiroInput.val('receita');
+                                } else if (tipoLancamento === 'despesa') {
+                                    modalTitle.text('Nova Despesa');
+                                    tipoFinanceiroInput.val('despesa');
+                                } else {
+                                    modalTitle.text('Novo Lançamento');
+                                    tipoFinanceiroInput.val('');
+                                }
+
+                                // Atualiza o campo hidden de origem
+                                origemInput.val(origem);
+
+                                // Atualiza a action do form baseado na origem
+                                if (origem === 'Caixa') {
+                                    form.attr('action', '{{ route('caixa.store') }}');
+                                    labelEntidade.text('Entidade');
+                                    entidadeSelect.attr('data-placeholder', 'Selecione a Entidade');
+                                } else {
+                                    form.attr('action', '{{ route('banco.store') }}');
+                                    labelEntidade.text('Banco');
+                                    entidadeSelect.attr('data-placeholder', 'Selecione o Banco');
+                                }
+
+                                // Filtra as opções do select baseado na origem
+                                entidadeSelect.find('option').each(function() {
+                                    var optionOrigem = $(this).data('origem');
+                                    if (optionOrigem && optionOrigem !== origem) {
+                                        $(this).prop('disabled', true).hide();
+                                    } else {
+                                        $(this).prop('disabled', false).show();
+                                    }
+                                });
+
+                                // Limpa a seleção
+                                entidadeSelect.val(null);
+
+                                // Reinicializa o Select2 se necessário
+                                setTimeout(function() {
+                                    if (entidadeSelect.hasClass('select2-hidden-accessible')) {
+                                        entidadeSelect.select2('destroy');
+                                    }
+                                    // Reinicializa o Select2
+                                    if (typeof KTSelect2 !== 'undefined') {
+                                        new KTSelect2(entidadeSelect[0]);
+                                    }
+                                }, 100);
+                            });
+
+                            // Aguarda o modal ser completamente exibido para manipular o select de tipo e lançamento padrão
+                            $('#Dm_modal_financeiro').on('shown.bs.modal', function() {
+                                var modal = $(this);
+                                var tipoSelect = modal.find('#tipo_select_banco');
+                                var lancamentoPadraoSelect = modal.find('#lancamento_padraos_id');
+                                var tipoHidden = modal.find('#tipo_hidden');
+
+                                // Aguarda um pequeno delay para garantir que o select2 foi inicializado
+                                setTimeout(function() {
+                                    if (tipoLancamento === 'receita') {
+                                        // Seleciona "entrada" no select
+                                        tipoSelect.val('entrada');
+                                        // Atualiza o campo hidden
+                                        if (tipoHidden.length > 0) {
+                                            tipoHidden.val('entrada');
+                                        }
+                                        // Desabilita o select
+                                        tipoSelect.prop('disabled', true);
+
+                                        // Atualiza o Select2
+                                        if (tipoSelect.hasClass('select2-hidden-accessible')) {
+                                            tipoSelect.select2('destroy');
+                                        }
+                                        // Reinicializa o Select2 desabilitado
+                                        if (typeof KTSelect2 !== 'undefined') {
+                                            new KTSelect2(tipoSelect[0]);
+                                        } else if (typeof tipoSelect.select2 !== 'undefined') {
+                                            tipoSelect.select2();
+                                        }
+                                        tipoSelect.trigger('change');
+
+                                        // Filtra os lançamentos padrão para entrada
+                                        filtrarLancamentosPadrao('entrada', lancamentoPadraoSelect);
+                                    } else if (tipoLancamento === 'despesa') {
+                                        // Seleciona "saida" no select
+                                        tipoSelect.val('saida');
+                                        // Atualiza o campo hidden
+                                        if (tipoHidden.length > 0) {
+                                            tipoHidden.val('saida');
+                                        }
+                                        // Desabilita o select
+                                        tipoSelect.prop('disabled', true);
+
+                                        // Atualiza o Select2
+                                        if (tipoSelect.hasClass('select2-hidden-accessible')) {
+                                            tipoSelect.select2('destroy');
+                                        }
+                                        // Reinicializa o Select2 desabilitado
+                                        if (typeof KTSelect2 !== 'undefined') {
+                                            new KTSelect2(tipoSelect[0]);
+                                        } else if (typeof tipoSelect.select2 !== 'undefined') {
+                                            tipoSelect.select2();
+                                        }
+                                        tipoSelect.trigger('change');
+
+                                        // Filtra os lançamentos padrão para saída
+                                        filtrarLancamentosPadrao('saida', lancamentoPadraoSelect);
+                                    } else {
+                                        // Se não houver tipo definido, mantém habilitado
+                                        tipoSelect.prop('disabled', false);
+                                        if (tipoSelect.hasClass('select2-hidden-accessible')) {
+                                            tipoSelect.select2('destroy');
+                                        }
+                                        // Reinicializa o Select2 habilitado
+                                        if (typeof KTSelect2 !== 'undefined') {
+                                            new KTSelect2(tipoSelect[0]);
+                                        } else if (typeof tipoSelect.select2 !== 'undefined') {
+                                            tipoSelect.select2();
+                                        }
+                                        // Limpa o campo hidden
+                                        if (tipoHidden.length > 0) {
+                                            tipoHidden.val('');
+                                        }
+                                    }
+                                }, 150);
+                            });
+
+                            // Função para filtrar lançamentos padrão baseado no tipo
+                            function filtrarLancamentosPadrao(tipo, $select) {
+                                // Filtra usando as opções existentes no DOM
+                                $select.find('option').each(function() {
+                                    var $option = $(this);
+                                    var optionType = $option.data('type');
+
+                                    // Se for a opção vazia, mantém visível
+                                    if ($option.val() === '' || !optionType) {
+                                        $option.prop('disabled', false).show();
+                                    } else if (optionType === tipo) {
+                                        // Mostra opções do tipo correto
+                                        $option.prop('disabled', false).show();
+                                    } else {
+                                        // Esconde opções de outro tipo
+                                        $option.prop('disabled', true).hide();
+                                    }
+                                });
+
+                                // Limpa a seleção atual
+                                $select.val(null);
+
+                                // Atualiza o Select2
+                                setTimeout(function() {
+                                    if ($select.hasClass('select2-hidden-accessible')) {
+                                        $select.select2('destroy');
+                                    }
+                                    // Reinicializa o Select2
+                                    if (typeof KTSelect2 !== 'undefined') {
+                                        new KTSelect2($select[0]);
+                                    } else if (typeof $select.select2 !== 'undefined') {
+                                        $select.select2();
+                                    }
+                                }, 50);
+                            }
+                        });
+                    </script>
 
                     <div class="card mb-xl-10 ">
                         <div class="card-body px-10">
@@ -59,16 +243,27 @@
                                 <!--end::Col-->
                                 <!--begin::Col-->
                                 <div class="col-md-3 fv-row">
-                                    <label
-                                        class="required d-flex align-items-center fs-5 fw-semibold mb-2">Banco</label>
+                                    <label class="required d-flex align-items-center fs-5 fw-semibold mb-2"
+                                        id="label_entidade">Banco</label>
                                     <div class="input-group">
-                                        <select class="form-select" data-control="select2" data-dropdown-parent="#Dm_modal_financeiro"
-                                        data-placeholder="Selecione o Banco" name="entidade_id" data-hide-search="true"
-                                        id="entidade_id">
-                                            <option value="" disabled selected>Selecione o Banco</option>
-                                            @foreach ($entidadesBanco as $entidade)
-                                                <option value="{{ $entidade->id }}" data-icon="{{ $entidade->bank->logo_path }}">{{ $entidade->agencia }} - {{ $entidade->conta }}</option>
-                                            @endforeach
+                                        <select class="form-select" data-control="select2"
+                                            data-dropdown-parent="#Dm_modal_financeiro" data-placeholder="Selecione"
+                                            name="entidade_id" data-hide-search="true" id="entidade_id">
+                                            <option value="" disabled selected>Selecione</option>
+                                            @if (isset($entidadesBanco))
+                                                @foreach ($entidadesBanco as $entidade)
+                                                    <option value="{{ $entidade->id }}"
+                                                        data-icon="{{ $entidade->bank->logo_path ?? '' }}"
+                                                        data-origem="Banco">{{ $entidade->agencia }} -
+                                                        {{ $entidade->conta }}</option>
+                                                @endforeach
+                                            @endif
+                                            @if (isset($entidades))
+                                                @foreach ($entidades as $entidade)
+                                                    <option value="{{ $entidade->id }}" data-origem="Caixa">
+                                                        {{ $entidade->nome }} ({{ ucfirst($entidade->tipo) }})</option>
+                                                @endforeach
+                                            @endif
                                         </select>
                                     </div>
                                     <!-- Exibindo a mensagem de erro -->
@@ -108,13 +303,13 @@
                             <div class="row g-9 mb-8">
                                 <div class="col-md-2 fv-row">
                                     <label class="d-flex align-items-center fs-5 fw-semibold mb-2">
-                                        <span class="required">Entrada/Saída</span>
+                                        <span class="required">Tipo</span>
                                         <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
                                             title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
                                     </label>
                                     <select class="form-select" data-control="select2"
-                                        data-placeholder="Selecione o tipo" data-hide-search="true"
-                                        name="tipo" id="tipo_select_banco">
+                                        data-placeholder="Selecione o tipo" data-hide-search="true" name="tipo"
+                                        id="tipo_select_banco">
                                         <option value="" disabled selected>Defina o tipo</option>
                                         <option value="entrada" {{ old('tipo') == 'entrada' ? 'selected' : '' }}>
                                             Entrada</option>
@@ -128,14 +323,16 @@
                                 <div class="col-md-6 fv-row">
                                     <label class="required fs-6 fw-semibold mb-2">Lançamento Padrão</label>
                                     <div class="input-group">
-                                        <select class="form-select" data-control="select2" data-dropdown-parent="#Dm_modal_financeiro" name="lancamento_padrao_id" id="lancamento_padraos_id"
-                                            data-placeholder="Escolha um Lançamento..." data-allow-clear="true"
-                                            data-minimum-results-for-search="0">
+                                        <select class="form-select" data-control="select2"
+                                            data-dropdown-parent="#Dm_modal_financeiro" name="lancamento_padrao_id"
+                                            id="lancamento_padraos_id" data-placeholder="Escolha um Lançamento..."
+                                            data-allow-clear="true" data-minimum-results-for-search="0">
                                             <option value=""></option> <!-- Opção vazia para o placeholder -->
                                             @foreach ($lps as $lp)
                                                 <option value="{{ $lp->id }}"
                                                     data-description="{{ $lp->description }}"
-                                                    data-type="{{ $lp->type }}"> {{ $lp->id }} - {{ $lp->description }}
+                                                    data-type="{{ $lp->type }}"> {{ $lp->id }} -
+                                                    {{ $lp->description }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -149,7 +346,8 @@
                                     <div class="input-group">
                                         <select name="cost_center_id" id="cost_center_id"
                                             class="form-select @error('cost_center_id') is-invalid @enderror"
-                                            data-control="select2" data-dropdown-parent="#Dm_modal_financeiro" data-dropdown-css-class="auto"
+                                            data-control="select2" data-dropdown-parent="#Dm_modal_financeiro"
+                                            data-dropdown-css-class="auto"
                                             data-placeholder="Selecione o Centro de Custo" data-allow-clear="true"
                                             data-minimum-results-for-search="0">
                                             <!-- Placeholder configurado aqui -->
@@ -174,9 +372,9 @@
                                         class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
                                         title="As categorias são utilizadas para formar um Plano de Contas. Muitas destas categorias são demonstradas em Relatórios e também alimentam o DRE Gerencial."></i>
                                     <select class="form-select" data-control="select2"
-                                    data-dropdown-parent="#kt_modal_new_address"
-                                        data-hide-search="true" data-placeholder="Select a Team Member"
-                                        name="tipo_documento" id="tipo_documento">
+                                        data-dropdown-parent="#kt_modal_new_address" data-hide-search="true"
+                                        data-placeholder="Select a Team Member" name="tipo_documento"
+                                        id="tipo_documento">
                                         <option value="Pix" {{ old('tipo_documento') == 'Pix' ? 'selected' : '' }}>
                                             Pix
                                         </option>
@@ -237,9 +435,8 @@
                                 <div class="col-md-4 fv-row ">
                                     <label class="fs-5 fw-semibold mb-2">Número do Documento</label>
                                     <div class="input-group">
-                                        <input type="text" class="form-control"
-                                            placeholder="1234567890" name="numero_documento"
-                                            value="{{ old('numero_documento') }}" />
+                                        <input type="text" class="form-control" placeholder="1234567890"
+                                            name="numero_documento" value="{{ old('numero_documento') }}" />
                                     </div>
                                     @error('numero_documento')
                                         <div class="text-danger">{{ $message }}</div>
@@ -283,10 +480,36 @@
                                 <label class="form-check form-switch form-check-custom form-check-solid">
                                     <!-- Checkbox para enviar 1 quando marcado -->
                                     <input class="form-check-input" type="checkbox" name="comprovacao_fiscal"
-                                        value="1" />
+                                        value="1" id="comprovacao_fiscal_checkbox" />
                                     <span class="form-check-label fw-semibold text-muted">Possui Nota</span>
                                 </label>
                                 <!--end::Switch-->
+                                <script>
+                                    // Controla a exibição da tab de Anexos baseado no checkbox
+                                    $(document).ready(function() {
+                                        $('#comprovacao_fiscal_checkbox').on('change', function() {
+                                            var isChecked = $(this).is(':checked');
+                                            var tabAnexosItem = $('#tab_anexos_item');
+
+                                            if (isChecked) {
+                                                // Mostra a tab de Anexos
+                                                tabAnexosItem.show();
+                                            } else {
+                                                // Esconde a tab de Anexos
+                                                tabAnexosItem.hide();
+
+                                                // Se a tab de Anexos estiver ativa, volta para a tab de Histórico
+                                                var tabAnexosLink = tabAnexosItem.find('a');
+                                                if (tabAnexosLink.hasClass('active')) {
+                                                    tabAnexosLink.removeClass('active');
+                                                    $('#kt_tab_pane_2').removeClass('show active');
+                                                    $('#kt_tab_pane_1').addClass('show active');
+                                                    $('a[href="#kt_tab_pane_1"]').addClass('active');
+                                                }
+                                            }
+                                        });
+                                    });
+                                </script>
                             </div>
                             <!--end::Input group-->
                             <!--begin::Input group-->
@@ -297,7 +520,7 @@
                                             <a class="nav-link active" data-bs-toggle="tab"
                                                 href="#kt_tab_pane_1">Histórico complementar</a>
                                         </li>
-                                        <li class="nav-item">
+                                        <li class="nav-item" id="tab_anexos_item" style="display: none;">
                                             <a class="nav-link" data-bs-toggle="tab" href="#kt_tab_pane_2">Anexos</a>
                                         </li>
                                     </ul>
@@ -308,7 +531,9 @@
                                             <span class="fs-6 text-muted">Insira no máximo 250
                                                 caracteres</span>
                                         </div>
-
+                                        <div class="tab-pane fade" id="kt_tab_pane_2" role="tabpanel">
+                                            <x-anexos-input name="anexos" :anexosExistentes="[]" />
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -324,7 +549,7 @@
             <!--end::Modal body-->
 
             <!--begin::Modal footer-->
-            <div class="modal-footer">
+            <div class="modal-footer btn btn-sm">
                 <div class="text-center">
                     <button type="reset" id="Dm_modal_financeiro_cancel"
                         class="btn btn-sm btn-light me-3">Cancelar</button>

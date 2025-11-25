@@ -25,11 +25,13 @@
                                                         <!--begin::Details-->
                                                         <div class="ms-5">
                                                             <!--begin::Desc-->
-                                                            <span class="text-muted fw-semibold mb-3">Lançamentos Importantes</span>
+                                                            <span class="text-muted fw-semibold mb-3">Lançamentos
+                                                                Importantes</span>
                                                             <!--end::Desc-->
                                                             <!--begin::Name-->
                                                             <div class="d-flex align-items-center">
-                                                                <a class="text-dark fw-bold text-hover-primary fs-5 me-4">{{ $entidade->nome }}</a>
+                                                                <a
+                                                                    class="text-dark fw-bold text-hover-primary fs-5 me-4">{{ $entidade->nome }}</a>
                                                             </div>
                                                             <!--end::Name-->
                                                         </div>
@@ -252,7 +254,7 @@
                                                                         @csrf
                                                                         <input type="hidden" name="bank_statement_id"
                                                                             value="{{ $conciliacao->id }}">
-                                                                        @if($transacaoSugerida)
+                                                                        @if ($transacaoSugerida)
                                                                         <input type="hidden"
                                                                             name="transacao_financeira_id"
                                                                             value="{{ $transacaoSugerida->id }}">
@@ -307,7 +309,8 @@
                                                                                                 class="fw-bold fs-5 text-danger">R$
                                                                                                 {{ number_format($transacaoSugerida->valor, 2, ',', '.') }}</span>
                                                                                         @else
-                                                                                            <span class="fw-bold fs-5 text-muted">R$
+                                                                                            <span
+                                                                                                class="fw-bold fs-5 text-muted">R$
                                                                                                 {{ number_format($conciliacao->amount, 2, ',', '.') }}</span>
                                                                                         @endif
                                                                                     </div>
@@ -416,7 +419,7 @@
                                                                                     <input type="hidden"
                                                                                         name="bank_statement_id"
                                                                                         value="{{ $conciliacao->id }}">
-                                                                                    @if($transacaoSugerida)
+                                                                                    @if ($transacaoSugerida)
                                                                                     <input type="hidden"
                                                                                         name="transacao_financeira_id"
                                                                                         value="{{ $transacaoSugerida->id }}">
@@ -505,10 +508,13 @@
                                                                     class="card-body d-flex align-items-center justify-content-center h-100">
                                                                     <button
                                                                         class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
-                                                                        type="submit" form="{{ $conciliacao->id }}">
+                                                                        type="button"
+                                                                        id="btn-conciliar-{{ $conciliacao->id }}">
                                                                         <span class="fs-1 me-2">🫱🏻‍🫲🏽</span>
                                                                         <!-- Emoji com tamanho ajustado -->
-                                                                        <span>Conciliar</span> <!-- Texto -->
+                                                                        <span
+                                                                            id="btn-conciliar-text-{{ $conciliacao->id }}">Conciliar</span>
+                                                                        <!-- Texto -->
                                                                     </button>
                                                                 </div>
                                                                 <!--end::Body-->
@@ -619,7 +625,8 @@
                                                                                     <div class="col-md-6">
 
                                                                                         <label for="categoria"
-                                                                                            class="required form-label fw-semibold">Centro de Custo</label>
+                                                                                            class="required form-label fw-semibold">Centro
+                                                                                            de Custo</label>
                                                                                         <select name="cost_center_id"
                                                                                             id="banco_id"
                                                                                             class="form-select form-select-solid @error('cost_center_id') is-invalid @enderror"
@@ -677,7 +684,7 @@
                                                                                         <input type="hidden"
                                                                                             name="bank_statement_id"
                                                                                             value="{{ $conciliacao->id }}">
-                                                                                        @if($transacaoSugerida)
+                                                                                        @if ($transacaoSugerida)
                                                                                         <input type="hidden"
                                                                                             name="transacao_financeira_id"
                                                                                             value="{{ $transacaoSugerida->id }}">
@@ -813,8 +820,8 @@
                                                                                                 <label
                                                                                                     class="fs-12 fw-semibold form-label">
                                                                                                     Existe comprovação
-                                                                                                    fiscal para
-                                                                                                    {{ $conciliacao->id }}?
+                                                                                                    fiscal
+                                                                                                    para{{ $conciliacao->id }}?
                                                                                                 </label>
                                                                                                 <div
                                                                                                     class="fs-7 fw-semibold text-muted">
@@ -828,15 +835,10 @@
                                                                                             <!--begin::Switch-->
                                                                                             <label
                                                                                                 class="form-check form-switch form-check-custom form-check-solid">
-                                                                                                <span
-                                                                                                    class="form-check-label fw-semibold text-muted">Possui
-                                                                                                    Nota</span>
-
                                                                                                 <!-- Hidden default 0 -->
                                                                                                 <input type="hidden"
                                                                                                     name="comprovacao_fiscal"
                                                                                                     value="0">
-
                                                                                                 <!-- Checkbox -->
                                                                                                 <input
                                                                                                     class="form-check-input"
@@ -858,36 +860,7 @@
                                                                                     <div class="col-md-12"
                                                                                         id="anexoInputContainer_{{ $conciliacao->id }}"
                                                                                         style="display: none;">
-                                                                                        <input type="file"
-                                                                                            name="files_{{ $conciliacao->id }}[]"
-                                                                                            id="photos_{{ $conciliacao->id }}" />
-
-                                                                                        <script>
-                                                                                            // Inicializa o KendoUpload nesse ID específico
-                                                                                            $(document).ready(function() {
-                                                                                                $("#photos_{{ $conciliacao->id }}").kendoUpload({
-                                                                                                    async: {
-                                                                                                        removeUrl: "{{ url('/remove') }}",
-                                                                                                        removeField: "path",
-                                                                                                        withCredentials: false
-                                                                                                    },
-                                                                                                    multiple: true,
-                                                                                                    validation: {
-                                                                                                        allowedExtensions: ["jpg", "jpeg", "png", "pdf", "page"],
-                                                                                                        maxFileSize: 5242880, // 5 MB
-                                                                                                        minFileSize: 1024 // 1 KB
-                                                                                                    },
-                                                                                                    localization: {
-                                                                                                        uploadSuccess: "Upload bem-sucedido!",
-                                                                                                        uploadFail: "Falha no upload",
-                                                                                                        invalidFileExtension: "Tipo de arquivo não permitido",
-                                                                                                        invalidMaxFileSize: "O arquivo é muito grande",
-                                                                                                        invalidMinFileSize: "O arquivo é muito pequeno",
-                                                                                                        select: "Anexar Arquivos"
-                                                                                                    }
-                                                                                                });
-                                                                                            });
-                                                                                        </script>
+                                                                                        <x-anexos-input name="anexos" :anexosExistentes="[]" />
                                                                                     </div>
                                                                                 </div>
 
@@ -914,7 +887,316 @@
                                                                             id="transferencia-{{ $conciliacao->id }}-pane"
                                                                             role="tabpanel"
                                                                             aria-labelledby="transferencia-{{ $conciliacao->id }}-tab">
-                                                                            <p>Formulário de transferência...</p>
+                                                                            <form
+                                                                                id="form-transferencia-{{ $conciliacao->id }}"
+                                                                                action="{{ route('conciliacao.transferir') }}"
+                                                                                method="POST">
+                                                                                @csrf
+                                                                                <input type="hidden"
+                                                                                    name="bank_statement_id"
+                                                                                    value="{{ $conciliacao->id }}">
+                                                                                <input type="hidden"
+                                                                                    name="entidade_origem_id"
+                                                                                    value="{{ $entidade->id }}">
+
+                                                                                <div class="row mb-5">
+                                                                                    <!-- Conta de Origem (readonly) -->
+                                                                                    <div class="col-md-6">
+                                                                                        <label
+                                                                                            class="form-label fw-semibold required">Conta
+                                                                                            de Origem</label>
+                                                                                        <input type="text"
+                                                                                            class="form-control form-control-solid"
+                                                                                            value="{{ $entidade->nome }}"
+                                                                                            readonly disabled>
+                                                                                        <div class="form-text">Conta
+                                                                                            atual sendo conciliada</div>
+                                                                                    </div>
+
+                                                                                    <!-- Conta de Destino -->
+                                                                                    <div class="col-md-6">
+                                                                                        <label
+                                                                                            for="entidade_destino_id_{{ $conciliacao->id }}"
+                                                                                            class="form-label fw-semibold required">Conta
+                                                                                            de Destino</label>
+                                                                                        <select
+                                                                                            name="entidade_destino_id"
+                                                                                            id="entidade_destino_id_{{ $conciliacao->id }}"
+                                                                                            class="form-select form-select-solid"
+                                                                                            data-control="select2"
+                                                                                            data-placeholder="Selecione a conta de destino"
+                                                                                            required>
+                                                                                            <option value="">
+                                                                                                Carregando contas...
+                                                                                            </option>
+                                                                                        </select>
+                                                                                        <div class="form-text">
+                                                                                            Selecione para onde
+                                                                                            transferir o valor</div>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div class="row mb-5">
+                                                                                    <!-- Valor da Transferência -->
+                                                                                    <div class="col-md-6">
+                                                                                        <label
+                                                                                            for="valor_transferencia_{{ $conciliacao->id }}"
+                                                                                            class="form-label fw-semibold required">Valor
+                                                                                            da Transferência</label>
+                                                                                        <div class="input-group">
+                                                                                            <span
+                                                                                                class="input-group-text">R$</span>
+                                                                                            <input type="text"
+                                                                                                id="valor_transferencia_{{ $conciliacao->id }}"
+                                                                                                class="form-control form-control-solid"
+                                                                                                value="{{ number_format(abs($conciliacao->amount), 2, ',', '.') }}"
+                                                                                                placeholder="0,00"
+                                                                                                readonly
+                                                                                                style="background-color: #f1f1f1; cursor: not-allowed;"
+                                                                                                disabled>
+                                                                                            <!-- Campo hidden com valor numérico puro para validação e envio -->
+                                                                                            <input type="hidden"
+                                                                                                name="valor"
+                                                                                                value="{{ abs($conciliacao->amount) }}">
+                                                                                        </div>
+                                                                                        <div class="form-text">Valor a
+                                                                                            ser transferido entre as
+                                                                                            contas (não editável)</div>
+                                                                                    </div>
+
+                                                                                    <!-- Data da Transferência -->
+                                                                                    <div class="col-md-6">
+                                                                                        <label
+                                                                                            for="data_transferencia_{{ $conciliacao->id }}"
+                                                                                            class="form-label fw-semibold required">Data
+                                                                                            da Transferência</label>
+                                                                                        <input type="date"
+                                                                                            name="data_transferencia"
+                                                                                            id="data_transferencia_{{ $conciliacao->id }}"
+                                                                                            class="form-control form-control-solid"
+                                                                                            value="{{ \Carbon\Carbon::parse($conciliacao->dtposted)->format('Y-m-d') }}"
+                                                                                            readonly
+                                                                                            style="background-color: #f1f1f1; cursor: not-allowed;"
+                                                                                            required>
+                                                                                        <div class="form-text">Data do
+                                                                                            lançamento bancário (não
+                                                                                            editável)</div>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <div class="row mb-5">
+                                                                                    <!-- Lançamento Padrão -->
+                                                                                    <div class="col-md-6">
+                                                                                        <label
+                                                                                            for="lancamento_padrao_id_transferencia_{{ $conciliacao->id }}"
+                                                                                            class="form-label fw-semibold required">Lançamento
+                                                                                            Padrão</label>
+                                                                                        <select
+                                                                                            name="lancamento_padrao_id"
+                                                                                            id="lancamento_padrao_id_transferencia_{{ $conciliacao->id }}"
+                                                                                            class="form-select form-select-solid"
+                                                                                            data-control="select2"
+                                                                                            data-placeholder="Selecione o lançamento padrão"
+                                                                                            required>
+                                                                                            <option value="">
+                                                                                                Selecione...</option>
+                                                                                            @foreach ($lps as $lp)
+                                                                                                @if (
+                                                                                                    $lp->type === 'ambos' ||
+                                                                                                        str_contains(strtolower($lp->description), 'transferência') ||
+                                                                                                        str_contains(strtolower($lp->description), 'transferencia'))
+                                                                                                    <option
+                                                                                                        value="{{ $lp->id }}"
+                                                                                                        {{ old('lancamento_padrao_id') == $lp->id ? 'selected' : '' }}>
+                                                                                                        {{ $lp->description }}
+                                                                                                    </option>
+                                                                                                @endif
+                                                                                            @endforeach
+                                                                                        </select>
+                                                                                        <div class="form-text">
+                                                                                            Selecione um lançamento
+                                                                                            padrão do tipo "Ambos" ou
+                                                                                            relacionado a transferências
+                                                                                        </div>
+                                                                                    </div>
+
+                                                                                    <!-- Descrição -->
+                                                                                    <div class="col-md-6">
+                                                                                        <label
+                                                                                            for="descricao_transferencia_{{ $conciliacao->id }}"
+                                                                                            class="form-label fw-semibold">Descrição</label>
+                                                                                        <textarea name="descricao" id="descricao_transferencia_{{ $conciliacao->id }}"
+                                                                                            class="form-control form-control-solid" rows="3"
+                                                                                            placeholder="Ex: Transferência automática entre contas - {{ $conciliacao->memo }}">{{ $conciliacao->memo ? 'Transferência: ' . $conciliacao->memo : '' }}</textarea>
+                                                                                    </div>
+                                                                                </div>
+
+                                                                                <!-- Botão removido - usando o botão "Conciliar" centralizado -->
+                                                                            </form>
+
+                                                                            <script>
+                                                                                $(document).ready(function() {
+                                                                                    // Carrega as contas disponíveis ao abrir a aba
+                                                                                    const conciliacaoId = {{ $conciliacao->id }};
+                                                                                    const entidadeOrigemId = {{ $entidade->id }};
+                                                                                    const selectDestino = $('#entidade_destino_id_' + conciliacaoId);
+
+                                                                                    // Carrega contas quando a aba é mostrada
+                                                                                    $('#transferencia-' + conciliacaoId + '-tab').on('shown.bs.tab', function() {
+                                                                                        if (selectDestino.find('option').length <= 1) {
+                                                                                            carregarContasDisponiveis(conciliacaoId, entidadeOrigemId);
+                                                                                        }
+                                                                                    });
+
+                                                                                    // Função para carregar contas disponíveis
+                                                                                    function carregarContasDisponiveis(conciliacaoId, entidadeOrigemId) {
+                                                                                        selectDestino.html('<option value="">Carregando...</option>');
+
+                                                                                        $.ajax({
+                                                                                            url: '{{ route('conciliacao.contas-disponiveis') }}',
+                                                                                            method: 'GET',
+                                                                                            data: {
+                                                                                                entidade_origem_id: entidadeOrigemId,
+                                                                                                bank_statement_id: conciliacaoId
+                                                                                            },
+                                                                                            success: function(response) {
+                                                                                                if (response.success && response.contas) {
+                                                                                                    selectDestino.html(
+                                                                                                    '<option value="">Selecione a conta de destino</option>');
+
+                                                                                                    response.contas.forEach(function(conta) {
+                                                                                                        const option = $('<option></option>')
+                                                                                                            .attr('value', conta.id)
+                                                                                                            .text(conta.nome + (conta.account_type ? ' - ' + conta
+                                                                                                                .account_type_label : ''));
+                                                                                                        selectDestino.append(option);
+                                                                                                    });
+
+                                                                                                    // Inicializa Select2
+                                                                                                    if (selectDestino.hasClass('select2-hidden-accessible')) {
+                                                                                                        selectDestino.select2('destroy');
+                                                                                                    }
+                                                                                                    selectDestino.select2({
+                                                                                                        placeholder: "Selecione a conta de destino",
+                                                                                                        allowClear: true
+                                                                                                    });
+                                                                                                } else {
+                                                                                                    selectDestino.html('<option value="">Nenhuma conta disponível</option>');
+                                                                                                }
+                                                                                            },
+                                                                                            error: function(xhr) {
+                                                                                                console.error('Erro ao carregar contas:', xhr);
+                                                                                                selectDestino.html('<option value="">Erro ao carregar contas</option>');
+                                                                                            }
+                                                                                        });
+                                                                                    }
+
+                                                                                    // Campo de valor não é mais editável, então não precisa de máscara
+                                                                                });
+
+                                                                                // Controla o comportamento do botão "Conciliar" baseado na aba ativa
+                                                                                $(document).ready(function() {
+                                                                                    const conciliacaoId = {{ $conciliacao->id }};
+                                                                                    const btnConciliar = $('#btn-conciliar-' + conciliacaoId);
+                                                                                    const btnConciliarText = $('#btn-conciliar-text-' + conciliacaoId);
+                                                                                    const formNovoLancamento = $('#' + conciliacaoId);
+                                                                                    const formTransferencia = $('#form-transferencia-' + conciliacaoId);
+
+                                                                                    // Função para atualizar o botão baseado na aba ativa
+                                                                                    function atualizarBotaoConciliar() {
+                                                                                        // Verifica qual aba está ativa usando múltiplas formas
+                                                                                        const tabNovoLancamento = $('#novo-lancamento-' + conciliacaoId + '-tab');
+                                                                                        const tabTransferencia = $('#transferencia-' + conciliacaoId + '-tab');
+
+                                                                                        const abaNovoLancamento = $('#novo-lancamento-' + conciliacaoId + '-pane');
+                                                                                        const abaTransferencia = $('#transferencia-' + conciliacaoId + '-pane');
+
+                                                                                        // Verifica qual tab button está ativo usando múltiplas formas
+                                                                                        const tabNovoLancamentoAtivo = tabNovoLancamento.hasClass('active') ||
+                                                                                            tabNovoLancamento.attr('aria-selected') === 'true' ||
+                                                                                            (abaNovoLancamento.hasClass('active') && abaNovoLancamento.hasClass('show'));
+
+                                                                                        const tabTransferenciaAtivo = tabTransferencia.hasClass('active') ||
+                                                                                            tabTransferencia.attr('aria-selected') === 'true' ||
+                                                                                            (abaTransferencia.hasClass('active') && abaTransferencia.hasClass('show')) ||
+                                                                                            abaTransferencia.hasClass('show');
+
+                                                                                        // Prioriza Transferência se ambas estiverem ativas (não deveria acontecer, mas por segurança)
+                                                                                        if (tabTransferenciaAtivo) {
+                                                                                            // Aba "Transferência" está ativa
+                                                                                            btnConciliarText.text('Realizar Transferência');
+                                                                                            btnConciliar.attr('form', 'form-transferencia-' + conciliacaoId);
+                                                                                        } else if (tabNovoLancamentoAtivo) {
+                                                                                            // Aba "Novo Lançamento" está ativa
+                                                                                            btnConciliarText.text('Conciliar');
+                                                                                            btnConciliar.attr('form', conciliacaoId);
+                                                                                        } else {
+                                                                                            // Outra aba (Buscar/Criar vários)
+                                                                                            btnConciliarText.text('Conciliar');
+                                                                                            btnConciliar.removeAttr('form');
+                                                                                        }
+                                                                                    }
+
+                                                                                    // Atualiza quando uma aba é mostrada (evento do Bootstrap)
+                                                                                    $('#novo-lancamento-' + conciliacaoId + '-tab, #transferencia-' + conciliacaoId +
+                                                                                        '-tab, #buscar-criar-' + conciliacaoId + '-tab').on('shown.bs.tab', function(e) {
+                                                                                        atualizarBotaoConciliar();
+                                                                                    });
+
+                                                                                    // Atualiza quando a aba é clicada (com pequeno delay para garantir que Bootstrap processou)
+                                                                                    $('#novo-lancamento-' + conciliacaoId + '-tab, #transferencia-' + conciliacaoId +
+                                                                                        '-tab, #buscar-criar-' + conciliacaoId + '-tab').on('click', function(e) {
+                                                                                        // Usa um pequeno delay para garantir que o Bootstrap processou a mudança
+                                                                                        setTimeout(function() {
+                                                                                            atualizarBotaoConciliar();
+                                                                                        }, 50);
+                                                                                    });
+
+                                                                                    // Inicializa o botão na carga da página
+                                                                                    atualizarBotaoConciliar();
+
+                                                                                    // Converte o botão para submit quando clicado
+                                                                                    btnConciliar.on('click', function(e) {
+                                                                                        e.preventDefault();
+
+                                                                                        // Atualiza o botão antes de submeter (garante que está correto)
+                                                                                        atualizarBotaoConciliar();
+
+                                                                                        const formId = $(this).attr('form');
+
+                                                                                        if (formId) {
+                                                                                            const form = $('#' + formId);
+
+                                                                                            if (form.length) {
+                                                                                                // Sincroniza Select2 antes de validar
+                                                                                                form.find('select[data-control="select2"]').each(function() {
+                                                                                                    const $select = $(this);
+                                                                                                    if ($select.hasClass('select2-hidden-accessible')) {
+                                                                                                        const selectedValue = $select.val();
+                                                                                                        $select.data('select2').$container.find(
+                                                                                                            '.select2-selection__rendered').attr('title', $select.find(
+                                                                                                            'option:selected').text());
+                                                                                                    }
+                                                                                                });
+
+                                                                                                // Valida o formulário antes de submeter
+                                                                                                if (form[0].checkValidity()) {
+                                                                                                    form.submit();
+                                                                                                } else {
+                                                                                                    // Mostra quais campos estão inválidos
+                                                                                                    const invalidFields = form[0].querySelectorAll(':invalid');
+                                                                                                    console.log('Campos inválidos:', Array.from(invalidFields).map(f => ({
+                                                                                                        id: f.id,
+                                                                                                        name: f.name,
+                                                                                                        validationMessage: f.validationMessage
+                                                                                                    })));
+                                                                                                    form[0].reportValidity();
+                                                                                                }
+                                                                                            }
+                                                                                        }
+                                                                                    });
+                                                                                });
+                                                                            </script>
                                                                         </div>
                                                                         <!-- Aba Buscar/Criar Vários -->
                                                                         <div class="tab-pane fade"
@@ -943,4 +1225,3 @@
                                     </div>
                                 </div>
                             </div>
-

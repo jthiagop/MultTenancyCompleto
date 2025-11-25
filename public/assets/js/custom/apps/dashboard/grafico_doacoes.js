@@ -75,7 +75,15 @@ var KTProjectOverview = function () {
             },
             legend: { show: false },
             dataLabels: { enabled: false },
-            fill: { type: 'solid', opacity: 1 },
+            fill: {
+                type: 'gradient',
+                gradient: {
+                    shadeIntensity: 1,
+                    opacityFrom: 0.4,
+                    opacityTo: 0.1,
+                    stops: [0, 90, 100]
+                }
+            },
             stroke: {
                 curve: 'smooth',
                 width: 3,
@@ -123,6 +131,12 @@ var KTProjectOverview = function () {
                 colors: [colors.lightPrimary, colors.lightSuccess, colors.lightWarning],
                 strokeColor: [colors.primary, colors.success, colors.warning],
                 strokeWidth: 3
+            },
+            // Configuração para permitir que todas as séries sejam visíveis
+            plotOptions: {
+                area: {
+                    fillTo: 'end'
+                }
             }
         };
 

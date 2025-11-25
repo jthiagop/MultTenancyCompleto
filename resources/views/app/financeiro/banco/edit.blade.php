@@ -591,7 +591,7 @@
 
                                                     <!-- Nome -->
                                                     <td>
-                                                        <x-file-icon :file="$file->nome_arquivo" />
+                                                        <x-file-icon :anexo="$file" />
                                                     </td>
 
                                                     <!-- Tamanho -->

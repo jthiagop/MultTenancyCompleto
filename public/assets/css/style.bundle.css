@@ -46825,19 +46825,19 @@ body,
 
 @media (min-width: 992px) {
   :root {
-    --bs-app-header-height: 70px;
-    --bs-app-header-height-actual: 70px;
+    --bs-app-header-height: 50px;
+    --bs-app-header-height-actual: 50px;
   }
   [data-kt-app-header-sticky=on] {
-    --bs-app-header-height: 70px;
-    --bs-app-header-height-actual: 70px;
+    --bs-app-header-height: 50px;
+    --bs-app-header-height-actual: 50px;
   }
   [data-kt-app-header-sticky=on][data-kt-app-header-stacked=true] {
     --bs-app-header-height: calc(var(--bs-app-header-primary-height, 0px) + var(--bs-app-header-secondary-height, 0px) + var(--bs-app-header-tertiary-height, 0px));
-    --bs-app-header-height-actual: calc(70px + 70px + 70px);
+    --bs-app-header-height-actual: calc(50px + 50px + 50px);
   }
   [data-kt-app-header-minimize=on] {
-    --bs-app-header-height: 70px;
+    --bs-app-header-height: 50px;
   }
   .app-header {
     height: var(--bs-app-header-height);

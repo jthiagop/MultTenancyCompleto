@@ -41,12 +41,28 @@
             @endphp
             @foreach ($anexos as $anexo)
                 @php
-                    $extension = pathinfo($anexo->nome_arquivo ?? '', PATHINFO_EXTENSION);
-                    $iconData = $icons[strtolower($extension)] ?? $defaultIcon;
+                    $formaAnexo = $anexo->forma_anexo ?? 'arquivo';
+                    $isLink = $formaAnexo === 'link';
+                    
+                    if ($isLink) {
+                        $href = $anexo->link ?? '#';
+                        $tooltip = $anexo->link ?? 'Link';
+                        $iconData = ['icon' => 'bi-link-45deg', 'color' => 'text-primary'];
+                    } else {
+                        $extension = pathinfo($anexo->nome_arquivo ?? '', PATHINFO_EXTENSION);
+                        $iconData = $icons[strtolower($extension)] ?? $defaultIcon;
+                        $tooltip = $anexo->nome_arquivo ?? 'Arquivo';
+                        
+                        if ($anexo->caminho_arquivo) {
+                            $href = route('file', ['path' => $anexo->caminho_arquivo]);
+                        } else {
+                            $href = '#';
+                        }
+                    }
                 @endphp
                 <div class="symbol symbol-30px symbol-circle bg-light-primary text-primary d-flex justify-content-center align-items-center"
-                    data-bs-toggle="tooltip" title="{{ $anexo->nome_arquivo }}">
-                    <a href="{{ route('file', ['path' => $anexo->caminho_arquivo]) }}"
+                    data-bs-toggle="tooltip" title="{{ $tooltip }}">
+                    <a href="{{ $href }}"
                         target="_blank" class="text-decoration-none">
                         <i class="bi {{ $iconData['icon'] }} {{ $iconData['color'] }} fs-3"></i>
                     </a>

@@ -2,10 +2,10 @@
     <div class="cursor-pointer symbol-group symbol-hover"
         data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent"
         data-kt-menu-placement="bottom-end">
-        
+
         {{-- INÍCIO DO NOVO ÍCONE AGRUPADO --}}
 
-        <div class="symbol symbol-circle symbol-35px symbol-md-40px">
+        <div class="symbol symbol-circle symbol-30px symbol-md-30px">
             @if($currentUser && $currentUser->avatar)
                 <img src="{{ route('file', ['path' => $currentUser->avatar]) }}" alt="Usuário"/>
             @else
@@ -14,7 +14,7 @@
             @endif
         </div>
 
-        <div class="symbol symbol-circle symbol-35px symbol-md-40px">
+        <div class="symbol symbol-circle symbol-30px symbol-md-30px">
             @if($activeCompany && $activeCompany->avatar)
                 <img src="{{ route('file', ['path' => $activeCompany->avatar]) }}" alt="Empresa"/>
             @else
@@ -22,7 +22,7 @@
                 <div class="symbol-label fs-2 fw-semibold bg-success text-inverse-success">{{ strtoupper(substr($activeCompany->name ?? 'C', 0, 1)) }}</div>
             @endif
         </div>
-        
+
         {{-- FIM DO NOVO ÍCONE AGRUPADO --}}
 
     </div>
@@ -54,7 +54,7 @@
             <div class="menu-sub menu-sub-dropdown w-275px py-4">
                 @foreach ($allCompanies as $company)
                 <div class="menu-item px-3">
-                    <a href="{{ route('session.switch-company', $company->id) }}" 
+                    <a href="{{ route('session.switch-company', $company->id) }}"
                        class="menu-link d-flex px-5 @if($activeCompany && $activeCompany->id == $company->id) active @endif">
                         <span class="symbol symbol-20px me-4">
                             @if($company->avatar)
@@ -76,7 +76,7 @@
         </div>
         <div class="separator my-2"></div>
         <div class="menu-item px-5">
-            <a href="{{ route('logout') }}" 
+            <a href="{{ route('logout') }}"
                onclick="event.preventDefault(); document.getElementById('logout-form').submit();"
                class="menu-link px-5">
                Sair
