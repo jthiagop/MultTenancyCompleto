@@ -39,4 +39,11 @@ class Address extends Model
     {
         return $this->hasMany(Recibo::class, 'address_id');
     }
+
+    public function fieis()
+    {
+        return $this->belongsToMany(Fiel::class, 'fiel_address', 'address_id', 'fiel_id')
+            ->withPivot('tipo')
+            ->withTimestamps();
+    }
 }

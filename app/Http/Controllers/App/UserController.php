@@ -73,16 +73,25 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
+        // Verificar se é atualização (tem user_id) ou criação
+        $userId = $request->input('user_id');
+        $emailRule = $userId
+            ? 'required|email|max:255|unique:users,email,' . $userId
+            : 'required|email|max:255|unique:users,email';
+
         // Obtendo o nome do banco de dados
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email',
-            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'email' => $emailRule,
+            'password' => $userId
+                ? ['nullable', 'confirmed', Rules\Password::defaults()]
+                : ['required', 'confirmed', Rules\Password::defaults()],
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Exemplo de regras para o campo avatar
             'roles' => 'required|array',
             'filiais' => 'array', // Certifique-se de que 'filiais' é um array
             'status' => 'nullable|boolean', // Status como um campo booleano
             'notifications' => 'nullable|array', // Deve ser um array, opcional (email/telefone)
+            'must_change_password' => 'nullable|boolean', // Campo para obrigar troca de senha
         ]);
 
         $validatedData['status'] = json_encode($request->input('status', [0]));
@@ -98,16 +107,29 @@ class UserController extends Controller
         }
 
         // Criação ou atualização do usuário
-        $user = User::updateOrCreate(
-            ['email' => $validatedData['email']], // Critério para identificar o usuário
-            [
-                'name' => $validatedData['name'],
-                'password' => bcrypt($validatedData['password']),
-                'avatar' => $validatedData['avatar'],
-                'active' => json_encode($validatedData['status'] ?? [0]),
-                'notifications' => json_encode($validatedData['notifications'] ?? []),
-            ]
-        );
+        $userData = [
+            'name' => $validatedData['name'],
+            'avatar' => $validatedData['avatar'],
+            'active' => json_encode($validatedData['status'] ?? [0]),
+            'notifications' => json_encode($validatedData['notifications'] ?? []),
+            'must_change_password' => $request->has('must_change_password') && $request->input('must_change_password') == '1' ? true : false,
+        ];
+
+        // Atualizar senha apenas se fornecida
+        if (!empty($validatedData['password'])) {
+            $userData['password'] = bcrypt($validatedData['password']);
+        }
+
+        if ($userId) {
+            // Atualização
+            $user = User::findOrFail($userId);
+            $user->update($userData);
+        } else {
+            // Criação
+            $userData['email'] = $validatedData['email'];
+            $userData['password'] = bcrypt($validatedData['password']);
+            $user = User::create($userData);
+        }
         // Sincronizar permissões (roles) se estiverem presentes
         if (isset($validatedData['roles'])) {
             $user->roles()->sync($request->input('roles'));
@@ -119,6 +141,20 @@ class UserController extends Controller
         // Remove duplicatas e sincroniza com a tabela pivot
         $user->companies()->sync(array_unique($companiesToSync));
 
+
+        // Se for requisição AJAX, retornar JSON
+        if ($request->expectsJson() || $request->wantsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuário criado ou atualizado com sucesso!',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'must_change_password' => $user->must_change_password,
+                ]
+            ]);
+        }
 
         // Adicionar mensagem de sucesso ao Flasher
         session()->flash('success', 'Usuário criado ou atualizado com sucesso.');
@@ -172,12 +208,18 @@ class UserController extends Controller
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'roles' => 'nullable|array',
             'filiais' => 'array', // Adicione esta linha para validar o campo 'filiais'
+            'must_change_password' => 'nullable|boolean', // Campo para obrigar troca de senha
         ]);
 
 
         // Processar upload do avatar se fornecido
         if ($request->hasFile('avatar')) {
             $validateData['avatar'] = $this->handleAvatarUpload($request);
+        }
+
+        // Atualizar must_change_password se fornecido
+        if ($request->has('must_change_password')) {
+            $validateData['must_change_password'] = $request->input('must_change_password') == '1';
         }
 
         $user->update($validateData);
@@ -189,6 +231,21 @@ class UserController extends Controller
         if (isset($validateData['filiais'])) {
             $user->filiais()->sync($validateData['filiais']);
         }
+
+        // Se for requisição AJAX, retornar JSON
+        if ($request->expectsJson() || $request->wantsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Usuário atualizado com sucesso!',
+                'user' => [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'must_change_password' => $user->must_change_password,
+                ]
+            ]);
+        }
+
         return redirect()->route('users.index')->with('success', ' Usuário cadastrodo com Sucesso!');;
     }
 
@@ -402,36 +459,49 @@ class UserController extends Controller
     public function resetPassword(Request $request, User $user)
     {
         try {
-            // Validação dos dados
-            $request->validate([
-                'password' => 'required|string|min:8|max:256|confirmed',
-                'require_change' => 'boolean'
-            ], [
-                'password.required' => 'A senha é obrigatória.',
-                'password.min' => 'A senha deve ter pelo menos 8 caracteres.',
-                'password.max' => 'A senha deve ter no máximo 256 caracteres.',
-                'password.confirmed' => 'A confirmação da senha não confere.',
-            ]);
+            $automaticPassword = $request->boolean('automatic_password', false);
+            $requireChange = $request->boolean('require_change', true);
 
-            // Validar complexidade da senha
-            $password = $request->password;
-            $hasUppercase = preg_match('/[A-Z]/', $password);
-            $hasLowercase = preg_match('/[a-z]/', $password);
-            $hasNumbers = preg_match('/[0-9]/', $password);
-            $hasSymbols = preg_match('/[^A-Za-z0-9]/', $password);
+            $password = null;
+            $generatedPassword = null;
 
-            $complexityCount = $hasUppercase + $hasLowercase + $hasNumbers + $hasSymbols;
+            if ($automaticPassword) {
+                // Gerar senha automática
+                $generatedPassword = $this->generateSecurePassword();
+                $password = $generatedPassword;
+            } else {
+                // Validação dos dados para senha manual
+                $request->validate([
+                    'password' => 'required|string|min:8|max:256|confirmed',
+                    'require_change' => 'boolean'
+                ], [
+                    'password.required' => 'A senha é obrigatória.',
+                    'password.min' => 'A senha deve ter pelo menos 8 caracteres.',
+                    'password.max' => 'A senha deve ter no máximo 256 caracteres.',
+                    'password.confirmed' => 'A confirmação da senha não confere.',
+                ]);
 
-            if ($complexityCount < 3) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.'
-                ], 422);
+                $password = $request->password;
+
+                // Validar complexidade da senha
+                $hasUppercase = preg_match('/[A-Z]/', $password);
+                $hasLowercase = preg_match('/[a-z]/', $password);
+                $hasNumbers = preg_match('/[0-9]/', $password);
+                $hasSymbols = preg_match('/[^A-Za-z0-9]/', $password);
+
+                $complexityCount = $hasUppercase + $hasLowercase + $hasNumbers + $hasSymbols;
+
+                if ($complexityCount < 3) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.'
+                    ], 422);
+                }
             }
 
             // Atualizar a senha
             $user->password = Hash::make($password);
-            $user->must_change_password = $request->boolean('require_change', true);
+            $user->must_change_password = $requireChange;
             $user->password_changed_at = now();
             $user->save();
 
@@ -439,33 +509,62 @@ class UserController extends Controller
                 'user_id' => $user->id,
                 'user_email' => $user->email,
                 'must_change_password' => $user->must_change_password,
+                'automatic_password' => $automaticPassword,
                 'reset_by' => Auth::user()->id
             ]);
 
-            return response()->json([
+            $response = [
                 'success' => true,
-                'message' => 'Senha redefinida com sucesso! ' . 
-                    ($user->must_change_password ? 'O usuário será obrigado a alterar a senha no próximo login.' : ''),
+                'message' => $automaticPassword
+                    ? 'Senha gerada com sucesso! ' . ($requireChange ? 'O usuário será obrigado a alterar a senha no próximo login.' : '')
+                    : 'Senha redefinida com sucesso! ' . ($requireChange ? 'O usuário será obrigado a alterar a senha no próximo login.' : ''),
                 'must_change_password' => $user->must_change_password
-            ]);
+            ];
 
-        } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Dados inválidos.',
-                'errors' => $e->errors()
-            ], 422);
+            // Se senha foi gerada automaticamente, incluir na resposta
+            if ($automaticPassword && $generatedPassword) {
+                $response['generated_password'] = $generatedPassword;
+            }
+
+            return response()->json($response);
         } catch (\Exception $e) {
-            Log::error('Erro ao redefinir senha do usuário: ' . $e->getMessage(), [
+            Log::error('Erro ao redefinir senha do usuário', [
                 'user_id' => $user->id,
-                'request_data' => $request->all()
+                'error' => $e->getMessage()
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Ocorreu um erro inesperado. Por favor, tente novamente.'
+                'message' => 'Ocorreu um erro ao redefinir a senha. Tente novamente.'
             ], 500);
         }
+    }
+
+    /**
+     * Gera uma senha segura automaticamente
+     */
+    private function generateSecurePassword($length = 12)
+    {
+        $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $lowercase = 'abcdefghijklmnopqrstuvwxyz';
+        $numbers = '0123456789';
+        $symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+        $all = $uppercase . $lowercase . $numbers . $symbols;
+
+        // Garantir que a senha tenha pelo menos um de cada tipo
+        $password = $uppercase[random_int(0, strlen($uppercase) - 1)];
+        $password .= $lowercase[random_int(0, strlen($lowercase) - 1)];
+        $password .= $numbers[random_int(0, strlen($numbers) - 1)];
+        $password .= $symbols[random_int(0, strlen($symbols) - 1)];
+
+        // Preencher o resto da senha com caracteres aleatórios
+        for ($i = strlen($password); $i < $length; $i++) {
+            $password .= $all[random_int(0, strlen($all) - 1)];
+        }
+
+        // Embaralhar a senha
+        return str_shuffle($password);
     }
 
     /**

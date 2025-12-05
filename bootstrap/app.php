@@ -36,6 +36,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'HandleSessionExpiration' => \App\Http\Middleware\HandleSessionExpiration::class,
             'set.active.company' => \App\Http\Middleware\SetActiveCompany::class, // Adicione o alias aqui
             'ensure.tenant.setup' => \App\Http\Middleware\EnsureTenantSetup::class, // Middleware para garantir setup do tenant
+            'require.password.change' => \App\Http\Middleware\RequirePasswordChange::class,
+            'check.user.active' => \App\Http\Middleware\CheckUserActive::class,
         ]);
 
         // Adicione o middleware ao grupo 'web' aqui
@@ -44,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\EnsureTenantSetup::class, // Verificar setup do tenant automaticamente
             \App\Http\Middleware\CheckSessionExpiration::class, // Verificar expiração de sessão
             \App\Http\Middleware\HandleSessionExpiration::class, // Tratar erros 419 de forma elegante
+            \App\Http\Middleware\RequirePasswordChange::class, // Verificar se usuário precisa trocar senha
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -473,12 +473,11 @@ public function show(string $id)
     }
 
 
-    public function imoveis(Request $request)
+    public function filtrar(Request $request)
     {
         // Inicia a query builder
         $query = Patrimonio::query();
         $totalPatrimonios = Patrimonio::count(); // Conta a quantidade de registros
-
 
         // Aplica os filtros se eles existirem na requisição
         if ($request->filled('filter_field') && $request->filled('filter_value')) {
@@ -500,10 +499,30 @@ public function show(string $id)
         // Pagina os resultados em vez de carregar todos de uma vez
         $patrimonios = $query->latest()->paginate(15);
 
-        return view('app.patrimonios.imoveis', [
+        return view('app.patrimonios.filtrar', [
             'patrimonios' => $patrimonios,
             'totalPatrimonios' => $totalPatrimonios, // Passa a contagem para a view
+        ]);
+    }
 
+    public function imoveis(Request $request)
+    {
+        $companyId = User::getCompany()->company_id ?? null;
+        
+        $query = \App\Models\Bem::where('tipo', 'imovel');
+        
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+        
+        $bens = $query->with('imovel')->latest()->paginate(15);
+        $totalBens = \App\Models\Bem::where('tipo', 'imovel')
+            ->where('company_id', $companyId)
+            ->count();
+
+        return view('app.patrimonios.imoveis', [
+            'bens' => $bens,
+            'totalBens' => $totalBens,
         ]);
     }
 
@@ -524,5 +543,47 @@ public function show(string $id)
         $patrimonio->save();
 
         return redirect()->back()->with('Localização atualizada com sucesso!');
+    }
+
+    public function bensMoveis(Request $request)
+    {
+        $companyId = User::getCompany()->company_id ?? null;
+        
+        $query = \App\Models\Bem::where('tipo', 'movel');
+        
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+        
+        $bens = $query->with('bemMovel')->latest()->paginate(15);
+        $totalBens = \App\Models\Bem::where('tipo', 'movel')
+            ->where('company_id', $companyId)
+            ->count();
+        
+        return view('app.patrimonios.bens-moveis', [
+            'bens' => $bens,
+            'totalBens' => $totalBens,
+        ]);
+    }
+
+    public function veiculos(Request $request)
+    {
+        $companyId = User::getCompany()->company_id ?? null;
+        
+        $query = \App\Models\Bem::where('tipo', 'veiculo');
+        
+        if ($companyId) {
+            $query->where('company_id', $companyId);
+        }
+        
+        $bens = $query->with('veiculo')->latest()->paginate(15);
+        $totalBens = \App\Models\Bem::where('tipo', 'veiculo')
+            ->where('company_id', $companyId)
+            ->count();
+        
+        return view('app.patrimonios.veiculos', [
+            'bens' => $bens,
+            'totalBens' => $totalBens,
+        ]);
     }
 }

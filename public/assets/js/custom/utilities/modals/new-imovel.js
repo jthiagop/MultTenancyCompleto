@@ -1,7 +1,7 @@
 "use strict";
 
 // Class definition
-var KTModalNewTarget = function () {
+var KTModalNewImovel = function () {
 	var submitButton;
 	var cancelButton;
 	var validator;
@@ -11,104 +11,109 @@ var KTModalNewTarget = function () {
 
 	// Init form inputs
 	var initForm = function() {
-		// Tags. For more info, please visit the official plugin site: https://yaireo.github.io/tagify/
-		var tags = new Tagify(form.querySelector('[name="tags"]'), {
-			whitelist: ["Important", "Urgent", "High", "Medium", "Low"],
-			maxTags: 5,
-			dropdown: {
-				maxItems: 10,           // <- mixumum allowed rendered suggestions
-				enabled: 0,             // <- show suggestions on focus
-				closeOnSelect: false    // <- do not hide the suggestions dropdown once an item has been selected
-			}
-		});
-		tags.on("change", function(){
-			// Revalidate the field when an option is chosen
-            validator.revalidateField('tags');
-		});
+		// Data de aquisição. For more info, please visit the official plugin site: https://flatpickr.js.org/
+		var dataAquisicao = $(form.querySelector('[name="data_aquisicao"]'));
+		if (dataAquisicao.length) {
+			dataAquisicao.flatpickr({
+				dateFormat: "d/m/Y",
+				locale: "pt",
+			});
+		}
 
-		// Due date. For more info, please visit the official plugin site: https://flatpickr.js.org/
-    var dueDates = document.querySelectorAll('[name="data"], [name="dataAquisicao"]');
+		// Máscara para CEP
+		var cepInput = form.querySelector('[name="cep"]');
+		if (cepInput) {
+			$(cepInput).mask('00000-000');
+		}
 
-    dueDates.forEach(function(dueDate) {
-        flatpickr(dueDate, {
-            enableTime: true,
-            dateFormat: "d/m/Y", // Formato pt-BR para exibição
-            locale: "pt", // Define a localidade como português do Brasil
-        });
-    });
+		// Máscara para valor
+		var valorInput = form.querySelector('[name="valor"]');
+		if (valorInput) {
+			$(valorInput).mask('#.##0,00', {reverse: true});
+		}
 
-		// Team assign. For more info, plase visit the official plugin site: https://select2.org/
-        $(form.querySelector('[name="team_assign"]')).on('change', function() {
-            // Revalidate the field when an option is chosen
-            validator.revalidateField('team_assign');
-        });
+		// Máscara para áreas
+		var areaTotalInput = form.querySelector('[name="area_total"]');
+		if (areaTotalInput) {
+			$(areaTotalInput).mask('#.##0,00', {reverse: true});
+		}
+
+		var areaPrivativaInput = form.querySelector('[name="area_privativa"]');
+		if (areaPrivativaInput) {
+			$(areaPrivativaInput).mask('#.##0,00', {reverse: true});
+		}
+
+		// Select2 para Centro de Custo
+		var centroCustoSelect = $(form.querySelector('[name="centro_custo"]'));
+		if (centroCustoSelect.length) {
+			centroCustoSelect.on('change', function() {
+				validator.revalidateField('centro_custo');
+			});
+		}
+
+		// Select2 para Estado do Bem
+		var estadoBemSelect = $(form.querySelector('[name="estado_bem"]'));
+		if (estadoBemSelect.length) {
+			estadoBemSelect.on('change', function() {
+				validator.revalidateField('estado_bem');
+			});
+		}
+
+		// Select2 para UF
+		var ufSelect = $(form.querySelector('[name="uf"]'));
+		if (ufSelect.length) {
+			ufSelect.on('change', function() {
+				validator.revalidateField('uf');
+			});
+		}
 	}
 
 	// Handle form validation and submittion
 	var handleForm = function() {
-		// Stepper custom navigation
-
 		// Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
 		validator = FormValidation.formValidation(
 			form,
 			{
 				fields: {
-                    descricao: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Descrição do patrimônio é obrigatória'
-                            }
-                        }
-                    },
-                    patrimonio: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Patrimônio é obrigatório'
-                            }
-                        }
-                    },
-                    data: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Data é obrigatória'
-                            }
-                        }
-                    },
-                    livro: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Livro é obrigatório'
-                            }
-                        }
-                    },
-                    folha: {
-                        validators: {
-                            notEmpty: {
-                                message: 'Folha é obrigatória'
-                            }
-                        }
-                    },
-                    cep: {
-                        validators: {
-                            notEmpty: {
-                                message: 'O CEP é obrigatória'
-                            }
-                        }
-                    },
-                    bairro: {
-                        validators: {
-                            notEmpty: {
-                                message: 'O bairro é obrigatória'
-                            }
-                        }
-                    },
-                },
+					descricao: {
+						validators: {
+							notEmpty: {
+								message: 'A descrição é obrigatória'
+							}
+						}
+					},
+					valor: {
+						validators: {
+							notEmpty: {
+								message: 'O valor é obrigatório'
+							}
+						}
+					},
+					data_aquisicao: {
+						validators: {
+							notEmpty: {
+								message: 'A data de aquisição é obrigatória'
+							},
+							date: {
+								format: 'DD/MM/YYYY',
+								message: 'A data deve estar no formato DD/MM/AAAA'
+							}
+						}
+					},
+					centro_custo: {
+						validators: {
+							notEmpty: {
+								message: 'O centro de custo é obrigatório'
+							}
+						}
+					}
+				},
 				plugins: {
 					trigger: new FormValidation.plugins.Trigger(),
 					bootstrap: new FormValidation.plugins.Bootstrap5({
 						rowSelector: '.fv-row',
-                        eleInvalidClass: '',
-                        eleValidClass: ''
+						eleInvalidClass: '',
+						eleValidClass: ''
 					})
 				}
 			}
@@ -121,90 +126,221 @@ var KTModalNewTarget = function () {
 			// Validate form before submit
 			if (validator) {
 				validator.validate().then(function (status) {
-					console.log('validated!');
-
 					if (status == 'Valid') {
 						submitButton.setAttribute('data-kt-indicator', 'on');
-
-						// Disable button to avoid multiple click
 						submitButton.disabled = true;
 
-						setTimeout(function() {
-							submitButton.removeAttribute('data-kt-indicator');
+						// Prepara os dados do formulário
+						var formData = new FormData(form);
 
-							// Enable button
-							submitButton.disabled = false;
+						// Converte FormData para objeto JSON
+						var jsonData = {};
+						for (var pair of formData.entries()) {
+							var key = pair[0];
+							var value = pair[1];
 
-							// Show success message. For more info check the plugin's official documentation: https://sweetalert2.github.io/
+							// Trata checkbox depreciar
+							if (key === 'depreciar') {
+								jsonData[key] = form.querySelector('[name="depreciar"]').checked ? '1' : '0';
+							} else {
+								jsonData[key] = value;
+							}
+						}
+
+						// Obtém o token CSRF
+						var csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+
+						// Envia via AJAX com JSON
+						fetch(form.action, {
+							method: 'POST',
+							headers: {
+								'Content-Type': 'application/json',
+								'Accept': 'application/json',
+								'X-CSRF-TOKEN': csrfToken
+							},
+							body: JSON.stringify(jsonData)
+						})
+						.then(response => {
+							return response.json().then(data => {
+								return { status: response.status, data: data };
+							});
+						})
+						.then(result => {
+							if (result.status === 200 || result.status === 201 || result.status === 302) {
+								// Sucesso
+								Swal.fire({
+									text: "Imóvel cadastrado com sucesso!",
+									icon: "success",
+									buttonsStyling: false,
+									confirmButtonText: "Ok, entendi!",
+									customClass: {
+										confirmButton: "btn btn-primary"
+									}
+								}).then(function (result) {
+									if (result.isConfirmed) {
+										form.reset();
+										modal.hide();
+										// Recarrega a página para atualizar a lista
+										location.reload();
+									}
+								});
+							} else if (result.status === 422) {
+								// Erro de validação
+								var errorMessages = [];
+								if (result.data.errors) {
+									Object.keys(result.data.errors).forEach(function(key) {
+										if (Array.isArray(result.data.errors[key])) {
+											errorMessages = errorMessages.concat(result.data.errors[key]);
+										} else {
+											errorMessages.push(result.data.errors[key]);
+										}
+									});
+								}
+								if (result.data.message) {
+									errorMessages.push(result.data.message);
+								}
+								if (errorMessages.length === 0) {
+									errorMessages.push('Erro de validação. Verifique os campos preenchidos.');
+								}
+
+								Swal.fire({
+									text: errorMessages.join('\n'),
+									icon: "error",
+									buttonsStyling: false,
+									confirmButtonText: "Ok, entendi!",
+									customClass: {
+										confirmButton: "btn btn-primary"
+									}
+								});
+							} else {
+								// Outro erro
+								var errorMsg = result.data.message || 'Erro ao cadastrar imóvel. Tente novamente.';
+								Swal.fire({
+									text: errorMsg,
+									icon: "error",
+									buttonsStyling: false,
+									confirmButtonText: "Ok, entendi!",
+									customClass: {
+										confirmButton: "btn btn-primary"
+									}
+								});
+							}
+						})
+						.catch(error => {
+							console.error('Erro:', error);
 							Swal.fire({
-                                text: "Formulário enviado com sucesso!",
-                                icon: "success",
-                                buttonsStyling: false,
-                                confirmButtonText: "Ok, entendi!",
-                                customClass: {
-                                    confirmButton: "btn btn-primary"
-                                }
-							}).then(function (result) {
-								if (result.isConfirmed) {
-									modal.hide();
-									form.submit(); // Submit form
+								text: "Erro ao processar a requisição. Tente novamente.",
+								icon: "error",
+								buttonsStyling: false,
+								confirmButtonText: "Ok, entendi!",
+								customClass: {
+									confirmButton: "btn btn-primary"
 								}
 							});
-						}, 2000);
+						})
+						.finally(() => {
+							submitButton.removeAttribute('data-kt-indicator');
+							submitButton.disabled = false;
+						});
 					} else {
 						// Show error message.
-                        Swal.fire({
-                            text: "Parece que há alguns erros. Por favor, tente novamente.",
-                            icon: "error",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok, entendi!",
-                            customClass: {
-                                confirmButton: "btn btn-primary"
-                            }
+						Swal.fire({
+							text: "Por favor, verifique os campos obrigatórios e tente novamente.",
+							icon: "error",
+							buttonsStyling: false,
+							confirmButtonText: "Ok, entendi!",
+							customClass: {
+								confirmButton: "btn btn-primary"
+							}
 						});
 					}
 				});
 			}
 		});
 
+		// Botão Cancelar - mesma lógica do new-target.js
 		cancelButton.addEventListener('click', function (e) {
 			e.preventDefault();
 
-            Swal.fire({
-                text: "Tem certeza de que deseja cancelar?",
-                icon: "warning",
-                showCancelButton: true,
-                buttonsStyling: false,
-                confirmButtonText: "Sim, cancelar!",
-                cancelButtonText: "Não, voltar",
-                customClass: {
-                    confirmButton: "btn btn-primary",
-                    cancelButton: "btn btn-active-light"
-                }
+			Swal.fire({
+				text: "Tem certeza que deseja cancelar?",
+				icon: "warning",
+				showCancelButton: true,
+				buttonsStyling: false,
+				confirmButtonText: "Sim, cancelar!",
+				cancelButtonText: "Não, voltar",
+				customClass: {
+					confirmButton: "btn btn-primary",
+					cancelButton: "btn btn-active-light"
+				}
 			}).then(function (result) {
 				if (result.value) {
 					form.reset(); // Reset form
 					modal.hide(); // Hide modal
 				} else if (result.dismiss === 'cancel') {
-                    Swal.fire({
-                        text: "Seu formulário não foi cancelado!",
-                        icon: "error",
-                        buttonsStyling: false,
-                        confirmButtonText: "Ok, entendi!",
-                        customClass: {
-                            confirmButton: "btn btn-primary",
-                        }
+					Swal.fire({
+						text: "O formulário não foi cancelado.",
+						icon: "info",
+						buttonsStyling: false,
+						confirmButtonText: "Ok, entendi!",
+						customClass: {
+							confirmButton: "btn btn-primary",
+						}
 					});
 				}
 			});
 		});
+
+		// Intercepta o evento de fechamento do modal (botão X e ESC)
+		var shouldClose = false;
+		modalEl.addEventListener('hide.bs.modal', function (e) {
+			// Se já foi confirmado, permite fechar
+			if (shouldClose) {
+				return;
+			}
+
+			// Previne o fechamento automático
+			e.preventDefault();
+
+			// Mostra confirmação
+			Swal.fire({
+				text: "Tem certeza que deseja cancelar?",
+				icon: "warning",
+				showCancelButton: true,
+				buttonsStyling: false,
+				confirmButtonText: "Sim, cancelar!",
+				cancelButtonText: "Não, voltar",
+				customClass: {
+					confirmButton: "btn btn-primary",
+					cancelButton: "btn btn-active-light"
+				}
+			}).then(function (result) {
+				if (result.value) {
+					form.reset(); // Reset form
+					shouldClose = true; // Marca como confirmado
+					modal.hide(); // Fecha o modal
+					shouldClose = false; // Reset para próxima vez
+				} else if (result.dismiss === 'cancel') {
+					Swal.fire({
+						text: "O formulário não foi cancelado.",
+						icon: "info",
+						buttonsStyling: false,
+						confirmButtonText: "Ok, entendi!",
+						customClass: {
+							confirmButton: "btn btn-primary",
+						}
+					});
+				}
+			});
+		});
+
 	}
 
 	return {
 		// Public functions
 		init: function () {
 			// Elements
-			modalEl = document.querySelector('#kt_modal_new_foro');
+			modalEl = document.querySelector('#kt_modal_new_imovel');
 
 			if (!modalEl) {
 				return;
@@ -212,9 +348,9 @@ var KTModalNewTarget = function () {
 
 			modal = new bootstrap.Modal(modalEl);
 
-			form = document.querySelector('#kt_modal_foro_form');
-			submitButton = document.getElementById('kt_modal_new_foro_submit');
-			cancelButton = document.getElementById('kt_modal_new_foro_cancel');
+			form = document.querySelector('#kt_modal_imovel_form');
+			submitButton = document.getElementById('kt_modal_imovel_submit');
+			cancelButton = document.getElementById('kt_modal_imovel_cancel');
 
 			initForm();
 			handleForm();
@@ -222,60 +358,7 @@ var KTModalNewTarget = function () {
 	};
 }();
 
-$(document).ready(function() {
-    // Quando o campo CEP perde o foco
-    $('#cep').on('blur', function() {
-        var cep = $(this).val().replace(/\D/g, '');
-
-        if (cep !== "") {
-            // Verifica se o CEP tem 8 dígitos
-            var validacep = /^[0-9]{8}$/;
-
-            if(validacep.test(cep)) {
-                // Preenche os campos com "..." enquanto carrega
-                $('#logradouro').val('...');
-                $('#bairro').val('...');
-                $('#localidade').val('...');
-                $('#uf').val('...');
-                $('#ibge').val('...');
-                $('#complemento').val('...');
-
-                // Faz a requisição para a API ViaCEP
-                $.getJSON("https://viacep.com.br/ws/"+ cep +"/json/?callback=?", function(dados) {
-
-                    if (!("erro" in dados)) {
-                        // Atualiza os campos com os valores da consulta
-                        $('#logradouro').val(dados.logradouro);
-                        $('#bairro').val(dados.bairro);
-                        $('#localidade').val(dados.localidade);
-                        $('#uf').val(dados.uf).trigger('change'); // Atualiza o select2
-                        $('#ibge').val(dados.ibge);
-                        $('#complemento').val(dados.complemento);
-                    } else {
-                        // CEP não encontrado
-                        alert("CEP não encontrado.");
-                    }
-                });
-            } else {
-                alert("Formato de CEP inválido.");
-            }
-        } else {
-            // CEP sem valor, limpa o formulário
-            limpaFormularioCEP();
-        }
-    });
-
-    function limpaFormularioCEP() {
-        // Limpa valores do formulário de CEP
-        $('#logradouro').val('');
-        $('#bairro').val('');
-        $('#localidade').val('');
-        $('#uf').val('').trigger('change');
-        $('#ibge').val('');
-        $('#complemento').val('');
-    }
-});
 // On document ready
 KTUtil.onDOMContentLoaded(function () {
-	KTModalNewTarget.init();
+	KTModalNewImovel.init();
 });

@@ -558,10 +558,22 @@ class ConciliacaoController extends Controller
             $entidadeOrigemId = $request->input('entidade_origem_id');
             $companyId = session('active_company_id'); // Recupera a empresa do usuário logado
 
+            // Log para debug
+            Log::info('Buscando contas disponíveis', [
+                'entidade_origem_id' => $entidadeOrigemId,
+                'company_id' => $companyId
+            ]);
+
             // Busca todas as entidades financeiras da mesma empresa, exceto a de origem
-            $contas = EntidadeFinanceira::where('company_id', $companyId)
-                ->where('id', '!=', $entidadeOrigemId)
-                ->where('tipo', 'banco') // Apenas contas bancárias
+            $query = EntidadeFinanceira::where('company_id', $companyId)
+                ->where('tipo', 'banco'); // Apenas contas bancárias
+
+            // Se houver entidade de origem, exclui ela
+            if ($entidadeOrigemId) {
+                $query->where('id', '!=', $entidadeOrigemId);
+            }
+
+            $contas = $query->orderBy('nome', 'asc')
                 ->get()
                 ->map(function ($conta) {
                     $accountTypeLabels = [
@@ -582,19 +594,28 @@ class ConciliacaoController extends Controller
                     ];
                 });
 
+            // Log para debug
+            Log::info('Contas encontradas', [
+                'total' => $contas->count(),
+                'contas' => $contas->pluck('nome')->toArray()
+            ]);
+
             return response()->json([
                 'success' => true,
                 'contas' => $contas,
+                'total' => $contas->count() // Adiciona total para debug
             ]);
         } catch (\Exception $e) {
             Log::error('Erro ao buscar contas disponíveis para transferência', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
+                'entidade_origem_id' => $request->input('entidade_origem_id'),
+                'company_id' => session('active_company_id')
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao buscar contas disponíveis.',
+                'message' => 'Erro ao buscar contas disponíveis: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -614,7 +635,9 @@ class ConciliacaoController extends Controller
                     'valor' => 'required|numeric|min:0.01',
                     'data_transferencia' => 'required|date',
                     'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
+                    'cost_center_id' => 'nullable|exists:cost_centers,id',
                     'descricao' => 'nullable|string|max:500',
+                    'checknum' => 'nullable|string|max:100',
                 ]);
 
                 $bankStatement = BankStatement::findOrFail($validated['bank_statement_id']);
@@ -624,125 +647,98 @@ class ConciliacaoController extends Controller
                 // Converte o valor do formato brasileiro para decimal
                 $valor = str_replace(['.', ','], ['', '.'], $validated['valor']);
 
-                // Verifica se a entidade de origem tem saldo suficiente
-                if ($entidadeOrigem->saldo_atual < $valor) {
-                    return redirect()->back()->with('error', 'Saldo insuficiente na conta de origem para realizar a transferência.');
-                }
-
                 // Recupera a empresa do usuário logado
                 $companyId = session('active_company_id');
 
-                // Cria movimentação de saída (origem)
-                $movimentacaoSaida = Movimentacao::create([
-                    'entidade_id' => $entidadeOrigem->id,
-                    'tipo' => 'saida',
-                    'valor' => $valor,
-                    'data' => $validated['data_transferencia'],
-                    'descricao' => $validated['descricao'] ?? 'Transferência para ' . $entidadeDestino->nome,
+                if (!$companyId) {
+                    return redirect()->back()->with('error', 'Companhia não encontrada.');
+                }
+
+                // Determina o tipo baseado no valor do bank statement (negativo = saída, positivo = entrada)
+                $tipo = $bankStatement->amount < 0 ? 'saida' : 'entrada';
+
+                // Prepara os dados para criar a transação (apenas da conta de origem - conciliação)
+                $validatedData = [
                     'company_id' => $companyId,
+                    'data_competencia' => $validated['data_transferencia'],
+                    'entidade_id' => $entidadeOrigem->id,
+                    'tipo' => $tipo,
+                    'valor' => abs($valor),
+                    'descricao' => $validated['descricao'] ?? 'Transferência para ' . $entidadeDestino->nome,
+                    'lancamento_padrao_id' => $validated['lancamento_padrao_id'],
+                    'cost_center_id' => $validated['cost_center_id'] ?? null,
+                    'origem' => 'transferencia',
+                    'historico_complementar' => 'Transferência automática entre contas bancárias - Conta destino: ' . $entidadeDestino->nome,
+                    'numero_documento' => $validated['checknum'] ?? null,
                     'created_by' => Auth::id(),
                     'created_by_name' => Auth::user()->name,
                     'updated_by' => Auth::id(),
                     'updated_by_name' => Auth::user()->name,
-                ]);
+                ];
 
-                // Cria movimentação de entrada (destino)
-                $movimentacaoEntrada = Movimentacao::create([
-                    'entidade_id' => $entidadeDestino->id,
-                    'tipo' => 'entrada',
-                    'valor' => $valor,
-                    'data' => $validated['data_transferencia'],
-                    'descricao' => $validated['descricao'] ?? 'Transferência de ' . $entidadeOrigem->nome,
-                    'company_id' => $companyId,
-                    'created_by' => Auth::id(),
-                    'created_by_name' => Auth::user()->name,
-                    'updated_by' => Auth::id(),
-                    'updated_by_name' => Auth::user()->name,
-                ]);
+                // Cria movimentação financeira
+                $movimentacao = $this->movimentacao($validatedData);
+                $validatedData['movimentacao_id'] = $movimentacao->id;
 
-                // Cria a transação de saída (origem)
-                $transacaoSaida = TransacaoFinanceira::create([
-                    'company_id' => $companyId,
-                    'data_competencia' => $validated['data_transferencia'],
-                    'entidade_id' => $entidadeOrigem->id,
-                    'tipo' => 'saida',
-                    'valor' => $valor,
-                    'descricao' => $validated['descricao'] ?? 'Transferência para ' . $entidadeDestino->nome,
-                    'lancamento_padrao_id' => $validated['lancamento_padrao_id'],
-                    'movimentacao_id' => $movimentacaoSaida->id,
-                    'origem' => 'transferencia',
-                    'historico_complementar' => 'Transferência automática entre contas bancárias',
-                    'created_by' => Auth::id(),
-                    'created_by_name' => Auth::user()->name,
-                ]);
+                // Cria a transação financeira (apenas uma - da conta de origem)
+                $transacao = TransacaoFinanceira::create($validatedData);
 
-                // Cria a transação de entrada (destino)
-                $transacaoEntrada = TransacaoFinanceira::create([
-                    'company_id' => $companyId,
-                    'data_competencia' => $validated['data_transferencia'],
-                    'entidade_id' => $entidadeDestino->id,
-                    'tipo' => 'entrada',
-                    'valor' => $valor,
-                    'descricao' => $validated['descricao'] ?? 'Transferência de ' . $entidadeOrigem->nome,
-                    'lancamento_padrao_id' => $validated['lancamento_padrao_id'],
-                    'movimentacao_id' => $movimentacaoEntrada->id,
-                    'origem' => 'transferencia',
-                    'historico_complementar' => 'Transferência automática entre contas bancárias',
-                    'created_by' => Auth::id(),
-                    'created_by_name' => Auth::user()->name,
-                ]);
+                // Processa lançamentos padrão
+                $this->processarLancamentoPadrao($validatedData);
 
-                // Atualiza os saldos das entidades
-                $entidadeOrigem->saldo_atual -= $valor;
-                $entidadeOrigem->save();
+                // Processa anexos, se existirem
+                $this->processarAnexos($request, $transacao);
 
-                $entidadeDestino->saldo_atual += $valor;
-                $entidadeDestino->save();
+                // Define o valor conciliado
+                $valorConciliado = abs($valor);
+
+                // Lógica para definir o status
+                if (bccomp($valorConciliado, abs($bankStatement->amount), 2) === 0) {
+                    $status = 'ok'; // Conciliação perfeita
+                } elseif ($valorConciliado < abs($bankStatement->amount)) {
+                    $status = 'parcial'; // Conciliação parcial (falta valor)
+                } elseif ($valorConciliado > abs($bankStatement->amount)) {
+                    $status = 'divergente'; // Conciliação com excesso
+                } else {
+                    $status = 'pendente'; // Algo inesperado, pendente de verificação
+                }
 
                 // Marca o bank statement como conciliado
                 $bankStatement->update([
                     'reconciled' => true,
-                    'status_conciliacao' => 'ok',
+                    'status_conciliacao' => $status,
                 ]);
 
-                // Vincula as transações ao bank statement
-                $bankStatement->transacoes()->attach($transacaoSaida->id, [
-                    'valor_conciliado' => $valor,
-                    'status_conciliacao' => 'ok',
+                // Vincula a transação ao bank statement (apenas uma transação)
+                $bankStatement->transacoes()->attach($transacao->id, [
+                    'valor_conciliado' => $valorConciliado,
+                    'status_conciliacao' => $status,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
 
-                $bankStatement->transacoes()->attach($transacaoEntrada->id, [
-                    'valor_conciliado' => $valor,
-                    'status_conciliacao' => 'ok',
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                Log::info('Transferência entre contas realizada com sucesso', [
+                Log::info('Conciliação de transferência realizada com sucesso', [
                     'bank_statement_id' => $bankStatement->id,
                     'entidade_origem_id' => $entidadeOrigem->id,
                     'entidade_destino_id' => $entidadeDestino->id,
                     'valor' => $valor,
-                    'transacao_saida_id' => $transacaoSaida->id,
-                    'transacao_entrada_id' => $transacaoEntrada->id,
+                    'transacao_id' => $transacao->id,
                 ]);
 
-                return redirect()->back()->with('success', 'Transferência realizada com sucesso!');
+                return redirect()->back()->with('success', 'Transferência conciliada com sucesso!');
             } catch (\Illuminate\Validation\ValidationException $e) {
                 return redirect()->back()
                     ->withErrors($e->errors())
                     ->withInput();
             } catch (\Exception $e) {
-                Log::error('Erro ao processar transferência entre contas', [
+                Log::error('Erro ao processar conciliação de transferência', [
                     'error' => $e->getMessage(),
                     'trace' => $e->getTraceAsString(),
                     'request' => $request->all(),
                 ]);
 
                 return redirect()->back()
-                    ->with('error', 'Erro ao processar transferência. Tente novamente.')
+                    ->with('error', 'Erro ao processar conciliação. Tente novamente.')
                     ->withInput();
             }
         });

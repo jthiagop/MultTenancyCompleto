@@ -72,6 +72,7 @@ var KTAppEcommerceSaveProduct = function () {
     }
 
     // Init form repeater --- more info: https://github.com/DubFriend/jquery.repeater
+    // Inicializa o repeater para os horários de missas
     const initFormRepeater = () => {
         $('#kt_ecommerce_add_product_options').repeater({
             initEmpty: false,

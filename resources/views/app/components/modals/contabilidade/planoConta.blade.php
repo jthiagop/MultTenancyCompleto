@@ -9,13 +9,7 @@
                 <!--begin::Close-->
                 <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
                     <span class="svg-icon svg-icon-1">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                            xmlns="http://www.w3.org/2000/svg">
-                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1"
-                                transform="rotate(-45 6 17.3137)" fill="currentColor" />
-                            <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                transform="rotate(45 7.41422 6)" fill="currentColor" />
-                        </svg>
+                        <i class="fa-solid fa-xmark"></i>
                     </span>
                 </div>
                 <!--end::Close-->
@@ -123,18 +117,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function initCreateModal() {
         form.action = "{{ route('contabilidade.plano-contas.store') }}";
         form.method = 'POST';
-        
+
         // Remove campo _method se existir
         const methodField = form.querySelector('input[name="_method"]');
         if (methodField) methodField.remove();
-        
+
         // Limpa os campos
         form.reset();
-        
+
         // Atualiza título
         document.getElementById('modal-title').textContent = 'Cadastrar Nova Conta Contábil';
         document.getElementById('modal-subtitle').textContent = 'Adicione uma nova conta ao seu plano de contas.';
-        
+
         // Limpa erros
         clearErrors();
     }
@@ -143,7 +137,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function initEditModal(contaData) {
         form.action = `/contabilidade/plano-contas/${contaData.id}`;
         form.method = 'POST';
-        
+
         // Adiciona método PUT
         let methodField = form.querySelector('input[name="_method"]');
         if (!methodField) {
@@ -153,17 +147,17 @@ document.addEventListener('DOMContentLoaded', function() {
             form.appendChild(methodField);
         }
         methodField.value = 'PUT';
-        
+
         // Preenche os campos
         document.getElementById('account_code_mask').value = contaData.code;
         form.querySelector('select[name="type"]').value = contaData.type;
         form.querySelector('input[name="name"]').value = contaData.name;
         form.querySelector('select[name="parent_id"]').value = contaData.parent_id || '';
-        
+
         // Atualiza título
         document.getElementById('modal-title').textContent = 'Editar Conta Contábil';
         document.getElementById('modal-subtitle').textContent = 'Edite os dados da conta contábil.';
-        
+
         // Limpa erros
         clearErrors();
     }
@@ -182,11 +176,11 @@ document.addEventListener('DOMContentLoaded', function() {
     // Exibe erros de validação
     function showErrors(errors) {
         clearErrors();
-        
+
         Object.keys(errors).forEach(field => {
             const input = form.querySelector(`[name="${field}"]`);
             const errorDiv = document.getElementById(`${field}-error`);
-            
+
             if (input && errorDiv) {
                 input.classList.add('is-invalid');
                 errorDiv.textContent = errors[field][0];
@@ -198,17 +192,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Manipula o envio do formulário
     form.addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         // Mostra loading
         submitBtn.setAttribute('data-kt-indicator', 'on');
         indicator.style.display = 'inline-block';
         label.style.display = 'none';
-        
+
         // Limpa erros anteriores
         clearErrors();
-        
+
         const formData = new FormData(form);
-        
+
         fetch(form.action, {
             method: form.method,
             headers: {

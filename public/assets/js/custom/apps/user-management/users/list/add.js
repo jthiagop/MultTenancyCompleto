@@ -4,101 +4,132 @@
 var KTUsersAddUser = function () {
     // Shared variables
     const element = document.getElementById('kt_modal_add_user');
+    if (!element) {
+        console.warn('Modal #kt_modal_add_user não encontrado');
+        return {
+            init: function() {}
+        };
+    }
+    
     const form = element.querySelector('#kt_modal_add_user_form');
     const modal = new bootstrap.Modal(element);
 
     // Init add schedule modal
     var initAddUser = () => {
-
-        // Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
-        var validator = FormValidation.formValidation(
-            form,
-            {
-                fields: {
-                    'user_name': {
-                        validators: {
-                            notEmpty: {
-                                message: 'Full name is required'
-                            }
-                        }
-                    },
-                    'user_email': {
-                        validators: {
-                            notEmpty: {
-                                message: 'Valid email address is required'
-                            }
-                        }
-                    },
-                },
-
-                plugins: {
-                    trigger: new FormValidation.plugins.Trigger(),
-                    bootstrap: new FormValidation.plugins.Bootstrap5({
-                        rowSelector: '.fv-row',
-                        eleInvalidClass: '',
-                        eleValidClass: ''
-                    })
-                }
-            }
-        );
+        if (!form) {
+            console.warn('Formulário #kt_modal_add_user_form não encontrado');
+            return;
+        }
 
         // Submit button handler
-        const submitButton = element.querySelector('[data-kt-users-modal-action="submit"]');
-        submitButton.addEventListener('click', e => {
-            e.preventDefault();
+        const submitButton = element.querySelector('#kt_modal_add_user_submit');
+        if (submitButton) {
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
 
-            // Validate form before submit
-            if (validator) {
-                validator.validate().then(function (status) {
-                    console.log('validated!');
+                // Limpar erros anteriores
+                const errorContainer = element.querySelector('#kt_modal_add_user_errors');
+                if (errorContainer) {
+                    errorContainer.classList.add('d-none');
+                    errorContainer.innerHTML = '';
+                }
 
-                    if (status == 'Valid') {
-                        // Show loading indication
-                        submitButton.setAttribute('data-kt-indicator', 'on');
+                // Coletar dados do formulário
+                const formData = new FormData(form);
+                
+                // Adicionar must_change_password se checkbox estiver marcado
+                const mustChangePasswordCheckbox = element.querySelector('#must_change_password');
+                if (mustChangePasswordCheckbox && mustChangePasswordCheckbox.checked) {
+                    formData.append('must_change_password', '1');
+                }
 
-                        // Disable button to avoid multiple click 
-                        submitButton.disabled = true;
+                // Mostrar loading
+                submitButton.setAttribute('data-kt-indicator', 'on');
+                submitButton.disabled = true;
 
-                        // Simulate form submission. For more info check the plugin's official documentation: https://sweetalert2.github.io/
-                        setTimeout(function () {
-                            // Remove loading indication
-                            submitButton.removeAttribute('data-kt-indicator');
+                // Obter token CSRF
+                const csrfToken = formData.get('_token') || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
+                
+                // Enviar via AJAX
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': csrfToken
+                    },
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => Promise.reject(err));
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Remover loading
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
 
-                            // Enable button
-                            submitButton.disabled = false;
-
-                            // Show popup confirmation 
-                            Swal.fire({
-                                text: "Form has been successfully submitted!",
-                                icon: "success",
-                                buttonsStyling: false,
-                                confirmButtonText: "Ok, got it!",
-                                customClass: {
-                                    confirmButton: "btn btn-primary"
-                                }
-                            }).then(function (result) {
-                                if (result.isConfirmed) {
-                                    modal.hide();
-                                }
-                            });
-
-                            //form.submit(); // Submit form
-                        }, 2000);
-                    } else {
-                        // Show popup warning. For more info check the plugin's official documentation: https://sweetalert2.github.io/
+                    if (data.success) {
+                        // Mostrar mensagem de sucesso
                         Swal.fire({
-                            text: "Sorry, looks like there are some errors detected, please try again.",
-                            icon: "error",
+                            text: data.message || "Usuário criado ou atualizado com sucesso!",
+                            icon: "success",
                             buttonsStyling: false,
-                            confirmButtonText: "Ok, got it!",
+                            confirmButtonText: "Ok, entendi!",
                             customClass: {
                                 confirmButton: "btn btn-primary"
                             }
+                        }).then(function (result) {
+                            if (result.isConfirmed) {
+                                form.reset();
+                                modal.hide();
+                                // Recarregar a página para atualizar a lista
+                                window.location.reload();
+                            }
                         });
+                    } else {
+                        throw new Error(data.message || 'Erro ao salvar usuário');
                     }
+                })
+                .catch(error => {
+                    // Remover loading
+                    submitButton.removeAttribute('data-kt-indicator');
+                    submitButton.disabled = false;
+
+                    let errorMessage = 'Erro ao salvar usuário. Tente novamente.';
+                    let errors = [];
+
+                    if (error.errors) {
+                        // Erros de validação
+                        Object.keys(error.errors).forEach(field => {
+                            errors.push(...error.errors[field]);
+                        });
+                        errorMessage = errors.join('<br>');
+                    } else if (error.message) {
+                        errorMessage = error.message;
+                    }
+
+                    // Mostrar erros no container
+                    if (errorContainer) {
+                        errorContainer.innerHTML = errorMessage;
+                        errorContainer.classList.remove('d-none');
+                    }
+
+                    // Mostrar popup de erro
+                    Swal.fire({
+                        text: errorMessage,
+                        icon: "error",
+                        buttonsStyling: false,
+                        confirmButtonText: "Ok, entendi!",
+                        customClass: {
+                            confirmButton: "btn btn-primary"
+                        }
+                    });
                 });
-            }
-        });
+            });
+        }
 
         // Cancel button handler
         const cancelButton = element.querySelector('[data-kt-users-modal-action="cancel"]');

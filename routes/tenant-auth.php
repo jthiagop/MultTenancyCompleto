@@ -4,10 +4,12 @@ use App\Http\Controllers\App\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\App\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\App\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\App\Auth\EmailVerificationPromptController;
+use App\Http\Controllers\App\Auth\FirstAccessController;
 use App\Http\Controllers\App\Auth\NewPasswordController;
 use App\Http\Controllers\App\Auth\PasswordController;
 use App\Http\Controllers\App\Auth\PasswordResetLinkController;
 use App\Http\Controllers\App\Auth\RegisteredUserController;
+use App\Http\Controllers\App\Auth\RequestPasswordController;
 use App\Http\Controllers\App\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
@@ -28,6 +30,12 @@ Route::middleware('guest')->group(function () {
     Route::post('forgot-password', [PasswordResetLinkController::class, 'store'])
                 ->name('password.email');
 
+    Route::get('request-password', [RequestPasswordController::class, 'create'])
+                ->name('password.request.admin');
+
+    Route::post('request-password', [RequestPasswordController::class, 'store'])
+                ->name('password.request.admin.store');
+
     Route::get('reset-password/{token}', [NewPasswordController::class, 'create'])
                 ->name('password.reset');
 
@@ -36,6 +44,9 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::middleware('auth')->group(function () {
+    // Rota para primeiro acesso / troca de senha obrigatória
+    Route::get('first-access', [FirstAccessController::class, 'show'])->name('first-access');
+    Route::post('first-access', [FirstAccessController::class, 'store']);
     Route::get('verify-email', EmailVerificationPromptController::class)
                 ->name('verification.notice');
 

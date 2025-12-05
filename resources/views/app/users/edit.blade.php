@@ -30,7 +30,7 @@
                             <li class="breadcrumb-item text-muted"><a href="{{ route('users.index') }}"
                                     class="text-muted text-hover-primary">Lista de usuário</a></li>
                             <!--end::Item-->
-                                                        <!--begin::Item-->
+                            <!--begin::Item-->
                             <li class="breadcrumb-item">
                                 <span class="bullet bg-gray-400 w-5px h-2px"></span>
                             </li>
@@ -65,7 +65,8 @@
                         <!--begin::Content-->
                         <div id="kt_account_settings_profile_details" class="collapse show">
                             <!--begin::Form-->
-                            <form method="POST" action="{{ route('users.update', $user->id) }}" enctype="multipart/form-data">
+                            <form method="POST" action="{{ route('users.update', $user->id) }}"
+                                enctype="multipart/form-data">
                                 @csrf
                                 @method('PUT')
                                 <!--begin::Card body-->
@@ -223,23 +224,27 @@
                                                 <div class="col-lg-6 mb-4 mb-lg-0">
                                                     <div class="fv-row mb-0">
                                                         <label for="emailaddress"
-                                                            class="form-label fs-6 fw-bold mb-3">Informe o novo email</label>
+                                                            class="form-label fs-6 fw-bold mb-3">Informe o novo
+                                                            email</label>
                                                         <input type="email"
                                                             class="form-control form-control-lg form-control-solid"
-                                                            id="emailaddress" placeholder="Email"
-                                                            name="email" value="{{ $user->email }}" />
-                                                        <div class="fv-plugins-message-container invalid-feedback" id="email-error"></div>
+                                                            id="emailaddress" placeholder="Email" name="email"
+                                                            value="{{ $user->email }}" />
+                                                        <div class="fv-plugins-message-container invalid-feedback"
+                                                            id="email-error"></div>
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-6">
                                                     <div class="fv-row mb-0">
                                                         <label for="confirmemailpassword"
-                                                            class="form-label fs-6 fw-bold mb-3">Confirme a senha</label>
+                                                            class="form-label fs-6 fw-bold mb-3">Confirme a
+                                                            senha</label>
                                                         <input type="password"
                                                             class="form-control form-control-lg form-control-solid"
-                                                            name="password" id="confirmemailpassword" 
+                                                            name="password" id="confirmemailpassword"
                                                             placeholder="Digite sua senha atual" />
-                                                        <div class="fv-plugins-message-container invalid-feedback" id="password-error"></div>
+                                                        <div class="fv-plugins-message-container invalid-feedback"
+                                                            id="password-error"></div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -248,7 +253,8 @@
                                                     class="btn btn-primary me-2 px-6">
                                                     <span class="indicator-label">Atualizar Email</span>
                                                     <span class="indicator-progress">Aguarde...
-                                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                                        <span
+                                                            class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                                                 </button>
                                                 <button id="kt_signin_cancel" type="button"
                                                     class="btn btn-color-gray-400 btn-active-light-primary px-6">Cancelar</button>
@@ -280,16 +286,27 @@
                                         <!--begin::Form-->
                                         <form id="kt_signin_change_password" class="form" novalidate="novalidate">
                                             @csrf
-                                            <div class="row mb-6">
+                                            <!-- Checkbox para criar senha automaticamente -->
+                                            <div class="form-check mb-5">
+                                                <input class="form-check-input" type="checkbox" name="automatic_password"
+                                                    id="automatic_password" checked />
+                                                <label class="form-check-label fw-semibold" for="automatic_password">
+                                                    Criar uma senha automaticamente.
+                                                </label>
+                                            </div>
+
+                                            <!-- Campo de senha manual (oculto quando automático está marcado) -->
+                                            <div class="row mb-6" id="manual_password_container" style="display: none;">
                                                 <div class="col-lg-6 mb-4 mb-lg-0">
                                                     <div class="fv-row mb-0">
                                                         <label for="newpassword"
                                                             class="form-label fs-6 fw-bold mb-3">Nova Senha *</label>
                                                         <input type="password"
                                                             class="form-control form-control-lg form-control-solid"
-                                                            name="password" id="newpassword" 
+                                                            name="password" id="newpassword"
                                                             placeholder="Digite a nova senha" />
-                                                        <div class="fv-plugins-message-container invalid-feedback" id="password-error"></div>
+                                                        <div class="fv-plugins-message-container invalid-feedback"
+                                                            id="password-error"></div>
                                                     </div>
                                                 </div>
                                                 <div class="col-lg-6">
@@ -298,43 +315,33 @@
                                                             class="form-label fs-6 fw-bold mb-3">Confirmar Nova Senha *</label>
                                                         <input type="password"
                                                             class="form-control form-control-lg form-control-solid"
-                                                            name="password_confirmation" id="confirmpassword" 
+                                                            name="password_confirmation" id="confirmpassword"
                                                             placeholder="Confirme a nova senha" />
-                                                        <div class="fv-plugins-message-container invalid-feedback" id="password_confirmation-error"></div>
+                                                        <div class="fv-plugins-message-container invalid-feedback"
+                                                            id="password_confirmation-error"></div>
                                                     </div>
                                                 </div>
                                             </div>
-                                            
-                                            <!-- Política de senha -->
-                                            <div class="alert alert-light-primary d-flex align-items-center p-5 mb-5">
-                                                <i class="ki-duotone ki-shield-tick fs-2hx text-primary me-4">
-                                                    <span class="path1"></span>
-                                                    <span class="path2"></span>
-                                                </i>
-                                                <div class="d-flex flex-column">
-                                                    <h4 class="mb-1 text-primary">Política de Senha</h4>
-                                                    <span>As senhas devem ter entre 8 e 256 caracteres e usar uma combinação de pelo menos três dos seguintes itens: letras maiúsculas, letras minúsculas, números e símbolos.</span>
-                                                </div>
-                                            </div>
-                                            
+
                                             <!-- Checkbox para obrigar alteração no próximo login -->
                                             <div class="form-check mb-5">
-                                                <input class="form-check-input" type="checkbox" 
-                                                    name="require_change" id="require_change" checked />
+                                                <input class="form-check-input" type="checkbox" name="require_change"
+                                                    id="require_change" checked />
                                                 <label class="form-check-label fw-semibold" for="require_change">
                                                     Exigir que este usuário altere a senha quando entrar pela primeira vez
                                                 </label>
                                             </div>
-                                            
-                                            <div class="d-flex">
+
+                                            <div class="d-flex justify-content-end gap-2 mt-5">
                                                 <button id="kt_password_submit" type="button"
-                                                    class="btn btn-primary me-2 px-6">
+                                                    class="btn btn-primary btn-sm">
                                                     <span class="indicator-label">Redefinir Senha</span>
                                                     <span class="indicator-progress">Aguarde...
-                                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                                        <span
+                                                            class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                                                 </button>
                                                 <button id="kt_password_cancel" type="button"
-                                                    class="btn btn-color-gray-400 btn-active-light-primary px-6">Cancelar</button>
+                                                    class="btn btn-secondary btn-sm">Cancelar</button>
                                             </div>
                                         </form>
                                         <!--end::Form-->
@@ -345,45 +352,9 @@
                                         <button class="btn btn-light btn-active-light-primary">Redefinir Senha</button>
                                     </div>
                                     <!--end::Action-->
+
                                 </div>
                                 <!--end::Password-->
-                                <!--begin::Notice-->
-                                <div
-                                    class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6">
-                                    <!--begin::Icon-->
-                                    <!--begin::Svg Icon | path: icons/duotune/general/gen048.svg-->
-                                    <span class="svg-icon svg-icon-2tx svg-icon-primary me-4">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <path opacity="0.3"
-                                                d="M20.5543 4.37824L12.1798 2.02473C12.0626 1.99176 11.9376 1.99176 11.8203 2.02473L3.44572 4.37824C3.18118 4.45258 3 4.6807 3 4.93945V13.569C3 14.6914 3.48509 15.8404 4.4417 16.984C5.17231 17.8575 6.18314 18.7345 7.446 19.5909C9.56752 21.0295 11.6566 21.912 11.7445 21.9488C11.8258 21.9829 11.9129 22 12.0001 22C12.0872 22 12.1744 21.983 12.2557 21.9488C12.3435 21.912 14.4326 21.0295 16.5541 19.5909C17.8169 18.7345 18.8277 17.8575 19.5584 16.984C20.515 15.8404 21 14.6914 21 13.569V4.93945C21 4.6807 20.8189 4.45258 20.5543 4.37824Z"
-                                                fill="currentColor" />
-                                            <path
-                                                d="M10.5606 11.3042L9.57283 10.3018C9.28174 10.0065 8.80522 10.0065 8.51412 10.3018C8.22897 10.5912 8.22897 11.0559 8.51412 11.3452L10.4182 13.2773C10.8099 13.6747 11.451 13.6747 11.8427 13.2773L15.4859 9.58051C15.771 9.29117 15.771 8.82648 15.4859 8.53714C15.1948 8.24176 14.7183 8.24176 14.4272 8.53714L11.7002 11.3042C11.3869 11.6221 10.874 11.6221 10.5606 11.3042Z"
-                                                fill="currentColor" />
-                                        </svg>
-                                    </span>
-                                    <!--end::Svg Icon-->
-                                    <!--end::Icon-->
-                                    <!--begin::Wrapper-->
-                                    <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
-                                        <!--begin::Content-->
-                                        <div class="mb-3 mb-md-0 fw-semibold">
-                                            <h4 class="text-gray-900 fw-bold">Secure Your Account</h4>
-                                            <div class="fs-6 text-gray-700 pe-7">Two-factor authentication adds an
-                                                extra layer of security to your account. To log in, in addition you'll
-                                                need to provide a 6 digit code</div>
-                                        </div>
-                                        <!--end::Content-->
-                                        <!--begin::Action-->
-                                        <a href="#" class="btn btn-primary px-6 align-self-center text-nowrap"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#kt_modal_two_factor_authentication">Enable</a>
-                                        <!--end::Action-->
-                                    </div>
-                                    <!--end::Wrapper-->
-                                </div>
-                                <!--end::Notice-->
                             </div>
                             <!--end::Card body-->
                         </div>
@@ -445,8 +416,15 @@
                                             <div class="d-flex flex-stack">
                                                 <div class="d-flex">
                                                     <div class="symbol symbol-circle symbol-35px symbol-md-40px">
-                                                        <img src="{{ route('file', ['path' => $company->avatar]) }}"
-                                                            class="w-35px me-6 " alt="{{ $company->name }}" />
+                                                        @if ($company->avatar && !empty($company->avatar))
+                                                            <img src="{{ route('file', ['path' => $company->avatar]) }}"
+                                                                class="w-35px me-6 " alt="{{ $company->name }}" />
+                                                        @else
+                                                            <div
+                                                                class="symbol-label fs-6 fw-semibold bg-primary text-inverse-primary">
+                                                                {{ strtoupper(substr($company->name ?? 'C', 0, 1)) }}
+                                                            </div>
+                                                        @endif
                                                     </div>
                                                     <div class="d-flex flex-column">
                                                         <span
@@ -885,405 +863,529 @@
 <script src="/assets/js/custom/account/settings/signin-methods.js"></script>
 
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Elementos do formulário
-    const form = document.getElementById('kt_signin_change_email');
-    const emailInput = document.getElementById('emailaddress');
-    const passwordInput = document.getElementById('confirmemailpassword');
-    const submitBtn = document.getElementById('kt_signin_submit');
-    const cancelBtn = document.getElementById('kt_signin_cancel');
-    
-    // Elementos de exibição
-    const emailDisplay = document.getElementById('kt_signin_email');
-    const emailEdit = document.getElementById('kt_signin_email_edit');
-    const emailButton = document.getElementById('kt_signin_email_button');
-    
-    // Elementos de erro
-    const emailError = document.getElementById('email-error');
-    const passwordError = document.getElementById('password-error');
-    
-    // Estado do botão
-    let isSubmitting = false;
-    
-    // Função para mostrar/ocultar formulário
-    function toggleEmailForm(show) {
-        if (show) {
-            emailDisplay.classList.add('d-none');
-            emailEdit.classList.remove('d-none');
-            emailButton.classList.add('d-none');
-            emailInput.focus();
-        } else {
-            emailDisplay.classList.remove('d-none');
-            emailEdit.classList.add('d-none');
-            emailButton.classList.remove('d-none');
-            clearForm();
-        }
-    }
-    
-    // Função para limpar formulário
-    function clearForm() {
-        form.reset();
-        clearErrors();
-        setButtonState(false);
-    }
-    
-    // Função para limpar erros
-    function clearErrors() {
-        emailError.textContent = '';
-        passwordError.textContent = '';
-        emailInput.classList.remove('is-invalid');
-        passwordInput.classList.remove('is-invalid');
-    }
-    
-    // Função para mostrar erro
-    function showError(field, message) {
-        const errorElement = field === 'email' ? emailError : passwordError;
-        const inputElement = field === 'email' ? emailInput : passwordInput;
-        
-        errorElement.textContent = message;
-        inputElement.classList.add('is-invalid');
-    }
-    
-    // Função para definir estado do botão
-    function setButtonState(submitting) {
-        isSubmitting = submitting;
-        submitBtn.disabled = submitting;
-        
-        if (submitting) {
-            submitBtn.setAttribute('data-kt-indicator', 'on');
-        } else {
-            submitBtn.removeAttribute('data-kt-indicator');
-        }
-    }
-    
-    // Event listener para o botão de editar
-    emailButton.addEventListener('click', function() {
-        toggleEmailForm(true);
-    });
-    
-    // Event listener para o botão de cancelar
-    cancelBtn.addEventListener('click', function() {
-        toggleEmailForm(false);
-    });
-    
-    // Event listener para o botão de submit
-    submitBtn.addEventListener('click', function() {
-        if (isSubmitting) return;
-        
-        clearErrors();
-        
-        // Validação básica
-        const email = emailInput.value.trim();
-        const password = passwordInput.value.trim();
-        
-        if (!email) {
-            showError('email', 'O email é obrigatório.');
-            return;
-        }
-        
-        if (!password) {
-            showError('password', 'A senha é obrigatória.');
-            return;
-        }
-        
-        if (email === '{{ $user->email }}') {
-            showError('email', 'O novo email deve ser diferente do email atual.');
-            return;
-        }
-        
-        // Enviar requisição
-        setButtonState(true);
-        
-        fetch('{{ route("users.email.update", $user->id) }}', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                email: email,
-                password: password
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Atualizar o email exibido
-                const emailText = emailDisplay.querySelector('.fw-semibold.text-gray-600');
-                emailText.textContent = data.new_email;
-                
-                // Mostrar mensagem de sucesso
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Sucesso!',
-                    text: data.message,
-                    confirmButtonText: 'OK'
-                });
-                
-                // Fechar formulário
-                toggleEmailForm(false);
-            } else {
-                // Mostrar erros
-                if (data.errors) {
-                    Object.keys(data.errors).forEach(field => {
-                        showError(field, data.errors[field][0]);
-                    });
-                } else {
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Erro!',
-                        text: data.message,
-                        confirmButtonText: 'OK'
-                    });
-                }
-            }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Erro!',
-                text: 'Ocorreu um erro inesperado. Tente novamente.',
-                confirmButtonText: 'OK'
-            });
-        })
-        .finally(() => {
-            setButtonState(false);
-        });
-    });
-    
-    // Validação em tempo real do email
-    emailInput.addEventListener('blur', function() {
-        const email = this.value.trim();
-        if (email && email !== '{{ $user->email }}') {
-            // Verificar se o email é válido
-            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-            if (!emailRegex.test(email)) {
-                showError('email', 'Digite um email válido.');
-            } else {
-                clearErrors();
-            }
-        }
-    });
-});
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos do formulário
+        const form = document.getElementById('kt_signin_change_email');
+        const emailInput = document.getElementById('emailaddress');
+        const passwordInput = document.getElementById('confirmemailpassword');
+        const submitBtn = document.getElementById('kt_signin_submit');
+        const cancelBtn = document.getElementById('kt_signin_cancel');
 
-// Script para redefinição de senha
-document.addEventListener('DOMContentLoaded', function() {
-    // Elementos do formulário de senha
-    const passwordForm = document.getElementById('kt_signin_change_password');
-    const passwordInput = document.getElementById('newpassword');
-    const confirmPasswordInput = document.getElementById('confirmpassword');
-    const submitPasswordBtn = document.getElementById('kt_password_submit');
-    const cancelPasswordBtn = document.getElementById('kt_password_cancel');
-    
-    // Elementos de exibição
-    const passwordDisplay = document.getElementById('kt_signin_password');
-    const passwordEdit = document.getElementById('kt_signin_password_edit');
-    const passwordButton = document.getElementById('kt_signin_password_button');
-    
-    // Elementos de erro
-    const passwordError = document.getElementById('password-error');
-    const confirmPasswordError = document.getElementById('password_confirmation-error');
-    
-    // Estado do botão
-    let isSubmittingPassword = false;
-    
-    // Função para mostrar/ocultar formulário de senha
-    function togglePasswordForm(show) {
-        if (show) {
-            passwordDisplay.classList.add('d-none');
-            passwordEdit.classList.remove('d-none');
-            passwordButton.classList.add('d-none');
-            passwordInput.focus();
-        } else {
-            passwordDisplay.classList.remove('d-none');
-            passwordEdit.classList.add('d-none');
-            passwordButton.classList.remove('d-none');
-            clearPasswordForm();
-        }
-    }
-    
-    // Função para limpar formulário de senha
-    function clearPasswordForm() {
-        passwordForm.reset();
-        clearPasswordErrors();
-        setPasswordButtonState(false);
-    }
-    
-    // Função para limpar erros de senha
-    function clearPasswordErrors() {
-        passwordError.textContent = '';
-        confirmPasswordError.textContent = '';
-        passwordInput.classList.remove('is-invalid');
-        confirmPasswordInput.classList.remove('is-invalid');
-    }
-    
-    // Função para mostrar erro de senha
-    function showPasswordError(field, message) {
-        const errorElement = field === 'password' ? passwordError : confirmPasswordError;
-        const inputElement = field === 'password' ? passwordInput : confirmPasswordInput;
-        
-        errorElement.textContent = message;
-        inputElement.classList.add('is-invalid');
-    }
-    
-    // Função para definir estado do botão de senha
-    function setPasswordButtonState(submitting) {
-        isSubmittingPassword = submitting;
-        submitPasswordBtn.disabled = submitting;
-        
-        if (submitting) {
-            submitPasswordBtn.setAttribute('data-kt-indicator', 'on');
-        } else {
-            submitPasswordBtn.removeAttribute('data-kt-indicator');
-        }
-    }
-    
-    // Função para validar complexidade da senha
-    function validatePasswordComplexity(password) {
-        const hasUppercase = /[A-Z]/.test(password);
-        const hasLowercase = /[a-z]/.test(password);
-        const hasNumbers = /[0-9]/.test(password);
-        const hasSymbols = /[^A-Za-z0-9]/.test(password);
-        
-        const complexityCount = hasUppercase + hasLowercase + hasNumbers + hasSymbols;
-        
-        return {
-            isValid: complexityCount >= 3,
-            count: complexityCount,
-            hasUppercase,
-            hasLowercase,
-            hasNumbers,
-            hasSymbols
-        };
-    }
-    
-    // Event listener para o botão de redefinir senha
-    passwordButton.addEventListener('click', function() {
-        togglePasswordForm(true);
-    });
-    
-    // Event listener para o botão de cancelar senha
-    cancelPasswordBtn.addEventListener('click', function() {
-        togglePasswordForm(false);
-    });
-    
-    // Event listener para o botão de submit de senha
-    submitPasswordBtn.addEventListener('click', function() {
-        if (isSubmittingPassword) return;
-        
-        clearPasswordErrors();
-        
-        // Validação básica
-        const password = passwordInput.value.trim();
-        const confirmPassword = confirmPasswordInput.value.trim();
-        const requireChange = document.getElementById('require_change').checked;
-        
-        if (!password) {
-            showPasswordError('password', 'A senha é obrigatória.');
-            return;
-        }
-        
-        if (!confirmPassword) {
-            showPasswordError('password_confirmation', 'A confirmação da senha é obrigatória.');
-            return;
-        }
-        
-        if (password !== confirmPassword) {
-            showPasswordError('password_confirmation', 'As senhas não conferem.');
-            return;
-        }
-        
-        // Validar complexidade
-        const passwordValidation = validatePasswordComplexity(password);
-        if (!passwordValidation.isValid) {
-            showPasswordError('password', 'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.');
-            return;
-        }
-        
-        // Enviar requisição
-        setPasswordButtonState(true);
-        
-        fetch('{{ route("users.password.reset", $user->id) }}', {
-            method: 'PUT',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: JSON.stringify({
-                password: password,
-                password_confirmation: confirmPassword,
-                require_change: requireChange
-            })
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                // Mostrar mensagem de sucesso
-                Swal.fire({
-                    icon: 'success',
-                    title: 'Sucesso!',
-                    text: data.message,
-                    confirmButtonText: 'OK'
-                });
-                
-                // Fechar formulário
-                togglePasswordForm(false);
+        // Elementos de exibição
+        const emailDisplay = document.getElementById('kt_signin_email');
+        const emailEdit = document.getElementById('kt_signin_email_edit');
+        const emailButton = document.getElementById('kt_signin_email_button');
+
+        // Elementos de erro
+        const emailError = document.getElementById('email-error');
+        const passwordError = document.getElementById('password-error');
+
+        // Estado do botão
+        let isSubmitting = false;
+
+        // Função para mostrar/ocultar formulário
+        function toggleEmailForm(show) {
+            if (show) {
+                emailDisplay.classList.add('d-none');
+                emailEdit.classList.remove('d-none');
+                emailButton.classList.add('d-none');
+                emailInput.focus();
             } else {
-                // Mostrar erros
-                if (data.errors) {
-                    Object.keys(data.errors).forEach(field => {
-                        showPasswordError(field, data.errors[field][0]);
-                    });
-                } else {
+                emailDisplay.classList.remove('d-none');
+                emailEdit.classList.add('d-none');
+                emailButton.classList.remove('d-none');
+                clearForm();
+            }
+        }
+
+        // Função para limpar formulário
+        function clearForm() {
+            form.reset();
+            clearErrors();
+            setButtonState(false);
+        }
+
+        // Função para limpar erros
+        function clearErrors() {
+            emailError.textContent = '';
+            passwordError.textContent = '';
+            emailInput.classList.remove('is-invalid');
+            passwordInput.classList.remove('is-invalid');
+        }
+
+        // Função para mostrar erro
+        function showError(field, message) {
+            const errorElement = field === 'email' ? emailError : passwordError;
+            const inputElement = field === 'email' ? emailInput : passwordInput;
+
+            errorElement.textContent = message;
+            inputElement.classList.add('is-invalid');
+        }
+
+        // Função para definir estado do botão
+        function setButtonState(submitting) {
+            isSubmitting = submitting;
+            submitBtn.disabled = submitting;
+
+            if (submitting) {
+                submitBtn.setAttribute('data-kt-indicator', 'on');
+            } else {
+                submitBtn.removeAttribute('data-kt-indicator');
+            }
+        }
+
+        // Event listener para o botão de editar
+        emailButton.addEventListener('click', function() {
+            toggleEmailForm(true);
+        });
+
+        // Event listener para o botão de cancelar
+        cancelBtn.addEventListener('click', function() {
+            toggleEmailForm(false);
+        });
+
+        // Event listener para o botão de submit
+        submitBtn.addEventListener('click', function() {
+            if (isSubmitting) return;
+
+            clearErrors();
+
+            // Validação básica
+            const email = emailInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            if (!email) {
+                showError('email', 'O email é obrigatório.');
+                return;
+            }
+
+            if (!password) {
+                showError('password', 'A senha é obrigatória.');
+                return;
+            }
+
+            if (email === '{{ $user->email }}') {
+                showError('email', 'O novo email deve ser diferente do email atual.');
+                return;
+            }
+
+            // Enviar requisição
+            setButtonState(true);
+
+            fetch('{{ route('users.email.update', $user->id) }}', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                            .getAttribute('content'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify({
+                        email: email,
+                        password: password
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Atualizar o email exibido
+                        const emailText = emailDisplay.querySelector('.fw-semibold.text-gray-600');
+                        emailText.textContent = data.new_email;
+
+                        // Mostrar mensagem de sucesso
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Sucesso!',
+                            text: data.message,
+                            confirmButtonText: 'OK'
+                        });
+
+                        // Fechar formulário
+                        toggleEmailForm(false);
+                    } else {
+                        // Mostrar erros
+                        if (data.errors) {
+                            Object.keys(data.errors).forEach(field => {
+                                showError(field, data.errors[field][0]);
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro!',
+                                text: data.message,
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
                     Swal.fire({
                         icon: 'error',
                         title: 'Erro!',
-                        text: data.message,
+                        text: 'Ocorreu um erro inesperado. Tente novamente.',
                         confirmButtonText: 'OK'
                     });
+                })
+                .finally(() => {
+                    setButtonState(false);
+                });
+        });
+
+        // Validação em tempo real do email
+        emailInput.addEventListener('blur', function() {
+            const email = this.value.trim();
+            if (email && email !== '{{ $user->email }}') {
+                // Verificar se o email é válido
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                if (!emailRegex.test(email)) {
+                    showError('email', 'Digite um email válido.');
+                } else {
+                    clearErrors();
                 }
             }
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            Swal.fire({
-                icon: 'error',
-                title: 'Erro!',
-                text: 'Ocorreu um erro inesperado. Tente novamente.',
-                confirmButtonText: 'OK'
-            });
-        })
-        .finally(() => {
-            setPasswordButtonState(false);
         });
     });
-    
-    // Validação em tempo real da senha
-    passwordInput.addEventListener('input', function() {
-        const password = this.value;
-        if (password.length > 0) {
-            const validation = validatePasswordComplexity(password);
-            if (!validation.isValid) {
-                showPasswordError('password', 'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.');
+
+    // Script para redefinição de senha
+    document.addEventListener('DOMContentLoaded', function() {
+        // Elementos do formulário de senha
+        const passwordForm = document.getElementById('kt_signin_change_password');
+        const passwordInput = document.getElementById('newpassword');
+        const confirmPasswordInput = document.getElementById('confirmpassword');
+        const submitPasswordBtn = document.getElementById('kt_password_submit');
+        const cancelPasswordBtn = document.getElementById('kt_password_cancel');
+
+        // Elementos de exibição
+        const passwordDisplay = document.getElementById('kt_signin_password');
+        const passwordEdit = document.getElementById('kt_signin_password_edit');
+        const passwordButton = document.getElementById('kt_signin_password_button');
+
+        // Elementos de erro
+        const passwordError = document.getElementById('password-error');
+        const confirmPasswordError = document.getElementById('password_confirmation-error');
+
+        // Estado do botão
+        let isSubmittingPassword = false;
+
+        // Função para mostrar/ocultar formulário de senha
+        function togglePasswordForm(show) {
+            if (show) {
+                passwordDisplay.classList.add('d-none');
+                passwordEdit.classList.remove('d-none');
+                passwordButton.classList.add('d-none');
+                passwordInput.focus();
             } else {
+                passwordDisplay.classList.remove('d-none');
+                passwordEdit.classList.add('d-none');
+                passwordButton.classList.remove('d-none');
+                clearPasswordForm();
+            }
+        }
+
+        // Função para limpar formulário de senha
+        function clearPasswordForm() {
+            passwordForm.reset();
+            clearPasswordErrors();
+            setPasswordButtonState(false);
+        }
+
+        // Função para limpar erros de senha
+        function clearPasswordErrors() {
+            passwordError.textContent = '';
+            if (confirmPasswordError) {
+                confirmPasswordError.textContent = '';
+            }
+            passwordInput.classList.remove('is-invalid');
+            if (confirmPasswordInput) {
+                confirmPasswordInput.classList.remove('is-invalid');
+            }
+        }
+
+        // Função para mostrar erro de senha
+        function showPasswordError(field, message) {
+            const errorElement = field === 'password' ? passwordError : (confirmPasswordError || null);
+            const inputElement = field === 'password' ? passwordInput : (confirmPasswordInput || null);
+
+            if (errorElement) {
+                errorElement.textContent = message;
+            }
+            if (inputElement) {
+                inputElement.classList.add('is-invalid');
+            }
+        }
+
+        // Função para definir estado do botão de senha
+        function setPasswordButtonState(submitting) {
+            isSubmittingPassword = submitting;
+            submitPasswordBtn.disabled = submitting;
+
+            if (submitting) {
+                submitPasswordBtn.setAttribute('data-kt-indicator', 'on');
+            } else {
+                submitPasswordBtn.removeAttribute('data-kt-indicator');
+            }
+        }
+
+        // Função para validar complexidade da senha
+        function validatePasswordComplexity(password) {
+            const hasUppercase = /[A-Z]/.test(password);
+            const hasLowercase = /[a-z]/.test(password);
+            const hasNumbers = /[0-9]/.test(password);
+            const hasSymbols = /[^A-Za-z0-9]/.test(password);
+
+            const complexityCount = hasUppercase + hasLowercase + hasNumbers + hasSymbols;
+
+            return {
+                isValid: complexityCount >= 3,
+                count: complexityCount,
+                hasUppercase,
+                hasLowercase,
+                hasNumbers,
+                hasSymbols
+            };
+        }
+
+        // Elementos do checkbox de senha automática
+        const automaticPasswordCheckbox = document.getElementById('automatic_password');
+        const manualPasswordContainer = document.getElementById('manual_password_container');
+
+        // Função para mostrar/ocultar campo de senha manual
+        function toggleManualPasswordField() {
+            if (automaticPasswordCheckbox.checked) {
+                manualPasswordContainer.style.display = 'none';
+                passwordInput.removeAttribute('required');
+                if (confirmPasswordInput) {
+                    confirmPasswordInput.removeAttribute('required');
+                }
+            } else {
+                manualPasswordContainer.style.display = 'block';
+                passwordInput.setAttribute('required', 'required');
+                if (confirmPasswordInput) {
+                    confirmPasswordInput.setAttribute('required', 'required');
+                }
+            }
+        }
+
+        // Event listener para o checkbox de senha automática
+        automaticPasswordCheckbox.addEventListener('change', function() {
+            toggleManualPasswordField();
+            clearPasswordErrors();
+        });
+
+        // Inicializar estado do campo de senha manual
+        toggleManualPasswordField();
+
+        // Event listener para o botão de redefinir senha
+        passwordButton.addEventListener('click', function() {
+            togglePasswordForm(true);
+        });
+
+        // Event listener para o botão de cancelar senha
+        cancelPasswordBtn.addEventListener('click', function() {
+            togglePasswordForm(false);
+        });
+
+        // Event listener para o botão de submit de senha
+        submitPasswordBtn.addEventListener('click', function() {
+            if (isSubmittingPassword) return;
+
+            clearPasswordErrors();
+
+            const automaticPassword = automaticPasswordCheckbox.checked;
+            const requireChange = document.getElementById('require_change').checked;
+            const password = passwordInput.value.trim();
+            const confirmPassword = confirmPasswordInput ? confirmPasswordInput.value.trim() : '';
+
+            // Validação para senha manual
+            if (!automaticPassword) {
+                if (!password) {
+                    showPasswordError('password', 'A senha é obrigatória.');
+                    return;
+                }
+
+                if (!confirmPassword) {
+                    showPasswordError('password_confirmation', 'A confirmação da senha é obrigatória.');
+                    return;
+                }
+
+                if (password !== confirmPassword) {
+                    showPasswordError('password_confirmation', 'As senhas não conferem.');
+                    return;
+                }
+
+                // Validar complexidade
+                const passwordValidation = validatePasswordComplexity(password);
+                if (!passwordValidation.isValid) {
+                    showPasswordError('password',
+                        'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.'
+                        );
+                    return;
+                }
+            }
+
+            // Enviar requisição
+            setPasswordButtonState(true);
+
+            const requestBody = {
+                automatic_password: automaticPassword,
+                require_change: requireChange
+            };
+
+            if (!automaticPassword) {
+                requestBody.password = password;
+                requestBody.password_confirmation = confirmPassword;
+            }
+
+            fetch('{{ route('users.password.reset', $user->id) }}', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                            .getAttribute('content'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify(requestBody)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Se senha foi gerada automaticamente, mostrar modal
+                        if (automaticPassword && data.generated_password) {
+                            document.getElementById('generated_password_display').value = data.generated_password;
+                            const modal = new bootstrap.Modal(document.getElementById('kt_modal_generated_password'));
+                            modal.show();
+
+                            // Botão de copiar senha
+                            document.getElementById('copy_password_btn').addEventListener('click', function() {
+                                const passwordField = document.getElementById('generated_password_display');
+                                passwordField.select();
+                                document.execCommand('copy');
+
+                                const btn = this;
+                                const originalHtml = btn.innerHTML;
+                                btn.innerHTML = '<i class="ki-duotone ki-check fs-2"><span class="path1"></span><span class="path2"></span></i> Copiado!';
+                                btn.classList.remove('btn-primary');
+                                btn.classList.add('btn-success');
+
+                                setTimeout(() => {
+                                    btn.innerHTML = originalHtml;
+                                    btn.classList.remove('btn-success');
+                                    btn.classList.add('btn-primary');
+                                }, 2000);
+                            });
+                        } else {
+                            // Mostrar mensagem de sucesso
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Sucesso!',
+                                text: data.message,
+                                confirmButtonText: 'OK'
+                            });
+                        }
+
+                        // Fechar formulário
+                        togglePasswordForm(false);
+                    } else {
+                        // Mostrar erros
+                        if (data.errors) {
+                            Object.keys(data.errors).forEach(field => {
+                                showPasswordError(field, data.errors[field][0]);
+                            });
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro!',
+                                text: data.message,
+                                confirmButtonText: 'OK'
+                            });
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Erro!',
+                        text: 'Ocorreu um erro inesperado. Tente novamente.',
+                        confirmButtonText: 'OK'
+                    });
+                })
+                .finally(() => {
+                    setPasswordButtonState(false);
+                });
+        });
+
+        // Validação em tempo real da senha
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            if (password.length > 0) {
+                const validation = validatePasswordComplexity(password);
+                if (!validation.isValid) {
+                    showPasswordError('password',
+                        'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.'
+                        );
+                } else {
+                    clearPasswordErrors();
+                }
+            }
+        });
+
+        // Validação em tempo real da confirmação
+        confirmPasswordInput.addEventListener('input', function() {
+            const password = passwordInput.value;
+            const confirmPassword = this.value;
+
+            if (confirmPassword.length > 0 && password !== confirmPassword) {
+                showPasswordError('password_confirmation', 'As senhas não conferem.');
+            } else if (confirmPassword.length > 0 && password === confirmPassword) {
                 clearPasswordErrors();
             }
-        }
+        });
     });
-    
-    // Validação em tempo real da confirmação
-    confirmPasswordInput.addEventListener('input', function() {
-        const password = passwordInput.value;
-        const confirmPassword = this.value;
-        
-        if (confirmPassword.length > 0 && password !== confirmPassword) {
-            showPasswordError('password_confirmation', 'As senhas não conferem.');
-        } else if (confirmPassword.length > 0 && password === confirmPassword) {
-            clearPasswordErrors();
-        }
-    });
-});
 </script>
+
+<!--begin::Modal para exibir senha gerada-->
+<div class="modal fade" id="kt_modal_generated_password" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered mw-650px">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="fw-bold">Senha Gerada com Sucesso</h2>
+                <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                    <i class="ki-duotone ki-cross fs-1">
+                        <span class="path1"></span>
+                        <span class="path2"></span>
+                    </i>
+                </div>
+            </div>
+            <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
+                <div class="alert alert-warning d-flex align-items-center p-5 mb-10">
+                    <i class="ki-duotone ki-shield-tick fs-2hx text-primary me-4"></i>
+                    <div class="d-flex flex-column">
+                        <h4 class="mb-1 text-dark">Importante!</h4>
+                        <span>Copie esta senha agora. Você não poderá vê-la novamente.</span>
+                    </div>
+                </div>
+                <div class="mb-10">
+                    <label class="form-label fw-bold mb-3">Nova Senha:</label>
+                    <div class="input-group input-group-solid">
+                        <input type="text" class="form-control form-control-lg" id="generated_password_display" readonly />
+                        <button class="btn btn-primary" type="button" id="copy_password_btn">
+                            <i class="ki-duotone ki-copy fs-2">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                                <span class="path3"></span>
+                                <span class="path4"></span>
+                            </i>
+                            Copiar
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Fechar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--end::Modal para exibir senha gerada-->

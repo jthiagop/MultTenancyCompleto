@@ -9,25 +9,25 @@
         <div class="d-flex flex-column flex-column-fluid">
             {{-- Header da Página --}}
             @include('app.financeiro.entidade.partials.header')
-            
+
             <!--begin::Content-->
             <div id="kt_app_content" class="app-content flex-column-fluid">
                 <!--begin::Content container-->
-                <div id="kt_app_content_container" class="app-container container-xxl">
+                <div id="kt_app_content_container" class="app-container container-fluid">
                     {{-- Mensagens de Sistema --}}
                     @include('app.financeiro.entidade.partials.alerts')
-                    
+
                     {{-- Navegação por Abas --}}
                     @include('app.financeiro.entidade.partials.tabs')
-                    
+
                     <!-- Conteúdo das Abas -->
                     <div class="tab-content" id="myTabContent">
                         {{-- Aba de Movimentação --}}
                         @include('app.financeiro.entidade.partials.movimentacao')
-                        
+
                         {{-- Aba de Conciliações Pendentes --}}
                         @include('app.financeiro.entidade.partials.conciliacoes')
-                        
+
                         {{-- Aba de Informações --}}
                         @include('app.financeiro.entidade.partials.informacoes')
                     </div>

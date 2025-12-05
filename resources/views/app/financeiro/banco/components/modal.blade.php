@@ -40,10 +40,10 @@
 
                 <!-- Rodapé -->
                 <div class="modal-footer border-0 pt-0">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
                         <i class="bi bi-x-circle me-2"></i>Cancelar
                     </button>
-                    <button type="submit" class="btn btn-success" id="importButton" disabled>
+                    <button type="submit" class="btn btn-sm btn-primary" id="importButton" disabled>
                         <span class="indicator-label">
                             <i class="bi bi-upload me-2"></i>Importar Extrato
                         </span>

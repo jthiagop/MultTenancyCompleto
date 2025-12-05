@@ -32,8 +32,12 @@
         <div class="menu-item px-3">
             <div class="menu-content d-flex align-items-center px-3">
                 <div class="symbol symbol-50px me-5">
+                    @if($currentUser && $currentUser->avatar)
                     <img src="{{ route('file', ['path' => $currentUser->avatar]) }}"
                         alt="user" class="rounded-circle" />
+                    @else
+                        <div class="symbol-label fs-2 fw-semibold bg-primary text-inverse-primary">{{ strtoupper(substr($currentUser->name ?? 'U', 0, 1)) }}</div>
+                    @endif
                 </div>
                 <div class="d-flex flex-column">
                     <div class="fw-bold d-flex align-items-center fs-5">

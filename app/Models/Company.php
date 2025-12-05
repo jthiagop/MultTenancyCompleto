@@ -98,6 +98,14 @@ class Company extends Model
         return $this->hasOne(Address::class, 'company_id');
     }
 
+    /**
+     * Get the mass schedules for the company.
+     */
+    public function horariosMissas()
+    {
+        return $this->hasMany(HorarioMissa::class);
+    }
+
 
     public function entidadesFinanceiras()
     {

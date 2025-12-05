@@ -80,17 +80,9 @@
                             <!--begin::Toolbar-->
                             <div class="d-flex justify-content-end" data-kt-user-table-toolbar="base">
                                 <!--begin::Add user-->
-                                <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                                <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
                                     data-bs-target="#kt_modal_add_user">
-                                    <!--begin::Svg Icon | path: icons/duotune/general/gen041.svg-->
-                                    <span class="svg-icon svg-icon-2 me-2">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <rect opacity="0.5" x="11" y="2" width="2" height="20" rx="1" fill="currentColor"/>
-                                            <rect x="2" y="11" width="20" height="2" rx="1" fill="currentColor"/>
-                                        </svg>
-                                    </span>
-                                    <!--end::Svg Icon-->
+                                    <i class="fas fa-user-plus me-2"></i>
                                     Novo Usuário
                                 </button>
                                 <!--end::Add user-->

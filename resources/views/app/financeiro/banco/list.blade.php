@@ -143,10 +143,12 @@
 <script src="/assets/js/custom/apps/bancos/shipping.js"></script>
 <!--end::Custom Javascript chats bancos-->
 
+<script src="/assets/js/custom/apps/bancos/widgets.bundle.js"></script>
+
 @if($activeTab === 'overview')
 <script src="/assets/js/custom/apps/bancos/banco-fluxo-widget-36.js"></script>
 @endif
-<script src="/assets/js/custom/apps/bancos/widgets.bundle.js"></script>
+
 <script src="/assets/js/custom/apps/bancos/fluxo-banco-chart.js"></script>
 <!--end::Custom Javascript-->
 

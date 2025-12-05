@@ -22,13 +22,61 @@ class AuthenticatedSessionController extends Controller
     /**
      * Handle an incoming authentication request.
      */
-    public function store(LoginRequest $request): RedirectResponse
+    public function store(LoginRequest $request)
     {
+        try {
         $request->authenticate();
 
         $request->session()->regenerate();
 
+        // Verifica se o usuário precisa trocar a senha
+        $user = Auth::user();
+            
+            // Verifica se o usuário está ativo
+            if (!$user->active) {
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+                
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Sua conta foi desativada. Entre em contato com o administrador.',
+                        'error' => 'USER_INACTIVE'
+                    ], 403);
+                }
+                
+                return redirect()->route('login')->with('error', 'Sua conta foi desativada. Entre em contato com o administrador.');
+            }
+            
+        if ($user->must_change_password) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Você precisa alterar sua senha.',
+                        'redirect' => route('first-access')
+                    ], 200);
+                }
+                
+            return redirect()->route('first-access');
+        }
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Login realizado com sucesso!',
+                    'redirect' => route('dashboard', absolute: false)
+                ], 200);
+            }
+
         return redirect()->intended(route('dashboard', absolute: false));
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Credenciais inválidas. Verifique seu email e senha.',
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            
+            throw $e;
+        }
     }
 
     /**

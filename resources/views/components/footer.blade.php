@@ -1,8 +1,8 @@
                     <!--begin::Footer-->
                     <div id="kt_app_footer" class="app-footer">
                         <!--begin::Footer container-->
-                        <footer class="app-container container-xxl py-4 ">
-                            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+                        <footer class="app-container container-xxl py-4 px-4">
+                            <div class="d-flex flex-column flex-sm-row flex-column-fluid justify-content-between align-items-center gap-3">
                                 <!-- Copyright -->
                                 <div class="text-center text-md-start text-muted">
                                     <span class="fw-semibold me-1" id="current-year"></span>

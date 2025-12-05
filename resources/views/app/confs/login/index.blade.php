@@ -100,9 +100,9 @@
                                 enctype="multipart/form-data">
                                 @csrf
                                 <!--begin::Wrapper-->
-                                <div class="card-px text-center py-20 my-10">
+                                <div class="card-px text-center py-2 my-2">
                                     <!--begin::Title-->
-                                    <h2 class="fs-2x fw-bold mb-10">Personalizar Tela de Login</h2>
+                                    <h2 class="fs-2x fw-bold">Personalizar Tela de Login</h2>
                                     <!--end::Title-->
                                     <!--begin::Description-->
                                     @if ($errors->any())

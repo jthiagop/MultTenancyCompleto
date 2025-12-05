@@ -37,6 +37,7 @@ use App\Http\Controllers\App\Frota\CarInsuranceController;
 use App\Http\Controllers\App\NamePatrimonioController;
 use App\Http\Controllers\App\Patrimonio\AvaliadorController;
 use App\Http\Controllers\App\PatrimonioController;
+use App\Http\Controllers\App\BemController;
 use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\App\PatrimonioAnexoController;
 use App\Http\Controllers\App\TelaDeLoginController;
@@ -78,7 +79,7 @@ Route::middleware([
 
     // Rota para o dashboard, acessível apenas por usuários autenticados e verificados
     Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->middleware(['auth', 'verified'])
+        ->middleware(['auth', 'check.user.active', 'verified'])
         ->name('dashboard');
 
     // Rotas de perfil de usuário
@@ -159,8 +160,8 @@ Route::middleware([
 
 
 
-    // Grupo de rotas protegido pelo middleware 'auth', 'ensureUserHasAccess' e 'password.change.required'
-    Route::middleware(['auth', 'ensureUserHasAccess', 'password.change.required'])->group(function () {
+    // Grupo de rotas protegido pelo middleware 'auth', 'check.user.active', 'ensureUserHasAccess' e 'password.change.required'
+    Route::middleware(['auth', 'check.user.active', 'ensureUserHasAccess', 'password.change.required'])->group(function () {
 
             // Rota que fornecerá os dados em formato JSON para a DataTable
     // Usaremos POST para enviar os filtros de forma mais robusta
@@ -260,13 +261,19 @@ Route::middleware([
             Route::resource('patrimonio', PatrimonioController::class);
             Route::post('/save-location', [PatrimonioController::class, 'updateLocation'])->name('patrimonios.updateLocation');
 
+            // *** Rotas para Bens (Novo Sistema) ***
+            Route::resource('bem', BemController::class);
+
             // *** Rotas resource para Contas Financeiras ***
             Route::resource('contas-financeiras', ContasFinanceirasController::class);
 
 
             Route::resource('escritura', EscrituraController::class);
             Route::resource('patrimonioAnexo', PatrimonioAnexoController::class);
+            Route::get('patrimonios/filtrar', [PatrimonioController::class, 'filtrar'])->name('patrimonio.filtrar');
             Route::get('patrimonios/imoveis', [PatrimonioController::class, 'imoveis'])->name('patrimonio.imoveis');
+            Route::get('patrimonios/bens-moveis', [PatrimonioController::class, 'bensMoveis'])->name('patrimonio.bens-moveis');
+            Route::get('patrimonios/veiculos', [PatrimonioController::class, 'veiculos'])->name('patrimonio.veiculos');
             Route::resource('namePatrimonio', NamePatrimonioController::class);
             Route::post('/validar-num-foro', [NamePatrimonioController::class, 'validarNumForo']);
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
@@ -316,6 +323,7 @@ Route::middleware([
                 Route::post('/filter', [PrestacaoDeContaController::class, 'generateReport']);
 
                 Route::resource('fieis', FielController::class);
+                Route::get('fieis/charts/data', [FielController::class, 'getChartData'])->name('fieis.charts.data');
 
                 Route::resource('entidades', EntidadeFinanceiraController::class);
 

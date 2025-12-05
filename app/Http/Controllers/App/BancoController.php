@@ -288,10 +288,19 @@ class BancoController extends Controller
 
         $companyId = session('active_company_id');
 
-        Log::info('getFluxoBancoChartData - companyId', ['company_id' => $companyId]);
+        // Fallback: Tentar obter a empresa do usuário se não estiver na sessão
+        if (!$companyId) {
+            $userCompany = User::getCompany();
+            if ($userCompany) {
+                $companyId = $userCompany->company_id;
+                Log::info('getFluxoBancoChartData - Usando fallback User::getCompany()', ['company_id' => $companyId]);
+            }
+        }
+
+        Log::info('getFluxoBancoChartData - companyId final', ['company_id' => $companyId]);
 
         if (!$companyId) {
-            Log::error('getFluxoBancoChartData - Empresa não encontrada na sessão');
+            Log::error('getFluxoBancoChartData - Empresa não encontrada na sessão ou no usuário');
             return response()->json(['error' => 'Empresa não encontrada'], 400);
         }
 

@@ -16,32 +16,9 @@ class Fiel extends Model
         'nome_completo',
         'data_nascimento',
         'sexo',
-        'estado_civil',
-        'profissao',
         'cpf',
         'rg',
-        'telefone',
-        'telefone_secundario',
-        'email',
-        'endereco',
-        'bairro',
         'notifications',
-        'cidade',
-        'estado',
-        'cep',
-        'data_batismo',
-        'local_batismo',
-        'data_casamento',
-        'local_casamento',
-        'data_ingresso',
-        'responsavel_ingresso',
-        'grupo_participante',
-        'ministerio',
-        'dizimista',
-        'valor_dizimo',
-        'frequencia_dizimo',
-        'ultima_contribuicao',
-        'observacoes',
         'status',
         'created_by',
         'updated_by',
@@ -49,4 +26,67 @@ class Fiel extends Model
         'updated_by_name',
         'avatar'
     ];
+
+    protected $casts = [
+        'data_nascimento' => 'date',
+        'notifications' => 'array',
+    ];
+
+    // Relacionamentos
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
+    public function addresses()
+    {
+        return $this->belongsToMany(Address::class, 'fiel_address', 'fiel_id', 'address_id')
+            ->withPivot('tipo')
+            ->withTimestamps();
+    }
+
+    public function contacts()
+    {
+        return $this->hasMany(FielContact::class);
+    }
+
+    public function complementaryData()
+    {
+        return $this->hasOne(FielComplementaryData::class);
+    }
+
+    public function parents()
+    {
+        return $this->hasOne(FielParent::class);
+    }
+
+    public function spouse()
+    {
+        return $this->hasOne(FielSpouse::class);
+    }
+
+    public function children()
+    {
+        return $this->hasMany(FielChild::class);
+    }
+
+    public function religiousData()
+    {
+        return $this->hasOne(FielReligiousData::class);
+    }
+
+    public function tithe()
+    {
+        return $this->hasOne(FielTithe::class);
+    }
+
+    public function creator()
+    {
+        return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function updater()
+    {
+        return $this->belongsTo(User::class, 'updated_by');
+    }
 }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Banco;
 use App\Models\Company;
+use App\Models\HorarioMissa;
 use App\Models\Movimentacao;
 use App\Models\User;
 use Carbon\Carbon;
@@ -203,7 +204,7 @@ class CompanyController extends Controller
 
         // 3. Busca a empresa e seus dados, garantindo que o usuário tem acesso a ela.
         $company = Auth::user()->companies()
-                              ->with('addresses') // Busca o endereço relacionado
+                              ->with(['addresses', 'horariosMissas']) // Busca o endereço e horários de missas relacionados
                               ->findOrFail($activeCompanyId);
 
         return view('app.company.edit', ['company' => $company]);
@@ -224,61 +225,93 @@ class CompanyController extends Controller
         // 2. Busca a empresa para garantir que o usuário tem permissão.
         $company = Auth::user()->companies()->findOrFail($activeCompanyId);
 
-        // 3. A sua lógica de validação e atualização continua praticamente a mesma.
-        //    (O código de validação que você já tem está ótimo e não precisa mudar)
-        $validator = Validator::make($request->all(), [
-            // ... suas regras de validação aqui ...
-            'name' => ['required', 'string', 'max:255'],
-            'cnpj' => ['required', 'string', 'size:18'],
-            'data_fundacao' => ['nullable', 'date_format:d/m/Y'],
-            'data_cnpj' => ['nullable', 'date_format:d/m/Y'],
-            'email' => ['nullable', 'email', Rule::unique('companies')->ignore($company->id)],
-        ]);
+        // 3. Verificar se é apenas atualização de horários de missas
+        $isOnlyHorariosMissas = $request->has('horarios_missas') && !$request->has('name');
 
-        if ($validator->fails()) {
-            return redirect()->back()->withErrors($validator)->withInput();
+        if (!$isOnlyHorariosMissas) {
+            // A sua lógica de validação e atualização continua praticamente a mesma.
+            //    (O código de validação que você já tem está ótimo e não precisa mudar)
+            $validator = Validator::make($request->all(), [
+                // ... suas regras de validação aqui ...
+                'name' => ['required', 'string', 'max:255'],
+                'cnpj' => ['required', 'string', 'size:18'],
+                'data_fundacao' => ['nullable', 'date_format:d/m/Y'],
+                'data_cnpj' => ['nullable', 'date_format:d/m/Y'],
+                'email' => ['nullable', 'email', Rule::unique('companies')->ignore($company->id)],
+            ]);
+
+            if ($validator->fails()) {
+                return redirect()->back()->withErrors($validator)->withInput();
+            }
+
+            $validatedData = $validator->validated();
+
+            // Conversão de datas
+            foreach (['data_fundacao', 'data_cnpj'] as $dateField) {
+                if (!empty($validatedData[$dateField])) {
+                    $validatedData[$dateField] = Carbon::createFromFormat('d/m/Y', $validatedData[$dateField])->format('Y-m-d');
+                }
+            }
+
+            // Preenche e atualiza a empresa
+            $company->fill($validatedData);
+
+            // Lógica do Avatar (seu código está ótimo)
+            if ($request->hasFile('avatar')) {
+                if ($company->avatar) {
+                    Storage::disk('public')->delete($company->avatar);
+                }
+                $company->avatar = $request->file('avatar')->store('brasao', 'public');
+            } elseif ($request->input('avatar_remove') === '1') {
+                if ($company->avatar) {
+                    Storage::disk('public')->delete($company->avatar);
+                }
+                $company->avatar = null;
+            }
+
+            $company->save();
+
+            // Atualiza o endereço
+            Address::updateOrCreate(
+                ['company_id' => $company->id],
+                [
+                    'cep' => $request->cep,
+                    'rua' => $request->logradouro,
+                    'numero' => $request->numero,
+                    'bairro' => $request->bairro,
+                    'complemento' => $request->complemento,
+                    'cidade' => $request->localidade,
+                    'uf' => $request->uf,
+                ]
+            );
         }
 
-        $validatedData = $validator->validated();
+        // Processar horários de missas
+        if ($request->has('horarios_missas')) {
+            // Deletar todos os horários existentes
+            HorarioMissa::where('company_id', $company->id)->delete();
 
-        // Conversão de datas
-        foreach (['data_fundacao', 'data_cnpj'] as $dateField) {
-            if (!empty($validatedData[$dateField])) {
-                $validatedData[$dateField] = Carbon::createFromFormat('d/m/Y', $validatedData[$dateField])->format('Y-m-d');
+            // Criar novos horários
+            foreach ($request->horarios_missas as $item) {
+                if (!empty($item['dia_semana']) && !empty($item['horario'])) {
+                    // Converter o horário para o formato correto (H:i:s)
+                    $horario = $item['horario'];
+                    // Se vier apenas H:i, adicionar :00 para os segundos
+                    if (strlen($horario) === 5 && substr_count($horario, ':') === 1) {
+                        $horario .= ':00';
+                    }
+                    
+                    HorarioMissa::create([
+                        'company_id' => $company->id,
+                        'dia_semana' => $item['dia_semana'],
+                        'horario' => $horario,
+                    ]);
+                }
             }
+        } elseif (!$isOnlyHorariosMissas) {
+            // Se não há horários_missas no request e não é apenas atualização de horários, não fazer nada
+            // (mantém os horários existentes)
         }
-
-        // Preenche e atualiza a empresa
-        $company->fill($validatedData);
-
-        // Lógica do Avatar (seu código está ótimo)
-        if ($request->hasFile('avatar')) {
-            if ($company->avatar) {
-                Storage::disk('public')->delete($company->avatar);
-            }
-            $company->avatar = $request->file('avatar')->store('brasao', 'public');
-        } elseif ($request->input('avatar_remove') === '1') {
-            if ($company->avatar) {
-                Storage::disk('public')->delete($company->avatar);
-            }
-            $company->avatar = null;
-        }
-
-        $company->save();
-
-        // Atualiza o endereço
-        Address::updateOrCreate(
-            ['company_id' => $company->id],
-            [
-                'cep' => $request->cep,
-                'rua' => $request->logradouro,
-                'numero' => $request->numero,
-                'bairro' => $request->bairro,
-                'complemento' => $request->complemento,
-                'cidade' => $request->localidade,
-                'uf' => $request->uf,
-            ]
-        );
 
         return redirect()->back()->with('success', 'Informações da empresa atualizadas com sucesso.');
     }

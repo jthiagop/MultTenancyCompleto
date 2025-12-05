@@ -37,48 +37,50 @@
                                      <a href="#" class="btn btn-sm btn-bg-light btn-active-color-primary me-3"
                                          data-bs-toggle="modal" data-bs-target="#kt_modal_users_search">
                                          <span class="svg-icon svg-icon-2">
-                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                 fill="currentColor" class="bi bi-search me-2" viewBox="0 0 16 16">
-                                                 <path
-                                                     d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
-                                             </svg>
+                                            <i class="bi bi-search"></i>
                                          </span>
                                          Pesquisar...</a>
                                      <a href="#" class="btn btn-sm btn-primary me-3" data-bs-toggle="modal"
-                                         data-bs-target="#kt_modal_new_foro">
-                                         <!--begin::Svg Icon | path: icons/duotune/ecommerce/ecm002.svg-->
-                                         <span class="svg-icon svg-icon-2">
-                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                 fill="currentColor" class="bi bi-house-add-fill me-2"
-                                                 viewBox="0 0 16 16">
-                                                 <path
-                                                     d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7m.5-5v1h1a.5.5 0 0 1 0 1h-1v1a.5.5 0 1 1-1 0v-1h-1a.5.5 0 1 1 0-1h1v-1a.5.5 0 0 1 1 0" />
-                                                 <path
-                                                     d="M8.707 1.5a1 1 0 0 0-1.414 0L.646 8.146a.5.5 0 0 0 .708.708L8 2.207l6.646 6.647a.5.5 0 0 0 .708-.708L13 5.793V2.5a.5.5 0 0 0-.5-.5h-1a.5.5 0 0 0-.5.5v1.293z" />
-                                                 <path
-                                                     d="m8 3.293 4.712 4.712A4.5 4.5 0 0 0 8.758 15H3.5A1.5 1.5 0 0 1 2 13.5V9.293z" />
-                                             </svg>
-                                         </span>
-                                         <!--end::Svg Icon-->
-                                         Novo Ímovel
+                                         data-bs-target="#kt_modal_new_imovel">
+                                         <i class="bi bi-house-add-fill"></i>
+                                         <span class="fw-normal">Cadastro de Imóveis</span>
                                      </a>
                                  @elseif (Request::is('patrimonio'))
+                                     <a href="#" class="btn btn-sm btn-bg-light btn-active-color-success me-3"
+                                         data-bs-toggle="modal" data-bs-target="#kt_modal_users_search">
+                                         <span class="svg-icon svg-icon-2">
+                                            <i class="bi bi-search"></i>
+                                         </span>
+                                         Pesquisar...</a>
+                                     <a href="#" class="btn btn-sm btn-primary me-3" data-bs-toggle="modal"
+                                     data-bs-target="#kt_modal_new_foro">
+                                         <i class="bi bi-house-add-fill"></i>
+                                         <span class="fw-normal">Cadastro de Imóveis Foreiros</span>
+                                     </a>
+                                     @elseif (Request::is('patrimonios/bens-moveis'))
                                      <a href="#" class="btn btn-sm btn-bg-light btn-active-color-primary me-3"
                                          data-bs-toggle="modal" data-bs-target="#kt_modal_users_search">
                                          <span class="svg-icon svg-icon-2">
-                                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                 fill="currentColor" class="bi bi-search me-2" viewBox="0 0 16 16">
-                                                 <path
-                                                     d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0" />
-                                             </svg>
+                                            <i class="bi bi-search "></i>
                                          </span>
                                          Pesquisar...</a>
                                      <a href="#" class="btn btn-sm btn-primary me-3" data-bs-toggle="modal"
-                                         data-bs-target="#kt_modal_new_foro">
-                                         <i class="bi bi-house-add-fill fs-2 me-1"></i>
-                                         <span class="fw-normal">Cadastro de Imóveis Foreiros</span>
+                                         data-bs-target="#kt_modal_new_bens_moveis">
+                                         <i class="bi bi-box-seam "></i>
+                                         <span class="fw-normal">Cadastro de Bens Móveis</span>
                                      </a>
-                                 @else
+                                     @elseif (Request::is('patrimonios/veiculos'))
+                                     <a href="#" class="btn btn-sm btn-bg-light btn-active-color-primary me-3"
+                                         data-bs-toggle="modal" data-bs-target="#kt_modal_users_search">
+                                         <span class="svg-icon svg-icon-2">
+                                            <i class="bi bi-search "></i>
+                                         </span>
+                                         Pesquisar...</a>
+                                     <a href="#" class="btn btn-sm btn-warning me-3" data-bs-toggle="modal"
+                                         data-bs-target="#kt_modal_new_veiculos">
+                                         <i class="bi bi-car-front "></i>
+                                         <span class="fw-normal">Cadastro de Veículos</span>
+                                     </a>
                                  @endif
 
                                  <!--begin::Menu-->
@@ -92,7 +94,7 @@
                                          data-kt-menu="true">
                                          <!--begin::Heading-->
                                          <div class="menu-item px-3">
-                                             <div class="menu-content text-muted pb-2 px-3 fs-7 text-uppercase">Payments
+                                             <div class="menu-content text-muted pb-2 px-3 fs-7 text-uppercase">Menu de Ações
                                              </div>
                                          </div>
                                          <!--end::Heading-->
@@ -104,40 +106,27 @@
                                          <!--end::Menu item-->
                                          <!--begin::Menu item-->
                                          <div class="menu-item px-3">
-                                             <a href="#" class="menu-link flex-stack px-3">Create Payment
-                                                 <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
-                                                     title="Specify a target name for future usage and reference"></i></a>
-                                         </div>
-                                         <!--end::Menu item-->
-                                         <!--begin::Menu item-->
-                                         <div class="menu-item px-3">
-                                             <a href="#" class="menu-link px-3">Generate Bill</a>
+                                            <a class="menu-link px-3 text-active-primary py-1 me-6 {{ Request::is('patrimonios/filtrar') ? 'active' : '' }}"
+                                            href="{{ route('patrimonio.filtrar') }}">Filtrar Patrimônios
+                                        </a>
                                          </div>
                                          <!--end::Menu item-->
                                          <!--begin::Menu item-->
                                          <div class="menu-item px-3" data-kt-menu-trigger="hover"
                                              data-kt-menu-placement="right-end">
                                              <a href="#" class="menu-link px-3">
-                                                 <span class="menu-title">Subscription</span>
+                                                 <span class="menu-title">Acessórios</span>
                                                  <span class="menu-arrow"></span>
                                              </a>
                                              <!--begin::Menu sub-->
                                              <div class="menu-sub menu-sub-dropdown w-175px py-4">
                                                  <!--begin::Menu item-->
                                                  <div class="menu-item px-3">
-                                                     <a href="#" class="menu-link px-3">Plans</a>
+                                                    <a class="menu-link px-3 text-active-primary py-1 me-6 {{ Request::is('patrimonio/create') ? 'active' : '' }}"
+                                                    href="{{ route('patrimonio.create') }}">
+                                                    Cadastror de Territorio Foreiro
+                                                </a>
                                                  </div>
-                                                 <!--end::Menu item-->
-                                                 <!--begin::Menu item-->
-                                                 <div class="menu-item px-3">
-                                                     <a href="#" class="menu-link px-3">Billing</a>
-                                                 </div>
-                                                 <!--end::Menu item-->
-                                                 <!--begin::Menu item-->
-                                                 <div class="menu-item px-3">
-                                                     <a href="#" class="menu-link px-3">Statements</a>
-                                                 </div>
-                                                 <!--end::Menu item-->
                                                  <!--begin::Menu separator-->
                                                  <div class="separator my-2"></div>
                                                  <!--end::Menu separator-->
@@ -205,8 +194,8 @@
                                          <i class="bi bi-house-fill fs-4 me-2 text-success"></i>
                                          <!--end::Svg Icon-->
                                          <div class="fs-4 fw-bold" data-kt-countup="true"
-                                             data-kt-countup-value="{{ $totalPatrimonios }}">
-                                             {{ $totalPatrimonios }} <!-- Exibe o total dinamicamente -->
+                                             data-kt-countup-value="1234567898">
+                                             1234567898 <!-- Exibe o total dinamicamente -->
                                          </div>
                                      </div>
                                      <!--end::Number-->
@@ -257,30 +246,39 @@
                  <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold">
                      <!--begin::Nav item-->
                      <li class="nav-item">
-                         <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('patrimonio') ? 'active' : '' }}"
+                         <a class="nav-link text-active-primary py-3 me-3 {{ Request::is('patrimonio') ? 'active' : '' }}"
                              href="{{ route('patrimonio.index') }}">
                              <i class="bi bi-speedometer2 me-1"></i> Resumo
                          </a>
                      </li>
                      <!--end::Nav item-->
 
-                     <!--begin::Nav item-->
-                     <li class="nav-item">
-                         <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('patrimonios/imoveis') ? 'active' : '' }}"
-                             href="{{ route('patrimonio.imoveis') }}">
-                             <i class="bi bi-search me-1"></i> Relatórios e Busca
-                         </a>
-                     </li>
-                     <!--end::Nav item-->
+                    <!--begin::Nav item-->
+                    <li class="nav-item">
+                        <a class="nav-link text-active-primary py-3 me-3 {{ Request::is('patrimonios/bens-moveis') ? 'active' : '' }}"
+                            href="{{ route('patrimonio.bens-moveis') }}">
+                            <i class="bi bi-box-seam me-1"></i> Bens Móveis
+                        </a>
+                    </li>
+                    <!--end::Nav item-->
 
-                     <!--begin::Nav item-->
-                     <li class="nav-item">
-                         <a class="nav-link text-active-primary py-5 me-6 {{ Request::is('patrimonio/create') ? 'active' : '' }}"
-                             href="{{ route('patrimonio.create') }}">
-                             <i class="bi bi-tools me-1"></i> Acessórios
-                         </a>
-                     </li>
-                     <!--end::Nav item-->
+                    <!--begin::Nav item-->
+                    <li class="nav-item">
+                        <a class="nav-link text-active-primary py-3 me-3 {{ Request::is('patrimonios/imoveis') ? 'active' : '' }}"
+                            href="{{ route('patrimonio.imoveis') }}">
+                            <i class="bi bi-house-door me-1"></i> Imóveis
+                        </a>
+                    </li>
+                    <!--end::Nav item-->
+
+                    <!--begin::Nav item-->
+                    <li class="nav-item">
+                        <a class="nav-link text-active-primary py-3 me-3 {{ Request::is('patrimonios/veiculos') ? 'active' : '' }}"
+                            href="{{ route('patrimonio.veiculos') }}">
+                            <i class="bi bi-car-front me-1"></i> Veículos
+                        </a>
+                    </li>
+                    <!--end::Nav item-->
                  </ul>
 
                  <!--end::Nav-->

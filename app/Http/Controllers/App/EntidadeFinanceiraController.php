@@ -307,6 +307,12 @@ class EntidadeFinanceiraController extends Controller
         $percentualConciliado = $totalTransacoes > 0 ? ($totalConciliadas / $totalTransacoes) * 100 : 0;
         $transacoesPorDia = $entidade->transacoesFinanceiras->groupBy(fn($item) => Carbon::parse($item->data_competencia)->format('Y-m-d'));
 
+        // 6.1. Carrega todas as entidades financeiras do tipo 'banco' para o select
+        $entidadesBancos = EntidadeFinanceira::forActiveCompany()
+            ->where('tipo', 'banco')
+            ->orderBy('nome')
+            ->get();
+
         // 7. Retorna a view com todos os dados corretamente filtrados.
         return view('app.financeiro.entidade.show', [
             'entidade' => $entidade,
@@ -316,6 +322,7 @@ class EntidadeFinanceiraController extends Controller
             'lps' => $lps,
             'percentualConciliado' => round($percentualConciliado),
             'transacoesPorDia' => $transacoesPorDia,
+            'entidadesBancos' => $entidadesBancos,
         ]);
     }
 

@@ -7,13 +7,14 @@
             <div class="card-title flex-column flex-lg-row align-items-start align-items-lg-center gap-3 gap-lg-5">
                 <!--begin::Select Banco-->
                 <div class="d-flex align-items-center">
-                    <select id="banco-select" name="bank_id" class="form-select form-select-solid" data-control="select2"
-                        data-placeholder="Selecione um banco" style="min-width: 220px;">
+                    <select id="banco-select" name="entidade_id" class="form-select form-select-solid"
+                        data-control="select2" data-placeholder="Selecione um banco" style="min-width: 220px;">
                         <option></option>
-                        @isset($banks)
-                            @foreach ($banks as $bank)
-                                <option value="{{ $bank->id }}" data-icon="{{ $bank->logo_path }}">
-                                    {{ $bank->name }}
+                        @isset($entidadesBancos)
+                            @foreach ($entidadesBancos as $entidadeBanco)
+                                <option value="{{ $entidadeBanco->id }}"
+                                    {{ isset($entidade) && $entidade->id == $entidadeBanco->id ? 'selected' : '' }}>
+                                    {{ $entidadeBanco->nome }}
                                 </option>
                             @endforeach
                         @endisset
@@ -21,14 +22,6 @@
                 </div>
                 <!--end::Select Banco-->
 
-                <!--begin::Informações de Data-->
-                <div class="d-flex flex-column gap-2">
-                    <div class="text-muted fs-7">
-                        <span>Data da última atualização: </span>
-                        <span id="data-ultima-atualizacao" class="fw-semibold text-dark">-</span>
-                    </div>
-                </div>
-                <!--end::Informações de Data-->
             </div>
             <!--end::Card title-->
 
@@ -70,7 +63,17 @@
                 <!--end::Informações Financeiras-->
             </div>
             <!--end::Card toolbar-->
+
         </div>
+
+        <!--begin::Informações de Data-->
+        <div class="d-flex flex-column gap-2">
+            <div class="text-muted fs-7">
+                <span>Data da última atualização: </span>
+                <span id="data-ultima-atualizacao" class="fw-semibold text-dark">-</span>
+            </div>
+        </div>
+        <!--end::Informações de Data-->
     </div>
     <!--end::Card header-->
 
@@ -353,6 +356,35 @@
         // Escuta mudanças no período para atualizar as informações
         window.addEventListener('periodoAlterado', function() {
             carregarInformacoes();
+        });
+
+        // Event listener para mudança de banco/entidade selecionada
+        const bancoSelect = $('#banco-select');
+
+        // Inicializa o Select2 se ainda não foi inicializado
+        if (bancoSelect.length && !bancoSelect.hasClass('select2-hidden-accessible')) {
+            bancoSelect.select2({
+                placeholder: "Selecione um banco",
+                allowClear: false,
+                minimumResultsForSearch: 0
+            });
+        }
+
+        // Quando o usuário selecionar uma entidade financeira
+        bancoSelect.on('change', function() {
+            const entidadeId = $(this).val();
+
+            if (entidadeId) {
+                // Redireciona para a página da entidade selecionada
+                // A rota resource 'entidades' gera a rota 'entidades.show'
+                // Usa a URL base atual e substitui apenas o ID
+                const currentPath = window.location.pathname;
+                const pathParts = currentPath.split('/').filter(part => part !== '');
+                // Remove o último segmento (ID atual) e adiciona o novo ID
+                pathParts[pathParts.length - 1] = entidadeId;
+                const newUrl = '/' + pathParts.join('/');
+                window.location.href = newUrl;
+            }
         });
     });
 </script>

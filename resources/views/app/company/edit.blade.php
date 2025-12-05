@@ -17,8 +17,7 @@
                         <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
                             <!--begin::Item-->
                             <li class="breadcrumb-item text-muted">
-                                <a href="{{ route('dashboard') }}"
-                                    class="text-muted text-hover-primary">Dashboard</a>
+                                <a href="{{ route('dashboard') }}" class="text-muted text-hover-primary">Dashboard</a>
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
@@ -50,329 +49,456 @@
             <div id="kt_app_content" class="app-content flex-column-fluid">
                 <!--begin::Content container-->
                 <div id="kt_app_content_container" class="app-container container-xxl">
-
-                    <!--begin::Basic info-->
-                    <div class="card mb-5 mb-xl-10">
-                        <!--begin::Card header-->
-                        <div class="card-header border-0 cursor-pointer" role="button" data-bs-toggle="collapse"
-                            data-bs-target="#kt_account_profile_details" aria-expanded="true"
-                            aria-controls="kt_account_profile_details">
-                            <!--begin::Card title-->
-                            <div class="card-title m-0">
-                                <h3 class="fw-bold m-0">Detalhes</h3>
-                            </div>
-                            <!--end::Card title-->
+                    <!--begin::Navbar-->
+                    <div class="card card-flush mb-9" id="kt_user_profile_panel">
+                        <!--begin::Hero nav-->
+                        <div class="card-header rounded-top bgi-size-cover h-200px"
+                            style="background-position: 100% 100%; background-image:url('/assets/media/misc/profile-head-bg1.jpg')">
                         </div>
-                        <!--begin::Card header-->
-                        <!--begin::Content-->
-                        <div id="kt_account_settings_profile_details" class="collapse show">
-                            <!--begin::Form-->
-                            <!-- Formulário -->
-                            <form method="POST" action="{{ route('company.update', $company->id) }}"
-                                enctype="multipart/form-data" id="kt_account_profile_details_form" class="form">
-                                @csrf
-                                @method('PUT')
-                                <!-- Mensagens de Erro -->
-                                @if ($errors->any())
-                                    <div class="alert alert-danger">
-                                        <ul>
-                                            @foreach ($errors->all() as $error)
-                                                <li>{{ $error }}</li>
-                                            @endforeach
-                                        </ul>
+                        <!--end::Hero nav-->
+                        <!--begin::Body-->
+                        <div class="card-body mt-n19">
+                            <!--begin::Details-->
+                            <div class="m-0">
+                                <!--begin: Pic-->
+                                <div class="d-flex flex-stack align-items-end pb-4 mt-n19">
+                                    <div
+                                        class="symbol symbol-125px symbol-lg-150px symbol-fixed position-relative mt-n3">
+                                        <img src="{{ $company->avatar ? route('file', ['path' => $company->avatar]) : '/assets/media/avatars/apple-touch-icon.svg' }}"
+                                            alt="image" class="border border-white border-4"
+                                            style="border-radius: 20px" />
+                                        <div
+                                            class="position-absolute translate-middle bottom-0 start-100 ms-n1 mb-9 bg-success rounded-circle h-15px w-15px">
+                                        </div>
                                     </div>
-                                @endif
-                                <div class="card-body border-top p-9">
-                                    <!-- Exemplo de input group para Brasão -->
-                                    <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Brasão</label>
-                                        <div class="col-lg-8">
-                                            <div class="image-input image-input-outline" data-kt-image-input="true"
-                                                style="background-image: url('/assets/media/svg/avatars/blank.svg')">
-                                                <div class="image-input-wrapper w-125px h-125px"
-                                                style="background-image: url('{{ $company->avatar ? route('file', ['path' => $company->avatar]) : '/assets/media/avatars/apple-touch-icon.svg' }}');">
-
+                                    <!--begin::Toolbar-->
+                                    <div class="me-0">
+                                        <button
+                                            class="btn btn-icon btn-sm btn-active-color-primary justify-content-end pt-3"
+                                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
+                                            <i class="fonticon-settings fs-2"></i>
+                                        </button>
+                                        <!--begin::Menu 3-->
+                                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px py-3"
+                                            data-kt-menu="true">
+                                            <!--begin::Heading-->
+                                            <div class="menu-item px-3">
+                                                <div class="menu-content text-muted pb-2 px-3 fs-7 text-uppercase">
+                                                    Payments</div>
+                                            </div>
+                                            <!--end::Heading-->
+                                            <!--begin::Menu item-->
+                                            <div class="menu-item px-3">
+                                                <a href="#" class="menu-link px-3">Create Invoice</a>
+                                            </div>
+                                            <!--end::Menu item-->
+                                            <!--begin::Menu item-->
+                                            <div class="menu-item px-3">
+                                                <a href="#" class="menu-link flex-stack px-3">Create Payment
+                                                    <i class="fas fa-exclamation-circle ms-2 fs-7"
+                                                        data-bs-toggle="tooltip"
+                                                        title="Specify a target name for future usage and reference"></i></a>
+                                            </div>
+                                            <!--end::Menu item-->
+                                            <!--begin::Menu item-->
+                                            <div class="menu-item px-3">
+                                                <a href="#" class="menu-link px-3">Generate Bill</a>
+                                            </div>
+                                            <!--end::Menu item-->
+                                            <!--begin::Menu item-->
+                                            <div class="menu-item px-3" data-kt-menu-trigger="hover"
+                                                data-kt-menu-placement="right-end">
+                                                <a href="#" class="menu-link px-3">
+                                                    <span class="menu-title">Subscription</span>
+                                                    <span class="menu-arrow"></span>
+                                                </a>
+                                                <!--begin::Menu sub-->
+                                                <div class="menu-sub menu-sub-dropdown w-175px py-4">
+                                                    <!--begin::Menu item-->
+                                                    <div class="menu-item px-3">
+                                                        <a href="#" class="menu-link px-3">Plans</a>
+                                                    </div>
+                                                    <!--end::Menu item-->
+                                                    <!--begin::Menu item-->
+                                                    <div class="menu-item px-3">
+                                                        <a href="#" class="menu-link px-3">Billing</a>
+                                                    </div>
+                                                    <!--end::Menu item-->
+                                                    <!--begin::Menu item-->
+                                                    <div class="menu-item px-3">
+                                                        <a href="#" class="menu-link px-3">Statements</a>
+                                                    </div>
+                                                    <!--end::Menu item-->
+                                                    <!--begin::Menu separator-->
+                                                    <div class="separator my-2"></div>
+                                                    <!--end::Menu separator-->
+                                                    <!--begin::Menu item-->
+                                                    <div class="menu-item px-3">
+                                                        <div class="menu-content px-3">
+                                                            <!--begin::Switch-->
+                                                            <label
+                                                                class="form-check form-switch form-check-custom form-check-solid">
+                                                                <!--begin::Input-->
+                                                                <input class="form-check-input w-30px h-20px"
+                                                                    type="checkbox" value="1" checked="checked"
+                                                                    name="notifications" />
+                                                                <!--end::Input-->
+                                                                <!--end::Label-->
+                                                                <span
+                                                                    class="form-check-label text-muted fs-6">Recuring</span>
+                                                                <!--end::Label-->
+                                                            </label>
+                                                            <!--end::Switch-->
+                                                        </div>
+                                                    </div>
+                                                    <!--end::Menu item-->
                                                 </div>
-                                                <label
-                                                    class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-                                                    data-kt-image-input-action="change" data-bs-toggle="tooltip"
-                                                    title="Change avatar">
-                                                    <i class="bi bi-pencil-fill fs-7"></i>
-                                                    <input type="file" name="avatar" accept=".png, .jpg, .jpeg"
-                                                        disabled /> <!-- Inicialmente desabilitado -->
-                                                    <input type="hidden" name="avatar_remove"  />
-                                                </label>
-
-                                                <!--begin::Cancel-->
-                                                <span
-                                                    class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-                                                    data-kt-image-input-action="cancel" data-bs-toggle="tooltip"
-                                                    title="Cancel avatar">
-                                                    <i class="bi bi-x fs-2"></i>
-                                                </span>
-                                                <!--end::Cancel-->
-                                                <!--begin::Remove-->
-                                                <span
-                                                    class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
-                                                    data-kt-image-input-action="remove" disabled data-bs-toggle="tooltip"
-                                                    title="Remove avatar">
-                                                    <i class="bi bi-x fs-2"></i>
-                                                </span>
-                                                <!--end::Remove-->
-                                                <!--end::Image input-->
-                                                <!--begin::Hint-->
-
-                                                <!--end::Hint-->
+                                                <!--end::Menu sub-->
                                             </div>
-                                            <div class="form-text">Tipos de arquivos permitidos: png, jpg, jpeg.
+                                            <!--end::Menu item-->
+                                            <!--begin::Menu item-->
+                                            <div class="menu-item px-3 my-1">
+                                                <a href="#" class="menu-link px-3">Settings</a>
                                             </div>
-
+                                            <!--end::Menu item-->
                                         </div>
-
+                                        <!--end::Menu 3-->
                                     </div>
-
-                                    <!-- Razão Social -->
-                                    <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label required fw-semibold fs-6">Razão
-                                            Social</label>
-                                        <div class="col-lg-8 fv-row">
-                                            <input type="text" name="name"
-                                                class="form-control form-control-lg form-control-solid"
-                                                placeholder="Nome do Organismo" value="{{ $company->name }}" disabled />
-                                        </div>
-                                    </div>
-
-                                    <!-- CNPJ -->
-                                    <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">CNPJ</label>
-                                        <div class="col-lg-8 fv-row">
-                                            <input type="tel" name="cnpj" id="cnpj"
-                                                class="form-control form-control-lg form-control-solid"
-                                                placeholder="000.000" value="{{ $company->cnpj }}" disabled />
-                                        </div>
-                                    </div>
-
-                                    <!-- E-mail -->
-                                    <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">E-mail</label>
-                                        <div class="col-lg-8 fv-row">
-                                            <input type="text" name="email"
-                                                class="form-control form-control-lg form-control-solid"
-                                                placeholder="E-mail da Empresa" value="{{ $company->email }}"
-                                                disabled />
-                                        </div>
-                                    </div>
-
-                                    <!-- CEP -->
-                                    <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">CEP</label>
-                                        <div class="col-lg-8 fv-row">
-                                            <input type="text" name="cep" id="cep"
-                                                class="form-control form-control-lg form-control-solid"
-                                                placeholder="00000-000" value="{{ $company->addresses->cep ?? '' }}"
-                                                disabled />
-                                        </div>
-                                    </div>
-
-                                    <!-- Logradouro -->
-                                    <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Logradouro</label>
-                                        <div class="col-lg-8 fv-row">
-                                            <input type="tel" name="logradouro" id="logradouro"
-                                                class="form-control form-control-lg form-control-solid"
-                                                placeholder="Informe a rua"
-                                                value="{{ $company->addresses->rua ?? '' }}" disabled />
-                                        </div>
-                                    </div>
-
-                                    <!-- Bairro -->
-                                    <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Bairro</label>
-                                        <div class="col-lg-8 fv-row">
-                                            <input type="text" name="bairro" id="bairro"
-                                                class="form-control form-control-lg form-control-solid"
-                                                placeholder="Informe o bairro"
-                                                value="{{ $company->addresses->bairro ?? '' }}" disabled />
-                                        </div>
-                                    </div>
-
-                                    <!-- Cidade -->
-                                    <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Cidade</label>
-                                        <div class="col-lg-8 fv-row">
-                                            <input type="text" name="localidade" id="localidade"
-                                                class="form-control form-control-lg form-control-solid"
-                                                placeholder="Informe a Cidade"
-                                                value="{{ $company->addresses->cidade ?? '' }}" disabled />
-                                        </div>
-                                    </div>
-
-                                    <!-- Estado -->
-                                    <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Estado</label>
-                                        <div class="col-lg-8 fv-row">
-                                            <select name="uf" id="uf" data-control="select2"
-                                                class="form-select form-select-solid form-select-lg" disabled>
-                                                <option value="">Selecione o estado...</option>
-                                                <option value="AC"
-                                                    {{ ($company->addresses->uf ?? '') == 'AC' ? 'selected' : '' }}>Acre
-                                                </option>
-                                                <option value="AL"
-                                                    {{ ($company->addresses->uf ?? '') == 'AL' ? 'selected' : '' }}>
-                                                    Alagoas</option>
-                                                <option value="AP"
-                                                    {{ ($company->addresses->uf ?? '') == 'AP' ? 'selected' : '' }}>
-                                                    Amapá</option>
-                                                <option value="AM"
-                                                    {{ ($company->addresses->uf ?? '') == 'AM' ? 'selected' : '' }}>
-                                                    Amazonas</option>
-                                                <option value="BA"
-                                                    {{ ($company->addresses->uf ?? '') == 'BA' ? 'selected' : '' }}>
-                                                    Bahia</option>
-                                                <option value="CE"
-                                                    {{ ($company->addresses->uf ?? '') == 'CE' ? 'selected' : '' }}>
-                                                    Ceará</option>
-                                                <option value="DF"
-                                                    {{ ($company->addresses->uf ?? '') == 'DF' ? 'selected' : '' }}>
-                                                    Distrito Federal</option>
-                                                <option value="ES"
-                                                    {{ ($company->addresses->uf ?? '') == 'ES' ? 'selected' : '' }}>
-                                                    Espírito Santo</option>
-                                                <option value="GO"
-                                                    {{ ($company->addresses->uf ?? '') == 'GO' ? 'selected' : '' }}>
-                                                    Goiás</option>
-                                                <option value="MA"
-                                                    {{ ($company->addresses->uf ?? '') == 'MA' ? 'selected' : '' }}>
-                                                    Maranhão</option>
-                                                <option value="MT"
-                                                    {{ ($company->addresses->uf ?? '') == 'MT' ? 'selected' : '' }}>
-                                                    Mato Grosso</option>
-                                                <option value="MS"
-                                                    {{ ($company->addresses->uf ?? '') == 'MS' ? 'selected' : '' }}>
-                                                    Mato Grosso do Sul</option>
-                                                <option value="MG"
-                                                    {{ ($company->addresses->uf ?? '') == 'MG' ? 'selected' : '' }}>
-                                                    Minas Gerais</option>
-                                                <option value="PA"
-                                                    {{ ($company->addresses->uf ?? '') == 'PA' ? 'selected' : '' }}>
-                                                    Pará</option>
-                                                <option value="PB"
-                                                    {{ ($company->addresses->uf ?? '') == 'PB' ? 'selected' : '' }}>
-                                                    Paraíba</option>
-                                                <option value="PR"
-                                                    {{ ($company->addresses->uf ?? '') == 'PR' ? 'selected' : '' }}>
-                                                    Paraná</option>
-                                                <option value="PE"
-                                                    {{ ($company->addresses->uf ?? '') == 'PE' ? 'selected' : '' }}>
-                                                    Pernambuco</option>
-                                                <option value="PI"
-                                                    {{ ($company->addresses->uf ?? '') == 'PI' ? 'selected' : '' }}>
-                                                    Piauí</option>
-                                                <option value="RJ"
-                                                    {{ ($company->addresses->uf ?? '') == 'RJ' ? 'selected' : '' }}>Rio
-                                                    de Janeiro</option>
-                                                <option value="RN"
-                                                    {{ ($company->addresses->uf ?? '') == 'RN' ? 'selected' : '' }}>Rio
-                                                    Grande do Norte</option>
-                                                <option value="RS"
-                                                    {{ ($company->addresses->uf ?? '') == 'RS' ? 'selected' : '' }}>Rio
-                                                    Grande do Sul</option>
-                                                <option value="RO"
-                                                    {{ ($company->addresses->uf ?? '') == 'RO' ? 'selected' : '' }}>
-                                                    Rondônia</option>
-                                                <option value="RR"
-                                                    {{ ($company->addresses->uf ?? '') == 'RR' ? 'selected' : '' }}>
-                                                    Roraima</option>
-                                                <option value="SC"
-                                                    {{ ($company->addresses->uf ?? '') == 'SC' ? 'selected' : '' }}>
-                                                    Santa Catarina</option>
-                                                <option value="SP"
-                                                    {{ ($company->addresses->uf ?? '') == 'SP' ? 'selected' : '' }}>São
-                                                    Paulo</option>
-                                                <option value="SE"
-                                                    {{ ($company->addresses->uf ?? '') == 'SE' ? 'selected' : '' }}>
-                                                    Sergipe</option>
-                                                <option value="TO"
-                                                    {{ ($company->addresses->uf ?? '') == 'TO' ? 'selected' : '' }}>
-                                                    Tocantins</option>
-                                                <option value="EX"
-                                                    {{ ($company->addresses->uf ?? '') == 'EX' ? 'selected' : '' }}>
-                                                    Estrangeiro</option>
-                                            </select>
-
-                                        </div>
-                                    </div>
-
-                                    <!-- Opções de Comunicação -->
-                                    <div class="row mb-6">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Comunicação</label>
-                                        <div class="col-lg-8 fv-row">
-                                            <label
-                                                class="form-check form-check-custom form-check-inline form-check-solid me-5">
-                                                <input class="form-check-input" name="communication[]"
-                                                    type="checkbox" value="1" disabled />
-                                                <span class="fw-semibold ps-2 fs-6">Email</span>
-                                            </label>
-                                            <label
-                                                class="form-check form-check-custom form-check-inline form-check-solid">
-                                                <input class="form-check-input" name="communication[]"
-                                                    type="checkbox" value="2" disabled />
-                                                <span class="fw-semibold ps-2 fs-6">Telefone</span>
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <!-- Cadastro ativo -->
-                                    <div class="row mb-0">
-                                        <label class="col-lg-4 col-form-label fw-semibold fs-6">Cadastro ativo?</label>
-                                        <div class="col-lg-8 d-flex align-items-center">
-                                            <div
-                                                class="form-check form-check-solid form-switch form-check-custom fv-row">
-                                                <input class="form-check-input w-45px h-30px" type="checkbox"
-                                                    id="allowmarketing" checked="checked" disabled />
-                                                <label class="form-check-label" for="allowmarketing"></label>
-                                            </div>
-                                        </div>
-                                    </div>
-
+                                    <!--end::Toolbar-->
                                 </div>
-
-                                <div class="card-footer d-flex justify-content-end py-6 px-9">
-                                    <button type="reset"
-                                        class="btn btn-light btn-active-light-primary me-2">Descartar</button>
-                                    <button type="button" id="editButton"
-                                        class="btn btn-light btn-active-light-success me-2">
-                                        <i class="fa-duotone fa-solid fa-pen-clip"></i> Editar
-                                    </button>
-                                    <button type="submit" class="btn btn-primary"
-                                        id="kt_account_profile_details_submit" disabled>
-                                        <i class="fa-solid fa-floppy-disk"></i> Salvar Alterações
-                                    </button>
+                                <!--end::Pic-->
+                                <!--begin::Info-->
+                                <div class="d-flex flex-stack flex-wrap align-items-end">
+                                    <!--begin::User-->
+                                    <div class="d-flex flex-column">
+                                        <!--begin::Name-->
+                                        <div class="d-flex align-items-center mb-2">
+                                            <a href="#"
+                                                class="text-gray-800 text-hover-primary fs-2 fw-bolder me-1">{{ $company->name }}</a>
+                                            <a href="#" class="" data-bs-toggle="tooltip"
+                                                data-bs-placement="right" title="Account is verified">
+                                                <!--begin::Svg Icon | path: icons/duotune/general/gen026.svg-->
+                                                <i class="bi bi-check-circle-fill text-success fs-2"></i>
+                                                <!--end::Svg Icon-->
+                                            </a>
+                                        </div>
+                                        <!--end::Name-->
+                                        <!--begin::Text-->
+                                        @if ($company->addresses)
+                                            <span class="fw-bold text-gray-600 fs-6 mb-2 d-block">{{ $company->addresses->rua }},
+                                                {{ $company->addresses->numero }} - {{ $company->addresses->bairro }} -
+                                                {{ $company->addresses->cidade }} -
+                                                {{ $company->addresses->uf }}</span>
+                                        @else
+                                            <span class="fw-bold text-gray-600 fs-6 mb-2 d-block">Endereço não
+                                                informado</span>
+                                        @endif
+                                        <!--end::Text-->
+                                        <!--begin::Info-->
+                                        <div class="d-flex align-items-center flex-wrap fw-semibold fs-7 pe-2">
+                                            <a href="#"
+                                                class="d-flex align-items-center text-gray-400 text-hover-primary">UI/UX
+                                                Design</a>
+                                            <span class="bullet bullet-dot h-5px w-5px bg-gray-400 mx-3"></span>
+                                            <a href="#"
+                                                class="d-flex align-items-center text-gray-400 text-hover-primary">Austin,
+                                                TX</a>
+                                            <span class="bullet bullet-dot h-5px w-5px bg-gray-400 mx-3"></span>
+                                            <a href="#" class="text-gray-400 text-hover-primary">3,450
+                                                Followers</a>
+                                        </div>
+                                        <!--end::Info-->
+                                    </div>
+                                    <!--end::User-->
+                                    <!--begin::Actions-->
+                                    <div class="d-flex">
+                                        <a href="#" class="btn btn-sm btn-light me-3"
+                                            id="kt_drawer_chat_toggle">Send Message</a>
+                                        <button class="btn btn-sm btn-primary" id="kt_user_follow_button">
+                                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr012.svg-->
+                                            <span class="svg-icon svg-icon-3 d-none">
+                                                <svg width="24" height="24" viewBox="0 0 24 24"
+                                                    fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                    <path opacity="0.3"
+                                                        d="M10 18C9.7 18 9.5 17.9 9.3 17.7L2.3 10.7C1.9 10.3 1.9 9.7 2.3 9.3C2.7 8.9 3.29999 8.9 3.69999 9.3L10.7 16.3C11.1 16.7 11.1 17.3 10.7 17.7C10.5 17.9 10.3 18 10 18Z"
+                                                        fill="currentColor" />
+                                                    <path
+                                                        d="M10 18C9.7 18 9.5 17.9 9.3 17.7C8.9 17.3 8.9 16.7 9.3 16.3L20.3 5.3C20.7 4.9 21.3 4.9 21.7 5.3C22.1 5.7 22.1 6.30002 21.7 6.70002L10.7 17.7C10.5 17.9 10.3 18 10 18Z"
+                                                        fill="currentColor" />
+                                                </svg>
+                                            </span>
+                                            <!--end::Svg Icon-->
+                                            <!--begin::Indicator label-->
+                                            <span class="indicator-label">Follow</span>
+                                            <!--end::Indicator label-->
+                                            <!--begin::Indicator progress-->
+                                            <span class="indicator-progress">Please wait...
+                                                <span
+                                                    class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                                            <!--end::Indicator progress-->
+                                        </button>
+                                    </div>
+                                    <!--end::Actions-->
                                 </div>
-                            </form>
-
-                            <script>
-                                document.getElementById('editButton').addEventListener('click', function() {
-                                    // Habilita todos os campos do formulário para edição
-                                    document.querySelectorAll(
-                                        '#kt_account_profile_details_form input, #kt_account_profile_details_form select').forEach(
-                                        function(el) {
-                                            el.disabled = false;
-                                        });
-
-                                    // Habilita o botão de salvar
-                                    document.getElementById('kt_account_profile_details_submit').disabled = false;
-                                });
-                            </script>
-
-                            <!--end::Form-->
+                                <!--end::Info-->
+                            </div>
+                            <!--end::Details-->
                         </div>
-                        <!--end::Content-->
                     </div>
-                    <!--end::Basic info-->
+                    <!--end::Navbar-->
+                    <!--begin::Nav items-->
+                    <div id="kt_user_profile_nav" class="rounded bg-gray-200 d-flex flex-stack flex-wrap mb-9 p-2"
+                        data-kt-page-scroll-position="400" data-kt-sticky="true"
+                        data-kt-sticky-name="sticky-profile-navs"
+                        data-kt-sticky-offset="{default: false, lg: '200px'}"
+                        data-kt-sticky-width="{target: '#kt_user_profile_panel'}" data-kt-sticky-left="auto"
+                        data-kt-sticky-top="70px" data-kt-sticky-animation="false" data-kt-sticky-zindex="95">
+                        <!--begin::Nav-->
+                        <ul class="nav flex-wrap border-transparent" role="tablist">
+                            <!--begin::Nav item-->
+                            <li class="nav-item my-1" role="presentation">
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1 active"
+                                    data-bs-toggle="tab" href="#kt_tab_detalhes" role="tab"
+                                    aria-selected="true">Detalhes</a>
+                            </li>
+                            <!--end::Nav item-->
+                            <!--begin::Nav item-->
+                            <li class="nav-item my-1" role="presentation">
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
+                                    data-bs-toggle="tab" href="#kt_tab_editar" role="tab" aria-selected="false"
+                                    id="nav-tab-editar">Editar</a>
+                            </li>
+                            <!--end::Nav item-->
+                            <!--begin::Nav item-->
+                            <li class="nav-item my-1" role="presentation">
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
+                                    data-bs-toggle="tab" href="#kt_tab_horario_missas" role="tab"
+                                    aria-selected="false">Horários de Missa</a>
+                            </li>
+                            <!--end::Nav item-->
+                            <!--begin::Nav item-->
+                            <li class="nav-item my-1" role="presentation">
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
+                                    data-bs-toggle="tab" href="#kt_tab_security" role="tab"
+                                    aria-selected="false">Security</a>
+                            </li>
+                            <!--end::Nav item-->
+                            <!--begin::Nav item-->
+                            <li class="nav-item my-1" role="presentation">
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
+                                    data-bs-toggle="tab" href="#kt_tab_activity" role="tab"
+                                    aria-selected="false">Activity</a>
+                            </li>
+                            <!--end::Nav item-->
+                            <!--begin::Nav item-->
+                            <li class="nav-item my-1" role="presentation">
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
+                                    data-bs-toggle="tab" href="#kt_tab_billing" role="tab"
+                                    aria-selected="false">Billing</a>
+                            </li>
+                            <!--end::Nav item-->
+                            <!--begin::Nav item-->
+                            <li class="nav-item my-1" role="presentation">
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
+                                    data-bs-toggle="tab" href="#kt_tab_statements" role="tab"
+                                    aria-selected="false">Statements</a>
+                            </li>
+                            <!--end::Nav item-->
+                            <!--begin::Nav item-->
+                            <li class="nav-item my-1" role="presentation">
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
+                                    data-bs-toggle="tab" href="#kt_tab_referrals" role="tab"
+                                    aria-selected="false">Referrals</a>
+                            </li>
+                            <!--end::Nav item-->
+                            <!--begin::Nav item-->
+                            <li class="nav-item my-1" role="presentation">
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
+                                    data-bs-toggle="tab" href="#kt_tab_api_keys" role="tab"
+                                    aria-selected="false">API Keys</a>
+                            </li>
+                            <!--end::Nav item-->
+                            <!--begin::Nav item-->
+                            <li class="nav-item my-1" role="presentation">
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
+                                    data-bs-toggle="tab" href="#kt_tab_logs" role="tab"
+                                    aria-selected="false">Logs</a>
+                            </li>
+                            <!--end::Nav item-->
+                        </ul>
+                        <!--end::Nav-->
+                    </div>
+                    <!--end::Nav items-->
+
+                    <!--begin::Tab content-->
+                    <div class="tab-content" id="kt_user_profile_tab_content">
+                        <!--begin::Tab pane - Detalhes (padrão)-->
+                        <div class="tab-pane fade show active" id="kt_tab_detalhes" role="tabpanel">
+                            @include('app.company.partials.details')
+                        </div>
+                        <!--end::Tab pane-->
+
+                        <!--begin::Tab pane - Editar-->
+                        <div class="tab-pane fade" id="kt_tab_editar" role="tabpanel">
+                            @include('app.company.partials.edit')
+                        </div>
+                        <!--end::Tab pane-->
+
+                        <!--begin::Tab pane - Visão Geral-->
+                        <div class="tab-pane fade" id="kt_tab_horario_missas" role="tabpanel">
+                            @include('app.company.partials.horarios-missas')
+                        </div>
+                        <!--end::Tab pane-->
+
+                        <!--begin::Tab pane - Security-->
+                        <div class="tab-pane fade" id="kt_tab_security" role="tabpanel">
+                            <div class="card mb-5 mb-xl-10">
+                                <div class="card-body p-9">
+                                    <p class="text-muted">Conteúdo de Security</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Tab pane-->
+
+                        <!--begin::Tab pane - Activity-->
+                        <div class="tab-pane fade" id="kt_tab_activity" role="tabpanel">
+                            <div class="card mb-5 mb-xl-10">
+                                <div class="card-body p-9">
+                                    <p class="text-muted">Conteúdo de Activity</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Tab pane-->
+
+                        <!--begin::Tab pane - Billing-->
+                        <div class="tab-pane fade" id="kt_tab_billing" role="tabpanel">
+                            <div class="card mb-5 mb-xl-10">
+                                <div class="card-body p-9">
+                                    <p class="text-muted">Conteúdo de Billing</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Tab pane-->
+
+                        <!--begin::Tab pane - Statements-->
+                        <div class="tab-pane fade" id="kt_tab_statements" role="tabpanel">
+                            <div class="card mb-5 mb-xl-10">
+                                <div class="card-body p-9">
+                                    <p class="text-muted">Conteúdo de Statements</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Tab pane-->
+
+                        <!--begin::Tab pane - Referrals-->
+                        <div class="tab-pane fade" id="kt_tab_referrals" role="tabpanel">
+                            <div class="card mb-5 mb-xl-10">
+                                <div class="card-body p-9">
+                                    <p class="text-muted">Conteúdo de Referrals</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Tab pane-->
+
+                        <!--begin::Tab pane - API Keys-->
+                        <div class="tab-pane fade" id="kt_tab_api_keys" role="tabpanel">
+                            <div class="card mb-5 mb-xl-10">
+                                <div class="card-body p-9">
+                                    <p class="text-muted">Conteúdo de API Keys</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Tab pane-->
+
+                        <!--begin::Tab pane - Logs-->
+                        <div class="tab-pane fade" id="kt_tab_logs" role="tabpanel">
+                            <div class="card mb-5 mb-xl-10">
+                                <div class="card-body p-9">
+                                    <p class="text-muted">Conteúdo de Logs</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Tab pane-->
+                    </div>
+                    <!--end::Tab content-->
                 </div>
+                <!--end::Basic info-->
+
             </div>
         </div>
     </div>
+    </div>
+
+    <script>
+        // Função para ativar a tab de edição
+        document.addEventListener('DOMContentLoaded', function() {
+            const btnEditarOrganismo = document.getElementById('btn-editar-organismo','nav-tab-editar');
+            const navTabEditar = document.getElementById('nav-tab-editar');
+
+            if (btnEditarOrganismo && navTabEditar) {
+                btnEditarOrganismo.addEventListener('click', function(e) {
+                    e.preventDefault();
+
+                    // Ativa a tab de edição usando Bootstrap
+                    const tab = new bootstrap.Tab(navTabEditar);
+                    tab.show();
+
+                    // Scroll suave para a tab
+                    setTimeout(() => {
+                        navTabEditar.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }, 100);
+                });
+            }
+        });
+    </script>
 
 </x-tenant-app-layout>
+
+<!--begin::Vendors Javascript(used for this page only)-->
+<script src="/assets/plugins/custom/formrepeater/formrepeater.bundle.js"></script>
+<!--end::Vendors Javascript-->
+
+<!--begin::Custom Javascript(used for this page only)-->
+<script>
+    // Debug: Verificar se scripts foram carregados
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('=== DEBUG HORÁRIOS DE MISSAS ===');
+        console.log('jQuery carregado:', typeof $ !== 'undefined' && typeof jQuery !== 'undefined');
+        console.log('jQuery.repeater carregado:', typeof $.fn.repeater !== 'undefined');
+        console.log('KTUtil carregado:', typeof KTUtil !== 'undefined');
+        console.log('tempusDominus carregado:', typeof tempusDominus !== 'undefined');
+        console.log('Elemento #kt_horarios_missas_repeater existe:', $('#kt_horarios_missas_repeater').length);
+
+        // Listener para quando a tab de Horários de Missas for mostrada
+        const tabTrigger = document.querySelector('[href="#kt_tab_horario_missas"]');
+        if (tabTrigger) {
+            console.log('Tab trigger encontrado!');
+
+            // Inicializar quando a tab for mostrada pela primeira vez
+            let tabActivated = false;
+            tabTrigger.addEventListener('shown.bs.tab', function (event) {
+                console.log('Tab Horários de Missas ativada!');
+
+                if (!tabActivated) {
+                    tabActivated = true;
+                    setTimeout(() => {
+                        console.log('Tentando inicializar KTHorariosMissas da tab...');
+                        if (typeof KTHorariosMissas !== 'undefined') {
+                            console.log('KTHorariosMissas encontrado!');
+                            // Verificar se o repeater foi inicializado
+                            const repeaterCheck = $('#kt_horarios_missas_repeater').data('repeater');
+                            console.log('Repeater já inicializado?', repeaterCheck !== undefined);
+                        } else {
+                            console.error('KTHorariosMissas NÃO está definido!');
+                        }
+                    }, 100);
+                }
+            });
+        }
+    });
+</script>
+<script src="/assets/js/custom/apps/company/horarios-missas.js?v={{ time() }}"></script>
+<!--end::Custom Javascript-->
