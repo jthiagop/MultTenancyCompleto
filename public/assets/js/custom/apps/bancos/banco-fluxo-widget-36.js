@@ -363,7 +363,7 @@ var KTChartsWidgetOverview = function () {
 
             // Atualizar estatísticas
             if (data.totais) {
-                var totalElement = document.querySelector('.fs-3x.fw-bold.text-gray-800');
+                var totalElement = document.getElementById('saldo-periodo');
                 if (totalElement) {
                     var saldo = data.totais.saldo || 0;
                     totalElement.textContent = saldo.toLocaleString('pt-BR', {
@@ -372,17 +372,30 @@ var KTChartsWidgetOverview = function () {
                     });
                     console.log('[KTChartsWidgetOverview] Estatística de saldo atualizada:', saldo);
                 } else {
-                    console.warn('[KTChartsWidgetOverview] Elemento de saldo não encontrado (.fs-3x.fw-bold.text-gray-800)');
+                    console.warn('[KTChartsWidgetOverview] Elemento de saldo não encontrado (#saldo-periodo)');
                 }
 
                 // Atualizar badge de variação
-                var badgeElement = document.querySelector('.badge.badge-light-success');
-                if (badgeElement && data.totais.entradas > 0) {
-                    var percentual = ((data.totais.saldo / data.totais.entradas) * 100).toFixed(1);
-                    badgeElement.innerHTML = '<i class="bi bi-graph-up-arrow me-2 text-success"></i>' + percentual + '%';
-                    console.log('[KTChartsWidgetOverview] Badge de percentual atualizado:', percentual + '%');
+                var badgeElement = document.getElementById('percentual-saldo');
+                var percentualTexto = document.getElementById('percentual-texto');
+                if (badgeElement && percentualTexto) {
+                    if (data.totais.entradas > 0) {
+                        var percentual = ((data.totais.saldo / data.totais.entradas) * 100).toFixed(1);
+                        percentualTexto.textContent = percentual + '%';
+                        badgeElement.style.display = 'inline-block';
+                        
+                        // Mudar cor do badge baseado no saldo (verde se positivo, vermelho se negativo)
+                        if (saldo >= 0) {
+                            badgeElement.className = 'badge badge-light-success fs-base';
+                        } else {
+                            badgeElement.className = 'badge badge-light-danger fs-base';
+                        }
+                        console.log('[KTChartsWidgetOverview] Badge de percentual atualizado:', percentual + '%');
+                    } else {
+                        badgeElement.style.display = 'none';
+                    }
                 } else {
-                    console.warn('[KTChartsWidgetOverview] Elemento de badge não encontrado ou sem entradas');
+                    console.warn('[KTChartsWidgetOverview] Elemento de badge não encontrado');
                 }
             } else {
                 console.warn('[KTChartsWidgetOverview] Dados de totais não disponíveis');

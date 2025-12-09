@@ -4,8 +4,7 @@
         <div class="modal-content">
             <!-- Cabeçalho -->
             <div class="modal-header">
-                <h5 class="modal-title text-danger fw-bold">
-                    <i class="fas fa-exclamation-triangle me-2"></i>
+                <h5 class="modal-title  fw-bold">
                     Confirmar Exclusão
                 </h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -13,12 +12,12 @@
 
             <!-- Corpo -->
             <div class="modal-body text-center">
-                <i class="bi bi-exclamation-circle-fill text-danger fs-1 mb-4"></i>
+                <i class="bi bi-exclamation-circle-fill text-danger icon-size-9 mb-4"></i>
                 <p class="mb-0 fs-5 fw-semibold text-center">
-                    Tem certeza que deseja excluir a conta contábil <strong id="conta-name"></strong>?
+                    Tem certeza que deseja excluir a conta contábil <span class="text-nowrap fs-3 fw-bold" id="conta-name"></span> ?
                 </p>
                 <small class="text-muted d-block mt-3">
-                    <i class="fas fa-info-circle me-1"></i>
+                    <i class="fas fa-info-circle me-1 icon-size-9"></i>
                     Esta ação não pode ser desfeita e pode afetar registros relacionados.
                 </small>
             </div>
@@ -28,11 +27,11 @@
                 <form id="delete-plano-conta-form" method="POST">
                     @csrf
                     @method('DELETE')
-                    <button type="button" class="btn btn-secondary px-4" data-bs-dismiss="modal">
-                        <i class="fas fa-times me-2"></i>Cancelar
+                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i>Cancelar
                     </button>
-                    <button type="submit" class="btn btn-danger px-4">
-                        <i class="fas fa-trash-alt me-2"></i> Confirmar Exclusão
+                    <button type="submit" class="btn btn-sm btn-danger">
+                        <i class="fas fa-trash-alt"></i> Confirmar Exclusão
                     </button>
                 </form>
             </div>
@@ -47,15 +46,15 @@ document.addEventListener('DOMContentLoaded', function() {
     // Manipula o envio do formulário de exclusão
     document.getElementById('delete-plano-conta-form').addEventListener('submit', function(e) {
         e.preventDefault();
-        
+
         const form = this;
         const submitBtn = form.querySelector('button[type="submit"]');
         const originalText = submitBtn.innerHTML;
-        
+
         // Mostra loading
-        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Excluindo...';
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>Excluindo...';
         submitBtn.disabled = true;
-        
+
         fetch(form.action, {
             method: form.method,
             headers: {

@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('fiel_tithe')) {
-            Schema::create('fiel_tithe', function (Blueprint $table) {
-                $table->id();
+        Schema::create('fiel_tithe', function (Blueprint $table) {
+            $table->id();
                 $table->foreignId('fiel_id')->constrained('fieis')->onDelete('cascade');
                 $table->boolean('dizimista')->default(false);
                 $table->string('codigo')->nullable();
@@ -23,7 +23,7 @@ return new class extends Migration
                 $table->decimal('valor_dizimo', 10, 2)->nullable();
                 $table->enum('frequencia_dizimo', ['Mensal', 'Semanal', 'Anual'])->nullable();
                 $table->date('ultima_contribuicao')->nullable();
-                $table->timestamps();
+            $table->timestamps();
                 
                 $table->unique('fiel_id');
             });

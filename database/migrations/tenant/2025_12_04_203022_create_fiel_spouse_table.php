@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('fiel_spouse')) {
-            Schema::create('fiel_spouse', function (Blueprint $table) {
-                $table->id();
+        Schema::create('fiel_spouse', function (Blueprint $table) {
+            $table->id();
                 $table->foreignId('fiel_id')->constrained('fieis')->onDelete('cascade');
                 $table->foreignId('fiel_conjuge_id')->nullable()->constrained('fieis')->onDelete('set null');
                 $table->string('nome_conjuge')->nullable();
@@ -25,7 +25,7 @@ return new class extends Migration
                 $table->string('cartao_magnetico')->nullable();
                 $table->decimal('percentual_salario', 5, 2)->nullable();
                 $table->boolean('criar_ficha')->default(false);
-                $table->timestamps();
+            $table->timestamps();
                 
                 $table->unique('fiel_id');
             });

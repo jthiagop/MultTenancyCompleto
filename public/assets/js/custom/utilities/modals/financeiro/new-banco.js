@@ -576,8 +576,8 @@ var DMModalNewBanco = function () {
 				confirmButtonText: "Sim, cancelar!",
 				cancelButtonText: "Não, voltar",
 				customClass: {
-					confirmButton: "btn btn-primary",
-					cancelButton: "btn btn-active-light"
+					confirmButton: "btn btn-sm btn-primary",
+					cancelButton: "btn btn-sm btn-active-light"
 				}
 			}).then(function (result) {
 				if (result.value) {
@@ -590,7 +590,7 @@ var DMModalNewBanco = function () {
 						buttonsStyling: false,
 						confirmButtonText: "Ok, entendi!",
 						customClass: {
-							confirmButton: "btn btn-primary",
+							confirmButton: "btn btn-sm btn-primary",
 						}
 					});
 				}
@@ -948,16 +948,22 @@ $(document).ready(function() {
 
                     // Recupera o caminho do ícone do atributo data-icon
                     let iconUrl = $(state.element).attr('data-icon');
+                    let nomeCompleto = $(state.element).attr('data-nome') || state.text;
+
+                    // Se não tiver ícone, retorna apenas o texto
                     if (!iconUrl) {
                         return state.text;
                     }
 
-                    // Monta um elemento com img + texto
+                    // Monta um elemento com img + texto principal e secundário
                     let $state = $(`
-                        <span class="d-flex align-items-center">
+                        <div class="d-flex align-items-center">
                             <img src="${iconUrl}" class="me-2" style="width:24px; height:24px; object-fit: contain;" />
-                            <span>${state.text}</span>
-                        </span>
+                            <div class="d-flex flex-column">
+                                <span class="fw-semibold">${state.text}</span>
+                                <span class="text-muted fs-7">${nomeCompleto}</span>
+                            </div>
+                        </div>
                     `);
 
                     return $state;
@@ -970,10 +976,14 @@ $(document).ready(function() {
                     }
 
                     let iconUrl = $(state.element).attr('data-icon');
+                    let nomeCompleto = $(state.element).attr('data-nome') || state.text;
+
+                    // Se não tiver ícone, retorna apenas o texto
                     if (!iconUrl) {
                         return state.text;
                     }
 
+                    // Na seleção, mostra apenas o logo e o texto principal (mais compacto)
                     let $state = $(`
                         <span class="d-flex align-items-center">
                             <img src="${iconUrl}" class="me-2" style="width:24px; height:24px; object-fit: contain;" />

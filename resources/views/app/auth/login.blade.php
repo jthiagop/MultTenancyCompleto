@@ -339,17 +339,6 @@
                                 submitButton.disabled = false;
 
                                 if (result.ok && result.data) {
-                                    // Show success message
-                                    Swal.fire({
-                                        text: result.data.message || 'Login realizado com sucesso!',
-                                        icon: "success",
-                                        buttonsStyling: false,
-                                        confirmButtonText: "Ok, entendi!",
-                                        customClass: {
-                                            confirmButton: "btn btn-primary"
-                                        }
-                                    }).then(function (swalResult) {
-                                        if (swalResult.isConfirmed) {
                                             // Clear form
                                             form.querySelector('[name="email"]').value = "";
                                             form.querySelector('[name="password"]').value = "";
@@ -360,8 +349,6 @@
                                             } else {
                                                 location.href = "{{ route('dashboard') }}";
                                             }
-                                        }
-                                    });
                                 } else {
                                     // Handle error response
                                     let errorMessage = "Desculpe, ocorreu um erro. Por favor, tente novamente.";

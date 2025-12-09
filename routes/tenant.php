@@ -81,6 +81,9 @@ Route::middleware([
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware(['auth', 'check.user.active', 'verified'])
         ->name('dashboard');
+    Route::get('/dashboard/missas-chart-data', [DashboardController::class, 'getMissasChartData'])
+        ->middleware(['auth', 'check.user.active', 'verified'])
+        ->name('dashboard.missas-chart-data');
 
     // Rotas de perfil de usuário
     Route::prefix('/app/profile')->group(function () {
@@ -213,6 +216,8 @@ Route::middleware([
 
                 // Rotas para o CRUD do Plano de Contas.
                 // O Laravel criará rotas como: /contabilidade/plano-contas, /contabilidade/plano-contas/create, etc.
+                Route::post('plano-contas/import', [ChartOfAccountController::class, 'import'])->name('plano-contas.import');
+                Route::post('plano-contas/export', [ChartOfAccountController::class, 'export'])->name('plano-contas.export');
                 Route::resource('plano-contas', ChartOfAccountController::class)->names('plano-contas');
 
                 // Rotas para o CRUD do Mapeamento (DE/PARA).
@@ -228,6 +233,8 @@ Route::middleware([
         Route::middleware(['role:admin_user'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
+            Route::get('/lancamentoPadrao/data', [LancamentoPadraoController::class, 'getData'])->name('lancamentoPadrao.data');
+            Route::post('/lancamentoPadrao/validate-field', [LancamentoPadraoController::class, 'validateField'])->name('lancamentoPadrao.validate-field');
             Route::resource('lancamentoPadrao', LancamentoPadraoController::class);
             Route::resource('cadastroBancos', BankController::class);
             Route::resource('users', UserController::class);
@@ -260,7 +267,7 @@ Route::middleware([
             // *** Editar Patrimônio ***
             Route::resource('patrimonio', PatrimonioController::class);
             Route::post('/save-location', [PatrimonioController::class, 'updateLocation'])->name('patrimonios.updateLocation');
-
+            
             // *** Rotas para Bens (Novo Sistema) ***
             Route::resource('bem', BemController::class);
 
@@ -300,6 +307,11 @@ Route::middleware([
             Route::post('/conciliacao', [ConciliacaoController::class, 'pivot'])->name('conciliacao.pivot');
             Route::put('/transacoes-financeiras/{id}', [ConciliacaoController::class, 'update'])->name('conciliacao.update');
             Route::get('/conciliacao/contas-disponiveis', [ConciliacaoController::class, 'contasDisponiveis'])->name('conciliacao.contas-disponiveis');
+    Route::post('/conciliacao/processar-missas', [ConciliacaoController::class, 'processarConciliacaoMissas'])->name('conciliacao.processar-missas');
+    Route::get('/conciliacao/missas', [ConciliacaoController::class, 'getConciliacoesMissas'])->name('conciliacao.missas');
+    Route::get('/conciliacao/candidatas', [ConciliacaoController::class, 'getTransacoesCandidatas'])->name('conciliacao.candidatas');
+    Route::post('/conciliacao/confirmar-missa', [ConciliacaoController::class, 'confirmarMissa'])->name('conciliacao.confirmar-missa');
+    Route::post('/conciliacao/rejeitar-missa', [ConciliacaoController::class, 'rejeitarMissa'])->name('conciliacao.rejeitar-missa');
             Route::post('/conciliacao/transferir', [ConciliacaoController::class, 'transferir'])->name('conciliacao.transferir');
 
 

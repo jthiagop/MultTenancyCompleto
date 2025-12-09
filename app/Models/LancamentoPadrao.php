@@ -19,14 +19,15 @@ class LancamentoPadrao extends Model
     protected $fillable = [
         'type',
         'description',
-        'date',
         'category',
         'user_id',
+        'company_id',
+        'conta_debito_id',
+        'conta_credito_id',
         'created_at'
     ];
 
     protected $casts = [
-        'date' => 'datetime',
         'created_at' => 'datetime'
     ];
 
@@ -46,6 +47,18 @@ class LancamentoPadrao extends Model
     public function bancos()
     {
         return $this->hasMany(Banco::class, 'lancamento_padrao_id');
+    }
+
+    // Relacionamento com conta de débito (contabilidade)
+    public function contaDebito()
+    {
+        return $this->belongsTo(\App\Models\Contabilide\ChartOfAccount::class, 'conta_debito_id');
+    }
+
+    // Relacionamento com conta de crédito (contabilidade)
+    public function contaCredito()
+    {
+        return $this->belongsTo(\App\Models\Contabilide\ChartOfAccount::class, 'conta_credito_id');
     }
 
         /**

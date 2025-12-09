@@ -130,8 +130,8 @@ var KTModalCustomersAdd = function () {
                 confirmButtonText: "Sim, cancelar!",
                 cancelButtonText: "Não, voltar",
                 customClass: {
-                    confirmButton: "btn btn-primary",
-                    cancelButton: "btn btn-active-light"
+                    confirmButton: "btn btn-sm btn-primary",
+                    cancelButton: "btn btn-sm btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
@@ -144,7 +144,7 @@ var KTModalCustomersAdd = function () {
                         buttonsStyling: false,
                         confirmButtonText: "Ok, entendi!",
                         customClass: {
-                            confirmButton: "btn btn-primary",
+                            confirmButton: "btn btn-sm btn-primary",
                         }
                     });
                 }
@@ -162,8 +162,8 @@ var KTModalCustomersAdd = function () {
                 confirmButtonText: "Sim, fechar!",
                 cancelButtonText: "Não, voltar",
                 customClass: {
-                    confirmButton: "btn btn-primary",
-                    cancelButton: "btn btn-active-light"
+                    confirmButton: "btn btn-sm btn-primary",
+                    cancelButton: "btn btn-sm btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
@@ -176,7 +176,7 @@ var KTModalCustomersAdd = function () {
                         buttonsStyling: false,
                         confirmButtonText: "Ok, entendi!",
                         customClass: {
-                            confirmButton: "btn btn-primary",
+                            confirmButton: "btn btn-sm btn-primary",
                         }
                     });
                 }

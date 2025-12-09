@@ -12,14 +12,8 @@
                     <!--begin::Heading-->
                     <div class="mb-13 text-center">
                         <!--begin::Title-->
-                        <h1 class="mb-3">Cadastrar Nova Entidade</h1>
+                        <h1 class="mb-3">Cadastrar Nova Entidade Financeira</h1>
                         <!--end::Title-->
-                        <!--begin::Description-->
-                        <div class="text-muted fw-semibold fs-5">
-                            Preencha os detalhes da nova dfadfadfa
-                            <a href="#" class="fw-bold link-primary">Entidade Financeira</a>.
-                        </div>
-                        <!--end::Description-->
                     </div>
                     <!--end::Heading-->
                     <!--end::Title-->

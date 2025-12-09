@@ -2,6 +2,8 @@
     <form method="POST" action="{{ route('company.update', $company->id) }}" id="kt_horarios_missas_form" class="form">
         @csrf
         @method('PUT')
+        <!-- Campo hidden para indicar que estamos enviando horários de missas -->
+        <input type="hidden" name="updating_horarios_missas" value="1">
         <div class="card card-flush">
             <!--begin::Card header-->
             <div class="card-header">
@@ -13,6 +15,8 @@
             <!--begin::Card body-->
             <div class="card-body pt-0">
                 <!--begin::Repeater Principal (Dias)-->
+                <!-- Campo hidden para garantir que dias[] seja enviado mesmo quando vazio -->
+                <input type="hidden" name="dias" value="" id="dias_empty_indicator">
                 <div data-repeater-list="dias">
                     @if (isset($company) && $company->horariosMissas->count() > 0)
                         @php
@@ -208,7 +212,7 @@
                     <div class="input-group" style="width: 150px;" data-td-target-input="nearest"
                         data-td-target-toggle="nearest" id="kt_td_picker_intervalo">
                         <input type="text" class="form-control form-control-sm" name="intervalo_padrao" id="intervalo_padrao"
-                            data-td-target="#kt_td_picker_intervalo" placeholder="00:00" 
+                            data-td-target="#kt_td_picker_intervalo" placeholder="00:00"
                             value="{{ isset($company) && $company->horariosMissas->first() ? \Carbon\Carbon::createFromTime(0, $company->horariosMissas->first()->intervalo ?? 90)->format('H:i') : '01:30' }}" />
                         <span class="input-group-text" data-td-target="#kt_td_picker_intervalo"
                             data-td-toggle="datetimepicker">
@@ -224,7 +228,7 @@
                 </button>
             </div>
             <!--end::Card footer-->
-            
+
         </div>
     </form>
 </div>

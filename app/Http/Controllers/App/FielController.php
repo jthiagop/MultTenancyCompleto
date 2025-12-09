@@ -27,7 +27,7 @@ class FielController extends Controller
         $companyId = session('active_company_id');
 
         if ($request->ajax()) {
-            $fieis = Fiel::with(['company', 'contacts'])
+            $fieis = Fiel::with(['company', 'contacts', 'addresses', 'tithe'])
                 ->where('company_id', $companyId)
                 ->select('fieis.*');
 
@@ -39,14 +39,51 @@ class FielController extends Controller
                 })
                 ->addColumn('nome_completo', function ($row) {
                     $avatar = $row->avatar ? route('file', ['path' => $row->avatar]) : '/assets/media/png/perfil.svg';
+                    
+                    // Buscar endereço principal
+                    $enderecoPrincipal = $row->addresses->where('pivot.tipo', 'principal')->first();
+                    $enderecoTexto = '';
+                    if ($enderecoPrincipal) {
+                        $enderecoPartes = array_filter([
+                            $enderecoPrincipal->rua,
+                            $enderecoPrincipal->bairro,
+                            $enderecoPrincipal->cidade,
+                            $enderecoPrincipal->uf
+                        ]);
+                        $enderecoTexto = !empty($enderecoPartes) ? implode(', ', $enderecoPartes) : '';
+                    }
+                    
                     return '<div class="d-flex align-items-center">
                                 <div class="symbol symbol-circle symbol-35px overflow-hidden me-3">
                                     <div class="symbol-label">
                                         <img src="' . $avatar . '" alt="' . $row->nome_completo . '" class="w-100" />
                                     </div>
                                 </div>
-                                <a href="#" class="text-gray-800 text-hover-primary mb-1">' . $row->nome_completo . '</a>
+                                <div class="d-flex flex-column">
+                                    <a href="#" class="text-gray-800 text-hover-primary fw-bold mb-1">' . $row->nome_completo . '</a>
+                                    ' . ($enderecoTexto ? '<span class="text-gray-600 fs-7">' . $enderecoTexto . '</span>' : '<span class="text-gray-400 fs-7">Endereço não cadastrado</span>') . '
+                                </div>
                             </div>';
+                })
+                ->addColumn('sexo', function ($row) {
+                    $sexoTexto = $row->sexo === 'M' ? 'Masculino' : ($row->sexo === 'F' ? 'Feminino' : '');
+                    return '<span class="text-gray-800">' . $sexoTexto . '</span>';
+                })
+                ->addColumn('cpf', function ($row) {
+                    return '<span class="text-gray-800">' . ($row->cpf ?? '-') . '</span>';
+                })
+                ->addColumn('rg', function ($row) {
+                    return '<span class="text-gray-800">' . ($row->rg ?? '-') . '</span>';
+                })
+                ->addColumn('telefone', function ($row) {
+                    $telefone = $row->contacts->where('tipo', 'telefone')->first()->valor ?? '-';
+                    return '<span class="text-gray-800">' . $telefone . '</span>';
+                })
+                ->addColumn('dizimista', function ($row) {
+                    $isDizimista = $row->tithe && $row->tithe->dizimista == 1;
+                    $badgeClass = $isDizimista ? 'badge-success' : 'badge-light';
+                    $texto = $isDizimista ? 'Sim' : 'Não';
+                    return '<div class="badge fw-bold ' . $badgeClass . '">' . $texto . '</div>';
                 })
                 ->addColumn('email', function ($row) {
                     $email = $row->contacts->where('tipo', 'email')->first()->valor ?? 'E-mail não cadastrado';
@@ -82,7 +119,7 @@ class FielController extends Controller
                                 </div>
                             </div>';
                 })
-                ->rawColumns(['checkbox', 'nome_completo', 'email', 'status', 'action'])
+                ->rawColumns(['checkbox', 'nome_completo', 'email', 'status', 'sexo', 'cpf', 'rg', 'telefone', 'dizimista', 'action'])
                 ->make(true);
         }
 
@@ -100,6 +137,11 @@ class FielController extends Controller
         $porcentagemMulheres = $totalFieis > 0 ? number_format(($totalMulheres / $totalFieis) * 100, 2) : 0;
         $porcentagemDizimistas = $totalFieis > 0 ? number_format(($totalDizimistas / $totalFieis) * 100, 2) : 0;
 
+        // Buscar profissões ativas ordenadas por popularidade
+        $profissoes = \App\Models\Profissao::where('ativo', true)
+            ->orderBy('popularidade')
+            ->get();
+
         return view('app.cadastros.fieis.index', compact(
             'totalFieis',
             'totalHomens',
@@ -107,7 +149,8 @@ class FielController extends Controller
             'totalDizimistas',
             'porcentagemHomens',
             'porcentagemMulheres',
-            'porcentagemDizimistas'
+            'porcentagemDizimistas',
+            'profissoes'
         ));
     }
 
@@ -174,7 +217,7 @@ class FielController extends Controller
                 } catch (\Exception $e) {
                     // Se falhar, tentar parse genérico
                     $dataNascimento = \Carbon\Carbon::parse($request->data_nascimento)->format('Y-m-d');
-                }
+            }
             }
 
             // Dados básicos do fiel

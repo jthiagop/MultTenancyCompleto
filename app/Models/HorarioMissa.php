@@ -19,7 +19,8 @@ class HorarioMissa extends Model
     ];
 
     protected $casts = [
-        'horario' => 'datetime',
+        'horario' => 'string', // Mantém como string para evitar problemas com time-only values
+        'intervalo' => 'integer',
     ];
 
     /**
@@ -28,6 +29,14 @@ class HorarioMissa extends Model
     public function company()
     {
         return $this->belongsTo(Company::class);
+    }
+
+    /**
+     * Relacionamento com bank statements conciliados
+     */
+    public function bankStatements()
+    {
+        return $this->hasMany(\App\Models\Financeiro\BankStatement::class, 'horario_missa_id');
     }
 }
 

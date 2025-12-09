@@ -4,10 +4,12 @@ namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
 use App\Models\Bank;
+use App\Models\Contabilide\ChartOfAccount;
 use App\Models\EntidadeFinanceira;
 use App\Models\Financeiro\BankStatement;
 use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\TransacaoFinanceira;
+use App\Models\HorarioMissa;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use Carbon\Carbon;
@@ -21,14 +23,17 @@ class EntidadeFinanceiraController extends Controller
     // Lista todas as entidades financeiras
     public function index()
     {
-        // Busca as entidades da empresa ativa E carrega as movimentações.
-        $entidades = EntidadeFinanceira::with('movimentacoes')
+        // Busca as entidades da empresa ativa E carrega as movimentações e conta contábil.
+        $entidades = EntidadeFinanceira::with(['movimentacoes', 'contaContabil'])
             ->forActiveCompany() // <-- Mágica do Scope!
             ->get();
 
         $banks = Bank::all();
 
-        return view('app.cadastros.entidades.index', compact('entidades', 'banks'));
+        // Busca contas contábeis para o select do modal
+        $contas = ChartOfAccount::forActiveCompany()->orderBy('code')->get();
+
+        return view('app.cadastros.entidades.index', compact('entidades', 'banks', 'contas'));
     }
 
     // Mostra o formulário de criação
@@ -64,6 +69,7 @@ class EntidadeFinanceiraController extends Controller
             'account_type'  => 'required_if:tipo,banco|nullable|in:corrente,poupanca,aplicacao,renda_fixa,tesouro_direto',
             'saldo_inicial' => 'required|numeric',
             'descricao'     => 'nullable|string|max:255',
+            'conta_contabil_id' => 'nullable|integer|exists:chart_of_accounts,id',
         ]);
 
         // 4. Lógica para gerar o nome da entidade (A CORREÇÃO PRINCIPAL)
@@ -171,6 +177,7 @@ class EntidadeFinanceiraController extends Controller
             $rules = [
                 'nome'      => 'required|string|max:100',
                 'descricao' => 'nullable|string|max:255',
+                'conta_contabil_id' => 'nullable|integer|exists:chart_of_accounts,id',
             ];
         } else {
             $rules = [
@@ -179,6 +186,7 @@ class EntidadeFinanceiraController extends Controller
                 'conta'        => 'required|string|max:20',
                 'account_type' => 'required|in:corrente,poupanca,aplicacao,renda_fixa,tesouro_direto',
                 'descricao'    => 'nullable|string|max:255',
+                'conta_contabil_id' => 'nullable|integer|exists:chart_of_accounts,id',
             ];
         }
 
@@ -187,16 +195,18 @@ class EntidadeFinanceiraController extends Controller
         try {
             // Atualiza os campos permitidos
             if ($entidade->tipo === 'caixa') {
-                // Para caixa, atualiza apenas nome e descrição
+                // Para caixa, atualiza nome, descrição e conta contábil
                 $entidade->nome = $validatedData['nome'];
                 $entidade->descricao = $validatedData['descricao'] ?? null;
+                $entidade->conta_contabil_id = $validatedData['conta_contabil_id'] ?? null;
             } else {
-                // Para banco, atualiza banco_id, agencia, conta, account_type e descrição
+                // Para banco, atualiza banco_id, agencia, conta, account_type, descrição e conta contábil
                 $entidade->banco_id = $validatedData['bank_id'];
                 $entidade->agencia = $validatedData['agencia'];
                 $entidade->conta = $validatedData['conta'];
                 $entidade->account_type = $validatedData['account_type'];
                 $entidade->descricao = $validatedData['descricao'] ?? null;
+                $entidade->conta_contabil_id = $validatedData['conta_contabil_id'] ?? null;
 
                 // Regenera o nome com os novos dados
                 $bank = Bank::find($entidade->banco_id);
@@ -313,6 +323,10 @@ class EntidadeFinanceiraController extends Controller
             ->orderBy('nome')
             ->get();
 
+        // 6.2. Verifica se existem horários de missa cadastrados para a empresa ativa
+        $companyId = session('active_company_id');
+        $hasHorariosMissas = HorarioMissa::where('company_id', $companyId)->exists();
+
         // 7. Retorna a view com todos os dados corretamente filtrados.
         return view('app.financeiro.entidade.show', [
             'entidade' => $entidade,
@@ -323,6 +337,7 @@ class EntidadeFinanceiraController extends Controller
             'percentualConciliado' => round($percentualConciliado),
             'transacoesPorDia' => $transacoesPorDia,
             'entidadesBancos' => $entidadesBancos,
+            'hasHorariosMissas' => $hasHorariosMissas,
         ]);
     }
 

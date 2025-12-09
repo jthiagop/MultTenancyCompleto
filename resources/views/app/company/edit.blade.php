@@ -197,48 +197,15 @@
                                         <!--begin::Info-->
                                         <div class="d-flex align-items-center flex-wrap fw-semibold fs-7 pe-2">
                                             <a href="#"
-                                                class="d-flex align-items-center text-gray-400 text-hover-primary">UI/UX
-                                                Design</a>
+                                                class="d-flex align-items-center text-gray-400 text-hover-primary">CNPJ: {{ $company->cnpj }}</a>
                                             <span class="bullet bullet-dot h-5px w-5px bg-gray-400 mx-3"></span>
-                                            <a href="#"
-                                                class="d-flex align-items-center text-gray-400 text-hover-primary">Austin,
-                                                TX</a>
+                                            <a href="#" class="d-flex align-items-center text-gray-400 text-hover-primary">Data de Fundação: {{ $company->data_fundacao }}</a>
                                             <span class="bullet bullet-dot h-5px w-5px bg-gray-400 mx-3"></span>
-                                            <a href="#" class="text-gray-400 text-hover-primary">3,450
-                                                Followers</a>
+                                            <a href="#" class="text-gray-400 text-hover-primary">Data de CNPJ: {{ $company->data_cnpj }}</a>
                                         </div>
                                         <!--end::Info-->
                                     </div>
                                     <!--end::User-->
-                                    <!--begin::Actions-->
-                                    <div class="d-flex">
-                                        <a href="#" class="btn btn-sm btn-light me-3"
-                                            id="kt_drawer_chat_toggle">Send Message</a>
-                                        <button class="btn btn-sm btn-primary" id="kt_user_follow_button">
-                                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr012.svg-->
-                                            <span class="svg-icon svg-icon-3 d-none">
-                                                <svg width="24" height="24" viewBox="0 0 24 24"
-                                                    fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path opacity="0.3"
-                                                        d="M10 18C9.7 18 9.5 17.9 9.3 17.7L2.3 10.7C1.9 10.3 1.9 9.7 2.3 9.3C2.7 8.9 3.29999 8.9 3.69999 9.3L10.7 16.3C11.1 16.7 11.1 17.3 10.7 17.7C10.5 17.9 10.3 18 10 18Z"
-                                                        fill="currentColor" />
-                                                    <path
-                                                        d="M10 18C9.7 18 9.5 17.9 9.3 17.7C8.9 17.3 8.9 16.7 9.3 16.3L20.3 5.3C20.7 4.9 21.3 4.9 21.7 5.3C22.1 5.7 22.1 6.30002 21.7 6.70002L10.7 17.7C10.5 17.9 10.3 18 10 18Z"
-                                                        fill="currentColor" />
-                                                </svg>
-                                            </span>
-                                            <!--end::Svg Icon-->
-                                            <!--begin::Indicator label-->
-                                            <span class="indicator-label">Follow</span>
-                                            <!--end::Indicator label-->
-                                            <!--begin::Indicator progress-->
-                                            <span class="indicator-progress">Please wait...
-                                                <span
-                                                    class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                                            <!--end::Indicator progress-->
-                                        </button>
-                                    </div>
-                                    <!--end::Actions-->
                                 </div>
                                 <!--end::Info-->
                             </div>
@@ -257,72 +224,21 @@
                         <ul class="nav flex-wrap border-transparent" role="tablist">
                             <!--begin::Nav item-->
                             <li class="nav-item my-1" role="presentation">
-                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1 active"
-                                    data-bs-toggle="tab" href="#kt_tab_detalhes" role="tab"
-                                    aria-selected="true">Detalhes</a>
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1 @if ($activeTab === 'detalhes') active @endif"
+                                    href="{{ route('company.edit', ['tab' => 'detalhes']) }}" role="tab">Detalhes</a>
                             </li>
                             <!--end::Nav item-->
                             <!--begin::Nav item-->
                             <li class="nav-item my-1" role="presentation">
-                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-                                    data-bs-toggle="tab" href="#kt_tab_editar" role="tab" aria-selected="false"
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1 @if ($activeTab === 'editar') active @endif"
+                                    href="{{ route('company.edit', ['tab' => 'editar']) }}" role="tab"
                                     id="nav-tab-editar">Editar</a>
                             </li>
                             <!--end::Nav item-->
                             <!--begin::Nav item-->
                             <li class="nav-item my-1" role="presentation">
-                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-                                    data-bs-toggle="tab" href="#kt_tab_horario_missas" role="tab"
-                                    aria-selected="false">Horários de Missa</a>
-                            </li>
-                            <!--end::Nav item-->
-                            <!--begin::Nav item-->
-                            <li class="nav-item my-1" role="presentation">
-                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-                                    data-bs-toggle="tab" href="#kt_tab_security" role="tab"
-                                    aria-selected="false">Security</a>
-                            </li>
-                            <!--end::Nav item-->
-                            <!--begin::Nav item-->
-                            <li class="nav-item my-1" role="presentation">
-                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-                                    data-bs-toggle="tab" href="#kt_tab_activity" role="tab"
-                                    aria-selected="false">Activity</a>
-                            </li>
-                            <!--end::Nav item-->
-                            <!--begin::Nav item-->
-                            <li class="nav-item my-1" role="presentation">
-                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-                                    data-bs-toggle="tab" href="#kt_tab_billing" role="tab"
-                                    aria-selected="false">Billing</a>
-                            </li>
-                            <!--end::Nav item-->
-                            <!--begin::Nav item-->
-                            <li class="nav-item my-1" role="presentation">
-                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-                                    data-bs-toggle="tab" href="#kt_tab_statements" role="tab"
-                                    aria-selected="false">Statements</a>
-                            </li>
-                            <!--end::Nav item-->
-                            <!--begin::Nav item-->
-                            <li class="nav-item my-1" role="presentation">
-                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-                                    data-bs-toggle="tab" href="#kt_tab_referrals" role="tab"
-                                    aria-selected="false">Referrals</a>
-                            </li>
-                            <!--end::Nav item-->
-                            <!--begin::Nav item-->
-                            <li class="nav-item my-1" role="presentation">
-                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-                                    data-bs-toggle="tab" href="#kt_tab_api_keys" role="tab"
-                                    aria-selected="false">API Keys</a>
-                            </li>
-                            <!--end::Nav item-->
-                            <!--begin::Nav item-->
-                            <li class="nav-item my-1" role="presentation">
-                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1"
-                                    data-bs-toggle="tab" href="#kt_tab_logs" role="tab"
-                                    aria-selected="false">Logs</a>
+                                <a class="btn btn-sm btn-color-gray-600 bg-state-body btn-active-color-gray-800 fw-bolder fw-bold fs-6 fs-lg-base nav-link px-3 px-lg-4 mx-1 @if ($activeTab === 'horario-missas') active @endif"
+                                    href="{{ route('company.edit', ['tab' => 'horario-missas']) }}" role="tab">Horários de Missa</a>
                             </li>
                             <!--end::Nav item-->
                         </ul>
@@ -332,93 +248,24 @@
 
                     <!--begin::Tab content-->
                     <div class="tab-content" id="kt_user_profile_tab_content">
-                        <!--begin::Tab pane - Detalhes (padrão)-->
-                        <div class="tab-pane fade show active" id="kt_tab_detalhes" role="tabpanel">
+                        <!--begin::Tab pane - Detalhes-->
+                        <div class="tab-pane fade @if ($activeTab === 'detalhes') show active @endif" id="kt_tab_detalhes" role="tabpanel">
                             @include('app.company.partials.details')
                         </div>
                         <!--end::Tab pane-->
 
                         <!--begin::Tab pane - Editar-->
-                        <div class="tab-pane fade" id="kt_tab_editar" role="tabpanel">
+                        <div class="tab-pane fade @if ($activeTab === 'editar') show active @endif" id="kt_tab_editar" role="tabpanel">
                             @include('app.company.partials.edit')
                         </div>
                         <!--end::Tab pane-->
 
-                        <!--begin::Tab pane - Visão Geral-->
-                        <div class="tab-pane fade" id="kt_tab_horario_missas" role="tabpanel">
+                        <!--begin::Tab pane - Horários de Missa-->
+                        <div class="tab-pane fade @if ($activeTab === 'horario-missas') show active @endif" id="kt_tab_horario_missas" role="tabpanel">
                             @include('app.company.partials.horarios-missas')
                         </div>
                         <!--end::Tab pane-->
 
-                        <!--begin::Tab pane - Security-->
-                        <div class="tab-pane fade" id="kt_tab_security" role="tabpanel">
-                            <div class="card mb-5 mb-xl-10">
-                                <div class="card-body p-9">
-                                    <p class="text-muted">Conteúdo de Security</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!--end::Tab pane-->
-
-                        <!--begin::Tab pane - Activity-->
-                        <div class="tab-pane fade" id="kt_tab_activity" role="tabpanel">
-                            <div class="card mb-5 mb-xl-10">
-                                <div class="card-body p-9">
-                                    <p class="text-muted">Conteúdo de Activity</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!--end::Tab pane-->
-
-                        <!--begin::Tab pane - Billing-->
-                        <div class="tab-pane fade" id="kt_tab_billing" role="tabpanel">
-                            <div class="card mb-5 mb-xl-10">
-                                <div class="card-body p-9">
-                                    <p class="text-muted">Conteúdo de Billing</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!--end::Tab pane-->
-
-                        <!--begin::Tab pane - Statements-->
-                        <div class="tab-pane fade" id="kt_tab_statements" role="tabpanel">
-                            <div class="card mb-5 mb-xl-10">
-                                <div class="card-body p-9">
-                                    <p class="text-muted">Conteúdo de Statements</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!--end::Tab pane-->
-
-                        <!--begin::Tab pane - Referrals-->
-                        <div class="tab-pane fade" id="kt_tab_referrals" role="tabpanel">
-                            <div class="card mb-5 mb-xl-10">
-                                <div class="card-body p-9">
-                                    <p class="text-muted">Conteúdo de Referrals</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!--end::Tab pane-->
-
-                        <!--begin::Tab pane - API Keys-->
-                        <div class="tab-pane fade" id="kt_tab_api_keys" role="tabpanel">
-                            <div class="card mb-5 mb-xl-10">
-                                <div class="card-body p-9">
-                                    <p class="text-muted">Conteúdo de API Keys</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!--end::Tab pane-->
-
-                        <!--begin::Tab pane - Logs-->
-                        <div class="tab-pane fade" id="kt_tab_logs" role="tabpanel">
-                            <div class="card mb-5 mb-xl-10">
-                                <div class="card-body p-9">
-                                    <p class="text-muted">Conteúdo de Logs</p>
-                                </div>
-                            </div>
-                        </div>
-                        <!--end::Tab pane-->
                     </div>
                     <!--end::Tab content-->
                 </div>
@@ -430,27 +277,52 @@
     </div>
 
     <script>
-        // Função para ativar a tab de edição
+        // Função para redirecionar para a tab de edição
         document.addEventListener('DOMContentLoaded', function() {
-            const btnEditarOrganismo = document.getElementById('btn-editar-organismo','nav-tab-editar');
+            const btnEditarOrganismo = document.getElementById('btn-editar-organismo');
             const navTabEditar = document.getElementById('nav-tab-editar');
 
-            if (btnEditarOrganismo && navTabEditar) {
+            if (btnEditarOrganismo) {
                 btnEditarOrganismo.addEventListener('click', function(e) {
                     e.preventDefault();
 
-                    // Ativa a tab de edição usando Bootstrap
-                    const tab = new bootstrap.Tab(navTabEditar);
-                    tab.show();
-
-                    // Scroll suave para a tab
-                    setTimeout(() => {
-                        navTabEditar.scrollIntoView({
-                            behavior: 'smooth',
-                            block: 'start'
-                        });
-                    }, 100);
+                    // Redireciona para a rota com tab=editar
+                    window.location.href = '{{ route("company.edit", ["tab" => "editar"]) }}';
                 });
+            }
+
+            // Inicializar Flatpickr nos campos de data (mesmo do settings.blade.php)
+            if (typeof $ !== 'undefined' && typeof $.fn.flatpickr !== 'undefined') {
+                // Init Datepicker --- For more info, please check Flatpickr's official documentation: https://flatpickr.js.org/
+                // Inicializa o Flatpickr no padrão Brasil
+                $("#DM_datepicker_1").flatpickr({
+                    dateFormat: "d/m/Y", // Formato brasileiro de data
+                    locale: "pt" // Define o idioma para português
+                });
+
+                $("#DM_datepicker_2").flatpickr({
+                    dateFormat: "d/m/Y", // Formato brasileiro de data
+                    locale: "pt" // Define o idioma para português
+                });
+            } else {
+                console.warn('Flatpickr não está disponível. Usando Inputmask como fallback.');
+                // Fallback: Aplicar máscara de data nos campos data_cnpj e data_fundacao
+                const dataCnpjInput = document.getElementById('DM_datepicker_2');
+                const dataFundacaoInput = document.getElementById('DM_datepicker_1');
+
+                if (dataCnpjInput && typeof Inputmask !== 'undefined') {
+                    Inputmask("99/99/9999", {
+                        placeholder: "dd/mm/aaaa",
+                        clearIncomplete: true
+                    }).mask(dataCnpjInput);
+                }
+
+                if (dataFundacaoInput && typeof Inputmask !== 'undefined') {
+                    Inputmask("99/99/9999", {
+                        placeholder: "dd/mm/aaaa",
+                        clearIncomplete: true
+                    }).mask(dataFundacaoInput);
+                }
             }
         });
     </script>
@@ -472,20 +344,11 @@
         console.log('tempusDominus carregado:', typeof tempusDominus !== 'undefined');
         console.log('Elemento #kt_horarios_missas_repeater existe:', $('#kt_horarios_missas_repeater').length);
 
-        // Listener para quando a tab de Horários de Missas for mostrada
-        const tabTrigger = document.querySelector('[href="#kt_tab_horario_missas"]');
-        if (tabTrigger) {
-            console.log('Tab trigger encontrado!');
-
-            // Inicializar quando a tab for mostrada pela primeira vez
-            let tabActivated = false;
-            tabTrigger.addEventListener('shown.bs.tab', function (event) {
-                console.log('Tab Horários de Missas ativada!');
-
-                if (!tabActivated) {
-                    tabActivated = true;
+        // Inicializar KTHorariosMissas se estivermos na tab de horários de missas
+        @if($activeTab === 'horario-missas')
+            // A tab de horários de missas está ativa, inicializar o script
                     setTimeout(() => {
-                        console.log('Tentando inicializar KTHorariosMissas da tab...');
+                console.log('Tab Horários de Missas está ativa, inicializando...');
                         if (typeof KTHorariosMissas !== 'undefined') {
                             console.log('KTHorariosMissas encontrado!');
                             // Verificar se o repeater foi inicializado
@@ -495,10 +358,38 @@
                             console.error('KTHorariosMissas NÃO está definido!');
                         }
                     }, 100);
-                }
-            });
-        }
+        @endif
     });
 </script>
 <script src="/assets/js/custom/apps/company/horarios-missas.js?v={{ time() }}"></script>
 <!--end::Custom Javascript-->
+
+<!--begin::Script para datepicker do formulário de edição-->
+<script>
+    "use strict";
+
+    // Inicializar Flatpickr nos campos de data quando a tab de edição estiver ativa
+    @if($activeTab === 'editar')
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aguarda um pouco para garantir que o jQuery e Flatpickr estejam carregados
+        setTimeout(function() {
+            if (typeof $ !== 'undefined' && typeof $.fn.flatpickr !== 'undefined') {
+                // Init Datepicker --- For more info, please check Flatpickr's official documentation: https://flatpickr.js.org/
+                // Inicializa o Flatpickr no padrão Brasil
+                $("#DM_datepicker_1").flatpickr({
+                    dateFormat: "d/m/Y", // Formato brasileiro de data
+                    locale: "pt" // Define o idioma para português
+                });
+
+                $("#DM_datepicker_2").flatpickr({
+                    dateFormat: "d/m/Y", // Formato brasileiro de data
+                    locale: "pt" // Define o idioma para português
+                });
+            } else {
+                console.warn('Flatpickr não está disponível. Verifique se o plugin está carregado.');
+            }
+        }, 300);
+    });
+    @endif
+</script>
+<!--end::Script para datepicker do formulário de edição-->

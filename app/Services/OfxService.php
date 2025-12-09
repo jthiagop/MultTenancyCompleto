@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class OfxService
 {
-    public function processOfx($file)
+    public function processOfx($file, $usarHorariosMissas = false)
     {
         ini_set('memory_limit', '512M'); // Aumenta o limite para 512MB
 
@@ -49,8 +49,26 @@ class OfxService
             }
 
             // 6. Iterar sobre as contas e transações
+            $transacoesImportadas = [];
             foreach ($account->statement->transactions ?? [] as $transaction) {
-                BankStatement::storeTransaction($account, $transaction, $entidade->id);
+                $bankStatement = BankStatement::storeTransaction($account, $transaction, $entidade->id);
+                if ($bankStatement) {
+                    $transacoesImportadas[] = $bankStatement;
+                }
+            }
+
+            // 7. Processar conciliação automática com missas (apenas se o usuário escolheu usar horários de missa)
+            if ($usarHorariosMissas && !empty($transacoesImportadas)) {
+                try {
+                    $conciliacaoService = new \App\Services\ConciliacaoMissasService();
+                    $conciliacaoService->processarTransacoes($companyId, collect($transacoesImportadas));
+                } catch (\Exception $e) {
+                    // Log do erro mas não interrompe a importação
+                    \Log::warning('Erro ao processar conciliação automática de missas', [
+                        'company_id' => $companyId,
+                        'error' => $e->getMessage()
+                    ]);
+                }
             }
         }
     }

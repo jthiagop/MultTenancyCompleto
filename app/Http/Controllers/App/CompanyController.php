@@ -192,7 +192,7 @@ class CompanyController extends Controller
 /**
      * Mostra o formulário para editar a empresa ATIVA NA SESSÃO.
      */
-    public function edit() // Removido o parâmetro $id
+    public function edit(Request $request) // Removido o parâmetro $id
     {
         // 1. Pega o ID da empresa ativa na sessão.
         $activeCompanyId = session('active_company_id');
@@ -207,7 +207,13 @@ class CompanyController extends Controller
                               ->with(['addresses', 'horariosMissas']) // Busca o endereço e horários de missas relacionados
                               ->findOrFail($activeCompanyId);
 
-        return view('app.company.edit', ['company' => $company]);
+        // 4. Obtém a tab ativa da query string, com 'detalhes' como padrão
+        $activeTab = $request->query('tab', 'detalhes');
+
+        return view('app.company.edit', [
+            'company' => $company,
+            'activeTab' => $activeTab
+        ]);
     }
 
     /**
@@ -226,7 +232,7 @@ class CompanyController extends Controller
         $company = Auth::user()->companies()->findOrFail($activeCompanyId);
 
         // 3. Verificar se é apenas atualização de horários de missas
-        $isOnlyHorariosMissas = $request->has('horarios_missas') && !$request->has('name');
+        $isOnlyHorariosMissas = $request->has('updating_horarios_missas') && !$request->has('name');
 
         if (!$isOnlyHorariosMissas) {
             // A sua lógica de validação e atualização continua praticamente a mesma.
@@ -234,10 +240,12 @@ class CompanyController extends Controller
             $validator = Validator::make($request->all(), [
                 // ... suas regras de validação aqui ...
                 'name' => ['required', 'string', 'max:255'],
+                'razao_social' => ['nullable', 'string', 'max:255'],
                 'cnpj' => ['required', 'string', 'size:18'],
                 'data_fundacao' => ['nullable', 'date_format:d/m/Y'],
                 'data_cnpj' => ['nullable', 'date_format:d/m/Y'],
                 'email' => ['nullable', 'email', Rule::unique('companies')->ignore($company->id)],
+                'details' => ['nullable', 'string'],
             ]);
 
             if ($validator->fails()) {
@@ -287,29 +295,89 @@ class CompanyController extends Controller
         }
 
         // Processar horários de missas
-        if ($request->has('horarios_missas')) {
+        // Verifica se o formulário de horários foi enviado (mesmo que vazio)
+        if ($request->has('updating_horarios_missas')) {
             // Deletar todos os horários existentes
             HorarioMissa::where('company_id', $company->id)->delete();
 
-            // Criar novos horários
-            foreach ($request->horarios_missas as $item) {
-                if (!empty($item['dia_semana']) && !empty($item['horario'])) {
-                    // Converter o horário para o formato correto (H:i:s)
-                    $horario = $item['horario'];
-                    // Se vier apenas H:i, adicionar :00 para os segundos
-                    if (strlen($horario) === 5 && substr_count($horario, ':') === 1) {
-                        $horario .= ':00';
-                    }
-                    
-                    HorarioMissa::create([
-                        'company_id' => $company->id,
-                        'dia_semana' => $item['dia_semana'],
-                        'horario' => $horario,
-                    ]);
+            // Processar intervalo padrão
+            $intervaloPadrao = 90; // Default 90 minutos
+            if ($request->has('intervalo_minutos') && !empty($request->intervalo_minutos)) {
+                // Se vier em minutos diretamente
+                $intervaloPadrao = (int) $request->intervalo_minutos;
+            } elseif ($request->has('intervalo_padrao') && !empty($request->intervalo_padrao)) {
+                // Converte de H:i para minutos
+                $intervaloTime = $request->intervalo_padrao;
+                if (preg_match('/(\d{1,2}):(\d{2})/', $intervaloTime, $matches)) {
+                    $horas = (int) $matches[1];
+                    $minutos = (int) $matches[2];
+                    $intervaloPadrao = ($horas * 60) + $minutos;
                 }
             }
+
+            // Processar estrutura do repeater (dias[][dia_semana] e dias[][horarios][][horario])
+            // Verifica se o campo dias foi enviado (mesmo que vazio como string)
+            $diasEnviado = $request->has('dias');
+            $diasArray = $request->input('dias');
+            
+            // Se dias foi enviado e é um array não vazio, processar
+            if ($diasEnviado && is_array($diasArray) && !empty($diasArray)) {
+                foreach ($diasArray as $diaData) {
+                    if (empty($diaData['dia_semana'])) {
+                        continue;
+                    }
+
+                    $diaSemana = $diaData['dia_semana'];
+                    
+                    // Processar horários aninhados
+                    if (isset($diaData['horarios']) && is_array($diaData['horarios'])) {
+                        foreach ($diaData['horarios'] as $horarioData) {
+                            if (empty($horarioData['horario'])) {
+                                continue;
+                            }
+
+                            // Converter o horário para o formato correto (H:i:s)
+                            $horario = $horarioData['horario'];
+                            // Se vier apenas H:i, adicionar :00 para os segundos
+                            if (strlen($horario) === 5 && substr_count($horario, ':') === 1) {
+                                $horario .= ':00';
+                            }
+                            
+                            HorarioMissa::create([
+                                'company_id' => $company->id,
+                                'dia_semana' => $diaSemana,
+                                'horario' => $horario,
+                                'intervalo' => $intervaloPadrao,
+                            ]);
+                        }
+                    }
+                }
+            } 
+            // Fallback para estrutura antiga (horarios_missas)
+            elseif ($request->has('horarios_missas') && is_array($request->horarios_missas) && !empty($request->horarios_missas)) {
+                foreach ($request->horarios_missas as $item) {
+                    if (!empty($item['dia_semana']) && !empty($item['horario'])) {
+                        // Converter o horário para o formato correto (H:i:s)
+                        $horario = $item['horario'];
+                        // Se vier apenas H:i, adicionar :00 para os segundos
+                        if (strlen($horario) === 5 && substr_count($horario, ':') === 1) {
+                            $horario .= ':00';
+                        }
+                        
+                        HorarioMissa::create([
+                            'company_id' => $company->id,
+                            'dia_semana' => $item['dia_semana'],
+                            'horario' => $horario,
+                            'intervalo' => $intervaloPadrao,
+                        ]);
+                    }
+                }
+            }
+            // Se não há dias nem horarios_missas, ou se dias foi enviado como string vazia,
+            // significa que o usuário excluiu tudo
+            // Os registros já foram deletados na linha 299, então não precisa fazer nada
         } elseif (!$isOnlyHorariosMissas) {
-            // Se não há horários_missas no request e não é apenas atualização de horários, não fazer nada
+            // Se não há horários de missas no request e não é apenas atualização de horários, não fazer nada
             // (mantém os horários existentes)
         }
 

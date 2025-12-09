@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('fiel_religious_data')) {
-            Schema::create('fiel_religious_data', function (Blueprint $table) {
-                $table->id();
+        Schema::create('fiel_religious_data', function (Blueprint $table) {
+            $table->id();
                 $table->foreignId('fiel_id')->constrained('fieis')->onDelete('cascade');
                 $table->date('data_batismo')->nullable();
                 $table->string('local_batismo')->nullable();
@@ -24,7 +24,7 @@ return new class extends Migration
                 $table->string('grupo_participante')->nullable();
                 $table->string('ministerio')->nullable();
                 $table->unsignedBigInteger('comunidade_id')->nullable();
-                $table->timestamps();
+            $table->timestamps();
                 
                 $table->unique('fiel_id');
             });

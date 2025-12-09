@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('fiel_parents')) {
-            Schema::create('fiel_parents', function (Blueprint $table) {
-                $table->id();
+        Schema::create('fiel_parents', function (Blueprint $table) {
+            $table->id();
                 $table->foreignId('fiel_id')->constrained('fieis')->onDelete('cascade');
                 $table->string('nome_pai')->nullable();
                 $table->string('nome_mae')->nullable();
-                $table->timestamps();
+            $table->timestamps();
                 
                 $table->unique('fiel_id');
             });
@@ -30,7 +30,7 @@ return new class extends Migration
                 if (!Schema::hasColumn('fiel_parents', 'nome_mae')) {
                     $table->string('nome_mae')->nullable()->after('nome_pai');
                 }
-            });
+        });
         }
     }
 

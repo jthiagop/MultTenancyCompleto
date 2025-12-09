@@ -6,16 +6,16 @@
             <!--begin::Toolbar-->
             <x-toolbar :company="$company" />
             <!--end::Toolbar-->
-            <!--begin::DateTime-->
-            <div class="text-center">
-                <span id="datetime" class="fs-6 fw-semibold text-gray-600"></span>
-            </div>
-            <!--end::DateTime-->
+
             <!--begin::Content container-->
-            <div id="kt_app_content_container" class="app-container container-xxl">
+            <div id="kt_app_content_container" class="app-container container-fluid">
                 <!--begin::Input group-->
                 <div id="kt_app_content" class="app-content">
-
+                    <!--begin::DateTime-->
+                    <div class="text-center">
+                        <span id="datetime" class="fs-6 fw-semibold text-gray-600"></span>
+                    </div>
+                    <!--end::DateTime-->
                     <!--begin::Card header-->
                     <div class="card-header text-center">
                         <!--begin::Row-->
@@ -206,64 +206,41 @@
                     <div class="row g-6 g-xl-9 mt-1">
                         <!--begin::Col - Resumo Financeiro-->
                         <div class="col-12 col-lg-5">
+                            <!--begin::Col-->
+                            <!--begin::Chart widget 5-->
                             <div class="card card-flush h-lg-100">
-                                <!--begin::Card header-->
-                                <div class="card-header mt-6">
-                                    <div class="card-title flex-column">
-                                        <h3 class="fw-bold mb-1">Resumo Financeiro</h3>
-                                        <div class="fs-6 fw-semibold text-gray-600">Receitas e Despesas Totais</div>
-                                    </div>
+                                <!--begin::Header-->
+                                <div class="card-header flex-nowrap pt-2">
+                                    <!--begin::Title-->
+                                    <h3 class="card-title align-items-start flex-column">
+                                        <span class="card-label fw-bold text-dark">Ranking de Missas</span>
+                                        <span class="text-gray-400 pt-2 fw-semibold fs-6">Ranking de missas por dia da
+                                            semana</span>
+                                    </h3>
+                                    <!--end::Title-->
+                                    <!--begin::Toolbar-->
                                     <div class="card-toolbar">
-                                        <a href="#" class="btn btn-light btn-sm">Ver Detalhes</a>
+                                        <!--begin::Daterangepicker-->
+                                        <div class="btn btn-sm btn-light d-flex align-items-center px-4"
+                                            id="missas-daterangepicker">
+                                            <!--begin::Display range-->
+                                            <i class="bi bi-calendar-date me-1 text-primary"></i>
+                                            <div class="text-gray-600 fw-bold">Selecione um período</div>
+                                            <!--end::Display range-->
+                                        </div>
+                                        <!--end::Daterangepicker-->
                                     </div>
+                                    <!--end::Toolbar-->
                                 </div>
-                                <!--end::Card header-->
-                                <!--begin::Card body-->
-                                <div class="card-body p-9 pt-5">
-                                    <div class="d-flex flex-wrap">
-                                        <div class="position-relative d-flex flex-center h-175px w-175px me-15 mb-7">
-                                            <div
-                                                class="position-absolute translate-middle start-50 top-50 d-flex flex-column flex-center">
-                                                <span class="fs-0 fw-bold">R$237,00</span>
-                                                <span class="fs-6 fw-semibold text-gray-600">Total Mensal</span>
-                                            </div>
-                                            <canvas id="project_overview_chart"
-                                                aria-describedby="financial-chart-description"></canvas>
-                                            <div id="financial-chart-description" class="sr-only">
-                                                Gráfico circular mostrando o total mensal de receitas (R$45,00) e
-                                                despesas (R$192,00).
-                                            </div>
-                                        </div>
-                                        <div
-                                            class="d-flex flex-column justify-content-center flex-row-fluid pe-11 mb-5">
-                                            <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
-                                                <div class="bullet bg-success me-3"></div>
-                                                <div class="text-gray-600">Receitas</div>
-                                                <div class="ms-auto fw-bold text-gray-700">R$ 45,00</div>
-                                            </div>
-                                            <div class="d-flex fs-6 fw-semibold align-items-center mb-3">
-                                                <div class="bullet bg-danger me-3"></div>
-                                                <div class="text-gray-600">Despesas</div>
-                                                <div class="ms-auto fw-bold text-gray-700">R$ 192,00</div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div
-                                        class="notice d-flex bg-light-primary rounded border-primary border-dashed p-6">
-                                        <div class="d-flex flex-stack flex-grow-1">
-                                            <div class="fw-semibold">
-                                                <div class="fs-6 text-gray-700">
-                                                    <a href="#" data-bs-toggle="modal"
-                                                        data-bs-target="#tipModal" class="fw-bold me-1">Dica:</a>
-                                                    Convide colaboradores para melhorar a análise de receitas e
-                                                    despesas.
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                <!--end::Header-->
+                                <!--begin::Body-->
+                                <div class="card-body pt-5 ps-6">
+                                    <div id="kt_charts_widget_5" class="min-h-auto"></div>
                                 </div>
-                                <!--end::Card body-->
+                                <!--end::Body-->
                             </div>
+                            <!--end::Chart widget 5-->
+                            <!--end::Col-->
                         </div>
                         <!--end::Col - Resumo Financeiro-->
 
@@ -332,14 +309,10 @@
 
 
 
-<!--begin::Vendors Javascript-->
-<script src="{{ url('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
-<!--end::Vendors Javascript-->
-<script src="{{ url('assets/js/custom/apps/dashboard/grafico_doacoes.js') }}"></script>
+<script src="/assets/js/custom/apps/dashboard/grafico_doacoes.js"></script>
+<script src="/assets/js/custom/apps/dashboard/missas-chart.js"></script>
 
-<!--begin::Custom Javascript-->
-<script src="{{ url('assets/js/widgets.bundle.js') }}"></script>
-<!--end::Custom Javascript-->
+
 
 <!--begin::Custom CSS-->
 <style>
@@ -412,9 +385,9 @@
         }
 
         var display = element.querySelector('.text-gray-600.fw-bold');
-        var attrOpens = element.hasAttribute('data-kt-daterangepicker-opens')
-            ? element.getAttribute('data-kt-daterangepicker-opens')
-            : 'left';
+        var attrOpens = element.hasAttribute('data-kt-daterangepicker-opens') ?
+            element.getAttribute('data-kt-daterangepicker-opens') :
+            'left';
         var range = element.getAttribute('data-kt-daterangepicker-range');
 
         // Configurar datas iniciais baseadas no range
@@ -445,9 +418,11 @@
             opens: attrOpens,
             ranges: {
                 'Este Ano': [moment().startOf('year'), moment().endOf('year')],
-                'Ano Passado': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1, 'year').endOf('year')],
+                'Ano Passado': [moment().subtract(1, 'year').startOf('year'), moment().subtract(1,
+                    'year').endOf('year')],
                 'Este Mês': [moment().startOf('month'), moment().endOf('month')],
-                'Mês Passado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')],
+                'Mês Passado': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1,
+                    'month').endOf('month')],
                 'Últimos 7 Dias': [moment().subtract(6, 'days'), moment()],
                 'Últimos 30 Dias': [moment().subtract(29, 'days'), moment()],
                 'Hoje': [moment(), moment()],
@@ -477,38 +452,40 @@
 
             // Atualizar o gráfico via AJAX
             fetch(`/dashboard?start_date=${startDate}&end_date=${endDate}`, {
-                method: 'GET',
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => {
-                if (!response.ok) {
-                    // Se não for JSON, fazer reload da página
-                    window.location.href = `?start_date=${startDate}&end_date=${endDate}`;
-                    return;
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data) {
-                    // Atualizar os dados do gráfico
-                    if (typeof areaChartData !== 'undefined' && typeof KTProjectOverview !== 'undefined') {
-                        areaChartData = data.areaChartData;
-                        // Recriar o gráfico com os novos dados
-                        if (typeof KTProjectOverview !== 'undefined' && typeof KTProjectOverview.initGraph === 'function') {
-                            KTProjectOverview.initGraph();
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        // Se não for JSON, fazer reload da página
+                        window.location.href = `?start_date=${startDate}&end_date=${endDate}`;
+                        return;
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data) {
+                        // Atualizar os dados do gráfico
+                        if (typeof areaChartData !== 'undefined' && typeof KTProjectOverview !==
+                            'undefined') {
+                            areaChartData = data.areaChartData;
+                            // Recriar o gráfico com os novos dados
+                            if (typeof KTProjectOverview !== 'undefined' && typeof KTProjectOverview
+                                .initGraph === 'function') {
+                                KTProjectOverview.initGraph();
+                            }
                         }
                     }
-                }
-            })
-            .catch(error => {
-                // Fallback para redirecionamento completo
-                var startDate = picker.startDate.format('YYYY-MM-DD');
-                var endDate = picker.endDate.format('YYYY-MM-DD');
-                window.location.href = `?start_date=${startDate}&end_date=${endDate}`;
-            });
+                })
+                .catch(error => {
+                    // Fallback para redirecionamento completo
+                    var startDate = picker.startDate.format('YYYY-MM-DD');
+                    var endDate = picker.endDate.format('YYYY-MM-DD');
+                    window.location.href = `?start_date=${startDate}&end_date=${endDate}`;
+                });
         });
 
         cb(start, end);

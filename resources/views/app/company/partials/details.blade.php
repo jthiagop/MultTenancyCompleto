@@ -34,7 +34,7 @@
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8 fv-row">
-                <span class="fw-semibold text-gray-800 fs-6">{{ $company->name }}</span>
+                <span class="fw-semibold text-gray-800 fs-6">{{ $company->razao_social ?? $company->name }}</span>
             </div>
             <!--end::Col-->
         </div>
@@ -48,8 +48,8 @@
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8 d-flex align-items-center">
-                <span class="fw-bold fs-6 text-gray-800 me-2">{{ $company->phone }}</span>
-                <span class="badge badge-success">Verified</span>
+                <span class="fw-bold fs-6 text-gray-800 me-2">{{ $company->addresses->phone ?? 'Não cadastrado' }}</span>
+                <span class="badge badge-success">{{ $company->status == 'active' ? 'Ativo' : 'Inativo' }}</span>
             </div>
             <!--end::Col-->
         </div>
@@ -57,12 +57,16 @@
         <!--begin::Input group-->
         <div class="row mb-7">
             <!--begin::Label-->
-            <label class="col-lg-4 fw-semibold text-muted">Site</label>
+            <label class="col-lg-4 fw-semibold text-muted">Rua</label>
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8">
                 <a href="#"
-                    class="fw-semibold fs-6 text-gray-800 text-hover-primary">{{ $company->site }}</a>
+                    class="fw-semibold fs-6 text-gray-800 text-hover-primary">{{ $company->addresses->rua ?? 'Não cadastrado' }}</a>
+                    {{ $company->addresses->numero ?? 'Não cadastrado' }} -
+                    {{ $company->addresses->bairro ?? 'Não cadastrado' }} -
+                    {{ $company->addresses->cidade ?? 'Não cadastrado' }} -
+                    {{ $company->addresses->uf ?? 'Não cadastrado' }}
             </div>
             <!--end::Col-->
         </div>
@@ -76,7 +80,7 @@
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8">
-                <span class="fw-bold fs-6 text-gray-800">{{ $company->country }}</span>
+                <span class="fw-bold fs-6 text-gray-800">{{ $company->addresses->country ?? 'Não cadastrado' }}</span>
             </div>
             <!--end::Col-->
         </div>
@@ -84,11 +88,11 @@
         <!--begin::Input group-->
         <div class="row mb-7">
             <!--begin::Label-->
-            <label class="col-lg-4 fw-semibold text-muted">Comunicação</label>
+            <label class="col-lg-4 fw-semibold text-muted">E-mail e Telefone</label>
             <!--end::Label-->
             <!--begin::Col-->
             <div class="col-lg-8">
-                <span class="fw-bold fs-6 text-gray-800">Email, Phone</span>
+                <span class="fw-bold fs-6 text-gray-800">{{ $company->addresses->email ?? 'Não cadastrado' }}, {{ $company->addresses->phone ?? 'Não cadastrado' }}</span>
             </div>
             <!--end::Col-->
         </div>
@@ -96,39 +100,15 @@
         <!--begin::Input group-->
         <div class="row mb-10">
             <!--begin::Label-->
-            <label class="col-lg-4 fw-semibold text-muted">Allow Changes</label>
+            <label class="col-lg-4 fw-semibold text-muted">Cadastro ativo?</label>
             <!--begin::Label-->
             <!--begin::Label-->
             <div class="col-lg-8">
-                <span class="fw-semibold fs-6 text-gray-800">Yes</span>
+                <span class="fw-semibold fs-6 text-gray-800">{{ $company->status == 'ativo' ? 'Sim' : 'Não' }}</span>
             </div>
             <!--begin::Label-->
         </div>
         <!--end::Input group-->
-        <!--begin::Notice-->
-        <div
-            class="notice d-flex bg-light-warning rounded border-warning border border-dashed p-6">
-            <!--begin::Icon-->
-            <!--begin::Svg Icon | path: icons/duotune/general/gen044.svg-->
-            <i class="bi bi-exclamation-circle-fill text-warning fs-2"></i>
-            <!--end::Svg Icon-->
-            <!--end::Icon-->
-            <!--begin::Wrapper-->
-            <div class="d-flex flex-stack flex-grow-1">
-                <!--begin::Content-->
-                <div class="fw-semibold">
-                    <h4 class="text-gray-900 fw-bold">Precisamos de sua atenção!</h4>
-                    <div class="fs-6 text-gray-700">O seu pagamento foi recusado. Para começar a
-                        usar as ferramentas, por favor
-                        <a class="fw-bold" href="../../demo1/dist/account/billing.html">Adicione
-                            um método de pagamento</a>.
-                    </div>
-                </div>
-                <!--end::Content-->
-            </div>
-            <!--end::Wrapper-->
-        </div>
-        <!--end::Notice-->
     </div>
     <!--end::Card body-->
 </div>

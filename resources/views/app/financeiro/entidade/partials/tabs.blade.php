@@ -83,9 +83,10 @@
 
     <!--begin::Nav Tabs-->
     <div class="card-body pt-0">
+        <div class="d-flex justify-content-between align-items-center">
         <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold">
             <!-- Aba de Conciliações Pendentes -->
-            <li class="nav-item mt-2">
+                <li class="nav-item">
                 <a class="nav-link text-active-primary me-4 active" data-bs-toggle="tab"
                     href="#kt_tab_pane_conciliacoes">
                     Conciliações Pendentes
@@ -93,18 +94,28 @@
                 </a>
             </li>
             <!-- Aba de Movimentação -->
-            <li class="nav-item mt-2">
+                <li class="nav-item">
                 <a class="nav-link text-active-primary me-4" data-bs-toggle="tab" href="#kt_tab_pane_movimentacao">
                     Movimentações
                 </a>
             </li>
             <!-- Aba de Informações -->
-            <li class="nav-item mt-2">
+                <li class="nav-item">
                 <a class="nav-link text-active-primary me-4" data-bs-toggle="tab" href="#kt_tab_pane_informacao">
                     Informações
                 </a>
             </li>
         </ul>
+            <div class="d-flex flex-column align-items-end mt-5">
+                <button class="btn btn-sm btn-primary text-end" data-kt-action="open-conciliacao-missas"
+                    id="btnHorariosMissas">
+                <i class="bi bi-alarm"></i>
+                Horários de Missas
+            </button>
+
+            </div>
+        </div>
+        <!--begin::Separator-->
     </div>
     <!--end::Nav Tabs-->
 </div>
@@ -114,6 +125,8 @@
 <script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/locale/pt-br.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css">
+{{-- Toast Script --}}
+<script src="/assets/js/toasts.js"></script>
 
 <script>
     // Variável global para armazenar o período selecionado
@@ -368,6 +381,39 @@
                 allowClear: false,
                 minimumResultsForSearch: 0
             });
+        }
+
+        // Controle do botão Horários de Missas
+        const btnHorariosMissas = document.getElementById('btnHorariosMissas');
+        const hasHorariosMissas = @json(isset($hasHorariosMissas) && $hasHorariosMissas);
+
+        if (btnHorariosMissas) {
+            // Previne a abertura do modal se não houver horários
+            btnHorariosMissas.addEventListener('click', function(e) {
+                if (!hasHorariosMissas) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Exibe toast de aviso usando a função específica do toasts.js
+                    if (typeof window.showHorariosMissasToast === 'function') {
+                        window.showHorariosMissasToast({
+                            cadastrarUrl: '{{ route("company.edit", ["tab" => "horario-missas"]) }}',
+                            delay: 8000,
+                            icon: 'ki-duotone ki-information-5'
+                        });
+                    } else {
+                        // Fallback se showHorariosMissasToast não estiver disponível
+                        console.warn('showHorariosMissasToast não está disponível. Certifique-se de que toasts.js está carregado.');
+                    }
+                    return false;
+                }
+            });
+
+            // Adiciona estilo visual quando desabilitado
+            if (!hasHorariosMissas && btnHorariosMissas) {
+                btnHorariosMissas.classList.add('opacity-50');
+                btnHorariosMissas.style.cursor = 'not-allowed';
+            }
         }
 
         // Quando o usuário selecionar uma entidade financeira

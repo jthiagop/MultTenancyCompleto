@@ -53,6 +53,8 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                 // Fica obrigatório se lancamento_padrao_id for igual ao $lancamentoPadraoDepositoId
                 'required_if:lancamento_padrao_id,' . $lancamentoPadraoDepositoId
             ],
+            'conta_debito_id' => 'nullable|exists:chart_of_accounts,id',
+            'conta_credito_id' => 'nullable|exists:chart_of_accounts,id',
         ];
     }
 

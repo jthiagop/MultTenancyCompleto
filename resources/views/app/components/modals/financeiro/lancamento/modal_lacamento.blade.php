@@ -217,7 +217,7 @@
                             <div class="row g-9 mb-8">
                                 <div class="col-md-2 fv-row">
                                     <label class="required fs-6 fw-semibold mb-2">
-                                        Data de competênciasss
+                                        Data de competência
                                     </label>
                                     <div class="position-relative d-flex align-items-center">
                                         <!--begin::Icon-->
@@ -254,16 +254,12 @@
                                                 @foreach ($entidadesBanco as $entidade)
                                                     <option value="{{ $entidade->id }}"
                                                         data-icon="{{ $entidade->bank->logo_path ?? '' }}"
+                                                        data-nome="{{ $entidade->nome }}"
                                                         data-origem="Banco">{{ $entidade->agencia }} -
                                                         {{ $entidade->conta }}</option>
                                                 @endforeach
                                             @endif
-                                            @if (isset($entidades))
-                                                @foreach ($entidades as $entidade)
-                                                    <option value="{{ $entidade->id }}" data-origem="Caixa">
-                                                        {{ $entidade->nome }} ({{ ucfirst($entidade->tipo) }})</option>
-                                                @endforeach
-                                            @endif
+
                                         </select>
                                     </div>
                                     <!-- Exibindo a mensagem de erro -->
@@ -571,8 +567,7 @@
                         <div class="dropdown-menu">
                             <a class="dropdown-item btn-sm" href="#" id="Dm_modal_financeiro_clone">Salvar e
                                 Clonar</a>
-                            <a class="dropdown-item btn-sm" href="#" id="Dm_modal_financeiro_novo">Salvar e em
-                                Branco</a>
+                            <a class="dropdown-item btn-sm" href="#" id="Dm_modal_financeiro_novo">Salvar e Limpar</a>
                         </div>
                     </div>
                 </div>

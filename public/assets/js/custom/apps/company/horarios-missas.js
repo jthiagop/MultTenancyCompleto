@@ -28,6 +28,7 @@ var KTHorariosMissas = function () {
 
             repeaters: [{
                 selector: '.horarios-repeater',
+                initEmpty: false,
                 show: function () {
                     console.log('Repeater horário show chamado');
                     $(this).slideDown();
@@ -65,14 +66,8 @@ var KTHorariosMissas = function () {
                     updateSelectOptions();
                 }, 150);
 
-                // Inicializar repeater de horários aninhado
-                setTimeout(() => {
-                    $(this).find('.horarios-repeater').each(function() {
-                        if (!$(this).data('repeater-initialized')) {
-                            initFormRepeaterHorarios($(this));
-                        }
-                    });
-                }, 100);
+                // O repeater de horários já está configurado no repeaters do repeater principal
+                // Não precisa de inicialização adicional
             },
 
             hide: function (deleteElement) {
@@ -243,6 +238,103 @@ var KTHorariosMissas = function () {
         });
     }
 
+    // Handle form submission
+    var initFormSubmission = function () {
+        const form = document.getElementById('kt_horarios_missas_form');
+        if (!form) return;
+
+        form.addEventListener('submit', function (e) {
+            // Verificar se há dia da semana selecionado sem horário
+            const dias = document.querySelectorAll('[data-repeater-item]');
+            let hasDiaSemHorario = false;
+
+            dias.forEach(diaItem => {
+                const diaSelect = diaItem.querySelector('[data-kt-horarios-missas="dia_semana"]');
+                    const horarios = diaItem.querySelectorAll('.horario-input');
+
+                // Se há um dia selecionado, verificar se tem pelo menos um horário válido
+                if (diaSelect && diaSelect.value && diaSelect.value !== '') {
+                    let hasHorarioValido = false;
+
+                        horarios.forEach(horarioInput => {
+                            if (horarioInput.value && horarioInput.value.trim() !== '') {
+                                hasHorarioValido = true;
+                            }
+                        });
+
+                    // Se o dia está selecionado mas não tem horário válido, marcar como erro
+                    if (!hasHorarioValido) {
+                        hasDiaSemHorario = true;
+                    }
+                }
+            });
+
+            // Só mostrar erro se houver dia selecionado sem horário
+            // Permitir excluir todos os horários (nenhum item de dia)
+            if (hasDiaSemHorario) {
+                e.preventDefault();
+                Swal.fire({
+                    text: 'Por favor, adicione pelo menos um horário para o(s) dia(s) da semana selecionado(s).',
+                    icon: 'warning',
+                    buttonsStyling: false,
+                    confirmButtonText: 'OK, entendi!',
+                    customClass: {
+                        confirmButton: 'btn fw-bold btn-primary'
+                    }
+                });
+                return false;
+            }
+
+            // Garantir que o campo dias[] seja enviado mesmo quando o repeater está vazio
+            // O jQuery repeater não envia o array quando está vazio, então precisamos garantir isso
+            const repeaterList = form.querySelector('[data-repeater-list="dias"]');
+            const repeaterItems = repeaterList ? repeaterList.querySelectorAll('[data-repeater-item]') : [];
+            
+            // Se não há itens no repeater, remover o campo hidden vazio e garantir que o array seja enviado
+            const diasEmptyIndicator = form.querySelector('#dias_empty_indicator');
+            if (repeaterItems.length === 0) {
+                // Remover o campo hidden vazio se existir
+                if (diasEmptyIndicator) {
+                    diasEmptyIndicator.remove();
+                }
+                // Adicionar um campo hidden para garantir que o array vazio seja enviado
+                // Isso garante que o controller saiba que todos os horários foram removidos
+                const emptyDiasInput = document.createElement('input');
+                emptyDiasInput.type = 'hidden';
+                emptyDiasInput.name = 'dias';
+                emptyDiasInput.value = '';
+                form.appendChild(emptyDiasInput);
+            } else {
+                // Se há itens, remover o indicador vazio
+                if (diasEmptyIndicator) {
+                    diasEmptyIndicator.remove();
+                }
+            }
+
+            // Converter intervalo de H:i para minutos antes de enviar
+            const intervaloInput = document.getElementById('intervalo_padrao');
+            if (intervaloInput && intervaloInput.value) {
+                const intervaloTime = intervaloInput.value;
+                const match = intervaloTime.match(/(\d{1,2}):(\d{2})/);
+                if (match) {
+                    const horas = parseInt(match[1]) || 0;
+                    const minutos = parseInt(match[2]) || 0;
+                    const intervaloMinutos = (horas * 60) + minutos;
+
+                    // Criar campo hidden com o valor em minutos
+                    let hiddenInput = form.querySelector('input[name="intervalo_minutos"]');
+                    if (!hiddenInput) {
+                        hiddenInput = document.createElement('input');
+                        hiddenInput.type = 'hidden';
+                        hiddenInput.name = 'intervalo_minutos';
+                        form.appendChild(hiddenInput);
+                    }
+                    hiddenInput.value = intervaloMinutos;
+                }
+            }
+        });
+    };
+
     // Public methods
     return {
         init: function () {
@@ -257,6 +349,7 @@ var KTHorariosMissas = function () {
             initFormRepeaterDias();
             initConditionsSelect2();
             initTempusDominusTimePickers();
+            initFormSubmission();
         }
     };
 }();

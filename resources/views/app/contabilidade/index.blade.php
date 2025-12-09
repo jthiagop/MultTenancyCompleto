@@ -1,6 +1,7 @@
 <x-tenant-app-layout>
     @include('app.components.modals.contabilidade.planoConta')
     @include('app.components.modals.contabilidade.mapear')
+    @include('app.components.modals.contabilidade.lancamentoPadrao')
     <!--begin::Main-->
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -88,6 +89,13 @@
                                             (DE/PARA)</a>
                                     </li>
                                     <!--end::Nav item-->
+                                    <!--begin::Nav item-->
+                                    <li class="nav-item mt-2">
+                                        <a class="nav-link text-active-primary ms-0 me-10 py-5 @if ($activeTab === 'lancamento-padrao') active @endif"
+                                            href="{{ route('contabilidade.index', ['tab' => 'lancamento-padrao']) }}">Lançamento
+                                            Padrão</a>
+                                    </li>
+                                    <!--end::Nav item-->
                                 </ul>
                                 <!--begin::Navs-->
                             </div>
@@ -114,6 +122,13 @@
                             @include('app.contabilidade.mapeamento._table')
                         </div>
                         <!--end::Tab pane-->
+                        <!--begin::Tab pane-->
+                        <div class="tab-pane fade @if ($activeTab === 'lancamento-padrao') show active @endif"
+                            id="kt_tab_pane_lancamento_padrao" role="tabpanel">
+                            {{-- Inclui o conteúdo da tabela de lançamentos padrão --}}
+                            @include('app.contabilidade.lancamento_padrao._table')
+                        </div>
+                        <!--end::Tab pane-->
                     </div>
                     <!--end::Tab content-->
                     <!--end::Card-->
@@ -130,6 +145,5 @@
 <!--begin::Vendors Javascript(used for this page only)-->
 <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/file-manager/list.js"></script>
-
+<!-- Scripts específicos são carregados dentro de cada partial -->
 <!--end::Vendors Javascript-->

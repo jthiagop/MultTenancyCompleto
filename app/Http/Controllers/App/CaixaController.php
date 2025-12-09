@@ -265,6 +265,34 @@ class CaixaController extends Controller
      */
     private function movimentacao(array $validatedData)
     {
+        // Busca o lançamento padrão para obter conta_debito_id e conta_credito_id se não foram enviados
+        $contaDebitoId = null;
+        $contaCreditoId = null;
+        $lancamentoPadraoId = null;
+        
+        if (isset($validatedData['lancamento_padrao_id']) && $validatedData['lancamento_padrao_id']) {
+            $lancamentoPadraoId = $validatedData['lancamento_padrao_id'];
+            $lancamentoPadrao = LancamentoPadrao::find($lancamentoPadraoId);
+            
+            if ($lancamentoPadrao) {
+                // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
+                $lancamentoPadrao->refresh();
+                
+                // Se não foram enviados no request, busca do lançamento padrão
+                if (!isset($validatedData['conta_debito_id']) && $lancamentoPadrao->conta_debito_id) {
+                    $contaDebitoId = $lancamentoPadrao->conta_debito_id;
+                } elseif (isset($validatedData['conta_debito_id'])) {
+                    $contaDebitoId = $validatedData['conta_debito_id'];
+                }
+                
+                if (!isset($validatedData['conta_credito_id']) && $lancamentoPadrao->conta_credito_id) {
+                    $contaCreditoId = $lancamentoPadrao->conta_credito_id;
+                } elseif (isset($validatedData['conta_credito_id'])) {
+                    $contaCreditoId = $validatedData['conta_credito_id'];
+                }
+            }
+        }
+        
         // Cria o lançamento na tabela 'movimentacoes'
         $movimentacao = Movimentacao::create([
             'entidade_id' => $validatedData['entidade_id'],
@@ -277,6 +305,10 @@ class CaixaController extends Controller
             'created_by_name' => $validatedData['created_by_name'],
             'updated_by'      => $validatedData['updated_by'],
             'updated_by_name' => $validatedData['updated_by_name'],
+            'lancamento_padrao_id' => $lancamentoPadraoId,
+            'conta_debito_id' => $contaDebitoId,
+            'conta_credito_id' => $contaCreditoId,
+            'data_competencia' => $validatedData['data_competencia'],
         ]);
 
         // Retorna o objeto Movimentacao recém-criado, de onde poderemos pegar o ID
@@ -293,6 +325,9 @@ class CaixaController extends Controller
             $validatedData['origem'] = 'Caixa';
             $validatedData['tipo'] = 'entrada';
 
+            // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
+            $lancamentoPadrao->refresh();
+            
             // Cria outra movimentação para "Deposito Bancário"
             $movimentacaoBanco = Movimentacao::create([
                 'entidade_id' => $validatedData['entidade_banco_id'],
@@ -304,6 +339,10 @@ class CaixaController extends Controller
                 'created_by_name' => $validatedData['created_by_name'],
                 'updated_by' => $validatedData['updated_by'],
                 'updated_by_name' => $validatedData['updated_by_name'],
+                'lancamento_padrao_id' => $lancamentoPadrao->id,
+                'conta_debito_id' => $lancamentoPadrao->conta_debito_id ?? null,
+                'conta_credito_id' => $lancamentoPadrao->conta_credito_id ?? null,
+                'data_competencia' => $validatedData['data_competencia'],
             ]);
 
             // Cria o lançamento no banco
@@ -477,13 +516,45 @@ class CaixaController extends Controller
             }
             $oldEntidade->save();
 
+            // Busca o lançamento padrão para obter conta_debito_id e conta_credito_id
+            $contaDebitoId = null;
+            $contaCreditoId = null;
+            
+            if (isset($validatedData['lancamento_padrao_id']) && $validatedData['lancamento_padrao_id']) {
+                $lancamentoPadrao = LancamentoPadrao::find($validatedData['lancamento_padrao_id']);
+                
+                if ($lancamentoPadrao) {
+                    // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
+                    $lancamentoPadrao->refresh();
+                    
+                    // Se não foram enviados no request, busca do lançamento padrão
+                    if (!isset($validatedData['conta_debito_id']) && $lancamentoPadrao->conta_debito_id) {
+                        $contaDebitoId = $lancamentoPadrao->conta_debito_id;
+                    } elseif (isset($validatedData['conta_debito_id'])) {
+                        $contaDebitoId = $validatedData['conta_debito_id'];
+                    }
+                    
+                    if (!isset($validatedData['conta_credito_id']) && $lancamentoPadrao->conta_credito_id) {
+                        $contaCreditoId = $lancamentoPadrao->conta_credito_id;
+                    } elseif (isset($validatedData['conta_credito_id'])) {
+                        $contaCreditoId = $validatedData['conta_credito_id'];
+                    }
+                }
+            }
+            
             // 3) Atualiza a movimentação (agora ela aponta para a nova entidade e novo valor)
             $movimentacao->update([
                 'entidade_id' => $validatedData['entidade_id'],
                 'tipo'        => $validatedData['tipo'],
                 'valor'       => $validatedData['valor'],
+                'data'        => $validatedData['data_competencia'],
                 'descricao'   => $validatedData['descricao'],
+                'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'] ?? null,
+                'conta_debito_id' => $contaDebitoId,
+                'conta_credito_id' => $contaCreditoId,
+                'data_competencia' => $validatedData['data_competencia'],
                 'updated_by'  => Auth::user()->id,
+                'updated_by_name' => Auth::user()->name,
             ]);
 
             // 4) Entidade nova escolhida no form

@@ -31,12 +31,34 @@ class Movimentacao extends Model
         'updated_by',
         'created_by_name',
         'updated_by_name',
+        'lancamento_padrao_id',
+        'conta_debito_id',
+        'conta_credito_id',
+        'data_competencia',
     ];
 
     // Relacionamento com a entidade financeira
     public function entidade()
     {
         return $this->belongsTo(EntidadeFinanceira::class, 'entidade_id' , 'id');
+    }
+
+    // Relacionamento com lançamento padrão
+    public function lancamentoPadrao()
+    {
+        return $this->belongsTo(LancamentoPadrao::class, 'lancamento_padrao_id');
+    }
+
+    // Relacionamento com conta de débito (contabilidade)
+    public function contaDebito()
+    {
+        return $this->belongsTo(\App\Models\Contabilide\ChartOfAccount::class, 'conta_debito_id');
+    }
+
+    // Relacionamento com conta de crédito (contabilidade)
+    public function contaCredito()
+    {
+        return $this->belongsTo(\App\Models\Contabilide\ChartOfAccount::class, 'conta_credito_id');
     }
 
     public static function boot()

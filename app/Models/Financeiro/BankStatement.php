@@ -38,6 +38,10 @@ class BankStatement extends Model
         'imported_by', // Usuário que fez a importação
         'created_by',
         'created_by_name',
+        'transaction_datetime', // Datetime final utilizado na lógica
+        'source_time', // Origem do horário ('memo' ou 'dtposted')
+        'conciliado_com_missa', // Flag de conciliação automática
+        'horario_missa_id', // FK para horarios_missas
     ];
 
     /**
@@ -62,11 +66,27 @@ class BankStatement extends Model
     }
 
     /**
+     * 🔗 Relacionamento com horário de missa
+     */
+    public function horarioMissa()
+    {
+        return $this->belongsTo(\App\Models\HorarioMissa::class, 'horario_missa_id');
+    }
+
+    /**
      * 🔍 Escopo para buscar apenas lançamentos não conciliados
      */
     public function scopeNaoConciliados($query)
     {
         return $query->where('reconciled', false);
+    }
+
+    /**
+     * 🔍 Escopo para buscar transações conciliadas com missas
+     */
+    public function scopeConciliadosComMissas($query)
+    {
+        return $query->where('conciliado_com_missa', true);
     }
 
     /**

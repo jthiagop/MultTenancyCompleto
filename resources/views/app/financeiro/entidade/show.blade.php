@@ -28,16 +28,19 @@
                         {{-- Aba de Conciliações Pendentes --}}
                         @include('app.financeiro.entidade.partials.conciliacoes')
 
-                        {{-- Aba de Informações --}}
-                        @include('app.financeiro.entidade.partials.informacoes')
-                    </div>
+                    {{-- Aba de Informações --}}
+                    @include('app.financeiro.entidade.partials.informacoes')
                 </div>
-                <!--end::Content container-->
             </div>
-            <!--end::Content-->
+            <!--end::Content container-->
         </div>
-        <!--end::Content wrapper-->
+        <!--end::Content-->
     </div>
+    <!--end::Content wrapper-->
+</div>
+
+{{-- Modal de Conciliação de Missas --}}
+@include('app.components.modals.financeiro.conciliacao-missas')
 </x-tenant-app-layout>
 
 {{-- Scripts JavaScript --}}
@@ -65,3 +68,6 @@
         });
     });
 </script>
+
+{{-- Script de Conciliação de Missas --}}
+<script src="/assets/js/custom/apps/financeiro/conciliacao-missas.js"></script>

@@ -22,6 +22,7 @@
         "php-flasher/flasher-laravel": "^2.1",
         "php-flasher/flasher-notyf-laravel": "^2.1",
         "php-flasher/flasher-toastr-laravel": "^2.1",
+        "phpoffice/phpspreadsheet": "^5.3",
         "setasign/fpdi": "^2.6",
         "sopamo/laravel-filepond": "^1.4",
         "spatie/browsershot": "^5.0",

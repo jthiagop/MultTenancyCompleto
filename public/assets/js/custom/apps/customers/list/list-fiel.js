@@ -23,15 +23,18 @@ var KTCustomersList = function () {
             'columns': [
                 { data: 'checkbox', name: 'checkbox', orderable: false, searchable: false },
                 { data: 'nome_completo', name: 'nome_completo' },
-                { data: 'email', name: 'email' },
-                { data: 'company', name: 'company.name' },
-                { data: 'status', name: 'status' },
                 { data: 'data_nascimento', name: 'data_nascimento' },
+                { data: 'sexo', name: 'sexo' },
+                { data: 'cpf', name: 'cpf' },
+                { data: 'rg', name: 'rg' },
+                { data: 'email', name: 'email' },
+                { data: 'telefone', name: 'telefone' },
+                { data: 'dizimista', name: 'dizimista' },
                 { data: 'action', name: 'action', orderable: false, searchable: false }
             ],
             'columnDefs': [
                 { orderable: false, targets: 0 }, // Disable ordering on column 0 (checkbox)
-                { orderable: false, targets: 6 }, // Disable ordering on column 6 (actions)
+                { orderable: false, targets: 9 }, // Disable ordering on column 9 (actions)
             ]
         });
 
@@ -205,7 +208,16 @@ var fillFormWithData = (data) => {
     if (data.sexo) form.querySelector('[name="sexo"]').value = data.sexo;
     if (data.cpf) form.querySelector('[name="cpf"]').value = data.cpf;
     if (data.rg) form.querySelector('[name="rg"]').value = data.rg;
-    if (data.profissao) form.querySelector('[name="profissao"]').value = data.profissao;
+    if (data.profissao) {
+        const profissaoSelect = form.querySelector('[name="profissao"]');
+        if (profissaoSelect) {
+            profissaoSelect.value = data.profissao;
+            // Atualizar Select2 se estiver inicializado
+            if (typeof $(profissaoSelect).select2 !== 'undefined') {
+                $(profissaoSelect).trigger('change');
+            }
+        }
+    }
     if (data.estado_civil) form.querySelector('[name="estado_civil"]').value = data.estado_civil;
     if (data.telefone) form.querySelector('[name="telefone"]').value = data.telefone;
     if (data.telefone_secundario) form.querySelector('[name="telefone_secundario"]').value = data.telefone_secundario;

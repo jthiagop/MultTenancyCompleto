@@ -11,6 +11,7 @@ use App\Models\Financeiro\BankStatement;
 use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\ModulosAnexo;
 use App\Models\Financeiro\TransacaoFinanceira;
+use App\Models\HorarioMissa;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use App\Models\User;
@@ -71,7 +72,7 @@ class BancoController extends Controller
         }
 
 
-        $perPage = (int) $request->input('per_page', 25);
+        $perPage = (int) $request->input('per_page', 50); // Aumentado de 25 para 50
         $perPage = max(5, min($perPage, 200)); // limites úteis
 
         $lps = LancamentoPadrao::all();
@@ -157,6 +158,8 @@ class BancoController extends Controller
             $entidade->badge_class = $statusClasses[strtolower($entidade->status_conciliacao)] ?? 'badge-light-secondary';
         }
 
+        // Verifica se existem horários de missa cadastrados para a empresa ativa
+        $hasHorariosMissas = HorarioMissa::where('company_id', $companyId)->exists();
 
         // 🟢 Retorna a View com todos os dados
         return view('app.financeiro.banco.list', array_merge([
@@ -173,6 +176,7 @@ class BancoController extends Controller
             'perPage' => $perPage,
             'entidades' => $entidades,
             'entidadesRelatorio' => $entidadesRelatorio,
+            'hasHorariosMissas' => $hasHorariosMissas,
         ], $dadosGrafico));
     }
 
@@ -318,15 +322,22 @@ class BancoController extends Controller
         $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
         $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
 
-        // Construir query base - apenas transações de banco através do relacionamento
-        $query = TransacaoFinanceira::where('company_id', $companyId)
-            ->whereHas('entidadeFinanceira', function ($q) {
+        // Construir query base - buscar da tabela movimentacoes filtrando por entidades do tipo banco
+        // Usa data_competencia se disponível, senão usa data
+        $query = Movimentacao::where('company_id', $companyId)
+            ->whereHas('entidade', function ($q) {
                 $q->where('tipo', 'banco');
             })
-            ->whereBetween('data_competencia', [$start, $end])
-            ->orderBy('data_competencia');
+            ->where(function($q) use ($start, $end) {
+                $q->whereBetween('data_competencia', [$start, $end])
+                  ->orWhere(function($subQ) use ($start, $end) {
+                      $subQ->whereNull('data_competencia')
+                           ->whereBetween('data', [$start, $end]);
+                  });
+            })
+            ->orderByRaw('COALESCE(data_competencia, data)');
 
-        $transacoes = $query->get();
+        $movimentacoes = $query->get();
 
         // Agrupar por dia
         $dadosPorDia = [];
@@ -336,12 +347,14 @@ class BancoController extends Controller
             $dataFormatada = $currentDate->format('Y-m-d');
             $diaFormatado = $currentDate->format('d/m');
 
-            $transacoesDia = $transacoes->filter(function ($transacao) use ($dataFormatada) {
-                return Carbon::parse($transacao->data_competencia)->format('Y-m-d') === $dataFormatada;
+            $movimentacoesDia = $movimentacoes->filter(function ($movimentacao) use ($dataFormatada) {
+                // Usa data_competencia se disponível, senão usa data
+                $dataMovimentacao = $movimentacao->data_competencia ?? $movimentacao->data;
+                return Carbon::parse($dataMovimentacao)->format('Y-m-d') === $dataFormatada;
             });
 
-            $entradas = $transacoesDia->where('tipo', 'entrada')->sum('valor');
-            $saidas = $transacoesDia->where('tipo', 'saida')->sum('valor');
+            $entradas = $movimentacoesDia->where('tipo', 'entrada')->sum('valor');
+            $saidas = $movimentacoesDia->where('tipo', 'saida')->sum('valor');
 
             $dadosPorDia[] = [
                 'data' => $diaFormatado,
@@ -354,8 +367,8 @@ class BancoController extends Controller
         }
 
         // Calcular totais do período
-        $totalEntradas = $transacoes->where('tipo', 'entrada')->sum('valor');
-        $totalSaidas = $transacoes->where('tipo', 'saida')->sum('valor');
+        $totalEntradas = $movimentacoes->where('tipo', 'entrada')->sum('valor');
+        $totalSaidas = $movimentacoes->where('tipo', 'saida')->sum('valor');
         $saldoTotal = $totalEntradas - $totalSaidas;
 
         // Preparar dados para o gráfico (arrays separados)
@@ -520,6 +533,34 @@ class BancoController extends Controller
      */
     private function movimentacao(array $validatedData)
     {
+        // Busca o lançamento padrão para obter conta_debito_id e conta_credito_id se não foram enviados
+        $contaDebitoId = null;
+        $contaCreditoId = null;
+        $lancamentoPadraoId = null;
+        
+        if (isset($validatedData['lancamento_padrao_id']) && $validatedData['lancamento_padrao_id']) {
+            $lancamentoPadraoId = $validatedData['lancamento_padrao_id'];
+            $lancamentoPadrao = LancamentoPadrao::find($lancamentoPadraoId);
+            
+            if ($lancamentoPadrao) {
+                // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
+                $lancamentoPadrao->refresh();
+                
+                // Se não foram enviados no request, busca do lançamento padrão
+                if (!isset($validatedData['conta_debito_id']) && $lancamentoPadrao->conta_debito_id) {
+                    $contaDebitoId = $lancamentoPadrao->conta_debito_id;
+                } elseif (isset($validatedData['conta_debito_id'])) {
+                    $contaDebitoId = $validatedData['conta_debito_id'];
+                }
+                
+                if (!isset($validatedData['conta_credito_id']) && $lancamentoPadrao->conta_credito_id) {
+                    $contaCreditoId = $lancamentoPadrao->conta_credito_id;
+                } elseif (isset($validatedData['conta_credito_id'])) {
+                    $contaCreditoId = $validatedData['conta_credito_id'];
+                }
+            }
+        }
+        
         // Cria o lançamento na tabela 'movimentacoes'
         $movimentacao = Movimentacao::create([
             'entidade_id' => $validatedData['entidade_id'],
@@ -532,6 +573,10 @@ class BancoController extends Controller
             'created_by_name' => $validatedData['created_by_name'],
             'updated_by'      => $validatedData['updated_by'],
             'updated_by_name' => $validatedData['updated_by_name'],
+            'lancamento_padrao_id' => $lancamentoPadraoId,
+            'conta_debito_id' => $contaDebitoId,
+            'conta_credito_id' => $contaCreditoId,
+            'data_competencia' => $validatedData['data_competencia'],
         ]);
 
         // Retorna o objeto Movimentacao recém-criado, de onde poderemos pegar o ID
@@ -548,6 +593,9 @@ class BancoController extends Controller
             $validatedData['origem'] = 'Banco';
             $validatedData['tipo'] = 'entrada';
 
+            // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
+            $lancamentoPadrao->refresh();
+            
             // Cria outra movimentação para "Deposito Bancário"
             $movimentacaoBanco = Movimentacao::create([
                 'entidade_id' => $validatedData['entidade_banco_id'],
@@ -559,6 +607,10 @@ class BancoController extends Controller
                 'created_by_name' => $validatedData['created_by_name'],
                 'updated_by' => $validatedData['updated_by'],
                 'updated_by_name' => $validatedData['updated_by_name'],
+                'lancamento_padrao_id' => $lancamentoPadrao->id,
+                'conta_debito_id' => $lancamentoPadrao->conta_debito_id ?? null,
+                'conta_credito_id' => $lancamentoPadrao->conta_credito_id ?? null,
+                'data_competencia' => $validatedData['data_competencia'],
             ]);
 
             // Cria o lançamento no banco
@@ -723,13 +775,45 @@ class BancoController extends Controller
             }
             $oldEntidade->save();
 
+            // Busca o lançamento padrão para obter conta_debito_id e conta_credito_id
+            $contaDebitoId = null;
+            $contaCreditoId = null;
+            
+            if (isset($validatedData['lancamento_padrao_id']) && $validatedData['lancamento_padrao_id']) {
+                $lancamentoPadrao = LancamentoPadrao::find($validatedData['lancamento_padrao_id']);
+                
+                if ($lancamentoPadrao) {
+                    // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
+                    $lancamentoPadrao->refresh();
+                    
+                    // Se não foram enviados no request, busca do lançamento padrão
+                    if (!isset($validatedData['conta_debito_id']) && $lancamentoPadrao->conta_debito_id) {
+                        $contaDebitoId = $lancamentoPadrao->conta_debito_id;
+                    } elseif (isset($validatedData['conta_debito_id'])) {
+                        $contaDebitoId = $validatedData['conta_debito_id'];
+                    }
+                    
+                    if (!isset($validatedData['conta_credito_id']) && $lancamentoPadrao->conta_credito_id) {
+                        $contaCreditoId = $lancamentoPadrao->conta_credito_id;
+                    } elseif (isset($validatedData['conta_credito_id'])) {
+                        $contaCreditoId = $validatedData['conta_credito_id'];
+                    }
+                }
+            }
+            
             // 3) Atualiza a movimentação (agora ela aponta para a nova entidade e novo valor)
             $movimentacao->update([
                 'entidade_id' => $validatedData['entidade_id'],
                 'tipo'        => $validatedData['tipo'],
                 'valor'       => $validatedData['valor'],
+                'data'        => $validatedData['data_competencia'],
                 'descricao'   => $validatedData['descricao'],
+                'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'] ?? null,
+                'conta_debito_id' => $contaDebitoId,
+                'conta_credito_id' => $contaCreditoId,
+                'data_competencia' => $validatedData['data_competencia'],
                 'updated_by'  => Auth::user()->id,
+                'updated_by_name' => Auth::user()->name,
             ]);
 
             // 4) Entidade nova escolhida no form

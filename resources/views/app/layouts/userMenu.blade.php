@@ -78,6 +78,22 @@
         <div class="menu-item px-5">
             <a href="{{ route('profile.edit') }}" class="menu-link px-5"> Meu Perfil</a>
         </div>
+        <div class="menu-item px-5" data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-placement="left-start" data-kt-menu-offset="-15px, 0">
+            <a href="#" class="menu-link px-5">
+                <span class="menu-title">Configurações</span>
+                <span class="menu-arrow"></span>
+            </a>
+            <div class="menu-sub menu-sub-dropdown w-275px py-4">
+                <div class="menu-item px-3">
+                    <a href="{{ route('company.edit') }}" class="menu-link px-5"> Organismo</a>
+                </div>
+                @if (auth()->user()->hasRole('global','admin'))
+                <div class="menu-item px-3">
+                    <a href="{{ route('telaLogin.index') }}" class="menu-link px-5"> Tela de Login</a>
+                </div>
+                @endif
+            </div>
+        </div>
         <div class="separator my-2"></div>
         <div class="menu-item px-5">
             <a href="{{ route('logout') }}"

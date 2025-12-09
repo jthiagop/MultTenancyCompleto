@@ -37,14 +37,6 @@
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
-                            <li class="breadcrumb-item text-muted">Cadastros</li>
-                            <!--end::Item-->
-                            <!--begin::Item-->
-                            <li class="breadcrumb-item">
-                                <span class="bullet bg-gray-400 w-5px h-2px"></span>
-                            </li>
-                            <!--end::Item-->
-                            <!--begin::Item-->
                             <li class="breadcrumb-item text-muted">Criação de Entidades</li>
                             <!--end::Item-->
                         </ul>
@@ -53,6 +45,15 @@
                     <!--end::Page title-->
                     <!--begin::Actions-->
 
+                    <!--begin::Actions-->
+                    <div class="d-flex align-items-center gap-2 gap-lg-3">
+                        <div class="m-0">
+                            <a href="#" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_entidade_financeira">
+                                <i class="bi bi-plus-lg fs-2"></i>
+                                Cadastrar Nova
+                            </a>
+                        </div>
+                    </div>
                     <!--end::Actions-->
                 </div>
                 <!--end::Toolbar container-->
@@ -62,294 +63,14 @@
             <div id="kt_app_content" class="app-content flex-column-fluid">
                 <!--begin::Content container-->
                 <div id="kt_app_content_container" class="app-container container-xxl">
+                    <!--begin::Modal - Cadastro de Entidade Financeira-->
+                    @include('app.components.modals.financeiro.entidade')
+                    <!--end::Modal-->
+
                     <!--begin::Row-->
                     <div class="row gy-5 g-xl-10">
                         <!--begin::Col-->
-                        <div class="col-xl-6 mb-xl-10">
-                            <!--begin::Chart widget 5-->
-                            <div class="card card-flush h-lg-100">
-                                <div class="card-body">
-                                    <!--begin:Form-->
-                                    <form method="POST" action="{{ route('entidades.store') }}" class="form mb-15">
-                                        @csrf <!-- Token CSRF obrigatório para proteção -->
-
-                                        <!--begin::Heading-->
-                                        <div class="mb-13 text-center">
-                                            <!--begin::Title-->
-                                            <h1 class="mb-3">Cadastrar Nova Entidade</h1>
-                                            <!--end::Title-->
-                                            <!--begin::Description-->
-                                            <div class="text-muted fw-semibold fs-5">
-                                                Preencha os detalhes da nova
-                                                <a href="#" class="fw-bold link-primary">Entidade Financeira</a>.
-                                            </div>
-                                            <!--end::Description-->
-                                        </div>
-                                        <!--end::Heading-->
-                                        <div class="row mb-5">
-                                            <!--begin::Col-->
-                                            <div class="col-md-4 fv-row">
-                                                <label class="fs-5 fw-semibold mb-2">Tipo</label>
-                                                <select name="tipo" id="tipo"
-                                                    class="form-select form-select-solid" required>
-                                                    <option value="" disabled selected>Selecione o tipo</option>
-                                                    <option value="caixa"
-                                                        {{ old('tipo') == 'caixa' ? 'selected' : '' }}>Caixa</option>
-                                                    <option value="banco"
-                                                        {{ old('tipo') == 'banco' ? 'selected' : '' }}>Banco</option>
-                                                </select>
-                                                @error('tipo')
-                                                    <div class="text-danger mt-2">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <!--end::Col-->
-
-                                            <!--begin::Col-->
-                                            <div class="col-md-8 fv-row" id="nome-entidade-group">
-                                                <label class="fs-5 fw-semibold mb-2">Nome da Entidade</label>
-                                                <input type="text" class="form-control form-control-solid"
-                                                    placeholder="Ex: Caixa Central" name="nome"
-                                                    value="{{ old('nome') }}" />
-                                                @error('nome')
-                                                    <div class="text-danger mt-2">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <!--end::Col-->
-                                            <!-- Campos para Banco (inicialmente ocultos) -->
-                                            <!-- Grupo de Banco (Oculto por padrão) -->
-                                            <div class="col-md-8 fv-row d-none" id="banco-group">
-                                                <label class="fs-5 fw-semibold mb-2">Banco</label>
-                                                <select id="banco-select" name="bank_id"
-                                                    class="form-select form-select-solid" data-control="select2"
-                                                    data-placeholder="Selecione um banco">
-                                                    <option></option> <!-- para placeholder vazio -->
-
-                                                    {{-- A lista de bancos agora vem do controller --}}
-                                                    @isset($banks)
-                                                        @foreach ($banks as $bank)
-                                                            {{--
-                                                                A CORREÇÃO ESTÁ AQUI:
-                                                                Removemos a função asset() e passamos o $bank->logo_path diretamente.
-                                                            --}}
-                                                            <option value="{{ $bank->id }}"
-                                                                data-icon="{{ $bank->logo_path }}">
-                                                                {{ $bank->name }}
-                                                            </option>
-                                                        @endforeach
-                                                    @endisset
-                                                </select>
-
-                                                @error('bank_id')
-                                                    <div class="text-danger mt-2">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                            <!--end::Input group-->
-                                        </div>
-                                        <!--end::Input group-->
-                                        <!--begin::Input group-->
-                                        <div class="row mb-5">
-                                            <div class="col-md-4 fv-row d-none" id="agencia-group">
-                                                <label class="fs-5 fw-semibold mb-2">Agência</label>
-                                                <input type="text" class="form-control form-control-solid"
-                                                    placeholder="Número da agência" name="agencia"
-                                                    value="{{ old('agencia') }}" />
-                                                @error('agencia')
-                                                    <div class="text-danger mt-2">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-4 fv-row d-none" id="conta-group">
-                                                <label class="fs-5 fw-semibold mb-2">Conta</label>
-                                                <input type="text" class="form-control form-control-solid"
-                                                    placeholder="Número da conta" name="conta"
-                                                    value="{{ old('conta') }}" />
-                                                @error('conta')
-                                                    <div class="text-danger mt-2">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-
-                                            <div class="col-md-4 fv-row d-none" id="account-type-group">
-                                                <label class="fs-5 fw-semibold mb-2">Natureza da Conta</label>
-                                                <select name="account_type" id="account_type"
-                                                    class="form-select form-select-solid">
-                                                    <option value="" disabled selected>Selecione a natureza</option>
-                                                    <option value="corrente" {{ old('account_type') == 'corrente' ? 'selected' : '' }}>Conta Corrente</option>
-                                                    <option value="poupanca" {{ old('account_type') == 'poupanca' ? 'selected' : '' }}>Poupança</option>
-                                                    <option value="aplicacao" {{ old('account_type') == 'aplicacao' ? 'selected' : '' }}>Aplicação</option>
-                                                    <option value="renda_fixa" {{ old('account_type') == 'renda_fixa' ? 'selected' : '' }}>Renda Fixa</option>
-                                                    <option value="tesouro_direto" {{ old('account_type') == 'tesouro_direto' ? 'selected' : '' }}>Tesouro Direto</option>
-                                                </select>
-                                                @error('account_type')
-                                                    <div class="text-danger mt-2">{{ $message }}</div>
-                                                @enderror
-                                            </div>
-                                        </div>
-
-                                        <!--begin::Linha Saldo Inicial / Saldo Atual-->
-                                        <div class="row mb-5">
-                                            <!--begin::Col-->
-                                            <div class="col-md-6 fv-row">
-                                                <!--begin::Label-->
-                                                <label class="fs-5 fw-semibold mb-2">Saldo Inicial</label>
-                                                <!--end::Label-->
-                                                <div class="position-relative d-flex align-items-center">
-                                                    <!--begin::Icon-->
-                                                    <!--begin::Svg Icon | path: icons/duotune/general/gen014.svg-->
-                                                    <span class="svg-icon svg-icon-2 position-absolute mx-4">
-                                                        <svg class="icon icon-tabler icon-tabler-currency-real"
-                                                            fill="none" height="24" stroke="currentColor"
-                                                            stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" viewBox="0 0 24 24" width="24"
-                                                            xmlns="http://www.w3.org/2000/svg">
-                                                            <!-- O preenchimento inicial não está definido -->
-                                                            <path d="M0 0h24v24H0z" fill="none" stroke="none">
-                                                            </path>
-                                                            <!-- Desenha a primeira linha que representa o símbolo da moeda -->
-                                                            <path d="M21 6h-4a3 3 0 0 0 0 6h1a3 3 0 0 1 0 6h-4"></path>
-                                                            <!-- Traça a segunda linha da moeda -->
-                                                            <path d="M4 18v-12h3a3 3 0 1 1 0 6h-3c5.5 0 5 4 6 6"></path>
-                                                            <!-- Traça duas linhas verticais curtas -->
-                                                            <path d="M18 6v-2"></path>
-                                                            <path d="M17 20v-2"></path>
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                    <!--end::Icon-->
-                                                    <!--begin::Input-->
-                                                    <input type="text"
-                                                        class="form-control form-control-solid ps-12 money"
-                                                        placeholder="Ex: 1.000,00" id="valor2"
-                                                        name="saldo_inicial" required />
-                                                    <!--end::Input-->
-                                                    @error('saldo_inicial')
-                                                        <div class="text-danger mt-2">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <!--end::Col-->
-
-                                            <!--begin::Col-->
-                                            <div class="col-md-6 fv-row">
-                                                <!--begin::Label-->
-                                                <label class="fs-5 fw-semibold mb-2">Saldo Atual</label>
-                                                <!--end::Label-->
-                                                <div class="position-relative d-flex align-items-center">
-                                                    <!--begin::Icon-->
-                                                    <!--begin::Svg Icon | path: icons/duotune/general/gen014.svg-->
-                                                    <span class="svg-icon svg-icon-2 position-absolute mx-4">
-                                                        <svg class="icon icon-tabler icon-tabler-currency-real"
-                                                            fill="none" height="24" stroke="currentColor"
-                                                            stroke-linecap="round" stroke-linejoin="round"
-                                                            stroke-width="2" viewBox="0 0 24 24" width="24"
-                                                            xmlns="http://www.w3.org/2000/svg">
-                                                            <!-- O preenchimento inicial não está definido -->
-                                                            <path d="M0 0h24v24H0z" fill="none" stroke="none">
-                                                            </path>
-                                                            <!-- Desenha a primeira linha que representa o símbolo da moeda -->
-                                                            <path d="M21 6h-4a3 3 0 0 0 0 6h1a3 3 0 0 1 0 6h-4"></path>
-                                                            <!-- Traça a segunda linha da moeda -->
-                                                            <path d="M4 18v-12h3a3 3 0 1 1 0 6h-3c5.5 0 5 4 6 6"></path>
-                                                            <!-- Traça duas linhas verticais curtas -->
-                                                            <path d="M18 6v-2"></path>
-                                                            <path d="M17 20v-2"></path>
-                                                        </svg>
-                                                    </span>
-                                                    <!--end::Svg Icon-->
-                                                    <!--end::Icon-->
-                                                    <!--begin::Input-->
-                                                    <input type="text"
-                                                        class="form-control form-control-solid ps-12 money"
-                                                        placeholder="Ex: 1.000,00" id="valor2" name="saldo_atual"
-                                                        disabled />
-                                                    <!--end::Input-->
-                                                    @error('saldo_atual')
-                                                        <div class="text-danger mt-2">{{ $message }}</div>
-                                                    @enderror
-                                                </div>
-                                            </div>
-                                            <!--end::Col-->
-                                        </div>
-                                        <!--end::Input group-->
-                                        <!--end::Linha Saldo-->
-
-                                        <!--begin::Descrição-->
-                                        <div class="d-flex flex-column mb-5 fv-row">
-                                            <label class="fs-5 fw-semibold mb-2">Descrição</label>
-                                            <textarea class="form-control form-control-solid" rows="4" name="descricao"
-                                                placeholder="Insira uma descrição (opcional)"></textarea>
-                                            @error('descricao')
-                                                <div class="text-danger mt-2">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                        <!--end::Descrição-->
-
-                                        <!--begin::Notice (Opcional)-->
-                                        <div
-                                            class="notice d-flex bg-light-primary rounded border-primary border border-dashed mb-9 p-6">
-                                            <span class="svg-icon svg-icon-2tx svg-icon-primary me-4">
-                                                <!-- Ícone ilustrativo -->
-                                                <svg width="24" height="24" viewBox="0 0 24 24"
-                                                    fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path opacity="0.3" d="M3.20001 5.91897L16.9 3.01895C17.4 2.91895
-                                                        18 3.219 18.1 3.819L19.2 9.01895L3.20001 5.91897Z"
-                                                        fill="currentColor" />
-                                                    <path opacity="0.3" d="M13 13.9189C13 12.2189 14.3 10.9189
-                                                        16 10.9189H21C21.6 10.9189 22 11.3189 22
-                                                        11.9189V15.9189C22 16.5189 21.6 16.9189
-                                                        21 16.9189H16C14.3 16.9189 13 15.6189
-                                                        13 13.9189ZM16 12.4189C15.2 12.4189 14.5
-                                                        13.1189 14.5 13.9189C14.5 14.7189 15.2
-                                                        15.4189 16 15.4189C16.8 15.4189 17.5
-                                                        14.7189 17.5 13.9189C17.5 13.1189 16.8
-                                                        12.4189 16 12.4189Z" fill="currentColor" />
-                                                    <path d="M13 13.9189C13 12.2189 14.3 10.9189
-                                                    16 10.9189H21V7.91895C21 6.81895 20.1
-                                                    5.91895 19 5.91895H3C2.4 5.91895
-                                                    2 6.31895 2 6.91895V20.9189C2
-                                                    21.5189 2.4 21.9189 3
-                                                    21.9189H19C20.1 21.9189 21
-                                                    21.0189 21 19.9189V16.9189H16C14.3
-                                                    16.9189 13 15.6189 13 13.9189Z" fill="currentColor" />
-                                                </svg>
-                                            </span>
-                                            <div class="d-flex flex-stack flex-grow-1">
-                                                <div class="fw-semibold">
-                                                    <h4 class="text-gray-900 fw-bold">Dica</h4>
-                                                    <div class="fs-6 text-gray-700">
-                                                        Certifique-se de preencher corretamente todos os campos
-                                                        obrigatórios.
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <!--end::Notice-->
-
-                                        <!--begin::Actions-->
-                                        <div class="text-center">
-                                            <button type="reset" class="btn btn-light me-3"
-                                                data-kt-modal-action-type="cancel">
-                                                Cancelar
-                                            </button>
-                                            <button type="submit" class="btn btn-primary"
-                                                id="kt_modal_submit_button">
-                                                <span class="indicator-label">Enviar</span>
-                                                <span class="indicator-progress">
-                                                    Aguarde...
-                                                    <span
-                                                        class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                                </span>
-                                            </button>
-                                        </div>
-                                        <!--end::Actions-->
-                                    </form>
-                                    <!--end:Form-->
-                                </div>
-                            </div>
-                            <!--end::Chart widget 5-->
-                        </div>
-                        <!--end::Col-->
-                        <!--begin::Col-->
-                        <div class="col-xl-6 mb-5 mb-xl-10">
+                        <div class="col-xl-12 mb-5 mb-xl-10">
                             <!--begin::Engage widget 1-->
                             <div class="card h-md-100" dir="ltr">
                                 <div class="card">
@@ -365,6 +86,7 @@
                                                 </div>
                                             </div>
                                             <!--end::Card title-->
+
                                         </div>
                                         <!--end::Card header-->
                                         <!--begin::Card body-->
@@ -377,12 +99,13 @@
                                                     <!--begin::Table row-->
                                                     <tr
                                                         class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
-                                                        <th class="min-w-250px">Nome</th>
+                                                        <th class="min-w-150px">Nome</th>
                                                         <th class="text-end min-w-175px">Saldo Inicial</th>
                                                         <th class="text-end min-w-150px">Ultima Atualização</th>
                                                         <th class="text-end min-w-150px">Saldo Atual</th>
-                                                        <th class="text-end min-w-120px">Tipo</th>
-                                                        <th class="text-end min-w-300px">Descrição</th>
+                                                        <th class="text-end min-w-100px">Tipo</th>
+                                                        <th class="text-end min-w-150px">Conta Contábil</th>
+                                                        <th class="text-end min-w-150px">Descrição</th>
                                                         @if(auth()->user()->hasRole(['admin', 'global']))
                                                             <th class="text-end min-w-100px">Ações</th>
                                                         @endif
@@ -413,6 +136,14 @@
                                                             <!-- Tipo -->
                                                             <td class="text-end pe-0">{{ ucfirst($entidade->tipo) }}
                                                             </td>
+                                                            <!-- Conta Contábil -->
+                                                            <td class="text-end pe-0">
+                                                                @if($entidade->contaContabil)
+                                                                    <span class="text-gray-800">{{ $entidade->contaContabil->code }} - {{ $entidade->contaContabil->name }}</span>
+                                                                @else
+                                                                    <span class="text-muted">-</span>
+                                                                @endif
+                                                            </td>
                                                             <!-- Descrição -->
                                                             <td class="text-end">{{ $entidade->descricao ?? '-' }}
                                                             </td>
@@ -429,6 +160,7 @@
                                                                             data-entidade-conta="{{ $entidade->conta ?? '' }}"
                                                                             data-entidade-account-type="{{ $entidade->account_type ?? '' }}"
                                                                             data-entidade-descricao="{{ htmlspecialchars($entidade->descricao ?? '', ENT_QUOTES, 'UTF-8') }}"
+                                                                            data-entidade-conta-contabil-id="{{ $entidade->conta_contabil_id ?? '' }}"
                                                                             data-bs-toggle="tooltip"
                                                                             title="Editar">
                                                                         <i class="fas fa-edit"></i>
@@ -585,6 +317,27 @@
                                         @enderror
                                     </div>
 
+                                    <!-- Conta Contábil -->
+                                    <div class="mb-5">
+                                        <label class="fs-5 fw-semibold mb-2">Conta Contábil (Plano de Contas)</label>
+                                        <select class="form-select form-select-solid" data-control="select2"
+                                            data-placeholder="Selecione a conta contábil..." name="conta_contabil_id"
+                                            id="edit_conta_contabil_id">
+                                            <option></option>
+                                            @isset($contas)
+                                                @foreach ($contas as $conta)
+                                                    <option value="{{ $conta->id }}">
+                                                        {{ $conta->code }} - {{ $conta->name }}
+                                                    </option>
+                                                @endforeach
+                                            @endisset
+                                        </select>
+                                        <div class="text-muted fs-7 mt-2">Vínculo contábil para exportação (De/Para)</div>
+                                        @error('conta_contabil_id')
+                                            <div class="text-danger mt-2">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
                                     <!-- Saldo Inicial e Atual (readonly) -->
                                     <div class="row mb-5">
                                         <div class="col-md-6">
@@ -637,93 +390,6 @@
 <script src="/assets/js/custom/apps/ecommerce/reports/sales/sales.js"></script>
 <script src="/assets/js/custom/utilities/modals/bidding.js"></script>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const tipoSelect = document.getElementById('tipo');
-        const nomeEntidadeGroup = document.getElementById('nome-entidade-group');
-        const bancoGroup = document.getElementById('banco-group');
-        const agenciaGroup = document.getElementById('agencia-group');
-        const contaGroup = document.getElementById('conta-group');
-        const accountTypeGroup = document.getElementById('account-type-group');
-
-        // Função para exibir/esconder campos
-        function toggleFields() {
-            const selected = tipoSelect.value;
-            if (selected === 'banco') {
-                nomeEntidadeGroup.classList.add('d-none'); // Esconde Nome da Entidade
-                bancoGroup.classList.remove('d-none'); // Mostra o select de Banco
-                agenciaGroup.classList.remove('d-none'); // Mostra Agência
-                contaGroup.classList.remove('d-none'); // Mostra Conta
-                accountTypeGroup.classList.remove('d-none'); // Mostra Natureza da Conta
-            } else {
-                nomeEntidadeGroup.classList.remove('d-none');
-                bancoGroup.classList.add('d-none');
-                agenciaGroup.classList.add('d-none');
-                contaGroup.classList.add('d-none');
-                accountTypeGroup.classList.add('d-none');
-            }
-        }
-
-        // Evento de mudança no select "tipo"
-        tipoSelect.addEventListener('change', toggleFields);
-
-        // Ao carregar a página, se "tipo=banco" já estiver selecionado (ex.: old value),
-        // podemos chamar toggleFields() para exibir/esconder adequadamente.
-        toggleFields();
-    });
-</script>
-<script>
-    $(document).ready(function() {
-        $('#banco-select').select2({
-            placeholder: "Selecione um banco",
-            allowClear: true,
-
-            // Exibir ícone no menu suspenso
-            templateResult: function(state) {
-                // Se for placeholder ou sem valor, retornar o texto normal
-                if (!state.id) {
-                    return state.text;
-                }
-
-                // Recupera o caminho do ícone do atributo data-icon
-                let iconUrl = $(state.element).attr('data-icon');
-                if (!iconUrl) {
-                    return state.text;
-                }
-
-                // Monta um elemento com img + texto
-                let $state = $(`
-                    <span class="d-flex align-items-center">
-                        <img src="${iconUrl}" class="me-2" style="width:24px; height:24px;" />
-                        <span>${state.text}</span>
-                    </span>
-                `);
-
-                return $state;
-            },
-
-            // Exibir ícone na opção selecionada
-            templateSelection: function(state) {
-                if (!state.id) {
-                    return state.text;
-                }
-
-                let iconUrl = $(state.element).attr('data-icon');
-                if (!iconUrl) {
-                    return state.text;
-                }
-
-                let $state = $(`
-                    <span class="d-flex align-items-center">
-                        <img src="${iconUrl}" class="me-2" style="width:24px; height:24px;" />
-                        <span>${state.text}</span>
-                    </span>
-                `);
-                return $state;
-            },
-        });
-    });
-</script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -751,9 +417,9 @@
     });
 
     // Função para abrir drawer de edição
-    function openEditDrawer(id, tipo, nome, bancoId, agencia, conta, accountType, descricao) {
+    function openEditDrawer(id, tipo, nome, bancoId, agencia, conta, accountType, descricao, contaContabilId) {
         console.log('=== Iniciando abertura do drawer ===');
-        console.log('Parâmetros recebidos:', { id, tipo, nome, bancoId, agencia, conta, accountType, descricao });
+        console.log('Parâmetros recebidos:', { id, tipo, nome, bancoId, agencia, conta, accountType, descricao, contaContabilId });
 
         // Verifica se o drawer existe
         const drawerElement = document.getElementById('kt_drawer_edit_entidade');
@@ -854,6 +520,19 @@
             if (descricaoInput) {
                 descricaoInput.value = descricao;
             }
+
+            // Preencher conta contábil
+            const contaContabilSelect = document.getElementById('edit_conta_contabil_id');
+            if (contaContabilSelect && contaContabilId) {
+                // Aguardar um pouco para garantir que Select2 está pronto
+                setTimeout(function() {
+                    if (typeof $ !== 'undefined' && $.fn.select2) {
+                        $(contaContabilSelect).val(contaContabilId).trigger('change');
+                    } else {
+                        contaContabilSelect.value = contaContabilId;
+                    }
+                }, 300);
+            }
         } catch (error) {
             console.error('Erro ao preencher campos:', error);
         }
@@ -952,13 +631,44 @@
             // Aguarda o drawer ser exibido antes de inicializar Select2
             drawer.on('kt.drawer.shown', function() {
                 initSelect2();
+                initContaContabilSelect2();
             });
+
+            // Função para inicializar Select2 da conta contábil
+            const initContaContabilSelect2 = function() {
+                if (typeof $ === 'undefined' || !$.fn.select2) {
+                    return;
+                }
+
+                const contaContabilSelect = $('#edit_conta_contabil_id');
+                if (contaContabilSelect.length === 0) {
+                    return;
+                }
+
+                setTimeout(() => {
+                    if (!contaContabilSelect.hasClass('select2-hidden-accessible')) {
+                        if (typeof KTSelect2 !== 'undefined') {
+                            new KTSelect2(contaContabilSelect[0]);
+                        } else {
+                            contaContabilSelect.select2({
+                                placeholder: "Selecione a conta contábil...",
+                                allowClear: true
+                            });
+                        }
+                    }
+                    // Definir valor se existir (usa a variável do escopo externo)
+                    if (contaContabilId) {
+                        contaContabilSelect.val(contaContabilId).trigger('change');
+                    }
+                }, 200);
+            };
 
             // Fallback: se o evento não for disparado, tenta inicializar após 500ms
             setTimeout(() => {
                 if (tipo === 'banco' && $('#edit_banco-select').length > 0 && !$('#edit_banco-select').hasClass('select2-hidden-accessible')) {
                     initSelect2();
                 }
+                initContaContabilSelect2();
             }, 500);
 
             // Adiciona evento ao botão de cancelar
@@ -1000,8 +710,9 @@
                 const conta = this.getAttribute('data-entidade-conta') || '';
                 const accountType = this.getAttribute('data-entidade-account-type') || '';
                 const descricao = this.getAttribute('data-entidade-descricao') || '';
+                const contaContabilId = this.getAttribute('data-entidade-conta-contabil-id') || '';
 
-                openEditDrawer(id, tipo, nome, bancoId, agencia, conta, accountType, descricao);
+                openEditDrawer(id, tipo, nome, bancoId, agencia, conta, accountType, descricao, contaContabilId);
             });
         });
     });

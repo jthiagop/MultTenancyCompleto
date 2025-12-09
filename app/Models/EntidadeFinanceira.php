@@ -26,6 +26,7 @@ class EntidadeFinanceira extends Model
         'saldo_inicial',
         'saldo_atual',
         'descricao',
+        'conta_contabil_id',
         'company_id',
         'created_by_name',
         'created_by',
@@ -119,5 +120,13 @@ class EntidadeFinanceira extends Model
     public function bank()
     {
         return $this->belongsTo(Bank::class, 'banco_id');
+    }
+
+    /**
+     * Relacionamento com conta contábil (Plano de Contas).
+     */
+    public function contaContabil()
+    {
+        return $this->belongsTo(\App\Models\Contabilide\ChartOfAccount::class, 'conta_contabil_id');
     }
 }

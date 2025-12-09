@@ -25,6 +25,7 @@ class OfxController extends Controller
         try {
             $request->validate([
                 'file' => 'required|file|max:21048',
+                'usar_horarios_missa' => 'nullable|boolean',
             ], [
                 'file.required' => 'Você deve selecionar um arquivo OFX.',
                 'file.max'      => 'O arquivo ultrapassa o tamanho máximo de 20MB.',
@@ -41,26 +42,23 @@ class OfxController extends Controller
                     ->with('warning', 'Este arquivo OFX já foi importado anteriormente.');
             }
 
-            // Processa OFX e extrai dados
-            $ofxData = $this->ofxService->processOfx($file);
-            $totalValue = $ofxData['total_value'] ?? 0;
-            $transactionCount = $ofxData['transaction_count'] ?? 0;
+            // Verifica se o usuário escolheu usar horários de missa
+            $usarHorariosMissas = $request->has('usar_horarios_missa') && $request->input('usar_horarios_missa') == '1';
 
-            // Salva no banco
-            BankStatement::create([
-                'bank_account_id' => Auth::user()->bank_account_id, // Exemplo de associação
-                'file_name' => $file->getClientOriginalName(),
-                'file_hash' => $fileHash,
-                'total_value' => $totalValue,
-                'transaction_count' => $transactionCount,
-                'imported_by' => Auth::id(),
-                'reconciled' => 0,
+            // Processa OFX e extrai dados (passa a escolha do usuário sobre horários de missa)
+            $this->ofxService->processOfx($file, $usarHorariosMissas);
+            
+            // O processOfx já salva as transações individualmente via BankStatement::storeTransaction
+            // Não precisamos criar um registro adicional aqui
 
-            ]);
+            $mensagemSucesso = 'Extrato OFX importado com sucesso!';
+            if ($usarHorariosMissas) {
+                $mensagemSucesso .= ' A conciliação com horários de missa foi processada.';
+            }
 
             return redirect()
                 ->route('banco.list', ['tab' => 'overview'])
-                ->with('success', 'Extrato OFX importado com sucesso!');
+                ->with('success', $mensagemSucesso);
 
         } catch (\Exception $e) {
             return redirect()

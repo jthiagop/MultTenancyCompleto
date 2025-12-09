@@ -19,22 +19,22 @@ class TenantDatabaseSeeder extends Seeder
             ['name' => 'global', 'guard_name' => 'web'],
             ['description' => 'Acesso global à todos os recursos']
         );
-        
+
         Role::firstOrCreate(
             ['name' => 'admin', 'guard_name' => 'web'],
             ['description' => 'Acesso global à maioria dos recursos']
         );
-        
+
         Role::firstOrCreate(
             ['name' => 'admin_user', 'guard_name' => 'web'],
             ['description' => 'Acesso acessa a filial como um administrador local']
         );
-        
+
         Role::firstOrCreate(
             ['name' => 'user', 'guard_name' => 'web'],
             ['description' => 'Eles podem visualizar suas próprias transações, gerar relatórios e acompanhar seu histórico financeiro.']
         );
-        
+
         Role::firstOrCreate(
             ['name' => 'sub_user', 'guard_name' => 'web'],
             ['description' => 'Ideal para pessoas que precisam visualizar dados de conteúdo, mas não precisa fazer quaisquer atualizações']
@@ -42,8 +42,11 @@ class TenantDatabaseSeeder extends Seeder
 
         // Chama o nosso novo seeder de bancos
         $this->call(BankSeeder::class);
-        
+
         // Chama o seeder de formas de pagamento
         $this->call(FormasPagamentoSeeder::class);
+
+        // Chama o seeder de profissões
+        $this->call(ProfissoesSeeder::class);
     }
 }

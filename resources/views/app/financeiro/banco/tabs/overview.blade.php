@@ -38,11 +38,13 @@
                     <!--begin::Statistics-->
                     <div class="d-flex align-items-center">
                         <span class="fs-1 fw-semibold text-gray-400 me-1 mt-n1">R$</span>
-                        <span class="fs-3x fw-bold text-gray-800 me-2 lh-1 ls-n2">8,55</span>
-                        <span class="badge badge-light-success fs-base">
+                        <span class="fs-3x fw-bold text-gray-800 me-2 lh-1 ls-n2" id="saldo-periodo">0,00</span>
+                        <span class="badge badge-light-success fs-base" id="percentual-saldo" style="display: none;">
                             <!--begin::Svg Icon | path: icons/duotune/arrows/arr066.svg-->
                             <i class="bi bi-graph-up-arrow me-2 text-success"></i>
-                            <!--end::Svg Icon-->2.2%</span>
+                            <!--end::Svg Icon-->
+                            <span id="percentual-texto">0%</span>
+                        </span>
                     </div>
                     <!--end::Statistics-->
                     <!--begin::Description-->

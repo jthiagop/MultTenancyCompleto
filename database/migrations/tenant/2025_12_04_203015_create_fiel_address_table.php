@@ -12,12 +12,12 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('fiel_address')) {
-            Schema::create('fiel_address', function (Blueprint $table) {
-                $table->id();
+        Schema::create('fiel_address', function (Blueprint $table) {
+            $table->id();
                 $table->foreignId('fiel_id')->constrained('fieis')->onDelete('cascade');
                 $table->foreignId('address_id')->constrained('adresses')->onDelete('cascade');
                 $table->string('tipo')->nullable()->comment('principal, secundario, etc.');
-                $table->timestamps();
+            $table->timestamps();
                 
                 $table->unique(['fiel_id', 'address_id']);
             });

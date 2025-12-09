@@ -12,14 +12,14 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('fiel_contacts')) {
-            Schema::create('fiel_contacts', function (Blueprint $table) {
-                $table->id();
+        Schema::create('fiel_contacts', function (Blueprint $table) {
+            $table->id();
                 $table->foreignId('fiel_id')->constrained('fieis')->onDelete('cascade');
                 $table->enum('tipo', ['telefone', 'telefone_secundario', 'email'])->default('telefone');
                 $table->string('valor');
                 $table->boolean('principal')->default(false);
-                $table->timestamps();
-            });
+            $table->timestamps();
+        });
         } else {
             // Se a tabela já existe, adicionar colunas que faltam
             Schema::table('fiel_contacts', function (Blueprint $table) {

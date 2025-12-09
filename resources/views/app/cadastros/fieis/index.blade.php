@@ -1,4 +1,9 @@
 <x-tenant-app-layout>
+    {{-- @include('app.layouts.subnav.projects', [
+        'activeTab' => 'projects',
+        'showAccountDropdown' => true,
+        'showToolsDropdown' => true
+    ]) --}}
     <!--begin::Modal - Support Center - Create Ticket-->
     @include('app.components.modals.cadastro_fiel')
     <!--end::Modal - Support Center - Create Ticket-->
@@ -36,7 +41,29 @@
                     </div>
                     <!--end::Page title-->
                     <!--begin::Actions-->
-
+                    <!--begin::Actions-->
+                    <div class="d-flex align-items-center gap-2 gap-lg-3">
+                        <!--begin::Export-->
+                        <button type="button" class="btn btn-sm btn-light-primary me-3" data-bs-toggle="modal"
+                            data-bs-target="#kt_customers_export_modal">
+                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
+                            <span class="svg-icon svg-icon-2">
+                                <i class="fa-solid fa-file-export"></i>
+                            </span>
+                            <!--end::Svg Icon-->Export</button>
+                        <!--end::Export-->
+                        <!--begin::Add user-->
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#kt_modal_new_ticket">
+                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr075.svg-->
+                            <span class="svg-icon svg-icon-2">
+                                <i class="fa-solid fa-user-plus"></i> Novo Fiél
+                            </span>
+                            <!--end::Svg Icon-->
+                        </button>
+                        <!--end::Add user-->
+                    </div>
+                    <!--end::Actions-->
                     <!--end::Actions-->
                 </div>
                 <!--end::Toolbar container-->
@@ -209,8 +236,9 @@
                                             <span>100%</span>
                                         </div>
                                         <div class="h-8px mx-3 w-100 bg-white bg-opacity-50 rounded">
-                                            <div class="bg-white rounded h-8px" role="progressbar" style="width: 100%;"
-                                                aria-valuenow="100" aria-valuemin="0" aria-valuemax="100"></div>
+                                            <div class="bg-white rounded h-8px" role="progressbar"
+                                                style="width: 100%;" aria-valuenow="100" aria-valuemin="0"
+                                                aria-valuemax="100"></div>
                                         </div>
                                     </div>
                                     <!--end::Progress-->
@@ -288,7 +316,7 @@
                                 <!--begin::Toolbar-->
                                 <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
                                     <!--begin::Filter-->
-                                    <button type="button" class="btn btn-light-primary me-3"
+                                    <button type="button" class="btn btn-sm btn-light-primary me-3"
                                         data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                                         <!--begin::Svg Icon | path: icons/duotune/general/gen031.svg-->
                                         <span class="svg-icon svg-icon-2">
@@ -376,10 +404,10 @@
                                             <!--begin::Actions-->
                                             <div class="d-flex justify-content-end">
                                                 <button type="reset"
-                                                    class="btn btn-light btn-active-light-primary me-2"
+                                                    class="btn btn-sm btn-light btn-active-light-primary me-2"
                                                     data-kt-menu-dismiss="true"
                                                     data-kt-customer-table-filter="reset">Reset</button>
-                                                <button type="submit" class="btn btn-primary"
+                                                <button type="submit" class="btn btn-sm btn-primary"
                                                     data-kt-menu-dismiss="true"
                                                     data-kt-customer-table-filter="filter">Apply</button>
                                             </div>
@@ -389,26 +417,6 @@
                                     </div>
                                     <!--end::Menu 1-->
                                     <!--end::Filter-->
-                                    <!--begin::Export-->
-                                    <button type="button" class="btn btn-light-primary me-3" data-bs-toggle="modal"
-                                        data-bs-target="#kt_customers_export_modal">
-                                        <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
-                                        <span class="svg-icon svg-icon-2">
-                                            <i class="fa-solid fa-file-export"></i>
-                                        </span>
-                                        <!--end::Svg Icon-->Export</button>
-                                    <!--end::Export-->
-                                    <!--begin::Add user-->
-                                    <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                        data-bs-target="#kt_modal_new_ticket">
-                                        <!--begin::Svg Icon | path: icons/duotune/arrows/arr075.svg-->
-                                        <span class="svg-icon svg-icon-2">
-                                            <i class="fa-solid fa-user-plus"></i> Novo Fiél
-                                        </span>
-                                        <!--end::Svg Icon-->
-                                    </button>
-                                    <!--end::Add user-->
-
                                 </div>
                                 <!--end::Toolbar-->
                                 <!--begin::Group actions-->
@@ -418,7 +426,7 @@
                                         <span class="me-2"
                                             data-kt-customer-table-select="selected_count"></span>Selected
                                     </div>
-                                    <button type="button" class="btn btn-danger"
+                                    <button type="button" class="btn btn-sm btn-danger"
                                         data-kt-customer-table-select="delete_selected">Delete Selected</button>
                                 </div>
                                 <!--end::Group actions-->
@@ -442,11 +450,14 @@
                                                     value="1" />
                                             </div>
                                         </th>
-                                        <th class="min-w-125px">Nome do Fiél</th>
-                                        <th class="min-w-125px">Email</th>
-                                        <th class="min-w-125px">Empresa</th>
-                                        <th class="min-w-125px">Método de Pagamento</th>
-                                        <th class="min-w-125px">Data de Criação</th>
+                                        <th class="min-w-200px">Nome do Fiél / Endereço</th>
+                                        <th class="min-w-125px">Nascimento</th>
+                                        <th class="min-w-100px">Sexo</th>
+                                        <th class="min-w-125px">CPF</th>
+                                        <th class="min-w-125px">RG</th>
+                                        <th class="min-w-150px">Email</th>
+                                        <th class="min-w-125px">Telefone</th>
+                                        <th class="min-w-100px">Dizimista</th>
                                         <th class="text-end min-w-70px">Ações</th>
                                     </tr>
                                     <!--end::Table row-->

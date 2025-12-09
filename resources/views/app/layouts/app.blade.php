@@ -94,7 +94,12 @@
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
     <script src="{{ url('assets/plugins/global/plugins.bundle.js') }}"></script>
     <script src="{{ url('assets/js/scripts.bundle.js') }}"></script>
-    <script src="{{ url('vendor/mckenziearts/laravel-notify/js/notify.js') }}"></script>
+    <!--begin::Toast Script (converte mensagens de sessão em toasts)-->
+    <script src="{{ url('assets/js/toasts.js') }}"></script>
+    <!--end::Toast Script-->
+    <!--begin::Session Handler Script (trata expiração de sessão)-->
+    <script src="{{ url('assets/js/session-handler.js') }}"></script>
+    <!--end::Session Handler Script-->
 </body>
 <!--end::Body-->
 

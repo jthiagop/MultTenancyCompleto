@@ -12,8 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         if (!Schema::hasTable('fiel_complementary_data')) {
-            Schema::create('fiel_complementary_data', function (Blueprint $table) {
-                $table->id();
+        Schema::create('fiel_complementary_data', function (Blueprint $table) {
+            $table->id();
                 $table->foreignId('fiel_id')->constrained('fieis')->onDelete('cascade');
                 $table->date('data_cadastro')->nullable();
                 $table->string('profissao')->nullable();
@@ -26,7 +26,7 @@ return new class extends Migration
                 $table->string('zona')->nullable();
                 $table->string('secao')->nullable();
                 $table->text('observacoes')->nullable();
-                $table->timestamps();
+            $table->timestamps();
                 
                 $table->unique('fiel_id');
             });

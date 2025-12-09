@@ -37,7 +37,13 @@ class ContabilidadeController extends Controller
             ->get();
 
         // Dados para popular os dropdowns do modal de mapeamento.
-        $lancamentosPadrao = LancamentoPadrao::all();
+        $lancamentosPadrao = LancamentoPadrao::forActiveCompany()->get();
+
+        // Busca lançamentos padrão para a aba de lançamentos padrão
+        $lancamentosPadraoList = LancamentoPadrao::with(['contaDebito', 'contaCredito', 'user'])
+            ->forActiveCompany()
+            ->orderBy('description')
+            ->get();
 
         return view('app.contabilidade.index', compact(
             'rootAccounts',
@@ -45,6 +51,7 @@ class ContabilidadeController extends Controller
             'mapeamentos',
             'activeTab',
             'lancamentosPadrao',
+            'lancamentosPadraoList',
             'contas'
         ));
     }

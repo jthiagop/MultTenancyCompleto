@@ -15101,7 +15101,7 @@ var KTChartsWidget5 = function () {
             },
             colors: ['#3E97FF', '#F1416C', '#50CD89', '#FFC700', '#7239EA', '#50CDCD', '#3F4254'],
             xaxis: {
-                categories: ['Phones', 'Laptops', 'Headsets', 'Games', 'Keyboardsy', 'Monitors', 'Speakers'],
+                categories: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
                 labels: {
                     formatter: function (val) {
                       return val + "K"
