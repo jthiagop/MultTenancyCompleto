@@ -25,9 +25,14 @@ var KTChartsWidgetOverview = function () {
             console.log('[KTChartsWidgetOverview] URL já é relativa, usando como está');
         }
 
+        // Obter valor do select de agrupamento
+        var groupBySelect = document.getElementById('group-by-select');
+        var groupBy = groupBySelect ? groupBySelect.value : 'auto';
+
         var params = new URLSearchParams({
             start_date: startDate,
-            end_date: endDate
+            end_date: endDate,
+            group_by: groupBy
         });
 
         var fullUrl = url + '?' + params.toString();
@@ -406,6 +411,33 @@ var KTChartsWidgetOverview = function () {
         });
     }
 
+    // Init group by select
+    var initGroupBySelect = function() {
+        var groupBySelect = document.getElementById('group-by-select');
+        if (groupBySelect) {
+            // Inicializar Select2 se disponível
+            if (typeof $ !== 'undefined' && $.fn.select2) {
+                $(groupBySelect).select2({
+                    minimumResultsForSearch: Infinity
+                });
+            }
+
+            // Listener para mudança de agrupamento
+            groupBySelect.addEventListener('change', function() {
+                console.log('[KTChartsWidgetOverview] Agrupamento alterado para:', this.value);
+                
+                // Obter datas atuais do daterangepicker
+                var daterangepickerElement = document.querySelector('[data-kt-daterangepicker="true"]');
+                if (daterangepickerElement && $(daterangepickerElement).data('daterangepicker')) {
+                    var picker = $(daterangepickerElement).data('daterangepicker');
+                    var startDate = picker.startDate.format('YYYY-MM-DD');
+                    var endDate = picker.endDate.format('YYYY-MM-DD');
+                    updateChart(startDate, endDate);
+                }
+            });
+        }
+    }
+
     // Init daterangepicker
     var initDaterangepicker = function() {
         console.log('[KTChartsWidgetOverview] Inicializando daterangepicker...');
@@ -601,6 +633,7 @@ var KTChartsWidgetOverview = function () {
     // Public methods
     return {
         init: function () {
+            initGroupBySelect();
             initDaterangepicker();
 
             // Update chart on theme mode change

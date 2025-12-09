@@ -15,6 +15,17 @@
 
                 <!--begin::Toolbar-->
                 <div class="card-toolbar">
+                    <!--begin::Group By Select-->
+                    <div class="me-3">
+                        <select id="group-by-select" class="form-select form-select-sm form-select-solid w-150px"
+                            data-control="select2" data-hide-search="true" data-placeholder="Agrupar por">
+                            <option value="auto">Automático</option>
+                            <option value="day">Diário</option>
+                            <option value="week">Semanal</option>
+                            <option value="month">Mensal</option>
+                        </select>
+                    </div>
+                    <!--end::Group By Select-->
                     <!--begin::Daterangepicker(defined in src/js/layout/app.js)-->
                     <div data-kt-daterangepicker="true" data-kt-daterangepicker-opens="left"
                         data-kt-daterangepicker-range="this month"

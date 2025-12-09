@@ -311,6 +311,7 @@ class BancoController extends Controller
         // Parâmetros de filtro por intervalo de datas
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
+        $groupBy = $request->input('group_by', 'day'); // day, week, month
 
         // Se não fornecido, usa o período padrão (últimos 30 dias)
         if (!$startDate || !$endDate) {
@@ -322,9 +323,40 @@ class BancoController extends Controller
         $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
         $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
 
-        // Construir query base - buscar da tabela movimentacoes filtrando por entidades do tipo banco
-        // Usa data_competencia se disponível, senão usa data
-        $query = Movimentacao::where('company_id', $companyId)
+        // Determinar granularidade automática baseada no período
+        $diasDiferenca = $start->diffInDays($end);
+        if ($groupBy === 'auto') {
+            if ($diasDiferenca <= 31) {
+                $groupBy = 'day';
+            } elseif ($diasDiferenca <= 90) {
+                $groupBy = 'week';
+            } else {
+                $groupBy = 'month';
+            }
+        }
+
+        // Agregação no banco de dados usando groupBy
+        switch ($groupBy) {
+            case 'week':
+                $dateFormat = DB::raw("DATE_FORMAT(COALESCE(data_competencia, data), '%Y-%u') as periodo");
+                $dateGroup = DB::raw("DATE_FORMAT(COALESCE(data_competencia, data), '%Y-%u')");
+                $dateLabel = DB::raw("CONCAT('Sem ', DATE_FORMAT(COALESCE(data_competencia, data), '%u/%Y')) as label");
+                break;
+            case 'month':
+                $dateFormat = DB::raw("DATE_FORMAT(COALESCE(data_competencia, data), '%Y-%m') as periodo");
+                $dateGroup = DB::raw("DATE_FORMAT(COALESCE(data_competencia, data), '%Y-%m')");
+                $dateLabel = DB::raw("DATE_FORMAT(COALESCE(data_competencia, data), '%m/%Y') as label");
+                break;
+            case 'day':
+            default:
+                $dateFormat = DB::raw("DATE(COALESCE(data_competencia, data)) as periodo");
+                $dateGroup = DB::raw("DATE(COALESCE(data_competencia, data))");
+                $dateLabel = DB::raw("DATE_FORMAT(COALESCE(data_competencia, data), '%d/%m') as label");
+                break;
+        }
+
+        // Agregar dados no banco de dados
+        $dadosAgregados = Movimentacao::where('company_id', $companyId)
             ->whereHas('entidade', function ($q) {
                 $q->where('tipo', 'banco');
             })
@@ -335,46 +367,53 @@ class BancoController extends Controller
                            ->whereBetween('data', [$start, $end]);
                   });
             })
-            ->orderByRaw('COALESCE(data_competencia, data)');
+            ->select(
+                $dateFormat,
+                $dateLabel,
+                DB::raw('SUM(CASE WHEN tipo = "entrada" THEN valor ELSE 0 END) as entradas'),
+                DB::raw('SUM(CASE WHEN tipo = "saida" THEN valor ELSE 0 END) as saidas')
+            )
+            ->groupBy($dateGroup)
+            ->orderByRaw('periodo')
+            ->get();
 
-        $movimentacoes = $query->get();
-
-        // Agrupar por dia
-        $dadosPorDia = [];
-        $currentDate = $start->copy();
-
-        while ($currentDate <= $end) {
-            $dataFormatada = $currentDate->format('Y-m-d');
-            $diaFormatado = $currentDate->format('d/m');
-
-            $movimentacoesDia = $movimentacoes->filter(function ($movimentacao) use ($dataFormatada) {
-                // Usa data_competencia se disponível, senão usa data
-                $dataMovimentacao = $movimentacao->data_competencia ?? $movimentacao->data;
-                return Carbon::parse($dataMovimentacao)->format('Y-m-d') === $dataFormatada;
-            });
-
-            $entradas = $movimentacoesDia->where('tipo', 'entrada')->sum('valor');
-            $saidas = $movimentacoesDia->where('tipo', 'saida')->sum('valor');
-
-            $dadosPorDia[] = [
-                'data' => $diaFormatado,
-                'data_completa' => $dataFormatada,
-                'entradas' => (float) $entradas,
-                'saidas' => (float) $saidas
+        // Preparar dados para o gráfico
+        $dadosPorPeriodo = [];
+        foreach ($dadosAgregados as $item) {
+            $dadosPorPeriodo[] = [
+                'data' => $item->label,
+                'data_completa' => $item->periodo,
+                'entradas' => (float) $item->entradas,
+                'saidas' => (float) $item->saidas
             ];
-
-            $currentDate->addDay();
         }
 
-        // Calcular totais do período
-        $totalEntradas = $movimentacoes->where('tipo', 'entrada')->sum('valor');
-        $totalSaidas = $movimentacoes->where('tipo', 'saida')->sum('valor');
+        // Calcular totais do período (agregação direta no banco)
+        $totais = Movimentacao::where('company_id', $companyId)
+            ->whereHas('entidade', function ($q) {
+                $q->where('tipo', 'banco');
+            })
+            ->where(function($q) use ($start, $end) {
+                $q->whereBetween('data_competencia', [$start, $end])
+                  ->orWhere(function($subQ) use ($start, $end) {
+                      $subQ->whereNull('data_competencia')
+                           ->whereBetween('data', [$start, $end]);
+                  });
+            })
+            ->select(
+                DB::raw('SUM(CASE WHEN tipo = "entrada" THEN valor ELSE 0 END) as total_entradas'),
+                DB::raw('SUM(CASE WHEN tipo = "saida" THEN valor ELSE 0 END) as total_saidas')
+            )
+            ->first();
+
+        $totalEntradas = (float) ($totais->total_entradas ?? 0);
+        $totalSaidas = (float) ($totais->total_saidas ?? 0);
         $saldoTotal = $totalEntradas - $totalSaidas;
 
         // Preparar dados para o gráfico (arrays separados)
-        $categorias = array_column($dadosPorDia, 'data');
-        $dadosEntradas = array_column($dadosPorDia, 'entradas');
-        $dadosSaidas = array_column($dadosPorDia, 'saidas');
+        $categorias = array_column($dadosPorPeriodo, 'data');
+        $dadosEntradas = array_column($dadosPorPeriodo, 'entradas');
+        $dadosSaidas = array_column($dadosPorPeriodo, 'saidas');
 
         $response = [
             'categorias' => $categorias,
@@ -387,7 +426,9 @@ class BancoController extends Controller
             ],
             'periodo' => [
                 'start_date' => $startDate,
-                'end_date' => $endDate
+                'end_date' => $endDate,
+                'group_by' => $groupBy,
+                'dias_diferenca' => $diasDiferenca
             ]
         ];
 
