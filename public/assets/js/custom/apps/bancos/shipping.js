@@ -8,21 +8,133 @@ var KTAppEcommerceReportShipping = function () {
 
     // Private functions
     var initDatatable = function () {
-        // Set date data order
-        const tableRows = table.querySelectorAll('tbody tr');
-
-        tableRows.forEach(row => {
-            const dateRow = row.querySelectorAll('td');
-            const realDate = moment(dateRow[1].innerText, "DD-MM-YYYY").format(); // select date from 2nd column in table
-            dateRow[1].setAttribute('data-order', realDate);
-        });
-
-        // Init datatable --- more info on datatables: https://datatables.net/manual/
+        // Obter URL da rota de dados (definida no Blade ou fallback)
+        var dataUrl = typeof bancoTransacoesDataUrl !== 'undefined' 
+            ? bancoTransacoesDataUrl 
+            : '/banco/transacoes-data';
+        
+        // Init datatable com server-side processing
         datatable = $(table).DataTable({
-            "info": true,
-            'order': [0, 'desc'],
-            'pageLength': 50, // Aumentado para exibir mais registros
-            'lengthMenu': [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]], // Opções de paginação
+            "processing": true,
+            "serverSide": true,
+            "ajax": {
+                "url": dataUrl,
+                "type": "GET",
+                "data": function(d) {
+                    // Adicionar filtros personalizados
+                    var daterangepicker = $("#kt_ecommerce_report_shipping_daterangepicker");
+                    if (daterangepicker.length && daterangepicker.data('daterangepicker')) {
+                        var picker = daterangepicker.data('daterangepicker');
+                        d.start_date = picker.startDate.format('YYYY-MM-DD');
+                        d.end_date = picker.endDate.format('YYYY-MM-DD');
+                    }
+                    
+                    // Filtro de tipo (status)
+                    var statusFilter = $('[data-kt-ecommerce-order-filter="status"]');
+                    if (statusFilter.length) {
+                        d.tipo = statusFilter.val() || '';
+                    }
+                },
+                "dataSrc": function(json) {
+                    console.log('[DataTables] Resposta recebida:', json);
+                    
+                    // Verificar se há erro na resposta
+                    if (json.error) {
+                        console.error('[DataTables] Erro na resposta:', json.error);
+                        return [];
+                    }
+                    
+                    // Verificar se a estrutura está correta
+                    if (!json || typeof json !== 'object') {
+                        console.error('[DataTables] Resposta inválida - não é um objeto:', json);
+                        return [];
+                    }
+                    
+                    // Verificar se tem o campo data
+                    if (!json.hasOwnProperty('data')) {
+                        console.error('[DataTables] Resposta inválida - campo "data" não encontrado:', json);
+                        return [];
+                    }
+                    
+                    // Verificar se data é um array
+                    if (!Array.isArray(json.data)) {
+                        console.error('[DataTables] Resposta inválida - "data" não é um array:', typeof json.data, json.data);
+                        return [];
+                    }
+                    
+                    console.log('[DataTables] Dados processados com sucesso, retornando', json.data.length, 'registros');
+                    return json.data;
+                },
+                "error": function(xhr, error, thrown) {
+                    console.error('[DataTables] Erro ao carregar dados:', error);
+                    console.error('[DataTables] Status:', xhr.status);
+                    console.error('[DataTables] Tipo de erro:', thrown);
+                    console.error('[DataTables] Resposta:', xhr.responseText);
+                    
+                    // Tentar parsear a resposta para ver o erro
+                    try {
+                        var response = JSON.parse(xhr.responseText);
+                        console.error('[DataTables] Erro parseado:', response);
+                    } catch (e) {
+                        console.error('[DataTables] Não foi possível parsear a resposta como JSON');
+                    }
+                    
+                    // Forçar parar o indicador de carregamento
+                    // Verificar se a API processing existe (depende da versão do DataTables)
+                    if (datatable && typeof datatable.processing === 'function') {
+                        datatable.processing(false);
+                    } else {
+                         // Fallback para jQuery se disponível
+                         $('#kt_ecommerce_report_shipping_table_processing').hide();
+                    }
+                }
+            },
+            "columns": [
+                { "data": 0, "name": "id", "orderable": true },
+                { "data": 1, "name": "data_competencia", "orderable": true },
+                { "data": 2, "name": "tipo_documento", "orderable": false },
+                { "data": 3, "name": "comprovacao_fiscal", "orderable": false },
+                { "data": 4, "name": "descricao", "orderable": false },
+                { "data": 5, "name": "tipo", "orderable": true },
+                { "data": 6, "name": "valor", "orderable": true },
+                { "data": 7, "name": "origem", "orderable": false },
+                { "data": 8, "name": "anexos", "orderable": false },
+                { "data": 9, "name": "actions", "orderable": false }
+            ],
+            "order": [[0, 'desc']],
+            "pageLength": 50,
+            "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
+            "language": {
+                "sEmptyTable": "Nenhum registro encontrado",
+                "sInfo": "Mostrando de _START_ até _END_ de _TOTAL_ registros",
+                "sInfoEmpty": "Mostrando 0 até 0 de 0 registros",
+                "sInfoFiltered": "(Filtrados de _MAX_ registros)",
+                "sInfoPostFix": "",
+                "sInfoThousands": ".",
+                "sLengthMenu": "_MENU_ resultados por página",
+                "sLoadingRecords": "Carregando...",
+                "sProcessing": "Processando...",
+                "sZeroRecords": "Nenhum registro encontrado",
+                "sSearch": "Pesquisar",
+                "oPaginate": {
+                    "sNext": "Próximo",
+                    "sPrevious": "Anterior",
+                    "sFirst": "Primeiro",
+                    "sLast": "Último"
+                },
+                "oAria": {
+                    "sSortAscending": ": Ordenar colunas de forma ascendente",
+                    "sSortDescending": ": Ordenar colunas de forma descendente"
+                }
+            },
+            "drawCallback": function(settings) {
+                // Reinicializar tooltips após cada desenho
+                if (typeof KTApp !== 'undefined' && KTApp.initTooltips) {
+                    KTApp.initTooltips();
+                } else if (typeof $ !== 'undefined' && $.fn.tooltip) {
+                    $('[data-bs-toggle="tooltip"]').tooltip();
+                }
+            }
         });
     }
 
@@ -79,34 +191,20 @@ var initDaterangepicker = function () {
 
     // Filter by date range
     var filterByDateRange = (start, end) => {
-        $.fn.dataTable.ext.search.push((settings, data, dataIndex) => {
-            var min = start.format("YYYY-MM-DD");
-            var max = end.format("YYYY-MM-DD");
-            var date = moment(data[1], "DD-MM-YYYY").format("YYYY-MM-DD"); // use data from the 2nd column
-
-            if (
-                (min === "" && max === "") ||
-                (min === "" && date <= max) ||
-                (min <= date && max === "") ||
-                (min <= date && date <= max)
-            ) {
-                return true;
-            }
-            return false;
-        });
-        datatable.draw();
-        $.fn.dataTable.ext.search.pop();
+        // Com server-side processing, apenas recarregar os dados
+        if (datatable) {
+            datatable.ajax.reload();
+        }
     }
 
     // Filtra pelo status
     var handleStatusFilter = () => {
         const filtroStatus = document.querySelector('[data-kt-ecommerce-order-filter="status"]');
         $(filtroStatus).on('change', e => {
-            let valor = e.target.value;
-            if (valor === 'all') {
-                valor = ''; // Limpa o filtro para mostrar todos os resultados
+            // Com server-side processing, recarregar os dados
+            if (datatable) {
+                datatable.ajax.reload();
             }
-            datatable.column(5).search(valor).draw(); // A coluna "Tipo" é a 5ª na tabela, então o índice é 4
         });
     };
 
@@ -185,9 +283,17 @@ var initDaterangepicker = function () {
     // Search Datatable --- official docs reference: https://datatables.net/reference/api/search/
     var handleSearchDatatable = () => {
         const filterSearch = document.querySelector('[data-kt-ecommerce-order-filter="search"]');
-        filterSearch.addEventListener('keyup', function (e) {
-            datatable.search(e.target.value).draw();
-        });
+        if (filterSearch && datatable) {
+            // Com server-side processing, o DataTables já gerencia a busca automaticamente
+            // Mas podemos adicionar um debounce para melhorar a performance
+            var searchTimeout;
+            filterSearch.addEventListener('keyup', function (e) {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(function() {
+                    datatable.search(e.target.value).draw();
+                }, 500); // Aguarda 500ms após o usuário parar de digitar
+            });
+        }
     }
 
     // Public methods

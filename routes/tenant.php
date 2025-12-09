@@ -256,6 +256,12 @@ Route::middleware([
             Route::delete('/financeiro/delete', [CaixaController::class, 'deleteEntries'])->name('financeiro.delete');
             Route::get('/financeiro/filter-options', [CaixaController::class, 'getFilterOptions'])->name('financeiro.filter-options');
 
+            Route::get('app/financeiro/banco/list', [BancoController::class, 'list'])->name('banco.list');
+            Route::get('/banco/chart-data', [BancoController::class, 'getChartData'])->name('banco.chart.data');
+            Route::get('/banco/fluxo-chart-data', [BancoController::class, 'getFluxoBancoChartData'])->name('banco.fluxo.chart.data');
+            Route::get('/banco/transacoes-data', [BancoController::class, 'getTransacoesData'])->name('banco.transacoes.data');
+            Route::get('/banco/conciliacoes-pendentes', [BancoController::class, 'getConciliacoesPendentes'])->name('banco.conciliacoes.pendentes');
+            Route::post('/banco/relatorio/gerar', [BancoController::class, 'gerarRelatorio'])->name('banco.relatorio.gerar');
             Route::resource('banco', BancoController::class);
             Route::resource('anexos', AnexoController::class);
             Route::resource('modulosAnexos', ModulosAnexosController::class);
@@ -284,11 +290,7 @@ Route::middleware([
             Route::resource('namePatrimonio', NamePatrimonioController::class);
             Route::post('/validar-num-foro', [NamePatrimonioController::class, 'validarNumForo']);
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
-            Route::get('app/financeiro/banco/list', [BancoController::class, 'list'])->name('banco.list');
-            Route::get('/banco/chart-data', [BancoController::class, 'getChartData'])->name('banco.chart.data');
-            Route::get('/banco/fluxo-chart-data', [BancoController::class, 'getFluxoBancoChartData'])->name('banco.fluxo.chart.data');
-            Route::get('/banco/conciliacoes-pendentes', [BancoController::class, 'getConciliacoesPendentes'])->name('banco.conciliacoes.pendentes');
-            Route::post('/banco/relatorio/gerar', [BancoController::class, 'gerarRelatorio'])->name('banco.relatorio.gerar');
+
             Route::get('/patrimonios/search', [PatrimonioController::class, 'search'])->name('patrimonios.search');
             Route::get('/patrimonios/grafico', [PatrimonioController::class, 'grafico']);
             Route::get('/report/shipping', [ReportController::class, 'shippingReport'])->name('report.shipping');

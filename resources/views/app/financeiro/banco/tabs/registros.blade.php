@@ -43,7 +43,7 @@
                     <!--begin::Export buttons-->
                     <div id="kt_ecommerce_report_shipping_export" class="d-none"></div>
                     <!--end::Export buttons-->
-                    
+
                 </div>
                 <!--end::Card title-->
                 <!--begin::Card toolbar-->
@@ -134,29 +134,22 @@
                     </thead>
                     <!--end::Table head-->
                     <!--begin::Table body-->
-                    <tbody class="fw-semibold text-gray-600" id="transacoes-tbody">
-                        @foreach ($transacoes as $transacao)
-                            @include('app.financeiro.banco.partials.transacao_row', [
-                                'transacao' => $transacao,
-                            ])
-                        @endforeach
+                    <tbody class="fw-semibold text-gray-600">
+                        <!-- Os dados serão carregados via AJAX pelo DataTables -->
                     </tbody>
                     <!--end::Table body-->
                 </table>
                 <!--end::Table-->
-                <!--begin::Load More Button-->
-                <div id="load-more" class="text-center mt-4">
-                    @if ($transacoes->hasMorePages())
-                        <button class="btn btn-primary" onclick="loadMore()">Carregar Mais</button>
-                    @endif
-                </div>
-                <!--end::Load More Button-->
             </div>
             <!--end::Card body-->
         </div>
         <!--end::Products-->
     </div>
 </div>
+
+<script>
+    var bancoTransacoesDataUrl = "{{ route('banco.transacoes.data') }}";
+</script>
 
 @include('app.components.modals.financeiro.lancamento.modal_lacamento')
 
@@ -174,41 +167,3 @@
 
 
 
-@section('scripts')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script>
-        let loading = false;
-
-        function loadMore() {
-            if (loading) return;
-            let nextPage = '{{ $transacoes->nextPageUrl() }}';
-            if (nextPage) {
-                loading = true;
-                $.ajax({
-                    url: nextPage,
-                    type: 'GET',
-                    success: function(response) {
-                        $('#transacoes-tbody').append($(response).find('#transacoes-tbody').html());
-                        if (!$(response).find('#load-more').length || !$(response).find('#load-more button')
-                            .length) {
-                            $('#load-more').hide();
-                        } else {
-                            $('#load-more').html($(response).find('#load-more').html());
-                        }
-                        loading = false;
-                    },
-                    error: function() {
-                        alert('Erro ao carregar mais transações.');
-                        loading = false;
-                    }
-                });
-            }
-        }
-
-        $(window).scroll(function() {
-            if ($(window).scrollTop() + $(window).height() >= $(document).height() - 100) {
-                loadMore();
-            }
-        });
-    </script>
-@endsection
