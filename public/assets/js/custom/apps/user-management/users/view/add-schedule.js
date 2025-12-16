@@ -8,7 +8,7 @@ var KTUsersAddSchedule = function () {
     const modal = new bootstrap.Modal(element);
 
     // Init add schedule modal
-    var initAddSchedule = () => {       
+    var initAddSchedule = () => {
 
         // Init flatpickr -- for more info: https://flatpickr.js.org/
         $("#kt_modal_add_schedule_datepicker").flatpickr({
@@ -61,9 +61,9 @@ var KTUsersAddSchedule = function () {
 								message: 'Event invitees is required'
 							}
 						}
-					},					
+					},
 				},
-				
+
 				plugins: {
 					trigger: new FormValidation.plugins.Trigger(),
 					bootstrap: new FormValidation.plugins.Bootstrap5({
@@ -87,20 +87,20 @@ var KTUsersAddSchedule = function () {
             e.preventDefault();
 
             Swal.fire({
-                text: "Are you sure you would like to cancel?",
+                text: "Tem certeza de que deseja cancelar?",
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, cancel it!",
-                cancelButtonText: "No, return",
+                confirmButtonText: "Sim, cancele!",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form	
-                    modal.hide(); // Hide modal				
+                    form.reset(); // Reset form
+                    modal.hide(); // Hide modal
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
                         text: "Your form has not been cancelled!.",
@@ -121,20 +121,20 @@ var KTUsersAddSchedule = function () {
             e.preventDefault();
 
             Swal.fire({
-                text: "Are you sure you would like to cancel?",
+                text: "Tem certeza de que deseja cancelar?",
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, cancel it!",
-                cancelButtonText: "No, return",
+                confirmButtonText: "Sim, cancele!",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form	
-                    modal.hide(); // Hide modal				
+                    form.reset(); // Reset form
+                    modal.hide(); // Hide modal
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
                         text: "Your form has not been cancelled!.",
@@ -164,7 +164,7 @@ var KTUsersAddSchedule = function () {
 						// Show loading indication
 						submitButton.setAttribute('data-kt-indicator', 'on');
 
-						// Disable button to avoid multiple click 
+						// Disable button to avoid multiple click
 						submitButton.disabled = true;
 
 						// Simulate form submission. For more info check the plugin's official documentation: https://sweetalert2.github.io/
@@ -174,8 +174,8 @@ var KTUsersAddSchedule = function () {
 
 							// Enable button
 							submitButton.disabled = false;
-							
-							// Show popup confirmation 
+
+							// Show popup confirmation
 							Swal.fire({
 								text: "Form has been successfully submitted!",
 								icon: "success",
@@ -191,7 +191,7 @@ var KTUsersAddSchedule = function () {
 							});
 
 							//form.submit(); // Submit form
-						}, 2000);   						
+						}, 2000);
 					} else {
 						// Show popup warning. For more info check the plugin's official documentation: https://sweetalert2.github.io/
 						Swal.fire({

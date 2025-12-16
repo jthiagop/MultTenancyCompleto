@@ -6,9 +6,31 @@ var KTChartsWidgetOverview = function () {
         self: null,
         rendered: false
     };
+    
+    // Estado da paginação
+    var paginationState = {
+        currentOffset: 0,
+        limit: 30,
+        hasMore: false,
+        total: 0,
+        currentData: {
+            categorias: [],
+            entradas: [],
+            saidas: []
+        }
+    };
 
     // Private methods
-    var loadChartData = function(startDate, endDate, callback) {
+    var loadChartData = function(startDate, endDate, callback, resetPagination) {
+        // Se resetPagination for true, reseta o offset
+        if (resetPagination !== false) {
+            paginationState.currentOffset = 0;
+            paginationState.currentData = {
+                categorias: [],
+                entradas: [],
+                saidas: []
+            };
+        }
         console.log('[KTChartsWidgetOverview] Carregando dados do gráfico:', { startDate, endDate });
 
         // Usar a URL definida no Blade ou fallback para a rota padrão
@@ -32,7 +54,9 @@ var KTChartsWidgetOverview = function () {
         var params = new URLSearchParams({
             start_date: startDate,
             end_date: endDate,
-            group_by: groupBy
+            group_by: groupBy,
+            limit: paginationState.limit,
+            offset: paginationState.currentOffset
         });
 
         var fullUrl = url + '?' + params.toString();
@@ -113,13 +137,49 @@ var KTChartsWidgetOverview = function () {
                             entradas: 0,
                             saidas: 0,
                             saldo: 0
+                        },
+                        paginacao: {
+                            has_more: false,
+                            total: 0
                         }
                     });
                 }
                 return;
             }
+            
+            // Atualizar estado da paginação
+            if (data.paginacao) {
+                paginationState.hasMore = data.paginacao.has_more || false;
+                paginationState.total = data.paginacao.total || 0;
+                paginationState.currentOffset = data.paginacao.next_offset || paginationState.currentOffset;
+            }
+            
+            // Se for reset (primeira carga), substituir dados
+            // Se for carregar mais, adicionar aos dados existentes
+            if (resetPagination !== false) {
+                paginationState.currentData = {
+                    categorias: data.categorias || [],
+                    entradas: data.entradas || [],
+                    saidas: data.saidas || []
+                };
+            } else {
+                // Adicionar novos dados aos existentes
+                paginationState.currentData.categorias = (paginationState.currentData.categorias || []).concat(data.categorias || []);
+                paginationState.currentData.entradas = (paginationState.currentData.entradas || []).concat(data.entradas || []);
+                paginationState.currentData.saidas = (paginationState.currentData.saidas || []).concat(data.saidas || []);
+            }
+            
+            // Preparar dados combinados para o callback
+            var combinedData = {
+                categorias: paginationState.currentData.categorias,
+                entradas: paginationState.currentData.entradas,
+                saidas: paginationState.currentData.saidas,
+                totais: data.totais || {},
+                paginacao: data.paginacao || {}
+            };
+            
             if (callback) {
-                callback(data);
+                callback(combinedData);
             }
         })
         .catch(error => {
@@ -408,7 +468,104 @@ var KTChartsWidgetOverview = function () {
 
             // Atualizar gráfico
             initChart(chart, data);
+            
+            // Atualizar botão "Carregar Mais"
+            updateLoadMoreButton(data.paginacao);
         });
+    }
+    
+    // Função para atualizar o botão "Carregar Mais"
+    var updateLoadMoreButton = function(paginacao) {
+        var container = document.getElementById('chart-load-more-container');
+        var button = document.getElementById('chart-load-more-btn');
+        var info = document.getElementById('chart-data-info');
+        
+        if (!container || !button || !info) {
+            return;
+        }
+        
+        if (paginacao && paginacao.has_more) {
+            container.style.display = 'block';
+            button.style.display = 'inline-block';
+            var exibindo = paginationState.currentData.categorias ? paginationState.currentData.categorias.length : 0;
+            var total = paginacao.total;
+            info.textContent = 'Exibindo ' + exibindo + ' de ' + total + ' períodos';
+            button.disabled = false;
+            button.querySelector('.indicator-label').style.display = 'inline';
+            button.querySelector('.indicator-progress').style.display = 'none';
+        } else {
+            if (paginacao && paginacao.total) {
+                container.style.display = 'block';
+                info.textContent = 'Todos os ' + paginacao.total + ' períodos foram carregados';
+                button.style.display = 'none';
+            } else {
+                container.style.display = 'none';
+            }
+        }
+    }
+    
+    // Função para carregar mais dados
+    var loadMoreData = function() {
+        var button = document.getElementById('chart-load-more-btn');
+        if (!button) {
+            return;
+        }
+        
+        // Desabilitar botão e mostrar loading
+        button.disabled = true;
+        button.querySelector('.indicator-label').style.display = 'none';
+        button.querySelector('.indicator-progress').style.display = 'inline';
+        
+        // Obter datas atuais do daterangepicker
+        var daterangepickerElement = document.querySelector('[data-kt-daterangepicker="true"]');
+        if (!daterangepickerElement || !$(daterangepickerElement).data('daterangepicker')) {
+            console.error('[KTChartsWidgetOverview] Daterangepicker não encontrado');
+            button.disabled = false;
+            button.querySelector('.indicator-label').style.display = 'inline';
+            button.querySelector('.indicator-progress').style.display = 'none';
+            return;
+        }
+        
+        var picker = $(daterangepickerElement).data('daterangepicker');
+        var startDate = picker.startDate.format('YYYY-MM-DD');
+        var endDate = picker.endDate.format('YYYY-MM-DD');
+        
+        // Carregar mais dados (não resetar paginação)
+        loadChartData(startDate, endDate, function(data) {
+            if (!data) {
+                console.error('[KTChartsWidgetOverview] Erro ao carregar mais dados');
+                button.disabled = false;
+                button.querySelector('.indicator-label').style.display = 'inline';
+                button.querySelector('.indicator-progress').style.display = 'none';
+                return;
+            }
+            
+            // Se o gráfico já existe, atualizar apenas as séries
+            if (chart.self && chart.rendered) {
+                console.log('[KTChartsWidgetOverview] Atualizando gráfico existente com novos dados');
+                chart.self.updateSeries([
+                    {
+                        name: 'Saídas',
+                        data: data.saidas
+                    },
+                    {
+                        name: 'Entradas',
+                        data: data.entradas
+                    }
+                ]);
+                chart.self.updateOptions({
+                    xaxis: {
+                        categories: data.categorias
+                    }
+                });
+            } else {
+                // Se não existe, criar novo gráfico
+                initChart(chart, data);
+            }
+            
+            // Atualizar botão
+            updateLoadMoreButton(data.paginacao);
+        }, false); // false = não resetar paginação, adicionar aos dados existentes
     }
 
     // Init group by select
@@ -434,6 +591,17 @@ var KTChartsWidgetOverview = function () {
                     var endDate = picker.endDate.format('YYYY-MM-DD');
                     updateChart(startDate, endDate);
                 }
+            });
+        }
+    }
+    
+    // Init load more button
+    var initLoadMoreButton = function() {
+        var button = document.getElementById('chart-load-more-btn');
+        if (button) {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                loadMoreData();
             });
         }
     }
@@ -634,6 +802,7 @@ var KTChartsWidgetOverview = function () {
     return {
         init: function () {
             initGroupBySelect();
+            initLoadMoreButton();
             initDaterangepicker();
 
             // Update chart on theme mode change

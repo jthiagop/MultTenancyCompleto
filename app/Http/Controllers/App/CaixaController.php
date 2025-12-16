@@ -133,9 +133,20 @@ class CaixaController extends Controller
 
         // Entidades do tipo 'Banco' da empresa ativa (parece repetido, mas corrigindo a lógica)
         $entidadesBanco = EntidadeFinanceira::where('company_id', $activeCompanyId)->where('tipo', 'banco')->get();
-        // Somando entradas e saídas do Caixa da empresa ativa
-        $somaEntradas = TransacaoFinanceira::where('company_id', $activeCompanyId)->where('origem', 'Caixa')->where('tipo', 'entrada')->sum('valor');
-        $somaSaidas = TransacaoFinanceira::where('company_id', $activeCompanyId)->where('origem', 'Caixa')->where('tipo', 'saida')->sum('valor');
+        // Somando entradas e saídas do Caixa da empresa ativa - Filtrando por entidade financeira do tipo 'caixa'
+        $somaEntradas = TransacaoFinanceira::join('entidades_financeiras', 'transacoes_financeiras.entidade_id', '=', 'entidades_financeiras.id')
+            ->where('transacoes_financeiras.company_id', $activeCompanyId)
+            ->where('entidades_financeiras.tipo', 'caixa')
+            ->where('transacoes_financeiras.tipo', 'entrada')
+            ->whereNull('transacoes_financeiras.deleted_at')
+            ->sum('transacoes_financeiras.valor');
+
+        $somaSaidas = TransacaoFinanceira::join('entidades_financeiras', 'transacoes_financeiras.entidade_id', '=', 'entidades_financeiras.id')
+            ->where('transacoes_financeiras.company_id', $activeCompanyId)
+            ->where('entidades_financeiras.tipo', 'caixa')
+            ->where('transacoes_financeiras.tipo', 'saida')
+            ->whereNull('transacoes_financeiras.deleted_at')
+            ->sum('transacoes_financeiras.valor');
 
 
 
@@ -144,9 +155,15 @@ class CaixaController extends Controller
             ->where('tipo', 'caixa') // Mantendo o filtro por 'caixa' que você tinha
             ->sum('saldo_atual');
 
-        // Transações de Caixa da empresa ativa (sua consulta já estava quase correta, só precisava usar a variável certa)
-        $transacoes = TransacaoFinanceira::where('origem', 'Caixa')
-            ->where('company_id', $activeCompanyId) // Usando a variável correta
+        // Transações de Caixa da empresa ativa - Filtrando por entidade financeira do tipo 'caixa'
+        $transacoes = TransacaoFinanceira::with(['entidadeFinanceira', 'lancamentoPadrao', 'modulos_anexos'])
+            ->join('entidades_financeiras', 'transacoes_financeiras.entidade_id', '=', 'entidades_financeiras.id')
+            ->where('transacoes_financeiras.company_id', $activeCompanyId)
+            ->where('entidades_financeiras.tipo', 'caixa')
+            ->whereNull('transacoes_financeiras.deleted_at')
+            ->select('transacoes_financeiras.*')
+            ->orderBy('transacoes_financeiras.data_competencia', 'DESC')
+            ->orderBy('transacoes_financeiras.id', 'DESC')
             ->get();
 
 
@@ -169,6 +186,117 @@ class CaixaController extends Controller
             'entidadesBanco' => $entidadesBanco,
             'activeTab' => $activeTab,
             'centrosAtivos' => $centrosAtivos,
+        ]);
+    }
+
+    /**
+     * Buscar saldos mensais de caixa para o relatório
+     */
+    public function getSaldosMensais(Request $request)
+    {
+        $activeCompanyId = session('active_company_id');
+
+        if (!$activeCompanyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa selecionada.'
+            ], 400);
+        }
+
+        $ano = $request->input('ano', date('Y'));
+        $codigo = $request->input('codigo', '');
+        $centroCustoId = $request->input('centro_custo_id', '');
+
+        // Buscar movimentações do ano
+        $queryAno = Movimentacao::join('entidades_financeiras', 'movimentacoes.entidade_id', '=', 'entidades_financeiras.id')
+            ->where('entidades_financeiras.company_id', $activeCompanyId)
+            ->where('entidades_financeiras.tipo', 'caixa')
+            ->whereNull('movimentacoes.deleted_at')
+            ->whereYear('movimentacoes.data', $ano);
+
+        // Filtro por código (ID da entidade financeira)
+        if ($codigo) {
+            $queryAno->where('entidades_financeiras.id', $codigo);
+        }
+
+        // Filtro por centro de custo - usar subquery para evitar duplicatas
+        if ($centroCustoId) {
+            $queryAno->whereExists(function($query) use ($centroCustoId) {
+                $query->select(DB::raw(1))
+                    ->from('transacoes_financeiras')
+                    ->whereColumn('transacoes_financeiras.movimentacao_id', 'movimentacoes.id')
+                    ->where('transacoes_financeiras.cost_center_id', $centroCustoId)
+                    ->whereNull('transacoes_financeiras.deleted_at');
+            });
+        }
+
+        $movimentacoesAno = $queryAno->select(
+                DB::raw('MONTH(movimentacoes.data) as mes'),
+                DB::raw('SUM(CASE WHEN movimentacoes.tipo = "entrada" THEN movimentacoes.valor ELSE 0 END) as entradas'),
+                DB::raw('SUM(CASE WHEN movimentacoes.tipo = "saida" THEN movimentacoes.valor ELSE 0 END) as saidas')
+            )
+            ->groupBy('mes')
+            ->orderBy('mes')
+            ->get();
+
+        // Buscar saldo anterior (saldo acumulado até o início do ano)
+        $saldoAnteriorQuery = Movimentacao::join('entidades_financeiras', 'movimentacoes.entidade_id', '=', 'entidades_financeiras.id')
+            ->where('entidades_financeiras.company_id', $activeCompanyId)
+            ->where('entidades_financeiras.tipo', 'caixa')
+            ->whereNull('movimentacoes.deleted_at')
+            ->whereRaw('YEAR(movimentacoes.data) < ?', [$ano]);
+
+        // Filtro por código
+        if ($codigo) {
+            $saldoAnteriorQuery->where('entidades_financeiras.id', $codigo);
+        }
+
+        // Filtro por centro de custo - usar subquery para evitar duplicatas
+        if ($centroCustoId) {
+            $saldoAnteriorQuery->whereExists(function($query) use ($centroCustoId) {
+                $query->select(DB::raw(1))
+                    ->from('transacoes_financeiras')
+                    ->whereColumn('transacoes_financeiras.movimentacao_id', 'movimentacoes.id')
+                    ->where('transacoes_financeiras.cost_center_id', $centroCustoId)
+                    ->whereNull('transacoes_financeiras.deleted_at');
+            });
+        }
+
+        $saldoAnterior = $saldoAnteriorQuery->select(
+            DB::raw('COALESCE(SUM(CASE
+                WHEN movimentacoes.tipo = "entrada" THEN movimentacoes.valor
+                WHEN movimentacoes.tipo = "saida" THEN -movimentacoes.valor
+                ELSE 0
+            END), 0) as saldo')
+        )->value('saldo') ?? 0;
+
+        // Organizar dados por mês
+        $dados = [];
+        $saldoAnteriorMes = (float) $saldoAnterior; // Saldo anterior do primeiro mês
+
+        for ($mes = 1; $mes <= 12; $mes++) {
+            $movimentacao = $movimentacoesAno->firstWhere('mes', $mes);
+
+            $entradas = $movimentacao ? (float) $movimentacao->entradas : 0;
+            $saidas = $movimentacao ? (float) $movimentacao->saidas : 0;
+
+            // Saldo atual é o saldo anterior + entradas - saídas
+            $saldoAtual = $saldoAnteriorMes + $entradas - $saidas;
+
+            $dados[$mes] = [
+                'saldo_anterior' => round($saldoAnteriorMes, 2),
+                'entradas' => round($entradas, 2),
+                'saidas' => round($saidas, 2),
+                'saldo_atual' => round($saldoAtual, 2)
+            ];
+
+            // O saldo anterior do próximo mês é o saldo atual deste mês
+            $saldoAnteriorMes = $saldoAtual;
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $dados
         ]);
     }
 
@@ -269,22 +397,22 @@ class CaixaController extends Controller
         $contaDebitoId = null;
         $contaCreditoId = null;
         $lancamentoPadraoId = null;
-        
+
         if (isset($validatedData['lancamento_padrao_id']) && $validatedData['lancamento_padrao_id']) {
             $lancamentoPadraoId = $validatedData['lancamento_padrao_id'];
             $lancamentoPadrao = LancamentoPadrao::find($lancamentoPadraoId);
-            
+
             if ($lancamentoPadrao) {
                 // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
                 $lancamentoPadrao->refresh();
-                
+
                 // Se não foram enviados no request, busca do lançamento padrão
                 if (!isset($validatedData['conta_debito_id']) && $lancamentoPadrao->conta_debito_id) {
                     $contaDebitoId = $lancamentoPadrao->conta_debito_id;
                 } elseif (isset($validatedData['conta_debito_id'])) {
                     $contaDebitoId = $validatedData['conta_debito_id'];
                 }
-                
+
                 if (!isset($validatedData['conta_credito_id']) && $lancamentoPadrao->conta_credito_id) {
                     $contaCreditoId = $lancamentoPadrao->conta_credito_id;
                 } elseif (isset($validatedData['conta_credito_id'])) {
@@ -292,7 +420,7 @@ class CaixaController extends Controller
                 }
             }
         }
-        
+
         // Cria o lançamento na tabela 'movimentacoes'
         $movimentacao = Movimentacao::create([
             'entidade_id' => $validatedData['entidade_id'],
@@ -327,7 +455,7 @@ class CaixaController extends Controller
 
             // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
             $lancamentoPadrao->refresh();
-            
+
             // Cria outra movimentação para "Deposito Bancário"
             $movimentacaoBanco = Movimentacao::create([
                 'entidade_id' => $validatedData['entidade_banco_id'],
@@ -519,21 +647,21 @@ class CaixaController extends Controller
             // Busca o lançamento padrão para obter conta_debito_id e conta_credito_id
             $contaDebitoId = null;
             $contaCreditoId = null;
-            
+
             if (isset($validatedData['lancamento_padrao_id']) && $validatedData['lancamento_padrao_id']) {
                 $lancamentoPadrao = LancamentoPadrao::find($validatedData['lancamento_padrao_id']);
-                
+
                 if ($lancamentoPadrao) {
                     // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
                     $lancamentoPadrao->refresh();
-                    
+
                     // Se não foram enviados no request, busca do lançamento padrão
                     if (!isset($validatedData['conta_debito_id']) && $lancamentoPadrao->conta_debito_id) {
                         $contaDebitoId = $lancamentoPadrao->conta_debito_id;
                     } elseif (isset($validatedData['conta_debito_id'])) {
                         $contaDebitoId = $validatedData['conta_debito_id'];
                     }
-                    
+
                     if (!isset($validatedData['conta_credito_id']) && $lancamentoPadrao->conta_credito_id) {
                         $contaCreditoId = $lancamentoPadrao->conta_credito_id;
                     } elseif (isset($validatedData['conta_credito_id'])) {
@@ -541,7 +669,7 @@ class CaixaController extends Controller
                     }
                 }
             }
-            
+
             // 3) Atualiza a movimentação (agora ela aponta para a nova entidade e novo valor)
             $movimentacao->update([
                 'entidade_id' => $validatedData['entidade_id'],

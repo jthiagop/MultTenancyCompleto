@@ -115,13 +115,23 @@
                                 </span>
                                 <!--end::Svg Icon-->Exportar</button>
                             <!--end::Export-->
+                            <!--begin::Import Bulk-->
+                            <button type="button" class="btn btn-sm btn-light-primary me-3" data-bs-toggle="modal" data-bs-target="#kt_modal_import_bulk">
+                                <span class="svg-icon svg-icon-2">
+                                    <i class="bi bi-cloud-arrow-up fs-3"></i>
+                                </span>
+                                Adicionar em Massa
+                            </button>
+                            <!--end::Import Bulk-->
                             <!--begin::Add lancamento padrao-->
                             <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_lancamento_padrao">
                                 <!--begin::Svg Icon | path: icons/duotune/arrows/arr075.svg-->
                                 <span class="svg-icon svg-icon-2">
                                     <i class="bi bi-plus-circle fs-3"></i>
                                 </span>
-                                <!--end::Svg Icon-->Lançamento Padrão</a>
+                                <!--end::Svg Icon-->
+                                <span class="text-nowrap">Lançamento Padrão</span>
+                            </button>
                             <!--end::Add lancamento padrao-->
                         </div>
                         <!--end::Toolbar-->
@@ -281,7 +291,7 @@
                                     <button type="submit" id="kt_subscriptions_export_submit"
                                         class="btn btn-primary">
                                         <span class="indicator-label">Submit</span>
-                                        <span class="indicator-progress">Please wait...
+                                        <span class="indicator-progress">Por favor, aguarde...
                                             <span
                                                 class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                                     </button>
@@ -297,6 +307,143 @@
                 <!--end::Modal dialog-->
             </div>
             <!--end::Modal - New Card-->
+
+            <!--begin::Modal - Import Bulk-->
+            <div class="modal fade" id="kt_modal_import_bulk" tabindex="-1" aria-hidden="true">
+                <!--begin::Modal dialog-->
+                <div class="modal-dialog modal-dialog-centered mw-800px">
+                    <!--begin::Modal content-->
+                    <div class="modal-content">
+                        <!--begin::Modal header-->
+                        <div class="modal-header pb-0 border-0">
+                            <!--begin::Modal title-->
+                            <h2 class="fw-bold">Adicionar em Massa</h2>
+                            <!--end::Modal title-->
+                            <!--begin::Close-->
+                            <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
+                                <span class="svg-icon svg-icon-1">
+                                    <i class="bi bi-x-lg fs-3"></i>
+                                </span>
+                            </div>
+                            <!--end::Close-->
+                        </div>
+                        <!--end::Modal header-->
+                        <!--begin::Modal body-->
+                        <div class="modal-body scroll-y mx-5 mx-xl-10 pt-0 pb-10">
+                            <!--begin::Nav tabs-->
+                            <ul class="nav nav-tabs nav-line-tabs mb-5 fs-6 border-bottom-0" role="tablist">
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link active text-danger fw-bold" data-bs-toggle="tab" href="#kt_tab_download_model" role="tab">
+                                        Baixar modelo
+                                    </a>
+                                </li>
+                                <li class="nav-item" role="presentation">
+                                    <a class="nav-link text-danger fw-bold" data-bs-toggle="tab" href="#kt_tab_upload_file" role="tab">
+                                        Enviar arquivo
+                                    </a>
+                                </li>
+                            </ul>
+                            <!--end::Nav tabs-->
+
+                            <!--begin::Tab content-->
+                            <div class="tab-content" id="myTabContent">
+                                <!--begin::Tab pane - Download Model-->
+                                <div class="tab-pane fade show active" id="kt_tab_download_model" role="tabpanel">
+                                    <!--begin::Content-->
+                                    <div class="py-5">
+                                        <div class="mb-5">
+                                            <h5 class="fw-bold mb-3">Formulário Básico</h5>
+                                            <p class="text-gray-600 fs-6">O formulário básico contém os campos obrigatórios para anunciar seu produto. O formulário pode ser usado para qualquer categoria.</p>
+                                        </div>
+
+                                        <!--begin::Actions-->
+                                        <div class="d-flex justify-content-start">
+                                            <button type="button" class="btn btn-danger fw-bold px-6">
+                                                Baixar
+                                            </button>
+                                        </div>
+                                        <!--end::Actions-->
+                                    </div>
+                                    <!--end::Content-->
+                                </div>
+                                <!--end::Tab pane-->
+
+                                <!--begin::Tab pane - Upload File-->
+                                <div class="tab-pane fade" id="kt_tab_upload_file" role="tabpanel">
+                                    <!--begin::Content-->
+                                    <div class="py-5">
+                                        <p class="text-gray-600 fs-6 mb-8">Envie o modelo completo e você pode verificar os novos produtos criados na aba Não Publicados quando o envio for completado.</p>
+
+                                        <!--begin::Upload area-->
+                                        <div class="border border-dashed border-gray-300 rounded text-center p-10 mb-10" style="background-color: #f9f9f9;">
+                                            <!--begin::Icon-->
+                                            <div class="mb-5">
+                                                <i class="bi bi-cloud-arrow-up fs-3x text-gray-400"></i>
+                                            </div>
+                                            <!--end::Icon-->
+
+                                            <!--begin::Info-->
+                                            <div class="mb-5">
+                                                <p class="text-gray-700 fw-semibold fs-6 mb-1">Selecione o arquivo ou insira seus arquivos do Excel aqui</p>
+                                                <p class="text-gray-500 fs-7">Tamanho máx.: 10.0 MB apenas xlsx</p>
+                                            </div>
+                                            <!--end::Info-->
+
+                                            <!--begin::Button-->
+                                            <button type="button" class="btn btn-danger fw-bold">Selecionar arquivo</button>
+                                            <input type="file" id="kt_import_file_input" class="d-none" accept=".xlsx,.xls">
+                                            <!--end::Button-->
+                                        </div>
+                                        <!--end::Upload area-->
+
+                                        <!--begin::Records section-->
+                                        <div class="mb-5">
+                                            <h5 class="fw-bold mb-3">Registros</h5>
+                                            <p class="text-gray-500 fs-7 mb-5">A Shopee manterá seus arquivos apenas nos últimos 30 dias.</p>
+                                        </div>
+
+                                        <!--begin::Table-->
+                                        <div class="table-responsive">
+                                            <table class="table table-row-bordered align-middle gy-4">
+                                                <thead>
+                                                    <tr class="fw-bold text-gray-700 bg-light">
+                                                        <th class="ps-4">Data</th>
+                                                        <th>Nome do arquivo</th>
+                                                        <th>Produtos</th>
+                                                        <th>Status</th>
+                                                        <th class="text-end pe-4">Ação</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody id="kt_import_records_tbody">
+                                                    <tr>
+                                                        <td colspan="5" class="text-center py-10">
+                                                            <!--begin::Empty state-->
+                                                            <div class="d-flex flex-column align-items-center">
+                                                                <i class="bi bi-file-earmark-text fs-3x text-gray-400 mb-3"></i>
+                                                                <span class="text-gray-500 fs-6">Ainda não há histórico de upload</span>
+                                                            </div>
+                                                            <!--end::Empty state-->
+                                                        </td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <!--end::Table-->
+                                    </div>
+                                    <!--end::Content-->
+                                </div>
+                                <!--end::Tab pane-->
+                            </div>
+                            <!--end::Tab content-->
+                        </div>
+                        <!--end::Modal body-->
+                    </div>
+                    <!--end::Modal content-->
+                </div>
+                <!--end::Modal dialog-->
+            </div>
+            <!--end::Modal - Import Bulk-->
+
             <!--end::Modals-->
 </div>
 <!--end::Card-->

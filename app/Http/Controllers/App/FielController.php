@@ -39,7 +39,7 @@ class FielController extends Controller
                 })
                 ->addColumn('nome_completo', function ($row) {
                     $avatar = $row->avatar ? route('file', ['path' => $row->avatar]) : '/assets/media/png/perfil.svg';
-                    
+
                     // Buscar endereço principal
                     $enderecoPrincipal = $row->addresses->where('pivot.tipo', 'principal')->first();
                     $enderecoTexto = '';
@@ -52,7 +52,7 @@ class FielController extends Controller
                         ]);
                         $enderecoTexto = !empty($enderecoPartes) ? implode(', ', $enderecoPartes) : '';
                     }
-                    
+
                     return '<div class="d-flex align-items-center">
                                 <div class="symbol symbol-circle symbol-35px overflow-hidden me-3">
                                     <div class="symbol-label">
@@ -152,6 +152,34 @@ class FielController extends Controller
             'porcentagemDizimistas',
             'profissoes'
         ));
+    }
+
+    /**
+     * API specific index for Mobile App
+     */
+    public function apiIndex(Request $request)
+    {
+        $user = auth()->user();
+        $companyId = $user->company_id;
+
+        if (!$companyId && method_exists($user, 'companies')) {
+             $firstCompany = $user->companies()->first();
+             if ($firstCompany) {
+                 $companyId = $firstCompany->id;
+             }
+        }
+
+        if (!$companyId) {
+             return response()->json(['data' => []]);
+        }
+
+        $fieis = Fiel::with(['contacts', 'addresses', 'tithe'])
+            ->where('company_id', $companyId)
+            ->select('fieis.*')
+            ->orderBy('nome_completo')
+            ->paginate(20);
+
+        return response()->json($fieis);
     }
 
     /**
@@ -345,7 +373,7 @@ class FielController extends Controller
     public function edit(Request $request, $id)
     {
         $companyId = session('active_company_id');
-        
+
         $fiel = Fiel::with([
             'contacts',
             'addresses',
@@ -410,7 +438,7 @@ class FielController extends Controller
     {
         try {
             $companyId = session('active_company_id');
-            
+
             // Buscar o fiel e verificar se pertence à empresa
             $fiel = Fiel::where('company_id', $companyId)->findOrFail($id);
 
@@ -529,7 +557,7 @@ class FielController extends Controller
             if ($request->cep || $request->endereco || $request->bairro || $request->cidade || $request->estado) {
                 // Remove endereços antigos
                 $fiel->addresses()->detach();
-                
+
                 $address = Address::firstOrCreate(
                     [
                         'cep' => $request->input('cep'),
@@ -607,7 +635,7 @@ class FielController extends Controller
         $fieisComIdade = Fiel::where('company_id', $companyId)
             ->whereNotNull('data_nascimento')
             ->get();
-        
+
         $faixasEtarias = [
             '0-17' => 0,
             '18-29' => 0,
@@ -616,7 +644,7 @@ class FielController extends Controller
             '60-74' => 0,
             '75+' => 0
         ];
-        
+
         foreach ($fieisComIdade as $fiel) {
             $idade = \Carbon\Carbon::parse($fiel->data_nascimento)->age;
             if ($idade < 18) {
@@ -633,7 +661,7 @@ class FielController extends Controller
                 $faixasEtarias['75+']++;
             }
         }
-        
+
         // Remover faixas com zero
         $faixasEtarias = array_filter($faixasEtarias, function($value) {
             return $value > 0;
@@ -682,5 +710,187 @@ class FielController extends Controller
                 ]
             ]
         ], 200, [], JSON_UNESCAPED_UNICODE);
+    }
+
+    /**
+     * Gera relatório PDF de fiéis com filtros
+     */
+    public function relatorioPdf(Request $request)
+    {
+        $companyId = session('active_company_id');
+        $company = \App\Models\Company::with('addresses')->find($companyId);
+
+        // Query base
+        $query = Fiel::with(['company', 'contacts', 'addresses', 'tithe', 'complementaryData'])
+            ->where('company_id', $companyId);
+
+        $tituloRelatorio = 'Relatório de Fiéis';
+        $subtitulos = [];
+
+        // Filtro 1: Tipo de Registro (por enquanto só fiéis)
+        $tipoRegistro = $request->input('tipo_registro', 'fieis');
+
+        // Filtro 2: Dizimista
+        $filtroDizimista = $request->input('filtro_dizimista', 'todos');
+        switch ($filtroDizimista) {
+            case 'sim':
+                $query->whereHas('tithe', function ($q) {
+                    $q->where('dizimista', true);
+                });
+                $subtitulos[] = 'Dizimistas';
+                break;
+            case 'nao':
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('tithe')
+                      ->orWhereHas('tithe', function ($subQ) {
+                          $subQ->where('dizimista', false);
+                      });
+                });
+                $subtitulos[] = 'Não Dizimistas';
+                break;
+        }
+
+        // Filtro 3: Filtros por Data/Idade
+        $filtroDataTipo = $request->input('filtro_data_tipo');
+
+        switch ($filtroDataTipo) {
+            case 'aniversariantes':
+                $periodoAniversario = $request->input('periodo_aniversario');
+                if ($periodoAniversario) {
+                    // Período vem no formato "DD/MM até DD/MM"
+                    $datas = explode(' até ', $periodoAniversario);
+                    if (count($datas) == 2) {
+                        $dataInicio = trim($datas[0]);
+                        $dataFim = trim($datas[1]);
+
+                        // Extrair dia e mês
+                        list($diaInicio, $mesInicio) = explode('/', $dataInicio);
+                        list($diaFim, $mesFim) = explode('/', $dataFim);
+
+                        // Se for o mesmo mês
+                        if ($mesInicio == $mesFim) {
+                            $query->whereMonth('data_nascimento', $mesInicio)
+                                  ->whereDay('data_nascimento', '>=', $diaInicio)
+                                  ->whereDay('data_nascimento', '<=', $diaFim);
+                        } else {
+                            // Se cruzar meses
+                            $query->where(function ($q) use ($diaInicio, $mesInicio, $diaFim, $mesFim) {
+                                $q->where(function ($subQ) use ($diaInicio, $mesInicio) {
+                                    $subQ->whereMonth('data_nascimento', $mesInicio)
+                                         ->whereDay('data_nascimento', '>=', $diaInicio);
+                                })->orWhere(function ($subQ) use ($diaFim, $mesFim) {
+                                    $subQ->whereMonth('data_nascimento', $mesFim)
+                                         ->whereDay('data_nascimento', '<=', $diaFim);
+                                });
+                            });
+                        }
+
+                        $subtitulos[] = "Aniversariantes de {$dataInicio} até {$dataFim}";
+                    }
+                }
+                break;
+
+            case 'idade':
+                $idadeMinima = $request->input('idade_minima');
+                $idadeMaxima = $request->input('idade_maxima');
+
+                $hoje = \Carbon\Carbon::now();
+
+                if ($idadeMaxima) {
+                    $dataNascimentoMin = $hoje->copy()->subYears($idadeMaxima)->subDay();
+                    $query->where('data_nascimento', '>=', $dataNascimentoMin);
+                }
+
+                if ($idadeMinima) {
+                    $dataNascimentoMax = $hoje->copy()->subYears($idadeMinima);
+                    $query->where('data_nascimento', '<=', $dataNascimentoMax);
+                }
+
+                if ($idadeMinima && $idadeMaxima) {
+                    $subtitulos[] = "Idade entre {$idadeMinima} e {$idadeMaxima} anos";
+                } elseif ($idadeMinima) {
+                    $subtitulos[] = "Idade mínima: {$idadeMinima} anos";
+                } elseif ($idadeMaxima) {
+                    $subtitulos[] = "Idade máxima: {$idadeMaxima} anos";
+                }
+                break;
+        }
+
+        // Filtros complementares
+        $sexo = $request->input('sexo');
+        if ($sexo) {
+            $query->where('sexo', $sexo);
+            $sexoTexto = $sexo === 'M' ? 'Masculino' : 'Feminino';
+            $subtitulos[] = "Sexo: {$sexoTexto}";
+        }
+
+        $estadoCivil = $request->input('estado_civil');
+        if ($estadoCivil) {
+            $query->whereHas('complementaryData', function ($q) use ($estadoCivil) {
+                $q->where('estado_civil', $estadoCivil);
+            });
+            $subtitulos[] = "Estado Civil: {$estadoCivil}";
+        }
+
+        // Montar título final
+        if (!empty($subtitulos)) {
+            $tituloRelatorio .= ' - ' . implode(' | ', $subtitulos);
+        }
+
+        // Aplicar ordenação
+        $ordenarPor = $request->input('ordenar_por', 'nome');
+        switch ($ordenarPor) {
+            case 'nome':
+                $query->orderBy('nome_completo');
+                break;
+            case 'data_nascimento':
+                $query->orderBy('data_nascimento');
+                break;
+            case 'cpf':
+                $query->orderBy('cpf');
+                break;
+        }
+
+        $fieis = $query->get();
+
+        // Escolher o layout do relatório
+        $layoutRelatorio = $request->input('layout_relatorio', 'resumido');
+        $viewName = $layoutRelatorio === 'detalhado'
+            ? 'app.relatorios.fieis.fieis_detalhado_pdf'
+            : 'app.relatorios.fieis.fieis_pdf';
+
+        // Gerar PDF usando Browsershot
+        $html = view($viewName, compact(
+            'fieis',
+            'company',
+            'tituloRelatorio'
+        ))->render();
+
+        try {
+            $browsershot = \Spatie\Browsershot\Browsershot::html($html)
+                ->format('A4')
+                ->showBackground()
+                ->margins(8, 8, 10, 8)
+                ->waitUntilNetworkIdle();
+
+            // Aplicar orientação baseada no layout
+            if ($layoutRelatorio === 'detalhado') {
+                $browsershot->portrait();
+            } else {
+                $browsershot->landscape();
+            }
+
+            $pdf = $browsershot->pdf();
+
+            return response($pdf, 200, [
+                'Content-Type' => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="relatorio-fieis.pdf"',
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao gerar PDF: ' . $e->getMessage()
+            ], 500);
+        }
     }
 }

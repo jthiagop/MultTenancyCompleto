@@ -24,7 +24,7 @@ var KTCustomerViewPaymentMethod = function () {
                     showCancelButton: true,
                     buttonsStyling: false,
                     confirmButtonText: "Yes, delete it!",
-                    cancelButtonText: "No, return",
+                    cancelButtonText: "Não, retorne",
                     customClass: {
                         confirmButton: "btn btn-primary",
                         cancelButton: "btn btn-active-light"
@@ -32,7 +32,7 @@ var KTCustomerViewPaymentMethod = function () {
                 }).then(function (result) {
                     if (result.value) {
                         row.remove();
-                        modal.hide(); // Hide modal				
+                        modal.hide(); // Hide modal
                     } else if (result.dismiss === 'cancel') {
                         Swal.fire({
                             text: "Your card was not deleted!.",
@@ -64,7 +64,7 @@ var KTCustomerViewPaymentMethod = function () {
                 showCancelButton: true,
                 buttonsStyling: false,
                 confirmButtonText: "Yes, set it!",
-                cancelButtonText: "No, return",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"

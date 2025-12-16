@@ -97,7 +97,7 @@
                                             <!--end::Menu item-->
                                             <!--begin::Menu item-->
                                             <div class="menu-item px-3">
-                                                <a href="#" class="menu-link flex-stack px-3">Create Payment
+                                                <a href="#" class="menu-link flex-stack px-3">Gerar ID para APP
                                                     <i class="fas fa-exclamation-circle ms-2 fs-7"
                                                         data-bs-toggle="tooltip"
                                                         title="Specify a target name for future usage and reference"></i></a>
@@ -1157,7 +1157,7 @@
                                                             @php
                                                                 $formaAnexo = $anexo->forma_anexo ?? 'arquivo';
                                                                 $isLink = $formaAnexo === 'link';
-                                                                
+
                                                                 if ($isLink) {
                                                                     $href = $anexo->link ?? '#';
                                                                     $nomeExibicao = $anexo->link ?? 'Link';
@@ -1165,7 +1165,7 @@
                                                                 } else {
                                                                     $nomeExibicao = $anexo->nome_arquivo ?? 'Arquivo';
                                                                     $iconClass = 'bi-file-earmark';
-                                                                    
+
                                                                     if ($anexo->caminho_arquivo) {
                                                                         $href = route('file', ['path' => $anexo->caminho_arquivo]);
                                                                     } else {

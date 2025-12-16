@@ -6,6 +6,10 @@
     @include('app.components.modals.financeiro.recitasDespesas.Dm_modal_financeiro')
     {{-- *** Fim Modal de Receitas e Despesas *** --}}
 
+    {{-- *** Modal Prestação de Contas *** --}}
+    @include('app.components.modals.financeiro.prestacao_contas.modal_prestacao_contas')
+    {{-- *** Fim Modal Prestação de Contas *** --}}
+
     <!--begin::Main-->
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -61,29 +65,3 @@
     </div>
     <!--end::Content-->
 </x-tenant-app-layout>
-
-{{-- Scripts JavaScript --}}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Inicializar Select2 com placeholder
-        $('.lancamento_padrao_banco').select2({
-            placeholder: "Selecione um lançamento padrão", // Texto do placeholder
-            allowClear: true // Permite limpar a seleção
-        });
-
-        // Filtrar as opções de cada select, para mostrar só 'entrada' OU 'saida'
-        $('.lancamento_padrao_banco').each(function() {
-            const tipoLancamento = $(this).closest('.row').find('.tipo-lancamento').val();
-
-            $(this).find('option').each(function() {
-                // 'data-type' em cada <option> do Lançamento
-                const optType = $(this).data('type');
-
-                // Se não coincide com o tipo da linha (entrada vs. saída), removemos
-                if (optType !== tipoLancamento && $(this).val() !== '') {
-                    $(this).remove();
-                }
-            });
-        });
-    });
-</script>

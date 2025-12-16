@@ -48,5 +48,11 @@ class TenantDatabaseSeeder extends Seeder
 
         // Chama o seeder de profissões
         $this->call(ProfissoesSeeder::class);
+
+        // Chama o seeder de permissões
+        $this->call(PermissionSeeder::class);
+
+        // Chama o seeder de módulos
+        $this->call(ModuleSeeder::class);
     }
 }

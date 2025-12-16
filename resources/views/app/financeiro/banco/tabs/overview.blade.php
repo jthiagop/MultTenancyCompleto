@@ -71,6 +71,17 @@
                 <!--end::Chart-->
             </div>
             <!--end::Card body-->
+            <!--begin::Load More Button-->
+            <div class="card-footer text-center" id="chart-load-more-container" style="display: none;">
+                <button type="button" id="chart-load-more-btn" class="btn btn-sm btn-light-primary">
+                    <span class="indicator-label">Carregar Mais Dados</span>
+                    <span class="indicator-progress">Carregando...
+                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                    </span>
+                </button>
+                <div class="text-muted fs-7 mt-2" id="chart-data-info"></div>
+            </div>
+            <!--end::Load More Button-->
         </div>
         <!--end::Chart widget 36-->
     </div>

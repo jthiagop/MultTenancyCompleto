@@ -43,6 +43,16 @@ class SeedTenantJob implements ShouldQueue
 
             // Atribuir o papel de administrador ao usuário
             $user->assignRole(['global', 'admin', 'admin_user', 'user']);
+            
+            // Dar todas as permissões ao primeiro usuário
+            try {
+                $allPermissions = \Spatie\Permission\Models\Permission::all();
+                if ($allPermissions->count() > 0) {
+                    $user->syncPermissions($allPermissions->pluck('id')->toArray());
+                }
+            } catch (\Exception $e) {
+                // Se as permissões ainda não existirem, não é um problema
+            }
 
             // Criar a empresa
             $company = Company::create([

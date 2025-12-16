@@ -93,7 +93,7 @@ var KTModalAddAddress = function () {
 
 						setTimeout(function() {
 							submitButton.removeAttribute('data-kt-indicator');
-							
+
 							Swal.fire({
 								text: "Form has been successfully submitted!",
 								icon: "success",
@@ -110,8 +110,8 @@ var KTModalAddAddress = function () {
 									// Enable submit button after loading
 									submitButton.disabled = false;
 								}
-							});							
-						}, 2000);   						
+							});
+						}, 2000);
 					} else {
 						Swal.fire({
 							text: "Sorry, looks like there are some errors detected, please try again.",
@@ -131,20 +131,20 @@ var KTModalAddAddress = function () {
             e.preventDefault();
 
             Swal.fire({
-                text: "Are you sure you would like to cancel?",
+                text: "Tem certeza de que deseja cancelar?",
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, cancel it!",
-                cancelButtonText: "No, return",
+                confirmButtonText: "Sim, cancele!",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form	
-                    modal.hide(); // Hide modal				
+                    form.reset(); // Reset form
+                    modal.hide(); // Hide modal
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
                         text: "Your form has not been cancelled!.",
@@ -163,20 +163,20 @@ var KTModalAddAddress = function () {
 			e.preventDefault();
 
             Swal.fire({
-                text: "Are you sure you would like to cancel?",
+                text: "Tem certeza de que deseja cancelar?",
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, cancel it!",
-                cancelButtonText: "No, return",
+                confirmButtonText: "Sim, cancele!",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form	
-                    modal.hide(); // Hide modal				
+                    form.reset(); // Reset form
+                    modal.hide(); // Hide modal
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
                         text: "Your form has not been cancelled!.",

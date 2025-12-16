@@ -46,15 +46,15 @@ var KTUsersAddRole = function () {
                 showCancelButton: true,
                 buttonsStyling: false,
                 confirmButtonText: "Yes, close it!",
-                cancelButtonText: "No, return",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    modal.hide(); // Hide modal				
-                } 
+                    modal.hide(); // Hide modal
+                }
             });
         });
 
@@ -64,20 +64,20 @@ var KTUsersAddRole = function () {
             e.preventDefault();
 
             Swal.fire({
-                text: "Are you sure you would like to cancel?",
+                text: "Tem certeza de que deseja cancelar?",
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, cancel it!",
-                cancelButtonText: "No, return",
+                confirmButtonText: "Sim, cancele!",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form	
-                    modal.hide(); // Hide modal				
+                    form.reset(); // Reset form
+                    modal.hide(); // Hide modal
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
                         text: "Your form has not been cancelled!.",
@@ -97,28 +97,28 @@ var KTUsersAddRole = function () {
          submitButton.addEventListener('click', function (e) {
              // Prevent default button action
              e.preventDefault();
- 
+
              // Validate form before submit
              if (validator) {
                  validator.validate().then(function (status) {
                      console.log('validated!');
- 
+
                      if (status == 'Valid') {
                          // Show loading indication
                          submitButton.setAttribute('data-kt-indicator', 'on');
- 
-                         // Disable button to avoid multiple click 
+
+                         // Disable button to avoid multiple click
                          submitButton.disabled = true;
- 
+
                          // Simulate form submission. For more info check the plugin's official documentation: https://sweetalert2.github.io/
                          setTimeout(function () {
                              // Remove loading indication
                              submitButton.removeAttribute('data-kt-indicator');
- 
+
                              // Enable button
                              submitButton.disabled = false;
- 
-                             // Show popup confirmation 
+
+                             // Show popup confirmation
                              Swal.fire({
                                  text: "Form has been successfully submitted!",
                                  icon: "success",
@@ -132,7 +132,7 @@ var KTUsersAddRole = function () {
                                      modal.hide();
                                  }
                              });
- 
+
                              //form.submit(); // Submit form
                          }, 2000);
                      } else {
@@ -150,7 +150,7 @@ var KTUsersAddRole = function () {
                  });
              }
          });
-        
+
 
     }
 

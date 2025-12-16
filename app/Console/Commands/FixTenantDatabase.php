@@ -279,6 +279,17 @@ class FixTenantDatabase extends Command
             if (DB::table('roles')->count() > 0) {
                 $user->assignRole(['global', 'admin', 'admin_user', 'user']);
             }
+            
+            // Dar todas as permissões ao primeiro usuário
+            try {
+                $allPermissions = \Spatie\Permission\Models\Permission::all();
+                if ($allPermissions->count() > 0) {
+                    $user->syncPermissions($allPermissions->pluck('id')->toArray());
+                    $this->info("    ✅ Todas as permissões atribuídas ao primeiro usuário!");
+                }
+            } catch (\Exception $e) {
+                $this->warn("    ⚠️  Erro ao atribuir permissões: " . $e->getMessage());
+            }
 
             $this->info("    ✅ Usuário principal criado!");
         }

@@ -10,7 +10,7 @@ var KTUsersAddUser = function () {
             init: function() {}
         };
     }
-    
+
     const form = element.querySelector('#kt_modal_add_user_form');
     const modal = new bootstrap.Modal(element);
 
@@ -36,7 +36,7 @@ var KTUsersAddUser = function () {
 
                 // Coletar dados do formulário
                 const formData = new FormData(form);
-                
+
                 // Adicionar must_change_password se checkbox estiver marcado
                 const mustChangePasswordCheckbox = element.querySelector('#must_change_password');
                 if (mustChangePasswordCheckbox && mustChangePasswordCheckbox.checked) {
@@ -49,7 +49,7 @@ var KTUsersAddUser = function () {
 
                 // Obter token CSRF
                 const csrfToken = formData.get('_token') || document.querySelector('meta[name="csrf-token"]')?.getAttribute('content');
-                
+
                 // Enviar via AJAX
                 fetch(form.action, {
                     method: 'POST',
@@ -137,20 +137,20 @@ var KTUsersAddUser = function () {
             e.preventDefault();
 
             Swal.fire({
-                text: "Are you sure you would like to cancel?",
+                text: "Tem certeza de que deseja cancelar?",
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, cancel it!",
-                cancelButtonText: "No, return",
+                confirmButtonText: "Sim, cancele!",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form			
-                    modal.hide();	
+                    form.reset(); // Reset form
+                    modal.hide();
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
                         text: "Your form has not been cancelled!.",
@@ -171,20 +171,20 @@ var KTUsersAddUser = function () {
             e.preventDefault();
 
             Swal.fire({
-                text: "Are you sure you would like to cancel?",
+                text: "Tem certeza de que deseja cancelar?",
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, cancel it!",
-                cancelButtonText: "No, return",
+                confirmButtonText: "Sim, cancele!",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form			
-                    modal.hide();	
+                    form.reset(); // Reset form
+                    modal.hide();
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
                         text: "Your form has not been cancelled!.",

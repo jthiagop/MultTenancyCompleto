@@ -16,7 +16,8 @@ class TenantFilesystems
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if(auth())
+        // Só configurar o filesystem do tenant se o usuário estiver autenticado
+        if(auth()->check())
             $this->setFilesystemsRoot();
 
         return $next($request);
@@ -25,6 +26,10 @@ class TenantFilesystems
     public function setFilesystemsRoot()
     {
         $tenant = app(ManagerTenant::class)->getTenant();
+
+        if (!$tenant) {
+            return;
+        }
 
         // Use the database name as the folder name
         $tenantDatabaseName = $tenant->database;

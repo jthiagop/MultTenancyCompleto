@@ -71,7 +71,7 @@ class PrestacaoDeContaController extends Controller
             'costCenter'      => optional(CostCenter::find($costCenter))->descricao,
             'totalEntradas'   => $totEntradaAll,
             'totalSaidas'     => $totSaidaAll,
-            'company'         => auth()->user()->company,   // ajuste conforme seu tenant
+            'company'         => Auth::user()->companies()->first(),   // ajuste conforme seu tenant
         ])->render();
 
         // 5) PDF

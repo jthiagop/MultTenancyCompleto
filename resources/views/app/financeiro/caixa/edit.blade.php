@@ -357,7 +357,7 @@
                                                         <!--begin::Row-->
                                                         <tr>
                                                             <td class="text-gray-400">Centro de Custo:</td>
-                                                            <td class="text-gray-800">{{ $caixa->costCenter->name }}
+                                                            <td class="text-gray-800">{{ $caixa->costCenter->name ?? '-' }}
                                                             </td>
                                                         </tr>
                                                         <!--end::Row-->
@@ -380,7 +380,7 @@
                                                         <tr>
                                                             <td class="text-gray-400">Lançamento Padão</td>
                                                             <td class="text-gray-800">
-                                                                {{ $caixa->lancamentoPadrao->description }}
+                                                                {{ $caixa->lancamentoPadrao->description ?? '-' }}
                                                             </td>
                                                         </tr>
                                                         <!--end::Row-->

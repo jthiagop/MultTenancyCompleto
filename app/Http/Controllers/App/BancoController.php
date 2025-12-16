@@ -312,6 +312,8 @@ class BancoController extends Controller
         $startDate = $request->input('start_date');
         $endDate = $request->input('end_date');
         $groupBy = $request->input('group_by', 'day'); // day, week, month
+        $limit = (int) $request->input('limit', 30); // Limite de períodos a retornar
+        $offset = (int) $request->input('offset', 0); // Offset para paginação
 
         // Se não fornecido, usa o período padrão (últimos 30 dias)
         if (!$startDate || !$endDate) {
@@ -355,7 +357,24 @@ class BancoController extends Controller
                 break;
         }
 
-        // Agregar dados no banco de dados
+        // Contar total de períodos disponíveis
+        $totalPeriodos = Movimentacao::where('company_id', $companyId)
+            ->whereHas('entidade', function ($q) {
+                $q->where('tipo', 'banco');
+            })
+            ->where(function($q) use ($start, $end) {
+                $q->whereBetween('data_competencia', [$start, $end])
+                  ->orWhere(function($subQ) use ($start, $end) {
+                      $subQ->whereNull('data_competencia')
+                           ->whereBetween('data', [$start, $end]);
+                  });
+            })
+            ->select($dateFormat)
+            ->groupBy($dateGroup)
+            ->get()
+            ->count();
+
+        // Agregar dados no banco de dados com limite e offset
         $dadosAgregados = Movimentacao::where('company_id', $companyId)
             ->whereHas('entidade', function ($q) {
                 $q->where('tipo', 'banco');
@@ -374,8 +393,11 @@ class BancoController extends Controller
                 DB::raw('SUM(CASE WHEN tipo = "saida" THEN valor ELSE 0 END) as saidas')
             )
             ->groupBy($dateGroup)
-            ->orderByRaw('periodo')
-            ->get();
+            ->orderByRaw('periodo DESC') // Ordenar do mais recente para o mais antigo
+            ->limit($limit)
+            ->offset($offset)
+            ->get()
+            ->reverse(); // Reverter para exibir do mais antigo para o mais recente no gráfico
 
         // Preparar dados para o gráfico
         $dadosPorPeriodo = [];
@@ -429,10 +451,253 @@ class BancoController extends Controller
                 'end_date' => $endDate,
                 'group_by' => $groupBy,
                 'dias_diferenca' => $diasDiferenca
+            ],
+            'paginacao' => [
+                'total' => $totalPeriodos,
+                'limit' => $limit,
+                'offset' => $offset,
+                'has_more' => ($offset + $limit) < $totalPeriodos,
+                'next_offset' => $offset + $limit
             ]
         ];
 
         return response()->json($response);
+    }
+
+    /**
+     * Fornece os dados para a DataTable com processamento do lado do servidor (server-side)
+     */
+    public function getTransacoesData(Request $request)
+    {
+        \Log::info('getTransacoesData - Início', [
+            'draw' => $request->input('draw'),
+            'start' => $request->input('start'),
+            'length' => $request->input('length'),
+            'search' => $request->input('search'),
+            'tipo' => $request->input('tipo'),
+            'start_date' => $request->input('start_date'),
+            'end_date' => $request->input('end_date')
+        ]);
+        
+        $companyId = session('active_company_id');
+        
+        if (!$companyId) {
+            \Log::warning('getTransacoesData - Company ID não encontrado');
+            return response()->json([
+                'draw' => intval($request->input('draw', 1)),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => []
+            ]);
+        }
+
+        // Query base - filtrar apenas transações de banco
+        $query = TransacaoFinanceira::with(['modulos_anexos', 'lancamentoPadrao'])
+            ->whereHas('entidadeFinanceira', function ($q) {
+                $q->where('tipo', 'banco');
+            })
+            ->where('company_id', $companyId);
+
+        // Contagem total de registros antes de qualquer filtro
+        $recordsTotal = $query->count();
+
+        // Aplicar busca geral (do campo de pesquisa do DataTables)
+        if ($request->filled('search') && !empty($request->search['value'])) {
+            $search = $request->search['value'];
+            $query->where(function($q) use ($search) {
+                $q->where('id', 'like', "%{$search}%")
+                  ->orWhere('descricao', 'like', "%{$search}%")
+                  ->orWhere('tipo_documento', 'like', "%{$search}%")
+                  ->orWhere('numero_documento', 'like', "%{$search}%")
+                  ->orWhere('origem', 'like', "%{$search}%")
+                  ->orWhereHas('lancamentoPadrao', function($subQ) use ($search) {
+                      $subQ->where('description', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        // Aplicar filtro de tipo (entrada/saida)
+        if ($request->filled('tipo') && $request->tipo !== 'all' && $request->tipo !== '') {
+            $query->where('tipo', $request->tipo);
+        }
+
+        // Aplicar filtro de data (daterangepicker)
+        if ($request->filled('start_date') && $request->filled('end_date')) {
+            try {
+                $startDate = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay();
+                $endDate = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay();
+                $query->whereBetween('data_competencia', [$startDate, $endDate]);
+            } catch (\Exception $e) {
+                Log::warning('Erro ao processar filtro de data no DataTables', ['error' => $e->getMessage()]);
+            }
+        }
+
+        // Contagem de registros após aplicar os filtros
+        $recordsFiltered = $query->count();
+
+        // Aplicar ordenação
+        $orderColumn = 'id'; // ID por padrão
+        $orderDir = 'desc';
+        
+        if ($request->has('order') && count($request->order)) {
+            $order = $request->order[0];
+            $columnIndex = (int) $order['column'];
+            $orderDir = $order['dir'];
+            
+            // Mapear índice da coluna para campo do banco
+            $columnMap = [
+                0 => 'id',
+                1 => 'data_competencia',
+                2 => 'tipo_documento',
+                3 => 'comprovacao_fiscal',
+                4 => 'descricao',
+                5 => 'tipo',
+                6 => 'valor',
+                7 => 'origem',
+                8 => 'anexos',
+                9 => 'actions'
+            ];
+            
+            $orderColumn = $columnMap[$columnIndex] ?? 'id';
+            
+            // Campos que não devem ser ordenados (HTML)
+            $nonOrderableColumns = ['comprovacao_fiscal', 'descricao', 'anexos', 'actions'];
+            if (in_array($orderColumn, $nonOrderableColumns)) {
+                $orderColumn = 'id'; // Fallback para ID
+            }
+        }
+        
+        $query->orderBy($orderColumn, $orderDir);
+
+        // Aplicar paginação
+        $start = $request->input('start', 0);
+        $length = $request->input('length', 50);
+        $transacoes = $query->skip($start)->take($length)->get();
+
+        // Formatar os dados para a resposta JSON
+        $data = $transacoes->map(function($transacao) {
+            // Formatar descrição com lançamento padrão
+            $descricaoHtml = '<div class="fw-bold">' . e($transacao->descricao) . '</div>';
+            if ($transacao->lancamentoPadrao) {
+                $descricaoHtml .= '<div class="text-muted small">' . e($transacao->lancamentoPadrao->description) . '</div>';
+            }
+            
+            // Formatar anexos
+            $anexosHtml = $this->formatAnexos($transacao);
+            
+            // Formatar ações
+            $actionsHtml = '<div class="d-flex justify-content-end align-items-center">
+                <a href="' . route('banco.edit', $transacao->id) . '" class="btn btn-icon btn-active-light-primary w-30px h-30px ms-auto me-5">
+                    <span class="svg-icon svg-icon-3">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path opacity="0.3" d="M21.4 8.35303L19.241 10.511L13.485 4.755L15.643 2.59595C16.0248 2.21423 16.5426 1.99988 17.0825 1.99988C17.6224 1.99988 18.1402 2.21423 18.522 2.59595L21.4 5.474C21.7817 5.85581 21.9962 6.37355 21.9962 6.91345C21.9962 7.45335 21.7817 7.97122 21.4 8.35303ZM3.68699 21.932L9.88699 19.865L4.13099 14.109L2.06399 20.309C1.98815 20.5354 1.97703 20.7787 2.03189 21.0111C2.08674 21.2436 2.2054 21.4561 2.37449 21.6248C2.54359 21.7934 2.75641 21.9115 2.989 21.9658C3.22158 22.0201 3.4647 22.0084 3.69099 21.932H3.68699Z" fill="currentColor" />
+                            <path d="M5.574 21.3L3.692 21.928C3.46591 22.0032 3.22334 22.0141 2.99144 21.9594C2.75954 21.9046 2.54744 21.7864 2.3789 21.6179C2.21036 21.4495 2.09202 21.2375 2.03711 21.0056C1.9822 20.7737 1.99289 20.5312 2.06799 20.3051L2.696 18.422L5.574 21.3ZM4.13499 14.105L9.891 19.861L19.245 10.507L13.489 4.75098L4.13499 14.105Z" fill="currentColor" />
+                        </svg>
+                    </span>
+                </a>
+            </div>';
+            
+            return [
+                $transacao->id,
+                $transacao->data_competencia 
+                    ? Carbon::parse($transacao->data_competencia)->format('d/m/y') 
+                    : '-',
+                $transacao->tipo_documento ?? '-',
+                $transacao->comprovacao_fiscal 
+                    ? '<i class="fas fa-check-circle text-success" title="Comprovação Fiscal"></i>'
+                    : '<i class="bi bi-x-circle-fill text-danger" title="Sem Comprovação Fiscal"></i>',
+                $descricaoHtml,
+                '<div class="badge fw-bold ' . ($transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger') . '">' . $transacao->tipo . '</div>',
+                'R$ ' . number_format($transacao->valor, 2, ',', '.'),
+                $transacao->origem ?? '-',
+                $anexosHtml,
+                $actionsHtml
+            ];
+        });
+
+        // Retorna a resposta no formato que a DataTable espera
+        $response = [
+            'draw' => intval($request->input('draw', 1)),
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data->toArray()
+        ];
+        
+        \Log::info('getTransacoesData - Resposta', [
+            'draw' => $response['draw'],
+            'recordsTotal' => $response['recordsTotal'],
+            'recordsFiltered' => $response['recordsFiltered'],
+            'data_count' => count($response['data'])
+        ]);
+        
+        return response()->json($response);
+    }
+    
+    /**
+     * Formata os anexos para exibição na tabela
+     */
+    private function formatAnexos($transacao)
+    {
+        $anexos = $transacao->modulos_anexos->take(3);
+        $remainingAnexos = $transacao->modulos_anexos->count() - 3;
+        
+        $icons = [
+            'pdf' => ['icon' => 'bi-file-earmark-pdf-fill', 'color' => 'text-danger'],
+            'jpg' => ['icon' => 'bi-file-earmark-image-fill', 'color' => 'text-warning'],
+            'jpeg' => ['icon' => 'bi-file-earmark-image-fill', 'color' => 'text-primary'],
+            'png' => ['icon' => 'bi-file-earmark-image-fill', 'color' => 'text-warning'],
+            'doc' => ['icon' => 'bi-file-earmark-word-fill', 'color' => 'text-info'],
+            'docx' => ['icon' => 'bi-file-earmark-word-fill', 'color' => 'text-info'],
+            'xls' => ['icon' => 'bi-file-earmark-spreadsheet-fill', 'color' => 'text-warning'],
+            'xlsx' => ['icon' => 'bi-file-earmark-spreadsheet-fill', 'color' => 'text-warning'],
+            'txt' => ['icon' => 'bi-file-earmark-text-fill', 'color' => 'text-muted'],
+        ];
+        $defaultIcon = ['icon' => 'bi-file-earmark-fill', 'color' => 'text-secondary'];
+        
+        $html = '<div class="symbol-group symbol-hover fs-8">';
+        
+        foreach ($anexos as $anexo) {
+            $formaAnexo = $anexo->forma_anexo ?? 'arquivo';
+            $isLink = $formaAnexo === 'link';
+            
+            if ($isLink) {
+                $href = $anexo->link ?? '#';
+                $tooltip = $anexo->link ?? 'Link';
+                $iconData = ['icon' => 'bi-link-45deg', 'color' => 'text-primary'];
+            } else {
+                $extension = pathinfo($anexo->nome_arquivo ?? '', PATHINFO_EXTENSION);
+                $iconData = $icons[strtolower($extension)] ?? $defaultIcon;
+                $tooltip = $anexo->nome_arquivo ?? 'Arquivo';
+                
+                if ($anexo->caminho_arquivo) {
+                    $href = route('file', ['path' => $anexo->caminho_arquivo]);
+                } else {
+                    $href = '#';
+                }
+            }
+            
+            $html .= '<div class="symbol symbol-30px symbol-circle bg-light-primary text-primary d-flex justify-content-center align-items-center" data-bs-toggle="tooltip" title="' . e($tooltip) . '">';
+            $html .= '<a href="' . e($href) . '" target="_blank" class="text-decoration-none">';
+            $html .= '<i class="bi ' . $iconData['icon'] . ' ' . $iconData['color'] . ' fs-3"></i>';
+            $html .= '</a></div>';
+        }
+        
+        if ($remainingAnexos > 0) {
+            $html .= '<div class="symbol symbol-25px symbol-circle" data-bs-toggle="tooltip" title="Mais ' . $remainingAnexos . ' anexos">';
+            $html .= '<a href="' . route('banco.edit', $transacao->id) . '">';
+            $html .= '<span class="symbol-label fs-8 fw-bold bg-light text-gray-800">+' . $remainingAnexos . '</span>';
+            $html .= '</a></div>';
+        }
+        
+        if ($transacao->modulos_anexos->isEmpty()) {
+            $html .= '<div class="symbol symbol-25px symbol-circle text-center" data-bs-toggle="tooltip" title="Nenhum anexo disponível">';
+            $html .= '<span class="symbol-label fs-8 fw-bold bg-light text-gray-800">0</span>';
+            $html .= '</div>';
+        }
+        
+        $html .= '</div>';
+        
+        return $html;
     }
 
     /**

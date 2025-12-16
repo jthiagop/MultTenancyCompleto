@@ -181,6 +181,16 @@ class EnsureTenantSetup
             if (DB::table('roles')->count() > 0) {
                 $user->assignRole(['global', 'admin', 'admin_user', 'user']);
             }
+            
+            // Dar todas as permissões ao primeiro usuário
+            try {
+                $allPermissions = \Spatie\Permission\Models\Permission::all();
+                if ($allPermissions->count() > 0) {
+                    $user->syncPermissions($allPermissions->pluck('id')->toArray());
+                }
+            } catch (\Exception $e) {
+                // Se as permissões ainda não existirem, não é um problema
+            }
         }
 
         // Criar empresa se não existir

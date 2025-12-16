@@ -8,13 +8,19 @@ class ManagerTenant
 {
     public function getTenantIdentity()
     {
-        return  auth()->user()->filiais->first()->id;
-
+        if (!auth()->check()) {
+            return null;
+        }
+        
+        return auth()->user()->filiais->first()->id;
     }
 
-    public function getTenant(): TenantFilial
+    public function getTenant(): ?TenantFilial
     {
-        return  auth()->user()->tenant_filials;
-
+        if (!auth()->check()) {
+            return null;
+        }
+        
+        return auth()->user()->tenant_filials;
     }
 }

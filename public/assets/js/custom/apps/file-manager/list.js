@@ -841,7 +841,7 @@ var KTFileManagerList = function () {
                                 showCancelButton: true,
                                 buttonsStyling: false,
                                 confirmButtonText: "Yes, move it!",
-                                cancelButtonText: "No, return",
+                                cancelButtonText: "Não, retorne",
                                 customClass: {
                                     confirmButton: "btn btn-primary",
                                     cancelButton: "btn btn-active-light"

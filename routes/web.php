@@ -18,6 +18,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/app/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::resource('tenants', TenantController::class );
+    Route::post('/tenants/{tenant}/generate-code', [TenantController::class, 'generateCode'])->name('tenants.generate-code');
 });
 
 require __DIR__.'/auth.php';

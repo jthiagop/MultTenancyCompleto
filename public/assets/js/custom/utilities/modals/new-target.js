@@ -154,12 +154,12 @@ var KTModalNewTarget = function () {
 			e.preventDefault();
 
 			Swal.fire({
-				text: "Are you sure you would like to cancel?",
+				text: "Tem certeza de que deseja cancelar?",
 				icon: "warning",
 				showCancelButton: true,
 				buttonsStyling: false,
-				confirmButtonText: "Yes, cancel it!",
-				cancelButtonText: "No, return",
+				confirmButtonText: "Sim, cancele!",
+				cancelButtonText: "Não, retorne",
 				customClass: {
 					confirmButton: "btn btn-primary",
 					cancelButton: "btn btn-active-light"

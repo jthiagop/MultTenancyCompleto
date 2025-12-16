@@ -479,119 +479,267 @@
                             data-bs-target="#kt_account_email_preferences" aria-expanded="true"
                             aria-controls="kt_account_email_preferences">
                             <div class="card-title m-0">
-                                <h3 class="fw-bold m-0">Permissões</h3>
+                                <h3 class="fw-bold m-0">Permissões por Módulo</h3>
                             </div>
                         </div>
                         <!--begin::Card header-->
                         <!--begin::Content-->
                         <div id="kt_account_settings_email_preferences" class="collapse show">
                             <!--begin::Form-->
-                            <form method="POST" action="{{ route('users.roles.update', $user->id) }}"
+                            <form method="POST" action="{{ route('users.permissions.update', $user->id) }}"
                                 enctype="multipart/form-data">
                                 @csrf
                                 @method('put')
                                 <!--begin::Card body-->
                                 <div class="card-body border-top px-9 py-9">
-
-                                    {{-- Pega todos os IDs das roles do usuário e coloca em um array. --}}
                                     @php
-                                        $userRoleIds = $user->roles->pluck('id')->toArray();
+                                        $permissionService = new \App\Services\PermissionService();
+                                        $actionNames = $permissionService->getActionNames();
+                                        $moduleIcons = [
+                                            'financeiro' => '/assets/media/png/financeiro.svg',
+                                            'patrimonio' => '/assets/media/png/house3d.png',
+                                            'contabilidade' => '/assets/media/png/contabilidade.png',
+                                            'fieis' => '/assets/media/png/fieis.png',
+                                            'cemiterio' => '/assets/media/png/lapide2.png',
+                                            'company' => '/assets/media/svg/files/folder-document.svg',
+                                            'users' => '/assets/media/svg/files/folder-document.svg',
+                                        ];
                                     @endphp
 
-                                    <!--begin::Input row - Global -->
-                                    <div class="d-flex fv-row">
-                                        <div class="form-check form-check-custom form-check-solid">
-                                            <input class="form-check-input me-3" name="roles[]" type="checkbox"
-                                                value="1" id="kt_modal_update_role_option_0"
-                                                {{-- Verifica se o ID 1 está no array de roles do usuário --}}
-                                                @if (in_array(1, $userRoleIds)) checked @endif />
-                                            <label class="form-check-label" for="kt_modal_update_role_option_0">
-                                                <div class="fw-bold text-gray-800">Global</div>
-                                                <div class="text-gray-600">Melhor para desenvolvedores...</div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class='separator separator-dashed my-5'></div>
+                                    @if (isset($permissionsByModule) && !empty($permissionsByModule))
+                                        <!--begin::Payment method-->
+                                        <div class="card card-flush pt-3 mb-5 mb-lg-10" data-kt-subscriptions-form="pricing">
+                                            <!--begin::Card body-->
+                                            <div class="card-body pt-0">
+                                                <!--begin::Options-->
+                                                <div id="kt_create_new_payment_method">
+                                                    @foreach ($permissionsByModule as $module => $permissions)
+                                                        @php
+                                                            $moduleName = $moduleNames[$module] ?? ucfirst($module);
+                                                            $moduleIcon = $moduleIcons[$module] ?? '/assets/media/svg/card-logos/mastercard.svg';
+                                                            $isFirst = $loop->first;
+                                                            $collapseId = "kt_module_permissions_{$module}";
+                                                            $checkedCount = 0;
+                                                            $totalCount = count($permissions);
+                                                            foreach ($permissions as $permission) {
+                                                                if (in_array($permission->id, $userPermissions ?? [])) {
+                                                                    $checkedCount++;
+                                                                }
+                                                            }
+                                                        @endphp
 
-                                    <!--begin::Input row - Administrador -->
-                                    <div class="d-flex fv-row">
-                                        <div class="form-check form-check-custom form-check-solid">
-                                            <input class="form-check-input me-3" name="roles[]" type="checkbox"
-                                                value="2" id="kt_modal_update_role_option_1"
-                                                {{-- Verifica se o ID 2 está no array de roles do usuário --}}
-                                                @if (in_array(2, $userRoleIds)) checked @endif />
-                                            <label class="form-check-label" for="kt_modal_update_role_option_1">
-                                                <div class="fw-bold text-gray-800">Administrador</div>
-                                                <div class="text-gray-600">Ideal para pessoas que precisam de acesso
-                                                    total...</div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class='separator separator-dashed my-5'></div>
+                                                        <!--begin::Option-->
+                                                        <div class="py-1">
+                                                            <!--begin::Header-->
+                                                            <div class="py-3 d-flex flex-stack flex-wrap">
+                                                                <!--begin::Toggle-->
+                                                                <div class="d-flex align-items-center collapsible toggle {{ $isFirst ? '' : 'collapsed' }}"
+                                                                    data-bs-toggle="collapse"
+                                                                    data-bs-target="#{{ $collapseId }}">
+                                                                    <!--begin::Arrow-->
+                                                                    <div class="btn btn-sm btn-icon btn-active-color-primary ms-n3 me-2">
+                                                                        <!--begin::Svg Icon | path: icons/duotune/general/gen036.svg-->
+                                                                        <span class="svg-icon toggle-on svg-icon-primary svg-icon-2">
+                                                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                                <rect opacity="0.3" x="2" y="2" width="20" height="20" rx="5" fill="currentColor" />
+                                                                                <rect x="6.0104" y="10.9247" width="12" height="2" rx="1" fill="currentColor" />
+                                                                            </svg>
+                                                                        </span>
+                                                                        <!--end::Svg Icon-->
+                                                                        <!--begin::Svg Icon | path: icons/duotune/general/gen035.svg-->
+                                                                        <span class="svg-icon toggle-off svg-icon-2">
+                                                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                                                                <rect opacity="0.3" x="2" y="2" width="20" height="20" rx="5" fill="currentColor" />
+                                                                                <rect x="10.8891" y="17.8033" width="12" height="2" rx="1" transform="rotate(-90 10.8891 17.8033)" fill="currentColor" />
+                                                                                <rect x="6.01041" y="10.9247" width="12" height="2" rx="1" fill="currentColor" />
+                                                                            </svg>
+                                                                        </span>
+                                                                        <!--end::Svg Icon-->
+                                                                    </div>
+                                                                    <!--end::Arrow-->
+                                                                    <!--begin::Logo-->
+                                                                    <img src="{{ $moduleIcon }}" class="w-40px me-3" alt="{{ $moduleName }}" />
+                                                                    <!--end::Logo-->
+                                                                    <!--begin::Summary-->
+                                                                    <div class="me-3 flex-grow-1">
+                                                                        <div class="d-flex align-items-center fw-bold">
+                                                                            {{ $moduleName }}
+                                                                            @if ($checkedCount > 0 && $checkedCount < $totalCount)
+                                                                                <div class="badge badge-light-warning ms-5">{{ $checkedCount }}/{{ $totalCount }}</div>
+                                                                            @elseif ($checkedCount == $totalCount)
+                                                                                <div class="badge badge-light-success ms-5">Completo</div>
+                                                                            @endif
+                                                                        </div>
+                                                                        <div class="text-muted">{{ $totalCount }} permissões disponíveis</div>
+                                                                    </div>
+                                                                    <!--end::Summary-->
+                                                                </div>
+                                                                <!--end::Toggle-->
+                                                                <!--begin::Input-->
+                                                                <div class="d-flex my-3 ms-9">
+                                                                    <!--begin::Checkbox Select All-->
+                                                                    <label class="form-check form-check-custom form-check-solid me-5">
+                                                                        <input class="form-check-input module-select-all" type="checkbox"
+                                                                            data-module="{{ $module }}"
+                                                                            id="module_select_all_{{ $module }}" />
+                                                                        <span class="form-check-label fw-semibold">Selecionar Tudo</span>
+                                                                    </label>
+                                                                    <!--end::Checkbox Select All-->
+                                                                </div>
+                                                                <!--end::Input-->
+                                                            </div>
+                                                            <!--end::Header-->
+                                                            <!--begin::Body-->
+                                                            <div id="{{ $collapseId }}" class="collapse {{ $isFirst ? 'show' : '' }} fs-6 ps-10">
+                                                                <!--begin::Details-->
+                                                                <div class="d-flex flex-wrap py-5">
+                                                                    <!--begin::Col-->
+                                                                    <div class="flex-equal w-100">
+                                                                        <div class="row g-3">
+                                                                            @foreach ($permissions as $permission)
+                                                                                @php
+                                                                                    $parts = explode('.', $permission->name);
+                                                                                    $action = end($parts);
+                                                                                    $actionName = $actionNames[$action] ?? ucfirst($action);
 
-                                    <!--begin::Input row - Admin User -->
-                                    <div class="d-flex fv-row">
-                                        <div class="form-check form-check-custom form-check-solid">
-                                            <input class="form-check-input me-3" name="roles[]" type="checkbox"
-                                                value="3" id="kt_modal_update_role_option_2"
-                                                {{-- Verifica se o ID 3 está no array de roles do usuário --}}
-                                                @if (in_array(3, $userRoleIds)) checked @endif />
-                                            <label class="form-check-label" for="kt_modal_update_role_option_2">
-                                                <div class="fw-bold text-gray-800">Admin User</div>
-                                                <div class="text-gray-600">Ideal para funcionários que gerenciam as
-                                                    filiais</div>
-                                            </label>
+                                                                                    // Determinar badge color baseado na ação
+                                                                                    $badgeClass = 'badge-light-primary';
+                                                                                    if ($action == 'delete') {
+                                                                                        $badgeClass = 'badge-light-danger';
+                                                                                    } elseif ($action == 'create' || $action == 'store') {
+                                                                                        $badgeClass = 'badge-light-success';
+                                                                                    } elseif ($action == 'edit' || $action == 'update') {
+                                                                                        $badgeClass = 'badge-light-warning';
+                                                                                    } elseif ($action == 'index' || $action == 'show') {
+                                                                                        $badgeClass = 'badge-light-info';
+                                                                                    }
+                                                                                @endphp
+                                                                                <div class="col-md-6 col-lg-4 mb-3">
+                                                                                    <div class="form-check form-check-custom form-check-solid p-3 border border-gray-300 rounded">
+                                                                                        <input class="form-check-input permission-checkbox"
+                                                                                            type="checkbox"
+                                                                                            name="permissions[]"
+                                                                                            value="{{ $permission->id }}"
+                                                                                            data-module="{{ $module }}"
+                                                                                            id="permission_{{ $permission->id }}"
+                                                                                            @if (in_array($permission->id, $userPermissions ?? [])) checked @endif />
+                                                                                        <label class="form-check-label w-100" for="permission_{{ $permission->id }}">
+                                                                                            <div class="d-flex align-items-center">
+                                                                                                <span class="fw-semibold text-dark me-2">{{ $actionName }}</span>
+                                                                                                <span class="badge {{ $badgeClass }} fs-8">{{ $action }}</span>
+                                                                                            </div>
+                                                                                            @if (count($parts) > 2)
+                                                                                                <div class="text-muted fs-7 mt-1">{{ $permission->name }}</div>
+                                                                                            @endif
+                                                                                        </label>
+                                                                                    </div>
+                                                                                </div>
+                                                                            @endforeach
+                                                                        </div>
+                                                                    </div>
+                                                                    <!--end::Col-->
+                                                                </div>
+                                                                <!--end::Details-->
+                                                            </div>
+                                                            <!--end::Body-->
+                                                        </div>
+                                                        <!--end::Option-->
+                                                        @if (!$loop->last)
+                                                            <div class="separator separator-dashed"></div>
+                                                        @endif
+                                                    @endforeach
+                                                </div>
+                                                <!--end::Options-->
+                                            </div>
+                                            <!--end::Card body-->
                                         </div>
-                                    </div>
-                                    <div class='separator separator-dashed my-5'></div>
+                                        <!--end::Payment method-->
+                                    @else
+                                        <div class="alert alert-warning">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>
+                                            Nenhuma permissão encontrada. Execute o seeder de permissões.
+                                        </div>
+                                    @endif
 
-                                    <!--begin::Input row - Usuários Comuns -->
-                                    <div class="d-flex fv-row">
-                                        <div class="form-check form-check-custom form-check-solid">
-                                            <input class="form-check-input me-3" name="roles[]" type="checkbox"
-                                                value="4" id="kt_modal_update_role_option_3"
-                                                {{-- Verifica se o ID 4 está no array de roles do usuário --}}
-                                                @if (in_array(4, $userRoleIds)) checked @endif />
-                                            <label class="form-check-label" for="kt_modal_update_role_option_3">
-                                                <div class="fw-bold text-gray-800">Usuários Comuns</div>
-                                                <div class="text-gray-600">Para usuários que tratam dos dados da
-                                                    organização</div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <div class='separator separator-dashed my-5'></div>
-
-                                    <!--begin::Input row - Sub Usuário -->
-                                    <div class="d-flex fv-row">
-                                        <div class="form-check form-check-custom form-check-solid">
-                                            <input class="form-check-input me-3" name="roles[]" type="checkbox"
-                                                value="5" id="kt_modal_update_role_option_4"
-                                                {{-- Verifica se o ID 5 está no array de roles do usuário --}}
-                                                @if (in_array(5, $userRoleIds)) checked @endif />
-                                            <label class="form-check-label" for="kt_modal_update_role_option_4">
-                                                <div class="fw-bold text-gray-800">Sub Usuário</div>
-                                                <div class="text-gray-600">Ideal para pessoas que precisam visualizar
-                                                    dados...</div>
-                                            </label>
-                                        </div>
-                                    </div>
-                                    <!--end::Input row-->
+                                    <x-input-error :messages="$errors->get('permissions')" class="mt-2" />
                                 </div>
                                 <!--end::Card body-->
                                 <!--begin::Card footer-->
-                                <div class="card-footer d-flex justify-content-end py-6 px-9">
-                                    <button type="submit" class="btn btn-primary px-6">
-                                        <i class="fas fa-sync-alt me-2"></i> Atualizar Permissões
-                                    </button>
+                                <div class="card-footer d-flex justify-content-between py-6 px-9">
+                                    @if($isFirstUser ?? false)
+                                        <form method="POST" action="{{ route('users.assign-all-permissions', $user->id) }}" class="d-inline">
+                                            @csrf
+                                            <button type="submit" class="btn btn-success px-6" onclick="return confirm('Tem certeza que deseja atribuir TODAS as permissões disponíveis a este usuário? Esta ação substituirá todas as permissões atuais.')">
+                                                <i class="fas fa-crown me-2"></i> Atribuir Todas as Permissões (Usuário Supremo)
+                                            </button>
+                                        </form>
+                                    @endif
+                                    <div class="ms-auto">
+                                        <button type="submit" class="btn btn-primary px-6">
+                                            <i class="fas fa-sync-alt me-2"></i> Atualizar Permissões
+                                        </button>
+                                    </div>
                                 </div>
                                 <!--end::Card footer-->
                             </form>
                             <!--end::Form-->
                         </div>
                         <!--end::Content-->
-
                     </div>
                     <!--end::Notifications-->
+
+                    <script>
+                        document.addEventListener('DOMContentLoaded', function() {
+                            // Selecionar todos os checkboxes de um módulo
+                            document.querySelectorAll('.module-select-all').forEach(function(checkbox) {
+                                checkbox.addEventListener('change', function() {
+                                    const module = this.getAttribute('data-module');
+                                    const moduleCheckboxes = document.querySelectorAll(
+                                        '.permission-checkbox[data-module="' + module + '"]'
+                                    );
+
+                                    moduleCheckboxes.forEach(function(cb) {
+                                        cb.checked = checkbox.checked;
+                                    });
+                                });
+                            });
+
+                            // Atualizar checkbox "selecionar tudo" quando checkboxes individuais mudarem
+                            document.querySelectorAll('.permission-checkbox').forEach(function(checkbox) {
+                                checkbox.addEventListener('change', function() {
+                                    const module = this.getAttribute('data-module');
+                                    const moduleCheckboxes = document.querySelectorAll(
+                                        '.permission-checkbox[data-module="' + module + '"]'
+                                    );
+                                    const moduleSelectAll = document.querySelector(
+                                        '.module-select-all[data-module="' + module + '"]'
+                                    );
+
+                                    const allChecked = Array.from(moduleCheckboxes).every(cb => cb.checked);
+                                    const someChecked = Array.from(moduleCheckboxes).some(cb => cb.checked);
+
+                                    if (moduleSelectAll) {
+                                        moduleSelectAll.checked = allChecked;
+                                        moduleSelectAll.indeterminate = someChecked && !allChecked;
+                                    }
+                                });
+                            });
+
+                            // Verificar estado inicial ao carregar (para edição)
+                            document.querySelectorAll('.module-select-all').forEach(function(checkbox) {
+                                const module = checkbox.getAttribute('data-module');
+                                const moduleCheckboxes = document.querySelectorAll(
+                                    '.permission-checkbox[data-module="' + module + '"]'
+                                );
+
+                                const allChecked = Array.from(moduleCheckboxes).every(cb => cb.checked);
+                                const someChecked = Array.from(moduleCheckboxes).some(cb => cb.checked);
+
+                                checkbox.checked = allChecked;
+                                checkbox.indeterminate = someChecked && !allChecked;
+                            });
+                        });
+                    </script>
                     <!--begin::Notifications-->
                     <div class="card mb-5 mb-xl-10">
                         <!--begin::Card header-->

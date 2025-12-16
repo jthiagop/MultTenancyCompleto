@@ -8,7 +8,7 @@ var KTSubscriptionsProducts = function () {
     var modal;
 
     var initDatatable = function() {
-        // Init datatable --- more info on datatables: https://datatables.net/manual/        
+        // Init datatable --- more info on datatables: https://datatables.net/manual/
         datatable = $(table).DataTable({
             "info": false,
             'order': [],
@@ -82,19 +82,19 @@ var KTSubscriptionsProducts = function () {
             e.preventDefault();
 
 			Swal.fire({
-				text: "Are you sure you would like to cancel?",
+				text: "Tem certeza de que deseja cancelar?",
 				icon: "warning",
 				showCancelButton: true,
 				buttonsStyling: false,
-				confirmButtonText: "Yes, cancel it!",
-				cancelButtonText: "No, return",
+				confirmButtonText: "Sim, cancele!",
+				cancelButtonText: "Não, retorne",
 				customClass: {
 					confirmButton: "btn btn-primary",
 					cancelButton: "btn btn-active-light"
 				}
 			}).then(function (result) {
 				if (result.value) {
-					modal.hide(); // Hide modal				
+					modal.hide(); // Hide modal
 				} else if (result.dismiss === 'cancel') {
 					Swal.fire({
 						text: "Your form has not been cancelled!.",
@@ -114,7 +114,7 @@ var KTSubscriptionsProducts = function () {
             e.preventDefault();
 
             // Check all radio buttons
-            var radio = modalEl.querySelector('input[type="radio"]:checked');            
+            var radio = modalEl.querySelector('input[type="radio"]:checked');
 
             // Define datatable row node
             var rowNode;
@@ -129,7 +129,7 @@ var KTSubscriptionsProducts = function () {
 
                 // Add custom class to last column -- more info: https://datatables.net/forums/discussion/22341/row-add-cell-class
                 $( rowNode ).find('td').eq(3).addClass('text-end');
-            }           
+            }
 
             modal.hide(); // Remove modal
         });

@@ -178,4 +178,98 @@ class CostCenterController extends Controller
 
         return round(($diasPassados / $totalDias) * 100, 2); // Arredonda para 2 casas decimais
     }
+
+    /**
+     * Retorna dados para o modal de prestação de contas via AJAX
+     */
+    public function getDataForModal(Request $request)
+    {
+        $activeCompanyId = session('active_company_id');
+        
+        if (!$activeCompanyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa ativa na sessão'
+            ], 400);
+        }
+
+        // Busca a empresa ativa
+        $company = \App\Models\Company::find($activeCompanyId);
+        
+        // Busca os centros de custo ativos
+        $costCenters = CostCenter::forActiveCompany()
+            ->select('id', 'name')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'company' => [
+                    'id' => $company->id,
+                    'name' => $company->name ?? 'N/A'
+                ],
+                'cost_centers' => $costCenters
+            ]
+        ]);
+    }
+
+    /**
+     * Retorna Caixa ou Bancos para o modal de prestação de contas
+     */
+    public function getContasFinanceiras(Request $request)
+    {
+        $tipo = $request->query('tipo'); // 'caixa' ou 'banco'
+        $activeCompanyId = session('active_company_id');
+        
+        if (!$activeCompanyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa ativa na sessão'
+            ], 400);
+        }
+
+        $contas = [];
+
+        if ($tipo === 'caixa') {
+            // Busca entidades financeiras do tipo caixa
+            $entidades = \App\Models\EntidadeFinanceira::where('company_id', $activeCompanyId)
+                ->where('tipo', 'caixa')
+                ->select('id', 'nome')
+                ->get();
+            
+            foreach ($entidades as $entidade) {
+                $contas[] = [
+                    'id' => $entidade->id,
+                    'name' => $entidade->nome
+                ];
+            }
+        } elseif ($tipo === 'banco') {
+            // Busca entidades financeiras do tipo banco
+            $entidades = \App\Models\EntidadeFinanceira::where('company_id', $activeCompanyId)
+                ->where('tipo', 'banco')
+                ->select('id', 'nome')
+                ->get();
+            
+            // Adiciona opção "Todos" se houver mais de um banco
+            if ($entidades->count() > 1) {
+                $contas[] = [
+                    'id' => 'all',
+                    'name' => 'Todos os Bancos'
+                ];
+            }
+            
+            // Adiciona cada banco
+            foreach ($entidades as $entidade) {
+                $contas[] = [
+                    'id' => $entidade->id,
+                    'name' => $entidade->nome
+                ];
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $contas
+        ]);
+    }
 }

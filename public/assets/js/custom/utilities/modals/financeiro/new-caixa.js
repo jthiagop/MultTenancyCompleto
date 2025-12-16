@@ -39,6 +39,21 @@ var DMModalNewCaixa = function () {
             });
         });
 
+        // Máscara monetária para o campo valor
+        var valorInput = document.getElementById('valor_caixa');
+        if (valorInput && typeof Inputmask !== 'undefined') {
+            Inputmask({
+                alias: "currency",
+                groupSeparator: ".",
+                radixPoint: ",",
+                autoGroup: true,
+                digits: 2,
+                digitsOptional: false,
+                placeholder: "0,00",
+                rightAlign: false,
+                removeMaskOnSubmit: true
+            }).mask(valorInput);
+        }
 
 		// Team assign. For more info, plase visit the official plugin site: https://select2.org/
         $(form.querySelector('[name="team_assign"]')).on('change', function() {
@@ -362,13 +377,13 @@ var DMModalNewCaixa = function () {
 			// Limpa todos os campos de texto
 			var descricaoField = form.querySelector('[name="descricao"]');
 			if (descricaoField) descricaoField.value = '';
-			
+
 			var valorField = form.querySelector('[name="valor"]');
 			if (valorField) valorField.value = '';
-			
+
 			var numeroDocField = form.querySelector('[name="numero_documento"]');
 			if (numeroDocField) numeroDocField.value = '';
-			
+
 			var historicoField = form.querySelector('[name="historico_complementar"]');
 			if (historicoField) historicoField.value = '';
 
@@ -449,7 +464,7 @@ var DMModalNewCaixa = function () {
 					lancamentoPadraoSelect.find('option').each(function() {
 						var $option = $(this);
 						var optionType = $option.data('type');
-						
+
 						// Se for a opção vazia, mantém visível
 						if ($option.val() === '' || !optionType) {
 							$option.prop('disabled', false).show();
@@ -461,7 +476,7 @@ var DMModalNewCaixa = function () {
 							$option.prop('disabled', true).hide();
 						}
 					});
-					
+
 					// Atualiza o Select2
 					setTimeout(function() {
 						if (lancamentoPadraoSelect.hasClass('select2-hidden-accessible')) {
@@ -500,12 +515,12 @@ var DMModalNewCaixa = function () {
 			e.preventDefault();
 
 			Swal.fire({
-				text: "Are you sure you would like to cancel?",
+				text: "Tem certeza de que deseja cancelar?",
 				icon: "warning",
 				showCancelButton: true,
 				buttonsStyling: false,
-				confirmButtonText: "Yes, cancel it!",
-				cancelButtonText: "No, return",
+				confirmButtonText: "Sim, cancele!",
+				cancelButtonText: "Não, retorne",
 				customClass: {
 					confirmButton: "btn btn-primary",
 					cancelButton: "btn btn-active-light"

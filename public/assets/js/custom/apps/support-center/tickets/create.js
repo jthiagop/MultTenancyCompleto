@@ -13,7 +13,7 @@ var KTModalNewTicket = function () {
 	var initForm = function() {
 		// Ticket attachments
 		// For more info about Dropzone plugin visit:  https://www.dropzonejs.com/#usage
-		var myDropzone = new Dropzone("#kt_modal_create_ticket_attachments", { 
+		var myDropzone = new Dropzone("#kt_modal_create_ticket_attachments", {
 			url: "https://keenthemes.com/scripts/void.php", // Set the url for your upload script location
             paramName: "file", // The name that will be used to transfer the file
             maxFiles: 10,
@@ -26,7 +26,7 @@ var KTModalNewTicket = function () {
                     done();
                 }
             }
-		});  
+		});
 
 		// Due date. For more info, please visit the official plugin site: https://flatpickr.js.org/
 		var dueDate = $(form.querySelector('[name="due_date"]'));
@@ -116,7 +116,7 @@ var KTModalNewTicket = function () {
 					if (status == 'Valid') {
 						submitButton.setAttribute('data-kt-indicator', 'on');
 
-						// Disable button to avoid multiple click 
+						// Disable button to avoid multiple click
 						submitButton.disabled = true;
 
 						setTimeout(function() {
@@ -124,7 +124,7 @@ var KTModalNewTicket = function () {
 
 							// Enable button
 							submitButton.disabled = false;
-							
+
 							// Show success message. For more info check the plugin's official documentation: https://sweetalert2.github.io/
 							Swal.fire({
 								text: "Form has been successfully submitted!",
@@ -141,7 +141,7 @@ var KTModalNewTicket = function () {
 							});
 
 							//form.submit(); // Submit form
-						}, 2000);   						
+						}, 2000);
 					} else {
 						// Show error message.
 						Swal.fire({
@@ -162,20 +162,20 @@ var KTModalNewTicket = function () {
 			e.preventDefault();
 
 			Swal.fire({
-				text: "Are you sure you would like to cancel?",
+				text: "Tem certeza de que deseja cancelar?",
 				icon: "warning",
 				showCancelButton: true,
 				buttonsStyling: false,
-				confirmButtonText: "Yes, cancel it!",
-				cancelButtonText: "No, return",
+				confirmButtonText: "Sim, cancele!",
+				cancelButtonText: "Não, retorne",
 				customClass: {
 					confirmButton: "btn btn-primary",
 					cancelButton: "btn btn-active-light"
 				}
 			}).then(function (result) {
 				if (result.value) {
-					form.reset(); // Reset form	
-					modal.hide(); // Hide modal				
+					form.reset(); // Reset form
+					modal.hide(); // Hide modal
 				} else if (result.dismiss === 'cancel') {
 					Swal.fire({
 						text: "Your form has not been cancelled!.",

@@ -44,7 +44,7 @@
                                     data-bs-target="#kt_modal_new_account">
                                     <!--begin::Svg Icon | path: icons/duotune/files/fil018.svg-->
                                     <span class="svg-icon svg-icon-2">
-                                        <i class="bi bi-plus"></i>
+                                        <i class="bi bi-plus fs-3"></i>
                                     </span>
                                     <span class="text-nowrap">Nova Conta Contábil</span>
                                 </button>

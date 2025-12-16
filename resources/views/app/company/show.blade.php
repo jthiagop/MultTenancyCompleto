@@ -166,17 +166,15 @@
                                                 <!--end::Menu item-->
                                                 <!--begin::Menu item-->
                                                 <div class="menu-item px-3">
-                                                    <a href="#" class="menu-link flex-stack px-3">Create Payment
+                                                    <a href="#" class="menu-link flex-stack px-3" onclick="openAppCodeModal(); return false;">
+                                                        Gerar ID para APP
                                                         <i class="fas fa-exclamation-circle ms-2 fs-7"
                                                             data-bs-toggle="tooltip"
-                                                            title="Specify a target name for future usage and reference"></i></a>
+                                                            title="Gera um código único para acesso via aplicativo mobile"></i>
+                                                    </a>
                                                 </div>
                                                 <!--end::Menu item-->
-                                                <!--begin::Menu item-->
-                                                <div class="menu-item px-3">
-                                                    <a href="#" class="menu-link px-3">Generate Bill</a>
-                                                </div>
-                                                <!--end::Menu item-->
+
                                                 <!--begin::Menu item-->
                                                 <div class="menu-item px-3" data-kt-menu-trigger="hover"
                                                     data-kt-menu-placement="right-end">
@@ -806,6 +804,9 @@
             <!--end::Modal dialog-->
         </div>
         <!--end::Modal - New Target-->
+        <!--begin::Modal - App Access Code-->
+        @include('app.company.modals.app-acess-code')
+        <!--end::Modal - App Access Code-->
 </x-tenant-app-layout>
 
 @include('app.components.modals.company.prestacao')
@@ -918,3 +919,143 @@
         }
     });
 </script>
+
+<!--begin::Script para Modal de Código de Acesso Mobile-->
+<script>
+    let currentAppCode = '';
+
+    /**
+     * Abre o modal e gera o código de acesso mobile para o tenant atual
+     */
+    function openAppCodeModal() {
+        // Abrir o modal
+        const modalElement = document.getElementById('kt_modal_app_code');
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+
+        // Mostrar loading
+        const displayCode = document.getElementById('display_app_code');
+        displayCode.textContent = 'Gerando...';
+        displayCode.classList.remove('text-primary');
+        displayCode.classList.add('text-muted');
+
+        // Desabilitar botão de copiar
+        const btnCopy = document.getElementById('btn_copy_code');
+        btnCopy.disabled = true;
+        btnCopy.querySelector('.indicator-label').classList.add('d-none');
+        btnCopy.querySelector('.indicator-progress').classList.remove('d-none');
+
+        // Fazer requisição AJAX para a rota do tenant atual
+        fetch('{{ route("tenant.generate-app-code") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+            },
+            body: JSON.stringify({})
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro ao gerar código');
+            }
+            return response.json();
+        })
+        .then(data => {
+            // Atualizar código no modal
+            currentAppCode = data.code;
+            displayCode.textContent = data.code;
+            displayCode.classList.remove('text-muted');
+            displayCode.classList.add('text-primary');
+
+            // Habilitar botão de copiar
+            btnCopy.disabled = false;
+            btnCopy.querySelector('.indicator-label').classList.remove('d-none');
+            btnCopy.querySelector('.indicator-progress').classList.add('d-none');
+        })
+        .catch(error => {
+            console.error('Erro:', error);
+            displayCode.textContent = 'Erro ao gerar código';
+            displayCode.classList.remove('text-primary');
+            displayCode.classList.add('text-danger');
+
+            // Habilitar botão de copiar (mesmo com erro)
+            btnCopy.disabled = false;
+            btnCopy.querySelector('.indicator-label').classList.remove('d-none');
+            btnCopy.querySelector('.indicator-progress').classList.add('d-none');
+        });
+    }
+
+    // Configurar botão de copiar código
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnCopy = document.getElementById('btn_copy_code');
+        if (btnCopy) {
+            btnCopy.addEventListener('click', function() {
+                if (!currentAppCode) {
+                    return;
+                }
+
+                // Tentar usar Clipboard API
+                if (navigator.clipboard && navigator.clipboard.writeText) {
+                    navigator.clipboard.writeText(currentAppCode).then(function() {
+                        // Feedback visual
+                        const originalText = btnCopy.querySelector('.indicator-label').innerHTML;
+                        btnCopy.querySelector('.indicator-label').innerHTML = '<i class="fas fa-check me-2"></i>Código Copiado!';
+                        btnCopy.classList.remove('btn-primary');
+                        btnCopy.classList.add('btn-success');
+
+                        setTimeout(function() {
+                            btnCopy.querySelector('.indicator-label').innerHTML = originalText;
+                            btnCopy.classList.remove('btn-success');
+                            btnCopy.classList.add('btn-primary');
+                        }, 2000);
+                    }).catch(function(err) {
+                        console.error('Erro ao copiar:', err);
+                        fallbackCopyTextToClipboard(currentAppCode);
+                    });
+                } else {
+                    // Fallback para navegadores mais antigos
+                    fallbackCopyTextToClipboard(currentAppCode);
+                }
+            });
+        }
+    });
+
+    /**
+     * Fallback para copiar texto (navegadores antigos)
+     */
+    function fallbackCopyTextToClipboard(text) {
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.top = '0';
+        textArea.style.left = '0';
+        textArea.style.position = 'fixed';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                const btnCopy = document.getElementById('btn_copy_code');
+                const originalText = btnCopy.querySelector('.indicator-label').innerHTML;
+                btnCopy.querySelector('.indicator-label').innerHTML = '<i class="fas fa-check me-2"></i>Código Copiado!';
+                btnCopy.classList.remove('btn-primary');
+                btnCopy.classList.add('btn-success');
+
+                setTimeout(function() {
+                    btnCopy.querySelector('.indicator-label').innerHTML = originalText;
+                    btnCopy.classList.remove('btn-success');
+                    btnCopy.classList.add('btn-primary');
+                }, 2000);
+            } else {
+                alert('Não foi possível copiar o código. Por favor, copie manualmente: ' + text);
+            }
+        } catch (err) {
+            console.error('Erro ao copiar:', err);
+            alert('Não foi possível copiar o código. Por favor, copie manualmente: ' + text);
+        }
+
+        document.body.removeChild(textArea);
+    }
+</script>
+<!--end::Script para Modal de Código de Acesso Mobile-->

@@ -94,12 +94,17 @@
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
     <script src="{{ url('assets/plugins/global/plugins.bundle.js') }}"></script>
     <script src="{{ url('assets/js/scripts.bundle.js') }}"></script>
+    <link href="{{ url('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
     <!--begin::Toast Script (converte mensagens de sessão em toasts)-->
     <script src="{{ url('assets/js/toasts.js') }}"></script>
     <!--end::Toast Script-->
     <!--begin::Session Handler Script (trata expiração de sessão)-->
     <script src="{{ url('assets/js/session-handler.js') }}"></script>
     <!--end::Session Handler Script-->
+    <!--begin::Favorites Script-->
+    <script src="{{ url('assets/js/custom/apps/favorites.js') }}"></script>
+    <!--end::Favorites Script-->
+    @stack('scripts')
 </body>
 <!--end::Body-->
 

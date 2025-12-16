@@ -541,8 +541,7 @@
                         <div class="dropdown-menu">
                             <a class="dropdown-item btn-sm" href="#" id="Dm_modal_caixa_clone">Salvar e
                                 Clonar</a>
-                            <a class="dropdown-item btn-sm" href="#" id="Dm_modal_caixa_novo">Salvar e em
-                                Branco</a>
+                            <a class="dropdown-item btn-sm" href="#" id="Dm_modal_caixa_novo">Salvar e Limpar</a>
                         </div>
                     </div>
                 </div>

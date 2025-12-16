@@ -532,7 +532,7 @@
                                             <button type="submit" id="kt_customers_export_submit"
                                                 class="btn btn-primary">
                                                 <span class="indicator-label">Submit</span>
-                                                <span class="indicator-progress">Please wait...
+                                                <span class="indicator-progress">Por favor, aguarde...
                                                     <span
                                                         class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                                             </button>

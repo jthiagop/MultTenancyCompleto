@@ -85,7 +85,7 @@ var KTModalTopUpWallet = function () {
 			// Prevent default button action
 			e.preventDefault();
 
-			// Disable button to avoid multiple click 
+			// Disable button to avoid multiple click
 			formSubmitButton.disabled = true;
 
 			// Show loading indication
@@ -106,7 +106,7 @@ var KTModalTopUpWallet = function () {
 	}
 
 	// Init form inputs
-	var initForm = function () {	
+	var initForm = function () {
         // Handle currency swap logic
         const currencyTypes = form.querySelectorAll('[name="currency_type"]');
         const targets = form.querySelectorAll('[data-kt-modal-top-up-wallet-option]');
@@ -220,20 +220,20 @@ var KTModalTopUpWallet = function () {
             e.preventDefault();
 
             Swal.fire({
-                text: "Are you sure you would like to cancel?",
+                text: "Tem certeza de que deseja cancelar?",
                 icon: "warning",
                 showCancelButton: true,
                 buttonsStyling: false,
-                confirmButtonText: "Yes, cancel it!",
-                cancelButtonText: "No, return",
+                confirmButtonText: "Sim, cancele!",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    form.reset(); // Reset form	
-                    modal.hide(); // Hide modal				
+                    form.reset(); // Reset form
+                    modal.hide(); // Hide modal
                 } else if (result.dismiss === 'cancel') {
                     Swal.fire({
                         text: "Your form has not been cancelled!.",

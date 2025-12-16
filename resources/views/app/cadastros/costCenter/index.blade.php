@@ -80,7 +80,7 @@
                             <!--end::Title-->
                             <!--begin::Description-->
                             <div class="text-muted fw-semibold fs-5">
-                                Preencha as informações necessárias para criar ou atualizar um centro de custo. <br>
+                                Preencha as informações necessárias para cadastrar um centro de custo. <br>
                                 Para mais detalhes, consulte as
                                 <a href="#" class="fw-bold link-primary">Diretrizes do Sistema</a>.
                             </div>

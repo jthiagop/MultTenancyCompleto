@@ -246,7 +246,7 @@
 														<!--begin::Button-->
 														<button type="submit" id="DM_modal_add_sepultado_submit" class="btn btn-primary">
 															<span class="indicator-label">Submit</span>
-															<span class="indicator-progress">Please wait...
+															<span class="indicator-progress">Por favor, aguarde...
 															<span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
 														</button>
 														<!--end::Button-->

@@ -8,6 +8,7 @@ use App\Models\Financeiro\BankStatement;
 use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\TenantFilial;
 use App\Models\User;
+use App\Services\ModuleService;
 use Carbon\Carbon;
 use Flasher\Laravel\Facade\Flasher;
 use Illuminate\Http\Request;
@@ -140,12 +141,17 @@ class DashboardController extends Controller
             ];
         }
 
+        // Buscar módulos para o dashboard
+        $moduleService = app(ModuleService::class);
+        $modules = $moduleService->getDashboardModules($user, $activeCompanyId);
+
         // Retorna para a view
         return view('app.dashboard', [
             'areaChartData' => $areaChartData,
             'selectedYear' => $selectedYear,
             'startDate' => $startDate,
-            'endDate' => $endDate
+            'endDate' => $endDate,
+            'modules' => $modules
         ]);
     }
 

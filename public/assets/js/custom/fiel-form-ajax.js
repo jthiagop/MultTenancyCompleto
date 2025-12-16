@@ -139,51 +139,63 @@ var KTModalNewTicket = function() {
                 form.reset();
                 validator.resetForm();
                 clearFormErrors();
-                
+
                 // Reset form action to create
                 form.action = form.getAttribute('data-original-action') || '{{ route("fieis.store") }}';
                 form.method = 'POST';
-                
+
                 // Remove method spoofing if exists
                 const methodInput = form.querySelector('input[name="_method"]');
                 if (methodInput) {
                     methodInput.remove();
                 }
-                
+
                 // Reset modal title
                 const modalTitle = document.querySelector('#kt_modal_new_ticket h1');
                 if (modalTitle) {
                     modalTitle.textContent = 'Cadastro de Fiéis';
                 }
-                
+
                 // Reset avatar preview
                 const avatarWrapper = form.querySelector('.image-input-wrapper');
                 if (avatarWrapper) {
                     avatarWrapper.style.backgroundImage = "url('/assets/media/avatars/blank.png')";
                 }
-                
+
                 // Reinicializar datepicker se necessário
                 initDatepicker();
-                
+
                 // Reinicializar validação de CPF
                 initCpfValidation();
             });
-            
+
             // Inicializar datepicker e validação de CPF quando o modal for aberto
             $(modal).on('shown.bs.modal', function() {
                 initDatepicker();
                 initCpfValidation();
-                
+
                 // Reinicializar Select2 para profissão se necessário
                 var profissaoSelect = form.querySelector('[name="profissao"]');
                 if (profissaoSelect && typeof $(profissaoSelect).select2 !== 'undefined') {
-                    // Verificar se já está inicializado
-                    if (!$(profissaoSelect).hasClass('select2-hidden-accessible')) {
-                        $(profissaoSelect).select2({
-                            placeholder: 'Selecione uma profissão...',
-                            allowClear: true
-                        });
+                    // Destruir instância anterior se existir
+                    if ($(profissaoSelect).hasClass('select2-hidden-accessible')) {
+                        $(profissaoSelect).select2('destroy');
                     }
+                    // Inicializar com busca sempre habilitada
+                    $(profissaoSelect).select2({
+                        dropdownParent: $(modal),
+                        placeholder: 'Selecione uma profissão...',
+                        allowClear: true,
+                        minimumResultsForSearch: 0,
+                        language: {
+                            noResults: function() {
+                                return "Nenhuma profissão encontrada";
+                            },
+                            searching: function() {
+                                return "Buscando...";
+                            }
+                        }
+                    });
                 }
             });
     };
@@ -192,17 +204,17 @@ var KTModalNewTicket = function() {
     var validarCPF = function(cpf) {
         // Remove caracteres não numéricos
         cpf = cpf.replace(/\D/g, '');
-        
+
         // Verifica se tem 11 dígitos
         if (cpf.length !== 11) {
             return false;
         }
-        
+
         // Verifica se todos os dígitos são iguais (ex: 111.111.111-11)
         if (/^(\d)\1{10}$/.test(cpf)) {
             return false;
         }
-        
+
         // Valida primeiro dígito verificador
         var soma = 0;
         for (var i = 0; i < 9; i++) {
@@ -215,7 +227,7 @@ var KTModalNewTicket = function() {
         if (resto !== parseInt(cpf.charAt(9))) {
             return false;
         }
-        
+
         // Valida segundo dígito verificador
         soma = 0;
         for (var i = 0; i < 10; i++) {
@@ -228,7 +240,7 @@ var KTModalNewTicket = function() {
         if (resto !== parseInt(cpf.charAt(10))) {
             return false;
         }
-        
+
         return true;
     };
 
@@ -258,7 +270,7 @@ var KTModalNewTicket = function() {
             }
             cpfInput.classList.add('is-invalid');
             cpfInput.classList.remove('is-valid');
-            
+
             // Adicionar classe no fv-row pai
             var fvRow = cpfInput.closest('.fv-row');
             if (!fvRow) {
@@ -284,7 +296,7 @@ var KTModalNewTicket = function() {
                 errorElement.classList.remove('d-block');
             }
             cpfInput.classList.remove('is-invalid');
-            
+
             // Remover classe do fv-row pai
             var fvRow = cpfInput.closest('.fv-row');
             if (!fvRow) {
@@ -303,25 +315,25 @@ var KTModalNewTicket = function() {
         // Validação quando o usuário terminar de digitar (on blur)
         var validateCpfRealTime = function() {
             var cpfValue = cpfInput.value.replace(/\D/g, ''); // Remove caracteres não numéricos
-            
+
             // Se o campo estiver vazio, limpa o erro (o notEmpty vai tratar)
             if (cpfValue.length === 0) {
                 clearCpfError();
                 return;
             }
-            
+
             // Se ainda está digitando e não tem 11 dígitos, não valida ainda
             if (cpfValue.length < 11) {
                 clearCpfError();
                 return;
             }
-            
+
             // Valida o CPF
             if (validarCPF(cpfValue)) {
                 clearCpfError();
                 cpfInput.classList.add('is-valid');
                 cpfInput.classList.remove('is-invalid');
-                
+
                 // Adicionar classe de sucesso no fv-row
                 var fvRow = cpfInput.closest('.fv-row');
                 if (!fvRow) {
@@ -391,7 +403,7 @@ var KTModalNewTicket = function() {
         if (form) {
             form.classList.remove('was-validated');
         }
-        
+
         // Limpar todos os erros do formulário
         var errorElements = form.querySelectorAll('.invalid-feedback, [role="alert"].invalid-feedback');
         errorElements.forEach(function(el) {
@@ -417,7 +429,7 @@ var KTModalNewTicket = function() {
         var invalidSelects = form.querySelectorAll('.form-select.is-invalid, select.is-invalid');
         invalidSelects.forEach(function(el) {
             el.classList.remove('is-invalid');
-            
+
             // Limpar também do container do Select2 se existir
             if (el.classList.contains('select2-hidden-accessible')) {
                 var select2Container = el.nextElementSibling;
@@ -438,22 +450,22 @@ var KTModalNewTicket = function() {
         // Limpar todos os campos do formulário
         var avatarWrapper = form.querySelector('.image-input-wrapper');
         var avatarRemoveInput = form.querySelector('input[name="avatar_remove"]');
-        
+
         // Resetar formulário
         form.reset();
         validator.resetForm();
         clearFormErrors();
-        
+
         // Restaurar background padrão do avatar
         if (avatarWrapper) {
             avatarWrapper.style.backgroundImage = "url('/assets/media/avatars/blank.png')";
         }
-        
+
         // Limpar campo de remoção de avatar
         if (avatarRemoveInput) {
             avatarRemoveInput.value = '';
         }
-        
+
         // Parar webcam se estiver ativa
         if (typeof KTWebcamCapture !== 'undefined' && KTWebcamCapture) {
             if (KTWebcamCapture.isCapturing) {
@@ -481,7 +493,7 @@ var KTModalNewTicket = function() {
 
                     // Criar FormData para enviar arquivos
                     var formData = new FormData(form);
-                    
+
                     // Garantir que a ação está no FormData
                     var saveActionField = form.querySelector('#save_action_field');
                     if (saveActionField) {
@@ -529,15 +541,15 @@ var KTModalNewTicket = function() {
                                 }
                             }).then(function() {
                                 // Verificar se é update ou create
-                                const isUpdate = form.querySelector('input[name="_method"]') && 
+                                const isUpdate = form.querySelector('input[name="_method"]') &&
                                                form.querySelector('input[name="_method"]').value === 'PUT';
-                                
+
                                 if (actionType === 'submit') {
                                     // Modo 1: Salvar - Fecha o modal e recarrega a tabela
                                     form.reset();
                                     validator.resetForm();
                                     clearFormErrors();
-                                    
+
                                     // Reset form action if it was an update
                                     if (isUpdate) {
                                         const originalAction = form.getAttribute('data-original-action');
@@ -559,7 +571,7 @@ var KTModalNewTicket = function() {
                                             avatarWrapper.style.backgroundImage = "url('/assets/media/avatars/blank.png')";
                                         }
                                     }
-                                    
+
                                     $(modal).modal('hide');
                                     // Recarregar a tabela via AJAX
                                     if ($.fn.DataTable.isDataTable('#kt_customers_table')) {
@@ -619,7 +631,7 @@ var KTModalNewTicket = function() {
                             if (result.data.errors) {
                                 // Limpar erros anteriores
                                 clearFormErrors();
-                                
+
                                 // Reabilitar botões em caso de erro
                                 if (cloneButton) {
                                     cloneButton.style.pointerEvents = 'auto';
@@ -636,7 +648,7 @@ var KTModalNewTicket = function() {
                                     }
 
                                     var errorMessage = result.data.errors[field][0];
-                                    
+
                                     // Buscar o elemento de input/select/textarea pelo nome
                                     var inputElement = form.querySelector('[name="' + field + '"]');
 
@@ -647,12 +659,12 @@ var KTModalNewTicket = function() {
 
                                     // Buscar o elemento de erro - tentar múltiplas formas
                                     var errorElement = document.getElementById(field + '-error');
-                                    
+
                                     // Se não encontrar pelo ID padrão, buscar dentro do container do campo
                                     if (!errorElement && inputElement) {
                                         // Buscar no container de mensagens mais próximo (pode estar no mesmo nível ou no parent)
                                         var messageContainer = inputElement.parentElement?.querySelector('.fv-plugins-message-container');
-                                        
+
                                         if (!messageContainer) {
                                             // Buscar no parent mais próximo que tenha o container
                                             var parent = inputElement.parentElement;
@@ -662,11 +674,11 @@ var KTModalNewTicket = function() {
                                                 parent = parent.parentElement;
                                             }
                                         }
-                                        
+
                                         if (messageContainer) {
                                             errorElement = messageContainer.querySelector('.invalid-feedback, [role="alert"]');
                                         }
-                                        
+
                                         // Se ainda não encontrar, buscar em qualquer lugar próximo ao input
                                         if (!errorElement) {
                                             // Buscar no mesmo container do input
@@ -674,7 +686,7 @@ var KTModalNewTicket = function() {
                                             if (inputContainer) {
                                                 errorElement = inputContainer.querySelector('#' + field + '-error, .invalid-feedback[id*="' + field + '"], [role="alert"][id*="' + field + '"]');
                                             }
-                                            
+
                                             // Se ainda não encontrar, buscar em qualquer fv-row próximo
                                             if (!errorElement) {
                                                 var fvRow = inputElement.closest('.fv-row');
@@ -687,7 +699,7 @@ var KTModalNewTicket = function() {
                                                         parent = parent.parentElement;
                                                     }
                                                 }
-                                                
+
                                                 if (fvRow) {
                                                     errorElement = fvRow.querySelector('#' + field + '-error, .invalid-feedback, [role="alert"]');
                                                 }
@@ -702,13 +714,13 @@ var KTModalNewTicket = function() {
                                         errorElement.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
                                         errorElement.classList.add('d-block');
                                         errorElement.removeAttribute('hidden');
-                                        
+
                                         // Garantir que o container pai também esteja visível
                                         var errorParent = errorElement.parentElement;
                                         while (errorParent && errorParent !== form) {
                                             errorParent.style.display = 'block';
                                             errorParent.style.visibility = 'visible';
-                                            if (errorParent.classList.contains('fv-plugins-message-container') || 
+                                            if (errorParent.classList.contains('fv-plugins-message-container') ||
                                                 errorParent.classList.contains('fv-help-block')) {
                                                 break;
                                             }
@@ -724,12 +736,12 @@ var KTModalNewTicket = function() {
                                             while (parent && parent !== form) {
                                                 messageContainer = parent.querySelector('.fv-plugins-message-container');
                                                 if (messageContainer) break;
-                                                
+
                                                 // Se não encontrar, criar um novo container após o input
                                                 if (!messageContainer && parent.tagName !== 'FORM') {
                                                     messageContainer = document.createElement('div');
                                                     messageContainer.className = 'fv-plugins-message-container';
-                                                    
+
                                                     // Inserir após o input ou após o wrapper do input
                                                     if (inputElement.nextSibling) {
                                                         parent.insertBefore(messageContainer, inputElement.nextSibling);
@@ -738,11 +750,11 @@ var KTModalNewTicket = function() {
                                                     }
                                                     break;
                                                 }
-                                                
+
                                                 parent = parent.parentElement;
                                             }
                                         }
-                                        
+
                                         if (messageContainer) {
                                             var helpBlock = messageContainer.querySelector('.fv-help-block');
                                             if (!helpBlock) {
@@ -750,7 +762,7 @@ var KTModalNewTicket = function() {
                                                 helpBlock.className = 'fv-help-block';
                                                 messageContainer.appendChild(helpBlock);
                                             }
-                                            
+
                                             errorElement = helpBlock.querySelector('.invalid-feedback, [role="alert"]');
                                             if (!errorElement) {
                                                 errorElement = document.createElement('span');
@@ -759,19 +771,19 @@ var KTModalNewTicket = function() {
                                                 errorElement.id = field + '-error';
                                                 helpBlock.appendChild(errorElement);
                                             }
-                                            
+
                                             errorElement.textContent = errorMessage;
                                             // Forçar exibição do elemento de erro (sobrescrever qualquer CSS)
                                             errorElement.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
                                             errorElement.classList.add('d-block');
                                             errorElement.removeAttribute('hidden');
-                                            
+
                                             // Garantir que o container pai também esteja visível
                                             var errorParent = errorElement.parentElement;
                                             while (errorParent && errorParent !== form) {
                                                 errorParent.style.display = 'block';
                                                 errorParent.style.visibility = 'visible';
-                                                if (errorParent.classList.contains('fv-plugins-message-container') || 
+                                                if (errorParent.classList.contains('fv-plugins-message-container') ||
                                                     errorParent.classList.contains('fv-help-block')) {
                                                     break;
                                                 }
@@ -786,7 +798,7 @@ var KTModalNewTicket = function() {
 
                                         // Remover classe válida se existir
                                         inputElement.classList.remove('is-valid');
-                                        
+
                                         // Adicionar classe was-validated ao formulário para garantir que os erros sejam exibidos
                                         if (form && !form.classList.contains('was-validated')) {
                                             form.classList.add('was-validated');
@@ -808,7 +820,7 @@ var KTModalNewTicket = function() {
                                                 parent = parent.parentElement;
                                             }
                                         }
-                                        
+
                                             if (fvRow) {
                                                 fvRow.classList.add('has-danger');
                                             fvRow.classList.remove('has-success');
@@ -832,7 +844,7 @@ var KTModalNewTicket = function() {
                                             }
                                         }
                                     }
-                                    
+
                                         hasErrors = true;
                                 }
 
@@ -858,7 +870,7 @@ var KTModalNewTicket = function() {
                                         'endereco': 'Endereço',
                                         'avatar': 'Avatar'
                                     };
-                                    
+
                                     for (var field in result.data.errors) {
                                         if (result.data.errors[field] && result.data.errors[field].length > 0) {
                                             var fieldLabel = fieldLabels[field] || field;
@@ -866,7 +878,7 @@ var KTModalNewTicket = function() {
                                             errorList.push('<strong>' + fieldLabel + ':</strong> ' + errorMsg);
                                         }
                                     }
-                                    
+
                                     var errorHtml = '<div style="text-align: left; max-height: 300px; overflow-y: auto;">';
                                     errorHtml += '<p style="margin-bottom: 10px;">Os seguintes campos precisam ser corrigidos:</p>';
                                     errorHtml += '<ul style="margin: 0; padding-left: 20px;">';
@@ -874,7 +886,7 @@ var KTModalNewTicket = function() {
                                         errorHtml += '<li style="margin-bottom: 8px;">' + error + '</li>';
                                     });
                                     errorHtml += '</ul></div>';
-                                    
+
                                     Swal.fire({
                                         html: errorHtml,
                                         icon: "error",

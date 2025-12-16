@@ -20,15 +20,6 @@
                                     em dinheiro com controle total.</div>
 
                             </div>
-                            <span class="btn btn-primary px-6 align-self-center" role="button">
-                                <svg width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                                Acessar
-                            </span>
                         </div>
                     </div>
                 </a>
@@ -38,28 +29,19 @@
             <div class="col-12 col-md-6 hover-elevate-up">
                 <a href="{{ route('banco.list', ['tab' => 'registros']) }}"
                     class="text-decoration-none" aria-label="Acessar lançamentos bancários">
-                    <div
-                        class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6">
+                    <div class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6">
                         <span class="svg-icon svg-icon-5x me-5">
                             <img width="50" height="50" src="/assets/media/png/banco3.png"
                                 alt="Ícone de lançamentos bancários" />
+
                         </span>
                         <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
                             <div class="mb-3 mb-md-0 fw-semibold">
                                 <h4 class="text-gray-900 fw-bold">Lançamentos Bancários</h4>
                                 <div class="text-muted fw-semibold fs-6">Controle transações de
                                     contas bancárias com relatórios detalhados.</div>
-                                <span class="badge badge-warning mt-2" id="banco-pendentes-count" style="display: none;">0</span>
+
                             </div>
-                            <span class="btn btn-primary px-6 align-self-center" role="button">
-                                <svg width="24" height="24" viewBox="0 0 24 24"
-                                    fill="none" xmlns="http://www.w3.org/2000/svg">
-                                    <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="currentColor"
-                                        stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
-                                Acessar
-                            </span>
                         </div>
                     </div>
                 </a>
@@ -67,58 +49,6 @@
             <!--end::Banco Card-->
         </div>
     </div>
+    
 <!--end::Financial Modules-->
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    // Função para carregar o número de conciliações pendentes
-    function carregarConciliacoesPendentes() {
-        const badge = document.getElementById('banco-pendentes-count');
-
-        if (!badge) {
-            return;
-        }
-
-        fetch('{{ route("banco.conciliacoes.pendentes") }}', {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(data => {
-            console.log('Resposta da API:', data);
-
-            if (data.success && data.total !== undefined) {
-                const total = data.total || 0;
-
-                if (total > 0) {
-                    badge.textContent = total;
-                    badge.style.display = 'inline-block';
-                    badge.classList.remove('badge-success');
-                    badge.classList.add('badge-warning');
-                } else {
-                    badge.style.display = 'none';
-                }
-            } else {
-                console.warn('Resposta não contém dados esperados:', data);
-                badge.style.display = 'none';
-            }
-        })
-        .catch(error => {
-            console.error('Erro ao carregar conciliações pendentes:', error);
-            badge.style.display = 'none';
-        });
-    }
-
-    // Carrega as informações inicialmente
-    carregarConciliacoesPendentes();
-});
-</script>

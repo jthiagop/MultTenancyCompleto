@@ -93,4 +93,41 @@ class TenantController extends Controller
     {
 
     }
+
+    /**
+     * Gera um código de acesso mobile para o tenant
+     */
+    public function generateCode(?Tenant $tenant = null)
+    {
+        try {
+            // Se não foi passado tenant (rota do tenant atual), buscar o tenant atual
+            if (!$tenant) {
+                $tenantId = tenant('id');
+                if (!$tenantId) {
+                    return response()->json([
+                        'error' => 'Tenant não encontrado'
+                    ], 404);
+                }
+
+                // O modelo Tenant sempre consulta o banco central
+                $tenant = Tenant::find($tenantId);
+                if (!$tenant) {
+                    return response()->json([
+                        'error' => 'Tenant não encontrado'
+                    ], 404);
+                }
+            }
+
+            $code = $tenant->generateAppCode();
+
+            return response()->json([
+                'code' => $code
+            ], 200);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao gerar código de acesso mobile: ' . $e->getMessage());
+            return response()->json([
+                'error' => 'Erro ao gerar código: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 }

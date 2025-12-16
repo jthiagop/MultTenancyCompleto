@@ -761,7 +761,7 @@ const initDropzone = () => {
                 showCancelButton: true,
                 buttonsStyling: false,
                 confirmButtonText: "Yes, remove it!",
-                cancelButtonText: "No, return",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
@@ -896,7 +896,7 @@ document.addEventListener("DOMContentLoaded", function() {
                                 showCancelButton: true,
                                 buttonsStyling: false,
                                 confirmButtonText: "Yes, move it!",
-                                cancelButtonText: "No, return",
+                                cancelButtonText: "Não, retorne",
                                 customClass: {
                                     confirmButton: "btn btn-primary",
                                     cancelButton: "btn btn-active-light"

@@ -15,14 +15,14 @@ var KTAppContactView = function () {
             // Prevent default button action
             e.preventDefault();
 
-            // Show popup confirmation 
+            // Show popup confirmation
             Swal.fire({
                 text: "Delete contact confirmation",
                 icon: "warning",
                 buttonsStyling: false,
                 showCancelButton: true,
                 confirmButtonText: "Yes, delete it!",
-                cancelButtonText: "No, return",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-danger",
                     cancelButton: "btn btn-active-light"

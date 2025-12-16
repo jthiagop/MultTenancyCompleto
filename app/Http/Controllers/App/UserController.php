@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rules;
 use Spatie\Permission\Models\Role;
+use Spatie\Permission\Models\Permission;
+use App\Services\PermissionService;
 
 class UserController extends Controller
 {
@@ -46,6 +48,10 @@ class UserController extends Controller
             return $user;
         });
 
+        // Buscar permissões agrupadas por módulo
+        $permissionService = new PermissionService();
+        $permissionsByModule = $permissionService->getPermissionsByModule();
+        $moduleNames = $permissionService->getModuleNames();
 
         return view(
             'app.users.index',
@@ -53,6 +59,8 @@ class UserController extends Controller
                 'users' => $users,
                 'roleColors' => $roleColors,
                 'companies' => $companies,
+                'permissionsByModule' => $permissionsByModule,
+                'moduleNames' => $moduleNames,
             ]
         );
     }
@@ -60,12 +68,17 @@ class UserController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(TenantFilial $tenantFilial)
+    public function create(TenantFilial $tenantFilial, PermissionService $permissionService)
     {
-
         $tenantFiliais = $tenantFilial->all();
+        $permissionsByModule = $permissionService->getPermissionsByModule();
+        $moduleNames = $permissionService->getModuleNames();
 
-        return view('app.users.create', ['tenantFiliais' => $tenantFiliais]);
+        return view('app.users.create', [
+            'tenantFiliais' => $tenantFiliais,
+            'permissionsByModule' => $permissionsByModule,
+            'moduleNames' => $moduleNames,
+        ]);
     }
 
     /**
@@ -87,8 +100,11 @@ class UserController extends Controller
                 ? ['nullable', 'confirmed', Rules\Password::defaults()]
                 : ['required', 'confirmed', Rules\Password::defaults()],
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Exemplo de regras para o campo avatar
-            'roles' => 'required|array',
-            'filiais' => 'array', // Certifique-se de que 'filiais' é um array
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'integer|exists:permissions,id',
+            'roles' => 'nullable|array',
+            'roles.*' => 'integer|exists:roles,id',
+            'filiais' => 'array', // Certifique-se que 'filiais' é um array
             'status' => 'nullable|boolean', // Status como um campo booleano
             'notifications' => 'nullable|array', // Deve ser um array, opcional (email/telefone)
             'must_change_password' => 'nullable|boolean', // Campo para obrigar troca de senha
@@ -120,6 +136,9 @@ class UserController extends Controller
             $userData['password'] = bcrypt($validatedData['password']);
         }
 
+        // Verificar se é o primeiro usuário do tenant (antes de criar)
+        $isFirstUser = !$userId && User::count() === 0;
+
         if ($userId) {
             // Atualização
             $user = User::findOrFail($userId);
@@ -130,9 +149,40 @@ class UserController extends Controller
             $userData['password'] = bcrypt($validatedData['password']);
             $user = User::create($userData);
         }
-        // Sincronizar permissões (roles) se estiverem presentes
-        if (isset($validatedData['roles'])) {
-            $user->roles()->sync($request->input('roles'));
+
+        // Sincronizar roles
+        if (isset($validatedData['roles']) && !empty($validatedData['roles'])) {
+            // Se roles foram enviados no request, usar eles
+            $validRoles = Role::whereIn('id', $request->input('roles'))->pluck('id')->toArray();
+            $user->syncRoles($validRoles);
+        } elseif (!$userId) {
+            // Se for criação e não houver roles no request, atribuir role padrão "user"
+            $defaultRole = Role::where('name', 'user')->first();
+            if ($defaultRole) {
+                $user->assignRole($defaultRole);
+            } elseif ($isFirstUser) {
+                // Se for o primeiro usuário, atribuir role "admin" ou "global"
+                $adminRole = Role::whereIn('name', ['admin', 'global'])->first();
+                if ($adminRole) {
+                    $user->assignRole($adminRole);
+                }
+            }
+        }
+
+        // Sincronizar permissões
+        if (isset($validatedData['permissions']) && !empty($validatedData['permissions'])) {
+            // Validar que as permissões existem
+            $validPermissions = Permission::whereIn('id', $request->input('permissions'))->pluck('id')->toArray();
+            $user->syncPermissions($validPermissions);
+        } elseif ($isFirstUser) {
+            // Se for o primeiro usuário, dar todas as permissões
+            $allPermissions = Permission::all()->pluck('id')->toArray();
+            if (!empty($allPermissions)) {
+                $user->syncPermissions($allPermissions);
+            }
+        } else {
+            // Se não houver permissões e não for o primeiro usuário, remover todas
+            $user->syncPermissions([]);
         }
         // --- A LÓGICA PRINCIPAL ESTÁ AQUI ---
         // Junta a empresa principal com as filiais
@@ -185,6 +235,14 @@ class UserController extends Controller
 
         $companies = Company::all();
 
+        // Buscar permissões agrupadas por módulo
+        $permissionService = new PermissionService();
+        $permissionsByModule = $permissionService->getPermissionsByModule();
+        $moduleNames = $permissionService->getModuleNames();
+        $userPermissions = $user->permissions->pluck('id')->toArray(); // Permissões atuais do usuário
+
+        // Verificar se é o primeiro usuário (Usuário Supremo)
+        $isFirstUser = User::orderBy('id', 'asc')->first()->id === $user->id;
 
         return view(
             'app.users.edit',
@@ -192,7 +250,11 @@ class UserController extends Controller
                 'user' => $user,
                 'roles' => $roles,
                 'tenantFiliais' => $tenantFiliais,
-                'companies' => $companies
+                'companies' => $companies,
+                'permissionsByModule' => $permissionsByModule,
+                'moduleNames' => $moduleNames,
+                'userPermissions' => $userPermissions,
+                'isFirstUser' => $isFirstUser,
             ]
         );
     }
@@ -206,7 +268,8 @@ class UserController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|max:255|unique:users,email,' . $user->id,
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'roles' => 'nullable|array',
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'integer|exists:permissions,id',
             'filiais' => 'array', // Adicione esta linha para validar o campo 'filiais'
             'must_change_password' => 'nullable|boolean', // Campo para obrigar troca de senha
         ]);
@@ -224,8 +287,14 @@ class UserController extends Controller
 
         $user->update($validateData);
 
-        if (isset($validateData['roles'])) {
-            $user->roles()->sync($request->input('roles'));
+        // Sincronizar permissões se estiverem presentes
+        if (isset($validateData['permissions']) && !empty($validateData['permissions'])) {
+            // Validar que as permissões existem antes de sincronizar
+            $validPermissions = Permission::whereIn('id', $request->input('permissions', []))->pluck('id')->toArray();
+            $user->syncPermissions($validPermissions);
+        } else {
+            // Se não houver permissões, remover todas
+            $user->syncPermissions([]);
         }
         // Adicione o trecho abaixo para sincronizar as filiais
         if (isset($validateData['filiais'])) {
@@ -302,6 +371,59 @@ class UserController extends Controller
             $user->roles()->sync($roles);
         }
         return redirect()->back()->with('success', 'Permissões atualizadas com sucesso!');
+    }
+
+    /**
+     * Atualiza apenas as permissões de um usuário específico.
+     */
+    public function updatePermissions(Request $request, User $user)
+    {
+        // Validação para garantir que os dados recebidos são seguros
+        $request->validate([
+            'permissions' => 'nullable|array',
+            'permissions.*' => 'integer|exists:permissions,id' // Garante que cada item no array é um ID de permissão válido
+        ]);
+
+        // Pega o array de IDs de permissões do formulário (ex: ['1', '4', '5'])
+        $permissionIds = $request->input('permissions', []);
+
+        // Verificar se as permissões existem antes de sincronizar
+        $validPermissions = Permission::whereIn('id', $permissionIds)->pluck('id')->toArray();
+
+        // Se houver IDs inválidos, retornar erro
+        if (count($permissionIds) !== count($validPermissions)) {
+            $invalidIds = array_diff($permissionIds, $validPermissions);
+            return redirect()->back()
+                ->withErrors(['permissions' => 'Algumas permissões não foram encontradas: ' . implode(', ', $invalidIds)])
+                ->withInput();
+        }
+
+        // Sincroniza as permissões usando o método do Spatie
+        $user->syncPermissions($validPermissions);
+
+        return redirect()->back()->with('success', 'Permissões atualizadas com sucesso!');
+    }
+
+    /**
+     * Atribui todas as permissões disponíveis ao usuário (Usuário Supremo).
+     */
+    public function assignAllPermissions(User $user)
+    {
+        try {
+            // Buscar todas as permissões
+            $allPermissions = Permission::all();
+
+            if ($allPermissions->isEmpty()) {
+                return redirect()->back()->with('error', 'Nenhuma permissão encontrada no sistema. Execute o seeder de permissões primeiro.');
+            }
+
+            // Atribuir todas as permissões
+            $user->syncPermissions($allPermissions->pluck('id')->toArray());
+
+            return redirect()->back()->with('success', "Todas as {$allPermissions->count()} permissões foram atribuídas ao usuário com sucesso!");
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Erro ao atribuir permissões: ' . $e->getMessage());
+        }
     }
 
     /**

@@ -12,12 +12,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\URL;
+use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasRoles;
+    use HasFactory, Notifiable, HasRoles, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -102,6 +103,22 @@ class User extends Authenticatable
     public function bancos()
     {
         return $this->hasMany(CadastroBanco::class, 'created_by');
+    }
+
+    // Favoritos de rotas
+    public function favoriteRoutes()
+    {
+        return $this->hasMany(UserFavoriteRoute::class)
+            ->where('company_id', session('active_company_id'))
+            ->ordered();
+    }
+
+    // Helper para favoritos com permissão
+    public function getAuthorizedFavoritesAttribute()
+    {
+        return $this->favoriteRoutes->filter(function ($favorite) {
+            return $this->can($favorite->module_key . '.index');
+        });
     }
 
     static public function getCompany()

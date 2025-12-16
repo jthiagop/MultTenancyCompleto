@@ -52,6 +52,40 @@
                         <!--end::Breadcrumb-->
                     </div>
                     <!--end::Page title-->
+                    <!--begin::Actions-->
+                    <div class="d-flex align-items-center gap-2 gap-lg-3">
+                        <!--begin::Filter menu-->
+                        <div class="d-flex">
+                            <select name="campaign-type" data-control="select2" data-hide-search="true"
+                                class="form-select form-select-sm bg-body border-body w-175px">
+                                <option value="Twitter" selected="selected">Select Campaign</option>
+                                <option value="Twitter">Twitter Campaign</option>
+                                <option value="Twitter">Facebook Campaign</option>
+                                <option value="Twitter">Adword Campaign</option>
+                                <option value="Twitter">Carbon Campaign</option>
+                            </select>
+                            <a href="#" class="btn btn-icon btn-sm btn-success flex-shrink-0 ms-4"
+                                data-bs-toggle="modal" data-bs-target="#kt_modal_create_campaign">
+                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr075.svg-->
+                                <span class="svg-icon svg-icon-2">
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                        xmlns="http://www.w3.org/2000/svg">
+                                        <rect opacity="0.5" x="11.364" y="20.364" width="16" height="2"
+                                            rx="1" transform="rotate(-90 11.364 20.364)" fill="currentColor" />
+                                        <rect x="4.36396" y="11.364" width="16" height="2" rx="1"
+                                            fill="currentColor" />
+                                    </svg>
+                                </span>
+                                <!--end::Svg Icon-->
+                            </a>
+                        </div>
+                        <!--end::Filter menu-->
+                        <!--begin::Secondary button-->
+                        <!--end::Secondary button-->
+                        <!--begin::Primary button-->
+                        <!--end::Primary button-->
+                    </div>
+                    <!--end::Actions-->
                 </div>
                 <!--end::Toolbar container-->
             </div>
@@ -67,8 +101,9 @@
                             <div class="d-flex flex-wrap flex-sm-nowrap mb-6">
                                 <!--begin::Image-->
                                 <span class="svg-icon svg-icon-5x me-5">
-                                    <img width="150" height="150" src="/assets/media/png/Cash_Register-transformed.webp" alt="">
-                            </span>
+                                    <img width="150" height="150"
+                                        src="/assets/media/png/Cash_Register-transformed.webp" alt="">
+                                </span>
                                 <!--end::Image-->
                                 <!--begin::Wrapper-->
                                 <div class="flex-grow-1">
@@ -79,7 +114,8 @@
                                             <!--begin::Status-->
                                             <div class="d-flex align-items-center mb-1">
                                                 <a href="#"
-                                                    class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">Movimentações do caixa</a>
+                                                    class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">Movimentações
+                                                    do caixa</a>
                                                 <span class="badge badge-light-success me-auto">Ativado</span>
                                             </div>
                                             <!--end::Status-->
@@ -351,45 +387,44 @@
                             </div>
                             <!--end::Details-->
                             <div class="separator"></div>
-                                    <!--begin::Nav-->
-                                    <ul
-                                        class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold">
-                                        <!--begin::Nav item-->
-                                        <li class="nav-item">
-                                            <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'overview' ? 'active' : '' }}"
-                                                href="{{ route('caixa.list', ['tab' => 'overview']) }}">
-                                                Gestão
-                                            </a>
-                                        </li>
-                                        <!--end::Nav item-->
-                                        <!--begin::Nav item-->
-                                        <li class="nav-item">
-                                            <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'lancamento' ? 'active' : '' }}"
-                                                href="{{ route('caixa.list', ['tab' => 'lancamento']) }}">
-                                                Lançamento
-                                            </a>
-                                        </li>
-                                        <!--end::Nav item-->
+                            <!--begin::Nav-->
+                            <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold">
+                                <!--begin::Nav item-->
+                                <li class="nav-item">
+                                    <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'overview' ? 'active' : '' }}"
+                                        href="{{ route('caixa.list', ['tab' => 'overview']) }}">
+                                        Gestão
+                                    </a>
+                                </li>
+                                <!--end::Nav item-->
+                                <!--begin::Nav item-->
+                                <li class="nav-item">
+                                    <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'lancamento' ? 'active' : '' }}"
+                                        href="{{ route('caixa.list', ['tab' => 'lancamento']) }}">
+                                        Lançamento
+                                    </a>
+                                </li>
+                                <!--end::Nav item-->
 
-                                        <!--begin::Nav item-->
-                                        <li class="nav-item">
-                                            <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'registros' ? 'active' : '' }}"
-                                                href="{{ route('caixa.list', ['tab' => 'registros']) }}">
-                                                Registros
-                                            </a>
-                                        </li>
-                                        <!--end::Nav item-->
+                                <!--begin::Nav item-->
+                                <li class="nav-item">
+                                    <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'registros' ? 'active' : '' }}"
+                                        href="{{ route('caixa.list', ['tab' => 'registros']) }}">
+                                        Registros
+                                    </a>
+                                </li>
+                                <!--end::Nav item-->
 
-                                        <!--begin::Nav item-->
-                                        <li class="nav-item">
-                                            <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'bancos' ? 'active' : '' }}"
-                                                href="{{ route('caixa.list', ['tab' => 'bancos']) }}">
-                                                Relatórios
-                                            </a>
-                                        </li>
-                                        <!--end::Nav item-->
-                                    </ul>
-                                    <!--end::Nav-->
+                                <!--begin::Nav item-->
+                                <li class="nav-item">
+                                    <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'bancos' ? 'active' : '' }}"
+                                        href="{{ route('caixa.list', ['tab' => 'bancos']) }}">
+                                        Relatórios
+                                    </a>
+                                </li>
+                                <!--end::Nav item-->
+                            </ul>
+                            <!--end::Nav-->
                         </div>
                     </div>
                     <!--end::Navbar-->
@@ -465,181 +500,197 @@
 
 
 @section('scripts')
-<script>
-    "use strict";
+    <script>
+        "use strict";
 
-    // Função para inicializar e controlar nosso gráfico de despesas
-    var DespesasChartWidget = function() {
-        var chartElement = document.getElementById('kt_despesas_chart');
-        var chart = null;
+        // Função para inicializar e controlar nosso gráfico de despesas
+        var DespesasChartWidget = function() {
+            var chartElement = document.getElementById('kt_despesas_chart');
+            var chart = null;
 
-        // Função para buscar dados e atualizar o gráfico
-        const updateChart = (params) => {
-            // Mostra o overlay de loading
-            const overlay = new KTOverlay(chartElement);
-            overlay.show();
+            // Função para buscar dados e atualizar o gráfico
+            const updateChart = (params) => {
+                // Mostra o overlay de loading
+                const overlay = new KTOverlay(chartElement);
+                overlay.show();
 
-            // Monta a URL com os parâmetros
-            const url = new URL("{{ route('charts.despesas.data') }}");
-            url.search = new URLSearchParams(params).toString();
+                // Monta a URL com os parâmetros
+                const url = new URL("{{ route('charts.despesas.data') }}");
+                url.search = new URLSearchParams(params).toString();
 
-            // Faz a chamada AJAX
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    // Atualiza o valor total
-                    document.getElementById('total_despesas_valor').innerText = data.total;
+                // Faz a chamada AJAX
+                fetch(url)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Atualiza o valor total
+                        document.getElementById('total_despesas_valor').innerText = data.total;
 
-                    // Atualiza o gráfico com os novos dados
-                    chart.updateOptions({
-                        xaxis: {
-                            categories: data.categories
-                        },
-                        series: data.series
+                        // Atualiza o gráfico com os novos dados
+                        chart.updateOptions({
+                            xaxis: {
+                                categories: data.categories
+                            },
+                            series: data.series
+                        });
+
+                        overlay.hide(); // Esconde o loading
+                    })
+                    .catch(error => {
+                        console.error('Erro ao buscar dados do gráfico:', error);
+                        overlay.hide();
                     });
-
-                    overlay.hide(); // Esconde o loading
-                })
-                .catch(error => {
-                    console.error('Erro ao buscar dados do gráfico:', error);
-                    overlay.hide();
-                });
-        }
-
-        // Função de inicialização
-        const init = () => {
-            if (!chartElement) {
-                return;
             }
 
-            // Opções base do ApexCharts (estilo do seu tema)
-            var options = {
-                series: [], // Começa vazio, será preenchido via AJAX
-                chart: {
-                    type: 'area',
-                    height: 300,
-                    toolbar: {
-                        show: false
-                    }
-                },
-                xaxis: {
-                    categories: [], // Começa vazio
-                    axisBorder: { show: false },
-                    axisTicks: { show: false },
-                    labels: {
-                        style: {
-                            colors: KTUtil.getCssVariableValue('--kt-gray-500'),
-                            fontSize: '12px'
+            // Função de inicialização
+            const init = () => {
+                if (!chartElement) {
+                    return;
+                }
+
+                // Opções base do ApexCharts (estilo do seu tema)
+                var options = {
+                    series: [], // Começa vazio, será preenchido via AJAX
+                    chart: {
+                        type: 'area',
+                        height: 300,
+                        toolbar: {
+                            show: false
                         }
-                    }
-                },
-                yaxis: {
-                    labels: {
-                        formatter: function (value) {
-                            return 'R$ ' + parseInt(value);
-                        },
-                        style: {
-                            colors: KTUtil.getCssVariableValue('--kt-gray-500'),
-                            fontSize: '12px'
-                        }
-                    }
-                },
-                fill: {
-                    type: 'gradient',
-                    gradient: {
-                        shadeIntensity: 1,
-                        opacityFrom: 0.4,
-                        opacityTo: 0.2,
-                        stops: [15, 120, 100]
-                    }
-                },
-                colors: [KTUtil.getCssVariableValue('--kt-primary')],
-                dataLabels: { enabled: false },
-                stroke: { curve: 'smooth', width: 2 },
-                legend: { show: false },
-                tooltip: {
-                    x: {
-                        format: 'dd MMM'
                     },
-                    y: {
-                        formatter: function (value) {
-                            return "R$ " + value.toFixed(2).replace('.', ',');
+                    xaxis: {
+                        categories: [], // Começa vazio
+                        axisBorder: {
+                            show: false
+                        },
+                        axisTicks: {
+                            show: false
+                        },
+                        labels: {
+                            style: {
+                                colors: KTUtil.getCssVariableValue('--kt-gray-500'),
+                                fontSize: '12px'
+                            }
+                        }
+                    },
+                    yaxis: {
+                        labels: {
+                            formatter: function(value) {
+                                return 'R$ ' + parseInt(value);
+                            },
+                            style: {
+                                colors: KTUtil.getCssVariableValue('--kt-gray-500'),
+                                fontSize: '12px'
+                            }
+                        }
+                    },
+                    fill: {
+                        type: 'gradient',
+                        gradient: {
+                            shadeIntensity: 1,
+                            opacityFrom: 0.4,
+                            opacityTo: 0.2,
+                            stops: [15, 120, 100]
+                        }
+                    },
+                    colors: [KTUtil.getCssVariableValue('--kt-primary')],
+                    dataLabels: {
+                        enabled: false
+                    },
+                    stroke: {
+                        curve: 'smooth',
+                        width: 2
+                    },
+                    legend: {
+                        show: false
+                    },
+                    tooltip: {
+                        x: {
+                            format: 'dd MMM'
+                        },
+                        y: {
+                            formatter: function(value) {
+                                return "R$ " + value.toFixed(2).replace('.', ',');
+                            }
                         }
                     }
+                };
+
+                chart = new ApexCharts(chartElement, options);
+                chart.render();
+
+                // Busca os dados iniciais (padrão de 30 dias)
+                updateChart({
+                    range: 30
+                });
+            }
+
+            // Configuração dos botões e do seletor de data
+            const setupEventListeners = () => {
+                const rangeButtons = document.querySelectorAll('.card-toolbar .btn-group [data-range]');
+
+                rangeButtons.forEach(button => {
+                    button.addEventListener('click', function(e) {
+                        // Remove a classe 'active' de todos os botões e adiciona no clicado
+                        rangeButtons.forEach(btn => btn.classList.remove('active'));
+                        this.classList.add('active');
+
+                        // Limpa o seletor de data
+                        $('#despesas_date_range_picker').val('');
+
+                        // Chama a atualização com o novo range
+                        const range = this.getAttribute('data-range');
+                        updateChart({
+                            range: range
+                        });
+                    });
+                });
+
+                // Inicializa o Date Range Picker
+                const datePicker = $("#despesas_date_range_picker");
+                datePicker.daterangepicker({
+                    autoUpdateInput: false,
+                    locale: {
+                        format: "DD/MM/YYYY",
+                        cancelLabel: 'Limpar',
+                        applyLabel: 'Aplicar'
+                    }
+                });
+
+                datePicker.on('apply.daterangepicker', function(ev, picker) {
+                    $(this).val(picker.startDate.format('DD/MM/YYYY') + ' - ' + picker.endDate.format(
+                        'DD/MM/YYYY'));
+                    rangeButtons.forEach(btn => btn.classList.remove('active'));
+
+                    updateChart({
+                        start_date: picker.startDate.format('YYYY-MM-DD'),
+                        end_date: picker.endDate.format('YYYY-MM-DD')
+                    });
+                });
+
+                datePicker.on('cancel.daterangepicker', function(ev, picker) {
+                    $(this).val('');
+                });
+
+                // Botão para limpar o datepicker
+                document.getElementById('despesas_date_range_picker_clear').addEventListener('click', function() {
+                    datePicker.val('');
+                    // Opcional: voltar para o filtro padrão de 30 dias
+                    document.querySelector('[data-range="30"]').click();
+                });
+            }
+
+            // Retorna os métodos públicos
+            return {
+                init: function() {
+                    init();
+                    setupEventListeners();
                 }
             };
+        }();
 
-            chart = new ApexCharts(chartElement, options);
-            chart.render();
-
-            // Busca os dados iniciais (padrão de 30 dias)
-            updateChart({ range: 30 });
-        }
-
-        // Configuração dos botões e do seletor de data
-        const setupEventListeners = () => {
-            const rangeButtons = document.querySelectorAll('.card-toolbar .btn-group [data-range]');
-
-            rangeButtons.forEach(button => {
-                button.addEventListener('click', function(e) {
-                    // Remove a classe 'active' de todos os botões e adiciona no clicado
-                    rangeButtons.forEach(btn => btn.classList.remove('active'));
-                    this.classList.add('active');
-
-                    // Limpa o seletor de data
-                    $('#despesas_date_range_picker').val('');
-
-                    // Chama a atualização com o novo range
-                    const range = this.getAttribute('data-range');
-                    updateChart({ range: range });
-                });
-            });
-
-            // Inicializa o Date Range Picker
-            const datePicker = $("#despesas_date_range_picker");
-            datePicker.daterangepicker({
-                autoUpdateInput: false,
-                locale: {
-                    format: "DD/MM/YYYY",
-                    cancelLabel: 'Limpar',
-                    applyLabel: 'Aplicar'
-                }
-            });
-
-            datePicker.on('apply.daterangepicker', function(ev, picker) {
-                $(this).val(picker.startDate.format('DD/MM/YYYY') + ' - ' + picker.endDate.format('DD/MM/YYYY'));
-                rangeButtons.forEach(btn => btn.classList.remove('active'));
-
-                updateChart({
-                    start_date: picker.startDate.format('YYYY-MM-DD'),
-                    end_date: picker.endDate.format('YYYY-MM-DD')
-                });
-            });
-
-            datePicker.on('cancel.daterangepicker', function(ev, picker) {
-                $(this).val('');
-            });
-
-            // Botão para limpar o datepicker
-            document.getElementById('despesas_date_range_picker_clear').addEventListener('click', function() {
-                datePicker.val('');
-                // Opcional: voltar para o filtro padrão de 30 dias
-                document.querySelector('[data-range="30"]').click();
-            });
-        }
-
-        // Retorna os métodos públicos
-        return {
-            init: function() {
-                init();
-                setupEventListeners();
-            }
-        };
-    }();
-
-    // Quando o documento estiver pronto, inicializa nosso widget
-    KTUtil.onDOMContentLoaded(function() {
-        DespesasChartWidget.init();
-    });
-</script>
+        // Quando o documento estiver pronto, inicializa nosso widget
+        KTUtil.onDOMContentLoaded(function() {
+            DespesasChartWidget.init();
+        });
+    </script>
 @endsection

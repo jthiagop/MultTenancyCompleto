@@ -20,15 +20,15 @@ var KTUsersAddAuthApp = function () {
                 showCancelButton: true,
                 buttonsStyling: false,
                 confirmButtonText: "Yes, close it!",
-                cancelButtonText: "No, return",
+                cancelButtonText: "Não, retorne",
                 customClass: {
                     confirmButton: "btn btn-primary",
                     cancelButton: "btn btn-active-light"
                 }
             }).then(function (result) {
                 if (result.value) {
-                    modal.hide(); // Hide modal				
-                } 
+                    modal.hide(); // Hide modal
+                }
             });
         });
 
