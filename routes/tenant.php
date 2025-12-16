@@ -24,6 +24,8 @@ use App\Http\Controllers\App\Contabilidade\ContabilidadeController;
 use App\Http\Controllers\App\EntidadeFinanceiraController;
 use App\Http\Controllers\App\EscrituraController;
 use App\Http\Controllers\App\FielController;
+use App\Http\Controllers\App\DizimoController;
+use App\Http\Controllers\App\FavoriteRouteController;
 use App\Http\Controllers\App\Filter\filterController;
 use App\Http\Controllers\App\Filter\RebortController;
 use App\Http\Controllers\App\Financeiro\ConciliacaoController;
@@ -41,6 +43,7 @@ use App\Http\Controllers\App\BemController;
 use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\App\PatrimonioAnexoController;
 use App\Http\Controllers\App\TelaDeLoginController;
+use App\Http\Controllers\TenantController;
 use App\Models\Financeiro\ModulosAnexo;
 use App\Models\TenantFilial;
 use Illuminate\Support\Facades\Route;
@@ -84,6 +87,20 @@ Route::middleware([
     Route::get('/dashboard/missas-chart-data', [DashboardController::class, 'getMissasChartData'])
         ->middleware(['auth', 'check.user.active', 'verified'])
         ->name('dashboard.missas-chart-data');
+
+    // Rotas de favoritos de módulos
+    Route::middleware(['auth', 'verified'])->group(function () {
+        Route::prefix('api/favorites')->name('api.favorites.')->group(function () {
+            Route::get('/available', [FavoriteRouteController::class, 'availableModules'])
+                ->name('available');
+            Route::post('/', [FavoriteRouteController::class, 'store'])
+                ->name('store');
+            Route::delete('/{id}', [FavoriteRouteController::class, 'destroy'])
+                ->name('destroy');
+            Route::put('/reorder', [FavoriteRouteController::class, 'reorder'])
+                ->name('reorder');
+        });
+    });
 
     // Rotas de perfil de usuário
     Route::prefix('/app/profile')->group(function () {
@@ -166,6 +183,9 @@ Route::middleware([
     // Grupo de rotas protegido pelo middleware 'auth', 'check.user.active', 'ensureUserHasAccess' e 'password.change.required'
     Route::middleware(['auth', 'check.user.active', 'ensureUserHasAccess', 'password.change.required'])->group(function () {
 
+        // Rota para gerar código de acesso mobile (para o tenant atual)
+        Route::post('/generate-app-code', [TenantController::class, 'generateCode'])->name('tenant.generate-app-code');
+
             // Rota que fornecerá os dados em formato JSON para a DataTable
     // Usaremos POST para enviar os filtros de forma mais robusta
     Route::post('/reports/financial-data', [ReportController::class, 'getFinancialDataServerSide'])->name('reports.financial.data');
@@ -194,6 +214,8 @@ Route::middleware([
             Route::resource('users', UserController::class);
             // Rota dedicada APENAS para atualizar as permissões de um usuário
             Route::put('/users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.roles.update');
+            Route::put('/users/{user}/permissions', [UserController::class, 'updatePermissions'])->name('users.permissions.update');
+            Route::post('/users/{user}/assign-all-permissions', [UserController::class, 'assignAllPermissions'])->name('users.assign-all-permissions');
             Route::put('/users/{user}/filiais', [UserController::class, 'updateFiliais'])->name('users.filiais.update');
             // Rota dedicada APENAS para ativar ou desativar um usuário
             Route::put('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status.update');
@@ -235,12 +257,17 @@ Route::middleware([
             Route::resource('caixa', CaixaController::class);
             Route::get('/lancamentoPadrao/data', [LancamentoPadraoController::class, 'getData'])->name('lancamentoPadrao.data');
             Route::post('/lancamentoPadrao/validate-field', [LancamentoPadraoController::class, 'validateField'])->name('lancamentoPadrao.validate-field');
+            Route::get('/lancamentoPadrao/download-template', [LancamentoPadraoController::class, 'downloadTemplate'])->name('lancamentoPadrao.download-template');
+            Route::post('/lancamentoPadrao/upload-template', [LancamentoPadraoController::class, 'uploadTemplate'])->name('lancamentoPadrao.upload-template');
             Route::resource('lancamentoPadrao', LancamentoPadraoController::class);
             Route::resource('cadastroBancos', BankController::class);
             Route::resource('users', UserController::class);
         });
 
         // Rotas para gerenciamento de centros de custo
+        // IMPORTANT: Custom routes must come BEFORE resource routes to avoid conflicts
+        Route::get('/costCenter/modal/data', [CostCenterController::class, 'getDataForModal'])->name('costCenter.modal.data');
+        Route::get('/costCenter/contas-financeiras', [CostCenterController::class, 'getContasFinanceiras'])->name('costCenter.contas.financeiras');
         Route::resource('costCenter', CostCenterController::class);
 
         // Rotas acessíveis apenas para usuários comuns
@@ -255,6 +282,7 @@ Route::middleware([
             Route::post('/financeiro/export', [CaixaController::class, 'export'])->name('financeiro.export');
             Route::delete('/financeiro/delete', [CaixaController::class, 'deleteEntries'])->name('financeiro.delete');
             Route::get('/financeiro/filter-options', [CaixaController::class, 'getFilterOptions'])->name('financeiro.filter-options');
+            Route::get('/financeiro/saldos-mensais', [CaixaController::class, 'getSaldosMensais'])->name('financeiro.saldos-mensais');
 
             Route::get('app/financeiro/banco/list', [BancoController::class, 'list'])->name('banco.list');
             Route::get('/banco/chart-data', [BancoController::class, 'getChartData'])->name('banco.chart.data');
@@ -273,7 +301,7 @@ Route::middleware([
             // *** Editar Patrimônio ***
             Route::resource('patrimonio', PatrimonioController::class);
             Route::post('/save-location', [PatrimonioController::class, 'updateLocation'])->name('patrimonios.updateLocation');
-            
+
             // *** Rotas para Bens (Novo Sistema) ***
             Route::resource('bem', BemController::class);
 
@@ -338,6 +366,9 @@ Route::middleware([
 
                 Route::resource('fieis', FielController::class);
                 Route::get('fieis/charts/data', [FielController::class, 'getChartData'])->name('fieis.charts.data');
+                Route::post('fieis/relatorio/pdf', [FielController::class, 'relatorioPdf'])->name('fieis.relatorio.pdf');
+
+                Route::resource('dizimos', DizimoController::class);
 
                 Route::resource('entidades', EntidadeFinanceiraController::class);
 

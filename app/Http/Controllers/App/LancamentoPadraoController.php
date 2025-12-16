@@ -5,6 +5,7 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Models\LancamentoPadrao;
 use App\Models\Contabilide\ChartOfAccount;
+use App\Exports\LancamentosPadraoTemplateExport;
 use Flasher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -434,6 +435,189 @@ class LancamentoPadraoController extends Controller
         }
     }
 
+    /**
+     * Download do template Excel para edição em massa
+     */
+    public function downloadTemplate()
+    {
+        $companyId = session('active_company_id');
+        
+        if (!$companyId) {
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['error' => 'Nenhuma empresa selecionada.'], 403);
+            }
+            return redirect()->back()->with('error', 'Nenhuma empresa selecionada.');
+        }
+        
+        try {
+            $export = new LancamentosPadraoTemplateExport($companyId);
+            $spreadsheet = $export->generate();
+            
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $filename = 'lancamentos_padrao_template.xlsx';
+            $tempFile = tempnam(sys_get_temp_dir(), $filename);
+            $writer->save($tempFile);
+            
+            return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao gerar template Excel: ' . $e->getMessage());
+            
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['error' => 'Erro ao gerar template: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Erro ao gerar template Excel.');
+        }
+    }
 
+    /**
+     * Upload e processamento do template Excel para atualização em massa
+     */
+    public function uploadTemplate(Request $request)
+    {
+        $companyId = session('active_company_id');
+        
+        if (!$companyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa selecionada.'
+            ], 403);
+        }
+
+        // Validação do arquivo
+        $request->validate([
+            'file' => 'required|file|mimes:xlsx|max:10240', // 10MB
+        ], [
+            'file.required' => 'Por favor, selecione um arquivo.',
+            'file.mimes' => 'O arquivo deve ser do tipo .xlsx',
+            'file.max' => 'O arquivo não pode ser maior que 10MB.',
+        ]);
+
+        try {
+            $file = $request->file('file');
+            $reader = new \PhpOffice\PhpSpreadsheet\Reader\Xlsx();
+            $spreadsheet = $reader->load($file->getRealPath());
+            
+            // Pega a aba de Lançamentos
+            $lancamentosSheet = $spreadsheet->getSheetByName('Lançamentos');
+            if (!$lancamentosSheet) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A aba "Lançamentos" não foi encontrada no arquivo.'
+                ], 400);
+            }
+
+            $rows = $lancamentosSheet->getHighestRow();
+            $updated = 0;
+            $errors = [];
+
+            // Processa cada linha (começando da linha 2, pois linha 1 é cabeçalho)
+            for ($row = 2; $row <= $rows; $row++) {
+                $id = $lancamentosSheet->getCell('A' . $row)->getValue();
+                $descricao = $lancamentosSheet->getCell('B' . $row)->getValue();
+                $tipo = $lancamentosSheet->getCell('C' . $row)->getValue();
+                $contaDebitoStr = $lancamentosSheet->getCell('D' . $row)->getValue();
+                $contaCreditoStr = $lancamentosSheet->getCell('E' . $row)->getValue();
+
+                // Pula linhas vazias
+                if (empty($id) && empty($descricao)) {
+                    continue;
+                }
+
+                // Busca o lançamento pelo ID
+                $lancamento = LancamentoPadrao::where('id', $id)
+                    ->where('company_id', $companyId)
+                    ->first();
+
+                if (!$lancamento) {
+                    $errors[] = "Linha {$row}: Lançamento com ID {$id} não encontrado.";
+                    continue;
+                }
+
+                // Processa conta de débito
+                $contaDebitoId = null;
+                if (!empty($contaDebitoStr)) {
+                    $contaDebitoId = $this->parseContaFromString($contaDebitoStr, $companyId);
+                    if (!$contaDebitoId) {
+                        $errors[] = "Linha {$row}: Conta de débito '{$contaDebitoStr}' não encontrada.";
+                        continue;
+                    }
+                }
+
+                // Processa conta de crédito
+                $contaCreditoId = null;
+                if (!empty($contaCreditoStr)) {
+                    $contaCreditoId = $this->parseContaFromString($contaCreditoStr, $companyId);
+                    if (!$contaCreditoId) {
+                        $errors[] = "Linha {$row}: Conta de crédito '{$contaCreditoStr}' não encontrada.";
+                        continue;
+                    }
+                }
+
+                // Atualiza o lançamento
+                $lancamento->update([
+                    'description' => $descricao ?: $lancamento->description,
+                    'type' => $tipo ?: $lancamento->type,
+                    'conta_debito_id' => $contaDebitoId ?: $lancamento->conta_debito_id,
+                    'conta_credito_id' => $contaCreditoId ?: $lancamento->conta_credito_id,
+                ]);
+
+                $updated++;
+            }
+
+            // Prepara resposta
+            $message = "Arquivo processado com sucesso! {$updated} lançamento(s) atualizado(s).";
+            if (count($errors) > 0) {
+                $message .= " " . count($errors) . " erro(s) encontrado(s).";
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => $message,
+                'updated' => $updated,
+                'errors' => $errors,
+                'registro' => [
+                    'data' => now()->format('d/m/Y H:i'),
+                    'nome_arquivo' => $file->getClientOriginalName(),
+                    'produtos' => $updated,
+                    'status' => count($errors) > 0 ? 'parcial' : 'processado'
+                ]
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('Erro ao processar upload de template: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao processar arquivo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Extrai o código da conta a partir da string "Código - Nome"
+     */
+    private function parseContaFromString($string, $companyId)
+    {
+        if (empty($string)) {
+            return null;
+        }
+
+        // Formato esperado: "1.01.001 - CAIXA GERAL"
+        $parts = explode(' - ', $string);
+        $code = trim($parts[0]);
+
+        if (empty($code)) {
+            return null;
+        }
+
+        // Busca a conta pelo código
+        $conta = ChartOfAccount::where('company_id', $companyId)
+            ->where('code', $code)
+            ->first();
+
+        return $conta ? $conta->id : null;
+    }
 
 }
