@@ -137,29 +137,35 @@
             {{-- Texto centralizado --}}
             <div class="header-text">
                 <h4>{{ strtoupper($company->name) }}</h4>
+                <h4>{{ strtoupper($company->razao_social) }}</h4>
+
                 <div class="subtitle">RELATÓRIO DE CONCILIAÇÃO BANCÁRIA</div>
                 <small>CNPJ: {{ $company->cnpj ?? '' }}</small>
                 <small>
-                    @if($company->addresses->rua ?? '')
+                    @if ($company->addresses->rua ?? '')
                         {{ $company->addresses->rua }}
-                        @if($company->addresses->numero ?? '')
+                        @if ($company->addresses->numero ?? '')
                             , {{ $company->addresses->numero }}
                         @endif
-                        @if($company->addresses->bairro ?? '')
+                        @if ($company->addresses->bairro ?? '')
                             - {{ $company->addresses->bairro }}
                         @endif
                         / {{ $company->addresses->cidade ?? '' }}-{{ $company->addresses->uf ?? '' }}
                     @endif
                 </small>
-                <small>
-                    Fone: {{ $company->phone ?? '' }}
-                    @if($company->website ?? '')
-                        - Site: {{ $company->website }}
-                    @else
-                        - Site: -
-                    @endif
-                    - E-mail: {{ $company->email ?? '' }}
-                </small>
+                @if ($company->phone || $company->website || $company->email)
+                    <small>
+                        @if ($company->phone)
+                            Fone: {{ $company->phone }}
+                        @endif
+                        @if ($company->website)
+                            {{ $company->phone ? ' - ' : '' }}Site: {{ $company->website }}
+                        @endif
+                        @if ($company->email)
+                            {{ $company->phone || $company->website ? ' - ' : '' }}E-mail: {{ $company->email }}
+                        @endif
+                    </small>
+                @endif
             </div>
 
             {{-- Logo direito --}}
