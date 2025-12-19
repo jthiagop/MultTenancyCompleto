@@ -51,6 +51,12 @@ class BrowsershotHelper
             '--disable-accelerated-video-decode',
         ]);
         
+        // Aumentar timeout para evitar erros em PDFs complexos
+        $browsershot->timeout(120); // 2 minutos
+        
+        // Otimizar estratégia de carregamento
+        $browsershot->setOption('waitUntil', 'domcontentloaded'); // Mais rápido que networkidle
+        
         return $browsershot;
     }
     

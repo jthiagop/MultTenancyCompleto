@@ -4,13 +4,38 @@
     <meta charset="utf-8">
     <title>Relatório de Conciliação Bancária</title>
 
-    {{-- Bootstrap 5 – CDN (Browsershot carrega normalmente) --}}
-    <link rel="stylesheet"
-        href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        crossorigin="anonymous">
-
-    {{-- CSS próprio pensado para impressão --}}
+    {{-- CSS próprio pensado para impressão (Bootstrap removido para evitar timeout) --}}
     <style>
+        /* Reset e básicos */
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; font-size: .77rem; line-height: 1.5; color: #212529; }
+        
+        /* Utilitários Bootstrap essenciais */
+        .container { width: 100%; padding-right: 15px; padding-left: 15px; margin-right: auto; margin-left: auto; }
+        .row { display: flex; flex-wrap: wrap; margin-right: -15px; margin-left: -15px; }
+        .col, .col-auto { position: relative; width: 100%; padding-right: 15px; padding-left: 15px; }
+        .col { flex-basis: 0; flex-grow: 1; max-width: 100%; }
+        .col-auto { flex: 0 0 auto; width: auto; max-width: 100%; }
+        .text-center { text-align: center !important; }
+        .text-end { text-align: right !important; }
+        .text-muted { color: #6c757d !important; }
+        .fw-bold { font-weight: 700 !important; }
+        .mb-0 { margin-bottom: 0 !important; }
+        .mb-2 { margin-bottom: 0.5rem !important; }
+        .mb-3 { margin-bottom: 1rem !important; }
+        .mt-3 { margin-top: 1rem !important; }
+        .small { font-size: 0.875em; }
+        
+        /* Tabelas */
+        table { width: 100%; border-collapse: collapse; }
+        .table { width: 100%; margin-bottom: 1rem; color: #212529; }
+        .table th, .table td { padding: 0.5rem; vertical-align: top; border-top: 1px solid #dee2e6; }
+        .table thead th { vertical-align: bottom; border-bottom: 2px solid #dee2e6; }
+        .table-sm th, .table-sm td { padding: 0.3rem; }
+        
+        /* Badges */
+        .badge { display: inline-block; padding: 0.25em 0.4em; font-size: 75%; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.25rem; }
+        
         @page { size: A4 landscape; margin: 8mm 8mm 10mm 8mm; }
         body   { font-size: .77rem; }
         .logo  { height: 60px; }
