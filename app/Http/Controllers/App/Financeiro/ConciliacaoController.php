@@ -47,8 +47,9 @@ class ConciliacaoController extends Controller
         $status      = $request->input('status', 'pendente');
         $entidadeId  = $request->input('entidade_id');
 
-        // 2) Query otimizada
-        $query = BankStatement::query();
+        // 2) Query otimizada - IMPORTANTE: Filtrar por company_id para segurança
+        $companyId = session('active_company_id');
+        $query = BankStatement::where('company_id', $companyId);
 
         // Filtrar por data se parâmetros forem fornecidos
         if ($dataInicial && $dataFinal) {
