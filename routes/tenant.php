@@ -384,9 +384,20 @@ Route::middleware([
 
                 Route::get('/conciliacao-bancaria/pdf', [ConciliacaoController::class, 'gerarPdf'])
                     ->name('relatorios.conciliacao.bancaria.gerar');
+                
+                // Rotas assíncronas de PDF
+                Route::post('/conciliacao-bancaria/pdf-async', [ConciliacaoController::class, 'gerarPdfAsync'])
+                    ->name('relatorios.conciliacao.bancaria.gerar.async');
 
                 Route::get('/boletim-financeiro/pdf', [BoletimFinanceiroController::class, 'gerarPdf'])
                     ->name('relatorios.boletim.financeiro.gerar');
+                
+                Route::post('/boletim-financeiro/pdf-async', [BoletimFinanceiroController::class, 'gerarPdfAsync'])
+                    ->name('relatorios.boletim.financeiro.gerar.async');
+                
+                // Rota compartilhada para verificar status de PDF
+                Route::get('/pdf/status/{id}', [ConciliacaoController::class, 'checkPdfStatus'])
+                    ->name('pdf.status');
 
                 Route::post('/filter', [PrestacaoDeContaController::class, 'generateReport']);
 
