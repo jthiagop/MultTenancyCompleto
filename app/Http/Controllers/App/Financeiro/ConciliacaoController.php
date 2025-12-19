@@ -23,6 +23,8 @@ use Log;
 use Validator;
 use Spatie\Browsershot\Browsershot;
 use App\Helpers\BrowsershotHelper;
+use App\Jobs\GenerateConciliacaoPdfJob;
+use App\Models\PdfGeneration;
 
 class ConciliacaoController extends Controller
 {
@@ -94,6 +96,85 @@ class ConciliacaoController extends Controller
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename=conciliacao-bancaria.pdf',
         ]);
+    }
+
+    /**
+     * Gera PDF de forma assíncrona (não trava o servidor)
+     */
+    public function gerarPdfAsync(Request $request)
+    {
+        try {
+            // Filtros
+            $filters = [
+                'data_inicial' => $request->input('data_inicial'),
+                'data_final' => $request->input('data_final'),
+                'status' => $request->input('status', 'pendente'),
+                'entidade_id' => $request->input('entidade_id'),
+            ];
+
+            $companyId = session('active_company_id');
+            $tenantId = tenant('id');
+
+            // Criar registro de rastreamento
+            $pdfGen = PdfGeneration::create([
+                'type' => 'conciliacao',
+                'user_id' => Auth::id(),
+                'company_id' => $companyId,
+                'status' => 'pending',
+                'parameters' => $filters,
+            ]);
+
+            // Despachar job
+            GenerateConciliacaoPdfJob::dispatch(
+                $filters,
+                $companyId,
+                Auth::id(),
+                $tenantId,
+                $pdfGen->id
+            );
+
+            return response()->json([
+                'success' => true,
+                'pdf_id' => $pdfGen->id,
+                'message' => 'PDF sendo gerado em background. Aguarde...'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao despachar job de PDF Conciliação', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao iniciar geração de PDF: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verifica status de geração de PDF
+     */
+    public function checkPdfStatus($id)
+    {
+        try {
+            $pdfGen = PdfGeneration::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->firstOrFail();
+
+            return response()->json([
+                'success' => true,
+                'status' => $pdfGen->status,
+                'download_url' => $pdfGen->download_url,
+                'error_message' => $pdfGen->error_message,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PDF não encontrado'
+            ], 404);
+        }
     }
 
     /**

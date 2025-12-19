@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\DB;
 use Spatie\Browsershot\Browsershot;
 use App\Helpers\BrowsershotHelper;
 use Carbon\Carbon;
+use App\Jobs\GenerateBoletimPdfJob;
+use App\Models\PdfGeneration;
+use Illuminate\Support\Facades\Log;
 
 class BoletimFinanceiroController extends Controller
 {
@@ -129,5 +132,88 @@ class BoletimFinanceiroController extends Controller
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename=boletim-financeiro.pdf',
         ]);
+    }
+
+    /**
+     * Gera PDF de forma assíncrona (não trava o servidor)
+     */
+    public function gerarPdfAsync(Request $request)
+    {
+        try {
+            // Extrair mês e ano das datas
+            $dataInicial = $request->input('data_inicial');
+            $dataInicialFormatted = Carbon::createFromFormat('d/m/Y', $dataInicial);
+            
+            $mes = $dataInicialFormatted->month;
+            $ano = $dataInicialFormatted->year;
+            $companyId = session('active_company_id');
+            $tenantId = tenant('id');
+
+            // Criar registro de rastreamento
+            $pdfGen = PdfGeneration::create([
+                'type' => 'boletim',
+                'user_id' => Auth::id(),
+                'company_id' => $companyId,
+                'status' => 'pending',
+                'parameters' => [
+                    'mes' => $mes,
+                    'ano' => $ano,
+                    'data_inicial' => $dataInicial,
+                    'data_final' => $request->input('data_final'),
+                ],
+            ]);
+
+            // Despachar job
+            GenerateBoletimPdfJob::dispatch(
+                $mes,
+                $ano,
+                $companyId,
+                Auth::id(),
+                $tenantId,
+                $pdfGen->id
+            );
+
+            return response()->json([
+                'success' => true,
+                'pdf_id' => $pdfGen->id,
+                'message' => 'PDF sendo gerado em background. Aguarde...'
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao despachar job de PDF Boletim', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao iniciar geração de PDF: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Verifica status de geração de PDF
+     */
+    public function checkPdfStatus($id)
+    {
+        try {
+            $pdfGen = PdfGeneration::where('id', $id)
+                ->where('user_id', Auth::id())
+                ->firstOrFail();
+
+            return response()->json([
+                'success' => true,
+                'status' => $pdfGen->status,
+                'download_url' => $pdfGen->download_url,
+                'error_message' => $pdfGen->error_message,
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'PDF não encontrado'
+            ], 404);
+        }
     }
 }
