@@ -1475,10 +1475,12 @@ class BancoController extends Controller
         ])->render();
 
         // Gerar PDF
-        $browsershot = Browsershot::html($html)
-            ->format('A4')
-            ->showBackground()
-            ->margins(8, 8, 25, 8); // Margem inferior maior para o rodapé
+        $browsershot = BrowsershotHelper::configureChromePath(
+            Browsershot::html($html)
+                ->format('A4')
+                ->showBackground()
+                ->margins(8, 8, 25, 8) // Margem inferior maior para o rodapé
+        );
 
         if ($orientacao === 'horizontal') {
             $browsershot->landscape();

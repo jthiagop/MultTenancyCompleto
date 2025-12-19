@@ -59,14 +59,15 @@ class ReciboController extends Controller
             'companyLogo' => $companyLogo, // A variável agora existe e está sendo passada
         ])->render();
 
-        $pdf = Browsershot::html($html)
-            ->format('A4')                 // Define o formato como A4
-            ->margins(5, 5, 5, 5)           // Margens menores para melhor aproveitamento
-            ->showBackground()               // Garante que fundos CSS sejam renderizados
-            ->deviceScaleFactor(2)           // Simula uma tela de alta resolução
-            ->quality(100) // Garante máxima qualidade para imagens
-            ->emulateMedia('screen') // Melhora a renderização do CSS no PDF
-            ->pdf();
+        $pdf = BrowsershotHelper::configureChromePath(
+            Browsershot::html($html)
+                ->format('A4')                 // Define o formato como A4
+                ->margins(5, 5, 5, 5)           // Margens menores para melhor aproveitamento
+                ->showBackground()               // Garante que fundos CSS sejam renderizados
+                ->deviceScaleFactor(2)           // Simula uma tela de alta resolução
+                ->quality(100) // Garante máxima qualidade para imagens
+                ->emulateMedia('screen') // Melhora a renderização do CSS no PDF
+        )->pdf();
 
         // 4) Retornar o PDF diretamente como resposta ao navegador
         return response($pdf)

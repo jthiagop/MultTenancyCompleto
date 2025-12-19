@@ -230,11 +230,12 @@ class PatrimonioController extends Controller
 
         ])->render();
 
-        $pdf = Browsershot::html($html)
-            ->format('A4')
-            ->showBackground()
-            ->margins(10, 10, 10, 10)
-            ->pdf();
+        $pdf = BrowsershotHelper::configureChromePath(
+            Browsershot::html($html)
+                ->format('A4')
+                ->showBackground()
+                ->margins(10, 10, 10, 10)
+        )->pdf();
 
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',

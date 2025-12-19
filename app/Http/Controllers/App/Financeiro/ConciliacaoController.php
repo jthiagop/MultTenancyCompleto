@@ -81,12 +81,13 @@ class ConciliacaoController extends Controller
         ])->render();
 
         // 4) PDF
-        $pdf = Browsershot::html($html)
-            ->format('A4')
-            ->landscape()
-            ->showBackground()
-            ->margins(8, 8, 8, 8)
-            ->pdf();
+        $pdf = BrowsershotHelper::configureChromePath(
+            Browsershot::html($html)
+                ->format('A4')
+                ->landscape()
+                ->showBackground()
+                ->margins(8, 8, 8, 8)
+        )->pdf();
 
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',

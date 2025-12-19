@@ -867,11 +867,13 @@ class FielController extends Controller
         ))->render();
 
         try {
-            $browsershot = \Spatie\Browsershot\Browsershot::html($html)
-                ->format('A4')
-                ->showBackground()
-                ->margins(8, 8, 10, 8)
-                ->waitUntilNetworkIdle();
+            $browsershot = \App\Helpers\BrowsershotHelper::configureChromePath(
+                \Spatie\Browsershot\Browsershot::html($html)
+                    ->format('A4')
+                    ->showBackground()
+                    ->margins(8, 8, 10, 8)
+                    ->waitUntilNetworkIdle()
+            );
 
             // Aplicar orientação baseada no layout
             if ($layoutRelatorio === 'detalhado') {

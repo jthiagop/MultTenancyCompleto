@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Spatie\Browsershot\Browsershot;
+use App\Helpers\BrowsershotHelper;
 use Carbon\Carbon;
 
 class BoletimFinanceiroController extends Controller
@@ -116,12 +117,13 @@ class BoletimFinanceiroController extends Controller
         ])->render();
 
         // 7) PDF
-        $pdf = Browsershot::html($html)
-            ->format('A4')
-            ->showBackground()
-            ->margins(8, 8, 8, 8)
-            ->waitUntilNetworkIdle()
-            ->pdf();
+        $pdf = BrowsershotHelper::configureChromePath(
+            Browsershot::html($html)
+                ->format('A4')
+                ->showBackground()
+                ->margins(8, 8, 8, 8)
+                ->waitUntilNetworkIdle()
+        )->pdf();
 
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',

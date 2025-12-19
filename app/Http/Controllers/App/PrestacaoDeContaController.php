@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use PDF;
 use Spatie\Browsershot\Browsershot;
+use App\Helpers\BrowsershotHelper;
 
 class PrestacaoDeContaController extends Controller
 {
@@ -75,12 +76,13 @@ class PrestacaoDeContaController extends Controller
         ])->render();
 
         // 5) PDF
-        $pdf = Browsershot::html($html)
-            ->format('A4')
-            ->landscape()
-            ->showBackground()
-            ->margins(8, 8, 8, 8)
-            ->pdf();
+        $pdf = BrowsershotHelper::configureChromePath(
+            Browsershot::html($html)
+                ->format('A4')
+                ->landscape()
+                ->showBackground()
+                ->margins(8, 8, 8, 8)
+        )->pdf();
 
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',
