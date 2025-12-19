@@ -43,6 +43,12 @@ class BrowsershotHelper
             '--disable-background-timer-throttling',
             '--disable-backgrounding-occluded-windows',
             '--disable-renderer-backgrounding',
+            '--single-process', // Reduz consumo de memória
+            '--no-zygote', // Evita processos extras
+            '--disable-accelerated-2d-canvas', // Reduz uso de GPU
+            '--disable-accelerated-jpeg-decoding',
+            '--disable-accelerated-mjpeg-decode',
+            '--disable-accelerated-video-decode',
         ]);
         
         return $browsershot;
