@@ -73,15 +73,19 @@
                                 data-hide-search="true" name="status_conciliacao" id="status_conciliacao">
                                 <option value="">Selecione o status...</option>
                                 <option value="todos">Todos</option>
-                                <option value="ok">Conciliado</option>
+                                <option value="ok">Conciliado (OK)</option>
                                 <option value="pendente" selected>Pendente</option>
+                                <option value="parcial">Parcial</option>
+                                <option value="divergente">Divergente</option>
                                 <option value="ignorado">Ignorado</option>
                             </select>
                             <!--begin::Help text-->
                             <div class="form-text">
                                 <ul class="mb-0 ps-3">
-                                    <li><strong>Conciliado:</strong> Lançamento vinculado a uma transação financeira</li>
+                                    <li><strong>Conciliado (OK):</strong> Valores batem perfeitamente</li>
                                     <li><strong>Pendente:</strong> Lançamento ainda não conciliado</li>
+                                    <li><strong>Parcial:</strong> Valor conciliado menor que o esperado</li>
+                                    <li><strong>Divergente:</strong> Valor conciliado maior que o esperado</li>
                                     <li><strong>Ignorado:</strong> Lançamento marcado para ser ignorado</li>
                                     <li><strong>Todos:</strong> Exibe todos os lançamentos</li>
                                 </ul>
