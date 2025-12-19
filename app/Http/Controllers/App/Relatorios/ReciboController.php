@@ -8,6 +8,7 @@ use App\Models\Financeiro\Recibo;
 use App\Models\Financeiro\TransacaoFinanceira;
 use Illuminate\Http\Request;
 use Spatie\Browsershot\Browsershot;
+use App\Helpers\BrowsershotHelper;
 use Validator;
 
 class ReciboController extends Controller

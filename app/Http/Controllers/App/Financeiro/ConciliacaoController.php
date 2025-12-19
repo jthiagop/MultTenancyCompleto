@@ -22,6 +22,7 @@ use Illuminate\Http\Request;
 use Log;
 use Validator;
 use Spatie\Browsershot\Browsershot;
+use App\Helpers\BrowsershotHelper;
 
 class ConciliacaoController extends Controller
 {

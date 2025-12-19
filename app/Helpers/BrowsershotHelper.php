@@ -83,6 +83,32 @@ class BrowsershotHelper
             }
         }
         
+        // Busca dinâmica: macOS ARM (M1/M2/M3)
+        if ($homeDir && is_dir($homeDir . '/.cache/puppeteer/chrome')) {
+            $macVersions = glob($homeDir . '/.cache/puppeteer/chrome/mac_arm-*/chrome-mac-arm64/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing');
+            if (!empty($macVersions)) {
+                usort($macVersions, function($a, $b) {
+                    preg_match('/mac_arm-(\d+\.\d+\.\d+\.\d+)/', $a, $matchA);
+                    preg_match('/mac_arm-(\d+\.\d+\.\d+\.\d+)/', $b, $matchB);
+                    return version_compare($matchB[1] ?? '0', $matchA[1] ?? '0');
+                });
+                $possiblePaths = array_merge($possiblePaths, $macVersions);
+            }
+        }
+        
+        // Busca dinâmica: macOS Intel (x64)
+        if ($homeDir && is_dir($homeDir . '/.cache/puppeteer/chrome')) {
+            $macIntelVersions = glob($homeDir . '/.cache/puppeteer/chrome/mac-*/chrome-mac/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing');
+            if (!empty($macIntelVersions)) {
+                usort($macIntelVersions, function($a, $b) {
+                    preg_match('/mac-(\d+\.\d+\.\d+\.\d+)/', $a, $matchA);
+                    preg_match('/mac-(\d+\.\d+\.\d+\.\d+)/', $b, $matchB);
+                    return version_compare($matchB[1] ?? '0', $matchA[1] ?? '0');
+                });
+                $possiblePaths = array_merge($possiblePaths, $macIntelVersions);
+            }
+        }
+        
         // 3. Verifica cada caminho possível
         foreach ($possiblePaths as $path) {
             if ($path && file_exists($path) && is_executable($path)) {
