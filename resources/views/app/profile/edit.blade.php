@@ -735,7 +735,7 @@
                                                 <span class="required">Date & Time</span>
                                                 <i class="fas fa-exclamation-circle ms-2 fs-7"
                                                     data-bs-toggle="popover" data-bs-trigger="hover"
-                                                    data-bs-html="true" data-bs-content="Select a date & time."></i>
+                                                    data-bs-html="true" data-bs-content="Selecione uma data & time."></i>
                                             </label>
                                             <!--end::Label-->
                                             <!--begin::Input-->

@@ -88,6 +88,14 @@ class ReciboController extends Controller
 
 
         if ($validator->fails()) {
+            // Se for requisição AJAX, retornar JSON
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+            
             return redirect()->back()
                 ->withErrors($validator)
                 ->withInput()
@@ -119,6 +127,21 @@ class ReciboController extends Controller
             'valor' => $transacao->valor, // Pega o valor da transação
             'referente' => $request->referente,
         ]);
+
+        // Se for requisição AJAX, retornar JSON de sucesso com URL do PDF
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Recibo criado com sucesso!',
+                'recibo_id' => $recibo->id,
+                'pdf_url' => route('recibo.imprimir', $recibo->id)
+            ]);
+        }
+
+        // Se solicitado, redirecionar para a impressão do recibo
+        if ($request->has('redirect_to_print') && $request->redirect_to_print == 'true') {
+            return redirect()->route('recibo.imprimir', $recibo->id);
+        }
 
         return redirect()->back()->with('message', 'Recibo criado com sucesso!');
     }

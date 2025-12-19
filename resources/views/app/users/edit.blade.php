@@ -503,6 +503,7 @@
                                             'cemiterio' => '/assets/media/png/lapide2.png',
                                             'company' => '/assets/media/svg/files/folder-document.svg',
                                             'users' => '/assets/media/svg/files/folder-document.svg',
+                                            'dizimos' => '/assets/media/png/dizimo.png',
                                         ];
                                     @endphp
 

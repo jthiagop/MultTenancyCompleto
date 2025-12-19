@@ -152,9 +152,8 @@
 </script>
 
 @include('app.components.modals.financeiro.lancamento.modal_lacamento')
-
-
-
+@include('app.components.drawers.transacao_detalhes')
+@include('app.components.modals.financeiro.recibo.modal_gerar_recibo_ajax')
 
 
 

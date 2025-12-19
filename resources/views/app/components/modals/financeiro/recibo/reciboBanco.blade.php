@@ -59,7 +59,7 @@
                            <!--end::Title-->
                         <!--begin::Description-->
                         <div class="text-gray-400 fw-semibold fs-5">
-                            Preencha os dados abaixo para emitir o recibo referente a esta transação. Após a emissão, você poderá imprimir ou excluir o recibo conforme necessário.
+                            Preencha os dados abaixo para emitir o recibo referente a esta sssss transação. Após a emissão, você poderá imprimir ou excluir o recibo conforme necessário.
                         </div>       <!--end::Description-->
                        </div>
                        <!--end::Heading-->

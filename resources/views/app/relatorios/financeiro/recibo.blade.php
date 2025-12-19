@@ -17,7 +17,7 @@
             font-size: 12px;
             color: #333;
             /* CORREÇÃO: Fundo cinza removido */
-            background-color: #fff; 
+            background-color: #fff;
             padding: 20px;
         }
 
@@ -25,7 +25,7 @@
             max-width: 800px;
             margin: auto;
             background-color: #fff;
-            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .separador {
@@ -36,7 +36,8 @@
         }
 
         .separador::before {
-            content: '✂'; /* Símbolo de tesoura */
+            content: '✂';
+            /* Símbolo de tesoura */
             position: absolute;
             top: -11px;
             left: 50%;
@@ -85,6 +86,12 @@
             font-size: 16px;
             font-weight: bold;
             margin-bottom: 5px;
+        }
+
+        .header .org-razaosocial {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
 
         .header .org-info {
@@ -161,8 +168,7 @@
 </head>
 
 <body>
-
-    <div class="recibo-wrapper">
+    <div>
         <!-- #################### INÍCIO DA 1ª VIA #################### -->
         <div class="container">
             <div class="via-identificador">1ª Via - Emitente</div>
@@ -174,11 +180,13 @@
                 </div>
                 <div class="header-center">
                     <div class="org-name">{{ $company->name }}</div>
+                    <div class="org-razaosocial">{{ $company->razao_social }}</div>
                     <div class="org-info">
                         CNPJ: {{ $company->cnpj }}<br>
                         @if ($company->addresses)
                             {{ $company->addresses->rua }}, {{ $company->addresses->numero }} -
-                            {{ $company->addresses->bairro }}, {{ $company->addresses->cidade }}/{{ $company->addresses->uf }}<br>
+                            {{ $company->addresses->bairro }},
+                            {{ $company->addresses->cidade }}/{{ $company->addresses->uf }}<br>
                         @endif
                         E-mail: {{ $company->email }}
                     </div>
@@ -193,7 +201,8 @@
                 </div>
                 <div>
                     <span class="label">Data de Emissão</span>
-                    <span class="value">{{ \Carbon\Carbon::parse($recibo->data_emissao ?? now())->format('d/m/Y') }}</span>
+                    <span
+                        class="value">{{ \Carbon\Carbon::parse($recibo->data_emissao ?? now())->format('d/m/Y') }}</span>
                 </div>
                 <div>
                     <span class="label">Valor (R$)</span>
@@ -202,15 +211,19 @@
             </div>
             <div class="body">
                 @php
-                    $tipoRecibo = isset($recibo->tipo_transacao) && strtolower($recibo->tipo_transacao) === 'pagamento' ? 'Pagamos a' : 'Recebemos de';
+                    $tipoRecibo =
+                        isset($recibo->tipo_transacao) && strtolower($recibo->tipo_transacao) === 'pagamento'
+                            ? 'Pagamos a'
+                            : 'Recebemos de';
                 @endphp
                 {{ $tipoRecibo }} <strong>{{ $recibo->nome ?? 'Nome da Pessoa/Entidade' }}</strong>,
                 portador do CPF/CNPJ <strong>{{ $recibo->cpf_cnpj ?? '___' }}</strong>,
                 a importância de <strong>R$ {{ number_format($recibo->valor ?? 0, 2, ',', '.') }}</strong>
-                (<em>{{ \NumberFormatter::create('pt_BR', \NumberFormatter::SPELLOUT)->format($recibo->valor ?? 0) }} reais</em>),
+                (<em>{{ \NumberFormatter::create('pt_BR', \NumberFormatter::SPELLOUT)->format($recibo->valor ?? 0) }}
+                    reais</em>),
                 referente a <strong>{{ $recibo->referente ?? 'motivo/descrição' }}</strong>.
             </div>
-            
+
             <!-- CORREÇÃO: Assinatura e Rodapé adicionados -->
             <div class="signature-section">
                 <div class="signature-line"></div>
@@ -238,11 +251,14 @@
                 </div>
                 <div class="header-center">
                     <div class="org-name">{{ $company->name }}</div>
+                    <div class="org-razaosocial">{{ $company->razao_social }}</div>
+
                     <div class="org-info">
                         CNPJ: {{ $company->cnpj }}<br>
                         @if ($company->addresses)
                             {{ $company->addresses->rua }}, {{ $company->addresses->numero }} -
-                            {{ $company->addresses->bairro }}, {{ $company->addresses->cidade }}/{{ $company->addresses->uf }}<br>
+                            {{ $company->addresses->bairro }},
+                            {{ $company->addresses->cidade }}/{{ $company->addresses->uf }}<br>
                         @endif
                         E-mail: {{ $company->email }}
                     </div>
@@ -257,7 +273,8 @@
                 </div>
                 <div>
                     <span class="label">Data de Emissão</span>
-                    <span class="value">{{ \Carbon\Carbon::parse($recibo->data_emissao ?? now())->format('d/m/Y') }}</span>
+                    <span
+                        class="value">{{ \Carbon\Carbon::parse($recibo->data_emissao ?? now())->format('d/m/Y') }}</span>
                 </div>
                 <div>
                     <span class="label">Valor (R$)</span>
@@ -266,15 +283,19 @@
             </div>
             <div class="body">
                 @php
-                    $tipoRecibo = isset($recibo->tipo_transacao) && strtolower($recibo->tipo_transacao) === 'pagamento' ? 'Pagamos a' : 'Recebemos de';
+                    $tipoRecibo =
+                        isset($recibo->tipo_transacao) && strtolower($recibo->tipo_transacao) === 'pagamento'
+                            ? 'Pagamos a'
+                            : 'Recebemos de';
                 @endphp
                 {{ $tipoRecibo }} <strong>{{ $recibo->nome ?? 'Nome da Pessoa/Entidade' }}</strong>,
                 portador do CPF/CNPJ <strong>{{ $recibo->cpf_cnpj ?? '___' }}</strong>,
                 a importância de <strong>R$ {{ number_format($recibo->valor ?? 0, 2, ',', '.') }}</strong>
-                (<em>{{ \NumberFormatter::create('pt_BR', \NumberFormatter::SPELLOUT)->format($recibo->valor ?? 0) }} reais</em>),
+                (<em>{{ \NumberFormatter::create('pt_BR', \NumberFormatter::SPELLOUT)->format($recibo->valor ?? 0) }}
+                    reais</em>),
                 referente a <strong>{{ $recibo->referente ?? 'motivo/descrição' }}</strong>.
             </div>
-            
+
             <!-- CORREÇÃO: Assinatura e Rodapé adicionados -->
             <div class="signature-section">
                 <div class="signature-line"></div>

@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Http\Controllers\App\Contabilidade\AccountMappingController;
 use App\Http\Controllers\App\Contabilidade\ChartOfAccountController;
 use App\Http\Controllers\App\PrestacaoDeContaController;
+use App\Http\Controllers\App\BoletimFinanceiroController;
 use App\Http\Controllers\App\AnexoController;
 use App\Http\Controllers\App\Anexos\ModulosAnexosController;
 use App\Http\Controllers\App\BancoController;
@@ -43,6 +44,8 @@ use App\Http\Controllers\App\BemController;
 use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\App\PatrimonioAnexoController;
 use App\Http\Controllers\App\TelaDeLoginController;
+use App\Http\Controllers\ModuleController;
+use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\TenantController;
 use App\Models\Financeiro\ModulosAnexo;
 use App\Models\TenantFilial;
@@ -206,6 +209,20 @@ Route::middleware([
         Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
         Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
 
+        // Rotas de módulos
+        Route::get('/modules', [ModuleController::class, 'index'])->name('modules.list');
+        Route::get('/modules/data', [ModuleController::class, 'getData'])->name('modules.data');
+        Route::post('/modules', [ModuleController::class, 'store'])->name('modules.store');
+        Route::put('/modules/{module}', [ModuleController::class, 'update'])->name('modules.update');
+        Route::delete('/modules/{module}', [ModuleController::class, 'destroy'])->name('modules.destroy');
+
+        // Rotas de permissões
+        Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.list');
+        Route::get('/permissions/data', [PermissionController::class, 'getData'])->name('permissions.data');
+        Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
+        Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->name('permissions.update');
+        Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
+
         // Rotas acessíveis apenas para administradores
         Route::middleware(['role:admin'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
@@ -288,6 +305,9 @@ Route::middleware([
             Route::get('/banco/chart-data', [BancoController::class, 'getChartData'])->name('banco.chart.data');
             Route::get('/banco/fluxo-chart-data', [BancoController::class, 'getFluxoBancoChartData'])->name('banco.fluxo.chart.data');
             Route::get('/banco/transacoes-data', [BancoController::class, 'getTransacoesData'])->name('banco.transacoes.data');
+            
+            Route::get('/financeiro/transacao/{id}/detalhes', [BancoController::class, 'getDetalhes'])
+                ->name('financeiro.transacao.detalhes');
             Route::get('/banco/conciliacoes-pendentes', [BancoController::class, 'getConciliacoesPendentes'])->name('banco.conciliacoes.pendentes');
             Route::post('/banco/relatorio/gerar', [BancoController::class, 'gerarRelatorio'])->name('banco.relatorio.gerar');
             Route::resource('banco', BancoController::class);
@@ -361,6 +381,12 @@ Route::middleware([
 
                 Route::get('/prestacao-de-contas/pdf', [PrestacaoDeContaController::class, 'gerarPdf'])
                     ->name('relatorios.prestacao.de.contas.gerar');
+
+                Route::get('/conciliacao-bancaria/pdf', [ConciliacaoController::class, 'gerarPdf'])
+                    ->name('relatorios.conciliacao.bancaria.gerar');
+
+                Route::get('/boletim-financeiro/pdf', [BoletimFinanceiroController::class, 'gerarPdf'])
+                    ->name('relatorios.boletim.financeiro.gerar');
 
                 Route::post('/filter', [PrestacaoDeContaController::class, 'generateReport']);
 

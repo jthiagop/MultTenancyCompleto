@@ -1,5 +1,5 @@
-<div class="row no-gutters">
-    <div class="12 col-sm-12 col-md-8">
+<div class="row no-gutters mt-7 ">
+    <div class="12 col-sm-12 col-md-8 ">
         <div class="card mb-1 mb-xl-9">
             <div class="card-body pt-9 pb-0">
                 <!--begin::Details-->

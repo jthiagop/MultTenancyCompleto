@@ -3929,7 +3929,7 @@
                                         <!--end::Icon-->
                                         <!--begin::Datepicker-->
                                         <input class="form-control form-control-solid ps-12"
-                                            placeholder="Select a date" name="due_date" />
+                                            placeholder="Selecione uma data" name="due_date" />
                                         <!--end::Datepicker-->
                                     </div>
                                     <!--end::Input-->

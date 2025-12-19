@@ -21,6 +21,7 @@ use Flasher;
 use Illuminate\Http\Request;
 use Log;
 use Validator;
+use Spatie\Browsershot\Browsershot;
 
 class ConciliacaoController extends Controller
 {
@@ -30,6 +31,67 @@ class ConciliacaoController extends Controller
     public function index()
     {
         //
+    }
+
+    /**
+     * Gera PDF do relatório de conciliações bancárias
+     */
+    public function gerarPdf(Request $request)
+    {
+        // 1) Filtros
+        $dataInicial = $request->input('data_inicial');
+        $dataFinal   = $request->input('data_final');
+        $status      = $request->input('status', 'pendente');
+        $entidadeId  = $request->input('entidade_id');
+
+        // 2) Query otimizada
+        $query = BankStatement::query();
+
+        // Filtrar por data se parâmetros forem fornecidos
+        if ($dataInicial && $dataFinal) {
+            $dataInicialFormatted = \Carbon\Carbon::createFromFormat('d/m/Y', $dataInicial)->format('Y-m-d');
+            $dataFinalFormatted = \Carbon\Carbon::createFromFormat('d/m/Y', $dataFinal)->format('Y-m-d');
+            $query->whereBetween('dtposted', [$dataInicialFormatted, $dataFinalFormatted]);
+        }
+
+        // Filtrar por status se fornecido e não for 'todos'
+        if ($status && $status !== 'todos') {
+            $query->where('status_conciliacao', $status);
+        }
+
+        // Filtrar por entidade se fornecido
+        if ($entidadeId) {
+            $query->where('entidade_id', $entidadeId);
+        }
+
+        // Buscar conciliações com relacionamentos
+        $conciliacoes = $query->with('transacoes')->orderBy('dtposted', 'desc')->get();
+
+        // Buscar entidade se ID foi fornecido
+        $entidade = $entidadeId ? EntidadeFinanceira::find($entidadeId) : null;
+
+        // 3) HTML da view
+        $html = view('app.relatorios.financeiro.conciliacao_pdf', [
+            'conciliacoes'  => $conciliacoes,
+            'dataInicial'   => $dataInicial,
+            'dataFinal'     => $dataFinal,
+            'status'        => $status,
+            'entidade'      => $entidade,
+            'company'       => Auth::user()->companies()->first(),
+        ])->render();
+
+        // 4) PDF
+        $pdf = Browsershot::html($html)
+            ->format('A4')
+            ->landscape()
+            ->showBackground()
+            ->margins(8, 8, 8, 8)
+            ->pdf();
+
+        return response($pdf, 200, [
+            'Content-Type'        => 'application/pdf',
+            'Content-Disposition' => 'inline; filename=conciliacao-bancaria.pdf',
+        ]);
     }
 
     /**

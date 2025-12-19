@@ -32,7 +32,7 @@ return new class extends Migration
             $table->string('refnum')->nullable();      // Número de referência
             $table->text('memo')->nullable();          // Descrição ou histórico
             $table->boolean('reconciled')->default(false); // Marcador de conciliação
-            $table->string('status_conciliacao')->default('pendente');
+            $table->string('status_conciliacao')->default('pendente'); // Status de conciliação (pendente, ok, ignorado)
 
             // Carimbo de tempo de criação/atualização
             $table->foreign('company_id')->references('id')->on('companies')->onDelete('set null');

@@ -577,7 +577,8 @@ class BancoController extends Controller
         // Formatar os dados para a resposta JSON
         $data = $transacoes->map(function($transacao) {
             // Formatar descrição com lançamento padrão
-            $descricaoHtml = '<div class="fw-bold">' . e($transacao->descricao) . '</div>';
+            // Formatar descrição com lançamento padrão
+            $descricaoHtml = '<div class="fw-bold"><a href="#" onclick="abrirDrawerTransacao(' . $transacao->id . '); return false;" class="text-gray-800 text-hover-primary">' . e($transacao->descricao) . '</a></div>';
             if ($transacao->lancamentoPadrao) {
                 $descricaoHtml .= '<div class="text-muted small">' . e($transacao->lancamentoPadrao->description) . '</div>';
             }
@@ -631,6 +632,67 @@ class BancoController extends Controller
         ]);
         
         return response()->json($response);
+    }
+
+    /**
+     * Retorna os detalhes de uma transação financeira para o drawer
+     */
+    public function getDetalhes($id)
+    {
+        $companyId = session('active_company_id');
+        
+        $transacao = TransacaoFinanceira::with([
+                'lancamentoPadrao',
+                'entidadeFinanceira',
+                'costCenter',
+                'modulos_anexos',
+                'createdBy',
+                'updatedBy',
+                'recibo.address' // Carregar recibo com endereço
+            ])
+            ->where('company_id', $companyId)
+            ->findOrFail($id);
+            
+        return response()->json([
+            'id' => $transacao->id,
+            'descricao' => $transacao->descricao,
+            'tipo' => $transacao->tipo,
+            'valor' => $transacao->valor,
+            'data_competencia_formatada' => $transacao->data_competencia ? Carbon::parse($transacao->data_competencia)->format('d/m/Y') : null,
+            'lancamento_padrao' => $transacao->lancamentoPadrao->description ?? null,
+            'tipo_documento' => $transacao->tipo_documento,
+            'numero_documento' => $transacao->numero_documento,
+            'comprovacao_fiscal' => $transacao->comprovacao_fiscal ? 'Sim' : 'Não',
+            'origem' => $transacao->origem,
+            'entidade_financeira' => $transacao->entidadeFinanceira->nome ?? null,
+            'centro_custo' => $transacao->costCenter->descricao ?? null,
+            'historico_complementar' => $transacao->historico_complementar,
+            'created_by_name' => $transacao->created_by_name ?? ($transacao->createdBy->name ?? null),
+            'updated_by_name' => $transacao->updated_by_name ?? ($transacao->updatedBy->name ?? null),
+            'created_at_formatado' => $transacao->created_at->format('d/m/Y H:i'),
+            'updated_at_formatado' => $transacao->updated_at->format('d/m/Y H:i'),
+            'recibo' => $transacao->recibo ? [
+                'id' => $transacao->recibo->id,
+                'nome' => $transacao->recibo->nome,
+                'cpf_cnpj' => $transacao->recibo->cpf_cnpj,
+                'referente' => $transacao->recibo->referente,
+                'address' => $transacao->recibo->address ? [
+                    'cep' => $transacao->recibo->address->cep,
+                    'rua' => $transacao->recibo->address->rua,
+                    'numero' => $transacao->recibo->address->numero,
+                    'bairro' => $transacao->recibo->address->bairro,
+                    'complemento' => $transacao->recibo->address->complemento,
+                    'cidade' => $transacao->recibo->address->cidade,
+                    'uf' => $transacao->recibo->address->uf,
+                ] : null
+            ] : null,
+            'anexos' => $transacao->modulos_anexos->map(function($anexo) {
+                return [
+                    'nome' => $anexo->nome_arquivo,
+                    'url' => $anexo->caminho_arquivo ? route('file', ['path' => $anexo->caminho_arquivo]) : ($anexo->link ?? '#')
+                ];
+            })
+        ]);
     }
     
     /**

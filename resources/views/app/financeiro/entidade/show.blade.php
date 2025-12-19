@@ -4,6 +4,9 @@
 <script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
 
 <x-tenant-app-layout>
+    {{-- Navbar Secundária do Módulo Financeiro --}}
+    @include('app.layouts.subnav.modules.financeiro')
+    
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
         <div class="d-flex flex-column flex-column-fluid">

@@ -94,6 +94,10 @@
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
     <script src="{{ url('assets/plugins/global/plugins.bundle.js') }}"></script>
     <script src="{{ url('assets/js/scripts.bundle.js') }}"></script>
+    <!--end::Global Javascript Bundle-->
+    <!--begin::Vendors Javascript(used for this page only)-->
+    <script src="{{ url('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
+    <!--end::Vendors Javascript-->
     <link href="{{ url('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
     <!--begin::Toast Script (converte mensagens de sessão em toasts)-->
     <script src="{{ url('assets/js/toasts.js') }}"></script>

@@ -9,7 +9,8 @@
 
 <!--begin::Boletim Financeiro Button-->
 <button class="btn btn-sm btn-light-primary fw-semibold px-4 rounded-pill"
-        id="kt_subnav_boletim_financeiro_btn">
+        id="kt_subnav_boletim_financeiro_btn" data-bs-toggle="modal"
+        data-bs-target="#modal_boletim_financeiro">
     <i class="fa-solid fa-chart-line fs-5 me-2"></i>
     Boletim Financeiro
 </button>
@@ -48,7 +49,20 @@
                 <span class="menu-title">Resumo Financeiro</span>
             </a>
         </div>
+        <div class="menu-item px-3">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#modal_conciliacao_bancaria" class="menu-link px-5">
+                <span class="menu-icon">
+                    <i class="bi bi-arrow-left-right fs-6"></i>
+                </span>
+                <span class="menu-title">Conciliação Bancária</span>
+            </a>
+        </div>
     </div>
     <!--end::Menu-->
 </div>
 <!--end::Relatórios Financeiros Dropdown-->
+
+{{-- Include Modals --}}
+@include('app.components.modals.financeiro.conciliacao.modal_conciliacao_bancaria')
+@include('app.components.modals.financeiro.prestacao_contas.modal_prestacao_contas')
+@include('app.components.modals.financeiro.boletim.modal_boletim_financeiro')

@@ -78,7 +78,8 @@
                                                     </span>
                                                     <span class="d-flex flex-column">
                                                         <span class="fs-6 fw-semibold text-gray-800">Organismos</span>
-                                                        <span class="fs-7 fw-semibold text-muted">Gerenciar empresas e filiais</span>
+                                                        <span class="fs-7 fw-semibold text-muted">Gerenciar empresas e
+                                                            filiais</span>
                                                     </span>
                                                 </a>
                                                 <!--end:Menu link-->
@@ -249,7 +250,7 @@
                                         <span class="menu-icon">
                                             <!--begin::Svg Icon | path: icons/duotune/graphs/gra006.svg-->
                                             <span class="svg-icon svg-icon-3">
-                                                <i class="fa-solid fa-money-bill text-dark"></i>
+                                                <i class="bi bi-cash-coin fs-3 text-primary"></i>
                                             </span>
                                             <!--end::Svg Icon-->
                                         </span>
@@ -416,15 +417,7 @@
                                         <span class="menu-icon">
                                             <!--begin::Svg Icon | path: icons/duotune/electronics/elc002.svg-->
                                             <span class="svg-icon svg-icon-3">
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg">
-                                                    <path opacity="0.3"
-                                                        d="M18.0624 15.3454L13.1624 20.7453C12.5624 21.4453 11.5624 21.4453 10.9624 20.7453L6.06242 15.3454C4.56242 13.6454 3.76242 11.4452 4.06242 8.94525C4.56242 5.34525 7.46242 2.44534 11.0624 2.04534C15.8624 1.54534 19.9624 5.24525 19.9624 9.94525C20.0624 12.0452 19.2624 13.9454 18.0624 15.3454ZM13.0624 10.0453C13.0624 9.44534 12.6624 9.04534 12.0624 9.04534C11.4624 9.04534 11.0624 9.44534 11.0624 10.0453V13.0453H13.0624V10.0453Z"
-                                                        fill="currentColor" />
-                                                    <path
-                                                        d="M12.6624 5.54531C12.2624 5.24531 11.7624 5.24531 11.4624 5.54531L8.06241 8.04531V12.0453C8.06241 12.6453 8.46241 13.0453 9.06241 13.0453H11.0624V10.0453C11.0624 9.44531 11.4624 9.04531 12.0624 9.04531C12.6624 9.04531 13.0624 9.44531 13.0624 10.0453V13.0453H15.0624C15.6624 13.0453 16.0624 12.6453 16.0624 12.0453V8.04531L12.6624 5.54531Z"
-                                                        fill="currentColor" />
-                                                </svg>
+                                                <i class="bi bi-building fs-3 text-primary"></i>
                                             </span>
                                             <!--end::Svg Icon-->
                                         </span>
@@ -500,15 +493,7 @@
                                         <span class="menu-icon">
                                             <!--begin::Svg Icon | path: icons/duotune/general/gen002.svg-->
                                             <span class="svg-icon svg-icon-3">
-                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                                    xmlns="http://www.w3.org/2000/svg">
-                                                    <path
-                                                        d="M20 8H16C15.4 8 15 8.4 15 9V16H10V17C10 17.6 10.4 18 11 18H16C16 16.9 16.9 16 18 16C19.1 16 20 16.9 20 18H21C21.6 18 22 17.6 22 17V13L20 8Z"
-                                                        fill="currentColor" />
-                                                    <path opacity="0.3"
-                                                        d="M20 18C20 19.1 19.1 20 18 20C16.9 20 16 19.1 16 18C16 16.9 16.9 16 18 16C19.1 16 20 16.9 20 18ZM15 4C15 3.4 14.6 3 14 3H3C2.4 3 2 3.4 2 4V13C2 13.6 2.4 14 3 14H15V4ZM6 16C4.9 16 4 16.9 4 18C4 19.1 4.9 20 6 20C7.1 20 8 19.1 8 18C8 16.9 7.1 16 6 16Z"
-                                                        fill="currentColor" />
-                                                </svg>
+                                                <i class="bi bi-calculator fs-3 text-primary"></i>
                                             </span>
                                             <!--end::Svg Icon-->
                                         </span>
@@ -573,6 +558,7 @@
                                         <span class="menu-icon">
                                             <!--begin::Svg Icon | path: icons/duotune/general/gen051.svg-->
                                             <span class="svg-icon svg-icon-3">
+                                                <i class="bi bi-clipboard2-plus fs-3 text-primary"></i>
 
                                             </span>
                                             <!--end::Svg Icon-->
@@ -681,6 +667,35 @@
                                                         <span class="bullet bullet-dot"></span>
                                                     </span>
                                                     <span class="menu-title">Organismo</span>
+                                                </a>
+                                                <!--end:Menu link-->
+                                            </div>
+                                            <!--end:Menu item-->
+                                        @endcan
+                                        <!--end:Menu item-->
+                                        @can('company.index')
+                                            <!--begin:Menu item-->
+                                            <div class="menu-item">
+                                                <!--begin:Menu link-->
+                                                <a class="menu-link {{ Route::currentRouteName() == 'modules.list' ? 'active' : '' }}"
+                                                    href="{{ route('modules.list') }}">
+                                                    <span class="menu-bullet">
+                                                        <span class="bullet bullet-dot"></span>
+                                                    </span>
+                                                    <span class="menu-title">Modulos</span>
+                                                </a>
+                                                <!--end:Menu link-->
+                                            </div>
+                                            <!--end:Menu item-->
+                                                                                   <!--begin:Menu item-->
+                                            <div class="menu-item">
+                                                <!--begin:Menu link-->
+                                                <a class="menu-link {{ Route::currentRouteName() == 'permissions.list' ? 'active' : '' }}"
+                                                    href="{{ route('permissions.list') }}">
+                                                    <span class="menu-bullet">
+                                                        <span class="bullet bullet-dot"></span>
+                                                    </span>
+                                                    <span class="menu-title">Permissões</span>
                                                 </a>
                                                 <!--end:Menu link-->
                                             </div>

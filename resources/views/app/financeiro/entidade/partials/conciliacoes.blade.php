@@ -1,5 +1,17 @@
 <div class="tab-pane fade show active" id="kt_tab_pane_conciliacoes" role="tabpanel">
     <div class="card mt-5">
+        {{-- Botão de Filtro --}}
+        <div class="card-header border-0 pt-5">
+            <h3 class="card-title align-items-start flex-column">
+                <span class="card-label fw-bold fs-3 mb-1">Conciliações Bancárias</span>
+            </h3>
+            <div class="card-toolbar">
+                <button type="button" class="btn btn-sm btn-light-primary" data-bs-toggle="modal" data-bs-target="#modal_conciliacao_bancaria">
+                    <i class="fa-solid fa-filter fs-4 me-2"></i>
+                    Filtrar Conciliações
+                </button>
+            </div>
+        </div>
         <div class="card-body">
             <div class="row gx-5 gx-xl-10">
                 <!--begin::Nome do Banco e do Dominus-->
@@ -183,8 +195,9 @@
                                                         @csrf
                                                         @method('PATCH')
                                                         <button type="submit" class="btn btn-sm btn-secondary">
-                                                            🚫 Ignorar
+                                                            <span>🚫  Ignorar</span>
                                                         </button>
+                                                        <i class="fas fa-exclamation-circle fs-7 ms-2" data-bs-toggle="tooltip" title="Você ignora um lançamento quando: É uma tarifa bancária que não precisa conciliar. É um lançamento duplicado. É um erro do banco que será estornado. Não corresponde a nenhuma transação do sistema"></i>
                                                     </form>
                                                 </div>
                                             </div>
@@ -1281,3 +1294,6 @@
         return html;
     }
 </script>
+
+{{-- Include Modal de Filtro de Conciliações --}}
+@include('app.components.modals.financeiro.conciliacao.modal_conciliacao_bancaria')

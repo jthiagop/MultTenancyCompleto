@@ -77,6 +77,18 @@ class Module extends Model
     }
 
     /**
+     * Retorna as permissões relacionadas a este módulo.
+     * Baseado na convenção de nome (ex: módulo 'financeiro' busca 'financeiro.%')
+     */
+    public function getRelatedPermissionsAttribute()
+    {
+        // Se a chave do módulo for 'financeiro', buscamos permissões que começam com 'financeiro.'
+        $prefix = $this->key;
+
+        return \Spatie\Permission\Models\Permission::where('name', 'LIKE', "{$prefix}.%")->get();
+    }
+
+    /**
      * Scope para filtrar por company_id
      */
     public function scopeForCompany($query, $companyId)

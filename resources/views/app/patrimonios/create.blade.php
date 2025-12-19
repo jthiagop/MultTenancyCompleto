@@ -1455,7 +1455,7 @@
                                     <!--end::Svg Icon-->
                                     <!--end::Icon-->
                                     <!--begin::Datepicker-->
-                                    <input class="form-control form-control-solid ps-12" placeholder="Select a date"
+                                    <input class="form-control form-control-solid ps-12" placeholder="Selecione uma data"
                                         name="due_date" />
                                     <!--end::Datepicker-->
                                 </div>

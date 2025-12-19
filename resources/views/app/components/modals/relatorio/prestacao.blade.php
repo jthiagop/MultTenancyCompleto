@@ -88,7 +88,7 @@
                                   <!--end::Svg Icon-->
                                   <!--end::Icon-->
                                   <!--begin::Datepicker-->
-                                  <input class="form-control form-control-solid ps-12" placeholder="Select a date"
+                                  <input class="form-control form-control-solid ps-12" placeholder="Selecione uma data"
                                       name="data_inicio" />
                                   <!--end::Datepicker-->
                               </div>
@@ -122,7 +122,7 @@
                                   <!--end::Svg Icon-->
                                   <!--end::Icon-->
                                   <!--begin::Datepicker-->
-                                  <input class="form-control form-control-solid ps-12" placeholder="Select a date"
+                                  <input class="form-control form-control-solid ps-12" placeholder="Selecione uma data"
                                       name="data_fim" />
 
                                   <!--end::Datepicker-->
