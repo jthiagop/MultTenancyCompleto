@@ -139,7 +139,6 @@
                 <h4>{{ strtoupper($company->name) }}</h4>
                 <h4>{{ strtoupper($company->razao_social) }}</h4>
 
-                <div class="subtitle">RELATÓRIO DE CONCILIAÇÃO BANCÁRIA</div>
                 <small>CNPJ: {{ $company->cnpj ?? '' }}</small>
                 <small>
                     @if ($company->addresses->rua ?? '')
@@ -185,6 +184,7 @@
     </div>
 
     {{-- Filtros --}}
+    <p class="fw-bold mb-1 text-center">RELATÓRIO DE CONCILIAÇÃO BANCÁRIA</p>
     <p class="fw-bold mb-1">Período: {{ $dataInicial }} a {{ $dataFinal }}</p>
     @isset($entidade)
         <p class="mb-2"><strong>Entidade Financeira:</strong> {{ $entidade->nome }}</p>
@@ -193,9 +193,13 @@
         @if($status === 'todos')
             Todos
         @elseif($status === 'ok')
-            Conciliado
+            Conciliado (OK)
         @elseif($status === 'pendente')
             Pendente
+        @elseif($status === 'parcial')
+            Parcial
+        @elseif($status === 'divergente')
+            Divergente
         @elseif($status === 'ignorado')
             Ignorado
         @endif
