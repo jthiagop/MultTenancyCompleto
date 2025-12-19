@@ -94,6 +94,12 @@
             line-height: 1.5;
             margin-top: 3px;
         }
+
+        .bg-success { background-color: #198754; color: white; }
+        .bg-danger { background-color: #dc3545; color: white; }
+        .bg-warning { background-color: #ffc107; color: #000; }
+        .bg-info { background-color: #007bff; color: white; }
+        .bg-light { background-color: #f8f9fa; color: #000; }
         
         /* Badges de status */
         .badge-ok { background-color: #198754; color: white; }
@@ -255,6 +261,10 @@
                             <span class="badge badge-pendente">Pendente</span>
                         @elseif($conciliacao->status_conciliacao === 'ignorado')
                             <span class="badge badge-ignorado">Ignorado</span>
+                        @elseif($conciliacao->status_conciliacao === 'parcial')
+                            <span class="badge badge-parcial">Parcial</span>
+                        @elseif($conciliacao->status_conciliacao === 'divergente')
+                            <span class="badge badge-divergente">Divergente</span>
                         @endif
                     </td>
                     <td>
