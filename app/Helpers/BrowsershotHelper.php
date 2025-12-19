@@ -24,7 +24,28 @@ class BrowsershotHelper
     {
         $chromePath = self::getChromePath();
         
-        return $browsershot->setChromePath($chromePath);
+        // Configurar caminho do Chrome
+        $browsershot->setChromePath($chromePath);
+        
+        // Adicionar argumentos adicionais para compatibilidade com Snap e ambientes restritos
+        $browsershot->setOption('args', [
+            '--no-sandbox',
+            '--disable-setuid-sandbox',
+            '--disable-dev-shm-usage',
+            '--disable-gpu',
+            '--disable-software-rasterizer',
+            '--disable-extensions',
+            '--disable-background-networking',
+            '--disable-sync',
+            '--disable-translate',
+            '--no-first-run',
+            '--enable-automation',
+            '--disable-background-timer-throttling',
+            '--disable-backgrounding-occluded-windows',
+            '--disable-renderer-backgrounding',
+        ]);
+        
+        return $browsershot;
     }
     
     /**
