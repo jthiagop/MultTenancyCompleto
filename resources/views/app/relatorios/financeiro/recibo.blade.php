@@ -73,7 +73,7 @@
         }
 
         .header-center {
-            flex: 2;
+            flex: 4;
             text-align: center;
         }
 
@@ -89,9 +89,8 @@
         }
 
         .header .org-razaosocial {
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 10px;
+            font-size: 12px;
+            margin-bottom: 5px;
         }
 
         .header .org-info {
