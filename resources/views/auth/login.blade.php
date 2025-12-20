@@ -55,7 +55,7 @@
         <div class="d-flex flex-column flex-lg-row flex-column-fluid">
             <!--begin::Aside-->
             <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                style="background-image: url(assets/media/misc/auth-bg.png)">
+                style="background-image: url('{{ isset($randomImage) ? route('file', ['path' => $randomImage->imagem_caminho]) : asset('assets/media/misc/auth-bg.png') }}')">
                 <!--begin::Content-->
                 <div class="d-flex flex-column flex-center p-6 p-lg-10 w-100">
                     <!--begin::Logo-->
@@ -67,18 +67,32 @@
                     <img class="d-none d-lg-block mx-auto w-300px w-lg-75 w-xl-500px mb-10 mb-lg-20"
                         src="assets/media/misc/auth-screens.png" alt="" />
                     <!--end::Image-->
-                    <!--begin::Title-->
-                    <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">
-                        Dominus: Rápido, Eficiente e Produtivo
-                    </h1>
-                    <!--end::Title-->
-                    <!--begin::Text-->
-                    <div class="d-none d-lg-block text-white fs-base text-center">
-                        No contexto da gestão eclesial, <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a> é um sistema
-                        que permite gerenciar de forma eficiente os campos de <br />pastorais, patrimônio e financeiro. Com <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a>,
-                        a administração de sua paróquia se torna mais organizada e <br />produtiva, facilitando a gestão de recursos e atividades eclesiais.
-                    </div>
-                    <!--end::Text-->
+                    
+                    @if(isset($randomImage) && $randomImage)
+                        <!--begin::Title-->
+                        <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">
+                            {{ $randomImage->descricao }}
+                        </h1>
+                        <!--end::Title-->
+                        <!--begin::Text-->
+                        <div class="d-none d-lg-block text-white fs-1 text-center fw-semibold">
+                            {{ $randomImage->localidade }}
+                        </div>
+                        <!--end::Text-->
+                    @else
+                        <!--begin::Title-->
+                        <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">
+                            Dominus: Rápido, Eficiente e Produtivo
+                        </h1>
+                        <!--end::Title-->
+                        <!--begin::Text-->
+                        <div class="d-none d-lg-block text-white fs-base text-center">
+                            No contexto da gestão eclesial, <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a> é um sistema
+                            que permite gerenciar de forma eficiente os campos de <br />pastorais, patrimônio e financeiro. Com <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a>,
+                            a administração de sua paróquia se torna mais organizada e <br />produtiva, facilitando a gestão de recursos e atividades eclesiais.
+                        </div>
+                        <!--end::Text-->
+                    @endif
                 </div>
                 <!--end::Content-->
             </div>
