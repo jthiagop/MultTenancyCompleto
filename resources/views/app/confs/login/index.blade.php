@@ -328,9 +328,7 @@
                                                 class="btn btn-light-success d-flex align-items-center gap-2">
                                                 <i class="fa-solid fa-upload"></i> Upload de Imagem
                                             </label>
-                                            <input type="file" id="backgroundImageUpload" accept="image/*" name="backgroundImage"
-                                                style="display: none;">
-
+                                            
                                             <!-- Botão de Salvar Tela (Submit) -->
                                             <button type="submit"
                                                 class="btn btn-light-primary d-flex align-items-center gap-2">

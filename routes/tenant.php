@@ -80,7 +80,24 @@ Route::middleware([
 
     // Rota para a página de login
     Route::get('/', function () {
-        return view('app.auth.login');
+        $randomImage = null;
+        $backgroundImage = null;
+
+        try {
+            if (class_exists(\App\Models\TelaDeLogin::class)) {
+                 $randomImage = \App\Models\TelaDeLogin::where('status', 'ativo')
+                    ->inRandomOrder()
+                    ->first();
+                
+                if ($randomImage) {
+                    $backgroundImage = $randomImage->imagem_caminho;
+                }
+            }
+        } catch (\Exception $e) {
+            // Fallback gracefully if table doesn't exist
+        }
+
+        return view('app.auth.login', compact('randomImage', 'backgroundImage'));
     });
 
     // Rota para o dashboard, acessível apenas por usuários autenticados e verificados

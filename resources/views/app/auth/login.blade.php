@@ -57,14 +57,22 @@
         <!--begin::Authentication - Sign-in -->
         <div class="d-flex flex-column flex-lg-row flex-column-fluid">
             <!--begin::Aside-->
-            <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                style="background-image: url('{{ (isset($randomImage) && $randomImage) ? route('file', ['path' => $randomImage->imagem_caminho]) : asset('/assets/media/misc/penha.png') }}');">
+            <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center position-relative"
+                style="background-image: url('{{ isset($backgroundImage) && $backgroundImage ? route('file', ['path' => $backgroundImage]) : asset('/assets/media/misc/penha.png') }}');">
+
+                <!--begin::Gradient Overlay - Preto para Transparente na parte inferior-->
+                <div class="position-absolute bottom-0 start-0 end-0"
+                    style="height: 200px; background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%); pointer-events: none; z-index: 1;"></div>
+                <!--end::Gradient Overlay-->
 
                 <!--begin::Content-->
-                <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100">
+                <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100 position-relative">
                     <!--begin::Logo-->
-                    <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20 position-relative" style="display: inline-block; padding: 15px 20px; border-radius: 12px; background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.25) 40%, rgba(0, 0, 0, 0.15) 70%, rgba(0, 0, 0, 0.05) 90%, transparent 100%); backdrop-filter: blur(3px);">
-                        <img alt="Logo" src="/assets/media/logos/default-white.svg" class="h-40px h-lg-50px position-relative" style="z-index: 1; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));" />
+                    <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20 position-relative"
+                        style="display: inline-block; padding: 15px 20px; border-radius: 12px; background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.35) 0%, rgba(0, 0, 0, 0.25) 40%, rgba(0, 0, 0, 0.15) 70%, rgba(0, 0, 0, 0.05) 90%, transparent 100%); backdrop-filter: blur(3px);">
+                        <img alt="Logo" src="/assets/media/logos/default-white.svg"
+                            class="h-40px h-lg-50px position-relative"
+                            style="z-index: 1; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));" />
                     </a>
                     <!--end::Logo-->
 
@@ -73,31 +81,27 @@
                         src="assets/media/misc/auth-screens.png" alt="" />
                     <!--end::Image-->
                     <div class="glass-effect">
-                    @if(isset($randomImage) && $randomImage)
                         <!--begin::Title-->
-                        <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">
-                            {{ $randomImage->descricao }}
-                        </h1>
-                        <!--end::Title-->
-                        <!--begin::Text-->
-                        <div class="d-none d-lg-block text-white fs-1 text-center fw-semibold">
-                            {{ $randomImage->localidade }}
-                        </div>
-                        <!--end::Text-->
-                    @else
-                        <!--begin::Title-->
-                        <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">
+                        <h1 class="d-none d-lg-block text-white fw-bold text-center mb-7">
                             Dominus: Rápido, Eficiente e Produtivo
                         </h1>
                         <!--end::Title-->
                         <!--begin::Text-->
                         <div class="d-none d-lg-block text-white fs-base text-center">
-                            No contexto da gestão eclesial, <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a> é um sistema
-                            que permite gerenciar de forma eficiente os campos de <br />pastorais, patrimônio e financeiro. Com <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a>,
-                            a administração de sua paróquia se torna mais organizada e <br />produtiva, facilitando a gestão de recursos e atividades eclesiais.
+                            @if(isset($randomImage) && $randomImage)
+                            <!--begin::Image Info - Discreto-->
+                            <div class="d-none d-lg-block position-absolute bottom-0 start-50 translate-middle-x mb-10 px-5 text-center" style="z-index: 2;">
+                                <div class="text-white fs-6 fw-bold mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+                                    {{ $randomImage->descricao }}
+                                </div>
+                                <div class="text-white fs-7 fw-bold" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+                                   <i class="fas fa-map-marker-alt text-white "></i> {{ $randomImage->localidade }}
+                                </div>
+                            </div>
+                            <!--end::Image Info-->
+                            @endif
                         </div>
                         <!--end::Text-->
-                    @endif
                     </div>
                 </div>
                 <!--end::Content-->
@@ -122,7 +126,7 @@
                                 <h1 class="text-dark fw-bolder mb-3">Entrar</h1>
                                 <!--end::Title-->
                                 <!--begin::Subtitle-->
-                                <div class="text-gray-500 fw-semibold fs-6">Dominus: Rápido, Eficiente e Produtivo</div>
+                                <div class="text-gray-500 fw-semibold fs-6">Faça seu login e comece a usar o Dominus</div>
                                 <!--end::Subtitle=-->
                             </div>
                             <!--begin::Heading-->
@@ -160,8 +164,8 @@
                             <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-8">
                                 <div></div>
                                 <!--begin::Link-->
-                                <a href="{{ route('password.request.admin') }}"
-                                    class="link-primary">Esqueceu sua senha?</a>
+                                <a href="{{ route('password.request.admin') }}" class="link-primary">Esqueceu sua
+                                    senha?</a>
                                 <!--end::Link-->
                             </div>
                             <!--end::Wrapper-->
@@ -232,8 +236,7 @@
             var handleValidation = function(e) {
                 // Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
                 validator = FormValidation.formValidation(
-                    form,
-                    {
+                    form, {
                         fields: {
                             'email': {
                                 validators: {
@@ -258,7 +261,7 @@
                             trigger: new FormValidation.plugins.Trigger(),
                             bootstrap: new FormValidation.plugins.Bootstrap5({
                                 rowSelector: '.fv-row',
-                                eleInvalidClass: '',  // comment to enable invalid state icons
+                                eleInvalidClass: '', // comment to enable invalid state icons
                                 eleValidClass: '' // comment to enable valid state icons
                             })
                         }
@@ -283,7 +286,7 @@
 
             var handleSubmitAjax = function(e) {
                 // Handle form submit
-                form.addEventListener('submit', function (e) {
+                form.addEventListener('submit', function(e) {
                     // Prevent button default action
                     e.preventDefault();
 
@@ -291,7 +294,7 @@
                     hideAlert();
 
                     // Validate form
-                    validator.validate().then(function (status) {
+                    validator.validate().then(function(status) {
                         if (status == 'Valid') {
                             // Show loading indication
                             submitButton.setAttribute('data-kt-indicator', 'on');
@@ -307,88 +310,94 @@
 
                             // Use fetch API for AJAX request
                             fetch(action, {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'X-Requested-With': 'XMLHttpRequest',
-                                    'X-CSRF-TOKEN': token,
-                                    'Accept': 'application/json'
-                                },
-                                body: JSON.stringify({
-                                    email: email,
-                                    password: password,
-                                    _token: token
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'X-Requested-With': 'XMLHttpRequest',
+                                        'X-CSRF-TOKEN': token,
+                                        'Accept': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        email: email,
+                                        password: password,
+                                        _token: token
+                                    })
                                 })
-                            })
-                            .then(function(response) {
-                                return response.json().then(function(data) {
-                                    return {
-                                        ok: response.ok,
-                                        status: response.status,
-                                        data: data
-                                    };
-                                });
-                            })
-                            .then(function(result) {
-                                // Hide loading indication
-                                submitButton.removeAttribute('data-kt-indicator');
+                                .then(function(response) {
+                                    return response.json().then(function(data) {
+                                        return {
+                                            ok: response.ok,
+                                            status: response.status,
+                                            data: data
+                                        };
+                                    });
+                                })
+                                .then(function(result) {
+                                    // Hide loading indication
+                                    submitButton.removeAttribute('data-kt-indicator');
 
-                                // Enable button
-                                submitButton.disabled = false;
+                                    // Enable button
+                                    submitButton.disabled = false;
 
-                                if (result.ok && result.data) {
-                                            // Clear form
-                                            form.querySelector('[name="email"]').value = "";
-                                            form.querySelector('[name="password"]').value = "";
+                                    if (result.ok && result.data) {
+                                        // Clear form
+                                        form.querySelector('[name="email"]').value = "";
+                                        form.querySelector('[name="password"]').value = "";
 
-                                            // Redirect
-                                            if (result.data.redirect) {
-                                                location.href = result.data.redirect;
-                                            } else {
-                                                location.href = "{{ route('dashboard') }}";
-                                            }
-                                } else {
-                                    // Handle error response
-                                    let errorMessage = "Desculpe, ocorreu um erro. Por favor, tente novamente.";
+                                        // Redirect
+                                        if (result.data.redirect) {
+                                            location.href = result.data.redirect;
+                                        } else {
+                                            location.href = "{{ route('dashboard') }}";
+                                        }
+                                    } else {
+                                        // Handle error response
+                                        let errorMessage =
+                                            "Desculpe, ocorreu um erro. Por favor, tente novamente.";
 
-                                    if (result.data) {
-                                        if (result.data.message) {
-                                            errorMessage = result.data.message;
-                                        } else if (result.data.errors) {
-                                            // Validation errors
-                                            const errors = result.data.errors;
-                                            const firstError = Object.values(errors)[0];
-                                            errorMessage = Array.isArray(firstError) ? firstError[0] : firstError;
+                                        if (result.data) {
+                                            if (result.data.message) {
+                                                errorMessage = result.data.message;
+                                            } else if (result.data.errors) {
+                                                // Validation errors
+                                                const errors = result.data.errors;
+                                                const firstError = Object.values(errors)[0];
+                                                errorMessage = Array.isArray(firstError) ?
+                                                    firstError[0] : firstError;
 
-                                            // Show field errors
-                                            if (errors.email) {
-                                                validator.updateFieldStatus('email', 'Invalid', {
-                                                    message: errors.email[0]
-                                                });
-                                            }
-                                            if (errors.password) {
-                                                validator.updateFieldStatus('password', 'Invalid', {
-                                                    message: errors.password[0]
-                                                });
+                                                // Show field errors
+                                                if (errors.email) {
+                                                    validator.updateFieldStatus('email',
+                                                        'Invalid', {
+                                                            message: errors.email[0]
+                                                        });
+                                                }
+                                                if (errors.password) {
+                                                    validator.updateFieldStatus('password',
+                                                        'Invalid', {
+                                                            message: errors.password[0]
+                                                        });
+                                                }
                                             }
                                         }
+
+                                        // Show error alert
+                                        showAlert(errorMessage, 'danger');
                                     }
+                                })
+                                .catch(function(error) {
+                                    // Hide loading indication
+                                    submitButton.removeAttribute('data-kt-indicator');
 
-                                    // Show error alert
-                                    showAlert(errorMessage, 'danger');
-                                }
-                            })
-                            .catch(function(error) {
-                                // Hide loading indication
-                                submitButton.removeAttribute('data-kt-indicator');
+                                    // Enable button
+                                    submitButton.disabled = false;
 
-                                // Enable button
-                                submitButton.disabled = false;
-
-                                // Network error or other
-                                showAlert("Desculpe, ocorreu um erro de conexão. Por favor, verifique sua internet e tente novamente.", 'danger');
-                                console.error('Erro na requisição:', error);
-                            });
+                                    // Network error or other
+                                    showAlert(
+                                        "Desculpe, ocorreu um erro de conexão. Por favor, verifique sua internet e tente novamente.",
+                                        'danger');
+                                    console.error('Erro na requisição:', error);
+                                });
                         } else {
                             // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
                             Swal.fire({
