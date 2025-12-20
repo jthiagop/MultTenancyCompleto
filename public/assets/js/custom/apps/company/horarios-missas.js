@@ -55,6 +55,29 @@ var KTHorariosMissas = function () {
             }],
 
             show: function () {
+                // Verificar limite de 7 dias (backup caso o clique não seja interceptado)
+                // Contar todos os itens de dias (incluindo o que está sendo adicionado)
+                const diasList = $('#kt_horarios_missas_dias_repeater [data-repeater-list="dias"]');
+                const totalItems = diasList.find('> [data-repeater-item]').length;
+                
+                console.log('Total de dias (incluindo o atual):', totalItems);
+                
+                // Se já temos 7 ou mais itens, bloquear (não deveria acontecer devido à interceptação do clique)
+                if (totalItems > 7) {
+                    Swal.fire({
+                        text: 'Você já adicionou todos os 7 dias da semana. Não é possível adicionar mais dias.',
+                        icon: 'warning',
+                        buttonsStyling: false,
+                        confirmButtonText: 'OK, entendi!',
+                        customClass: {
+                            confirmButton: 'btn fw-bold btn-primary'
+                        }
+                    });
+                    // Remover o item extra que foi adicionado
+                    $(this).remove();
+                    return false;
+                }
+
                 console.log('Repeater dia show chamado');
                 $(this).slideDown();
 
@@ -64,6 +87,7 @@ var KTHorariosMissas = function () {
                 // Atualizar opções após adicionar novo item
                 setTimeout(() => {
                     updateSelectOptions();
+                    updateAddDayButtonState(); // Atualizar estado do botão após adicionar
                 }, 150);
 
                 // O repeater de horários já está configurado no repeaters do repeater principal
@@ -79,6 +103,7 @@ var KTHorariosMissas = function () {
                 // Atualizar opções após remover um dia
                 setTimeout(() => {
                     updateSelectOptions();
+                    updateAddDayButtonState(); // Atualizar estado do botão após remover
                 }, 300);
             }
         });
@@ -170,6 +195,36 @@ var KTHorariosMissas = function () {
 
         // Atualizar opções inicialmente
         updateSelectOptions();
+    }
+
+    // Atualizar estado do botão "Adicionar Dia" baseado no número de dias
+    const updateAddDayButtonState = () => {
+        // Contar apenas os itens de dias (não os itens de horários aninhados)
+        const diasList = $('#kt_horarios_missas_dias_repeater [data-repeater-list="dias"]');
+        const currentItems = diasList.find('> [data-repeater-item]').length;
+        const addButton = $('.btn-add-dia');
+        
+        console.log('Atualizando estado do botão. Dias atuais:', currentItems);
+        
+        if (currentItems >= 7) {
+            addButton.prop('disabled', true);
+            addButton.addClass('disabled');
+            addButton.attr('data-bs-toggle', 'tooltip');
+            addButton.attr('title', 'Limite de 7 dias atingido (todos os dias da semana)');
+        } else {
+            addButton.prop('disabled', false);
+            addButton.removeClass('disabled');
+            addButton.attr('title', 'Adicionar novo dia');
+        }
+        
+        // Reinicializar tooltip se necessário
+        if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
+            const tooltipInstance = bootstrap.Tooltip.getInstance(addButton[0]);
+            if (tooltipInstance) {
+                tooltipInstance.dispose();
+            }
+            new bootstrap.Tooltip(addButton[0]);
+        }
     }
 
     // Init tempusDominus time pickers
@@ -345,11 +400,42 @@ var KTHorariosMissas = function () {
             console.log('jQuery.repeater disponível:', typeof $.fn.repeater !== 'undefined');
             console.log('tempusDominus disponível:', typeof tempusDominus !== 'undefined');
 
+            // Interceptar clique no botão "Adicionar Dia" para verificar limite antes de adicionar
+            const addDayButton = $('.btn-add-dia');
+            if (addDayButton.length > 0) {
+                addDayButton.on('click', function(e) {
+                    const diasList = $('#kt_horarios_missas_dias_repeater [data-repeater-list="dias"]');
+                    const currentItems = diasList.find('> [data-repeater-item]').length;
+                    
+                    console.log('Tentando adicionar dia. Total atual:', currentItems);
+                    
+                    if (currentItems >= 7) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        Swal.fire({
+                            text: 'Você já adicionou todos os 7 dias da semana. Não é possível adicionar mais dias.',
+                            icon: 'warning',
+                            buttonsStyling: false,
+                            confirmButtonText: 'OK, entendi!',
+                            customClass: {
+                                confirmButton: 'btn fw-bold btn-primary'
+                            }
+                        });
+                        return false;
+                    }
+                });
+            }
+
             // Init forms
             initFormRepeaterDias();
             initConditionsSelect2();
             initTempusDominusTimePickers();
             initFormSubmission();
+            
+            // Atualizar estado inicial do botão
+            setTimeout(() => {
+                updateAddDayButtonState();
+            }, 200);
         }
     };
 }();

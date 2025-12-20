@@ -335,7 +335,20 @@ class CaixaController extends Controller
         $validatedData = $request->validated();
 
         // Formata valores
-        $validatedData['data_competencia'] = Carbon::createFromFormat('d/m/Y', $validatedData['data_competencia'])->format('Y-m-d');
+        // Tenta múltiplos formatos de data (d/m/Y ou d-m-Y)
+        $dataCompetencia = $validatedData['data_competencia'];
+        try {
+            // Tenta primeiro com formato d/m/Y (barra)
+            $validatedData['data_competencia'] = Carbon::createFromFormat('d/m/Y', $dataCompetencia)->format('Y-m-d');
+        } catch (\Exception $e) {
+            try {
+                // Se falhar, tenta com formato d-m-Y (hífen)
+                $validatedData['data_competencia'] = Carbon::createFromFormat('d-m-Y', $dataCompetencia)->format('Y-m-d');
+            } catch (\Exception $e2) {
+                // Se ambos falharem, tenta parse automático
+                $validatedData['data_competencia'] = Carbon::parse($dataCompetencia)->format('Y-m-d');
+            }
+        }
         $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
 
         // Adiciona informações padrão

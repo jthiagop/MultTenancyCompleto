@@ -86,6 +86,35 @@
                     </div>
                     <!--end::Botões -->
                 </div>
+                <!--end::Rodapé-->
+
+                <!--begin::Alert - Horários de Missa não cadastrados (oculto por padrão)-->
+                <div id="alertHorariosMissas" class="alert alert-dismissible bg-light-warning border border-warning d-flex flex-column flex-sm-row p-5 mb-4 d-none mx-4">
+                    <!--begin::Icon-->
+                    <i class="bi bi-exclamation-triangle fs-2hx text-warning me-4 mb-5 mb-sm-0"> </i>
+                    <!--end::Icon-->
+
+                    <!--begin::Wrapper-->
+                    <div class="d-flex flex-column pe-0 pe-sm-10">
+                        <!--begin::Title-->
+                        <h4 class="fw-semibold">Atenção</h4>
+                        <!--end::Title-->
+
+                        <!--begin::Content-->
+                        <span>Não existem horários de missa cadastrados.
+                            <a href="{{ route('company.edit', ['tab' => 'horario-missas']) }}" class="text-primary fw-bold">Cadastrar Horários de Missa?</a>
+                        </span>
+                        <!--end::Content-->
+                    </div>
+                    <!--end::Wrapper-->
+
+                    <!--begin::Close-->
+                    <button type="button" class="position-absolute position-sm-relative m-2 m-sm-0 top-0 end-0 btn btn-icon ms-sm-auto" data-bs-dismiss="alert" onclick="document.getElementById('alertHorariosMissas').classList.add('d-none')">
+                        <i class="bi bi-x-circle fs-1 text-warning"></i>
+                    </button>
+                    <!--end::Close-->
+                </div>
+                <!--end::Alert-->
             </form>
         </div>
     </div>
@@ -107,16 +136,18 @@
                 }
             }
 
-            // Função para exibir toast de aviso usando a função específica do toasts.js
-            function exibirToastAviso() {
-                if (typeof window.showHorariosMissasToast === 'function') {
-                    window.showHorariosMissasToast({
-                        cadastrarUrl: '{{ route("company.edit", ["tab" => "horario-missas"]) }}',
-                        delay: 15000,
-                        icon: 'bi bi-exclamation-triangle'
-                    });
-                } else {
-                    console.warn('showHorariosMissasToast não está disponível. Certifique-se de que toasts.js está carregado.');
+            // Função para exibir/ocultar alert de horários de missa
+            function exibirAlertHorariosMissas() {
+                const alertElement = document.getElementById('alertHorariosMissas');
+                if (alertElement) {
+                    alertElement.classList.remove('d-none');
+                }
+            }
+
+            function ocultarAlertHorariosMissas() {
+                const alertElement = document.getElementById('alertHorariosMissas');
+                if (alertElement) {
+                    alertElement.classList.add('d-none');
                 }
             }
 
@@ -125,10 +156,13 @@
 
             // Event listener para mudanças no checkbox
             switchHorariosMissas.addEventListener('change', function() {
-                // Se não houver horários e o usuário tentar marcar, desmarcar e mostrar toast
+                // Se não houver horários e o usuário tentar marcar, desmarcar e mostrar alert
                 if (!hasHorariosMissas && this.checked) {
                     this.checked = false;
-                    exibirToastAviso();
+                    exibirAlertHorariosMissas();
+                } else if (!this.checked) {
+                    // Se desmarcar, ocultar o alert
+                    ocultarAlertHorariosMissas();
                 }
                 atualizarLabel();
             });
@@ -139,7 +173,9 @@
                     if (this.checked) {
                         e.preventDefault();
                         this.checked = false;
-                        exibirToastAviso();
+                        exibirAlertHorariosMissas();
+                    } else {
+                        ocultarAlertHorariosMissas();
                     }
                     atualizarLabel();
                 });

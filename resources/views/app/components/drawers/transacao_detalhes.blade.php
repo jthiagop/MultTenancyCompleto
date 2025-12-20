@@ -11,7 +11,7 @@
             <div class="card-toolbar">
                 <button type="button" class="btn btn-sm btn-icon btn-active-color-primary"
                     id="kt_drawer_transacao_close">
-                    <i class="ki-duotone ki-cross fs-2"><span class="path1"></span><span class="path2"></span></i>
+                    <i class="bi bi-x"></i>
                 </button>
             </div>
         </div>
@@ -30,7 +30,7 @@
                     <div class="d-flex align-items-center mb-5">
                         <div class="symbol symbol-60px symbol-circle me-3">
                             <span class="symbol-label bg-light-primary">
-                                <i class="bi bi-currency-exchange fs-4"></i>
+                                <i class="bi bi-currency-exchange fs-1"></i>
                             </span>
                         </div>
                         <div class="flex-grow-1">
@@ -187,23 +187,23 @@
         <!--begin::Footer-->
         <div class="card-footer py-5 text-center" id="kt_drawer_transacao_footer">
             <input type="hidden" id="drawer_transacao_id_hidden">
-            
+
             <!-- Botão Gerar Recibo (exibido quando NÃO existe recibo) -->
             <button type="button" class="btn btn-warning btn-sm me-2" id="btn_gerar_recibo" style="display: none;">
-                <i class="bi bi-receipt fs-2"></i> Gerar Recibo
+                <i class="bi bi-receipt"></i> Gerar Recibo
             </button>
-            
+
             <!-- Botão Editar Recibo (exibido quando JÁ existe recibo) -->
             <button type="button" class="btn btn-primary btn-sm me-2" id="btn_editar_recibo" style="display: none;">
-                <i class="bi bi-pencil-square fs-2"></i> Editar Recibo
+                <i class="bi bi-pencil-square "></i> Editar Recibo
             </button>
-            
+
             <button type="button" class="btn btn-light-primary btn-sm" data-kt-drawer-dismiss="true">
-                <i class="bi bi-x fs-2"></i> Fechar
+                <i class="bi bi-x "></i> Fechar
             </button>
         </div>
         <!--end::Footer-->
-        
+
     </div>
     <!--end::Card-->
 </div>
@@ -221,16 +221,16 @@
                 document.getElementById('drawer_transacao_id_hidden').value = data.id;
                 document.getElementById('drawer_transacao_id').textContent = `#${data.id}`;
                 document.getElementById('drawer_transacao_descricao').textContent = data.descricao || 'Sem descrição';
-                
+
                 // Configurar botões de recibo
                 const btnGerarRecibo = document.getElementById('btn_gerar_recibo');
                 const btnEditarRecibo = document.getElementById('btn_editar_recibo');
-                
+
                 if (data.recibo) {
                     // Já existe recibo - mostrar botão de editar
                     btnGerarRecibo.style.display = 'none';
                     btnEditarRecibo.style.display = 'inline-block';
-                    
+
                     btnEditarRecibo.onclick = function() {
                         abrirModalReciboAjax(data, true); // true = modo edição
                     };
@@ -238,12 +238,12 @@
                     // Não existe recibo - mostrar botão de gerar
                     btnGerarRecibo.style.display = 'inline-block';
                     btnEditarRecibo.style.display = 'none';
-                    
+
                     btnGerarRecibo.onclick = function() {
                         abrirModalReciboAjax(data, false); // false = modo criação
                     };
                 }
-                
+
                 // Tipo e badge
                 const tipoBadge = document.getElementById('drawer_transacao_tipo_badge');
                 if (data.tipo === 'entrada') {
@@ -253,27 +253,27 @@
                     tipoBadge.textContent = 'SAÍDA';
                     tipoBadge.className = 'badge badge-light-danger fs-7 fw-bold';
                 }
-                
+
                 // Valor
-                document.getElementById('drawer_transacao_valor').textContent = 
+                document.getElementById('drawer_transacao_valor').textContent =
                     `R$ ${parseFloat(data.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-                
+
                 // Data
                 document.getElementById('drawer_transacao_data').textContent = data.data_competencia_formatada || '-';
-                
+
                 // Lançamento Padrão
                 document.getElementById('drawer_transacao_lancamento').textContent = data.lancamento_padrao || '-';
-                
+
                 // Documento
                 document.getElementById('drawer_transacao_tipo_doc').textContent = data.tipo_documento || '-';
                 document.getElementById('drawer_transacao_num_doc').textContent = data.numero_documento || '-';
                 document.getElementById('drawer_transacao_comprovacao').textContent = data.comprovacao_fiscal || '-';
-                
+
                 // Financeiro
                 document.getElementById('drawer_transacao_origem').textContent = data.origem || '-';
                 document.getElementById('drawer_transacao_entidade').textContent = data.entidade_financeira || '-';
                 document.getElementById('drawer_transacao_centro_custo').textContent = data.centro_custo || '-';
-                
+
                 // Histórico
                 const historicoEl = document.getElementById('drawer_transacao_historico');
                 if (data.historico_complementar) {
@@ -281,7 +281,7 @@
                 } else {
                     historicoEl.innerHTML = '<span class="text-muted">Nenhum histórico complementar</span>';
                 }
-                
+
                 // Anexos
                 const anexosEl = document.getElementById('drawer_transacao_anexos');
                 if (data.anexos && data.anexos.length > 0) {
@@ -299,13 +299,13 @@
                 } else {
                     anexosEl.innerHTML = '<span class="text-muted">Nenhum anexo</span>';
                 }
-                
+
                 // Auditoria
                 document.getElementById('drawer_transacao_criado_por').textContent = data.created_by_name || '-';
                 document.getElementById('drawer_transacao_criado_em').textContent = data.created_at_formatado || '-';
                 document.getElementById('drawer_transacao_atualizado_por').textContent = data.updated_by_name || '-';
                 document.getElementById('drawer_transacao_atualizado_em').textContent = data.updated_at_formatado || '-';
-                
+
                 // Abrir o drawer
                 const drawer = KTDrawer.getInstance(document.getElementById('kt_drawer_transacao_detalhes'));
                 if (drawer) {

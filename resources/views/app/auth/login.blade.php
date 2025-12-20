@@ -60,9 +60,10 @@
             <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center position-relative"
                 style="background-image: url('{{ isset($backgroundImage) && $backgroundImage ? route('file', ['path' => $backgroundImage]) : asset('/assets/media/misc/penha.png') }}');">
 
-                <!--begin::Gradient Overlay - Preto para Transparente na parte inferior-->
-                <div class="position-absolute bottom-0 start-0 end-0"
-                    style="height: 200px; background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%); pointer-events: none; z-index: 1;"></div>
+                <!--begin::Gradient Overlay - Preto para Transparente na parte inferior (apenas telas >= 992px)-->
+                <div class="d-none d-lg-block position-absolute bottom-0 start-0 end-0"
+                    style="height: 200px; background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 100%); pointer-events: none; z-index: 1;">
+                </div>
                 <!--end::Gradient Overlay-->
 
                 <!--begin::Content-->
@@ -73,7 +74,8 @@
                         <img alt="Logo" src="/assets/media/logos/default-white.svg"
                             class="h-40px h-lg-50px position-relative"
                             style="z-index: 1; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));" />
-                    </a>
+
+                        </a>
                     <!--end::Logo-->
 
                     <!--begin::Image-->
@@ -82,23 +84,23 @@
                     <!--end::Image-->
                     <div class="glass-effect">
                         <!--begin::Title-->
-                        <h1 class="d-none d-lg-block text-white fw-bold text-center mb-7">
-                            Dominus: Rápido, Eficiente e Produtivo
-                        </h1>
-                        <!--end::Title-->
+
                         <!--begin::Text-->
                         <div class="d-none d-lg-block text-white fs-base text-center">
-                            @if(isset($randomImage) && $randomImage)
-                            <!--begin::Image Info - Discreto-->
-                            <div class="d-none d-lg-block position-absolute bottom-0 start-50 translate-middle-x mb-10 px-5 text-center" style="z-index: 2;">
-                                <div class="text-white fs-6 fw-bold mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
-                                    {{ $randomImage->descricao }}
+                            @if (isset($randomImage) && $randomImage)
+                                <!--begin::Image Info - Discreto-->
+                                <div class="d-none d-lg-block position-absolute bottom-0 start-50 translate-middle-x mb-10 px-5 text-center"
+                                    style="z-index: 2;">
+                                    <div class="text-white fs-6 fw-bold mb-1"
+                                        style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+                                        {{ $randomImage->descricao }}
+                                    </div>
+                                    <div class="text-white fs-7 fw-bold"
+                                        style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+                                        <i class="fas fa-map-marker-alt text-white "></i> {{ $randomImage->localidade }}
+                                    </div>
                                 </div>
-                                <div class="text-white fs-7 fw-bold" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
-                                   <i class="fas fa-map-marker-alt text-white "></i> {{ $randomImage->localidade }}
-                                </div>
-                            </div>
-                            <!--end::Image Info-->
+                                <!--end::Image Info-->
                             @endif
                         </div>
                         <!--end::Text-->
@@ -126,7 +128,8 @@
                                 <h1 class="text-dark fw-bolder mb-3">Entrar</h1>
                                 <!--end::Title-->
                                 <!--begin::Subtitle-->
-                                <div class="text-gray-500 fw-semibold fs-6">Faça seu login e comece a usar o Dominus</div>
+                                <div class="text-gray-500 fw-semibold fs-6">Faça seu login e comece a usar o Dominus
+                                </div>
                                 <!--end::Subtitle=-->
                             </div>
                             <!--begin::Heading-->
