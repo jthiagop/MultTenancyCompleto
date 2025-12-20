@@ -545,14 +545,15 @@
                                                 </div>
                                                 <form id="{{ $conciliacao->id }}" class="row"
                                                     action="{{ $transacaoSugerida ? route('conciliacao.pivot') : route('conciliacao.conciliar') }}"
-                                                    method="POST">
+                                                    method="POST"
+                                                    enctype="multipart/form-data">
                                                     @csrf
                                                     <!-- Container onde o formulário será renderizado via JSON -->
                                                     <div id="form-container-{{ $conciliacao->id }}"></div>
 
                                                     <!-- Container de anexos (aparece quando checkbox é marcado) -->
                                                     <div class="col-md-12" id="anexoInputContainer_{{ $conciliacao->id }}" style="display: none;">
-                                                        <x-anexos-input name="anexos" :anexosExistentes="[]" />
+                                                        <x-anexos-input name="anexos" :anexosExistentes="[]" :uniqueId="$conciliacao->id" />
                                                     </div>
                                                 </form>
 
@@ -597,7 +598,6 @@
                                                                     label: 'Centro de Custo',
                                                                     required: true,
                                                                     col: 'col-md-6',
-                                                                    placeholder: 'Selecione o Centro de Custo',
                                                                     allowClear: true,
                                                                     options: [
                                                                         @foreach ($centrosAtivos as $centro)
@@ -637,7 +637,6 @@
                                                                     label: 'Tipo do Documento',
                                                                     required: true,
                                                                     col: 'col-md-4',
-                                                                    placeholder: 'Tipo de Documento',
                                                                     options: [
                                                                         { value: 'Pix', text: 'Pix', selected: {{ old('tipo_documento') == 'Pix' ? 'true' : 'false' }} },
                                                                         { value: 'OUTR - Dafe', text: 'OUTR - Dafe', selected: {{ old('tipo_documento') == 'OUTR - Dafe' ? 'true' : 'false' }} },
@@ -684,6 +683,43 @@
                                                                 checkbox.addEventListener('change', function() {
                                                                     if (this.checked) {
                                                                         anexoInputContainer.style.display = 'block';
+
+                                                                        // Aguarda o container ser exibido e inicializa o componente de anexos se necessário
+                                                                        setTimeout(() => {
+                                                                            const anexosContainer = anexoInputContainer.querySelector('.anexos-container[data-name="anexos"][data-unique-id="{{ $conciliacao->id }}"]');
+                                                                            if (anexosContainer) {
+                                                                                // Se já foi inicializado, apenas inicializa Select2 nos selects que ainda não foram inicializados
+                                                                                if (anexosContainer.dataset.initialized === 'true') {
+                                                                                    anexosContainer.querySelectorAll('select[data-control="select2"]').forEach(select => {
+                                                                                        const isInitialized = select.classList.contains('select2-hidden-accessible') ||
+                                                                                                             (typeof KTSelect2 !== 'undefined' && KTSelect2.getInstance(select));
+                                                                                        if (!isInitialized) {
+                                                                                            if (typeof KTSelect2 !== 'undefined') {
+                                                                                                new KTSelect2(select);
+                                                                                            } else if (typeof $(select).select2 !== 'undefined') {
+                                                                                                $(select).select2();
+                                                                                            }
+                                                                                        }
+                                                                                    });
+                                                                                } else {
+                                                                                    // Se não foi inicializado, chama a função de inicialização
+                                                                                    const functionName = 'initAnexosComponent_anexos_{{ $conciliacao->id }}';
+                                                                                    if (typeof window[functionName] === 'function') {
+                                                                                        window[functionName]();
+                                                                                    } else {
+                                                                                        // Se a função não existir, força inicialização manual
+                                                                                        anexosContainer.querySelectorAll('select[data-control="select2"]').forEach(select => {
+                                                                                            if (typeof KTSelect2 !== 'undefined') {
+                                                                                                new KTSelect2(select);
+                                                                                            } else if (typeof $(select).select2 !== 'undefined') {
+                                                                                                $(select).select2();
+                                                                                            }
+                                                                                        });
+                                                                                        anexosContainer.dataset.initialized = 'true';
+                                                                                    }
+                                                                                }
+                                                                            }
+                                                                        }, 200);
                                                                     } else {
                                                                         anexoInputContainer.style.display = 'none';
                                                                     }

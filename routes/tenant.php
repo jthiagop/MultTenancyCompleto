@@ -88,7 +88,7 @@ Route::middleware([
                  $randomImage = \App\Models\TelaDeLogin::where('status', 'ativo')
                     ->inRandomOrder()
                     ->first();
-                
+
                 if ($randomImage) {
                     $backgroundImage = $randomImage->imagem_caminho;
                 }
@@ -322,7 +322,7 @@ Route::middleware([
             Route::get('/banco/chart-data', [BancoController::class, 'getChartData'])->name('banco.chart.data');
             Route::get('/banco/fluxo-chart-data', [BancoController::class, 'getFluxoBancoChartData'])->name('banco.fluxo.chart.data');
             Route::get('/banco/transacoes-data', [BancoController::class, 'getTransacoesData'])->name('banco.transacoes.data');
-            
+
             Route::get('/financeiro/transacao/{id}/detalhes', [BancoController::class, 'getDetalhes'])
                 ->name('financeiro.transacao.detalhes');
             Route::get('/financeiro/caixa/{id}/detalhes', [CaixaController::class, 'getDetalhes'])
@@ -403,17 +403,17 @@ Route::middleware([
 
                 Route::get('/conciliacao-bancaria/pdf', [ConciliacaoController::class, 'gerarPdf'])
                     ->name('relatorios.conciliacao.bancaria.gerar');
-                
+
                 // Rotas assíncronas de PDF
                 Route::post('/conciliacao-bancaria/pdf-async', [ConciliacaoController::class, 'gerarPdfAsync'])
                     ->name('relatorios.conciliacao.bancaria.gerar.async');
 
                 Route::get('/boletim-financeiro/pdf', [BoletimFinanceiroController::class, 'gerarPdf'])
                     ->name('relatorios.boletim.financeiro.gerar');
-                
+
                 Route::post('/boletim-financeiro/pdf-async', [BoletimFinanceiroController::class, 'gerarPdfAsync'])
                     ->name('relatorios.boletim.financeiro.gerar.async');
-                
+
                 // Rota compartilhada para verificar status de PDF
                 Route::get('/pdf/status/{id}', [ConciliacaoController::class, 'checkPdfStatus'])
                     ->name('pdf.status');

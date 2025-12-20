@@ -59,9 +59,9 @@ var KTHorariosMissas = function () {
                 // Contar todos os itens de dias (incluindo o que está sendo adicionado)
                 const diasList = $('#kt_horarios_missas_dias_repeater [data-repeater-list="dias"]');
                 const totalItems = diasList.find('> [data-repeater-item]').length;
-                
+
                 console.log('Total de dias (incluindo o atual):', totalItems);
-                
+
                 // Se já temos 7 ou mais itens, bloquear (não deveria acontecer devido à interceptação do clique)
                 if (totalItems > 7) {
                     Swal.fire({
@@ -203,9 +203,9 @@ var KTHorariosMissas = function () {
         const diasList = $('#kt_horarios_missas_dias_repeater [data-repeater-list="dias"]');
         const currentItems = diasList.find('> [data-repeater-item]').length;
         const addButton = $('.btn-add-dia');
-        
+
         console.log('Atualizando estado do botão. Dias atuais:', currentItems);
-        
+
         if (currentItems >= 7) {
             addButton.prop('disabled', true);
             addButton.addClass('disabled');
@@ -216,7 +216,7 @@ var KTHorariosMissas = function () {
             addButton.removeClass('disabled');
             addButton.attr('title', 'Adicionar novo dia');
         }
-        
+
         // Reinicializar tooltip se necessário
         if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
             const tooltipInstance = bootstrap.Tooltip.getInstance(addButton[0]);
@@ -344,7 +344,7 @@ var KTHorariosMissas = function () {
             // O jQuery repeater não envia o array quando está vazio, então precisamos garantir isso
             const repeaterList = form.querySelector('[data-repeater-list="dias"]');
             const repeaterItems = repeaterList ? repeaterList.querySelectorAll('[data-repeater-item]') : [];
-            
+
             // Se não há itens no repeater, remover o campo hidden vazio e garantir que o array seja enviado
             const diasEmptyIndicator = form.querySelector('#dias_empty_indicator');
             if (repeaterItems.length === 0) {
@@ -406,9 +406,9 @@ var KTHorariosMissas = function () {
                 addDayButton.on('click', function(e) {
                     const diasList = $('#kt_horarios_missas_dias_repeater [data-repeater-list="dias"]');
                     const currentItems = diasList.find('> [data-repeater-item]').length;
-                    
+
                     console.log('Tentando adicionar dia. Total atual:', currentItems);
-                    
+
                     if (currentItems >= 7) {
                         e.preventDefault();
                         e.stopPropagation();
@@ -431,7 +431,7 @@ var KTHorariosMissas = function () {
             initConditionsSelect2();
             initTempusDominusTimePickers();
             initFormSubmission();
-            
+
             // Atualizar estado inicial do botão
             setTimeout(() => {
                 updateAddDayButtonState();

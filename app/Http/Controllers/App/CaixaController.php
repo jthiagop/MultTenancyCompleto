@@ -1088,7 +1088,7 @@ class CaixaController extends Controller
     public function getDetalhes($id)
     {
         $companyId = session('active_company_id');
-        
+
         $transacao = TransacaoFinanceira::with([
                 'lancamentoPadrao',
                 'entidadeFinanceira',
@@ -1100,7 +1100,7 @@ class CaixaController extends Controller
             ])
             ->where('company_id', $companyId)
             ->findOrFail($id);
-            
+
         return response()->json([
             'id' => $transacao->id,
             'descricao' => $transacao->descricao,

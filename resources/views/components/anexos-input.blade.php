@@ -1,9 +1,15 @@
 @props([
     'name' => 'anexos',
-    'anexosExistentes' => []
+    'anexosExistentes' => [],
+    'uniqueId' => null
 ])
 
-<div class="anexos-container" data-name="{{ $name }}">
+@php
+    $uniqueId = $uniqueId ?? uniqid();
+    $containerId = 'anexos-container-' . $uniqueId;
+@endphp
+
+<div class="anexos-container" data-name="{{ $name }}" data-unique-id="{{ $uniqueId }}" id="{{ $containerId }}">
     <!-- Cabeçalho das colunas -->
     <div class="row g-3 mb-3 d-none d-md-flex">
         <div class="col-md-2">
@@ -47,7 +53,16 @@
     (function() {
         // Aguarda o DOM estar pronto ou executa imediatamente se já estiver
         function initAnexosComponent() {
-            const container = document.querySelector('.anexos-container[data-name="{{ $name }}"]');
+            // Busca o container específico pelo ID único ou pelo data-name
+            const containerId = '{{ $containerId }}';
+            let container = document.getElementById(containerId);
+
+            // Se não encontrou pelo ID, tenta pelo data-name (fallback)
+            if (!container) {
+                const containers = document.querySelectorAll('.anexos-container[data-name="{{ $name }}"][data-unique-id="{{ $uniqueId }}"]');
+                container = containers.length > 0 ? containers[0] : null;
+            }
+
             if (!container) {
                 // Se o container ainda não existe, tenta novamente após um delay
                 setTimeout(initAnexosComponent, 100);
@@ -258,40 +273,50 @@
                 return kb + 'Kb';
             }
 
-            // Event listeners
-            container.addEventListener('click', function(e) {
-                // Botão adicionar anexo
-                if (e.target.closest('.btn-add-anexo')) {
-                    e.preventDefault();
-                    addAnexoRow();
-                }
-
-                // Botão remover linha
-                if (e.target.closest('.btn-remove-anexo')) {
-                    e.preventDefault();
-                    removeAnexoRow(e.target.closest('.btn-remove-anexo'));
-                }
-
-                // Botão remover arquivo
-                if (e.target.closest('.remove-file')) {
-                    e.preventDefault();
-                    const row = e.target.closest('.anexo-row');
-                    const fileInput = row.querySelector('.anexo-file-input');
-                    const preview = row.querySelector('.file-preview');
-                    if (fileInput) {
-                        fileInput.value = '';
-                        preview.classList.add('d-none');
+            // Event listeners - verifica se já foram adicionados
+            if (!container.dataset.listenersAttached) {
+                container.addEventListener('click', function(e) {
+                    // Botão adicionar anexo
+                    if (e.target.closest('.btn-add-anexo')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        addAnexoRow();
+                        return false;
                     }
 
-                }
-            });
+                    // Botão remover linha
+                    if (e.target.closest('.btn-remove-anexo')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        removeAnexoRow(e.target.closest('.btn-remove-anexo'));
+                        return false;
+                    }
 
-            // Event listener para mudança de forma do anexo
-            container.addEventListener('change', function(e) {
-                if (e.target.matches('select[name*="[forma_anexo]"]')) {
-                    toggleAnexoType(e.target);
-                }
-            });
+                    // Botão remover arquivo
+                    if (e.target.closest('.remove-file')) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const row = e.target.closest('.anexo-row');
+                        const fileInput = row.querySelector('.anexo-file-input');
+                        const preview = row.querySelector('.file-preview');
+                        if (fileInput) {
+                            fileInput.value = '';
+                            preview.classList.add('d-none');
+                        }
+                        return false;
+                    }
+                });
+
+                // Event listener para mudança de forma do anexo
+                container.addEventListener('change', function(e) {
+                    if (e.target.matches('select[name*="[forma_anexo]"]')) {
+                        toggleAnexoType(e.target);
+                    }
+                });
+
+                // Marca que os listeners foram adicionados
+                container.dataset.listenersAttached = 'true';
+            }
 
             // Inicializa selects existentes
             container.querySelectorAll('.anexo-row').forEach(row => {
@@ -326,6 +351,10 @@
             });
             observer.observe(tabPane, { attributes: true });
         }
+
+        // Expõe a função de inicialização globalmente com ID único para ser chamada quando o container for exibido
+        const functionName = 'initAnexosComponent_{{ str_replace(['-', '[', ']'], ['_', '_', '_'], $name) }}_{{ $uniqueId }}';
+        window[functionName] = initAnexosComponent;
     })();
 </script>
 
