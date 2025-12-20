@@ -1,8 +1,3 @@
-@php
-    // Recupera a última imagem de fundo ativa ou define uma padrão
-    $backgroundImage = \App\Models\TelaDeLogin::where('status', 'ativo')->latest()->value('imagem_caminho');
-@endphp
-
 <html lang="pt_BR">
 <!--begin::Head-->
 
@@ -63,7 +58,7 @@
         <div class="d-flex flex-column flex-lg-row flex-column-fluid">
             <!--begin::Aside-->
             <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                style="background-image: url('{{ $backgroundImage ? route('file', ['path' => $backgroundImage]) : asset('/assets/media/misc/penha.png') }}');">
+                style="background-image: url('{{ $imagemConvento ? asset('storage/' . $imagemConvento->imagem_caminho) : asset('/assets/media/misc/penha.png') }}');">
 
                 <!--begin::Content-->
                 <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100">
@@ -80,12 +75,18 @@
                     <div class="glass-effect">
                         <!--begin::Title-->
                         <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">
-                            Dominus: Rápido, Eficiente e Produtivo
+                            {{ $imagemConvento->descricao ?? 'Dominus: Rápido, Eficiente e Produtivo' }}
                         </h1>
                         <!--end::Title-->
                         <!--begin::Text-->
                         <div class="d-none d-lg-block text-white fs-base text-center px-10"
                             style="line-height: 1.8; max-width: 600px; margin: 0 auto;">
+                            @if($imagemConvento && $imagemConvento->localidade)
+                                <p class="mb-3" style="text-align: center;">
+                                    <i class="fas fa-map-marker-alt me-2"></i>
+                                    <span class="fw-semibold">{{ $imagemConvento->localidade }}</span>
+                                </p>
+                            @endif
                             <p class="mb-3" style="text-align: justify; text-align-last: center;">
                                 No contexto da gestão eclesial, <a href="#"
                                     class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a> é um sistema

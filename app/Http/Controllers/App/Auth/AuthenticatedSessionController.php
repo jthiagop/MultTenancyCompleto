@@ -4,6 +4,7 @@ namespace App\Http\Controllers\App\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
+use App\Models\TelaDeLogin;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,7 +17,12 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('app.auth.login');
+        // Buscar uma imagem aleatória ativa para exibir
+        $imagemConvento = TelaDeLogin::ativas()
+            ->inRandomOrder()
+            ->first();
+        
+        return view('app.auth.login', compact('imagemConvento'));
     }
 
     /**

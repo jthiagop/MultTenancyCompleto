@@ -18,9 +18,12 @@ class TelaDeLogin extends Model
      */
     protected $fillable = [
         'imagem_caminho',
+        'descricao',
+        'localidade',
         'data_upload',
         'upload_usuario_id',
         'status',
+        'tags',
         'updated_by',
     ];
 
@@ -50,12 +53,19 @@ class TelaDeLogin extends Model
         return $this->belongsTo(User::class, 'updated_by');
     }
 
-    public function showLoginForm()
+    /**
+     * Scope para buscar apenas imagens ativas
+     */
+    public function scopeAtivas($query)
     {
-        // Recupere a última imagem de fundo ativa, ou a imagem padrão se não houver nenhuma.
-        $backgroundImage = TelaDeLogin::where('status', 'ativo')->latest()->value('imagem_caminho');
+        return $query->where('status', 'ativo');
+    }
 
-
-        return view('auth.login', compact('backgroundImage'));
+    /**
+     * Accessor para URL completa da imagem
+     */
+    public function getImagemUrlAttribute()
+    {
+        return asset('storage/' . $this->imagem_caminho);
     }
 }
