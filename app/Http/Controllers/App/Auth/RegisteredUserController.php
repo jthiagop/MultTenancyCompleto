@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\App\Auth;
 
 use App\Http\Controllers\Controller;
-use App\Models\TelaDeLogin;
 use App\Models\User;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
@@ -20,12 +19,7 @@ class RegisteredUserController extends Controller
      */
     public function create(): View
     {
-        // Buscar uma imagem aleatória ativa para exibir
-        $imagemConvento = TelaDeLogin::ativas()
-            ->inRandomOrder()
-            ->first();
-        
-        return view('app.auth.login', compact('imagemConvento'));
+        return view('app.auth.login');
     }
 
     /**

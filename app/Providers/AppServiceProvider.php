@@ -28,5 +28,8 @@ class AppServiceProvider extends ServiceProvider
 
         // 3. Adicione esta linha para registrar o Composer
         View::composer('app.layouts.userMenu', UserMenuComposer::class);
+        
+        // Composer para a tela de login (Imagem de fundo aleatória)
+        View::composer('app.auth.login', \App\View\Composers\LoginComposer::class);
     }
 }
