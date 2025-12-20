@@ -167,36 +167,48 @@
                                                                     src="assets/media/logos/apple-touch-icon.svg"
                                                                     class="h-140px h-lg-150px">
                                                             </a>
-                                                            <!-- Form Inputs for Customization -->
-                                                            <div class="w-100 p-5">
-                                                                <div class="fv-row mb-5">
-                                                                    <label class="form-label required">Nome do Convento</label>
-                                                                    <input type="text" name="descricao" class="form-control" 
-                                                                           placeholder="Ex: Convento São Francisco" required
-                                                                           id="input-descricao">
-                                                                </div>
-                                                                <div class="fv-row mb-5">
-                                                                    <label class="form-label required">Localidade</label>
-                                                                    <input type="text" name="localidade" class="form-control" 
-                                                                           placeholder="Ex: Recife - PE" required
-                                                                           id="input-localidade">
-                                                                </div>
+                                                            <!--begin::Wrapper-->
+                                                            <div class="w-lg-350px p-5">
+                                                                <form method="POST" action="{{ route('login') }}">
+                                                                    @csrf
+                                                                    <!--begin::Heading-->
+                                                                    <div class="text-center mb-8">
+                                                                        <h1 class="text-dark fw-bolder mb-3">Entre
+                                                                            no Dominus</h1>
+                                                                        <div class="text-gray-500 fw-semibold fs-6">
+                                                                            Faça seu login</div>
+                                                                    </div>
+                                                                    <!--end::Heading-->
 
-                                                                <!-- Login Form Preview (Disabled) -->
-                                                                <div class="opacity-50 mt-10">
-                                                                    <div class="text-center mb-5">
-                                                                        <h3 class="text-dark fw-bolder">Visualização do Login</h3>
+                                                                    <!--begin::Input group-->
+                                                                    <div class="fv-row mb-5">
+                                                                        <input id="email" type="email"
+                                                                            name="email" required autofocus
+                                                                            autocomplete="username"
+                                                                            class="form-control bg-transparent" disabled
+                                                                            placeholder="Email">
                                                                     </div>
                                                                     <div class="fv-row mb-5">
-                                                                        <input type="email" class="form-control bg-transparent" disabled placeholder="Email">
+                                                                        <input id="password" type="password"
+                                                                            name="password" required
+                                                                            autocomplete="current-password"
+                                                                            class="form-control bg-transparent" disabled
+                                                                            placeholder="Senha">
                                                                     </div>
-                                                                    <div class="fv-row mb-5">
-                                                                        <input type="password" class="form-control bg-transparent" disabled placeholder="Senha">
-                                                                    </div>
+                                                                    <!--end::Input group-->
+
                                                                     <div class="d-grid mb-7">
-                                                                        <button type="button" disabled class="btn btn-primary">Entrar</button>
+                                                                        <button type="submit" id="kt_sign_in_submit"
+                                                                            disabled class="btn btn-primary">
+                                                                            <span class="indicator-label">Entrar</span>
+                                                                            <span class="indicator-progress">Por
+                                                                                favor, espere...
+                                                                                <span
+                                                                                    class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                                                            </span>
+                                                                        </button>
                                                                     </div>
-                                                                </div>
+                                                                </form>
                                                             </div>
 
                                                             <!--end::Wrapper-->
@@ -210,62 +222,80 @@
                                             <!--end::Root-->
                                         </div>
                                     </div>
-                                    <!--end::Description-->
+                                    <!--begin::Description-->
                                     <div class="tns tns-default mb-3" style="direction: ltr">
                                         <!--begin::Slider-->
                                         <div data-tns="true" data-tns-loop="true" data-tns-swipe-angle="false"
                                             data-tns-speed="2000" data-tns-autoplay="true"
-                                            data-tns-autoplay-timeout="8000" data-tns-items="3" data-tns-center="true"
+                                            data-tns-autoplay-timeout="4000" data-tns-items="3" data-tns-center="true"
                                             data-tns-slide-by="true" data-tns-nav-container="#kt_slider_thumbnails"
                                             data-tns-nav-as-thumbnails="true" data-tns-prev-button="#kt_slider_prev"
                                             data-tns-next-button="#kt_slider_next">
-                                            @forelse($existingImages as $image)
+                                            
+                                            @forelse($activeImages as $image)
                                             <!--begin::Item-->
                                             <div class="text-center px-5 py-5">
-                                                <div class="card shadow-sm h-100">
-                                                    <img src="{{ asset('storage/' . $image->imagem_caminho) }}"
-                                                        class="card-img-top card-rounded mw-100" style="height: 200px; object-fit: cover;" alt="{{ $image->descricao }}" />
-                                                    <div class="card-body p-3">
-                                                        <div class="fw-bold text-gray-800">{{Str::limit($image->descricao, 20)}}</div>
-                                                        <div class="fs-7 text-muted mt-1">
-                                                            <i class="fas fa-map-marker-alt fs-9 me-1"></i> {{Str::limit($image->localidade, 20)}}
-                                                        </div>
-                                                    </div>
-                                                </div>
+                                                <img src="{{ route('file', ['path' => $image->imagem_caminho]) }}"
+                                                    class="card-rounded mw-100" style="height: 200px; object-fit: cover;" alt="{{ $image->descricao }}" />
+                                                <div class="mt-2 text-dark fw-bold">{{ $image->descricao }}</div>
+                                                <div class="text-muted fs-7">{{ $image->localidade }}</div>
                                             </div>
                                             <!--end::Item-->
                                             @empty
+                                            <!--begin::Item-->
                                             <div class="text-center px-5 py-5">
-                                                <img src="assets/media/misc/penha.png" class="card-rounded mw-100" alt="Padrão" />
-                                                <p class="text-muted mt-2">Nenhuma imagem personalizada.</p>
+                                                <div class="alert alert-info">Nenhuma imagem cadastrada</div>
                                             </div>
+                                            <!--end::Item-->
                                             @endforelse
+                                            
                                         </div>
                                         <!--end::Slider-->
 
                                         <!--begin::Slider button-->
                                         <button class="btn btn-icon btn-active-color-primary" id="kt_slider_prev">
-                                            <i class="fas fa-chevron-left"></i>
+                                            <i class="ki-duotone ki-left fs-2x">
+                                                <span class="path1"></span><span class="path2"></span>
+                                            </i>
                                         </button>
                                         <!--end::Slider button-->
 
                                         <!--begin::Slider button-->
                                         <button class="btn btn-icon btn-active-color-primary" id="kt_slider_next">
-                                            <i class="fas fa-chevron-right"></i>
+                                            <i class="ki-duotone ki-right fs-2x">
+                                                <span class="path1"></span><span class="path2"></span>
+                                            </i>
                                         </button>
                                         <!--end::Slider button-->
                                     </div>
 
                                     <div class="d-flex flex-center">
-                                        <ul class="d-flex align-items-center list-unstyled gap-5 cursor-pointer" id="kt_slider_thumbnails">
-                                            @foreach($existingImages as $image)
-                                            <li class="d-flex gap-3">
-                                                <img src="{{ asset('storage/' . $image->imagem_caminho) }}" class="w-50px h-50px rounded object-fit-cover"
-                                                    alt="" />
+                                        <ul class="d-flex align-items-center list-unstyled gap-5 cursor-pointer">
+                                            @foreach($activeImages as $image)
+                                            <li class="d-flex gap-3" id="kt_slider_thumbnails">
+                                                <img src="{{ route('file', ['path' => $image->imagem_caminho]) }}" class="w-50px h-50px rounded object-fit-cover"
+                                                    alt="{{ $image->descricao }}" />
                                             </li>
                                             @endforeach
                                         </ul>
                                     </div>
+                                    
+                                    <!-- Campos de Texto para Nome e Localidade -->
+                                    <div class="row mb-5 mt-10">
+                                        <div class="col-md-6">
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="descricao" name="descricao" placeholder="Nome do Convento" required>
+                                                <label for="descricao">Nome do Convento</label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-floating mb-3">
+                                                <input type="text" class="form-control" id="localidade" name="localidade" placeholder="Localidade" required>
+                                                <label for="localidade">Localidade</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <!--begin::Action-->
                                     <!--begin::Ações (Centralizados)-->
                                     <div class="d-flex justify-content-center mt-5">
