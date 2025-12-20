@@ -87,7 +87,7 @@
                 <div class="menu-item px-3">
                     <a href="{{ route('company.edit') }}" class="menu-link px-5"> Organismo</a>
                 </div>
-                @if (auth()->user()->hasRole('global','admin'))
+                @if (auth()->user()->hasAnyRole(['global', 'admin']))
                 <div class="menu-item px-3">
                     <a href="{{ route('telaLogin.index') }}" class="menu-link px-5"> Tela de Login</a>
                 </div>
