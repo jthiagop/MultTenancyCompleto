@@ -58,7 +58,7 @@
         <div class="d-flex flex-column flex-lg-row flex-column-fluid">
             <!--begin::Aside-->
             <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                style="background-image: url('{{ $imagemConvento ? asset('storage/' . $imagemConvento->imagem_caminho) : asset('/assets/media/misc/penha.png') }}');">
+                style="background-image: url('{{ (isset($randomImage) && $randomImage) ? route('file', ['path' => $randomImage->imagem_caminho]) : asset('/assets/media/misc/penha.png') }}');">
 
                 <!--begin::Content-->
                 <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100">
@@ -73,34 +73,31 @@
                         src="assets/media/misc/auth-screens.png" alt="" />
                     <!--end::Image-->
                     <div class="glass-effect">
+                    @if(isset($randomImage) && $randomImage)
                         <!--begin::Title-->
                         <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">
-                            {{ $imagemConvento->descricao ?? 'Dominus: Rápido, Eficiente e Produtivo' }}
+                            {{ $randomImage->descricao }}
                         </h1>
                         <!--end::Title-->
                         <!--begin::Text-->
-                        <div class="d-none d-lg-block text-white fs-base text-center px-10"
-                            style="line-height: 1.8; max-width: 600px; margin: 0 auto;">
-                            @if($imagemConvento && $imagemConvento->localidade)
-                                <p class="mb-3" style="text-align: center;">
-                                    <i class="fas fa-map-marker-alt me-2"></i>
-                                    <span class="fw-semibold">{{ $imagemConvento->localidade }}</span>
-                                </p>
-                            @endif
-                            <p class="mb-3" style="text-align: justify; text-align-last: center;">
-                                No contexto da gestão eclesial, <a href="#"
-                                    class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a> é um sistema
-                                que permite gerenciar de forma eficiente os campos de pastorais, patrimônio e
-                                financeiro.
-                            </p>
-                            <p class="mb-0" style="text-align: justify; text-align-last: center;">
-                                Com <a href="#"
-                                    class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a>,
-                                a administração de sua paróquia se torna mais organizada e produtiva, facilitando a
-                                gestão de recursos e atividades eclesiais.
-                            </p>
+                        <div class="d-none d-lg-block text-white fs-1 text-center fw-semibold">
+                            {{ $randomImage->localidade }}
                         </div>
                         <!--end::Text-->
+                    @else
+                        <!--begin::Title-->
+                        <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">
+                            Dominus: Rápido, Eficiente e Produtivo
+                        </h1>
+                        <!--end::Title-->
+                        <!--begin::Text-->
+                        <div class="d-none d-lg-block text-white fs-base text-center">
+                            No contexto da gestão eclesial, <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a> é um sistema
+                            que permite gerenciar de forma eficiente os campos de <br />pastorais, patrimônio e financeiro. Com <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a>,
+                            a administração de sua paróquia se torna mais organizada e <br />produtiva, facilitando a gestão de recursos e atividades eclesiais.
+                        </div>
+                        <!--end::Text-->
+                    @endif
                     </div>
                 </div>
                 <!--end::Content-->

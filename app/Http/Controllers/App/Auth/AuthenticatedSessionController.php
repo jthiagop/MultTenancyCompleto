@@ -16,7 +16,18 @@ class AuthenticatedSessionController extends Controller
      */
     public function create(): View
     {
-        return view('app.auth.login');
+        $randomImage = null;
+        try {
+            if (class_exists(\App\Models\TelaDeLogin::class)) {
+                 $randomImage = \App\Models\TelaDeLogin::where('status', 'ativo')
+                    ->inRandomOrder()
+                    ->first();
+            }
+        } catch (\Exception $e) {
+            // Fallback gracefully if table doesn't exist
+        }
+
+        return view('app.auth.login', compact('randomImage'));
     }
 
     /**
