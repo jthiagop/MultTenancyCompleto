@@ -18,54 +18,40 @@ class TelaDeLoginController extends Controller
 
     public function create()
     {
-        // Lista de imagens predefinidas (pode ser movida para um arquivo de configuração ou banco)
-        $backgroundImages = collect([
-            (object)['path' => 'assets/media/misc/image1.jpg', 'name' => 'Imagem 1'],
-            (object)['path' => 'assets/media/misc/image2.jpg', 'name' => 'Imagem 2'],
-            (object)['path' => 'assets/media/misc/image3.jpg', 'name' => 'Imagem 3'],
-        ]);
+        // Buscar todas as imagens ativas para mostrar na galeria (slider)
+        $existingImages = TelaDeLogin::where('status', 'ativo')->latest()->get();
 
-        // Buscar a imagem de fundo atual (ativa)
-        $currentBackground = TelaDeLogin::where('status', 'ativo')->latest()->first();
+        // Buscar a imagem mais recente para ser o background inicial da visualização
+        $currentBackground = $existingImages->first();
 
-        return view('app.confs.login.index', compact('backgroundImages', 'currentBackground'));
+        return view('app.confs.login.index', compact('existingImages', 'currentBackground'));
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'backgroundImage' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:4096', // 4MB
-            'selectedImage' => 'nullable|string',
+            'backgroundImage' => 'required|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB
+            'descricao' => 'required|string|max:255',
+            'localidade' => 'required|string|max:255',
         ]);
 
-        // Desativar imagens anteriores
-        TelaDeLogin::where('status', 'ativo')->update(['status' => 'inativo']);
-
-        // Processar upload de imagem ou seleção predefinida
         if ($request->hasFile('backgroundImage')) {
-            $imagePath = $request->file('backgroundImage')->store('tela_login_images', 'public');
-        } elseif ($request->filled('selectedImage')) {
-            $imagePath = $request->input('selectedImage');
-        } else {
-            if ($request->ajax()) {
-                return response()->json(['message' => 'Nenhuma imagem selecionada.'], 422);
-            }
-            return redirect()->back()->with('error', 'Nenhuma imagem selecionada.');
+            $imagePath = $request->file('backgroundImage')->store('login-images', 'public');
+
+            // Criar o registro (NÃO desativa os anteriores, pois queremos o slider aleatório)
+            TelaDeLogin::create([
+                'imagem_caminho' => $imagePath,
+                'descricao' => $request->descricao,
+                'localidade' => $request->localidade,
+                'data_upload' => now(),
+                'upload_usuario_id' => Auth::id(),
+                'status' => 'ativo',
+                'updated_by' => Auth::id(),
+            ]);
+
+            return redirect()->back()->with('success', 'Imagem enviada com sucesso! Ela aparecerá aleatoriamente na tela de login.');
         }
 
-        // Criar o registro
-        $telaDeLogin = TelaDeLogin::create([
-            'imagem_caminho' => $imagePath,
-            'data_upload' => now(),
-            'upload_usuario_id' => Auth::id(),
-            'status' => 'ativo',
-            'updated_by' => Auth::id(),
-        ]);
-
-        if ($request->ajax()) {
-            return response()->json(['message' => 'Imagem de fundo salva com sucesso!', 'data' => $telaDeLogin], 200);
-        }
-
-        return redirect()->back()->with('success', 'Imagem enviada e registrada com sucesso.');
+        return redirect()->back()->with('error', 'Por favor, selecione uma imagem.');
     }
 }

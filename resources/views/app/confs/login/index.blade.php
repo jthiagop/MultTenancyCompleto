@@ -90,22 +90,18 @@
             <div id="kt_app_content" class="app-content flex-column-fluid">
                 <!--begin::Content container-->
                 <div id="kt_app_content_container" class="app-container container-xxl">
-                    <!--begin::Card-->
-                    <div class="card">
-                        <!-- Mensagens de Erro -->
-
-                        <!--begin::Card body-->
-                        <div class="card-body p-0">
-                            <form id="TelaDeLogin" method="POST" action="{{ route('telaLogin.store') }}"
-                                enctype="multipart/form-data">
-                                @csrf
-                                <!--begin::Wrapper-->
-                                <div class="card-px text-center py-2 my-2">
-                                    <!--begin::Title-->
-                                    <h2 class="fs-2x fw-bold">Personalizar Tela de Login</h2>
-                                    <!--end::Title-->
-                                    <!--begin::Description-->
-                                    @if ($errors->any())
+                    <!--begin::Card body-->
+                    <div class="card-body p-0">
+                        <form id="TelaDeLogin" method="POST" action="{{ route('telaLogin.store') }}"
+                            enctype="multipart/form-data">
+                            @csrf
+                            <!--begin::Wrapper-->
+                            <div class="card-px text-center py-2 my-2">
+                                <!--begin::Title-->
+                                <h2 class="fs-2x fw-bold">Personalizar Tela de Login</h2>
+                                <!--end::Title-->
+                                <!--begin::Description-->
+                                @if ($errors->any())
                                     <div class="alert alert-danger">
                                         <ul>
                                             @foreach ($errors->all() as $error)
@@ -114,151 +110,190 @@
                                         </ul>
                                     </div>
                                 @endif
-                                    <body id="kt_body" class="app-blank app-blank">
-                                        <div class="computer-frame">
-                                            <div class="computer-screen">
-                                                <!--begin::Root-->
-                                                <div class="d-flex flex-column flex-root" id="kt_app_root">
-                                                    <!--begin::Authentication - Sign-in-->
-                                                    <div class="d-flex flex-column flex-lg-row flex-column-fluid">
 
-                                                        <!-- Input de Upload de Imagem -->
-                                                        <!--begin::Aside (Left Section with Background Image)-->
-                                                        <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                                                            style="background-image: url('assets/media/misc/penha.png');">
-                                                            <!--begin::Content-->
-                                                            <div
-                                                                class="d-flex flex-column flex-center p-7 p-lg-10 w-100">
-                                                                <!--begin::Logo-->
-                                                                <a href="{{ route('dashboard') }}"
-                                                                    class="mb-0 mb-lg-20">
-                                                                    <img alt="Logo"
-                                                                        src="assets/media/logos/default.svg"
-                                                                        class="h-40px h-lg-50px">
-                                                                </a>
-                                                                <!--end::Logo-->
+                                <div id="kt_body" class="app-blank app-blank">
+                                    <div class="computer-frame">
+                                        <div class="computer-screen">
+                                            <!--begin::Root-->
+                                            <div class="d-flex flex-column flex-root" id="kt_app_root">
+                                                <!--begin::Authentication - Sign-in-->
+                                                <div class="d-flex flex-column flex-lg-row flex-column-fluid">
 
-                                                                <!--begin::Image and Title-->
-                                                                <div class="glass-effect text-center text-white">
-                                                                    <h1 class="d-none d-lg-block fs-2qx fw-bold mb-7">
-                                                                        Dominus: Rápido, Eficiente e Produtivo
-                                                                    </h1>
-                                                                    <div class="d-none d-lg-block fs-base">
-                                                                        No contexto da gestão eclesial, <a
-                                                                            href="#"
-                                                                            class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a>
-                                                                        é um sistema
-                                                                        que permite gerenciar de forma eficiente os
-                                                                        campos
-                                                                        de pastorais, patrimônio e financeiro.
+                                                    <!-- Input de Upload de Imagem -->
+                                                    <!--begin::Aside (Left Section with Background Image)-->
+                                                    <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
+                                                        style="background-image: url('assets/media/misc/penha.png');">
+                                                        <!--begin::Content-->
+                                                        <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100">
+                                                            <!--begin::Logo-->
+                                                            <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20">
+                                                                <img alt="Logo" src="assets/media/logos/default.svg"
+                                                                    class="h-40px h-lg-50px">
+                                                            </a>
+                                                            <!--end::Logo-->
+
+                                                            <!--begin::Image and Title-->
+                                                            <div class="glass-effect text-center text-white">
+                                                                <h1 class="d-none d-lg-block fs-2qx fw-bold mb-7">
+                                                                    Dominus: Rápido, Eficiente e Produtivo
+                                                                </h1>
+                                                                <div class="d-none d-lg-block fs-base">
+                                                                    No contexto da gestão eclesial, <a href="#"
+                                                                        class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a>
+                                                                    é um sistema
+                                                                    que permite gerenciar de forma eficiente os
+                                                                    campos
+                                                                    de pastorais, patrimônio e financeiro.
+                                                                </div>
+                                                            </div>
+                                                            <!--end::Image and Title-->
+
+                                                            <!-- Upload Button -->
+                                                            <input type="file" id="backgroundImageUpload"
+                                                                accept="image/*" name="backgroundImage"
+                                                                style="display: none;">
+                                                        </div>
+                                                        <!--end::Content-->
+                                                    </div>
+                                                    <!--end::Aside-->
+
+                                                    <!--begin::Body (Login Form Section)-->
+                                                    <div class="d-flex flex-column flex-lg-row-fluid w-lg-50 p-10">
+                                                        <!--begin::Form-->
+                                                        <div class="d-flex flex-center flex-column flex-lg-row-fluid">
+                                                            <!--begin::Logo-->
+                                                            <a href="#" class="mb-0 mb-lg-10 disabled">
+                                                                <img alt="Logo"
+                                                                    src="assets/media/logos/apple-touch-icon.svg"
+                                                                    class="h-140px h-lg-150px">
+                                                            </a>
+                                                            <!-- Form Inputs for Customization -->
+                                                            <div class="w-100 p-5">
+                                                                <div class="fv-row mb-5">
+                                                                    <label class="form-label required">Nome do Convento</label>
+                                                                    <input type="text" name="descricao" class="form-control" 
+                                                                           placeholder="Ex: Convento São Francisco" required
+                                                                           id="input-descricao">
+                                                                </div>
+                                                                <div class="fv-row mb-5">
+                                                                    <label class="form-label required">Localidade</label>
+                                                                    <input type="text" name="localidade" class="form-control" 
+                                                                           placeholder="Ex: Recife - PE" required
+                                                                           id="input-localidade">
+                                                                </div>
+
+                                                                <!-- Login Form Preview (Disabled) -->
+                                                                <div class="opacity-50 mt-10">
+                                                                    <div class="text-center mb-5">
+                                                                        <h3 class="text-dark fw-bolder">Visualização do Login</h3>
+                                                                    </div>
+                                                                    <div class="fv-row mb-5">
+                                                                        <input type="email" class="form-control bg-transparent" disabled placeholder="Email">
+                                                                    </div>
+                                                                    <div class="fv-row mb-5">
+                                                                        <input type="password" class="form-control bg-transparent" disabled placeholder="Senha">
+                                                                    </div>
+                                                                    <div class="d-grid mb-7">
+                                                                        <button type="button" disabled class="btn btn-primary">Entrar</button>
                                                                     </div>
                                                                 </div>
-                                                                <!--end::Image and Title-->
-
-                                                                <!-- Upload Button -->
-                                                                <input type="file" id="backgroundImageUpload"
-                                                                    accept="image/*" name="backgroundImage" style="display: none;">
                                                             </div>
-                                                            <!--end::Content-->
+
+                                                            <!--end::Wrapper-->
                                                         </div>
-                                                        <!--end::Aside-->
-
-                                                        <!--begin::Body (Login Form Section)-->
-                                                        <div class="d-flex flex-column flex-lg-row-fluid w-lg-50 p-10">
-                                                            <!--begin::Form-->
-                                                            <div
-                                                                class="d-flex flex-center flex-column flex-lg-row-fluid">
-                                                                <!--begin::Logo-->
-                                                                <a href="#" class="mb-0 mb-lg-10 disabled">
-                                                                    <img alt="Logo"
-                                                                        src="assets/media/logos/apple-touch-icon.svg"
-                                                                        class="h-140px h-lg-150px">
-                                                                </a>
-                                                                <!--begin::Wrapper-->
-                                                                <div class="w-lg-350px p-5">
-                                                                    <form method="POST" action="{{ route('login') }}">
-                                                                        @csrf
-                                                                        <!--begin::Heading-->
-                                                                        <div class="text-center mb-8">
-                                                                            <h1 class="text-dark fw-bolder mb-3">Entre
-                                                                                no Dominus</h1>
-                                                                            <div class="text-gray-500 fw-semibold fs-6">
-                                                                                Faça seu login</div>
-                                                                        </div>
-                                                                        <!--end::Heading-->
-
-                                                                        <!--begin::Input group-->
-                                                                        <div class="fv-row mb-5">
-                                                                            <input id="email" type="email"
-                                                                                name="email" required autofocus
-                                                                                autocomplete="username"
-                                                                                class="form-control bg-transparent"
-                                                                                disabled placeholder="Email">
-                                                                        </div>
-                                                                        <div class="fv-row mb-5">
-                                                                            <input id="password" type="password"
-                                                                                name="password" required
-                                                                                autocomplete="current-password"
-                                                                                class="form-control bg-transparent"
-                                                                                disabled placeholder="Senha">
-                                                                        </div>
-                                                                        <!--end::Input group-->
-
-                                                                        <div class="d-grid mb-7">
-                                                                            <button type="submit"
-                                                                                id="kt_sign_in_submit" disabled
-                                                                                class="btn btn-primary">
-                                                                                <span
-                                                                                    class="indicator-label">Entrar</span>
-                                                                                <span class="indicator-progress">Por
-                                                                                    favor, espere...
-                                                                                    <span
-                                                                                        class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                                                                </span>
-                                                                            </button>
-                                                                        </div>
-                                                                    </form>
-                                                                </div>
-
-                                                                <!--end::Wrapper-->
-                                                            </div>
-                                                            <!--end::Form-->
-                                                        </div>
-                                                        <!--end::Body-->
+                                                        <!--end::Form-->
                                                     </div>
-                                                    <!--end::Authentication - Sign-in-->
+                                                    <!--end::Body-->
                                                 </div>
-                                                <!--end::Root-->
+                                                <!--end::Authentication - Sign-in-->
                                             </div>
+                                            <!--end::Root-->
                                         </div>
-                                        <!--end::Description-->
-                                        <!--begin::Action-->
-                                        <!--begin::Ações (Centralizados)-->
-                                        <div class="d-flex justify-content-center mt-5">
-                                            <div class="d-flex gap-3 align-items-center">
-                                                <!-- Botão de Upload de Imagem -->
-                                                <label for="backgroundImageUpload"
-                                                    class="btn btn-light-success d-flex align-items-center gap-2">
-                                                    <i class="fa-solid fa-upload"></i> Upload de Imagem
-                                                </label>
-                                                <input type="file" id="backgroundImageUpload" accept="image/*"
-                                                    style="display: none;">
-
-                                                <!-- Botão de Salvar Tela (Submit) -->
-                                                <button type="submit"
-                                                    class="btn btn-light-primary d-flex align-items-center gap-2">
-                                                    <i class="fa-solid fa-floppy-disk"></i> Salvar Tela
-                                                </button>
+                                    </div>
+                                    <!--end::Description-->
+                                    <div class="tns tns-default mb-3" style="direction: ltr">
+                                        <!--begin::Slider-->
+                                        <div data-tns="true" data-tns-loop="true" data-tns-swipe-angle="false"
+                                            data-tns-speed="2000" data-tns-autoplay="true"
+                                            data-tns-autoplay-timeout="8000" data-tns-items="3" data-tns-center="true"
+                                            data-tns-slide-by="true" data-tns-nav-container="#kt_slider_thumbnails"
+                                            data-tns-nav-as-thumbnails="true" data-tns-prev-button="#kt_slider_prev"
+                                            data-tns-next-button="#kt_slider_next">
+                                            @forelse($existingImages as $image)
+                                            <!--begin::Item-->
+                                            <div class="text-center px-5 py-5">
+                                                <div class="card shadow-sm h-100">
+                                                    <img src="{{ asset('storage/' . $image->imagem_caminho) }}"
+                                                        class="card-img-top card-rounded mw-100" style="height: 200px; object-fit: cover;" alt="{{ $image->descricao }}" />
+                                                    <div class="card-body p-3">
+                                                        <div class="fw-bold text-gray-800">{{Str::limit($image->descricao, 20)}}</div>
+                                                        <div class="fs-7 text-muted mt-1">
+                                                            <i class="fas fa-map-marker-alt fs-9 me-1"></i> {{Str::limit($image->localidade, 20)}}
+                                                        </div>
+                                                    </div>
+                                                </div>
                                             </div>
+                                            <!--end::Item-->
+                                            @empty
+                                            <div class="text-center px-5 py-5">
+                                                <img src="assets/media/misc/penha.png" class="card-rounded mw-100" alt="Padrão" />
+                                                <p class="text-muted mt-2">Nenhuma imagem personalizada.</p>
+                                            </div>
+                                            @endforelse
                                         </div>
-                                        <!--end::Ações-->
-                            </form>
+                                        <!--end::Slider-->
 
-                            <!--end::Action-->
-                        </div>
-                        <!--end::Wrapper-->
+                                        <!--begin::Slider button-->
+                                        <button class="btn btn-icon btn-active-color-primary" id="kt_slider_prev">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </button>
+                                        <!--end::Slider button-->
+
+                                        <!--begin::Slider button-->
+                                        <button class="btn btn-icon btn-active-color-primary" id="kt_slider_next">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </button>
+                                        <!--end::Slider button-->
+                                    </div>
+
+                                    <div class="d-flex flex-center">
+                                        <ul class="d-flex align-items-center list-unstyled gap-5 cursor-pointer" id="kt_slider_thumbnails">
+                                            @foreach($existingImages as $image)
+                                            <li class="d-flex gap-3">
+                                                <img src="{{ asset('storage/' . $image->imagem_caminho) }}" class="w-50px h-50px rounded object-fit-cover"
+                                                    alt="" />
+                                            </li>
+                                            @endforeach
+                                        </ul>
+                                    </div>
+                                    <!--begin::Action-->
+                                    <!--begin::Ações (Centralizados)-->
+                                    <div class="d-flex justify-content-center mt-5">
+                                        <div class="d-flex gap-3 align-items-center">
+                                            <!-- Botão de Upload de Imagem -->
+                                            <label for="backgroundImageUpload"
+                                                class="btn btn-light-success d-flex align-items-center gap-2">
+                                                <i class="fa-solid fa-upload"></i> Upload de Imagem
+                                            </label>
+                                            <input type="file" id="backgroundImageUpload" accept="image/*"
+                                                style="display: none;">
+
+                                            <!-- Botão de Salvar Tela (Submit) -->
+                                            <button type="submit"
+                                                class="btn btn-light-primary d-flex align-items-center gap-2">
+                                                <i class="fa-solid fa-floppy-disk"></i> Salvar Tela
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <!--end::Ações-->
+                                </div>
+
+                            </div>
+                        </form>
+
+                        <!--end::Action-->
                     </div>
-                    <!--end::Card body-->
+                    <!--end::Wrapper-->
                 </div>
                 <!--end::Card-->
             </div>
