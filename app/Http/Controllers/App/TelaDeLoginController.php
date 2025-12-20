@@ -76,4 +76,34 @@ class TelaDeLoginController extends Controller
 
         return redirect()->back()->with('success', 'Imagem enviada e registrada com sucesso.');
     }
+    public function update(Request $request, $id)
+    {
+        $request->validate([
+            'descricao' => 'required|string|max:255',
+            'localidade' => 'required|string|max:255',
+        ]);
+
+        $telaDeLogin = TelaDeLogin::findOrFail($id);
+
+        $telaDeLogin->update([
+            'descricao' => $request->input('descricao'),
+            'localidade' => $request->input('localidade'),
+            'updated_by' => Auth::id(),
+        ]);
+
+        return redirect()->back()->with('success', 'Informações atualizadas com sucesso.');
+    }
+
+    public function destroy($id)
+    {
+        $telaDeLogin = TelaDeLogin::findOrFail($id);
+        
+        // Podemos deletar fisicamente ou apenas mudar status para 'inativo'
+        // Como o status já é usado para filtrar no slide, vamos mudar para 'inativo' e apagar o arquivo se quiser
+        
+        $telaDeLogin->update(['status' => 'inativo']);
+        // $telaDeLogin->delete(); // Se quiser deletar do banco
+
+        return redirect()->back()->with('success', 'Imagem removida da galeria com sucesso.');
+    }
 }

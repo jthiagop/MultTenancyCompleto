@@ -183,14 +183,14 @@
                                                                     <!--begin::Input group-->
                                                                     <div class="fv-row mb-5">
                                                                         <input id="email" type="email"
-                                                                            name="email" required autofocus
+                                                                            name="email" autofocus
                                                                             autocomplete="username"
                                                                             class="form-control bg-transparent" disabled
                                                                             placeholder="Email">
                                                                     </div>
                                                                     <div class="fv-row mb-5">
                                                                         <input id="password" type="password"
-                                                                            name="password" required
+                                                                            name="password"
                                                                             autocomplete="current-password"
                                                                             class="form-control bg-transparent" disabled
                                                                             placeholder="Senha">
@@ -231,24 +231,44 @@
                                             data-tns-slide-by="true" data-tns-nav-container="#kt_slider_thumbnails"
                                             data-tns-nav-as-thumbnails="true" data-tns-prev-button="#kt_slider_prev"
                                             data-tns-next-button="#kt_slider_next">
-                                            
+
                                             @forelse($activeImages as $image)
-                                            <!--begin::Item-->
-                                            <div class="text-center px-5 py-5">
-                                                <img src="{{ route('file', ['path' => $image->imagem_caminho]) }}"
-                                                    class="card-rounded mw-100" style="height: 200px; object-fit: cover;" alt="{{ $image->descricao }}" />
-                                                <div class="mt-2 text-dark fw-bold">{{ $image->descricao }}</div>
-                                                <div class="text-muted fs-7">{{ $image->localidade }}</div>
-                                            </div>
-                                            <!--end::Item-->
+                                                <!--begin::Item-->
+                                                <div class="text-center px-5 py-5 position-relative group-hover">
+                                                    <img src="{{ route('file', ['path' => $image->imagem_caminho]) }}"
+                                                        class="card-rounded mw-100"
+                                                        style="height: 200px; object-fit: cover;"
+                                                        alt="{{ $image->descricao }}" />
+                                                    <div class="mt-2 text-dark fw-bold">{{ $image->descricao }}</div>
+                                                    <div class="text-muted fs-7">{{ $image->localidade }}</div>
+
+                                                    <!-- Botões de Ação (Aparecem ao passar o mouse ou fixos) -->
+                                                    <div class="mt-2 d-flex justify-content-center gap-2">
+                                                        <button type="button" class="btn btn-sm btn-light-primary btn-icon"
+                                                            onclick="openEditModal({{ $image->id }}, '{{ addslashes($image->descricao) }}', '{{ addslashes($image->localidade) }}')"
+                                                            title="Editar">
+                                                            <i class="fas fa-edit"></i>
+                                                        </button>
+                                                        <form action="{{ route('telaLogin.destroy', $image->id) }}" method="POST"
+                                                            class="d-inline" onsubmit="return confirm('Tem certeza que deseja remover esta imagem?');">
+                                                            @csrf
+                                                            @method('DELETE')
+                                                            <button type="submit" class="btn btn-sm btn-light-danger btn-icon"
+                                                                title="Remover">
+                                                                <i class="fas fa-trash"></i>
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                                <!--end::Item-->
                                             @empty
-                                            <!--begin::Item-->
-                                            <div class="text-center px-5 py-5">
-                                                <div class="alert alert-info">Nenhuma imagem cadastrada</div>
-                                            </div>
-                                            <!--end::Item-->
+                                                <!--begin::Item-->
+                                                <div class="text-center px-5 py-5">
+                                                    <div class="alert alert-info">Nenhuma imagem cadastrada</div>
+                                                </div>
+                                                <!--end::Item-->
                                             @endforelse
-                                            
+
                                         </div>
                                         <!--end::Slider-->
 
@@ -271,26 +291,29 @@
 
                                     <div class="d-flex flex-center">
                                         <ul class="d-flex align-items-center list-unstyled gap-5 cursor-pointer">
-                                            @foreach($activeImages as $image)
-                                            <li class="d-flex gap-3" id="kt_slider_thumbnails">
-                                                <img src="{{ route('file', ['path' => $image->imagem_caminho]) }}" class="w-50px h-50px rounded object-fit-cover"
-                                                    alt="{{ $image->descricao }}" />
-                                            </li>
+                                            @foreach ($activeImages as $image)
+                                                <li class="d-flex gap-3" id="kt_slider_thumbnails">
+                                                    <img src="{{ route('file', ['path' => $image->imagem_caminho]) }}"
+                                                        class="w-50px h-50px rounded object-fit-cover"
+                                                        alt="{{ $image->descricao }}" />
+                                                </li>
                                             @endforeach
                                         </ul>
                                     </div>
-                                    
+
                                     <!-- Campos de Texto para Nome e Localidade -->
                                     <div class="row mb-5 mt-10">
                                         <div class="col-md-6">
                                             <div class="form-floating mb-3">
-                                                <input type="text" class="form-control" id="descricao" name="descricao" placeholder="Nome do Convento" required>
+                                                <input type="text" class="form-control" id="descricao"
+                                                    name="descricao" placeholder="Nome do Convento" required>
                                                 <label for="descricao">Nome do Convento</label>
                                             </div>
                                         </div>
                                         <div class="col-md-6">
                                             <div class="form-floating mb-3">
-                                                <input type="text" class="form-control" id="localidade" name="localidade" placeholder="Localidade" required>
+                                                <input type="text" class="form-control" id="localidade"
+                                                    name="localidade" placeholder="Localidade" required>
                                                 <label for="localidade">Localidade</label>
                                             </div>
                                         </div>
@@ -305,7 +328,7 @@
                                                 class="btn btn-light-success d-flex align-items-center gap-2">
                                                 <i class="fa-solid fa-upload"></i> Upload de Imagem
                                             </label>
-                                            <input type="file" id="backgroundImageUpload" accept="image/*"
+                                            <input type="file" id="backgroundImageUpload" accept="image/*" name="backgroundImage"
                                                 style="display: none;">
 
                                             <!-- Botão de Salvar Tela (Submit) -->
@@ -335,6 +358,36 @@
     </div>
     <!--end:::Main-->
 
+    <!-- Modal de Edição -->
+    <div class="modal fade" id="editImageModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Editar Imagem</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="editImageForm" method="POST">
+                    @csrf
+                    @method('PUT')
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label for="editDescricao" class="form-label">Nome do Convento</label>
+                            <input type="text" class="form-control" id="editDescricao" name="descricao" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="editLocalidade" class="form-label">Localidade</label>
+                            <input type="text" class="form-control" id="editLocalidade" name="localidade" required>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
+                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!--begin::Javascript-->
     <script>
         document.getElementById('backgroundImageUpload').addEventListener('change', function(event) {
@@ -349,9 +402,31 @@
                 reader.readAsDataURL(file);
             }
         });
+
+        function openEditModal(id, descricao, localidade) {
+            // Preencher os campos do modal
+            document.getElementById('editDescricao').value = descricao;
+            document.getElementById('editLocalidade').value = localidade;
+
+            // Definir a ação do formulário para a rota de update
+            // Supondo que a rota seja telaLogin.update
+            let form = document.getElementById('editImageForm');
+            form.action = `/app/confs/telaLogin/${id}`; 
+
+            // Se a rota usar resource e for diferente, ajustar aqui. 
+            // Como usamos resource, a rota é /telaLogin/{id} ou algo similar dependendo do prefixo
+            // Verificando a rota resource no arquivo de rotas: Route::resource('telaLogin', TelaDeLoginController::class);
+            // Geralmente gera urls como: /telaLogin/{id} (se estiver na raiz) ou com prefixo.
+            // Vou usar o helper route do laravel no js se possível, mas como é js puro, vou construir
+            // O ideal é passar a url base ou usar um data-attribute no botão
+             form.action = "{{ route('telaLogin.index') }}/" + id;
+
+
+            // Abrir o modal
+            var myModal = new bootstrap.Modal(document.getElementById('editImageModal'));
+            myModal.show();
+        }
     </script>
     <!--end::Javascript-->
     </body>
-
-
 </x-tenant-app-layout>
