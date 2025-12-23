@@ -143,6 +143,28 @@ class PermissionSeeder extends Seeder
                 'description' => 'Visualizar detalhes de registros do módulo cemitério'
             ],
 
+            // Módulo NF-e (Nota Fiscal)
+            [
+                'name' => 'notafiscal.index',
+                'description' => 'Visualizar listagem do módulo nota fiscal'
+            ],
+            [
+                'name' => 'notafiscal.create',
+                'description' => 'Criar registros no módulo nota fiscal'
+            ],
+            [
+                'name' => 'notafiscal.edit',
+                'description' => 'Editar registros do módulo nota fiscal'
+            ],
+            [
+                'name' => 'notafiscal.delete',
+                'description' => 'Excluir registros do módulo nota fiscal'
+            ],
+            [
+                'name' => 'notafiscal.show',
+                'description' => 'Visualizar detalhes de registros do módulo nota fiscal'
+            ],
+
             // Módulo Organismos (Company)
             [
                 'name' => 'company.index',

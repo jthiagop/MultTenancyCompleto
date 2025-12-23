@@ -72,12 +72,6 @@ var KTChartsWidgetOverview = function () {
             }
         })
         .then(response => {
-            console.log('[KTChartsWidgetOverview] Resposta recebida:', response.status, response.statusText);
-            console.log('[KTChartsWidgetOverview] Headers da resposta:', {
-                contentType: response.headers.get('content-type'),
-                location: response.headers.get('location')
-            });
-
             if (!response.ok) {
                 console.error('[KTChartsWidgetOverview] ========== ERRO HTTP ==========');
                 console.error('[KTChartsWidgetOverview] Status:', response.status, response.statusText);

@@ -13,7 +13,7 @@
     var lpsData = @json($lps);
 </script>
 
-<script src="/assets/js/custom_script.js"></script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -41,7 +41,7 @@
 <!-- jQuery -->
 
 <!-- Custom Script -->
-<script src="{{ asset('js/custom_script.js') }}"></script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

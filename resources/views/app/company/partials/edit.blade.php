@@ -115,8 +115,13 @@
                     <!--end::Col-->
                     <!--begin::Col-->
                     <div class="col-xl-9 fv-row">
-                        <input type="text" class="form-control form-control-solid" name="cnpj" id="cnpj"
-                            value="{{ $company->cnpj }}" />
+                        <div class="input-group">
+                            <input type="text" class="form-control form-control-solid" name="cnpj" id="cnpj"
+                                value="{{ $company->cnpj }}" placeholder="CNPJ" />
+                            <button type="button" class="btn btn-secondary" id="btn-consultar-cnpj">
+                                <i class="bi bi-search"></i> Consultar
+                            </button>
+                        </div>
                     </div>
                 </div>
                 <!--end::Row-->
@@ -394,3 +399,102 @@
     <!--end::Content-->
 </div>
 <!--end::Basic info-->
+
+@push('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnConsultar = document.getElementById('btn-consultar-cnpj');
+        const inputCnpj = document.getElementById('cnpj');
+
+        if (btnConsultar) {
+            btnConsultar.addEventListener('click', function() {
+                const cnpj = inputCnpj.value.replace(/\D/g, '');
+
+                if (cnpj.length !== 14) {
+                    toastr.warning('Por favor, digite um CNPJ válido com 14 dígitos.');
+                    return;
+                }
+
+                // Feedback visual de carregamento
+                const originalText = btnConsultar.innerHTML;
+                btnConsultar.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Consultando...';
+                btnConsultar.disabled = true;
+
+                fetch('{{ route("company.consultar-cnpj") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ cnpj: cnpj })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erro na consulta');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.error) {
+                        toastr.error(data.error);
+                        return;
+                    }
+
+                    // Preencher campos
+                    // Razão Social (#razao_social) e Nome Fantasia (#name)
+                    if (document.querySelector('input[name="razao_social"]')) {
+                        document.querySelector('input[name="razao_social"]').value = data.razao_social || '';
+                    }
+                    if (document.querySelector('input[name="name"]')) {
+                        document.querySelector('input[name="name"]').value = data.nome_fantasia || data.razao_social || '';
+                    }
+
+                    // E-mail (#email) - a API BrasilAPI nem sempre retorna email no objeto raiz, mas tenta
+                    if (document.getElementById('email') && data.email) {
+                        document.getElementById('email').value = data.email;
+                    }
+
+                    // Endereço
+                    if (document.getElementById('cep')) document.getElementById('cep').value = data.cep || '';
+                    if (document.getElementById('logradouro')) document.getElementById('logradouro').value = data.logradouro || '';
+                    if (document.getElementById('numero')) document.getElementById('numero').value = data.numero || '';
+                    if (document.getElementById('bairro')) document.getElementById('bairro').value = data.bairro || '';
+                    if (document.getElementById('localidade')) document.getElementById('localidade').value = data.municipio || '';
+
+                    // Estado (Select2)
+                    if (data.uf) {
+                        const selectUf = document.querySelector('select[name="uf"]');
+                        if (selectUf) {
+                            $(selectUf).val(data.uf).trigger('change');
+                        }
+                    }
+
+                    // Datas
+                    if (data.data_inicio_atividade) { // Vem no formato YYYY-MM-DD
+                        const dateParts = data.data_inicio_atividade.split('-');
+                        const formattedDate = `${dateParts[2]}/${dateParts[1]}/${dateParts[0]}`;
+                        
+                        const dateInput = document.querySelector('input[name="data_fundacao"]');
+                         if (dateInput) {
+                            // Se for flatpickr/datepicker, pode precisar de tratamento especial
+                             dateInput.value = formattedDate;
+                             // Tenta atualizar se for um componente de data visível
+                             dateInput.dispatchEvent(new Event('input'));
+                         }
+                    }
+
+                    toastr.success('Dados preenchidos com sucesso!');
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    toastr.error('Erro ao consultar CNPJ. Verifique se o número está correto.');
+                })
+                .finally(() => {
+                    btnConsultar.innerHTML = originalText;
+                    btnConsultar.disabled = false;
+                });
+            });
+        }
+    });
+</script>
+@endpush

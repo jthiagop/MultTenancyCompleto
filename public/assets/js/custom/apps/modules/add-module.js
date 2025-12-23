@@ -62,23 +62,36 @@ var KTModalAddModule = function () {
                         submitButton.setAttribute('data-kt-indicator', 'on');
                         submitButton.disabled = true;
 
-                        // Prepare form data
-                        var formData = {
-                            name: form.querySelector('[name="module_name"]').value,
-                            key: form.querySelector('[name="module_key"]').value,
-                            route_name: form.querySelector('[name="module_route"]').value,
-                            permission: form.querySelector('[name="module_permission"]').value,
-                            description: form.querySelector('[name="module_description"]').value,
-                            is_active: form.querySelector('[name="module_active"]').checked ? 1 : 0,
-                            show_on_dashboard: form.querySelector('[name="module_dashboard"]').checked ? 1 : 0,
-                            order_index: parseInt(form.querySelector('[name="module_order"]').value) || 0,
-                        };
+                        // Prepare form data using FormData to support file upload
+                        var formData = new FormData();
+                        formData.append('name', form.querySelector('[name="module_name"]').value);
+                        formData.append('key', form.querySelector('[name="module_key"]').value);
+                        formData.append('route_name', form.querySelector('[name="module_route"]').value);
+                        formData.append('permission', form.querySelector('[name="module_permission"]').value || '');
+                        formData.append('description', form.querySelector('[name="module_description"]').value || '');
+                        formData.append('is_active', form.querySelector('[name="module_active"]').checked ? 1 : 0);
+                        formData.append('show_on_dashboard', form.querySelector('[name="module_dashboard"]').checked ? 1 : 0);
+                        formData.append('order_index', parseInt(form.querySelector('[name="module_order"]').value) || 0);
+
+                        // Add icon file if selected
+                        var iconInput = form.querySelector('[name="icon"]');
+                        if (iconInput && iconInput.files && iconInput.files[0]) {
+                            formData.append('icon', iconInput.files[0]);
+                        }
+
+                        // Add icon_remove if avatar was removed
+                        var iconRemoveInput = form.querySelector('[name="icon_remove"]');
+                        if (iconRemoveInput && iconRemoveInput.value === '1') {
+                            formData.append('icon_remove', 1);
+                        }
 
                         // Send AJAX request
                         $.ajax({
                             url: '/modules',
                             type: 'POST',
                             data: formData,
+                            processData: false,
+                            contentType: false,
                             headers: {
                                 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
                             },

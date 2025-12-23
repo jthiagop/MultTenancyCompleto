@@ -20,6 +20,8 @@
         "laravel/tinker": "^2.9",
         "maatwebsite/excel": "^1.1",
         "mckenziearts/laravel-notify": "^2.5",
+        "nfephp-org/nfephp": "^4.0",
+        "nfephp-org/sped-nfe": "^5.2",
         "owen-it/laravel-auditing": "^13.6",
         "php-flasher/flasher-laravel": "^2.1",
         "php-flasher/flasher-notyf-laravel": "^2.1",

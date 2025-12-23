@@ -63,6 +63,8 @@ class PermissionService
             'cemiterio' => 'Cemitério',
             'company' => 'Organismos',
             'users' => 'Cadastro de Usuários',
+            'notafiscal' => 'Nota Fiscal',
+            'dizimos' => 'Dízimo e Doações',
         ];
     }
 

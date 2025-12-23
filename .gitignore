@@ -1,24 +1,39 @@
-/.phpunit.cache
-/node_modules
-/public/build
+# --- Dependências / builds ---
+/node_modules/
+/vendor/
+/public/build/
 /public/hot
 /public/storage
-/storage/*.key
-/vendor
+
+# --- Ambiente / segredos ---
 .env
+.env.*
+!.env.example
 .env.backup
 .env.production
-.phpactor.json
+/storage/*.key
+auth.json
+
+# --- Cache / testes / ferramentas ---
+/.phpunit.cache/
+/.phpunit.result.cache
 .phpunit.result.cache
+/.phpactor.json
+
+# --- Homestead ---
 Homestead.json
 Homestead.yaml
-auth.json
+
+# --- Logs de gerenciadores ---
 npm-debug.log
 yarn-error.log
-/.fleet
-/.idea
-/.vscode
+
+# --- IDEs ---
+/.fleet/
+/.idea/
+/.vscode/
 
 # 2) Ignorar tudo dentro de /storage
-/storage/
-
+/storage/*
+!/storage/logs/
+!/storage/logs/laravel.log

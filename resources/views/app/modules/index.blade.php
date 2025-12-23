@@ -17,8 +17,7 @@
                             </span>
                             <!--end::Svg Icon-->
                             <input type="text" data-kt-modules-table-filter="search"
-                                class="form-control form-control-solid w-250px ps-15"
-                                placeholder="Search Modulos" />
+                                class="form-control form-control-solid w-250px ps-15" placeholder="Search Modulos" />
                         </div>
                         <!--end::Search-->
                     </div>
@@ -41,9 +40,8 @@
                 <!--begin::Card body-->
                 <div class="card-body pt-0">
                     <!--begin::Table-->
-                    <table class="table align-middle table-row-dashed fs-6 gy-5 mb-0" 
-                           id="kt_modules_table" 
-                           data-url="{{ route('modules.data') }}">
+                    <table class="table align-middle table-row-dashed fs-6 gy-5 mb-0" id="kt_modules_table"
+                        data-url="{{ route('modules.data') }}">
                         <!--begin::Table head-->
                         <thead>
                             <!--begin::Table row-->
@@ -83,8 +81,8 @@
                             <h2 class="fw-bold">Adicionar Módulo</h2>
                             <!--end::Modal title-->
                             <!--begin::Close-->
-                            <div class="btn btn-icon btn-sm btn-active-icon-primary"
-                                data-bs-dismiss="modal" aria-label="Close">
+                            <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal"
+                                aria-label="Close">
                                 <span class="svg-icon svg-icon-1">
                                     <i class="fa fa-times"></i>
                                 </span>
@@ -95,14 +93,55 @@
                         <!--begin::Modal body-->
                         <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
                             <!--begin::Form-->
-                            <form id="kt_modal_add_module_form" class="form" action="#">
+                            <form id="kt_modal_add_module_form" class="form" action="#" enctype="multipart/form-data">
+                                <!--begin::Image input-->
+                                <div class="image-input image-input-outline image-input-placeholder"
+                                    data-kt-image-input="true">
+                                    <!--begin::Preview existing avatar-->
+                                    <div class="image-input-wrapper w-125px h-125px"
+                                        style="background-image: url(assets/media/avatars/icon.png);"></div>
+                                    <!--end::Preview existing avatar-->
+                                    <!--begin::Label-->
+                                    <label
+                                        class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+                                        data-kt-image-input-action="change" data-bs-toggle="tooltip"
+                                        title="Alterar ícone">
+                                        <i class="bi bi-pencil-fill fs-7"></i>
+                                        <!--begin::Inputs-->
+                                        <input type="file" name="icon" accept=".png, .jpg, .jpeg" />
+                                        <input type="hidden" name="icon_remove" />
+                                        <!--end::Inputs-->
+                                    </label>
+                                    <!--end::Label-->
+                                    <!--begin::Cancel-->
+                                    <span
+                                        class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+                                        data-kt-image-input-action="cancel" data-bs-toggle="tooltip"
+                                        title="Cancelar ícone">
+                                        <i class="bi bi-x fs-2"></i>
+                                    </span>
+                                    <!--end::Cancel-->
+                                    <!--begin::Remove-->
+                                    <span
+                                        class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+                                        data-kt-image-input-action="remove" data-bs-toggle="tooltip"
+                                        title="Remover ícone">
+                                        <i class="bi bi-x fs-2"></i>
+                                    </span>
+                                    <!--end::Remove-->
+                                </div>
+                                <!--end::Image input-->
+                                <!--begin::Hint-->
+                                <div class="form-text">Tipos de arquivo permitidos: png, jpg, jpeg.</div>
+                                <!--end::Hint-->
+
                                 <!--begin::Input group-->
                                 <div class="fv-row mb-7">
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span class="required">Nome do Módulo</span>
                                     </label>
-                                    <input class="form-control form-control-solid"
-                                        placeholder="Ex: Financeiro" name="module_name" required />
+                                    <input class="form-control form-control-solid" placeholder="Ex: Financeiro"
+                                        name="module_name" required />
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Input group-->
@@ -110,8 +149,8 @@
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span class="required">Chave</span>
                                     </label>
-                                    <input class="form-control form-control-solid"
-                                        placeholder="Ex: financeiro" name="module_key" required />
+                                    <input class="form-control form-control-solid" placeholder="Ex: financeiro"
+                                        name="module_key" required />
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Input group-->
@@ -119,8 +158,8 @@
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span class="required">Nome da Rota</span>
                                     </label>
-                                    <input class="form-control form-control-solid"
-                                        placeholder="Ex: financeiro.index" name="module_route" required />
+                                    <input class="form-control form-control-solid" placeholder="Ex: financeiro.index"
+                                        name="module_route" required />
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Input group-->
@@ -128,8 +167,8 @@
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span>Permissão</span>
                                     </label>
-                                    <input class="form-control form-control-solid"
-                                        placeholder="Ex: financeiro.index" name="module_permission" />
+                                    <input class="form-control form-control-solid" placeholder="Ex: financeiro.index"
+                                        name="module_permission" />
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Input group-->
@@ -137,8 +176,8 @@
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span>Descrição</span>
                                     </label>
-                                    <textarea class="form-control form-control-solid" rows="3"
-                                        placeholder="Descrição do módulo" name="module_description"></textarea>
+                                    <textarea class="form-control form-control-solid" rows="3" placeholder="Descrição do módulo"
+                                        name="module_description"></textarea>
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Input group-->
@@ -155,7 +194,8 @@
                                     <label class="form-check form-check-custom form-check-solid me-9">
                                         <input class="form-check-input" type="checkbox" value="1"
                                             name="module_dashboard" id="kt_module_dashboard" checked />
-                                        <span class="form-check-label" for="kt_module_dashboard">Exibir no Dashboard</span>
+                                        <span class="form-check-label" for="kt_module_dashboard">Exibir no
+                                            Dashboard</span>
                                     </label>
                                 </div>
                                 <!--end::Input group-->
@@ -164,8 +204,8 @@
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span>Ordem</span>
                                     </label>
-                                    <input type="number" class="form-control form-control-solid"
-                                        placeholder="0" name="module_order" value="0" />
+                                    <input type="number" class="form-control form-control-solid" placeholder="0"
+                                        name="module_order" value="0" />
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Actions-->
@@ -202,8 +242,8 @@
                             <h2 class="fw-bold">Editar Módulo</h2>
                             <!--end::Modal title-->
                             <!--begin::Close-->
-                            <div class="btn btn-icon btn-sm btn-active-icon-primary"
-                                data-bs-dismiss="modal" aria-label="Close">
+                            <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal"
+                                aria-label="Close">
                                 <span class="svg-icon svg-icon-1">
                                     <i class="fa fa-times"></i>
                                 </span>
@@ -214,15 +254,60 @@
                         <!--begin::Modal body-->
                         <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
                             <!--begin::Form-->
-                            <form id="kt_modal_update_module_form" class="form" action="#">
+                            <form id="kt_modal_update_module_form" class="form" action="#" enctype="multipart/form-data">
                                 <input type="hidden" name="module_id" />
+                                <!--begin::Image input-->
+                                <div class="fv-row mb-7">
+                                    <label class="fs-6 fw-semibold form-label mb-2">
+                                        <span>Ícone do Módulo</span>
+                                    </label>
+                                    <div class="image-input image-input-outline image-input-placeholder"
+                                        data-kt-image-input="true">
+                                        <!--begin::Preview existing avatar-->
+                                        <div class="image-input-wrapper w-125px h-125px"
+                                            style="background-image: url({{ asset('assets/media/avatars/blank.png') }});"></div>
+                                        <!--end::Preview existing avatar-->
+                                        <!--begin::Label-->
+                                        <label
+                                            class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+                                            data-kt-image-input-action="change" data-bs-toggle="tooltip"
+                                            title="Alterar ícone">
+                                            <i class="bi bi-pencil-fill fs-7"></i>
+                                            <!--begin::Inputs-->
+                                            <input type="file" name="icon" accept=".png, .jpg, .jpeg" />
+                                            <input type="hidden" name="icon_remove" />
+                                            <!--end::Inputs-->
+                                        </label>
+                                        <!--end::Label-->
+                                        <!--begin::Cancel-->
+                                        <span
+                                            class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+                                            data-kt-image-input-action="cancel" data-bs-toggle="tooltip"
+                                            title="Cancelar ícone">
+                                            <i class="bi bi-x fs-2"></i>
+                                        </span>
+                                        <!--end::Cancel-->
+                                        <!--begin::Remove-->
+                                        <span
+                                            class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
+                                            data-kt-image-input-action="remove" data-bs-toggle="tooltip"
+                                            title="Remover ícone">
+                                            <i class="bi bi-x fs-2"></i>
+                                        </span>
+                                        <!--end::Remove-->
+                                    </div>
+                                    <!--begin::Hint-->
+                                    <div class="form-text">Tipos de arquivo permitidos: png, jpg, jpeg.</div>
+                                    <!--end::Hint-->
+                                </div>
+                                <!--end::Image input-->
                                 <!--begin::Input group-->
                                 <div class="fv-row mb-7">
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span class="required">Nome do Módulo</span>
                                     </label>
-                                    <input class="form-control form-control-solid"
-                                        placeholder="Ex: Financeiro" name="module_name" required />
+                                    <input class="form-control form-control-solid" placeholder="Ex: Financeiro"
+                                        name="module_name" required />
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Input group-->
@@ -230,8 +315,8 @@
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span class="required">Chave</span>
                                     </label>
-                                    <input class="form-control form-control-solid"
-                                        placeholder="Ex: financeiro" name="module_key" required />
+                                    <input class="form-control form-control-solid" placeholder="Ex: financeiro"
+                                        name="module_key" required />
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Input group-->
@@ -239,8 +324,8 @@
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span class="required">Nome da Rota</span>
                                     </label>
-                                    <input class="form-control form-control-solid"
-                                        placeholder="Ex: financeiro.index" name="module_route" required />
+                                    <input class="form-control form-control-solid" placeholder="Ex: financeiro.index"
+                                        name="module_route" required />
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Input group-->
@@ -248,8 +333,8 @@
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span>Permissão</span>
                                     </label>
-                                    <input class="form-control form-control-solid"
-                                        placeholder="Ex: financeiro.index" name="module_permission" />
+                                    <input class="form-control form-control-solid" placeholder="Ex: financeiro.index"
+                                        name="module_permission" />
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Input group-->
@@ -257,8 +342,8 @@
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span>Descrição</span>
                                     </label>
-                                    <textarea class="form-control form-control-solid" rows="3"
-                                        placeholder="Descrição do módulo" name="module_description"></textarea>
+                                    <textarea class="form-control form-control-solid" rows="3" placeholder="Descrição do módulo"
+                                        name="module_description"></textarea>
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Input group-->
@@ -266,7 +351,8 @@
                                     <label class="form-check form-check-custom form-check-solid me-9">
                                         <input class="form-check-input" type="checkbox" value="1"
                                             name="module_active" id="kt_module_active_update" />
-                                        <span class="form-check-label" for="kt_module_active_update">Módulo Ativo</span>
+                                        <span class="form-check-label" for="kt_module_active_update">Módulo
+                                            Ativo</span>
                                     </label>
                                 </div>
                                 <!--end::Input group-->
@@ -275,7 +361,8 @@
                                     <label class="form-check form-check-custom form-check-solid me-9">
                                         <input class="form-check-input" type="checkbox" value="1"
                                             name="module_dashboard" id="kt_module_dashboard_update" />
-                                        <span class="form-check-label" for="kt_module_dashboard_update">Exibir no Dashboard</span>
+                                        <span class="form-check-label" for="kt_module_dashboard_update">Exibir no
+                                            Dashboard</span>
                                     </label>
                                 </div>
                                 <!--end::Input group-->
@@ -284,8 +371,8 @@
                                     <label class="fs-6 fw-semibold form-label mb-2">
                                         <span>Ordem</span>
                                     </label>
-                                    <input type="number" class="form-control form-control-solid"
-                                        placeholder="0" name="module_order" value="0" />
+                                    <input type="number" class="form-control form-control-solid" placeholder="0"
+                                        name="module_order" value="0" />
                                 </div>
                                 <!--end::Input group-->
                                 <!--begin::Actions-->
@@ -318,8 +405,8 @@
 
 </x-tenant-app-layout>
 
-    <!--begin::Custom Javascript(used for this page only)-->
-    <script src="/assets/js/custom/apps/modules/list.js"></script>
-    <script src="/assets/js/custom/apps/modules/add-module.js"></script>
-    <script src="/assets/js/custom/apps/modules/update-module.js"></script>
-    <!--end::Custom Javascript-->
+<!--begin::Custom Javascript(used for this page only)-->
+<script src="/assets/js/custom/apps/modules/list.js"></script>
+<script src="/assets/js/custom/apps/modules/add-module.js"></script>
+<script src="/assets/js/custom/apps/modules/update-module.js"></script>
+<!--end::Custom Javascript-->

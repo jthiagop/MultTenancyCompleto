@@ -338,6 +338,7 @@ class EntidadeFinanceiraController extends Controller
             'transacoesPorDia' => $transacoesPorDia,
             'entidadesBancos' => $entidadesBancos,
             'hasHorariosMissas' => $hasHorariosMissas,
+            'activeTab' => 'conciliacoes', // Aba padrão
         ]);
     }
 
@@ -462,6 +463,337 @@ class EntidadeFinanceiraController extends Controller
                     'saldo_atual' => $entidade->saldo_atual ?? 0,
                 ]
             ]
+        ]);
+    }
+
+    /**
+     * Retorna o histórico de conciliações realizadas para uma entidade financeira
+     *
+     * @param int $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function historicoConciliacoes($id, Request $request)
+    {
+        // Verifica empresa ativa na sessão
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa selecionada.'
+            ], 403);
+        }
+
+        // Filtros de data
+        $dataInicio = $request->input('data_inicio');
+        $dataFim = $request->input('data_fim');
+
+        // Verifica se a entidade pertence à empresa ativa
+        $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+
+        // Busca os lançamentos do extrato que já foram processados (ok, divergente, ignorado)
+        // Filtra por company_id e entidade_financeira_id para garantir segurança
+        $conciliacoes = BankStatement::where('company_id', $activeCompanyId)
+            ->where('entidade_financeira_id', $id)
+            ->whereIn('status_conciliacao', ['ok', 'divergente', 'ignorado'])
+            ->when($dataInicio, function ($query) use ($dataInicio) {
+                $query->whereDate('dtposted', '>=', Carbon::parse($dataInicio)->startOfDay());
+            })
+            ->when($dataFim, function ($query) use ($dataFim) {
+                $query->whereDate('dtposted', '<=', Carbon::parse($dataFim)->endOfDay());
+            })
+            ->with(['transacoes.lancamentoPadrao', 'transacoes.costCenter', 'transacoes.createdBy'])
+            ->orderBy('dtposted', 'desc')
+            ->get();
+
+        // Formata os dados para o frontend
+        $dados = $conciliacoes->map(function ($item) {
+            $transacao = $item->transacoes->first();
+
+            return [
+                'id' => $item->id,
+                'data_conciliacao' => $item->updated_at,
+                'data_extrato' => $item->dtposted,
+                'descricao' => $item->memo ?? $item->name ?? '-',
+                'tipo' => $item->amount >= 0 ? 'entrada' : 'saida',
+                'valor' => abs($item->amount),
+                'lancamento_padrao' => $transacao?->lancamentoPadrao?->description ?? '-',
+                'status' => $item->status_conciliacao ?? 'pendente',
+                'usuario' => $transacao?->createdBy?->name ?? '-',
+                'transacao_id' => $transacao?->id,
+            ];
+        });
+
+        return response()->json([
+            'success' => true,
+            'data' => $dados,
+            'total' => $dados->count()
+        ]);
+    }
+
+    /**
+     * Retorna os detalhes completos de uma conciliação (BankStatement + Transação)
+     *
+     * @param int $bankStatementId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function detalhesConciliacao($bankStatementId)
+    {
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa selecionada.'
+            ], 403);
+        }
+
+        // Busca o bank statement com a transação relacionada
+        $bankStatement = BankStatement::where('company_id', $activeCompanyId)
+            ->with(['transacoes.lancamentoPadrao', 'transacoes.costCenter', 'transacoes.createdBy', 'transacoes.updatedBy'])
+            ->findOrFail($bankStatementId);
+
+        $transacao = $bankStatement->transacoes->first();
+
+        // Formata os dados para o drawer
+        $dados = [
+            'id' => $bankStatement->id,
+            'transacao_id' => $transacao?->id,
+            
+            // Dados da transação
+            'descricao' => $bankStatement->memo ?? $bankStatement->name ?? $transacao?->descricao ?? '-',
+            'tipo' => $bankStatement->amount >= 0 ? 'entrada' : 'saida',
+            'valor' => abs($bankStatement->amount),
+            
+            // Datas
+            'data_competencia' => $transacao?->data_competencia,
+            'data_competencia_formatada' => $transacao?->data_competencia ? \Carbon\Carbon::parse($transacao->data_competencia)->format('d/m/Y') : '-',
+            'data_conciliacao' => $bankStatement->updated_at,
+            'data_conciliacao_formatada' => $bankStatement->updated_at ? $bankStatement->updated_at->format('d/m/Y H:i') : '-',
+            'data_extrato' => $bankStatement->dtposted,
+            'data_extrato_formatada' => $bankStatement->dtposted ? \Carbon\Carbon::parse($bankStatement->dtposted)->format('d/m/Y') : '-',
+            
+            // Status e arquivo OFX
+            'status_conciliacao' => $bankStatement->status_conciliacao ?? 'pendente',
+            'arquivo_ofx' => $bankStatement->file_name ?? '-',
+            'data_importacao_ofx' => $bankStatement->created_at,
+            'data_importacao_ofx_formatada' => $bankStatement->created_at ? $bankStatement->created_at->format('d/m/Y H:i') : '-',
+            
+            // Dados da transação
+            'lancamento_padrao' => $transacao?->lancamentoPadrao?->description ?? '-',
+            'centro_custo' => $transacao?->costCenter?->nome ?? '-',
+            'tipo_documento' => $transacao?->tipo_documento ?? '-',
+            'numero_documento' => $transacao?->numero_documento ?? $bankStatement->checknum ?? '-',
+            'comprovacao_fiscal' => $transacao?->comprovacao_fiscal ?? '-',
+            'origem' => $transacao?->origem ?? '-',
+            'entidade_financeira' => $transacao?->entidadeFinanceira?->nome ?? '-',
+            'historico_complementar' => $transacao?->historico_complementar ?? null,
+            
+            // Auditoria
+            'created_by_name' => $transacao?->createdBy?->name ?? '-',
+            'created_at_formatado' => $transacao?->created_at ? $transacao->created_at->format('d/m/Y H:i') : '-',
+            'updated_by_name' => $transacao?->updatedBy?->name ?? '-',
+            'updated_at_formatado' => $transacao?->updated_at ? $transacao->updated_at->format('d/m/Y H:i') : '-',
+            
+            // Anexos (se houver)
+            'anexos' => [],
+            'recibo' => $transacao?->recibo ?? null,
+        ];
+
+        return response()->json($dados);
+    }
+
+    /**
+     * Retorna apenas o total de conciliações pendentes (sem paginação)
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function totalPendentes($id)
+    {
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa selecionada.'
+            ], 403);
+        }
+
+        // Verifica se a entidade pertence à empresa ativa
+        $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+
+        // Conta o total de lançamentos pendentes (sem paginação, sem filtro de data)
+        $totalPendentes = BankStatement::where('entidade_financeira_id', $id)
+            ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+            ->whereDoesntHave('transacoes')
+            ->count();
+
+        return response()->json([
+            'success' => true,
+            'total' => $totalPendentes
+        ]);
+    }
+
+    /**
+     * Desfaz uma conciliação, deletando a transação e movimentação relacionadas
+     * e atualizando o saldo da entidade financeira
+     *
+     * @param int $bankStatementId
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function desfazerConciliacao($bankStatementId)
+    {
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa selecionada.'
+            ], 403);
+        }
+
+        try {
+            return \DB::transaction(function () use ($bankStatementId, $activeCompanyId) {
+                // Busca o bank statement com a transação relacionada
+                $bankStatement = BankStatement::where('company_id', $activeCompanyId)
+                    ->with(['transacoes.movimentacao', 'transacoes.entidadeFinanceira'])
+                    ->findOrFail($bankStatementId);
+
+                // Verifica se há transação vinculada
+                $transacao = $bankStatement->transacoes->first();
+                if (!$transacao) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Nenhuma transação vinculada a esta conciliação.'
+                    ], 404);
+                }
+
+                // Guarda informações para log
+                $entidadeId = $transacao->entidade_id;
+                $valor = $transacao->valor;
+                $tipo = $transacao->tipo;
+                $movimentacaoId = $transacao->movimentacao_id;
+
+                // 1. Atualizar o saldo da entidade financeira (reverter a operação)
+                if ($transacao->entidadeFinanceira) {
+                    $entidade = $transacao->entidadeFinanceira;
+                    
+                    // Reverte a operação no saldo
+                    if ($tipo === 'entrada') {
+                        // Se foi entrada, subtrai do saldo
+                        $entidade->saldo_atual -= $valor;
+                    } else {
+                        // Se foi saída, adiciona ao saldo
+                        $entidade->saldo_atual += $valor;
+                    }
+                    
+                    $entidade->save();
+                }
+
+                // 2. Deletar a movimentação relacionada
+                if ($movimentacaoId) {
+                    Movimentacao::where('id', $movimentacaoId)->delete();
+                }
+
+                // 3. Remover o vínculo na tabela pivot
+                $bankStatement->transacoes()->detach($transacao->id);
+
+                // 4. Deletar a transação financeira
+                $transacao->delete();
+
+                // 5. Atualizar o status do bank statement
+                $bankStatement->update([
+                    'reconciled' => false,
+                    'status_conciliacao' => 'pendente'
+                ]);
+
+                \Log::info('Conciliação desfeita com sucesso', [
+                    'bank_statement_id' => $bankStatementId,
+                    'transacao_id' => $transacao->id,
+                    'movimentacao_id' => $movimentacaoId,
+                    'entidade_id' => $entidadeId,
+                    'valor' => $valor,
+                    'tipo' => $tipo,
+                    'user_id' => Auth::id()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Conciliação desfeita com sucesso!'
+                ]);
+            });
+        } catch (\Exception $e) {
+            \Log::error('Erro ao desfazer conciliação', [
+                'bank_statement_id' => $bankStatementId,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao desfazer conciliação: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Exibe a aba de movimentações da entidade financeira
+     *
+     * @param int $id
+     * @return \Illuminate\View\View
+     */
+    public function movimentacoes($id)
+    {
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return redirect()->route('dashboard')->with('error', 'Nenhuma empresa selecionada.');
+        }
+
+        $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+
+        return view('app.financeiro.entidade.show', [
+            'entidade' => $entidade,
+            'activeTab' => 'movimentacoes',
+        ]);
+    }
+
+    /**
+     * Exibe a aba de informações da entidade financeira
+     *
+     * @param int $id
+     * @return \Illuminate\View\View
+     */
+    public function informacoes($id)
+    {
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return redirect()->route('dashboard')->with('error', 'Nenhuma empresa selecionada.');
+        }
+
+        $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+
+        return view('app.financeiro.entidade.show', [
+            'entidade' => $entidade,
+            'activeTab' => 'informacoes',
+        ]);
+    }
+
+    /**
+     * Exibe a aba de histórico de conciliações da entidade financeira
+     *
+     * @param int $id
+     * @return \Illuminate\View\View
+     */
+    public function historico($id)
+    {
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return redirect()->route('dashboard')->with('error', 'Nenhuma empresa selecionada.');
+        }
+
+        $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+
+        return view('app.financeiro.entidade.show', [
+            'entidade' => $entidade,
+            'activeTab' => 'historico',
         ]);
     }
 }

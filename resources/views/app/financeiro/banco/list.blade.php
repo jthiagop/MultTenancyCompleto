@@ -73,7 +73,7 @@
             <!--begin::Content-->
             <div id="kt_app_content" class="app-content flex-column-fluid">
                 <!--begin::Content container-->
-                <div id="kt_app_content_container" class="app-container container-xxl">
+                <div id="kt_app_content_container" class="app-container container-fluid">
                     <!-- Mensagem de sucesso -->
                     @if (session('success'))
                         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -121,12 +121,10 @@
         // Gerar apenas o caminho da rota (sem domínio)
         var bancoFluxoChartDataUrl = '{{ route("banco.fluxo.chart.data", [], false) }}';
         var bancoTransacoesDataUrl = '{{ route("banco.transacoes.data", [], false) }}';
-        console.log('[Blade] URL da rota banco.fluxo.chart.data:', bancoFluxoChartDataUrl);
-        console.log('[Blade] URL da rota banco.transacoes.data:', bancoTransacoesDataUrl);
     </script>
 </x-tenant-app-layout>
 
-<script src="/assets/js/custom_script.js"></script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -168,7 +166,7 @@
 <!-- jQuery -->
 
 <!-- Custom Script -->
-<script src="{{ asset('js/custom_script.js') }}"></script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 

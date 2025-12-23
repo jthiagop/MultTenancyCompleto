@@ -15,6 +15,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 
@@ -390,5 +392,30 @@ class CompanyController extends Controller
     public function destroy(string $id)
     {
         //
+    }
+
+    /**
+     * Consulta dados do CNPJ na BrasilAPI
+     */
+    public function consultarCNPJ(Request $request)
+    {
+        $cnpj = preg_replace('/\D/', '', $request->input('cnpj'));
+
+        if (strlen($cnpj) !== 14) {
+            return response()->json(['error' => 'CNPJ inválido'], 400);
+        }
+
+        try {
+            $response = Http::get("https://brasilapi.com.br/api/cnpj/v1/{$cnpj}");
+
+            if ($response->successful()) {
+                return response()->json($response->json());
+            }
+
+            return response()->json(['error' => 'CNPJ não encontrado'], 404);
+        } catch (\Exception $e) {
+            Log::error('Erro ao consultar CNPJ: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro ao consultar serviço'], 500);
+        }
     }
 }

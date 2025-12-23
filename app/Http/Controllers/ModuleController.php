@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Module;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Spatie\Permission\Models\Permission;
 use Yajra\DataTables\Facades\DataTables;
 
 class ModuleController extends Controller
@@ -38,6 +40,7 @@ class ModuleController extends Controller
                         : '<span class="badge badge-light-secondary">Não</span>';
                 })
                 ->addColumn('actions', function ($module) {
+                    $iconPath = $module->icon_path ? asset('storage/' . $module->icon_path) : asset('assets/media/avatars/blank.png');
                     return '
                         <button class="btn btn-icon btn-active-light-primary w-30px h-30px me-3" 
                             data-bs-toggle="modal" 
@@ -50,7 +53,8 @@ class ModuleController extends Controller
                             data-module-description="' . htmlspecialchars($module->description ?? '') . '"
                             data-module-active="' . ($module->is_active ? '1' : '0') . '"
                             data-module-dashboard="' . ($module->show_on_dashboard ? '1' : '0') . '"
-                            data-module-order="' . $module->order_index . '">
+                            data-module-order="' . $module->order_index . '"
+                            data-module-icon-path="' . htmlspecialchars($iconPath) . '">
                             <span class="svg-icon svg-icon-3">
                                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                     <path d="M17.5 11H6.5C4 11 2 9 2 6.5C2 4 4 2 6.5 2H17.5C20 2 22 4 22 6.5C22 9 20 11 17.5 11ZM15 6.5C15 7.9 16.1 9 17.5 9C18.9 9 20 7.9 20 6.5C20 5.1 18.9 4 17.5 4C16.1 4 15 5.1 15 6.5Z" fill="currentColor"/>
@@ -95,11 +99,28 @@ class ModuleController extends Controller
             'is_active' => 'boolean',
             'show_on_dashboard' => 'boolean',
             'order_index' => 'integer',
+            'icon' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
 
         $validated['company_id'] = auth()->user()->company_id ?? null;
 
-        Module::create($validated);
+        // Processa upload do ícone
+        if ($request->hasFile('icon')) {
+            $file = $request->file('icon');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('modules/icons', $fileName, 'public');
+            $validated['icon_path'] = $path;
+        }
+
+        // Remove o campo 'icon' do array validado antes de criar o módulo
+        unset($validated['icon']);
+
+        $module = Module::create($validated);
+
+        // Criar permissões padrão para o módulo se não existirem
+        if ($module->permission) {
+            $this->createModulePermissions($module->key);
+        }
 
         return response()->json([
             'success' => true,
@@ -122,9 +143,40 @@ class ModuleController extends Controller
             'is_active' => 'boolean',
             'show_on_dashboard' => 'boolean',
             'order_index' => 'integer',
+            'icon' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'icon_remove' => 'nullable|boolean',
         ]);
 
+        // Processa remoção do ícone
+        if ($request->has('icon_remove') && $request->icon_remove) {
+            if ($module->icon_path) {
+                Storage::disk('public')->delete($module->icon_path);
+            }
+            $validated['icon_path'] = null;
+        }
+
+        // Processa upload do novo ícone
+        if ($request->hasFile('icon')) {
+            // Remove o ícone antigo se existir
+            if ($module->icon_path) {
+                Storage::disk('public')->delete($module->icon_path);
+            }
+
+            $file = $request->file('icon');
+            $fileName = time() . '_' . $file->getClientOriginalName();
+            $path = $file->storeAs('modules/icons', $fileName, 'public');
+            $validated['icon_path'] = $path;
+        }
+
+        // Remove campos que não devem ser salvos diretamente
+        unset($validated['icon'], $validated['icon_remove']);
+
         $module->update($validated);
+
+        // Criar permissões padrão para o módulo se não existirem
+        if ($module->permission) {
+            $this->createModulePermissions($module->key);
+        }
 
         return response()->json([
             'success' => true,
@@ -143,5 +195,31 @@ class ModuleController extends Controller
             'success' => true,
             'message' => 'Módulo excluído com sucesso!'
         ]);
+    }
+
+    /**
+     * Cria permissões padrão para um módulo
+     *
+     * @param string $moduleKey
+     * @return void
+     */
+    private function createModulePermissions(string $moduleKey): void
+    {
+        $permissions = [
+            'index' => 'Visualizar listagem do módulo',
+            'create' => 'Criar registros no módulo',
+            'edit' => 'Editar registros do módulo',
+            'delete' => 'Excluir registros do módulo',
+            'show' => 'Visualizar detalhes de registros do módulo',
+        ];
+
+        foreach ($permissions as $action => $description) {
+            $permissionName = "{$moduleKey}.{$action}";
+            
+            Permission::firstOrCreate(
+                ['name' => $permissionName, 'guard_name' => 'web'],
+                ['name' => $permissionName, 'guard_name' => 'web']
+            );
+        }
     }
 }

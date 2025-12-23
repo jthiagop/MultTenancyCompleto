@@ -19,7 +19,6 @@ var KTModalPrestacaoContas = function () {
 			success: function(response) {
 				if (response.success) {
 					modalData = response.data;
-					console.log('Modal data loaded:', modalData);
 					
 					// Initialize company name since Convento is selected by default
 					var companyNameInput = document.getElementById('company_name_input');

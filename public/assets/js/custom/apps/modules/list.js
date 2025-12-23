@@ -169,6 +169,7 @@ var KTModulesList = function () {
                 const moduleActive = this.getAttribute('data-module-active');
                 const moduleDashboard = this.getAttribute('data-module-dashboard');
                 const moduleOrder = this.getAttribute('data-module-order');
+                const moduleIconPath = this.getAttribute('data-module-icon-path');
 
                 // Populate the update modal form
                 const modal = document.querySelector('#kt_modal_update_module');
@@ -181,6 +182,14 @@ var KTModulesList = function () {
                 modal.querySelector('[name="module_active"]').checked = moduleActive === '1';
                 modal.querySelector('[name="module_dashboard"]').checked = moduleDashboard === '1';
                 modal.querySelector('[name="module_order"]').value = moduleOrder;
+
+                // Update icon preview if exists
+                if (moduleIconPath) {
+                    const imageWrapper = modal.querySelector('.image-input-wrapper');
+                    if (imageWrapper) {
+                        imageWrapper.style.backgroundImage = 'url(' + moduleIconPath + ')';
+                    }
+                }
             });
         });
     }

@@ -1,4 +1,4 @@
-<div class="tab-pane fade" id="kt_tab_pane_informacao" role="tabpanel">
+<div>
     <div class="card mt-5">
         <div class="card-body">
             <!-- Container para o loader -->

@@ -713,6 +713,9 @@ class ConciliacaoController extends Controller
                 }
             }
         }
+
+        // Atualiza automaticamente o campo comprovacao_fiscal
+        $caixa->updateComprovacaoFiscal();
     }
 
     /**

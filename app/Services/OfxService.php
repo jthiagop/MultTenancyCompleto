@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 
 class OfxService
 {
-    public function processOfx($file, $usarHorariosMissas = false)
+    public function processOfx($file, $usarHorariosMissas = false, $fileHash = null, $fileName = null)
     {
         ini_set('memory_limit', '512M'); // Aumenta o limite para 512MB
 
@@ -28,6 +28,8 @@ class OfxService
 
         // 3. Processar o OFX
         $parsedData = OFX::parse($contents);
+
+        $totalTransacoesImportadas = 0;
 
         // 4. Verifica se a conta bancária está cadastrada na tabela `entidades_financeiras`
         foreach ($parsedData->bankAccounts as $account) {
@@ -51,9 +53,10 @@ class OfxService
             // 6. Iterar sobre as contas e transações
             $transacoesImportadas = [];
             foreach ($account->statement->transactions ?? [] as $transaction) {
-                $bankStatement = BankStatement::storeTransaction($account, $transaction, $entidade->id);
+                $bankStatement = BankStatement::storeTransaction($account, $transaction, $entidade->id, $fileHash, $fileName);
                 if ($bankStatement) {
                     $transacoesImportadas[] = $bankStatement;
+                    $totalTransacoesImportadas++;
                 }
             }
 
@@ -71,6 +74,8 @@ class OfxService
                 }
             }
         }
+
+        return $totalTransacoesImportadas;
     }
 
 }

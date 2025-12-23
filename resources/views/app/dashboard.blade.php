@@ -30,8 +30,19 @@
                                             <!--begin::Imagem/Ícone - Lado Esquerdo-->
                                             <div class="icon-container me-4 flex-shrink-0">
                                                 @if($module->icon_path)
+                                                    @php
+                                                        // Tratar caminhos de storage vs caminhos públicos
+                                                        if (str_starts_with($module->icon_path, '/assets')) {
+                                                            $iconUrl = $module->icon_path;
+                                                        } elseif (str_starts_with($module->icon_path, 'modules/icons') || !str_starts_with($module->icon_path, '/')) {
+                                                            // Usar a rota 'file' para arquivos em storage
+                                                            $iconUrl = route('file', ['path' => $module->icon_path]);
+                                                        } else {
+                                                            $iconUrl = $module->icon_path;
+                                                        }
+                                                    @endphp
                                                     <img loading="lazy" width="75px" height="75px"
-                                                        src="{{ $module->icon_path }}" alt="Ícone {{ $module->name }}">
+                                                        src="{{ $iconUrl }}" alt="Ícone {{ $module->name }}">
                                                 @elseif($module->icon_class)
                                                     <i class="{{ $module->icon_class }} fs-1 text-primary" style="font-size: 3rem !important;"></i>
                                                 @else

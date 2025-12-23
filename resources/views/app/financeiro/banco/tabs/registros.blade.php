@@ -49,9 +49,13 @@
                 <!--begin::Card toolbar-->
                 <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
                     <!--begin::Daterangepicker-->
-                    <input class=" btn btn-sm form-control form-control-solid w-100 mw-250px"
-                        placeholder="Pick date range" id="kt_ecommerce_report_shipping_daterangepicker" />
-
+                    <div class="input-group input-group-solid w-100 mw-250px">
+                        <span class="input-group-text">
+                            <i class="bi bi-calendar-event"></i>
+                        </span>
+                        <input class="form-control btn btn-sm form-control-solid"
+                            placeholder="Selecionar período" id="kt_ecommerce_report_shipping_daterangepicker" />
+                    </div>
                     <!--end::Daterangepicker-->
                     <!--begin::Filter-->
                     <div class="w-150px">

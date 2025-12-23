@@ -151,7 +151,8 @@
                                             </td>
                                             <td>{{ $transacao->tipo_documento }}</td>
                                             <td>
-                                                {!! $transacao->comprovacao_fiscal
+                                                {{-- Verifica se tem anexos ativos diretamente do relacionamento --}}
+                                                {!! $transacao->modulos_anexos->where('status', 'ativo')->isNotEmpty()
                                                     ? '<i class="fas fa-check-circle text-success" title="Comprovação Fiscal"></i>'
                                                     : '<i class="bi bi-x-circle-fill text-danger" title="Sem Comprovação Fiscal"></i>' !!}
                                             </td>

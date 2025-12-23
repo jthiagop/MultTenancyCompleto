@@ -160,77 +160,86 @@
 <!--end::Navbar Secundária-->
 
 @php
-    // Verificar se existe subnav específica para o módulo atual
-    $currentModule = \App\Helpers\ModuleHelper::getCurrentModule();
-    $hasModuleSubnav = $currentModule && \App\Helpers\ModuleHelper::hasSubnav($currentModule);
+    // Parâmetros opcionais para controlar o layout terciário
+    // Cada view pode passar explicitamente o que quer exibir
 
-    // Verificar se existe toolbar para o módulo atual
-    $hasModuleToolbar = false;
-    if ($currentModule) {
-        $toolbarPath = "app.layouts.subnav.modules.toolbars.{$currentModule}";
-        $hasModuleToolbar = view()->exists($toolbarPath);
+    // Subnav: pode ser uma string (caminho da view) ou null
+    $subnavView = $subnavView ?? null;
+
+    // Toolbar: pode ser uma string (caminho da view) ou null
+    $toolbarView = $toolbarView ?? null;
+
+    // Se não foram passados explicitamente, tentar detectar automaticamente (compatibilidade)
+    if (!$subnavView && !$toolbarView) {
+        $currentModule = \App\Helpers\ModuleHelper::getCurrentModule();
+
+        if ($currentModule && \App\Helpers\ModuleHelper::hasSubnav($currentModule)) {
+            $subnavView = "app.layouts.subnav.modules.{$currentModule}";
+        }
+
+        if ($currentModule) {
+            $toolbarPath = "app.layouts.subnav.modules.toolbars.{$currentModule}";
+            if (view()->exists($toolbarPath)) {
+                $toolbarView = $toolbarPath;
+            }
+        }
     }
+
+    // Verificar se deve exibir a navbar terciária
+    $showTertiaryNav = $subnavView || $toolbarView || ($showBulkEditButton ?? false);
 @endphp
 
-@if ($hasModuleToolbar || $hasModuleSubnav)
-    <!--begin::Navbar Terciária com Toolbar-->
+@if ($showTertiaryNav)
+    <!--begin::Navbar Terciária-->
     <div class="app-subnav-tertiary border-bottom">
         <div class="app-container container-fluid px-4">
-            <div class="d-flex align-items-center justify-content-between gap-4 py-3">
-                <!--begin::Left side - Toolbar-->
-                @if ($hasModuleToolbar)
-                    <div class="flex-grow-1 d-flex align-items-center flex-stack">
-                        @include("app.layouts.subnav.modules.toolbars.{$currentModule}")
+            <div class="d-flex align-items-center gap-4 py-3">
+                <!--begin::Left side - Subnav (quando especificada)-->
+                @if ($subnavView)
+                    <div class="flex-grow-1">
+                        @include($subnavView)
                     </div>
                 @endif
-                <!--end::Left side-->
 
-                <!--begin::Right side - Subnav Actions-->
-                <div class="d-flex align-items-center gap-3 flex-nowrap flex-shrink-0">
-                    @if ($hasModuleSubnav)
-                        @include("app.layouts.subnav.modules.{$currentModule}")
-                    @else
+                <!--begin::Right side - Toolbar (quando especificada)-->
+                @if ($toolbarView)
+                    <div class="d-flex align-items-center flex-nowrap flex-shrink-0">
+                        @include($toolbarView)
+                    </div>
+                @endif
 
-
-                        <!--begin::Search Dropdown-->
-                        @if($showBulkEditButton)
+                <!--begin::Right side - Actions (quando não há subnav mas há ações)-->
+                @if (!$subnavView && ($showBulkEditButton ?? false))
+                    <div class="d-flex align-items-center gap-3 flex-nowrap flex-shrink-0 ms-auto">
+                        <!--begin::Bulk Edit Button-->
                         <div class="d-flex align-items-center" data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
                             data-kt-menu-placement="bottom-start">
-                            <!--begin::Toolbar-->
                             <div class="me-0">
                                 <button class="btn btn-icon btn-sm btn-active-color-primary justify-content-end"
                                     data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                                     <i class="fonticon-settings fs-2"></i>
                                 </button>
-                                <!--begin::Menu 3-->
+                                <!--begin::Menu-->
                                 <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px py-3"
                                     data-kt-menu="true">
-                                    <!--begin::Heading-->
                                     <div class="menu-item px-3">
-                                        <div class="menu-content text-muted pb-2 px-3 fs-7 text-uppercase">Ações em Massa
-                                        </div>
+                                        <div class="menu-content text-muted pb-2 px-3 fs-7 text-uppercase">Ações em Massa</div>
                                     </div>
-                                    <!--end::Heading-->
-
-                                    <!--begin::Menu item-->
                                     <div class="menu-item px-3">
-                                        <a href="#" class="menu-link flex-stack px-3" data-bs-toggle="modal" data-bs-target="#kt_modal_lancamento_padrao_bulk">Editar em Massa
+                                        <a href="#" class="menu-link flex-stack px-3" data-bs-toggle="modal" data-bs-target="#kt_modal_lancamento_padrao_bulk">
+                                            Editar em Massa
                                             <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
-                                                title="Edite os campos selecionados em massa"></i></a>
+                                                title="Edite os campos selecionados em massa"></i>
+                                        </a>
                                     </div>
-                                    <!--end::Menu item-->
                                 </div>
-                                <!--end::Menu 3-->
                             </div>
-                            <!--end::Toolbar-->
                         </div>
-                        <!--end::Search Dropdown-->
-                        @endif
-                    @endif
-                </div>
-                <!--end::Right side-->
+                        <!--end::Bulk Edit Button-->
+                    </div>
+                @endif
             </div>
         </div>
     </div>
-
+    <!--end::Navbar Terciária-->
 @endif

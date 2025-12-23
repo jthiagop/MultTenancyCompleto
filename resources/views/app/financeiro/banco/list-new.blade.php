@@ -8,7 +8,7 @@
         <div class="d-flex flex-column flex-column-fluid">
             <!-- Cabeçalho da Página -->
             @include('app.financeiro.banco.components.header')
-            
+
             <!--begin::Content-->
             <div id="kt_app_content" class="app-content flex-column-fluid">
                 <!--begin::Content container-->

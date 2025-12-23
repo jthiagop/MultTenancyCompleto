@@ -10,6 +10,8 @@ use App\Http\Controllers\App\AnexoController;
 use App\Http\Controllers\App\Anexos\ModulosAnexosController;
 use App\Http\Controllers\App\BancoController;
 use App\Http\Controllers\App\CompanyController;
+use App\Http\Controllers\App\NotaFiscalController;
+use App\Http\Controllers\App\NfeEntradaController;
 use App\Http\Controllers\App\DashboardController;
 use App\Http\Controllers\App\PostController;
 use App\Http\Controllers\App\ProfileController;
@@ -225,6 +227,12 @@ Route::middleware([
 
         Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
         Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
+        Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
+        Route::post('/company/consultar-cnpj', [CompanyController::class, 'consultarCNPJ'])->name('company.consultar-cnpj');
+
+        // Notas Fiscais de Entrada (DFe)
+        Route::get('/nfe-entrada', [NfeEntradaController::class, 'index'])->name('nfe_entrada.index');
+        Route::post('/nfe-entrada/filtrar', [NfeEntradaController::class, 'filtrar'])->name('nfe_entrada.filtrar');
 
         // Rotas de módulos
         Route::get('/modules', [ModuleController::class, 'index'])->name('modules.list');
@@ -425,6 +433,8 @@ Route::middleware([
                 Route::post('fieis/relatorio/pdf', [FielController::class, 'relatorioPdf'])->name('fieis.relatorio.pdf');
 
                 Route::resource('dizimos', DizimoController::class);
+                Route::get('/notafiscal', [NotaFiscalController::class, 'index'])->name('notafiscal.index');
+                Route::post('/notafiscal/conta', [NotaFiscalController::class, 'storeConta'])->name('notafiscal.conta.store');
 
                 Route::resource('entidades', EntidadeFinanceiraController::class);
 
@@ -433,6 +443,26 @@ Route::middleware([
 
                 Route::get('entidades/{id}/json', [EntidadeFinanceiraController::class, 'showJson'])
                     ->name('entidades.show.json');
+
+                Route::get('entidades/{id}/historico-conciliacoes', [EntidadeFinanceiraController::class, 'historicoConciliacoes'])
+                    ->name('entidades.historico-conciliacoes');
+
+                Route::get('entidades/{id}/total-pendentes', [EntidadeFinanceiraController::class, 'totalPendentes'])
+                    ->name('entidades.total-pendentes');
+
+                Route::get('conciliacao/{id}/detalhes', [EntidadeFinanceiraController::class, 'detalhesConciliacao'])
+                    ->name('conciliacao.detalhes');
+
+                Route::post('conciliacao/{id}/desfazer', [EntidadeFinanceiraController::class, 'desfazerConciliacao'])
+                    ->name('conciliacao.desfazer');
+
+                // Rotas para abas da entidade financeira
+                Route::get('entidades/{id}/movimentacoes', [EntidadeFinanceiraController::class, 'movimentacoes'])
+                    ->name('entidades.movimentacoes');
+                Route::get('entidades/{id}/informacoes', [EntidadeFinanceiraController::class, 'informacoes'])
+                    ->name('entidades.informacoes');
+                Route::get('entidades/{id}/historico', [EntidadeFinanceiraController::class, 'historico'])
+                    ->name('entidades.historico');
 
                 Route::resource('car_insurance', CarInsuranceController::class);
 

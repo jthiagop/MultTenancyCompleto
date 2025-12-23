@@ -217,7 +217,96 @@ class TransacaoFinanceiraController extends Controller
      */
     public function destroy(TransacaoFinanceira $transacaoFinanceira)
     {
-        //
+        $activeCompanyId = session('active_company_id');
+        if (!$activeCompanyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa selecionada.'
+            ], 403);
+        }
+
+        // Verificar se a transação pertence à empresa ativa
+        if ($transacaoFinanceira->company_id != $activeCompanyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transação não encontrada.'
+            ], 404);
+        }
+
+        try {
+            return \DB::transaction(function () use ($transacaoFinanceira) {
+                // Guardar informações para log
+                $transacaoId = $transacaoFinanceira->id;
+                $entidadeId = $transacaoFinanceira->entidade_id;
+                $valor = $transacaoFinanceira->valor;
+                $tipo = $transacaoFinanceira->tipo;
+                $movimentacaoId = $transacaoFinanceira->movimentacao_id;
+
+                // 1. Reverter saldo da entidade financeira
+                if ($transacaoFinanceira->entidadeFinanceira) {
+                    $entidade = $transacaoFinanceira->entidadeFinanceira;
+                    
+                    // Reverte a operação no saldo
+                    if ($tipo === 'entrada') {
+                        // Se foi entrada, subtrai do saldo
+                        $entidade->saldo_atual -= $valor;
+                    } else {
+                        // Se foi saída, adiciona ao saldo
+                        $entidade->saldo_atual += $valor;
+                    }
+                    
+                    $entidade->save();
+                }
+
+                // 2. Se conciliada, desfazer vínculo com bank_statement
+                if ($transacaoFinanceira->bankStatements()->exists()) {
+                    $bankStatements = $transacaoFinanceira->bankStatements;
+                    
+                    foreach ($bankStatements as $bankStatement) {
+                        $bankStatement->update([
+                            'reconciled' => false,
+                            'status_conciliacao' => 'pendente'
+                        ]);
+                    }
+                    
+                    // Remover vínculo na tabela pivot
+                    $transacaoFinanceira->bankStatements()->detach();
+                }
+
+                // 3. Deletar movimentação relacionada
+                if ($movimentacaoId) {
+                    Movimentacao::where('id', $movimentacaoId)->delete();
+                }
+
+                // 4. Deletar a transação financeira
+                $transacaoFinanceira->delete();
+
+                \Log::info('Transação excluída com sucesso', [
+                    'transacao_id' => $transacaoId,
+                    'movimentacao_id' => $movimentacaoId,
+                    'entidade_id' => $entidadeId,
+                    'valor' => $valor,
+                    'tipo' => $tipo,
+                    'user_id' => Auth::id()
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transação excluída com sucesso!'
+                ]);
+            });
+        } catch (\Exception $e) {
+            \Log::error('Erro ao excluir transação', [
+                'transacao_id' => $transacaoFinanceira->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao excluir transação: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
 

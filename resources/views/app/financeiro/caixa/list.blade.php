@@ -12,7 +12,7 @@
             <!--begin::Content-->
             <div id="kt_app_content" class="app-content flex-column-fluid pt-7">
                 <!--begin::Content container-->
-                <div id="kt_app_content_container" class="app-container container-xxl">
+                <div id="kt_app_content_container" class="app-container container-fluid">
                     <!--begin::Navbar-->
                     <div class="card mb-6 mb-xl-9">
                         <div class="card-body pt-9 pb-0">
@@ -33,9 +33,8 @@
                                             <!--begin::Status-->
                                             <div class="d-flex align-items-center mb-1">
                                                 <a href="#"
-                                                    class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">Movimentações
-                                                    do caixa</a>
-                                                <span class="badge badge-light-success me-auto">Ativado</span>
+                                                    class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">
+                                                    Movimentações do caixa</a>
                                             </div>
                                             <!--end::Status-->
                                             <!--begin::Description-->
@@ -50,13 +49,7 @@
                                                 class="btn btn-sm btn-bg-light btn-active-color-primary me-3">Financeiro</a>
                                             <a href="{{ route('caixa.list', ['tab' => 'lancamento']) }}"
                                                 class="btn btn-sm btn-success me-3">
-                                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                                    fill="currentColor" class="bi bi-plus-circle" viewBox="0 0 16 16">
-                                                    <path
-                                                        d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14m0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16" />
-                                                    <path
-                                                        d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4" />
-                                                </svg>
+                                                <i class="bi bi-plus-circle fs-3"></i>
                                                 <span>Lançamento</span></a>
                                             <!--begin::Menu-->
                                             <div class="me-0">
@@ -115,8 +108,7 @@
                                                             <!--end::Menu item-->
                                                             <!--begin::Menu item-->
                                                             <div class="menu-item px-3">
-                                                                <a href="#"
-                                                                    class="menu-link px-3">Statements</a>
+                                                                <a href="#" class="menu-link px-3">Statements</a>
                                                             </div>
                                                             <!--end::Menu item-->
                                                             <!--begin::Menu separator-->
@@ -382,7 +374,7 @@
 <!-- Bootstrap Bundle (includes Popper) -->
 
 <!-- Custom Script -->
-<script src="/assets/js/custom_script.js"></script>
+
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

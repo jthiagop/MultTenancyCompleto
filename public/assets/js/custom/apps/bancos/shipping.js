@@ -36,7 +36,6 @@ var KTAppEcommerceReportShipping = function () {
                     }
                 },
                 "dataSrc": function(json) {
-                    console.log('[DataTables] Resposta recebida:', json);
                     
                     // Verificar se há erro na resposta
                     if (json.error) {
@@ -62,7 +61,6 @@ var KTAppEcommerceReportShipping = function () {
                         return [];
                     }
                     
-                    console.log('[DataTables] Dados processados com sucesso, retornando', json.data.length, 'registros');
                     return json.data;
                 },
                 "error": function(xhr, error, thrown) {
@@ -106,12 +104,10 @@ var KTAppEcommerceReportShipping = function () {
             "lengthMenu": [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Todos"]],
             "language": {
                 "sEmptyTable": "Nenhum registro encontrado",
-                "sInfo": "Mostrando de _START_ até _END_ de _TOTAL_ registros",
                 "sInfoEmpty": "Mostrando 0 até 0 de 0 registros",
                 "sInfoFiltered": "(Filtrados de _MAX_ registros)",
                 "sInfoPostFix": "",
                 "sInfoThousands": ".",
-                "sLengthMenu": "_MENU_ resultados por página",
                 "sLoadingRecords": "Carregando...",
                 "sProcessing": "Processando...",
                 "sZeroRecords": "Nenhum registro encontrado",
@@ -161,11 +157,11 @@ var initDaterangepicker = function () {
         endDate: end,
         ranges: {
             "Hoje": [moment(), moment()],
-            "Ontem": [moment().subtract(1, "days"), moment().subtract(1, "days")],
             "Últimos 7 Dias": [moment().subtract(6, "days"), moment()],
             "Últimos 30 Dias": [moment().subtract(29, "days"), moment()],
             "Este Mês": [moment().startOf("month"), moment().endOf("month")],
-            "Mês Passado": [moment().subtract(1, "month").startOf("month"), moment().subtract(1, "month").endOf("month")]
+            "Mês Passado": [moment().subtract(1, "month").startOf("month"), moment().subtract(1, "month").endOf("month")],
+            "Todos": [moment().subtract(100, "years"), moment().add(1, "year")]
         },
         locale: {
             format: "DD/MM/YYYY", // Define o formato padrão para o picker
@@ -320,15 +316,12 @@ KTUtil.onDOMContentLoaded(function () {
 
     // Inicializar gráfico combinado se estiver na aba overview
     if (document.getElementById('kt_charts_widget_combined')) {
-        console.log('Elemento do gráfico encontrado, inicializando...');
 
         // Carregar ApexCharts se não estiver carregado
         if (typeof ApexCharts === 'undefined') {
-            console.log('ApexCharts não encontrado, carregando...');
             var script = document.createElement('script');
             script.src = 'https://cdn.jsdelivr.net/npm/apexcharts@latest';
             script.onload = function() {
-                console.log('ApexCharts carregado, inicializando gráfico...');
                 KTAppBancoChartCombined.init();
             };
             script.onerror = function() {
@@ -336,10 +329,8 @@ KTUtil.onDOMContentLoaded(function () {
             };
             document.head.appendChild(script);
         } else {
-            console.log('ApexCharts já carregado, inicializando gráfico...');
             KTAppBancoChartCombined.init();
         }
     } else {
-        console.log('Elemento do gráfico não encontrado');
     }
 });

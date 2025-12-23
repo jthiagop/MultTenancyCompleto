@@ -34,8 +34,9 @@ class OfxController extends Controller
             $file = $request->file('file');
             $fileContents = file_get_contents($file->getRealPath());
             $fileHash = md5($fileContents);
+            $fileName = $file->getClientOriginalName(); // Get the original file name here
 
-            // Verifica se já foi importado
+            // Verifica se já foi importado (ANTES de processar)
             if (BankStatement::where('file_hash', $fileHash)->exists()) {
                 return redirect()
                     ->route('banco.list', ['tab' => 'overview'])
@@ -45,13 +46,17 @@ class OfxController extends Controller
             // Verifica se o usuário escolheu usar horários de missa
             $usarHorariosMissas = $request->has('usar_horarios_missa') && $request->input('usar_horarios_missa') == '1';
 
-            // Processa OFX e extrai dados (passa a escolha do usuário sobre horários de missa)
-            $this->ofxService->processOfx($file, $usarHorariosMissas);
+            // Processa OFX e extrai dados (retorna quantidade de transações importadas)
+            $transacoesImportadas = $this->ofxService->processOfx($file, $usarHorariosMissas, $fileHash, $fileName);
             
-            // O processOfx já salva as transações individualmente via BankStatement::storeTransaction
-            // Não precisamos criar um registro adicional aqui
+            // Verifica se alguma transação foi realmente importada
+            if ($transacoesImportadas === 0) {
+                return redirect()
+                    ->route('banco.list', ['tab' => 'overview'])
+                    ->with('warning', 'Nenhuma transação nova foi importada. Todas as transações deste arquivo já existem no sistema.');
+            }
 
-            $mensagemSucesso = 'Extrato OFX importado com sucesso!';
+            $mensagemSucesso = "Extrato OFX importado com sucesso! {$transacoesImportadas} transação(ões) importada(s).";
             if ($usarHorariosMissas) {
                 $mensagemSucesso .= ' A conciliação com horários de missa foi processada.';
             }

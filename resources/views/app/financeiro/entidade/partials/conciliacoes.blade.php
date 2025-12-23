@@ -1,17 +1,6 @@
-<div class="tab-pane fade show active" id="kt_tab_pane_conciliacoes" role="tabpanel">
+<div>
     <div class="card mt-5">
-        {{-- Botão de Filtro --}}
-        <div class="card-header border-0 pt-5">
-            <h3 class="card-title align-items-start flex-column">
-                <span class="card-label fw-bold fs-3 mb-1">Conciliações Bancárias</span>
-            </h3>
-            <div class="card-toolbar">
-                <button type="button" class="btn btn-sm btn-light-primary" data-bs-toggle="modal" data-bs-target="#modal_conciliacao_bancaria">
-                    <i class="fa-solid fa-filter fs-4 me-2"></i>
-                    Filtrar Conciliações
-                </button>
-            </div>
-        </div>
+
         <div class="card-body">
             <div class="row gx-5 gx-xl-10">
                 <!--begin::Nome do Banco e do Dominus-->
@@ -866,7 +855,6 @@
                                                                     bank_statement_id: conciliacaoId
                                                                 },
                                                                 success: function(response) {
-                                                                    console.log('Resposta do servidor:', response); // Debug
 
                                                                     if (response.success && response.contas && response.contas.length > 0) {
                                                                         selectDestino.html(
@@ -1181,7 +1169,6 @@
                 bank_statement_id: conciliacaoId
             },
             success: function(response) {
-                console.log('Resposta do servidor:', response); // Debug
 
                 if (response.success && response.contas && response.contas.length > 0) {
                     $select.html('<option value="">Selecione a conta de destino</option>');

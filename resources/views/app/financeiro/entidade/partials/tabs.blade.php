@@ -1,5 +1,5 @@
 <!-- Navbar -->
-<div class="card card-flush">
+<div class="card card-flush mt-5">
     <!--begin::Card header-->
     <div class="card-header align-items-stretch py-5">
         <div class="d-flex flex-column flex-lg-row flex-stack gap-5 w-100">
@@ -82,44 +82,45 @@
     <!--end::Separator-->
 
     <!--begin::Nav Tabs-->
-    <div class="card-body pt-0">
-        <div class="d-flex justify-content-between align-items-center">
-        <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-2x border-transparent fs-5 fw-bold">
-            <!-- Aba de Conciliações Pendentes -->
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center w-100">
+            <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-1x border-transparent fs-5 fw-bold">
+                <!-- Aba de Conciliações Pendentes -->
                 <li class="nav-item">
-                <a class="nav-link text-active-primary me-4 active" data-bs-toggle="tab"
-                    href="#kt_tab_pane_conciliacoes">
-                    Conciliações Pendentes
-                    <span id="badge-conciliacoes" class="badge badge-danger ms-2" style="display: none;">0</span>
-                </a>
-            </li>
-            <!-- Aba de Movimentação -->
+                    <a class="nav-link text-active-primary me-4 {{ ($activeTab ?? 'conciliacoes') === 'conciliacoes' ? 'active' : '' }}"
+                        href="{{ route('entidades.show', $entidade->id) }}">
+                        Conciliações Pendentes
+                        <span id="badge-conciliacoes" class="badge badge-danger ms-2" style="display: none;">0</span>
+                    </a>
+                </li>
+                <!-- Aba de Movimentação -->
                 <li class="nav-item">
-                <a class="nav-link text-active-primary me-4" data-bs-toggle="tab" href="#kt_tab_pane_movimentacao">
-                    Movimentações
-                </a>
-            </li>
-            <!-- Aba de Informações -->
+                    <a class="nav-link text-active-primary me-4 {{ ($activeTab ?? '') === 'movimentacoes' ? 'active' : '' }}"
+                        href="{{ route('entidades.movimentacoes', $entidade->id) }}">
+                        Movimentações
+                    </a>
+                </li>
+                <!-- Aba de Informações -->
                 <li class="nav-item">
-                <a class="nav-link text-active-primary me-4" data-bs-toggle="tab" href="#kt_tab_pane_informacao">
-                    Informações
+                    <a class="nav-link text-active-primary me-4 {{ ($activeTab ?? '') === 'informacoes' ? 'active' : '' }}"
+                        href="{{ route('entidades.informacoes', $entidade->id) }}">
+                        Informações
+                    </a>
+                </li>
+            </ul>
+            <!--begin::Actions-->
+            <div class="d-flex align-items-end gap-2 ms-auto">
+                <a href="{{ route('entidades.historico', $entidade->id) }}"
+                    class="btn btn-sm btn-light-success {{ ($activeTab ?? '') === 'historico' ? 'active' : '' }}">
+                    <i class="bi bi-clock-history me-1"></i>
+                    Histórico
                 </a>
-            </li>
-        </ul>
-            <div class="d-flex flex-column align-items-end mt-5">
-                <button class="btn btn-sm btn-primary text-end" data-kt-action="open-conciliacao-missas"
-                    id="btnHorariosMissas">
-                <i class="bi bi-alarm"></i>
-                Horários de Missas
-            </button>
-
             </div>
+            <!--end::Actions-->
         </div>
-        <!--begin::Separator-->
     </div>
     <!--end::Nav Tabs-->
 </div>
-
 {{-- Scripts necessários --}}
 <script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/locale/pt-br.js"></script>
@@ -152,6 +153,54 @@
         if (!entidadeId) {
             return;
         }
+
+        // Handler para o botão de Histórico
+        const btnHistorico = document.getElementById('btnHistoricoConciliações');
+        const linkHistorico = document.getElementById('link-historico-hidden');
+        if (btnHistorico && linkHistorico) {
+            btnHistorico.addEventListener('click', function(e) {
+                e.preventDefault();
+                linkHistorico.click();
+            });
+        }
+
+        // Função para carregar o total de conciliações pendentes (independente do filtro de data)
+        function carregarTotalPendentes() {
+            fetch(`{{ route('entidades.total-pendentes', ':id') }}`.replace(':id', entidadeId), {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const total = data.total || 0;
+                    
+                    const badge = document.getElementById('badge-conciliacoes');
+                    if (badge) {
+                        if (total > 0) {
+                            badge.textContent = total;
+                            badge.style.display = 'inline-block';
+                        } else {
+                            badge.style.display = 'none';
+                        }
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Erro ao carregar total de pendentes:', error);
+            });
+        }
+
+        // Carrega o total de pendentes ao carregar a página
+        carregarTotalPendentes();
+
+        // Recarrega o total quando a aba de conciliações for ativada
+        document.querySelector('a[href="#kt_tab_pane_conciliacoes"]')?.addEventListener('shown.bs.tab', function() {
+            carregarTotalPendentes();
+        });
 
         // Configura a localidade para português do Brasil
         moment.locale('pt-br');
@@ -304,20 +353,8 @@
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.data) {
-                        // Atualiza contador de conciliações
-                        const conciliacoesPendentes = data.data.conciliacoesPendentes;
-                        const total = conciliacoesPendentes?.data?.length || conciliacoesPendentes
-                            ?.length || 0;
-
-                        const badge = document.getElementById('badge-conciliacoes');
-                        if (badge) {
-                            if (total > 0) {
-                                badge.textContent = total;
-                                badge.style.display = 'inline-block';
-                            } else {
-                                badge.style.display = 'none';
-                            }
-                        }
+                        // Badge de conciliações pendentes é atualizado pela função carregarTotalPendentes()
+                        // que busca o total geral independente do filtro de data
 
                         // Atualiza informações adicionais
                         const infoAdicional = data.data.informacoesAdicionais || {};
@@ -397,13 +434,15 @@
                     // Exibe toast de aviso usando a função específica do toasts.js
                     if (typeof window.showHorariosMissasToast === 'function') {
                         window.showHorariosMissasToast({
-                            cadastrarUrl: '{{ route("company.edit", ["tab" => "horario-missas"]) }}',
+                            cadastrarUrl: '{{ route('company.edit', ['tab' => 'horario-missas']) }}',
                             delay: 8000,
                             icon: 'ki-duotone ki-information-5'
                         });
                     } else {
                         // Fallback se showHorariosMissasToast não estiver disponível
-                        console.warn('showHorariosMissasToast não está disponível. Certifique-se de que toasts.js está carregado.');
+                        console.warn(
+                            'showHorariosMissasToast não está disponível. Certifique-se de que toasts.js está carregado.'
+                            );
                     }
                     return false;
                 }

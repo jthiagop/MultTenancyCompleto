@@ -100,7 +100,7 @@ class BankStatement extends Model
     /**
      * 🔄 Método para armazenar uma nova transação do OFX
      */
-    public static function storeTransaction($account, $transaction, $entidadeId)
+    public static function storeTransaction($account, $transaction, $entidadeId, $fileHash = null, $fileName = null)
     {
         // Verifica se a transação já foi importada anteriormente
         $transacaoExistente = self::where('fitid', $transaction->uniqueId)
@@ -129,6 +129,8 @@ class BankStatement extends Model
             'refnum'        => $transaction->referenceNumber ?? null,
             'memo'          => $transaction->memo,
             'reconciled'    => false,
+            'file_hash'     => $fileHash, // Salva o hash do arquivo
+            'file_name'     => $fileName, // Salva o nome do arquivo original
         ]);
     }
 

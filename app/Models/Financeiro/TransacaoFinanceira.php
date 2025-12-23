@@ -146,4 +146,22 @@ class TransacaoFinanceira extends Model
         // Se não houver, retorna uma consulta que não trará resultados para proteger os dados.
         return $query->whereRaw('1 = 0');
     }
+
+    /**
+     * Atualiza automaticamente o campo comprovacao_fiscal baseado na existência de anexos
+     * 
+     * @return bool
+     */
+    public function updateComprovacaoFiscal()
+    {
+        // Conta quantos anexos ativos existem para esta transação
+        $hasAnexos = $this->modulos_anexos()
+            ->where('status', 'ativo')
+            ->exists();
+
+        // Atualiza o campo comprovacao_fiscal
+        $this->comprovacao_fiscal = $hasAnexos;
+        
+        return $this->save();
+    }
 }

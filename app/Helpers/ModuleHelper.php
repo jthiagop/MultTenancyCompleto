@@ -25,6 +25,7 @@ class ModuleHelper
             'contas-financeiras.' => 'financeiro',
             'conciliacao.' => 'financeiro',
             'transacoes-financeiras.' => 'financeiro',
+            'nfe_entrada.' => 'financeiro',
             'patrimonio.' => 'patrimonio',
             'bem.' => 'patrimonio',
             'namePatrimonio.' => 'patrimonio',
@@ -57,4 +58,3 @@ class ModuleHelper
         return view()->exists($viewPath);
     }
 }
-

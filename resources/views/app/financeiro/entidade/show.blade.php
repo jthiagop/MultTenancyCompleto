@@ -3,44 +3,38 @@
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
 <script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
 
-<x-tenant-app-layout>
-    {{-- Navbar Secundária do Módulo Financeiro --}}
-    @include('app.layouts.subnav.modules.financeiro')
-    
-    <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
-        <!--begin::Content wrapper-->
-        <div class="d-flex flex-column flex-column-fluid">
-            {{-- Header da Página --}}
-            @include('app.financeiro.entidade.partials.header')
-
-            <!--begin::Content-->
-            <div id="kt_app_content" class="app-content flex-column-fluid">
-                <!--begin::Content container-->
-                <div id="kt_app_content_container" class="app-container container-fluid">
-                    {{-- Mensagens de Sistema --}}
-                    @include('app.financeiro.entidade.partials.alerts')
+<x-tenant-app-layout :page-title="$entidade->nome">
+    <!--begin::Toolbar-->
+    @include('app.financeiro.entidade.partials.header')
+    <!--end::Toolbar-->
+    <!--begin::Content-->
+    <div id="kt_app_content" class="app-content flex-column-fluid">
+        <!--begin::Content container-->
+        <div id="kt_app_content_container" class="app-container container-fluid">
+            {{-- Mensagens de Sistema --}}
+            @include('app.financeiro.entidade.partials.alerts')
 
                     {{-- Navegação por Abas --}}
                     @include('app.financeiro.entidade.partials.tabs')
 
-                    <!-- Conteúdo das Abas -->
-                    <div class="tab-content" id="myTabContent">
-                        {{-- Aba de Movimentação --}}
-                        @include('app.financeiro.entidade.partials.movimentacao')
-
+                    {{-- Conteúdo da Aba Ativa --}}
+                    @if(($activeTab ?? 'conciliacoes') === 'conciliacoes')
                         {{-- Aba de Conciliações Pendentes --}}
                         @include('app.financeiro.entidade.partials.conciliacoes')
-
-                    {{-- Aba de Informações --}}
-                    @include('app.financeiro.entidade.partials.informacoes')
-                </div>
+                    @elseif($activeTab === 'movimentacoes')
+                        {{-- Aba de Movimentação --}}
+                        @include('app.financeiro.entidade.partials.movimentacao')
+                    @elseif($activeTab === 'informacoes')
+                        {{-- Aba de Informações --}}
+                        @include('app.financeiro.entidade.partials.informacoes')
+                    @elseif($activeTab === 'historico')
+                        {{-- Aba de Histórico de Conciliações --}}
+                        @include('app.financeiro.entidade.partials.historico')
+                    @endif
             </div>
             <!--end::Content container-->
         </div>
-        <!--end::Content-->
-    </div>
-    <!--end::Content wrapper-->
-</div>
+    <!--end::Content-->
 
 {{-- Modal de Conciliação de Missas --}}
 @include('app.components.modals.financeiro.conciliacao-missas')

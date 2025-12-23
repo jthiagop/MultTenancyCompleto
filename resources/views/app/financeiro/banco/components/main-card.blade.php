@@ -19,8 +19,8 @@
                                 <!--begin::Status-->
                                 <div class="d-flex align-items-center mb-1">
                                     <a href="#"
-                                        class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">Movimentação
-                                        Bancária</a>
+                                        class="text-gray-800 text-hover-primary fs-2 fw-bold me-3">
+                                        Movimentação Bancária</a>
                                     {{-- <span class="badge badge-light-success me-auto">Ativado</span> --}}
                                 </div>
                                 <!--end::Status-->

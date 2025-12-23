@@ -135,6 +135,13 @@ var KTAppEcommerceSaveProduct = function () {
 
     // Init DropzoneJS --- more info:
     const initDropzone = () => {
+        // Verificar se o elemento existe antes de inicializar
+        const dropzoneElement = document.querySelector("#kt_ecommerce_add_product_media");
+        if (!dropzoneElement) {
+            console.warn('Dropzone: Elemento #kt_ecommerce_add_product_media não encontrado');
+            return;
+        }
+
         var myDropzone = new Dropzone("#kt_ecommerce_add_product_media", {
             url: "/upload", // Defina a URL para o script de upload no servidor
             paramName: "file", // Nome do parâmetro usado para transferir o arquivo
@@ -167,26 +174,30 @@ var KTAppEcommerceSaveProduct = function () {
 
         // Enviar os arquivos junto ao formulário
         const form = document.getElementById('kt_ecommerce_add_product_form');
-        form.onsubmit = function (e) {
-            e.preventDefault(); // Impede o envio tradicional do formulário
+        if (form) {
+            form.onsubmit = function (e) {
+                e.preventDefault(); // Impede o envio tradicional do formulário
 
-            // Anexar os arquivos do Dropzone ao formulário
-            var files = myDropzone.getAcceptedFiles();
-            files.forEach(function (file) {
-                var input = document.createElement("input");
-                input.type = "hidden";
-                input.name = "files[]"; // O nome do campo de arquivos no formulário
-                input.value = file.name; // O nome do arquivo (ou você pode usar file.dataURL ou file.size)
-                form.appendChild(input);
-            });
+                // Anexar os arquivos do Dropzone ao formulário
+                var files = myDropzone.getAcceptedFiles();
+                files.forEach(function (file) {
+                    var input = document.createElement("input");
+                    input.type = "hidden";
+                    input.name = "files[]"; // O nome do campo de arquivos no formulário
+                    input.value = file.name; // O nome do arquivo (ou você pode usar file.dataURL ou file.size)
+                    form.appendChild(input);
+                });
 
-            // Agora podemos enviar o formulário
-            form.submit();
-        };
+                // Agora podemos enviar o formulário
+                form.submit();
+            };
+        }
     };
 
-    // Inicializar o Dropzone
-    initDropzone();
+    // Inicializar o Dropzone apenas se o elemento existir
+    if (document.querySelector("#kt_ecommerce_add_product_media")) {
+        initDropzone();
+    }
 
     // Handle discount options
     const handleDiscount = () => {

@@ -19,9 +19,46 @@ use Illuminate\Validation\Rules;
 use Spatie\Permission\Models\Role;
 use Spatie\Permission\Models\Permission;
 use App\Services\PermissionService;
+use App\Models\Module;
 
 class UserController extends Controller
 {
+    /**
+     * Busca os ícones dos módulos do banco de dados
+     *
+     * @return array
+     */
+    private function getModuleIcons(): array
+    {
+        $modules = Module::where('is_active', true)->get();
+        $moduleIcons = [];
+        $defaultIcon = asset('assets/media/avatars/blank.png');
+
+        foreach ($modules as $module) {
+            if ($module->icon_path) {
+                // Se o caminho começa com /assets, usar diretamente (arquivo público estático)
+                if (str_starts_with($module->icon_path, '/assets')) {
+                    $moduleIcons[$module->key] = $module->icon_path;
+                } 
+                // Se começa com modules/icons, usar Storage::url() para gerar URL completa
+                elseif (str_starts_with($module->icon_path, 'modules/icons')) {
+                    $moduleIcons[$module->key] = Storage::url($module->icon_path);
+                } 
+                // Se não começa com /, pode ser um caminho de storage
+                elseif (!str_starts_with($module->icon_path, '/')) {
+                    $moduleIcons[$module->key] = Storage::url($module->icon_path);
+                } else {
+                    // Fallback: usar o caminho diretamente
+                    $moduleIcons[$module->key] = $module->icon_path;
+                }
+            } else {
+                // Ícone padrão se não houver icon_path
+                $moduleIcons[$module->key] = $defaultIcon;
+            }
+        }
+
+        return $moduleIcons;
+    }
     /**
      * Display a listing of the resource.
      */
@@ -53,6 +90,9 @@ class UserController extends Controller
         $permissionsByModule = $permissionService->getPermissionsByModule();
         $moduleNames = $permissionService->getModuleNames();
 
+        // Buscar ícones dos módulos do banco de dados
+        $moduleIcons = $this->getModuleIcons();
+
         return view(
             'app.users.index',
             [
@@ -61,6 +101,7 @@ class UserController extends Controller
                 'companies' => $companies,
                 'permissionsByModule' => $permissionsByModule,
                 'moduleNames' => $moduleNames,
+                'moduleIcons' => $moduleIcons,
             ]
         );
     }
@@ -74,10 +115,14 @@ class UserController extends Controller
         $permissionsByModule = $permissionService->getPermissionsByModule();
         $moduleNames = $permissionService->getModuleNames();
 
+        // Buscar ícones dos módulos do banco de dados
+        $moduleIcons = $this->getModuleIcons();
+
         return view('app.users.create', [
             'tenantFiliais' => $tenantFiliais,
             'permissionsByModule' => $permissionsByModule,
             'moduleNames' => $moduleNames,
+            'moduleIcons' => $moduleIcons,
         ]);
     }
 
@@ -241,6 +286,9 @@ class UserController extends Controller
         $moduleNames = $permissionService->getModuleNames();
         $userPermissions = $user->permissions->pluck('id')->toArray(); // Permissões atuais do usuário
 
+        // Buscar ícones dos módulos do banco de dados
+        $moduleIcons = $this->getModuleIcons();
+
         // Verificar se é o primeiro usuário (Usuário Supremo)
         $isFirstUser = User::orderBy('id', 'asc')->first()->id === $user->id;
 
@@ -253,6 +301,7 @@ class UserController extends Controller
                 'companies' => $companies,
                 'permissionsByModule' => $permissionsByModule,
                 'moduleNames' => $moduleNames,
+                'moduleIcons' => $moduleIcons,
                 'userPermissions' => $userPermissions,
                 'isFirstUser' => $isFirstUser,
             ]

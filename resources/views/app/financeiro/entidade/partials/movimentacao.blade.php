@@ -1,4 +1,4 @@
-<div class="tab-pane fade" id="kt_tab_pane_movimentacao" role="tabpanel">
+<div>
     <div class="card card-flush mt-5">
         <div class="card-body">
             <h5 class="card-title">Movimentações</h5>

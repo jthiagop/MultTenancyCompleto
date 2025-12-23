@@ -495,16 +495,9 @@
                                     @php
                                         $permissionService = new \App\Services\PermissionService();
                                         $actionNames = $permissionService->getActionNames();
-                                        $moduleIcons = [
-                                            'financeiro' => '/assets/media/png/financeiro.svg',
-                                            'patrimonio' => '/assets/media/png/house3d.png',
-                                            'contabilidade' => '/assets/media/png/contabilidade.png',
-                                            'fieis' => '/assets/media/png/fieis.png',
-                                            'cemiterio' => '/assets/media/png/lapide2.png',
-                                            'company' => '/assets/media/svg/files/folder-document.svg',
-                                            'users' => '/assets/media/svg/files/folder-document.svg',
-                                            'dizimos' => '/assets/media/png/dizimo.png',
-                                        ];
+                                        // $moduleIcons já vem do controller com os dados do banco
+                                        // Se não existir, usar fallback padrão
+                                        $defaultIcon = asset('assets/media/avatars/blank.png');
                                     @endphp
 
                                     @if (isset($permissionsByModule) && !empty($permissionsByModule))
@@ -517,7 +510,8 @@
                                                     @foreach ($permissionsByModule as $module => $permissions)
                                                         @php
                                                             $moduleName = $moduleNames[$module] ?? ucfirst($module);
-                                                            $moduleIcon = $moduleIcons[$module] ?? '/assets/media/svg/card-logos/mastercard.svg';
+                                                            // Buscar ícone do módulo do banco de dados ou usar padrão
+                                                            $moduleIcon = $moduleIcons[$module] ?? $defaultIcon;
                                                             $isFirst = $loop->first;
                                                             $collapseId = "kt_module_permissions_{$module}";
                                                             $checkedCount = 0;
