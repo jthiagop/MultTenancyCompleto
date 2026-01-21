@@ -60,11 +60,35 @@ class InitializeTenancyByHostHeader extends InitializeTenancyByDomain
         // para garantir que usamos o domínio correto (do header Host se disponível)
         try {
             return $this->initializeTenancy($request, $next, $domainToUse ?? $host);
-        } catch (\Exception $e) {
+        } catch (\Stancl\Tenancy\Exceptions\TenantCouldNotBeIdentifiedOnDomainException $e) {
             \Log::error('[InitializeTenancyByHostHeader] Erro ao inicializar tenant: ' . $e->getMessage());
             \Log::error('[InitializeTenancyByHostHeader] Host atual: ' . $request->getHost());
             \Log::error('[InitializeTenancyByHostHeader] Header Host: ' . $request->header('Host'));
             \Log::error('[InitializeTenancyByHostHeader] DomainToUse: ' . ($domainToUse ?? $host));
+            
+            // Se for uma requisição JSON/API, retornar erro JSON
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Tenant not found for domain: ' . ($domainToUse ?? $host),
+                    'error' => 'TENANT_NOT_FOUND'
+                ], 404);
+            }
+            
+            throw $e;
+        } catch (\Exception $e) {
+            \Log::error('[InitializeTenancyByHostHeader] Erro inesperado ao inicializar tenant: ' . $e->getMessage());
+            \Log::error('[InitializeTenancyByHostHeader] Host atual: ' . $request->getHost());
+            \Log::error('[InitializeTenancyByHostHeader] Header Host: ' . $request->header('Host'));
+            \Log::error('[InitializeTenancyByHostHeader] DomainToUse: ' . ($domainToUse ?? $host));
+            
+            // Se for uma requisição JSON/API, retornar erro JSON
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json([
+                    'message' => 'Error initializing tenant: ' . $e->getMessage(),
+                    'error' => 'TENANCY_ERROR'
+                ], 500);
+            }
+            
             throw $e;
         }
     }

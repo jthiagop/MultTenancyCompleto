@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
     protected $commands = [
         \App\Console\Commands\AtualizarStatusContas::class,
         \App\Console\Commands\SeedFormasPagamento::class,
+        \App\Console\Commands\CleanExpiredWhatsappCodes::class,
     ];
 
     /**
@@ -23,6 +24,9 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule)
     {
         $schedule->command('contas:atualizar-status')->daily();
+
+        // Limpar códigos de vinculação WhatsApp expirados a cada hora
+        $schedule->command('whatsapp:clean-expired-codes')->hourly();
     }
 
     /**

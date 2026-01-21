@@ -360,11 +360,15 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
+    
     function reloadDataTable() {
         if (dataTable) {
             dataTable.ajax.reload();
         }
     }
+    
+    // Expõe função globalmente para uso em outros scripts (ex: drawer form)
+    window.reloadDataTable = reloadDataTable;
     
     function initializeDataTable() {
         const tableId = currentTab === 'receitas' ? 'receitasTable' : 'despesasTable';

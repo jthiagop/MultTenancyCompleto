@@ -122,7 +122,15 @@
                                                 <!--end::Heading-->
                                                 <!--begin::Menu item-->
                                                 <div class="menu-item px-3">
-                                                    <a href="#" class="menu-link px-3">Create Invoice</a>
+                                                    @if($bankConfig)
+                                                        <a href="#" class="menu-link px-3" data-bs-toggle="modal" data-bs-target="#kt_modal_bb_view">
+                                                            Configurações BB
+                                                        </a>
+                                                    @else
+                                                        <a href="#" class="menu-link px-3" data-bs-toggle="modal" data-bs-target="#kt_modal_bb_config">
+                                                            Configurar BB
+                                                        </a>
+                                                    @endif
                                                 </div>
                                                 <!--end::Menu item-->
                                                 <!--begin::Menu item-->
@@ -804,6 +812,646 @@
             <!--end::Modal dialog-->
         </div>
         <!--end::Modal - New Target-->
+
+        <!--begin::Modal - BB Config-->
+        <div class="modal fade" id="kt_modal_bb_config" tabindex="-1" aria-hidden="true">
+            <!--begin::Modal dialog-->
+            <div class="modal-dialog modal-dialog-centered mw-750px">
+                <!--begin::Modal content-->
+                <div class="modal-content rounded">
+                    <!--begin::Modal header-->
+                    <div class="modal-header pb-0 border-0 justify-content-end">
+                        <!--begin::Close-->
+                        <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                            <span class="svg-icon svg-icon-1">
+                                <i class="fa fa-times fa-2x"></i>
+                            </span>
+                        </div>
+                        <!--end::Close-->
+                    </div>
+                    <!--end::Modal header-->
+                    <!--begin::Modal body-->
+                    <div class="modal-body scroll-y px-10 px-lg-15 pt-0 pb-15">
+                        <!--begin:Form-->
+                        <form method="POST" id="kt_modal_bb_config_form" class="form" action="{{ route('bank-config.store') }}">
+                            @csrf
+                            <input type="hidden" name="company_id" value="{{ $companyShow->id }}" />
+                            <input type="hidden" name="banco_codigo" value="001" />
+
+                            <!--begin::Heading-->
+                            <div class="mb-13 text-center">
+                                <!--begin::Title-->
+                                <h1 class="mb-3">Configurações Banco do Brasil</h1>
+                                <!--end::Title-->
+                                <!--begin::Description-->
+                                <div class="text-muted fw-semibold fs-5">Configure as credenciais da API do BB para geração de boletos</div>
+                                <!--end::Description-->
+                            </div>
+                            <!--end::Heading-->
+
+                            <!--begin::Input group - Nome da Conta-->
+                            <div class="d-flex flex-column mb-8 fv-row">
+                                <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
+                                    <span>Nome da Conta</span>
+                                    <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                        title="Identificação interna desta configuração (ex: Conta Movimento)"></i>
+                                </label>
+                                <input type="text" class="form-control form-control-solid"
+                                    placeholder="Ex: Conta Movimento" name="nome_conta" value="{{ old('nome_conta', $bankConfig->nome_conta ?? '') }}" />
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Row - Agência e Conta-->
+                            <div class="row g-9 mb-8">
+                                <!--begin::Col - Agência-->
+                                <div class="col-md-6 fv-row">
+                                    <label class="fs-6 fw-semibold mb-2">Agência</label>
+                                    <input type="text" class="form-control form-control-solid"
+                                        placeholder="Ex: 1234" name="agencia" maxlength="10" value="{{ old('agencia', $bankConfig->agencia ?? '') }}" />
+                                </div>
+                                <!--end::Col-->
+
+                                <!--begin::Col - Conta Corrente-->
+                                <div class="col-md-6 fv-row">
+                                    <label class="fs-6 fw-semibold mb-2">Conta Corrente</label>
+                                    <input type="text" class="form-control form-control-solid"
+                                        placeholder="Ex: 12345-6" name="conta_corrente" maxlength="20" value="{{ old('conta_corrente', $bankConfig->conta_corrente ?? '') }}" />
+                                </div>
+                                <!--end::Col-->
+                            </div>
+                            <!--end::Row-->
+
+                            <!--begin::Separator-->
+                            <div class="separator separator-dashed my-8"></div>
+                            <!--end::Separator-->
+
+                            <h3 class="fw-bold mb-6">Credenciais da API</h3>
+
+                            <!--begin::Input group - Client ID-->
+                            <div class="d-flex flex-column mb-8 fv-row">
+                                <label class="required fs-6 fw-semibold mb-2">Client ID</label>
+                                <input type="text" class="form-control form-control-solid"
+                                    placeholder="Digite o Client ID" name="client_id" required />
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Input group - Client Secret-->
+                            <div class="d-flex flex-column mb-8 fv-row">
+                                <label class="required fs-6 fw-semibold mb-2">Client Secret</label>
+                                <div class="position-relative">
+                                    <input type="password" class="form-control form-control-solid"
+                                        placeholder="Digite o Client Secret" name="client_secret" id="client_secret" required />
+                                    <span class="btn btn-sm btn-icon position-absolute translate-middle top-50 end-0 me-n2"
+                                        onclick="togglePassword('client_secret')">
+                                        <i class="bi bi-eye" id="client_secret_icon"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Input group - Developer App Key-->
+                            <div class="d-flex flex-column mb-8 fv-row">
+                                <label class="required fs-6 fw-semibold mb-2">Developer Application Key</label>
+                                <div class="position-relative">
+                                    <input type="password" class="form-control form-control-solid"
+                                        placeholder="Digite a App Key" name="developer_app_key" id="developer_app_key" required />
+                                    <span class="btn btn-sm btn-icon position-absolute translate-middle top-50 end-0 me-n2"
+                                        onclick="togglePassword('developer_app_key')">
+                                        <i class="bi bi-eye" id="developer_app_key_icon"></i>
+                                    </span>
+                                </div>
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Input group - MCI Teste-->
+                            <div class="d-flex flex-column mb-8 fv-row">
+                                <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
+                                    <span>MCI de Teste (Opcional)</span>
+                                    <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                        title="Usado apenas no header x-br-com-bb-ipa-mci em ambiente de homologação"></i>
+                                </label>
+                                <input type="text" class="form-control form-control-solid"
+                                    placeholder="Ex: 12345678" name="mci_teste" value="{{ old('mci_teste', $bankConfig->mci_teste ?? '') }}" />
+                                <div class="form-text">Necessário apenas para testes manuais no ambiente de homologação do BB</div>
+                            </div>
+                            <!--end::Input group-->
+
+                            <!--begin::Separator-->
+                            <div class="separator separator-dashed my-8"></div>
+                            <!--end::Separator-->
+
+                            <h3 class="fw-bold mb-6">Dados Bancários</h3>
+
+                            <!--begin::Row-->
+                            <div class="row g-9 mb-8">
+                                <!--begin::Col - Convênio-->
+                                <div class="col-md-4 fv-row">
+                                    <label class="required fs-6 fw-semibold mb-2">Convênio</label>
+                                    <input type="text" class="form-control form-control-solid"
+                                        placeholder="Nº Convênio" name="convenio" required value="{{ old('convenio', $bankConfig->convenio ?? '') }}" />
+                                </div>
+                                <!--end::Col-->
+
+                                <!--begin::Col - Carteira-->
+                                <div class="col-md-4 fv-row">
+                                    <label class="required fs-6 fw-semibold mb-2">Carteira</label>
+                                    <input type="text" class="form-control form-control-solid"
+                                        placeholder="Ex: 17" name="carteira" required value="{{ old('carteira', $bankConfig->carteira ?? '') }}" />
+                                </div>
+                                <!--end::Col-->
+
+                                <!--begin::Col - Variação-->
+                                <div class="col-md-4 fv-row">
+                                    <label class="required fs-6 fw-semibold mb-2">Variação</label>
+                                    <input type="text" class="form-control form-control-solid"
+                                        placeholder="Ex: 35" name="variacao" required value="{{ old('variacao', $bankConfig->variacao ?? '') }}" />
+                                </div>
+                                <!--end::Col-->
+                            </div>
+                            <!--end::Row-->
+
+                            <!--begin::Separator-->
+                            <div class="separator separator-dashed my-8"></div>
+                            <!--end::Separator-->
+
+                            <!--begin::Input group - Ambiente-->
+                            <div class="d-flex flex-stack mb-8">
+                                <div class="me-5">
+                                    <label class="fs-6 fw-semibold">Ambiente</label>
+                                    <div class="fs-7 fw-semibold text-muted">
+                                        Selecione <span id="ambiente-text">Homologação</span> para testes ou Produção para uso real
+                                    </div>
+                                </div>
+                                <label class="form-check form-switch form-check-custom form-check-solid">
+                                    <input class="form-check-input" type="checkbox" value="producao"
+                                        name="ambiente" id="ambiente-switch" {{ (old('ambiente') == 'producao' || ($bankConfig->ambiente ?? '') == 'producao') ? 'checked' : '' }} />
+                                    <span class="form-check-label fw-semibold text-muted">Produção</span>
+                                </label>
+                            </div>
+                            <!--end::Input group-->
+
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const ambienteSwitch = document.getElementById('ambiente-switch');
+                                    const ambienteText = document.getElementById('ambiente-text');
+
+                                    if (ambienteSwitch && ambienteText) {
+                                        function updateAmbienteText() {
+                                            ambienteText.textContent = ambienteSwitch.checked ? 'Produção' : 'Homologação';
+                                        }
+
+                                        ambienteSwitch.addEventListener('change', updateAmbienteText);
+                                        updateAmbienteText();
+                                    }
+                                });
+                            </script>
+
+                            <!--begin::Input group - Ativo-->
+                            <div class="d-flex flex-stack mb-8">
+                                <div class="me-5">
+                                    <label class="fs-6 fw-semibold">Status</label>
+                                    <div class="fs-7 fw-semibold text-muted">
+                                        A configuração estará <span id="status-bb-text">ativa</span>
+                                    </div>
+                                </div>
+                                <label class="form-check form-switch form-check-custom form-check-solid">
+                                    <input class="form-check-input" type="checkbox" value="1"
+                                        name="ativo" id="bb-status-switch" {{ old('ativo', $bankConfig->ativo ?? 1) ? 'checked' : '' }} />
+                                    <span class="form-check-label fw-semibold text-muted">Ativo</span>
+                                </label>
+                            </div>
+
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    const statusSwitch = document.getElementById('bb-status-switch');
+                                    const statusText = document.getElementById('status-bb-text');
+
+                                    if (statusSwitch && statusText) {
+                                        function updateStatusText() {
+                                            statusText.textContent = statusSwitch.checked ? 'ativa' : 'inativa';
+                                        }
+
+                                        statusSwitch.addEventListener('change', updateStatusText);
+                                        updateStatusText();
+                                    }
+                                });
+                            </script>
+                            <!--end::Input group-->
+
+                            <!--begin::Actions-->
+                            <div class="d-flex justify-content-between pt-5">
+                                <!--begin::Test Connection-->
+                                <button type="button" 
+                                        id="btn-test-connection"
+                                        class="btn btn-sm btn-warning">
+                                    <i class="bi bi-wifi fs-4 me-1"></i>
+                                    <span class="indicator-label">Testar Conexão</span>
+                                    <span class="indicator-progress d-none">
+                                        Conectando...
+                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                    </span>
+                                </button>
+                                <!--end::Test Connection-->
+
+                                <!--begin::Submit Buttons-->
+                                <div>
+                                    <button type="reset" class="btn btn-sm btn-light me-3" data-bs-dismiss="modal">Cancelar</button>
+                                    <button type="submit" id="btn-save-config" class="btn btn-sm btn-primary">
+                                        <span class="indicator-label">Salvar Configuração</span>
+                                        <span class="indicator-progress d-none">
+                                            Salvando...
+                                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                        </span>
+                                    </button>
+                                </div>
+                                <!--end::Submit Buttons-->
+                            </div>
+                            <!--end::Actions-->
+                        </form>
+                        <!--end:Form-->
+                    </div>
+                    <!--end::Modal body-->
+                </div>
+                <!--end::Modal content-->
+            </div>
+            <!--end::Modal dialog-->
+        </div>
+        <!--end::Modal - BB Config-->
+
+        <!--begin::Modal - BB View/Test-->
+        @if($bankConfig)
+        <div class="modal fade" id="kt_modal_bb_view" tabindex="-1" aria-hidden="true">
+            <!--begin::Modal dialog-->
+            <div class="modal-dialog modal-dialog-centered mw-900px">
+                <!--begin::Modal content-->
+                <div class="modal-content rounded">
+                    <!--begin::Modal header-->
+                    <div class="modal-header pb-0 border-0 justify-content-end">
+                        <!--begin::Close-->
+                        <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
+                            <i class="fa fa-times fa-2x"></i>
+                        </div>
+                        <!--end::Close-->
+                    </div>
+                    <!--end::Modal header-->
+                    <!--begin::Modal body-->
+                    <div class="modal-body scroll-y px-10 px-lg-15 pt-0 pb-15">
+                        <!--begin::Heading-->
+                        <div class="mb-13 text-center">
+                            <h1 class="mb-3">Configuração Banco do Brasil</h1>
+                            <div class="text-muted fw-semibold fs-5">
+                                Visualize e teste a integração com a API do BB
+                            </div>
+                        </div>
+                        <!--end::Heading-->
+
+                        <!--begin::Info Grid-->
+                        <div class="row g-6 mb-8">
+                            <!--begin::Col-->
+                            <div class="col-md-6">
+                                <label class="fs-6 fw-bold text-gray-700 mb-2">Nome da Conta</label>
+                                <div class="fs-5 text-gray-900">{{ $bankConfig->nome_conta ?? 'Não informado' }}</div>
+                            </div>
+                            <!--end::Col-->
+
+                            <!--begin::Col-->
+                            <div class="col-md-3">
+                                <label class="fs-6 fw-bold text-gray-700 mb-2">Agência</label>
+                                <div class="fs-5 text-gray-900">{{ $bankConfig->agencia ?? '-' }}</div>
+                            </div>
+                            <!--end::Col-->
+
+                            <!--begin::Col-->
+                            <div class="col-md-3">
+                                <label class="fs-6 fw-bold text-gray-700 mb-2">Conta</label>
+                                <div class="fs-5 text-gray-900">{{ $bankConfig->conta_corrente ?? '-' }}</div>
+                            </div>
+                            <!--end::Col-->
+                        </div>
+                        <!--end::Info Grid-->
+
+                        <!--begin::Separator-->
+                        <div class="separator separator-dashed my-8"></div>
+                        <!--end::Separator-->
+
+                        <!--begin::Credentials-->
+                        <h3 class="fw-bold mb-6">Credenciais</h3>
+                        <div class="row g-6 mb-8">
+                            <div class="col-md-4">
+                                <label class="fs-6 fw-bold text-gray-700 mb-2">Client ID</label>
+                                <div class="fs-6 text-gray-600 font-monospace">
+                                    @if(!empty($bankConfig->getRawOriginal('client_id')))
+                                        ••••••••••••••••••••
+                                    @else
+                                        Não configurado
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="fs-6 fw-bold text-gray-700 mb-2">Client Secret</label>
+                                <div class="fs-6 text-gray-600 font-monospace">
+                                    @if(!empty($bankConfig->getRawOriginal('client_secret')))
+                                        ••••••••••••••••••••
+                                    @else
+                                        Não configurado
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="fs-6 fw-bold text-gray-700 mb-2">Developer App Key</label>
+                                <div class="fs-6 text-gray-600 font-monospace">
+                                    @if(!empty($bankConfig->getRawOriginal('developer_app_key')))
+                                        ••••••••••••••••••••
+                                    @else
+                                        Não configurado
+                                    @endif
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Credentials-->
+
+                        <!--begin::Security Notice-->
+                        <div class="alert alert-warning d-flex align-items-center mb-8">
+                            <i class="bi bi-exclamation-triangle-fill fs-2 me-3"></i>
+                            <div class="">
+                                <strong>Importante:</strong> O Client Secret é exibido apenas uma vez no momento de geração das credenciais. Em caso de perda será necessário gerar novas credenciais.
+                            </div>
+                        </div>
+                        <!--end::Security Notice-->
+
+                        <!--begin::Separator-->
+                        <div class="separator separator-dashed my-8"></div>
+                        <!--end::Separator-->
+
+                        <!--begin::Bank Data-->
+                        <h3 class="fw-bold mb-6">Dados Bancários</h3>
+                        <div class="row g-6 mb-8">
+                            <div class="col-md-4">
+                                <label class="fs-6 fw-bold text-gray-700 mb-2">Convênio</label>
+                                <div class="fs-5 text-gray-900">{{ $bankConfig->convenio }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="fs-6 fw-bold text-gray-700 mb-2">Carteira</label>
+                                <div class="fs-5 text-gray-900">{{ $bankConfig->carteira }}</div>
+                            </div>
+                            <div class="col-md-4">
+                                <label class="fs-6 fw-bold text-gray-700 mb-2">Variação</label>
+                                <div class="fs-5 text-gray-900">{{ $bankConfig->variacao }}</div>
+                            </div>
+                        </div>
+                        <!--end::Bank Data-->
+
+                        <!--begin::Separator-->
+                        <div class="separator separator-dashed my-8"></div>
+                        <!--end::Separator-->
+
+                        <!--begin::Status-->
+                        <div class="row g-6 mb-8">
+                            <div class="col-md-6">
+                                <label class="fs-6 fw-bold text-gray-700 mb-2">Ambiente</label>
+                                <div>
+                                    <span class="badge badge-light-{{ $bankConfig->ambiente === 'producao' ? 'success' : 'warning' }} fs-6">
+                                        {{ $bankConfig->ambiente === 'producao' ? 'Produção' : 'Homologação' }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="fs-6 fw-bold text-gray-700 mb-2">Status</label>
+                                <div>
+                                    <span class="badge badge-light-{{ $bankConfig->ativo ? 'success' : 'danger' }} fs-6">
+                                        {{ $bankConfig->ativo ? 'Ativo' : 'Inativo' }}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Status-->
+
+                        <!--begin::Separator-->
+                        <div class="separator separator-dashed my-10"></div>
+                        <!--end::Separator-->
+
+                        <!--begin::Test Section-->
+                        <h3 class="fw-bold mb-6">Testes de Integração</h3>
+                        
+                        <div class="row g-4 mb-8">
+                            <!--begin::OAuth Test-->
+                            <div class="col-md-6">
+                                <div class="card card-bordered h-100">
+                                    <div class="card-body">
+                                        <h4 class="card-title mb-3">
+                                            <i class="bi bi-shield-lock text-primary fs-2 me-2"></i>
+                                            Autenticação OAuth
+                                        </h4>
+                                        <p class="text-gray-600 mb-4">Testa se as credenciais estão corretas e se consegue obter token de acesso.</p>
+                                        <button type="button" class="btn btn-primary w-100" id="btn-test-oauth">
+                                            <i class="bi bi-play-circle me-2"></i>
+                                            Testar OAuth
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::OAuth Test-->
+
+                            <!--begin::Extrato Test-->
+                            <div class="col-md-6">
+                                <div class="card card-bordered h-100">
+                                    <div class="card-body">
+                                        <h4 class="card-title mb-3">
+                                            <i class="bi bi-file-earmark-text text-success fs-2 me-2"></i>
+                                            API de Extrato
+                                        </h4>
+                                        <p class="text-gray-600 mb-4">Testa a consulta de extrato bancário dos últimos 7 dias.</p>
+                                        <button type="button" class="btn btn-success w-100" id="btn-test-extrato">
+                                            <i class="bi bi-play-circle me-2"></i>
+                                            Testar Extrato
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!--end::Extrato Test-->
+                        </div>
+                        <!--end::Test Section-->
+
+                        <!--begin::Actions-->
+                        <div class="d-flex justify-content-between pt-5">
+                            <button type="button" class="btn btn-light-primary" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#kt_modal_bb_config">
+                                <i class="bi bi-pencil me-2"></i>
+                                Editar Configuração
+                            </button>
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Fechar</button>
+                        </div>
+                        <!--end::Actions-->
+                    </div>
+                    <!--end::Modal body-->
+                </div>
+                <!--end::Modal content-->
+            </div>
+            <!--end::Modal dialog-->
+        </div>
+        @endif
+        <!--end::Modal - BB View/Test-->
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                const testBtn = document.getElementById('btn-test-connection');
+                const form = document.getElementById('kt_modal_bb_config_form');
+
+                if (testBtn && form) {
+                    testBtn.addEventListener('click', function() {
+                        // Coletar dados do formulário
+                        const formData = new FormData(form);
+                        
+                        // Validar campos obrigatórios
+                        const clientId = formData.get('client_id');
+                        const clientSecret = formData.get('client_secret');
+                        const developerAppKey = formData.get('developer_app_key');
+                        
+                        if (!clientId || !clientSecret || !developerAppKey) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Campos Obrigatórios',
+                                text: 'Preencha Client ID, Client Secret e Developer App Key antes de testar.',
+                                confirmButtonText: 'OK'
+                            });
+                            return;
+                        }
+
+                        // Mostrar loading
+                        const labelSpan = testBtn.querySelector('.indicator-label');
+                        const progressSpan = testBtn.querySelector('.indicator-progress');
+                        labelSpan.classList.add('d-none');
+                        progressSpan.classList.remove('d-none');
+                        testBtn.disabled = true;
+
+                        // Obter valor do ambiente (switch)
+                        const ambienteSwitch = document.getElementById('ambiente-switch');
+                        const ambiente = ambienteSwitch && ambienteSwitch.checked ? 'producao' : 'homologacao';
+
+                        // Fazer requisição
+                        fetch('{{ route("bank-config.test-connection") }}', {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json',
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                client_id: clientId,
+                                client_secret: clientSecret,
+                                developer_app_key: developerAppKey,
+                                ambiente: ambiente,
+                                mci_teste: formData.get('mci_teste')
+                            })
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            // Esconder loading
+                            labelSpan.classList.remove('d-none');
+                            progressSpan.classList.add('d-none');
+                            testBtn.disabled = false;
+
+                            if (data.success) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Conexão Bem-Sucedida!',
+                                    html: `<p>${data.message}</p><small class="text-muted">Token: ${data.token_preview}</small>`,
+                                    confirmButtonText: 'Ótimo!'
+                                });
+                            } else {
+                                Swal.fire({
+                                    icon: 'error',
+                                    title: 'Falha na Conexão',
+                                    text: data.message,
+                                    confirmButtonText: 'OK'
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            // Esconder loading
+                            labelSpan.classList.remove('d-none');
+                            progressSpan.classList.add('d-none');
+                            testBtn.disabled = false;
+
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Erro',
+                                text: 'Erro ao testar conexão: ' + error.message,
+                                confirmButtonText: 'OK'
+                            });
+                        });
+                    });
+
+                    // Handler de Submit do Formulário (Salvar)
+                    form.addEventListener('submit', function(e) {
+                        e.preventDefault();
+
+                        const submitBtn = document.getElementById('kt_modal_new_target_submit');
+                        
+                        submitBtn.setAttribute('data-kt-indicator', 'on');
+                        submitBtn.disabled = true;
+
+                        const formData = new FormData(form);
+
+                        fetch(form.action, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                                'Accept': 'application/json'
+                            },
+                            body: formData
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            submitBtn.removeAttribute('data-kt-indicator');
+                            submitBtn.disabled = false;
+
+                            if (data.success) {
+                                Swal.fire({
+                                    text: data.message || "Configuração salva com sucesso!",
+                                    icon: "success",
+                                    buttonsStyling: false,
+                                    confirmButtonText: "Ok, entendi!",
+                                    customClass: {
+                                        confirmButton: "btn btn-primary"
+                                    }
+                                }).then(function (result) {
+                                    if (result.isConfirmed) {
+                                        location.reload();
+                                    }
+                                });
+                            } else {
+                                Swal.fire({
+                                    text: data.message || "Ocorreu um erro ao salvar.",
+                                    icon: "error",
+                                    buttonsStyling: false,
+                                    confirmButtonText: "Ok, entendi!",
+                                    customClass: {
+                                        confirmButton: "btn btn-primary"
+                                    }
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            submitBtn.removeAttribute('data-kt-indicator');
+                            submitBtn.disabled = false;
+
+                            Swal.fire({
+                                text: "Erro de requisição: " + error.message,
+                                icon: "error",
+                                buttonsStyling: false,
+                                confirmButtonText: "Ok, entendi!",
+                                customClass: {
+                                    confirmButton: "btn btn-primary"
+                                }
+                            });
+                        });
+                    });
+                }
+            });
+        </script>
+
+        @include('app.company.partials.bb-test-scripts')
+
         <!--begin::Modal - App Access Code-->
         @include('app.company.modals.app-acess-code')
         <!--end::Modal - App Access Code-->

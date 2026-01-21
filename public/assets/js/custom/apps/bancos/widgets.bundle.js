@@ -264,13 +264,20 @@ var KTCardWidget12 = function () {
 
         var height = parseInt(KTUtil.css(element, 'height'));
         var borderColor = KTUtil.getCssVariableValue('--bs-border-dashed-color');
-        var baseColor = KTUtil.getCssVariableValue('--bs-gray-800');
-        var lightColor = KTUtil.getCssVariableValue('--bs-success');
+        var successColor = KTUtil.getCssVariableValue('--bs-success');
+        var dangerColor = KTUtil.getCssVariableValue('--bs-danger');
+
+        // 🟢 Lê os dados reais do banco de dados dos data attributes
+        var entradas = JSON.parse(element.dataset.entradas || '[0,0,0,0,0,0,0,0,0,0,0,0]');
+        var saidas = JSON.parse(element.dataset.saidas || '[0,0,0,0,0,0,0,0,0,0,0,0]');
 
         var options = {
             series: [{
-                name: 'Sales',
-                data: [3.5, 5.7, 2.8, 5.9, 4.2, 5.6, 4.3, 4.5, 5.9, 4.5, 5.7, 4.8, 5.7]
+                name: 'Entradas',
+                data: entradas
+            }, {
+                name: 'Saídas',
+                data: saidas
             }],
             chart: {
                 fontFamily: 'inherit',
@@ -287,16 +294,20 @@ var KTCardWidget12 = function () {
                 enabled: false
             },
             fill: {
-                type: 'solid',
-                opacity: 0
+                type: 'gradient',
+                gradient: {
+                    opacityFrom: 0.4,
+                    opacityTo: 0.1,
+                }
             },
             stroke: {
                 curve: 'smooth',
                 show: true,
-                width: 2,
-                colors: [baseColor]
+                width: 3,
+                colors: [successColor, dangerColor]
             },
             xaxis: {
+                categories: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
                 axisBorder: {
                     show: false,
                 },
@@ -304,12 +315,16 @@ var KTCardWidget12 = function () {
                     show: false
                 },
                 labels: {
-                    show: false
+                    show: true,
+                    style: {
+                        colors: KTUtil.getCssVariableValue('--bs-gray-500'),
+                        fontSize: '11px'
+                    }
                 },
                 crosshairs: {
                     position: 'front',
                     stroke: {
-                        color: baseColor,
+                        color: successColor,
                         width: 1,
                         dashArray: 3
                     }
@@ -354,17 +369,15 @@ var KTCardWidget12 = function () {
                     fontSize: '12px'
                 },
                 x: {
-                    formatter: function (val) {
-                        return "Feb " + val;
-                    }
+                    show: true
                 },
                 y: {
                     formatter: function (val) {
-                        return val * "10" + "K"
+                        return "R$ " + val.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
                     }
                 }
             },
-            colors: [lightColor],
+            colors: [successColor, dangerColor],
             grid: {
                 borderColor: borderColor,
                 strokeDashArray: 4,
@@ -381,7 +394,7 @@ var KTCardWidget12 = function () {
                 }
             },
             markers: {
-                strokeColor: baseColor,
+                strokeColors: [successColor, dangerColor],
                 strokeWidth: 2
             }
         };

@@ -54,5 +54,8 @@ class TenantDatabaseSeeder extends Seeder
 
         // Chama o seeder de módulos
         $this->call(ModuleSeeder::class);
+
+        // Chama o seeder de integrações
+        $this->call(IntegracaoSeeder::class);
     }
 }

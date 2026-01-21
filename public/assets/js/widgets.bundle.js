@@ -256,7 +256,7 @@ var KTCardWidget12 = function () {
 
     // Private methods
     var initChart = function(chart) {
-        var element = document.getElementById("kt_card_widget_12_chart");
+        var element = document.getElementById("kt_card_widget_122_chart");
 
         if (!element) {
             return;
@@ -411,6 +411,8 @@ var KTCardWidget12 = function () {
         }
     }
 }();
+
+
 
 // Webpack support
 if (typeof module !== 'undefined') {

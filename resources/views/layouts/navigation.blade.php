@@ -24,7 +24,7 @@
                     <!--end::sidebar mobile toggle-->
                     <!--begin::Mobile logo-->
                     <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
-                        <a href="../../demo1/dist/index.html" class="d-lg-none">
+                        <a href="{{ route('dashboard') }}" class="d-lg-none">
                             <img alt="Logo" src="/assets/media/logos/default-small.svg"
                                 class="theme-light-show h-30px" />
                             <img alt="Logo" src="/assets/media/logos/default-small-dark.svg"
@@ -68,7 +68,7 @@
                                                     <!--begin:Menu item-->
                                                     <div class="menu-item p-0 m-0">
                                                         <!--begin:Menu link-->
-                                                        <a href="../../demo1/dist/index.html"
+                                                        <a href="{{ route('dashboard') }}"
                                                             class="menu-link active">
                                                             <span
                                                                 class="menu-custom-icon d-flex flex-center flex-shrink-0 rounded w-40px h-40px me-3">

@@ -131,6 +131,8 @@ class TenancyServiceProvider extends ServiceProvider
     protected function makeTenancyMiddlewareHighestPriority()
     {
         $tenancyMiddleware = [
+            // Middleware customizado para webhook (deve ser executado primeiro)
+            \App\Http\Middleware\InitializeTenancyForWebhook::class,
             // Even higher priority than the initialization middleware
             Middleware\PreventAccessFromCentralDomains::class,
 

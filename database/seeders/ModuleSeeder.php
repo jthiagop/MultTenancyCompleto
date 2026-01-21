@@ -18,7 +18,7 @@ class ModuleSeeder extends Seeder
             [
                 'key' => 'financeiro',
                 'name' => 'Financeiro',
-                'route_name' => 'caixa.index',
+                'route_name' => 'financeiro.index',
                 'icon_path' => '/assets/media/png/financeiro.svg',
                 'icon_class' => 'fa-money-bill',
                 'permission' => 'financeiro.index',

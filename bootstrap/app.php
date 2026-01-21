@@ -15,6 +15,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         using: function () {
             $centralDomains = config('tenancy.central_domains');
+            
+            // Rota de webhook WhatsApp - deve funcionar em qualquer domínio (ngrok, localhost, etc)
+            // Registrada ANTES do loop de domínios para funcionar globalmente
+            Route::withoutMiddleware([\Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class])
+                ->match(['get', 'post'], '/webhooks/meta/whatsapp', [App\Http\Controllers\WhatsAppIntegrationController::class, 'webhook'])
+                ->name('whatsapp.webhook');
 
             foreach ($centralDomains as $domain) {
                 Route::middleware('web')
@@ -350,6 +356,17 @@ return Application::configure(basePath: dirname(__DIR__))
 
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // Exceção CSRF para webhooks do WhatsApp (Evolution API) e rotas de autenticação
+        $middleware->validateCsrfTokens(except: [
+            'api/whatsapp/*',
+            '*/whatsapp/webhook',
+            '*/webhooks/meta/whatsapp',
+            'login',           // Rota de login do tenant (POST)
+            'register',        // Rota de registro do tenant (POST)
+            'forgot-password', // Rota de recuperação de senha (POST)
+            'reset-password',  // Rota de reset de senha (POST)
+        ]);
+        
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
@@ -363,6 +380,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'ensure.tenant.setup' => \App\Http\Middleware\EnsureTenantSetup::class, // Middleware para garantir setup do tenant
             'require.password.change' => \App\Http\Middleware\RequirePasswordChange::class,
             'check.user.active' => \App\Http\Middleware\CheckUserActive::class,
+            'initialize.tenancy.for.webhook' => \App\Http\Middleware\InitializeTenancyForWebhook::class,
         ]);
 
         // Adicione o middleware ao grupo 'web' aqui
@@ -372,8 +390,10 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\CheckSessionExpiration::class, // Verificar expiração de sessão
             \App\Http\Middleware\HandleSessionExpiration::class, // Tratar erros 419 de forma elegante
             \App\Http\Middleware\RequirePasswordChange::class, // Verificar se usuário precisa trocar senha
+            \App\Http\Middleware\HandleInertiaRequests::class, // Inertia.js middleware
         ]);
     })
+
     ->withExceptions(function (Exceptions $exceptions) {
         // Interceptar erro 419 (Page Expired) e redirecionar para login
         $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e, $request) {
@@ -391,6 +411,21 @@ return Application::configure(basePath: dirname(__DIR__))
                 return redirect()->route('login')->with('error', 'Sua sessão expirou por inatividade. Faça login novamente para continuar.');
             } else {
                 return redirect()->route('login')->with('error', 'Sua sessão expirou por inatividade. Faça login novamente para continuar.');
+            }
+        });
+
+        // Capturar exceções gerais e retornar JSON para requisições que esperam JSON
+        $exceptions->render(function (\Throwable $e, $request) {
+            // Se a requisição espera JSON (AJAX, API, etc), retornar JSON
+            if ($request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
+                $status = $status >= 100 && $status < 600 ? $status : 500;
+                
+                return response()->json([
+                    'message' => config('app.debug') ? $e->getMessage() : 'Erro ao processar solicitação.',
+                    'error' => class_basename($e),
+                    'status' => $status
+                ], $status);
             }
         });
     })->create();

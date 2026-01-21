@@ -10,6 +10,7 @@ use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use App\Models\User;
+use App\Services\RecurrenceService;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Flasher;
@@ -20,6 +21,13 @@ use Yajra\DataTables\Facades\DataTables;
 
 class TransacaoFinanceiraController extends Controller
 {
+    protected RecurrenceService $recurrenceService;
+
+    public function __construct(RecurrenceService $recurrenceService)
+    {
+        $this->recurrenceService = $recurrenceService;
+    }
+
     /**
      * Display a listing of the resource.
      */
@@ -85,9 +93,80 @@ class TransacaoFinanceiraController extends Controller
         // Processa anexos, se existirem
         $this->processarAnexos($request, $caixa);
 
+        // Processa Recorrência se solicitado
+        \Log::info('Verificando recorrência', [
+            'has_repetir' => $request->has('repetir_lancamento'),
+            'repetir_value' => $request->repetir_lancamento,
+            'has_frequencia' => $request->has('frequencia'),
+            'frequencia' => $request->frequencia,
+            'intervalo' => $request->intervalo_repeticao,
+            'apos_ocorrencias' => $request->apos_ocorrencias,
+        ]);
+
+        if ($request->has('repetir_lancamento') && $request->repetir_lancamento == '1') {
+            \Log::info('Chamando processarRecorrencia');
+            $this->processarRecorrencia($request, $caixa, $validatedData);
+        } else {
+            \Log::info('Recorrência NÃO ativada');
+        }
+
         // Adiciona mensagem de sucesso
         Flasher::addSuccess('Lançamento criado com sucesso!');
         return redirect()->back()->with('message', 'Lançamento criado com sucesso!');
+    }
+
+    /**
+     * Processa a lógica de recorrência
+     */
+    private function processarRecorrencia(Request $request, TransacaoFinanceira $transacaoOriginal, array $validatedData)
+    {
+        \Log::info('ProcessarRecorrencia INICIADO', [
+            'transacao_id' => $transacaoOriginal->id,
+            'frequencia' => $request->frequencia,
+            'intervalo' => $request->intervalo_repeticao,
+            'total' => $request->apos_ocorrencias,
+        ]);
+
+        try {
+            $recorrencia = null;
+
+            // 1. Identificar ou Criar a Recorrência
+            if ($request->filled('configuracao_recorrencia') && is_numeric($request->configuracao_recorrencia)) {
+                $recorrencia = \App\Models\Financeiro\Recorrencia::find($request->configuracao_recorrencia);
+            } else {
+                // Criar nova recorrência
+                $recorrencia = \App\Models\Financeiro\Recorrencia::create([
+                    'company_id' => $validatedData['company_id'],
+                    'intervalo_repeticao' => $request->intervalo_repeticao ?? 1,
+                    'frequencia' => $request->frequencia,
+                    'total_ocorrencias' => $request->apos_ocorrencias,
+                    'ocorrencias_geradas' => 0,
+                    'data_inicio' => $validatedData['data_competencia'],
+                    'data_proxima_geracao' => $validatedData['data_competencia'],
+                    'ativo' => true,
+                    'created_by' => Auth::id(),
+                    'created_by_name' => Auth::user()->name,
+                    'updated_by' => Auth::id(),
+                    'updated_by_name' => Auth::user()->name,
+                ]);
+            }
+
+            if (!$recorrencia) {
+                return;
+            }
+
+            // 2. Delegate to RecurrenceService for all transaction generation
+            $this->recurrenceService->generateRecurringTransactions(
+                $recorrencia,
+                $transacaoOriginal,
+                $validatedData
+            );
+
+        } catch (\Exception $e) {
+            \Log::error('Erro ao processar recorrência: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+        }
     }
 
     /**

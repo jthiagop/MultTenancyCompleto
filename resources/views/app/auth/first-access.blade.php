@@ -110,7 +110,7 @@
                 <!--begin::Form-->
                 <div class="d-flex flex-center flex-column flex-lg-row-fluid">
                     <!--begin::Logo-->
-                    <a href="../../demo1/dist/index.html" class="mb-0 mb-lg-50">
+                    <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-50">
                         <img alt="Logo" src="assets/media/logos/apple-touch-icon.svg" class="h-100px h-lg-100px" />
                     </a>
                     <!--begin::Wrapper-->
@@ -240,7 +240,7 @@
                 <div class="d-flex flex-center flex-wrap px-5">
                     <!--begin::Links-->
                     <div class="d-flex fw-semibold text-primary fs-base">
-                        <a href="#" class="px-5" target="_blank">Termos</a>
+                        <a href="{{ route('termos') }}" class="px-5">Termos</a>
                         <a href="#" class="px-5" target="_blank">Plans</a>
                         <a href="#" class="px-5" target="_blank">Contato</a>
                     </div>

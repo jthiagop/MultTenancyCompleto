@@ -1,386 +1,330 @@
-<x-tenant-app-layout>
-    <!--begin::Main-->
-    <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
-        <!--begin::Content wrapper-->
-        <div class="d-flex flex-column flex-column-fluid">
-            <!--begin::Toolbar-->
-            <div id="kt_app_toolbar" class="app-toolbar py-3 py-lg-6">
-                <!--begin::Toolbar container-->
-                <div id="kt_app_toolbar_container" class="app-container container-xxl d-flex flex-stack">
-                    <!--begin::Page title-->
-                    <div class="page-title d-flex flex-column justify-content-center flex-wrap me-3">
-                        <!--begin::Title-->
-                        <h1 class="page-heading d-flex text-dark fw-bold fs-3 flex-column justify-content-center my-0">
-                            Criação de Entidade Financeira</h1>
-                        <!--end::Title-->
-                        <!--begin::Breadcrumb-->
-                        <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
-                            <!--begin::Item-->
-                            <li class="breadcrumb-item text-muted">
-                                <a href="{{ route('dashboard') }}" class="text-muted text-hover-primary">Dashboard</a>
-                            </li>
-                            <!--end::Item-->
-                            <!--begin::Item-->
-                            <li class="breadcrumb-item">
-                                <span class="bullet bg-gray-400 w-5px h-2px"></span>
-                            </li>
-                            <!--end::Item-->
-                            <!--begin::Item-->
-                            <li class="breadcrumb-item text-muted">
-                                <a href="{{ route('caixa.index') }}"
-                                    class="text-muted text-hover-primary">Financeiro</a>
-                            </li>
-                            <!--end::Item-->
-                            <!--begin::Item-->
-                            <li class="breadcrumb-item">
-                                <span class="bullet bg-gray-400 w-5px h-2px"></span>
-                            </li>
-                            <!--end::Item-->
-                            <!--begin::Item-->
-                            <li class="breadcrumb-item text-muted">Criação de Entidades</li>
-                            <!--end::Item-->
-                        </ul>
-                        <!--end::Breadcrumb-->
-                    </div>
-                    <!--end::Page title-->
-                    <!--begin::Actions-->
+<x-tenant-app-layout pageTitle="Cadastro de Entidade Financeira" :breadcrumbs="[['label' => 'Financeiro', 'url' => route('banco.list')], ['label' => 'Entidades Financeiras']]">
 
-                    <!--begin::Actions-->
-                    <div class="d-flex align-items-center gap-2 gap-lg-3">
-                        <div class="m-0">
-                            <a href="#" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_entidade_financeira">
-                                <i class="bi bi-plus-lg fs-2"></i>
-                                Cadastrar Nova
-                            </a>
-                        </div>
-                    </div>
-                    <!--end::Actions-->
-                </div>
-                <!--end::Toolbar container-->
-            </div>
-            <!--end::Toolbar-->
-            <!--begin::Content-->
-            <div id="kt_app_content" class="app-content flex-column-fluid">
-                <!--begin::Content container-->
-                <div id="kt_app_content_container" class="app-container container-xxl">
-                    <!--begin::Modal - Cadastro de Entidade Financeira-->
-                    @include('app.components.modals.financeiro.entidade')
-                    <!--end::Modal-->
+    <!--begin::Content-->
+    <div id="kt_app_content" class="app-content flex-column-fluid mt-5" >
+        <!--begin::Content container-->
+        <div id="kt_app_content_container" class="app-container container-fluid">
+            <!--begin::Modal - Cadastro de Entidade Financeira-->
+            @include('app.components.modals.financeiro.entidade')
+            <!--end::Modal-->
 
-                    <!--begin::Row-->
-                    <div class="row gy-5 g-xl-10">
-                        <!--begin::Col-->
-                        <div class="col-xl-12 mb-5 mb-xl-10">
-                            <!--begin::Engage widget 1-->
-                            <div class="card h-md-100" dir="ltr">
-                                <div class="card">
-                                    <!--begin::Products-->
-                                    <div class="card card-flush">
-                                        <!--begin::Card header-->
-                                        <div class="card-header align-items-center py-5 gap-2 gap-md-5">
-                                            <!--begin::Card title-->
-                                            <div class="card-title">
-                                                <!--begin::Search-->
-                                                <div class="d-flex align-items-center position-relative my-1">
-                                                    Entidades Financeiras
-                                                </div>
-                                            </div>
-                                            <!--end::Card title-->
-
+            <!--begin::Row-->
+            <div class="row gy-5 g-xl-10">
+                <!--begin::Col-->
+                <div class="col-xl-12 mb-5 mb-xl-10">
+                    <!--begin::Engage widget 1-->
+                    <div class="card h-md-100" dir="ltr">
+                        <div class="card">
+                            <!--begin::Products-->
+                            <div class="card card-flush">
+                                <!--begin::Card header-->
+                                <div class="card-header align-items-center py-5 gap-2 gap-md-5">
+                                    <!--begin::Card title-->
+                                    <div class="card-title">
+                                        <!--begin::Search-->
+                                        <div class="d-flex align-items-center position-relative my-1">
+                                            Entidades Financeiras
                                         </div>
-                                        <!--end::Card header-->
-                                        <!--begin::Card body-->
-                                        <div class="card-body pt-0">
-                                            <!--begin::Table-->
-                                            <table class="table align-middle table-row-dashed fs-6 gy-5"
-                                                id="kt_ecommerce_report_sales_table">
-                                                <!--begin::Table head-->
-                                                <thead>
-                                                    <!--begin::Table row-->
-                                                    <tr
-                                                        class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
-                                                        <th class="min-w-150px">Nome</th>
-                                                        <th class="text-end min-w-175px">Saldo Inicial</th>
-                                                        <th class="text-end min-w-150px">Ultima Atualização</th>
-                                                        <th class="text-end min-w-150px">Saldo Atual</th>
-                                                        <th class="text-end min-w-100px">Tipo</th>
-                                                        <th class="text-end min-w-150px">Conta Contábil</th>
-                                                        <th class="text-end min-w-150px">Descrição</th>
-                                                        @if(auth()->user()->hasRole(['admin', 'global']))
-                                                            <th class="text-end min-w-100px">Ações</th>
+                                    </div>
+                                    <!--end::Card title-->
+                                    <!--begin::Actions-->
+                                    <div class="d-flex align-items-center gap-2 gap-lg-3">
+                                        <div class="m-0">
+                                            <a href="#" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                                                data-bs-target="#kt_modal_entidade_financeira">
+                                                <i class="bi bi-plus-lg fs-2"></i>
+                                                Cadastrar Nova
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <!--end::Actions-->
+                                </div>
+                                <!--end::Card header-->
+                                <!--begin::Card body-->
+                                <div class="card-body pt-0">
+                                    <!--begin::Table-->
+                                    <table class="table align-middle table-row-dashed fs-6 gy-5"
+                                        id="kt_ecommerce_report_sales_table">
+                                        <!--begin::Table head-->
+                                        <thead>
+                                            <!--begin::Table row-->
+                                            <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
+                                                <th class="min-w-150px">Nome</th>
+                                                <th class="text-end min-w-175px">Saldo Inicial</th>
+                                                <th class="text-end min-w-150px">Ultima Atualização</th>
+                                                <th class="text-end min-w-150px">Saldo Atual</th>
+                                                <th class="text-end min-w-100px">Tipo</th>
+                                                <th class="text-end min-w-150px">Conta Contábil</th>
+                                                <th class="text-end min-w-150px">Descrição</th>
+                                                @if (auth()->user()->hasRole(['admin', 'global']))
+                                                    <th class="text-end min-w-100px">Ações</th>
+                                                @endif
+                                            </tr>
+                                            <!--end::Table row-->
+                                        </thead>
+                                        <!--end::Table head-->
+                                        <!--begin::Table body-->
+                                        <tbody class="fw-semibold text-gray-600">
+                                            @forelse($entidades as $entidade)
+                                                <tr>
+                                                    <!-- Nome -->
+                                                    <td>{{ $entidade->nome }}</td>
+                                                    <!-- Saldo Inicial -->
+                                                    <td class="text-end pe-0">R$
+                                                        {{ number_format($entidade->saldo_inicial, 2, ',', '.') }}
+                                                    </td>
+                                                    <!-- Saldo Inicial -->
+                                                    <td class="text-end pe-0">
+                                                        {{ $entidade->updated_at->format('d/m/Y H:i') }}
+                                                    </td>
+                                                    <!-- Saldo Atual -->
+                                                    <td
+                                                        class="text-end pe-0 {{ $entidade->saldo_atual >= 0 ? 'text-success' : 'text-danger' }}">
+                                                        R$
+                                                        {{ number_format($entidade->saldo_atual, 2, ',', '.') }}
+                                                    </td>
+                                                    <!-- Tipo -->
+                                                    <td class="text-end pe-0">{{ ucfirst($entidade->tipo) }}
+                                                    </td>
+                                                    <!-- Conta Contábil -->
+                                                    <td class="text-end pe-0">
+                                                        @if ($entidade->contaContabil)
+                                                            <span
+                                                                class="text-gray-800">{{ $entidade->contaContabil->code }}
+                                                                - {{ $entidade->contaContabil->name }}</span>
+                                                        @else
+                                                            <span class="text-muted">-</span>
                                                         @endif
-                                                    </tr>
-                                                    <!--end::Table row-->
-                                                </thead>
-                                                <!--end::Table head-->
-                                                <!--begin::Table body-->
-                                                <tbody class="fw-semibold text-gray-600">
-                                                    @forelse($entidades as $entidade)
-                                                        <tr>
-                                                            <!-- Nome -->
-                                                            <td>{{ $entidade->nome }}</td>
-                                                            <!-- Saldo Inicial -->
-                                                            <td class="text-end pe-0">R$
-                                                                {{ number_format($entidade->saldo_inicial, 2, ',', '.') }}
-                                                            </td>
-                                                            <!-- Saldo Inicial -->
-                                                            <td class="text-end pe-0">
-                                                                {{ $entidade->updated_at->format('d/m/Y H:i') }}
-                                                            </td>
-                                                            <!-- Saldo Atual -->
-                                                            <td
-                                                                class="text-end pe-0 {{ $entidade->saldo_atual >= 0 ? 'text-success' : 'text-danger' }}">
-                                                                R$
-                                                                {{ number_format($entidade->saldo_atual, 2, ',', '.') }}
-                                                            </td>
-                                                            <!-- Tipo -->
-                                                            <td class="text-end pe-0">{{ ucfirst($entidade->tipo) }}
-                                                            </td>
-                                                            <!-- Conta Contábil -->
-                                                            <td class="text-end pe-0">
-                                                                @if($entidade->contaContabil)
-                                                                    <span class="text-gray-800">{{ $entidade->contaContabil->code }} - {{ $entidade->contaContabil->name }}</span>
-                                                                @else
-                                                                    <span class="text-muted">-</span>
-                                                                @endif
-                                                            </td>
-                                                            <!-- Descrição -->
-                                                            <td class="text-end">{{ $entidade->descricao ?? '-' }}
-                                                            </td>
-                                                            @if(auth()->user()->hasRole(['admin', 'global', 'admin_user']))
-                                                                <!-- Ações -->
-                                                                <td class="text-end">
-                                                                    <button type="button"
-                                                                            class="btn btn-sm btn-icon btn-light-primary btn-edit-entidade"
-                                                                            data-entidade-id="{{ $entidade->id }}"
-                                                                            data-entidade-tipo="{{ $entidade->tipo }}"
-                                                                            data-entidade-nome="{{ htmlspecialchars($entidade->nome, ENT_QUOTES, 'UTF-8') }}"
-                                                                            data-entidade-banco-id="{{ $entidade->banco_id ?? '' }}"
-                                                                            data-entidade-agencia="{{ $entidade->agencia ?? '' }}"
-                                                                            data-entidade-conta="{{ $entidade->conta ?? '' }}"
-                                                                            data-entidade-account-type="{{ $entidade->account_type ?? '' }}"
-                                                                            data-entidade-descricao="{{ htmlspecialchars($entidade->descricao ?? '', ENT_QUOTES, 'UTF-8') }}"
-                                                                            data-entidade-conta-contabil-id="{{ $entidade->conta_contabil_id ?? '' }}"
-                                                                            data-bs-toggle="tooltip"
-                                                                            title="Editar">
-                                                                        <i class="fas fa-edit"></i>
-                                                                    </button>
-                                                                </td>
-                                                            @endif
-                                                        </tr>
-                                                    @empty
-                                                    @endforelse
-                                                </tbody>
-                                                <!--end::Table body-->
-                                            </table>
-                                            <!--end::Table-->
-                                        </div>
-                                        <!--end::Card body-->
-
-                                    </div>
-                                    <!--end::Products-->
+                                                    </td>
+                                                    <!-- Descrição -->
+                                                    <td class="text-end">{{ $entidade->descricao ?? '-' }}
+                                                    </td>
+                                                    @if (auth()->user()->hasRole(['admin', 'global', 'admin_user']))
+                                                        <!-- Ações -->
+                                                        <td class="text-end">
+                                                            <button type="button"
+                                                                class="btn btn-sm btn-icon btn-light-primary btn-edit-entidade"
+                                                                data-entidade-id="{{ $entidade->id }}"
+                                                                data-entidade-tipo="{{ $entidade->tipo }}"
+                                                                data-entidade-nome="{{ htmlspecialchars($entidade->nome, ENT_QUOTES, 'UTF-8') }}"
+                                                                data-entidade-banco-id="{{ $entidade->banco_id ?? '' }}"
+                                                                data-entidade-agencia="{{ $entidade->agencia ?? '' }}"
+                                                                data-entidade-conta="{{ $entidade->conta ?? '' }}"
+                                                                data-entidade-account-type="{{ $entidade->account_type ?? '' }}"
+                                                                data-entidade-descricao="{{ htmlspecialchars($entidade->descricao ?? '', ENT_QUOTES, 'UTF-8') }}"
+                                                                data-entidade-conta-contabil-id="{{ $entidade->conta_contabil_id ?? '' }}"
+                                                                data-bs-toggle="tooltip" title="Editar">
+                                                                <i class="fas fa-edit"></i>
+                                                            </button>
+                                                        </td>
+                                                    @endif
+                                                </tr>
+                                            @empty
+                                            @endforelse
+                                        </tbody>
+                                        <!--end::Table body-->
+                                    </table>
+                                    <!--end::Table-->
                                 </div>
-                                <!--end::Card-->
+                                <!--end::Card body-->
+
                             </div>
-                            <!--end::Engage widget 1-->
-                        </div>
-                        <!--end::Col-->
-                    </div>
-                    <!--end::Row-->
-
-                    <!--begin::Drawer de Edição-->
-                    @if(auth()->user()->hasRole(['admin', 'global']))
-                    <div id="kt_drawer_edit_entidade"
-                         class="bg-white"
-                         data-kt-drawer="true"
-                         data-kt-drawer-name="edit_entidade"
-                         data-kt-drawer-activate="true"
-                         data-kt-drawer-toggle="#kt_drawer_edit_entidade_toggle"
-                         data-kt-drawer-close="#kt_drawer_edit_entidade_close"
-                         data-kt-drawer-overlay="true"
-                         data-kt-drawer-width="{default:'300px', 'md': '500px', 'lg': '600px'}"
-                         data-kt-drawer-direction="end">
-                        <!--begin::Card-->
-                        <div class="card rounded-0 w-100">
-                            <!--begin::Card header-->
-                            <div class="card-header pe-5">
-                                <!--begin::Title-->
-                                <div class="card-title">
-                                    <h2 class="fw-bold">Editar Entidade Financeira</h2>
-                                </div>
-                                <!--end::Title-->
-                                <!--begin::Card toolbar-->
-                                <div class="card-toolbar">
-                                    <!--begin::Close-->
-                                    <div class="btn btn-sm btn-icon btn-active-light-primary" id="kt_drawer_edit_entidade_close">
-                                        <i class="fas fa-times fs-1"></i>
-                                    </div>
-                                    <!--end::Close-->
-                                </div>
-                                <!--end::Card toolbar-->
-                            </div>
-                            <!--end::Card header-->
-
-                            <!--begin::Card body-->
-                            <div class="card-body hover-scroll-overlay-y py-10 px-7">
-                                <form id="kt_drawer_edit_entidade_form" method="POST" action="">
-                                    @csrf
-                                    @method('PUT')
-                                    <input type="hidden" name="entidade_id" id="edit_entidade_id">
-
-                                    <!-- Tipo (readonly) -->
-                                    <div class="mb-5">
-                                        <label class="fs-5 fw-semibold mb-2">Tipo</label>
-                                        <input type="text" class="form-control form-control-solid"
-                                               id="edit_tipo" readonly disabled>
-                                    </div>
-
-                                    <!-- Nome (para tipo Caixa) -->
-                                    <div class="mb-5" id="edit_nome-group">
-                                        <label class="fs-5 fw-semibold mb-2">Nome da Entidade</label>
-                                        <input type="text" class="form-control form-control-solid"
-                                               name="nome" id="edit_nome"
-                                               placeholder="Ex: Caixa Central" />
-                                        @error('nome')
-                                            <div class="text-danger mt-2">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <!-- Banco (para tipo Banco) -->
-                                    <div class="mb-5 d-none" id="edit_banco-group">
-                                        <label class="fs-5 fw-semibold mb-2">Banco</label>
-                                        <select id="edit_banco-select" name="bank_id"
-                                            class="form-select form-select-solid" data-control="select2"
-                                            data-placeholder="Selecione um banco">
-                                            <option></option>
-                                            @isset($banks)
-                                                @foreach ($banks as $bank)
-                                                    <option value="{{ $bank->id }}"
-                                                        data-icon="{{ $bank->logo_path }}">
-                                                        {{ $bank->name }}
-                                                    </option>
-                                                @endforeach
-                                            @endisset
-                                        </select>
-                                        @error('bank_id')
-                                            <div class="text-danger mt-2">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <!-- Agência, Conta e Natureza (para tipo Banco) -->
-                                    <div class="row mb-5 d-none" id="edit_banco-details-group">
-                                        <div class="col-md-4">
-                                            <label class="fs-5 fw-semibold mb-2">Agência</label>
-                                            <input type="text" class="form-control form-control-solid"
-                                                   name="agencia" id="edit_agencia"
-                                                   placeholder="Número da agência" />
-                                            @error('agencia')
-                                                <div class="text-danger mt-2">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label class="fs-5 fw-semibold mb-2">Conta</label>
-                                            <input type="text" class="form-control form-control-solid"
-                                                   name="conta" id="edit_conta"
-                                                   placeholder="Número da conta" />
-                                            @error('conta')
-                                                <div class="text-danger mt-2">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-
-                                        <div class="col-md-4">
-                                            <label class="fs-5 fw-semibold mb-2">Natureza da Conta</label>
-                                            <select name="account_type" id="edit_account_type"
-                                                class="form-select form-select-solid">
-                                                <option value="" disabled>Selecione a natureza</option>
-                                                <option value="corrente">Conta Corrente</option>
-                                                <option value="poupanca">Poupança</option>
-                                                <option value="aplicacao">Aplicação</option>
-                                                <option value="renda_fixa">Renda Fixa</option>
-                                                <option value="tesouro_direto">Tesouro Direto</option>
-                                            </select>
-                                            @error('account_type')
-                                                <div class="text-danger mt-2">{{ $message }}</div>
-                                            @enderror
-                                        </div>
-                                    </div>
-
-                                    <!-- Descrição -->
-                                    <div class="mb-5">
-                                        <label class="fs-5 fw-semibold mb-2">Descrição</label>
-                                        <textarea class="form-control form-control-solid"
-                                                  rows="4" name="descricao" id="edit_descricao"
-                                                  placeholder="Insira uma descrição (opcional)"></textarea>
-                                        @error('descricao')
-                                            <div class="text-danger mt-2">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <!-- Conta Contábil -->
-                                    <div class="mb-5">
-                                        <label class="fs-5 fw-semibold mb-2">Conta Contábil (Plano de Contas)</label>
-                                        <select class="form-select form-select-solid" data-control="select2"
-                                            data-placeholder="Selecione a conta contábil..." name="conta_contabil_id"
-                                            id="edit_conta_contabil_id">
-                                            <option></option>
-                                            @isset($contas)
-                                                @foreach ($contas as $conta)
-                                                    <option value="{{ $conta->id }}">
-                                                        {{ $conta->code }} - {{ $conta->name }}
-                                                    </option>
-                                                @endforeach
-                                            @endisset
-                                        </select>
-                                        <div class="text-muted fs-7 mt-2">Vínculo contábil para exportação (De/Para)</div>
-                                        @error('conta_contabil_id')
-                                            <div class="text-danger mt-2">{{ $message }}</div>
-                                        @enderror
-                                    </div>
-
-                                    <!-- Saldo Inicial e Atual (readonly) -->
-                                    <div class="row mb-5">
-                                        <div class="col-md-6">
-                                            <label class="fs-5 fw-semibold mb-2">Saldo Inicial</label>
-                                            <input type="text" class="form-control form-control-solid"
-                                                   id="edit_saldo_inicial" readonly disabled>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <label class="fs-5 fw-semibold mb-2">Saldo Atual</label>
-                                            <input type="text" class="form-control form-control-solid"
-                                                   id="edit_saldo_atual" readonly disabled>
-                                        </div>
-                                    </div>
-
-                                    <!--begin::Card footer-->
-                                    <div class="card-footer">
-                                        <div class="d-flex justify-content-end gap-2">
-                                            <button type="button" class="btn btn-light" id="kt_drawer_edit_entidade_close_btn">Cancelar</button>
-                                            <button type="submit" class="btn btn-primary">
-                                                <span class="indicator-label">Salvar Alterações</span>
-                                                <span class="indicator-progress">Aguarde...
-                                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                                </span>
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <!--end::Card footer-->
-                                </form>
-                            </div>
-                            <!--end::Card body-->
+                            <!--end::Products-->
                         </div>
                         <!--end::Card-->
                     </div>
-                    @endif
-                    <!--end::Drawer de Edição-->
+                    <!--end::Engage widget 1-->
                 </div>
-                <!--end::Content container-->
+                <!--end::Col-->
             </div>
-            <!--end::Content-->
+            <!--end::Row-->
+
+            <!--begin::Drawer de Edição-->
+            @if (auth()->user()->hasRole(['admin', 'global']))
+                <div id="kt_drawer_edit_entidade" class="bg-white" data-kt-drawer="true"
+                    data-kt-drawer-name="edit_entidade" data-kt-drawer-activate="true"
+                    data-kt-drawer-toggle="#kt_drawer_edit_entidade_toggle"
+                    data-kt-drawer-close="#kt_drawer_edit_entidade_close" data-kt-drawer-overlay="true"
+                    data-kt-drawer-width="{default:'300px', 'md': '500px', 'lg': '600px'}"
+                    data-kt-drawer-direction="end">
+                    <!--begin::Card-->
+                    <div class="card rounded-0 w-100">
+                        <!--begin::Card header-->
+                        <div class="card-header pe-5">
+                            <!--begin::Title-->
+                            <div class="card-title">
+                                <h2 class="fw-bold">Editar Entidade Financeira</h2>
+                            </div>
+                            <!--end::Title-->
+                            <!--begin::Card toolbar-->
+                            <div class="card-toolbar">
+                                <!--begin::Close-->
+                                <div class="btn btn-sm btn-icon btn-active-light-primary"
+                                    id="kt_drawer_edit_entidade_close">
+                                    <i class="fas fa-times fs-1"></i>
+                                </div>
+                                <!--end::Close-->
+                            </div>
+                            <!--end::Card toolbar-->
+                        </div>
+                        <!--end::Card header-->
+
+                        <!--begin::Card body-->
+                        <div class="card-body hover-scroll-overlay-y py-10 px-7">
+                            <form id="kt_drawer_edit_entidade_form" method="POST" action="">
+                                @csrf
+                                @method('PUT')
+                                <input type="hidden" name="entidade_id" id="edit_entidade_id">
+
+                                <!-- Tipo (readonly) -->
+                                <div class="mb-5">
+                                    <label class="fs-5 fw-semibold mb-2">Tipo</label>
+                                    <input type="text" class="form-control form-control-solid" id="edit_tipo"
+                                        readonly disabled>
+                                </div>
+
+                                <!-- Nome (para tipo Caixa) -->
+                                <div class="mb-5" id="edit_nome-group">
+                                    <label class="fs-5 fw-semibold mb-2">Nome da Entidade</label>
+                                    <input type="text" class="form-control form-control-solid" name="nome"
+                                        id="edit_nome" placeholder="Ex: Caixa Central" />
+                                    @error('nome')
+                                        <div class="text-danger mt-2">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Banco (para tipo Banco) -->
+                                <div class="mb-5 d-none" id="edit_banco-group">
+                                    <label class="fs-5 fw-semibold mb-2">Banco</label>
+                                    <select id="edit_banco-select" name="bank_id"
+                                        class="form-select form-select-solid" data-control="select2"
+                                        data-placeholder="Selecione um banco">
+                                        <option></option>
+                                        @isset($banks)
+                                            @foreach ($banks as $bank)
+                                                <option value="{{ $bank->id }}" data-icon="{{ $bank->logo_path }}">
+                                                    {{ $bank->name }}
+                                                </option>
+                                            @endforeach
+                                        @endisset
+                                    </select>
+                                    @error('bank_id')
+                                        <div class="text-danger mt-2">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Agência, Conta e Natureza (para tipo Banco) -->
+                                <div class="row mb-5 d-none" id="edit_banco-details-group">
+                                    <div class="col-md-4">
+                                        <label class="fs-5 fw-semibold mb-2">Agência</label>
+                                        <input type="text" class="form-control form-control-solid" name="agencia"
+                                            id="edit_agencia" placeholder="Número da agência" />
+                                        @error('agencia')
+                                            <div class="text-danger mt-2">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="fs-5 fw-semibold mb-2">Conta</label>
+                                        <input type="text" class="form-control form-control-solid" name="conta"
+                                            id="edit_conta" placeholder="Número da conta" />
+                                        @error('conta')
+                                            <div class="text-danger mt-2">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="fs-5 fw-semibold mb-2">Natureza da Conta</label>
+                                        <select name="account_type" id="edit_account_type"
+                                            class="form-select form-select-solid">
+                                            <option value="" disabled>Selecione a natureza</option>
+                                            <option value="corrente">Conta Corrente</option>
+                                            <option value="poupanca">Poupança</option>
+                                            <option value="aplicacao">Aplicação</option>
+                                            <option value="renda_fixa">Renda Fixa</option>
+                                            <option value="tesouro_direto">Tesouro Direto</option>
+                                        </select>
+                                        @error('account_type')
+                                            <div class="text-danger mt-2">{{ $message }}</div>
+                                        @enderror
+                                    </div>
+                                </div>
+
+                                <!-- Descrição -->
+                                <div class="mb-5">
+                                    <label class="fs-5 fw-semibold mb-2">Descrição</label>
+                                    <textarea class="form-control form-control-solid" rows="4" name="descricao" id="edit_descricao"
+                                        placeholder="Insira uma descrição (opcional)"></textarea>
+                                    @error('descricao')
+                                        <div class="text-danger mt-2">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Conta Contábil -->
+                                <div class="mb-5">
+                                    <label class="fs-5 fw-semibold mb-2">Conta Contábil (Plano de
+                                        Contas)</label>
+                                    <select class="form-select form-select-solid" data-control="select2"
+                                        data-placeholder="Selecione a conta contábil..." name="conta_contabil_id"
+                                        id="edit_conta_contabil_id">
+                                        <option></option>
+                                        @isset($contas)
+                                            @foreach ($contas as $conta)
+                                                <option value="{{ $conta->id }}">
+                                                    {{ $conta->code }} - {{ $conta->name }}
+                                                </option>
+                                            @endforeach
+                                        @endisset
+                                    </select>
+                                    <div class="text-muted fs-7 mt-2">Vínculo contábil para exportação
+                                        (De/Para)</div>
+                                    @error('conta_contabil_id')
+                                        <div class="text-danger mt-2">{{ $message }}</div>
+                                    @enderror
+                                </div>
+
+                                <!-- Saldo Inicial e Atual (readonly) -->
+                                <div class="row mb-5">
+                                    <div class="col-md-6">
+                                        <label class="fs-5 fw-semibold mb-2">Saldo Inicial</label>
+                                        <input type="text" class="form-control form-control-solid"
+                                            id="edit_saldo_inicial" readonly disabled>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="fs-5 fw-semibold mb-2">Saldo Atual</label>
+                                        <input type="text" class="form-control form-control-solid"
+                                            id="edit_saldo_atual" readonly disabled>
+                                    </div>
+                                </div>
+
+                                <!--begin::Card footer-->
+                                <div class="card-footer">
+                                    <div class="d-flex justify-content-end gap-2">
+                                        <button type="button" class="btn btn-light"
+                                            id="kt_drawer_edit_entidade_close_btn">Cancelar</button>
+                                        <button type="submit" class="btn btn-primary">
+                                            <span class="indicator-label">Salvar Alterações</span>
+                                            <span class="indicator-progress">Aguarde...
+                                                <span
+                                                    class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                            </span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <!--end::Card footer-->
+                            </form>
+                        </div>
+                        <!--end::Card body-->
+                    </div>
+                    <!--end::Card-->
+                </div>
+            @endif
+            <!--end::Drawer de Edição-->
         </div>
-        <!--end::Content wrapper-->
+        <!--end::Content container-->
     </div>
-    <!--end:::Main-->
+    <!--end::Content-->
+
 </x-tenant-app-layout>
 
 <!--begin::Vendors Javascript(used for this page only)-->
@@ -419,7 +363,17 @@
     // Função para abrir drawer de edição
     function openEditDrawer(id, tipo, nome, bancoId, agencia, conta, accountType, descricao, contaContabilId) {
         console.log('=== Iniciando abertura do drawer ===');
-        console.log('Parâmetros recebidos:', { id, tipo, nome, bancoId, agencia, conta, accountType, descricao, contaContabilId });
+        console.log('Parâmetros recebidos:', {
+            id,
+            tipo,
+            nome,
+            bancoId,
+            agencia,
+            conta,
+            accountType,
+            descricao,
+            contaContabilId
+        });
 
         // Verifica se o drawer existe
         const drawerElement = document.getElementById('kt_drawer_edit_entidade');
@@ -548,16 +502,18 @@
                     const saldoAtualInput = document.getElementById('edit_saldo_atual');
 
                     if (saldoInicialInput) {
-                        saldoInicialInput.value = 'R$ ' + parseFloat(entidade.saldo_inicial || 0).toLocaleString('pt-BR', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
+                        saldoInicialInput.value = 'R$ ' + parseFloat(entidade.saldo_inicial || 0).toLocaleString(
+                            'pt-BR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
                     }
                     if (saldoAtualInput) {
-                        saldoAtualInput.value = 'R$ ' + parseFloat(entidade.saldo_atual || 0).toLocaleString('pt-BR', {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2
-                        });
+                        saldoAtualInput.value = 'R$ ' + parseFloat(entidade.saldo_atual || 0).toLocaleString(
+                            'pt-BR', {
+                                minimumFractionDigits: 2,
+                                maximumFractionDigits: 2
+                            });
                     }
                 }
             })
@@ -607,7 +563,8 @@
                                     let iconUrl = $(state.element).attr('data-icon');
                                     if (!iconUrl) return state.text;
                                     let html = '<span class="d-flex align-items-center">';
-                                    html += '<img src="' + iconUrl + '" class="me-2" style="width:24px; height:24px;" />';
+                                    html += '<img src="' + iconUrl +
+                                        '" class="me-2" style="width:24px; height:24px;" />';
                                     html += '<span>' + state.text + '</span>';
                                     html += '</span>';
                                     return $(html);
@@ -617,7 +574,8 @@
                                     let iconUrl = $(state.element).attr('data-icon');
                                     if (!iconUrl) return state.text;
                                     let html = '<span class="d-flex align-items-center">';
-                                    html += '<img src="' + iconUrl + '" class="me-2" style="width:24px; height:24px;" />';
+                                    html += '<img src="' + iconUrl +
+                                        '" class="me-2" style="width:24px; height:24px;" />';
                                     html += '<span>' + state.text + '</span>';
                                     html += '</span>';
                                     return $(html);
@@ -665,7 +623,8 @@
 
             // Fallback: se o evento não for disparado, tenta inicializar após 500ms
             setTimeout(() => {
-                if (tipo === 'banco' && $('#edit_banco-select').length > 0 && !$('#edit_banco-select').hasClass('select2-hidden-accessible')) {
+                if (tipo === 'banco' && $('#edit_banco-select').length > 0 && !$('#edit_banco-select').hasClass(
+                        'select2-hidden-accessible')) {
                     initSelect2();
                 }
                 initContaContabilSelect2();
@@ -710,9 +669,11 @@
                 const conta = this.getAttribute('data-entidade-conta') || '';
                 const accountType = this.getAttribute('data-entidade-account-type') || '';
                 const descricao = this.getAttribute('data-entidade-descricao') || '';
-                const contaContabilId = this.getAttribute('data-entidade-conta-contabil-id') || '';
+                const contaContabilId = this.getAttribute('data-entidade-conta-contabil-id') ||
+                    '';
 
-                openEditDrawer(id, tipo, nome, bancoId, agencia, conta, accountType, descricao, contaContabilId);
+                openEditDrawer(id, tipo, nome, bancoId, agencia, conta, accountType, descricao,
+                    contaContabilId);
             });
         });
     });

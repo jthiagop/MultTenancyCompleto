@@ -24,7 +24,7 @@ class DashboardController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
-        
+
         // Pega a empresa ativa da sessão
         $activeCompanyId = session('active_company_id');
         $company = $user->companies()->find($activeCompanyId);
@@ -53,7 +53,7 @@ class DashboardController extends Controller
             $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
             $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
             $query->whereBetween('data_competencia', [$start, $end]);
-            
+
             // Para intervalo de datas, agrupa por dia
             $lancamentos = $query->select(
                     DB::raw('DATE(data_competencia) as data'),
@@ -67,7 +67,7 @@ class DashboardController extends Controller
             // Prepara os dados agrupados por dia
             $dadosPorDia = [];
             $currentDate = $start->copy();
-            
+
             while ($currentDate <= $end) {
                 $dataFormatada = $currentDate->format('Y-m-d');
                 $dadosPorDia[$dataFormatada] = [
@@ -90,7 +90,7 @@ class DashboardController extends Controller
             $entradasData = [];
             $saidasData = [];
             $categories = [];
-            
+
             foreach ($dadosPorDia as $data => $valores) {
                 $categories[] = Carbon::createFromFormat('Y-m-d', $data)->format('d/m');
                 $entradasData[] = $valores['Entradas'];
@@ -107,7 +107,7 @@ class DashboardController extends Controller
         } else {
             // Mantém a lógica original por ano
             $query->whereYear('data_competencia', $selectedYear);
-            
+
             $lancamentos = $query->select(
                     DB::raw('MONTH(data_competencia) as mes'),
                     'tipo',
@@ -215,147 +215,148 @@ class DashboardController extends Controller
      */
     public function getMissasChartData(Request $request)
     {
-        $activeCompanyId = session('active_company_id');
-        
-        if (!$activeCompanyId) {
-            return response()->json(['error' => 'Nenhuma empresa selecionada'], 400);
-        }
+        try {
+            $activeCompanyId = session('active_company_id');
 
-        // Parâmetros de data (opcionais)
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
+            if (!$activeCompanyId) {
+                return response()->json(['error' => 'Nenhuma empresa selecionada'], 400);
+            }
 
-        // Query base: busca BankStatements conciliados com missas
-        // Usar whereRaw para tratar tanto boolean true quanto string '1'
-        $query = BankStatement::where('company_id', $activeCompanyId)
-            ->where(function($q) {
-                $q->where('conciliado_com_missa', true)
-                  ->orWhere('conciliado_com_missa', 1)
-                  ->orWhere('conciliado_com_missa', '1');
-            })
-            ->whereNotNull('horario_missa_id')
-            ->with('horarioMissa');
+            // Parâmetros de data (opcionais)
+            $startDate = $request->input('start_date');
+            $endDate = $request->input('end_date');
 
-        // Aplicar filtro de período se fornecido
-        if ($startDate && $endDate) {
-            $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
-            $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
-            
-            // Usar transaction_datetime se disponível, senão dtposted
-            $query->where(function($q) use ($start, $end) {
-                $q->whereBetween('transaction_datetime', [$start, $end])
-                  ->orWhere(function($q2) use ($start, $end) {
-                      $q2->whereNull('transaction_datetime')
-                         ->whereBetween('dtposted', [$start, $end]);
-                  });
+            // Query base: busca BankStatements conciliados com missas
+            // Usar whereRaw para tratar tanto boolean true quanto string '1'
+            $query = BankStatement::where('company_id', $activeCompanyId)
+                ->where(function($q) {
+                    $q->where('conciliado_com_missa', true)
+                      ->orWhere('conciliado_com_missa', 1)
+                      ->orWhere('conciliado_com_missa', '1');
+                })
+                ->whereNotNull('horario_missa_id')
+                ->select(['id', 'company_id', 'horario_missa_id', 'amount', 'transaction_datetime', 'dtposted'])
+                ->with('horarioMissa:id,dia_semana');
+
+            // Aplicar filtro de período se fornecido
+            if ($startDate && $endDate) {
+                try {
+                    $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
+                    $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
+
+                    // Usar transaction_datetime se disponível, senão dtposted
+                    $query->where(function($q) use ($start, $end) {
+                        $q->whereBetween('transaction_datetime', [$start, $end])
+                          ->orWhere(function($q2) use ($start, $end) {
+                              $q2->whereNull('transaction_datetime')
+                                 ->whereBetween('dtposted', [$start, $end]);
+                          });
+                    });
+                } catch (\Exception $e) {
+                    \Log::error('Erro ao parsear datas no getMissasChartData', [
+                        'start_date' => $startDate,
+                        'end_date' => $endDate,
+                        'error' => $e->getMessage()
+                    ]);
+                    return response()->json(['error' => 'Datas inválidas'], 400);
+                }
+            }
+
+            // Usar chunk para evitar memory overflow
+            $bankStatements = [];
+            $query->chunk(500, function($statements) use (&$bankStatements) {
+                $bankStatements = array_merge($bankStatements, $statements->toArray());
             });
-        }
 
-        $bankStatements = $query->get();
-        
-        // Log para debug
-        \Log::info('DashboardController::getMissasChartData', [
-            'company_id' => $activeCompanyId,
-            'start_date' => $startDate,
-            'end_date' => $endDate,
-            'total_statements' => $bankStatements->count(),
-            'statements' => $bankStatements->map(function($s) {
-                return [
-                    'id' => $s->id,
-                    'amount' => $s->amount,
-                    'conciliado_com_missa' => $s->conciliado_com_missa,
-                    'horario_missa_id' => $s->horario_missa_id,
-                    'horario_missa' => $s->horarioMissa ? [
-                        'id' => $s->horarioMissa->id,
-                        'dia_semana' => $s->horarioMissa->dia_semana
-                    ] : null,
-                    'transaction_datetime' => $s->transaction_datetime,
-                    'dtposted' => $s->dtposted
-                ];
-            })->toArray()
-        ]);
+            // Ordem dos dias da semana
+            $ordemDias = [
+                'Domingo' => 0,
+                'Segunda' => 1,
+                'Terça' => 2,
+                'Quarta' => 3,
+                'Quinta' => 4,
+                'Sexta' => 5,
+                'Sábado' => 6
+            ];
 
-        // Ordem dos dias da semana
-        $ordemDias = [
-            'Domingo' => 0,
-            'Segunda' => 1,
-            'Terça' => 2,
-            'Quarta' => 3,
-            'Quinta' => 4,
-            'Sexta' => 5,
-            'Sábado' => 6
-        ];
-
-        // Agrupar por dia da semana e somar valores
-        $dadosPorDia = [];
-        foreach ($bankStatements as $statement) {
-            // Verificar se o relacionamento foi carregado
-            if (!$statement->relationLoaded('horarioMissa') && $statement->horario_missa_id) {
-                $statement->load('horarioMissa');
-            }
+            // Agrupar por dia da semana e somar valores
+            $dadosPorDia = [];
+            $statementsProcessados = 0;
             
-            if ($statement->horarioMissa && $statement->horarioMissa->dia_semana) {
-                // Normalizar dia_semana: primeira letra maiúscula (ex: "sexta" -> "Sexta")
-                $diaSemana = ucfirst(mb_strtolower($statement->horarioMissa->dia_semana));
-                
-                if (!isset($dadosPorDia[$diaSemana])) {
-                    $dadosPorDia[$diaSemana] = 0;
+            foreach ($bankStatements as $statement) {
+                try {
+                    // Verificar se o relacionamento foi carregado
+                    if (!isset($statement['horario_missa']) || !$statement['horario_missa']) {
+                        continue;
+                    }
+
+                    $diaSemana = ucfirst(mb_strtolower($statement['horario_missa']['dia_semana'] ?? ''));
+                    
+                    if (!$diaSemana || !isset($ordemDias[$diaSemana])) {
+                        continue;
+                    }
+
+                    if (!isset($dadosPorDia[$diaSemana])) {
+                        $dadosPorDia[$diaSemana] = 0;
+                    }
+
+                    // Somar apenas valores positivos (entradas)
+                    if ((float)$statement['amount'] > 0) {
+                        $dadosPorDia[$diaSemana] += floatval($statement['amount']);
+                    }
+                    
+                    $statementsProcessados++;
+                } catch (\Exception $e) {
+                    \Log::warning('Erro ao processar BankStatement individual', [
+                        'statement_id' => $statement['id'] ?? 'unknown',
+                        'error' => $e->getMessage()
+                    ]);
+                    continue;
                 }
-                
-                // Somar apenas valores positivos (entradas)
-                if ($statement->amount > 0) {
-                    $dadosPorDia[$diaSemana] += floatval($statement->amount);
-                }
-            } else {
-                // Log para debug quando horarioMissa não está disponível
-                \Log::warning('BankStatement sem horarioMissa válido', [
-                    'bank_statement_id' => $statement->id,
-                    'horario_missa_id' => $statement->horario_missa_id,
-                    'horarioMissa_loaded' => $statement->relationLoaded('horarioMissa'),
-                    'horarioMissa_exists' => $statement->horarioMissa ? true : false,
-                    'dia_semana' => $statement->horarioMissa ? $statement->horarioMissa->dia_semana : null
-                ]);
             }
+
+            // Ordenar por ordem dos dias da semana
+            uksort($dadosPorDia, function($a, $b) use ($ordemDias) {
+                $ordemA = $ordemDias[$a] ?? 999;
+                $ordemB = $ordemDias[$b] ?? 999;
+                return $ordemA <=> $ordemB;
+            });
+
+            // Preparar arrays para o gráfico
+            $categories = array_keys($dadosPorDia);
+            $data = array_values($dadosPorDia);
+
+            // Se algum dia não tiver dados, adicionar com valor 0
+            $diasCompletos = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
+            $categoriesFinal = [];
+            $dataFinal = [];
+
+            foreach ($diasCompletos as $dia) {
+                $categoriesFinal[] = $dia;
+                $dataFinal[] = $dadosPorDia[$dia] ?? 0;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $dataFinal,
+                'categories' => $categoriesFinal,
+                'debug' => [
+                    'total_statements' => count($bankStatements),
+                    'statements_processados' => $statementsProcessados
+                ]
+            ])->header('Content-Type', 'application/json; charset=utf-8');
+        } catch (\Exception $e) {
+            \Log::error('Erro em getMissasChartData', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return response()->json([
+                'error' => 'Erro ao processar dados do gráfico',
+                'message' => $e->getMessage()
+            ], 500)->header('Content-Type', 'application/json; charset=utf-8');
         }
-
-        // Ordenar por ordem dos dias da semana
-        uksort($dadosPorDia, function($a, $b) use ($ordemDias) {
-            $ordemA = $ordemDias[$a] ?? 999;
-            $ordemB = $ordemDias[$b] ?? 999;
-            return $ordemA <=> $ordemB;
-        });
-
-        // Preparar arrays para o gráfico
-        $categories = array_keys($dadosPorDia);
-        $data = array_values($dadosPorDia);
-
-        // Se algum dia não tiver dados, adicionar com valor 0
-        $diasCompletos = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
-        $categoriesFinal = [];
-        $dataFinal = [];
-        
-        foreach ($diasCompletos as $dia) {
-            $categoriesFinal[] = $dia;
-            $dataFinal[] = $dadosPorDia[$dia] ?? 0;
-        }
-
-        // Log final para debug
-        \Log::info('DashboardController::getMissasChartData - Resultado final', [
-            'dadosPorDia' => $dadosPorDia,
-            'categoriesFinal' => $categoriesFinal,
-            'dataFinal' => $dataFinal
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'data' => $dataFinal,
-            'categories' => $categoriesFinal,
-            'debug' => [
-                'total_statements' => $bankStatements->count(),
-                'statements_with_horario' => $bankStatements->filter(function($s) {
-                    return $s->horarioMissa && $s->horarioMissa->dia_semana;
-                })->count()
-            ]
-        ]);
     }
 }

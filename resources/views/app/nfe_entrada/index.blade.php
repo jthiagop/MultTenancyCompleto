@@ -1,9 +1,12 @@
-<x-tenant-app-layout page-title="Notas Fiscais de Entrada">
+<x-tenant-app-layout
+    pageTitle="Notas Fiscais de Entrada"
+    :breadcrumbs="array(
+        array('label' => 'Financeiro', 'url' => route('caixa.index')),
+        array('label' => 'Notas Fiscais')
+    )">
     <!--begin::Main-->
-    {{-- Navbar Secundária do Módulo Financeiro com Toolbar (Automática via Layout) --}}
     <!--begin::Content-->
-    <!--begin::Content-->
-    <div id="kt_app_content" class="app-content flex-column-fluid mt-5">
+    <div id="kt_app_content" class="app-content flex-column-fluid mt-7">
         <!--begin::Content container-->
         <div id="kt_app_content_container" class="app-container container-xxl">
             <!--begin::Card-->

@@ -6,17 +6,19 @@
     <title>{{ config('app.name', 'Dominus') }}</title>
     <meta charset="utf-8" />
     <meta name="description"
-        content="The most advanced Bootstrap Admin Theme on Bootstrap Market trusted by over 4,000 beginners and professionals. Multi-demo, Dark Mode, RTL support. Grab your copy now and get life-time updates for free." />
+        content="No contexto da gestão eclesial, Dominus é um sistema que permite gerenciar de forma eficiente os campos de pastorais, patrimônio e financeiro. Com Dominus,
+    a administração de sua paróquia se torna mais organizada e produtiva, facilitando a gestão de recursos e atividades eclesiais." />
     <meta name="keywords"
-        content="keen, bootstrap, bootstrap 5, bootstrap 4, admin themes, web design, figma, web development, free templates, free admin themes, bootstrap theme, bootstrap template, bootstrap dashboard, bootstrap dak mode, bootstrap button, bootstrap datepicker, bootstrap timepicker, fullcalendar, datatables, flaticon" />
+        content="gestão eclesial, sistema Dominus, campos de pastorais, gestão de patrimônio, gestão financeira eclesial, administração paroquial, gestão de recursos eclesiais, atividades eclesiais, eficiência na gestão eclesial, produtividade paroquial" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta property="og:locale" content="en_US" />
-    <meta property="og:type" content="article" />
-    <meta property="og:title" content="Keen - Multi-demo Bootstrap 5 HTML Admin Dashboard Theme" />
-    <meta property="og:url" content="https://keenthemes.com/keen" />
-    <meta property="og:site_name" content="Keenthemes | Keen" />
-    <link rel="canonical" href="https://preview.keenthemes.com/keen" />
-    <link rel="shortcut icon" href="assets/media/logos/favicon.ico" />
+    <meta property="og:locale" content="pt_BR" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://dominus.eco.br" />
+    <meta property="og:title" content="Dominus - Sistema Eclesiais" />
+    <meta property="og:url" content="https://dominusbr.com/" />
+    <meta property="og:site_name" content="Dominus | Dominus Sistema Eclesial" />
+    <link rel="canonical" href="https://dominus.eco.br/login" />
+    <link rel="shortcut icon" href="{{ url('assets/media/app/mini-logo.svg') }}" />
     <!--begin::Fonts(mandatory for all pages)-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <!--end::Fonts-->
@@ -59,15 +61,15 @@
                 <!--begin::Content-->
                 <div class="d-flex flex-column flex-center p-6 p-lg-10 w-100">
                     <!--begin::Logo-->
-                    <a href="../../demo1/dist/index.html" class="mb-0 mb-lg-20">
-                        <img alt="Logo" src="/assets/media/logos/default.svg" class="h-40px h-lg-50px" />
+                    <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20">
+                        <img alt="Logo" src="{{ url('assets/media/app/default-logo-dark.svg') }}" class="h-40px h-lg-50px" style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));" />
                     </a>
                     <!--end::Logo-->
                     <!--begin::Image-->
                     <img class="d-none d-lg-block mx-auto w-300px w-lg-75 w-xl-500px mb-10 mb-lg-20"
                         src="assets/media/misc/auth-screens.png" alt="" />
                     <!--end::Image-->
-                    
+
                     @if(isset($randomImage) && $randomImage)
                         <!--begin::Title-->
                         <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">
@@ -86,10 +88,14 @@
                         </h1>
                         <!--end::Title-->
                         <!--begin::Text-->
-                        <div class="d-none d-lg-block text-white fs-base text-center">
-                            No contexto da gestão eclesial, <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a> é um sistema
-                            que permite gerenciar de forma eficiente os campos de <br />pastorais, patrimônio e financeiro. Com <a href="#" class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a>,
-                            a administração de sua paróquia se torna mais organizada e <br />produtiva, facilitando a gestão de recursos e atividades eclesiais.
+                        <div class="d-none d-lg-block text-white fs-base text-center mb-7">
+                            <p class="mb-1 fw-bold fs-5">Dominus Tecnologia</p>
+                        <p class="mb-1">
+                            CNPJ: 60.571.888/0001-44 <span class="mx-1">-</span> Razão Social: Jose Thiago Pereira de Oliveira
+                        </p>
+                            <p class="mt-5 mb-0 fs-7">
+                                © {{ date('Y') }} Dominus. Todos os direitos reservados.
+                            </p>
                         </div>
                         <!--end::Text-->
                     @endif
@@ -98,24 +104,24 @@
             </div>
             <!--begin::Aside-->
             <!--begin::Body-->
-            <div class="d-flex flex-column flex-lg-row-fluid w-lg-50 p-10">
+            <div class="d-flex flex-column flex-lg-row-fluid w-lg-50">
                 <!--begin::Form-->
                 <div class="d-flex flex-center flex-column flex-lg-row-fluid">
                         <!--begin::Logo-->
-                        <a href="../../demo1/dist/index.html" class="mb-0 mb-lg-20">
-                            <img alt="Logo" src="assets/media/logos/default.svg" class="h-40px h-lg-50px" />
+                        <a href="#" class="mb-0 mb-lg-20">
+                            <img alt="Logo" src="{{ url('assets/media/app/mini-logo.svg') }}" class="h-40px h-lg-50px" />
                         </a>
                     <!--begin::Wrapper-->
-                    <div class="w-lg-500px p-10">
+                    <div class="w-lg-500px">
                         <!--begin::Form-->
                         <form method="POST" action="{{ route('login') }}">
                             @csrf <!--begin::Heading-->
                             <div class="text-center mb-11">
                                 <!--begin::Title-->
-                                <h1 class="text-dark fw-bolder mb-3">Sign In</h1>
+                                <h1 class="text-dark fw-bolder mb-3">Entrar</h1>
                                 <!--end::Title-->
                                 <!--begin::Subtitle-->
-                                <div class="text-gray-500 fw-semibold fs-6">Your Social Campaigns</div>
+                                <div class="text-gray-500 fw-semibold fs-6">Digite seu email e senha para entrar</div>
                                 <!--end::Subtitle=-->
                             </div>
                             <!--begin::Heading-->
@@ -127,7 +133,7 @@
                                     <a href="#"
                                         class="btn btn-flex btn-outline btn-text-gray-700 btn-active-color-primary bg-state-light flex-center text-nowrap w-100">
                                         <img alt="Logo" src="assets/media/svg/brand-logos/google-icon.svg"
-                                            class="h-15px me-3" />Sign in with Google</a>
+                                            class="h-15px me-3" />Entrar com Google</a>
                                     <!--end::Google link=-->
                                 </div>
                                 <!--end::Col-->
@@ -139,7 +145,7 @@
                                         <img alt="Logo" src="assets/media/svg/brand-logos/apple-black.svg"
                                             class="theme-light-show h-15px me-3" />
                                         <img alt="Logo" src="assets/media/svg/brand-logos/apple-black-dark.svg"
-                                            class="theme-dark-show h-15px me-3" />Sign in with Apple</a>
+                                            class="theme-dark-show h-15px me-3" />Entrar com Apple</a>
                                     <!--end::Google link=-->
                                 </div>
                                 <!--end::Col-->
@@ -147,7 +153,7 @@
                             <!--endLogin options-->
                             <!--begin::Separator-->
                             <div class="separator separator-content my-14">
-                                <span class="w-125px text-gray-500 fw-semibold fs-7">Or with email</span>
+                                <span class="w-125px text-gray-500 fw-semibold fs-7">Ou com email</span>
                             </div>
                         <!--end::Separator-->
                         <!--begin::Input group=-->
@@ -207,10 +213,10 @@
                 </div>
                 <!--end::Form-->
                 <!--begin::Footer-->
-                <div class="d-flex flex-center flex-wrap px-5">
+                <div class="d-flex flex-column flex-center flex-wrap px-5">
                     <!--begin::Links-->
-                    <div class="d-flex fw-semibold text-primary fs-base">
-                        <a href="#" class="px-5" target="_blank">Termos</a>
+                    <div class="d-flex fw-semibold text-primary fs-base mb-4">
+                        <a href="{{ route('termos') }}" class="px-5">Termos</a>
                         <a href="#" class="px-5" target="_blank">Plans</a>
                         <a href="#" class="px-5" target="_blank">Contato</a>
                     </div>

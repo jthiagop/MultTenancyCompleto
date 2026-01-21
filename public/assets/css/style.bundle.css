@@ -5789,6 +5789,8 @@ textarea.form-control-lg {
 }
 .modal-backdrop.show {
   opacity: var(--bs-backdrop-opacity);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
 }
 
 .modal-header {
@@ -43020,6 +43022,8 @@ code:not([class*=language-]) {
   overflow: hidden;
   z-index: 109;
   background-color: var(--bs-drawer-overlay-bg-color);
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   animation: animation-drawer-fade-in 0.3s ease-in-out 1;
 }
 
@@ -46643,7 +46647,7 @@ a:hover {
 }
 
 [data-bs-theme=light] {
-  --bs-app-bg-color: #F9F9F9;
+  --bs-app-bg-color: #f2f5fa;
   --bs-app-blank-bg-color: #ffffff;
   --bs-app-header-base-bg-color: #ffffff;
   --bs-app-header-base-box-shadow: 0px 10px 30px 0px rgba(82, 63, 105, 0.05);
@@ -46825,7 +46829,7 @@ body,
 
 @media (min-width: 992px) {
   :root {
-    --bs-app-header-height: 50px;
+    --bs-app-header-height: 70px;
     --bs-app-header-height-actual: 50px;
   }
   [data-kt-app-header-sticky=on] {

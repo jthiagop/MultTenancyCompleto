@@ -39,7 +39,17 @@ class EntidadeFinanceiraController extends Controller
     // Mostra o formulário de criação
     public function create()
     {
-        return view('app.cadastros.entidades.index');
+        // Busca as entidades da empresa ativa E carrega as movimentações e conta contábil.
+        $entidades = EntidadeFinanceira::with(['movimentacoes', 'contaContabil'])
+            ->forActiveCompany()
+            ->get();
+
+        $banks = Bank::all();
+
+        // Busca contas contábeis para o select do modal
+        $contas = ChartOfAccount::forActiveCompany()->orderBy('code')->get();
+
+        return view('app.cadastros.entidades.index', compact('entidades', 'banks', 'contas'));
     }
 
     // Salva uma nova entidade financeira
@@ -153,10 +163,18 @@ class EntidadeFinanceiraController extends Controller
             return redirect()->route('entidades.index');
         }
 
+        // Busca as entidades da empresa ativa E carrega as movimentações e conta contábil.
+        $entidades = EntidadeFinanceira::with(['movimentacoes', 'contaContabil'])
+            ->forActiveCompany()
+            ->get();
+
         $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
         $banks = Bank::all();
 
-        return view('app.cadastros.entidades.index', compact('entidade', 'banks'));
+        // Busca contas contábeis para o select do modal
+        $contas = ChartOfAccount::forActiveCompany()->orderBy('code')->get();
+
+        return view('app.cadastros.entidades.index', compact('entidades', 'entidade', 'banks', 'contas'));
     }
 
     // Atualiza uma entidade financeira

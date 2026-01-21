@@ -15,10 +15,15 @@ var KTModalBoletimFinanceiro = function () {
 		var dataInicialInput = form.querySelector('[name="data_inicial"]');
 		var dataFinalInput = form.querySelector('[name="data_final"]');
 		
-		var dataInicialFlatpickr = $(dataInicialInput).flatpickr({
+		// Verifica se locale pt está disponível
+		var localeConfig = {};
+		if (typeof flatpickr !== 'undefined' && flatpickr.l10ns && (flatpickr.l10ns.pt || flatpickr.l10ns.pt_BR)) {
+			localeConfig.locale = "pt";
+		}
+		
+		var dataInicialFlatpickr = $(dataInicialInput).flatpickr(Object.assign({
 			enableTime: false,
 			dateFormat: "d/m/Y",
-            locale: "pt",
 			onChange: function(selectedDates, dateStr, instance) {
 				// Quando a data inicial mudar, atualiza a data mínima da data final
 				if (selectedDates.length > 0) {
@@ -30,13 +35,12 @@ var KTModalBoletimFinanceiro = function () {
 					validator.revalidateField('data_final');
 				}
 			}
-		});
+		}, localeConfig));
 
         // Data Final - Flatpickr
-        var dataFinalFlatpickr = $(dataFinalInput).flatpickr({
+        var dataFinalFlatpickr = $(dataFinalInput).flatpickr(Object.assign({
 			enableTime: false,
 			dateFormat: "d/m/Y",
-            locale: "pt",
 			onChange: function(selectedDates, dateStr, instance) {
 				// Quando a data final mudar, atualiza a data máxima da data inicial
 				if (selectedDates.length > 0) {
@@ -48,7 +52,7 @@ var KTModalBoletimFinanceiro = function () {
 					validator.revalidateField('data_final');
 				}
 			}
-		});
+		}, localeConfig));
 	}
 
 	// Handle form validation and submittion

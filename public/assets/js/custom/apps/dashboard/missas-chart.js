@@ -8,7 +8,10 @@ var KTMissasChart = function () {
     };
 
     // Private methods
-    var loadChartData = function(startDate, endDate) {
+    var loadChartData = function(startDate, endDate, retryCount) {
+        retryCount = retryCount || 0;
+        var maxRetries = 2;
+        
         var url = '/dashboard/missas-chart-data';
         var params = new URLSearchParams();
 
@@ -31,37 +34,72 @@ var KTMissasChart = function () {
             }
         })
         .then(response => {
+            // Verificar se a resposta é válida
             if (!response.ok) {
-                throw new Error('Erro ao carregar dados do gráfico');
+                throw new Error('HTTP ' + response.status + ': ' + response.statusText);
             }
-            return response.json();
+            
+            // Verificar Content-Type
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                return response.text().then(text => {
+                    throw new Error('Resposta inválida. Content-Type: ' + contentType + ', Body: ' + text.substring(0, 100));
+                });
+            }
+            
+            return response.json().catch(err => {
+                throw new Error('Erro ao decodificar JSON: ' + err.message);
+            });
         })
         .then(data => {
-            if (data.success && data.data && data.categories) {
-                return {
-                    data: data.data,
-                    categories: data.categories
-                };
+            // Validar estrutura dos dados
+            if (!data) {
+                throw new Error('Dados vazios recebidos do servidor');
             }
-            throw new Error('Formato de dados inválido');
+            
+            if (data.error) {
+                throw new Error('Erro do servidor: ' + data.error);
+            }
+            
+            if (!data.success) {
+                throw new Error('Requisição não bem-sucedida');
+            }
+            
+            if (!Array.isArray(data.data) || !Array.isArray(data.categories)) {
+                throw new Error('Formato de dados inválido: data ou categories não são arrays');
+            }
+
+            return {
+                data: data.data,
+                categories: data.categories
+            };
+        })
+        .catch(error => {
+            console.error('[KTMissasChart] Erro ao carregar dados (tentativa ' + (retryCount + 1) + '):', error.message);
+            
+            // Tentar novamente se houver tentativas restantes
+            if (retryCount < maxRetries) {
+                console.log('[KTMissasChart] Tentando novamente em 2 segundos...');
+                return new Promise(resolve => setTimeout(resolve, 2000))
+                    .then(() => loadChartData(startDate, endDate, retryCount + 1));
+            }
+            
+            // Se esgotou as tentativas, lançar o erro
+            throw error;
         });
     };
 
     var initChart = function(chartData) {
         // Verificar se ApexCharts está disponível
         if (typeof ApexCharts === 'undefined') {
-            console.error('[KTMissasChart] ApexCharts não está disponível');
             return;
         }
 
         var element = document.getElementById("kt_charts_widget_5");
 
         if (!element) {
-            console.error('[KTMissasChart] Elemento kt_charts_widget_5 não encontrado');
             return;
         }
-
-        console.log('[KTMissasChart] Inicializando gráfico com dados:', chartData);
 
         var borderColor = KTUtil.getCssVariableValue('--bs-border-dashed-color');
 
@@ -164,32 +202,40 @@ var KTMissasChart = function () {
     };
 
     var updateChart = function(startDate, endDate) {
-        console.log('[KTMissasChart] Atualizando gráfico com período:', startDate, 'até', endDate);
         loadChartData(startDate, endDate)
             .then(function(chartData) {
-                console.log('[KTMissasChart] Dados carregados com sucesso:', chartData);
-                initChart(chartData);
+                try {
+                    initChart(chartData);
+                } catch (error) {
+                    console.error('[KTMissasChart] Erro ao renderizar gráfico:', error);
+                }
             })
             .catch(function(error) {
-                console.error('[KTMissasChart] Erro ao atualizar gráfico de missas:', error);
+                console.error('[KTMissasChart] Erro ao atualizar gráfico de missas:', error.message || error);
+                // Mostrar dados vazios em caso de erro
+                try {
+                    initChart({
+                        data: [0, 0, 0, 0, 0, 0, 0],
+                        categories: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
+                    });
+                } catch (e) {
+                    console.error('[KTMissasChart] Erro ao renderizar gráfico com dados vazios:', e);
+                }
             });
     };
 
     var initDaterangepicker = function() {
         // Verificar se jQuery e daterangepicker estão disponíveis
         if (typeof jQuery === 'undefined' || typeof $.fn.daterangepicker === 'undefined') {
-            console.error('[KTMissasChart] jQuery ou daterangepicker não estão disponíveis');
             return null;
         }
 
         if (typeof moment === 'undefined') {
-            console.error('[KTMissasChart] Moment.js não está disponível');
             return null;
         }
 
         var element = document.getElementById('missas-daterangepicker');
         if (!element) {
-            console.error('[KTMissasChart] Elemento missas-daterangepicker não encontrado');
             return null;
         }
 
@@ -272,30 +318,24 @@ var KTMissasChart = function () {
     // Public methods
     return {
         init: function () {
-            console.log('[KTMissasChart] Inicializando...');
-
             // Verificar se os elementos necessários existem
             var chartElement = document.getElementById("kt_charts_widget_5");
             var daterangepickerElement = document.getElementById('missas-daterangepicker');
 
             if (!chartElement) {
-                console.error('[KTMissasChart] Elemento do gráfico (kt_charts_widget_5) não encontrado');
                 return;
             }
 
             if (!daterangepickerElement) {
-                console.error('[KTMissasChart] Elemento do daterangepicker (missas-daterangepicker) não encontrado');
                 return;
             }
 
             // Verificar dependências
             if (typeof ApexCharts === 'undefined') {
-                console.error('[KTMissasChart] ApexCharts não está disponível');
                 return;
             }
 
             if (typeof KTUtil === 'undefined') {
-                console.error('[KTMissasChart] KTUtil não está disponível');
                 return;
             }
 
@@ -366,13 +406,11 @@ var initializeWithRetry = function(retryCount) {
     // Verificar se todas as dependências estão disponíveis
     if (typeof ApexCharts === 'undefined' || typeof KTUtil === 'undefined' || typeof jQuery === 'undefined' || typeof moment === 'undefined') {
         if (retryCount < maxRetries) {
-            console.log('[KTMissasChart] Aguardando dependências... (tentativa ' + (retryCount + 1) + '/' + maxRetries + ')');
             setTimeout(function() {
                 initializeWithRetry(retryCount + 1);
             }, retryDelay);
             return;
         } else {
-            console.error('[KTMissasChart] Timeout aguardando dependências. Tentando inicializar mesmo assim...');
         }
     }
 
@@ -382,38 +420,32 @@ var initializeWithRetry = function(retryCount) {
 
     if (!chartElement || !daterangepickerElement) {
         if (retryCount < maxRetries) {
-            console.log('[KTMissasChart] Aguardando elementos DOM... (tentativa ' + (retryCount + 1) + '/' + maxRetries + ')');
             setTimeout(function() {
                 initializeWithRetry(retryCount + 1);
             }, retryDelay);
             return;
         } else {
-            console.error('[KTMissasChart] Elementos não encontrados após ' + maxRetries + ' tentativas');
             return;
         }
     }
 
     // Todas as dependências estão prontas, inicializar
-    console.log('[KTMissasChart] Todas as dependências prontas, inicializando...');
     KTMissasChart.init();
 };
 
 // On document ready
 if (typeof KTUtil !== 'undefined' && typeof KTUtil.onDOMContentLoaded === 'function') {
     KTUtil.onDOMContentLoaded(function() {
-        console.log('[KTMissasChart] DOM carregado via KTUtil, inicializando...');
         initializeWithRetry(0);
     });
 } else {
     // Fallback caso KTUtil não esteja disponível
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('[KTMissasChart] DOM carregado (fallback), inicializando...');
             initializeWithRetry(0);
         });
     } else {
         // DOM já está carregado
-        console.log('[KTMissasChart] DOM já carregado, inicializando...');
         initializeWithRetry(0);
     }
 }

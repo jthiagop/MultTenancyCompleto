@@ -5,18 +5,18 @@
 
         {{-- INÍCIO DO NOVO ÍCONE AGRUPADO --}}
 
-        <div class="symbol symbol-circle symbol-30px symbol-md-30px">
+        <div class="symbol symbol-circle symbol-35px symbol-md-35px border border-2 border-success">
             @if($currentUser && $currentUser->avatar)
-                <img src="{{ route('file', ['path' => $currentUser->avatar]) }}" alt="Usuário"/>
+                <img src="{{ route('file', ['path' => $currentUser->avatar]) }}" alt="Usuário" class="rounded-circle"/>
             @else
                 {{-- Fallback para as iniciais do usuário se não houver avatar --}}
                 <div class="symbol-label fs-2 fw-semibold bg-primary text-inverse-primary">{{ strtoupper(substr($currentUser->name ?? 'U', 0, 1)) }}</div>
             @endif
         </div>
 
-        <div class="symbol symbol-circle symbol-30px symbol-md-30px">
+        <div class="symbol symbol-circle symbol-35px symbol-md-35px border border-2 border-success">
             @if($activeCompany && $activeCompany->avatar)
-                <img src="{{ route('file', ['path' => $activeCompany->avatar]) }}" alt="Empresa"/>
+                <img src="{{ route('file', ['path' => $activeCompany->avatar]) }}" alt="Empresa" class="rounded-circle"/>
             @else
                 {{-- Fallback para as iniciais da empresa se não houver logo --}}
                 <div class="symbol-label fs-2 fw-semibold bg-success text-inverse-success">{{ strtoupper(substr($activeCompany->name ?? 'C', 0, 1)) }}</div>
@@ -40,7 +40,7 @@
                     @endif
                 </div>
                 <div class="d-flex flex-column">
-                    <div class="fw-bold d-flex align-items-center fs-5">
+                    <div class="fw-bold d-flex align-items-center fs-5 text-dark dark:text-white ">
                         {{ Str::limit($currentUser->name, 20, '...') }}
                     </div>
                     <a href="#"

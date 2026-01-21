@@ -3,7 +3,11 @@
 
 <script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
 
-<x-tenant-app-layout>
+<x-tenant-app-layout
+    pageTitle="Modulo Financeiro"
+    :breadcrumbs="array(
+        array('label' => 'Financeiro')
+    )">
 
     <!--begin::Main-->
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
@@ -348,7 +352,7 @@
         </div>
         <!--end::Content wrapper-->
 
-        @include('app.components.modals.financeiro.lancamento.modal_lacamento')
+        @include('app.components.modals.financeiro.lancamento.modal_lancamento_refatorado')
 
 </x-tenant-app-layout>
 

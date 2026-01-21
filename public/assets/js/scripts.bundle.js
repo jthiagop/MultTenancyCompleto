@@ -7722,10 +7722,16 @@ var KTLayoutSearch = function() {
         emptyElement.classList.add('d-none');
     };
 
-    return {
-        init: function() {
-            element = document.querySelector('#kt_modal_users_search_handler');
-            formElement = element.querySelector('[data-kt-search-element="form"]');
+    	return {
+		init: function() {
+			element = document.querySelector('#kt_modal_users_search_handler');
+			
+			// Verificar se o elemento existe
+			if (!element) {
+				return;
+			}
+			
+			formElement = element.querySelector('[data-kt-search-element="form"]');
             inputElement = element.querySelector('[data-kt-search-element="input"]');
             resultsElement = element.querySelector('[data-kt-search-element="results"]');
             emptyElement = element.querySelector('[data-kt-search-element="empty"]');
@@ -8076,8 +8082,10 @@ KTUtil.onDOMContentLoaded(function () {
 // Receber o seletor do campo valor
 let inputValor = document.getElementById('valor');
 
-// Aguardar o usuário digitar valor no campo
-inputValor.addEventListener('input', function(){
+// Verificar se o elemento existe antes de adicionar listener
+if (inputValor) {
+	// Aguardar o usuário digitar valor no campo
+	inputValor.addEventListener('input', function(){
 
     // Obter o valor atual removendo qualquer caractere que não seja número
     let valueValor = this.value.replace(/[^\d]/g, '');
@@ -8092,11 +8100,14 @@ inputValor.addEventListener('input', function(){
     this.value = formattedValor;
 
 });
+}
 
 let num_documento = document.getElementById('num_documento');
 
-// Aguardar o usuário digitar valor no campo
-num_documento.addEventListener('input', function(){
+// Verificar se o elemento existe antes de adicionar listener
+if (num_documento) {
+	// Aguardar o usuário digitar valor no campo
+	num_documento.addEventListener('input', function(){
 
     // Obter o valor atual removendo qualquer caractere que não seja número
     let valueValor = this.value.replace(/[^\d]/g, '');
@@ -8110,6 +8121,7 @@ num_documento.addEventListener('input', function(){
     this.value = formattedValor;
 
 });
+}
 
 $(document).ready(function() {
     // Adiciona o evento `shown.bs.modal` para inicializar o select2 no modal

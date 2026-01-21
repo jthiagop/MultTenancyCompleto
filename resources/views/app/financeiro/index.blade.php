@@ -1,10 +1,12 @@
 {{-- Incluindo assets e scripts --}}
 @include('app.financeiro.components.assets')
 
-<x-tenant-app-layout>
-    {{-- *** Modal de Receitas e Despesas *** --}}
-    @include('app.components.modals.financeiro.recitasDespesas.Dm_modal_financeiro')
-    {{-- *** Fim Modal de Receitas e Despesas *** --}}
+<x-tenant-app-layout
+    pageTitle="Modulo Financeiro"
+    :breadcrumbs="array(
+        array('label' => 'Financeiro')
+    )">
+
 
     {{-- *** Modal Prestação de Contas *** --}}
     @include('app.components.modals.financeiro.prestacao_contas.modal_prestacao_contas')
@@ -31,9 +33,7 @@
         </div>
         <!--end::Content wrapper-->
 
-        <!--begin::Modals-->
-        @include('app.components.modals.financeiro.lancamento.modal_lacamento')
-        <!--end::Modals-->
+
     </div>
     <!--end::Main-->
 

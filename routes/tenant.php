@@ -9,6 +9,9 @@ use App\Http\Controllers\App\BoletimFinanceiroController;
 use App\Http\Controllers\App\AnexoController;
 use App\Http\Controllers\App\Anexos\ModulosAnexosController;
 use App\Http\Controllers\App\BancoController;
+use App\Http\Controllers\App\BankConfigController;
+use App\Http\Controllers\App\RecorrenciaController;
+use App\Http\Controllers\App\BankStatementController;
 use App\Http\Controllers\App\CompanyController;
 use App\Http\Controllers\App\NotaFiscalController;
 use App\Http\Controllers\App\NfeEntradaController;
@@ -35,9 +38,11 @@ use App\Http\Controllers\App\Financeiro\ConciliacaoController;
 use App\Http\Controllers\App\Financeiro\ContasFinanceirasController;
 use App\Http\Controllers\App\Financeiro\CostCenterController;
 use App\Http\Controllers\App\Financeiro\FormasPagamentoController;
+use App\Http\Controllers\App\Financeiro\FornecedorController;
 use App\Http\Controllers\App\Financeiro\OfxController;
 use App\Http\Controllers\App\Relatorios\ReciboController;
 use App\Http\Controllers\App\Financeiro\TransacaoFinanceiraController;
+use App\Http\Controllers\Financeiro\FinanceiroController;
 use App\Http\Controllers\App\Frota\CarInsuranceController;
 use App\Http\Controllers\App\NamePatrimonioController;
 use App\Http\Controllers\App\Patrimonio\AvaliadorController;
@@ -53,6 +58,7 @@ use App\Models\Financeiro\ModulosAnexo;
 use App\Models\TenantFilial;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
+use Inertia\Inertia;
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 
@@ -87,7 +93,7 @@ Route::middleware([
 
         try {
             if (class_exists(\App\Models\TelaDeLogin::class)) {
-                 $randomImage = \App\Models\TelaDeLogin::where('status', 'ativo')
+                $randomImage = \App\Models\TelaDeLogin::where('status', 'ativo')
                     ->inRandomOrder()
                     ->first();
 
@@ -109,6 +115,12 @@ Route::middleware([
     Route::get('/dashboard/missas-chart-data', [DashboardController::class, 'getMissasChartData'])
         ->middleware(['auth', 'check.user.active', 'verified'])
         ->name('dashboard.missas-chart-data');
+
+    // Rota alternativa para teste sem autenticação (desenvolvimento)
+    if (app()->environment(['local', 'development', 'testing'])) {
+        Route::get('/api/dashboard/missas-chart-data', [DashboardController::class, 'getMissasChartData'])
+            ->name('api.dashboard.missas-chart-data');
+    }
 
     // Rotas de favoritos de módulos
     Route::middleware(['auth', 'verified'])->group(function () {
@@ -205,12 +217,18 @@ Route::middleware([
     // Grupo de rotas protegido pelo middleware 'auth', 'check.user.active', 'ensureUserHasAccess' e 'password.change.required'
     Route::middleware(['auth', 'check.user.active', 'ensureUserHasAccess', 'password.change.required'])->group(function () {
 
+        // Módulo Financeiro
+        Route::prefix('financeiro')->name('financeiro.')->group(function () {
+            Route::get('/', [FinanceiroController::class, 'index'])->name('index');
+        });
+        // ====================================================================
+
         // Rota para gerar código de acesso mobile (para o tenant atual)
         Route::post('/generate-app-code', [TenantController::class, 'generateCode'])->name('tenant.generate-app-code');
 
-            // Rota que fornecerá os dados em formato JSON para a DataTable
-    // Usaremos POST para enviar os filtros de forma mais robusta
-    Route::post('/reports/financial-data', [ReportController::class, 'getFinancialDataServerSide'])->name('reports.financial.data');
+        // Rota que fornecerá os dados em formato JSON para a DataTable
+        // Usaremos POST para enviar os filtros de forma mais robusta
+        Route::post('/reports/financial-data', [ReportController::class, 'getFinancialDataServerSide'])->name('reports.financial.data');
 
         // Rotas acessíveis apenas para administradores globais
         Route::middleware(['role:global'])->group(function () {
@@ -220,6 +238,7 @@ Route::middleware([
             Route::resource('telaLogin', TelaDeLoginController::class);
 
             Route::resource('formas-pagamento', FormasPagamentoController::class);
+            Route::post('/fornecedores/store', [FornecedorController::class, 'store'])->name('fornecedores.store');
         });
 
         Route::get('/session/switch-company/{company}', [SessionController::class, 'switchCompany'])->name('session.switch-company');
@@ -270,6 +289,19 @@ Route::middleware([
             Route::post('/password/change', [UserController::class, 'updatePasswordChange'])->name('password.change');
 
             Route::resource('company', CompanyController::class)->except(['edit', 'update']);
+
+            // Rotas para configurações bancárias
+            Route::resource('bank-config', BankConfigController::class);
+            Route::post('bank-config/test-connection', [BankConfigController::class, 'testConnection'])->name('bank-config.test-connection');
+            Route::post('bank-config/test-extrato', [BankConfigController::class, 'testExtrato'])->name('bank-config.test-extrato');
+
+            // Rotas para extratos bancários
+            Route::prefix('bank-statements')->name('bank-statements.')->group(function () {
+                Route::get('/', [BankStatementController::class, 'index'])->name('index');
+                Route::post('/sync', [BankStatementController::class, 'sync'])->name('sync');
+                Route::post('/fetch', [BankStatementController::class, 'fetch'])->name('fetch');
+                Route::get('/{id}', [BankStatementController::class, 'show'])->name('show');
+            });
 
             Route::post('/filter', [RebortController::class, 'generateReport']);
 
@@ -330,6 +362,12 @@ Route::middleware([
             Route::get('/banco/chart-data', [BancoController::class, 'getChartData'])->name('banco.chart.data');
             Route::get('/banco/fluxo-chart-data', [BancoController::class, 'getFluxoBancoChartData'])->name('banco.fluxo.chart.data');
             Route::get('/banco/transacoes-data', [BancoController::class, 'getTransacoesData'])->name('banco.transacoes.data');
+            Route::get('/banco/stats-data', [BancoController::class, 'getStatsData'])->name('banco.stats.data');
+            Route::get('/banco/summary', [BancoController::class, 'getSummary'])->name('banco.summary');
+            Route::post('/banco/mark-as-paid', [BancoController::class, 'markAsPaid'])->name('banco.mark-as-paid');
+            Route::post('/banco/batch-mark-as-paid', [BancoController::class, 'batchMarkAsPaid'])->name('banco.batch-mark-as-paid');
+            Route::post('/banco/batch-mark-as-open', [BancoController::class, 'batchMarkAsOpen'])->name('banco.batch-mark-as-open');
+            Route::post('/banco/batch-delete', [BancoController::class, 'batchDelete'])->name('banco.batch-delete');
 
             Route::get('/financeiro/transacao/{id}/detalhes', [BancoController::class, 'getDetalhes'])
                 ->name('financeiro.transacao.detalhes');
@@ -338,7 +376,68 @@ Route::middleware([
             Route::get('/banco/conciliacoes-pendentes', [BancoController::class, 'getConciliacoesPendentes'])->name('banco.conciliacoes.pendentes');
             Route::post('/banco/relatorio/gerar', [BancoController::class, 'gerarRelatorio'])->name('banco.relatorio.gerar');
             Route::resource('banco', BancoController::class);
+
+            // Rotas para configurações de recorrência
+            Route::get('/recorrencias', [RecorrenciaController::class, 'index'])->name('recorrencias.index');
+            Route::get('/recorrencias/{id}', [RecorrenciaController::class, 'show'])->name('recorrencias.show');
+            Route::post('/recorrencias', [RecorrenciaController::class, 'store'])->name('recorrencias.store');
+
+            // Rotas para Domus IA (API / Ações)
+            Route::prefix('financeiro/domusia')->group(function () {
+                Route::post('/extract', [\App\Http\Controllers\App\DomusiaController::class, 'extract'])
+                    ->name('domusia.extract');
+                Route::post('/render-entries', [\App\Http\Controllers\App\DomusiaController::class, 'renderExtractedEntries'])
+                    ->name('domusia.render-entries');
+                Route::get('/list', [\App\Http\Controllers\App\DomusiaController::class, 'list'])
+                    ->name('domusia.list');
+                // Rota para servir arquivo diretamente (deve vir antes da rota /{id})
+                Route::get('/file/{id}', [\App\Http\Controllers\App\DomusiaController::class, 'serveFile'])
+                    ->where('id', '[0-9]+')
+                    ->name('domusia.file');
+                Route::get('/{id}', [\App\Http\Controllers\App\DomusiaController::class, 'show'])
+                    ->where('id', '[0-9]+') // Restringe ID apenas para números para não conflitar com tabs
+                    ->name('domusia.show');
+                Route::delete('/{id}', [\App\Http\Controllers\App\DomusiaController::class, 'destroy'])
+                    ->where('id', '[0-9]+')
+                    ->name('domusia.destroy');
+            });
+
+            // Rota para Domus IA com suporte a tabs (Visualização)
+            Route::get('/financeiro/domusia/{tab?}', function ($tab = null) {
+                // Se não foi passado tab na URL, verificar query string
+                if (!$tab) {
+                    $tab = request()->query('tab', 'pendentes');
+                }
+
+                // Validar tab
+                $validTabs = ['pendentes', 'integracoes'];
+                $activeTab = in_array($tab, $validTabs) ? $tab : 'pendentes';
+
+                // Buscar integrações do usuário atual
+                $integracoes = [];
+                if (Auth::check()) {
+                    $integracoes = \App\Models\Integracao::where('user_id', Auth::id())
+                        ->orderBy('tipo')
+                        ->get();
+                }
+
+                return view('app.financeiro.domusia.index', compact('activeTab', 'integracoes'));
+            })->name('domusia.index');
+
+            // Rotas para integração WhatsApp
+            Route::prefix('whatsapp')->group(function () {
+                Route::get('/instance/qrcode/{instanceName?}', [App\Http\Controllers\WhatsAppIntegrationController::class, 'getQRCode'])->name('whatsapp.qrcode');
+                Route::get('/instance/status/{code}', [App\Http\Controllers\WhatsAppIntegrationController::class, 'checkStatus'])->name('whatsapp.status');
+            });
+
+            // Rotas para integrações
+            Route::prefix('integracoes')->group(function () {
+                Route::get('/', [App\Http\Controllers\WhatsAppIntegrationController::class, 'listarIntegracoes'])->name('integracoes.listar');
+                Route::delete('/{id}', [App\Http\Controllers\WhatsAppIntegrationController::class, 'excluirIntegracao'])->name('integracoes.excluir');
+            });
+
             Route::resource('anexos', AnexoController::class);
+
             Route::resource('modulosAnexos', ModulosAnexosController::class);
             Route::resource('post', PostController::class);
             Route::get('/lancamento_padrao/tipo/{tipo}', [LancamentoPadraoController::class, 'getLancamentosByTipo']);
@@ -384,11 +483,11 @@ Route::middleware([
             Route::post('/conciliacao', [ConciliacaoController::class, 'pivot'])->name('conciliacao.pivot');
             Route::put('/transacoes-financeiras/{id}', [ConciliacaoController::class, 'update'])->name('conciliacao.update');
             Route::get('/conciliacao/contas-disponiveis', [ConciliacaoController::class, 'contasDisponiveis'])->name('conciliacao.contas-disponiveis');
-    Route::post('/conciliacao/processar-missas', [ConciliacaoController::class, 'processarConciliacaoMissas'])->name('conciliacao.processar-missas');
-    Route::get('/conciliacao/missas', [ConciliacaoController::class, 'getConciliacoesMissas'])->name('conciliacao.missas');
-    Route::get('/conciliacao/candidatas', [ConciliacaoController::class, 'getTransacoesCandidatas'])->name('conciliacao.candidatas');
-    Route::post('/conciliacao/confirmar-missa', [ConciliacaoController::class, 'confirmarMissa'])->name('conciliacao.confirmar-missa');
-    Route::post('/conciliacao/rejeitar-missa', [ConciliacaoController::class, 'rejeitarMissa'])->name('conciliacao.rejeitar-missa');
+            Route::post('/conciliacao/processar-missas', [ConciliacaoController::class, 'processarConciliacaoMissas'])->name('conciliacao.processar-missas');
+            Route::get('/conciliacao/missas', [ConciliacaoController::class, 'getConciliacoesMissas'])->name('conciliacao.missas');
+            Route::get('/conciliacao/candidatas', [ConciliacaoController::class, 'getTransacoesCandidatas'])->name('conciliacao.candidatas');
+            Route::post('/conciliacao/confirmar-missa', [ConciliacaoController::class, 'confirmarMissa'])->name('conciliacao.confirmar-missa');
+            Route::post('/conciliacao/rejeitar-missa', [ConciliacaoController::class, 'rejeitarMissa'])->name('conciliacao.rejeitar-missa');
             Route::post('/conciliacao/transferir', [ConciliacaoController::class, 'transferir'])->name('conciliacao.transferir');
 
 

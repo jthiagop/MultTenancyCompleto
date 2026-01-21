@@ -8,16 +8,19 @@ use Illuminate\View\View;
 class TenantAppLayout extends Component
 {
     public $pageTitle;
+    public $breadcrumbs;
 
     /**
      * Create a new component instance.
      *
      * @param string|null $pageTitle
+     * @param array $breadcrumbs
      * @return void
      */
-    public function __construct($pageTitle = null)
+    public function __construct($pageTitle = null, $breadcrumbs = [])
     {
         $this->pageTitle = $pageTitle;
+        $this->breadcrumbs = $breadcrumbs;
     }
 
     /**
@@ -25,6 +28,9 @@ class TenantAppLayout extends Component
      */
     public function render(): View
     {
-        return view('app.layouts.app', ['pageTitle' => $this->pageTitle]);
+        return view('app.layouts.app', [
+            'pageTitle' => $this->pageTitle,
+            'breadcrumbs' => $this->breadcrumbs
+        ]);
     }
 }

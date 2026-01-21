@@ -123,6 +123,23 @@ class EntidadeFinanceira extends Model
     }
 
     /**
+     * Accessor: Formata o saldo atual como moeda brasileira
+     */
+    public function getSaldoFormatadoAttribute(): string
+    {
+        $saldo = $this->saldo_atual ?? 0;
+        return number_format($saldo, 2, ',', '.');
+    }
+
+    /**
+     * Accessor: Retorna o saldo atual ou 0 se null
+     */
+    public function getSaldoAtualSeguroAttribute(): float
+    {
+        return $this->saldo_atual ?? 0;
+    }
+
+    /**
      * Relacionamento com conta contábil (Plano de Contas).
      */
     public function contaContabil()

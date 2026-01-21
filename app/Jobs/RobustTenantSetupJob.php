@@ -274,7 +274,32 @@ class RobustTenantSetupJob implements ShouldQueue
             }
         }
 
+        // Criar integrações padrão para todos os usuários
+        $this->createIntegracoesPadrao();
+
         Log::info("Dados essenciais criados");
+    }
+
+    private function createIntegracoesPadrao(): void
+    {
+        Log::info("Criando integrações padrão...");
+
+        // Verificar se a tabela de integrações existe
+        if (!Schema::hasTable('integracoes')) {
+            Log::warning("Tabela integracoes não existe. Pulando criação de integrações.");
+            return;
+        }
+
+        // Executar seeder de integrações para garantir que todos os usuários tenham integrações
+        try {
+            Artisan::call('db:seed', [
+                '--class' => 'Database\\Seeders\\IntegracaoSeeder',
+                '--force' => true
+            ]);
+            Log::info("Integrações padrão criadas com sucesso");
+        } catch (\Exception $e) {
+            Log::warning("Erro ao criar integrações padrão: " . $e->getMessage());
+        }
     }
 
     private function createDefaultAvatar(): void

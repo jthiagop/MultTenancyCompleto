@@ -191,6 +191,11 @@ var KTFileManagerList = function () {
         // Select elements
         const deleteSelected = document.querySelector('[data-kt-filemanager-table-select="delete_selected"]');
 
+        // Verificar se o elemento existe antes de adicionar listeners
+        if(!deleteSelected) {
+            return; // Sai da função se o elemento não existir
+        }
+
         // Toggle delete selected toolbar
         checkboxes.forEach(c => {
             // Checkbox on click event
@@ -290,6 +295,11 @@ var KTFileManagerList = function () {
     const handleNewFolder = () => {
         // Select button
         const newFolder = document.getElementById('kt_file_manager_new_folder');
+
+        // Verificar se o elemento existe
+        if (!newFolder) {
+            return;
+        }
 
         // Handle click action
         newFolder.addEventListener('click', e => {
@@ -650,6 +660,11 @@ var KTFileManagerList = function () {
         const id = "#kt_modal_upload_dropzone";
         const dropzone = document.querySelector(id);
 
+        // Verificar se o elemento existe antes de continuar
+        if (!dropzone) {
+            return; // Sai da função se o modal não existir na página
+        }
+
         // Template de preview
         let previewNode = dropzone.querySelector(".dropzone-item");
         previewNode.id = "";
@@ -793,6 +808,12 @@ var KTFileManagerList = function () {
     // Handle move to folder
     const handleMoveToFolder = () => {
         const element = document.querySelector('#kt_modal_move_to_folder');
+        
+        // Verificar se o elemento existe
+        if (!element) {
+            return;
+        }
+        
         const form = element.querySelector('#kt_modal_move_to_folder_form');
         const saveButton = form.querySelector('#kt_modal_move_to_folder_submit');
         const moveModal = new bootstrap.Modal(element);
@@ -897,6 +918,11 @@ var KTFileManagerList = function () {
     // Count total number of items
     const countTotalItems = () => {
         const counter = document.getElementById('kt_file_manager_items_counter');
+
+        // Verificar se o elemento existe
+        if (!counter) {
+            return;
+        }
 
         // Count total number of elements in datatable --- more info: https://datatables.net/reference/api/count/
         counter.innerText = datatable.rows().count() + ' items';

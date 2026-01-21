@@ -35,4 +35,17 @@ return [
         ],
     ],
 
+    'meta' => [
+        'phone_id' => env('META_PHONE_ID'),
+        'token' => env('META_WHATSAPP_TOKEN'),
+        'verify_token' => env('META_VERIFY_TOKEN', 'Thiago'),
+        'whatsapp_number' => env('META_WHATSAPP_NUMBER', '558183797797'),
+        'app_secret' => env('META_APP_SECRET'),
+        'skip_signature_validation' => env('META_SKIP_SIGNATURE_VALIDATION', false),
+    ],
+
+    'openai' => [
+        'key' => env('OPENAI_API_KEY'),
+    ],
+
 ];

@@ -19,7 +19,7 @@
     <meta property="og:url" content="https://dominusbr.com/" />
     <meta property="og:site_name" content="Dominus | Dominus Sistema Eclesial" />
     <link rel="canonical" href="https://dominusbr.com/login" />
-    <link rel="shortcut icon" href="/assets/media/logos/favicon.ico" />
+    <link rel="shortcut icon" href="{{ url('assets/media/app/mini-logo.svg') }}" />
     <!--begin::Fonts(mandatory for all pages)-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <!--end::Fonts-->
@@ -33,35 +33,65 @@
     <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
     <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
     <!--end::Global Stylesheets Bundle-->
+    <!--begin::Sidebar State Restore (antes da renderização)-->
+    <script>
+        (function() {
+            // Função para ler cookie antes do DOM estar pronto
+            function getCookie(name) {
+                var value = "; " + document.cookie;
+                var parts = value.split("; " + name + "=");
+                if (parts.length === 2) return parts.pop().split(";").shift();
+                return null;
+            }
+
+            // Restaurar estado do sidebar ANTES de qualquer renderização
+            var sidebarState = getCookie('sidebar_minimize_state');
+
+            // Função para aplicar o estado
+            function applySidebarState() {
+                if (sidebarState === 'on' && document.body) {
+                    document.body.setAttribute('data-kt-app-sidebar-minimize', 'on');
+                    // Aguardar um pouco para o toggle estar disponível
+                    setTimeout(function() {
+                        var toggle = document.getElementById('kt_app_sidebar_toggle');
+                        if (toggle) {
+                            toggle.classList.add('active');
+                        }
+                    }, 10);
+                }
+            }
+
+            // Tentar aplicar imediatamente se o body já existir
+            if (document.body) {
+                applySidebarState();
+            } else {
+                // Aguardar o body estar disponível
+                var checkBody = setInterval(function() {
+                    if (document.body) {
+                        applySidebarState();
+                        clearInterval(checkBody);
+                    }
+                }, 10);
+
+                // Fallback com DOMContentLoaded
+                document.addEventListener('DOMContentLoaded', applySidebarState, false);
+            }
+        })();
+    </script>
+    <!--end::Sidebar State Restore-->
 </head>
 <!--end::Head-->
 <!--begin::Body-->
 
 <!--begin::Body-->
 
-<body id="kt_app_body" data-kt-app-layout="light-header" data-kt-app-header-fixed="true"
-    data-kt-app-toolbar-enabled="true" class="app-default">
-
+@php
+    $sidebarState = request()->cookie('sidebar_minimize_state');
+@endphp
+<body id="kt_app_body" data-kt-app-layout="dark-sidebar" data-kt-app-header-fixed="true" data-kt-app-sidebar-enabled="true" data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-hoverable="true" data-kt-app-sidebar-push-header="true" data-kt-app-sidebar-push-toolbar="true" data-kt-app-sidebar-push-footer="true" data-kt-app-toolbar-enabled="true" class="app-default"{{ $sidebarState === 'on' ? ' data-kt-app-sidebar-minimize="on"' : '' }}>
     <!--begin::Theme mode setup on page load-->
-    <script>
-        var defaultThemeMode = "light";
-        var themeMode;
-        if (document.documentElement) {
-            if (document.documentElement.hasAttribute("data-bs-theme-mode")) {
-                themeMode = document.documentElement.getAttribute("data-bs-theme-mode");
-            } else {
-                if (localStorage.getItem("data-bs-theme") !== null) {
-                    themeMode = localStorage.getItem("data-bs-theme");
-                } else {
-                    themeMode = defaultThemeMode;
-                }
-            }
-            if (themeMode === "system") {
-                themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-            }
-            document.documentElement.setAttribute("data-bs-theme", themeMode);
-        }
-    </script>
+	<script>var defaultThemeMode = "light"; var themeMode; if ( document.documentElement ) { if ( document.documentElement.hasAttribute("data-bs-theme-mode")) { themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); } else { if ( localStorage.getItem("data-bs-theme") !== null ) { themeMode = localStorage.getItem("data-bs-theme"); } else { themeMode = defaultThemeMode; } } if (themeMode === "system") { themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } document.documentElement.setAttribute("data-bs-theme", themeMode); }</script>
+    <!--end::Theme mode setup on page load-->
 
     <style>
         /* Flash Messages */
@@ -107,7 +137,43 @@
     <!--begin::Favorites Script-->
     <script src="{{ url('assets/js/custom/apps/favorites.js') }}"></script>
     <!--end::Favorites Script-->
+    <!--begin::Sidebar Menu Active State Script-->
+    <script src="{{ url('assets/js/sidebar-menu-active.js') }}"></script>
+    <!--end::Sidebar Menu Active State Script-->
+    <!--begin::Sidebar State Script-->
+    <script src="{{ url('assets/js/sidebar-state.js') }}"></script>
+    <!--end::Sidebar State Script-->
     @stack('scripts')
+
+    {{-- Tenant DataTable Pane Module - Must load after DataTables --}}
+    <script src="{{ url('assets/js/custom/tenant/tenant-datatable-pane.js') }}"></script>
+
+    {{-- Amazon-style Notifications System --}}
+    <link href="{{ url('assets/css/notifications-amazon.css') }}" rel="stylesheet" type="text/css" />
+    <script src="{{ url('assets/js/notifications-amazon.js') }}"></script>
+
+    {{-- Exibir notificações da sessão Laravel --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Exibir notificações da sessão
+            @if(session()->has('success'))
+                notify.success("{{ session('success') }}");
+            @endif
+
+            @if(session()->has('error'))
+                notify.error("{{ session('error') }}");
+            @endif
+
+            @if(session()->has('warning'))
+                notify.warning("{{ session('warning') }}");
+            @endif
+
+            @if(session()->has('info'))
+                notify.info("{{ session('info') }}");
+            @endif
+
+        });
+    </script>
 </body>
 <!--end::Body-->
 

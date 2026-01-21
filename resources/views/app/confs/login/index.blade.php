@@ -64,7 +64,7 @@
                         <ul class="breadcrumb breadcrumb-separatorless fw-semibold fs-7 my-0 pt-1">
                             <!--begin::Item-->
                             <li class="breadcrumb-item text-muted">
-                                <a href="../../demo1/dist/index.html" class="text-muted text-hover-primary">Home</a>
+                                <a href="{{ route('dashboard') }}" class="text-muted text-hover-primary">Home</a>
                             </li>
                             <!--end::Item-->
                             <!--begin::Item-->
@@ -122,12 +122,12 @@
                                                     <!-- Input de Upload de Imagem -->
                                                     <!--begin::Aside (Left Section with Background Image)-->
                                                     <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                                                        style="background-image: url('assets/media/misc/penha.png');">
+                                                        style="background-image: url('{{ asset('/assets/media/misc/penha.png') }}');">
                                                         <!--begin::Content-->
                                                         <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100">
                                                             <!--begin::Logo-->
                                                             <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20">
-                                                                <img alt="Logo" src="assets/media/logos/default.svg"
+                                                                <img alt="Logo" src="{{ asset('assets/media/logos/default.svg') }}"
                                                                     class="h-40px h-lg-50px">
                                                             </a>
                                                             <!--end::Logo-->
@@ -164,7 +164,7 @@
                                                             <!--begin::Logo-->
                                                             <a href="#" class="mb-0 mb-lg-10 disabled">
                                                                 <img alt="Logo"
-                                                                    src="assets/media/logos/apple-touch-icon.svg"
+                                                                    src="{{ asset('assets/media/logos/apple-touch-icon.svg') }}"
                                                                     class="h-140px h-lg-150px">
                                                             </a>
                                                             <!--begin::Wrapper-->
@@ -328,7 +328,7 @@
                                                 class="btn btn-light-success d-flex align-items-center gap-2">
                                                 <i class="fa-solid fa-upload"></i> Upload de Imagem
                                             </label>
-                                            
+
                                             <!-- Botão de Salvar Tela (Submit) -->
                                             <button type="submit"
                                                 class="btn btn-light-primary d-flex align-items-center gap-2">
@@ -409,9 +409,9 @@
             // Definir a ação do formulário para a rota de update
             // Supondo que a rota seja telaLogin.update
             let form = document.getElementById('editImageForm');
-            form.action = `/app/confs/telaLogin/${id}`; 
+            form.action = `/app/confs/telaLogin/${id}`;
 
-            // Se a rota usar resource e for diferente, ajustar aqui. 
+            // Se a rota usar resource e for diferente, ajustar aqui.
             // Como usamos resource, a rota é /telaLogin/{id} ou algo similar dependendo do prefixo
             // Verificando a rota resource no arquivo de rotas: Route::resource('telaLogin', TelaDeLoginController::class);
             // Geralmente gera urls como: /telaLogin/{id} (se estiver na raiz) ou com prefixo.

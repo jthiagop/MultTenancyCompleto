@@ -7,6 +7,7 @@ use App\Models\EntidadeFinanceira;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use App\Models\User;
+use App\Models\Financeiro\TransacaoFracionamento;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -24,22 +25,47 @@ class TransacaoFinanceira extends Model
     protected $fillable = [
         'company_id',
         'data_competencia',
+        'data_vencimento',
+        'data_pagamento',
         'entidade_id',
         'tipo',
         'valor',
+        'valor_pago',
+        'juros',
+        'multa',
+        'desconto',
+        'valor_a_pagar',
         'descricao',
         'lancamento_padrao_id',
         'movimentacao_id',
+        'recorrencia_id',
         'cost_center_id',
         'tipo_documento',
         'numero_documento',
         'origem',
         'historico_complementar',
         'comprovacao_fiscal',
+        'situacao',
+        'agendado',
         'created_by',
         'updated_by',
         'created_by_name',
         'updated_by_name',
+    ];
+
+    protected $casts = [
+        'situacao' => \App\Enums\SituacaoTransacao::class,
+        'data_competencia' => \App\Casts\BrazilianDateCast::class,
+        'data_vencimento' => \App\Casts\BrazilianDateCast::class,
+        'data_pagamento' => \App\Casts\BrazilianDateCast::class,
+        'valor' => 'decimal:2',
+        'valor_pago' => 'decimal:2',
+        'juros' => 'decimal:2',
+        'multa' => 'decimal:2',
+        'desconto' => 'decimal:2',
+        'valor_a_pagar' => 'decimal:2',
+        'agendado' => 'boolean',
+        'comprovacao_fiscal' => 'boolean',
     ];
 
     // Tabela Pivot
@@ -100,6 +126,55 @@ class TransacaoFinanceira extends Model
         return $this->hasMany(ModulosAnexo::class, 'anexavel_id');
     }
 
+    /**
+     * Relacionamento: Configuração de recorrência usada por esta transação
+     */
+    public function recorrenciaConfig()
+    {
+        return $this->belongsTo(Recorrencia::class, 'recorrencia_id');
+    }
+
+    /**
+     * Relacionamento: Recorrência que gerou esta transação (via pivot - para transações geradas)
+     */
+    public function recorrencia()
+    {
+        return $this->belongsToMany(
+            Recorrencia::class,
+            'recorrencia_transacoes',
+            'transacao_financeira_id',
+            'recorrencia_id'
+        )
+        ->withPivot('data_geracao', 'numero_ocorrencia', 'movimentacao_id')
+        ->withTimestamps();
+    }
+
+    /**
+     * Relacionamento: Lançamentos fracionados desta transação
+     */
+    public function fracionamentos()
+    {
+        return $this->hasMany(TransacaoFracionamento::class, 'transacao_principal_id');
+    }
+
+    /**
+     * Scope: Fracionamentos do tipo "pago"
+     */
+    public function fracionamentosPagos()
+    {
+        return $this->hasMany(TransacaoFracionamento::class, 'transacao_principal_id')
+                    ->where('tipo', 'pago');
+    }
+
+    /**
+     * Scope: Fracionamentos do tipo "em_aberto"
+     */
+    public function fracionamentosEmAberto()
+    {
+        return $this->hasMany(TransacaoFracionamento::class, 'transacao_principal_id')
+                    ->where('tipo', 'em_aberto');
+    }
+
     static public function getChartSaida()
     {
         $userId = Auth::user()->id; // Recupere o ID do usuário logado
@@ -127,6 +202,25 @@ class TransacaoFinanceira extends Model
             'caixa' => $caixaSaidas,
             'total' => $bancoSaidas + $caixaSaidas
         ];
+    }
+
+    /**
+     * Retorna informações da recorrência formatadas (ex: "1/12")
+     * 
+     * @return string|null
+     */
+    public function getRecorrenciaInfoAttribute(): ?string
+    {
+        $recorrencia = $this->recorrencia()->first();
+        if (!$recorrencia) {
+            return null;
+        }
+        
+        $pivot = $recorrencia->pivot;
+        $numeroOcorrencia = $pivot->numero_ocorrencia ?? 1;
+        $totalOcorrencias = $recorrencia->total_ocorrencias ?? 1;
+        
+        return "{$numeroOcorrencia}/{$totalOcorrencias}";
     }
 
     /**
@@ -163,5 +257,128 @@ class TransacaoFinanceira extends Model
         $this->comprovacao_fiscal = $hasAnexos;
         
         return $this->save();
+    }
+
+    /**
+     * Calcula automaticamente a situação do lançamento baseado nos dados atuais
+     * 
+     * @return string
+     */
+    public function calcularSituacao(): string
+    {
+        // Se foi desconsiderado manualmente, mantém
+        if ($this->situacao === 'desconsiderado') {
+            return 'desconsiderado';
+        }
+        
+        // PRIORIDADE 1: Se há fracionamentos, a situação é "pago_parcial"
+        // Verifica se existem fracionamentos (carregando o relacionamento se necessário)
+        if ($this->relationLoaded('fracionamentos')) {
+            if ($this->fracionamentos->isNotEmpty()) {
+                return 'pago_parcial';
+            }
+        } else {
+            // Se o relacionamento não está carregado, verifica diretamente no banco
+            if ($this->exists && $this->fracionamentos()->exists()) {
+                return 'pago_parcial';
+            }
+        }
+        
+        // Se está agendado e ainda não venceu
+        if ($this->agendado && $this->data_vencimento && $this->data_vencimento > now()) {
+            return 'previsto';
+        }
+        
+        // Se venceu e não foi pago completamente
+        if ($this->data_vencimento && $this->data_vencimento < now() && $this->valor_pago < $this->valor) {
+            return 'atrasado';
+        }
+        
+        // Se foi pago parcialmente (sem fracionamentos registrados)
+        if ($this->valor_pago > 0 && $this->valor_pago < $this->valor) {
+            return 'pago_parcial';
+        }
+        
+        // Se foi totalmente pago/recebido
+        if ($this->valor_pago >= $this->valor && $this->valor > 0) {
+            // Entrada → recebido | Saída → pago
+            return ($this->tipo === 'entrada') 
+                ? \App\Enums\SituacaoTransacao::RECEBIDO->value 
+                : \App\Enums\SituacaoTransacao::PAGO->value;
+        }
+        
+        // Padrão: em aberto
+        return 'em_aberto';
+    }
+
+    /**
+     * Atualiza a situação automaticamente baseado nos dados atuais
+     * 
+     * @return bool
+     */
+    public function atualizarSituacao(): bool
+    {
+        // Se há fracionamentos, sempre deve ser "pago_parcial"
+        if ($this->exists && $this->fracionamentos()->exists()) {
+            $this->situacao = 'pago_parcial';
+        } else {
+            $this->situacao = $this->calcularSituacao();
+        }
+        return $this->save();
+    }
+
+    /**
+     * Boot do modelo - atualiza situação automaticamente quando necessário
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Atualiza situação antes de salvar
+        static::saving(function ($transacao) {
+            // PRIORIDADE 1: Se há fracionamentos, SEMPRE deve ser "pago_parcial"
+            if ($transacao->exists) {
+                if ($transacao->fracionamentos()->exists()) {
+                    $transacao->situacao = \App\Enums\SituacaoTransacao::PAGO_PARCIAL;
+                    return;
+                }
+            }
+            
+            // PRIORIDADE 2: Se foi definido manualmente como desconsiderado, mantém
+            if ($transacao->situacao === \App\Enums\SituacaoTransacao::DESCONSIDERADO) {
+                return;
+            }
+            
+            // PRIORIDADE 3: Se foi definido manualmente como pago, recebido ou em_aberto, mantém
+            $situacoesParaManter = [
+                \App\Enums\SituacaoTransacao::PAGO->value,
+                \App\Enums\SituacaoTransacao::RECEBIDO->value,
+                \App\Enums\SituacaoTransacao::EM_ABERTO->value
+            ];
+            
+            // Normaliza situacao para comparação (pode ser Enum ou string)
+            $situacaoValue = $transacao->situacao instanceof \App\Enums\SituacaoTransacao 
+                ? $transacao->situacao->value 
+                : $transacao->situacao;
+            
+            if (in_array($situacaoValue, $situacoesParaManter)) {
+                return;
+            }
+            
+            // PRIORIDADE 4: Se foi definido manualmente como pago_parcial, mantém
+            if ($situacaoValue === \App\Enums\SituacaoTransacao::PAGO_PARCIAL->value) {
+                return;
+            }
+            
+            // PRIORIDADE 5: Calcula automaticamente para outros casos
+            $situacaoCalculada = $transacao->calcularSituacao();
+
+            // Novo registro com data passada não nasce atrasado
+            if (!$transacao->exists && $situacaoCalculada === 'atrasado') {
+                $situacaoCalculada = 'em_aberto';
+            }
+
+            $transacao->situacao = $situacaoCalculada;
+        });
     }
 }

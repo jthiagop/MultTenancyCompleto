@@ -1,190 +1,125 @@
-<div class="col-12 col-sm-12 col-md-4"> <!--begin::Row-->
-    <div class="row">
-        <!--begin::Col-->
-        <div class="col-xl-12 mb-xl-6">
-            <!--begin::Slider Widget 2-->
-            <div id="kt_sliders_widget_2_slider"
-                class="card card-flush carousel carousel-custom carousel-stretch slide h-xl-100"
-                data-bs-ride="carousel" data-bs-interval="6000">
-                <!--begin::Header-->
-                <div class="card-header pt-5">
-                    <!--begin::Title-->
-                    <h4 class="card-title d-flex align-items-start flex-column">
-                        <span class="card-label fw-bold text-gray-800">Lista de Bancos</span>
-                        <span class="text-gray-400 mt-1 fw-bold fs-7">
-                            Exibindo {{ count($entidadesBanco) }}
-                            @if (count($entidadesBanco) == 1)
-                                banco
-                            @else
-                                bancos
-                            @endif
-                        </span>
-                    </h4>
-                    <!--end::Title-->
-                    <!--begin::Toolbar-->
-                    <div class="card-toolbar">
-                        <!--begin::Carousel Indicators-->
-                        <ol
-                            class="p-0 m-0 carousel-indicators carousel-indicators-dots carousel-indicators-active-success">
-                            @foreach ($entidadesBanco as $key => $entidade)
-                                <li data-bs-target="#kt_sliders_widget_2_slider"
-                                    data-bs-slide-to="{{ $key }}"
-                                    class="@if ($key == 0) active @endif ms-1">
-                                </li>
-                            @endforeach
-                        </ol>
-                        <!--end::Carousel Indicators-->
-                    </div>
-                    <!--end::Toolbar-->
+@props([
+    'todasEntidades' => null,
+    'entidadesBanco' => collect(),
+    'entidadesCaixa' => collect(),
+    'carouselId' => null,
+    'showVariacao' => true,
+])
+
+@php
+    // Compatibilidade: se todasEntidades não foi passada, faz o merge aqui
+    // (para não quebrar código existente)
+    if (!$todasEntidades) {
+        $todasEntidades = $entidadesBanco->merge($entidadesCaixa)->values();
+    }
+
+    // Gera ID único para o carrossel se não foi fornecido
+    $carouselId = $carouselId ?? 'kt_sliders_widget_2_slider_' . uniqid();
+
+    // Garante que todasEntidades seja uma coleção
+    $todasEntidades = $todasEntidades instanceof \Illuminate\Support\Collection
+        ? $todasEntidades
+        : collect($todasEntidades);
+@endphp
+
+<div class="col-12 col-sm-12 col-md-5">
+    @if($todasEntidades->isEmpty())
+        {{-- Estado vazio --}}
+        <div class="card card-flush h-xl-100">
+            <div class="card-body d-flex align-items-center justify-content-center">
+                <div class="text-center">
+                    <i class="bi bi-inbox fs-3x text-gray-400 mb-3 d-block" aria-hidden="true"></i>
+                    <p class="text-gray-600 mb-0">Nenhuma entidade financeira disponível.</p>
                 </div>
-                <!--end::Header-->
-
-                <!--begin::Body-->
-                <div class="card-body py-3 position-relative">
-                    <!--begin::Carousel Controls-->
-                    @if (count($entidadesBanco) > 1)
-                        <!--begin::Seta Anterior-->
-                        <button class="carousel-control-prev position-absolute start-0 top-25 translate-middle-y"
-                            type="button"
-                            data-bs-target="#kt_sliders_widget_2_slider"
-                            data-bs-slide="prev"
-                            style="border-radius: 50%; margin-left: -20px; z-index: 10;">
-                            <i class="bi bi-chevron-compact-left fs-1"></i>
-                            <span class="visually-hidden">Anterior</span>
-                        </button>
-                        <!--end::Seta Anterior-->
-
-                        <!--begin::Seta Próximo-->
-                        <button class="carousel-control-next position-absolute end-0 top-25 translate-middle-y"
-                            type="button"
-                            data-bs-target="#kt_sliders_widget_2_slider"
-                            data-bs-slide="next"
-                            style="border-radius: 50%; margin-right: -20px; z-index: 10;">
-                            <i class="bi bi-chevron-compact-right fs-1"></i>
-                            <span class="visually-hidden">Próximo</span>
-                        </button>
-                        <!--end::Seta Próximo-->
-                    @endif
-                    <!--end::Carousel Controls-->
-
-                    <!--begin::Carousel-->
-                    <div class="carousel-inner">
-                        <!--begin::Itens do Carrossel-->
-                        @foreach ($entidadesBanco as $key => $entidade)
-                            <div
-                                class="carousel-item @if ($key == 0) active show @endif">
-                                <!--begin::Wrapper-->
-                                <div class="d-flex align-items-center mb-8">
-                                    <!--begin::Symbol-->
-                                    <div class="symbol symbol-70px me-5">
-                                        {{-- Verifica se a entidade tem um banco relacionado
-                                                e se esse banco tem um caminho de logo definido.
-                                            --}}
-                                        @if ($entidade->bank && $entidade->bank->logo_path)
-                                            {{-- Usa o caminho do logo salvo no banco de dados --}}
-                                            <img src="{{ $entidade->bank->logo_path}}"
-                                                alt="{{ $entidade->bank->name }}"
-                                                class="p-3" />
-                                        @else
-                                            {{-- Fallback: Mostra um ícone genérico se não houver logo --}}
-                                            <span class="symbol-label bg-light-primary">
-                                                <span
-                                                    class="svg-icon svg-icon-3x svg-icon-primary">
-                                                    <svg width="24" height="24"
-                                                        viewBox="0 0 24 24" fill="none"
-                                                        xmlns="http://www.w3.org/2000/svg">
-                                                        <path
-                                                            d="M20 14H18V10H20V14ZM10 14H8V10H10V14ZM15 14H13V10H15V14Z"
-                                                            fill="currentColor" />
-                                                        <path opacity="0.3"
-                                                            d="M22 18V6C22 5.4 21.6 5 21 5H3C2.4 5 2 5.4 2 6V18C2 18.6 2.4 19 3 19H21C21.6 19 22 18.6 22 18ZM5 14H7V10H5V14ZM12 14H10V10H12V14ZM17 14H15V10H17V14Z"
-                                                            fill="currentColor" />
-                                                    </svg>
-                                                </span>
-                                            </span>
-                                        @endif
-                                    </div>
-                                    <!--end::Symbol-->
-
-                                    <!--begin::Info-->
-                                    <div class="m-0 ">
-                                        <!--begin::Subtitle-->
-                                        <h4 class="fw-bold text-gray-800 mb-3">
-                                            {{ $entidade->agencia }} - {{ $entidade->conta }} <span class="badge badge-info fs-base">{{ $entidade->conta }}</span>
-
-                                            @if (strtolower($entidade->status_conciliacao) == 'pendente')
-                                                <i class="bi bi-flag-fill text-warning" data-bs-toggle="popover" data-bs-dismiss="true" title="Conciliação Pendente" data-bs-content="A conciliação está pendente."></i>
-                                            @endif
-                                        </h4>
-                                        <!--end::Subtitle-->
-
-                                        <!--begin::Items-->
-                                        <div class="d-flex d-grid gap-5">
-                                            <!--begin::Item-->
-                                            <div class="d-flex flex-column flex-shrink-0 me-4">
-                                                <!--begin::Info-->
-                                                <div class="d-flex align-items-center">
-                                                    <!--begin::Currency-->
-                                                    <span
-                                                        class="fs-4 fw-semibold text-gray-400 me-1 align-self-start">R$</span>
-                                                    <!--end::Currency-->
-                                                    <!--begin::Amount-->
-                                                    <span
-                                                        class="fs-2hx fw-bold text-dark me-2 lh-1 ls-n2">{{ number_format($entidade->saldo_atual, 2, ',', '.') }}</span>
-                                                    <!--end::Amount-->
-                                                    <!--begin::Badge-->
-                                                    <span
-                                                        class="badge badge-light-success fs-base">
-                                                        <!--begin::Svg Icon | path: icons/duotune/arrows/arr066.svg-->
-                                                        <span
-                                                            class="svg-icon svg-icon-5 svg-icon-success ms-n1">
-                                                            <svg width="24" height="24"
-                                                                viewBox="0 0 24 24"
-                                                                fill="none"
-                                                                xmlns="http://www.w3.org/2000/svg">
-                                                                <rect opacity="0.5" x="13"
-                                                                    y="6" width="13"
-                                                                    height="2"
-                                                                    rx="1"
-                                                                    transform="rotate(90 13 6)"
-                                                                    fill="currentColor" />
-                                                                <path
-                                                                    d="M12.5657 8.56569L16.75 12.75C17.1642 13.1642 17.8358 13.1642 18.25 12.75C18.6642 12.3358 18.6642 11.6642 18.25 11.25L12.7071 5.70711C12.3166 5.31658 11.6834 5.31658 11.2929 5.70711L5.75 11.25C5.33579 11.6642 5.33579 12.3358 5.75 12.75C6.16421 13.1642 6.83579 13.1642 7.25 12.75L11.4343 8.56569C11.7467 8.25327 12.2533 8.25327 12.5657 8.56569Z"
-                                                                    fill="currentColor" />
-                                                            </svg>
-                                                        </span>
-                                                        <!--end::Svg Icon-->
-                                                        2.2%
-                                                    </span>
-                                                    <!--end::Badge-->
-                                                </div>
-                                                <!--end::Info-->
-                                            </div>
-                                            <!--end::Item-->
-                                        </div>
-                                        <!--end::Items-->
-                                    </div>
-                                    <!--end::Info-->
-                                </div>
-                                <!--end::Wrapper-->
-                                <div class="separator my-4 py-2 border-muted "></div>
-
-                                <!--begin::Action-->
-                                <div class="m-0">
-                                    <a href="{{ route('entidades.show', $entidade->id) }}"
-                                        class="btn btn-sm btn-success mb-2"><i class="bi bi-arrow-right fs-2"></i> Entrar no Banco</a>
-                                </div>
-                                <!--end::Action-->
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-                <!--end::Body-->
             </div>
-            <!--end::Slider Widget 2-->
-
         </div>
-        <!--end::Col-->
-    </div>
-    <!--end::Row-->
+    @else
+        <div id="{{ $carouselId }}"
+             class="card card-flush carousel carousel-custom carousel-stretch slide h-xl-100"
+             data-bs-ride="carousel"
+             data-bs-interval="9000"
+             role="region"
+             aria-label="Carrossel de entidades financeiras">
+
+            <div class="card-body py-3 position-relative">
+                {{-- Controls --}}
+                @if ($todasEntidades->count() > 1)
+                    <button class="carousel-control-prev entity-carousel-control"
+                            type="button"
+                            data-bs-target="#{{ $carouselId }}"
+                            data-bs-slide="prev"
+                            aria-label="Slide anterior">
+                        <i class="bi bi-chevron-compact-left fs-1 me-12" aria-hidden="true"></i>
+                    </button>
+
+                    <button class="carousel-control-next entity-carousel-control"
+                            type="button"
+                            data-bs-target="#{{ $carouselId }}"
+                            data-bs-slide="next"
+                            aria-label="Próximo slide">
+                        <i class="bi bi-chevron-compact-right fs-1 ms-12" aria-hidden="true"></i>
+                    </button>
+                @endif
+
+                <div class="carousel-inner" role="listbox" aria-label="Lista de entidades financeiras">
+                    @foreach ($todasEntidades as $key => $entidade)
+                        @include('app.financeiro.banco.components.side-card-item', [
+                            'entidade' => $entidade,
+                            'isActive' => $key === 0,
+                            'index' => $key,
+                        ])
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Indicators --}}
+            @if ($todasEntidades->count() > 1)
+                <ol class="p-0 m-0 carousel-indicators carousel-indicators-bullet carousel-indicators-active-primary"
+                    role="tablist"
+                    aria-label="Indicadores de slide">
+                    @foreach ($todasEntidades as $key => $entidade)
+                        <li data-bs-target="#{{ $carouselId }}"
+                            data-bs-slide-to="{{ $key }}"
+                            class="bullet bullet-dot bg-success me-5 {{ $key === 0 ? 'active' : '' }}"
+                            role="tab"
+                            aria-label="Ir para slide {{ $key + 1 }}"
+                            @if($key === 0) aria-selected="true" @endif>
+                        </li>
+                    @endforeach
+                </ol>
+            @endif
+        </div>
+    @endif
 </div>
+
+@push('scripts')
+@once
+<script>
+    // Inicializar tooltips quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', function() {
+        // Inicializa tooltips do Bootstrap
+        var tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        var tooltipList = Array.from(tooltipTriggerList).map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+
+        // Reinicializa tooltips quando novos slides são carregados (para conteúdo dinâmico)
+        var carouselElement = document.getElementById('{{ $carouselId }}');
+        if (carouselElement) {
+            carouselElement.addEventListener('slid.bs.carousel', function () {
+                // Destrói tooltips antigos
+                tooltipList.forEach(function(tooltip) {
+                    tooltip.dispose();
+                });
+
+                // Recria tooltips para o novo conteúdo
+                tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                tooltipList = Array.from(tooltipTriggerList).map(function (tooltipTriggerEl) {
+                    return new bootstrap.Tooltip(tooltipTriggerEl);
+                });
+            });
+        }
+    });
+</script>
+@endonce
+@endpush

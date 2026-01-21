@@ -21,27 +21,28 @@ class UpdateTransacaoFinanceiraRequest extends FormRequest
 
     /**
      * Regras de validação para a solicitação.
+     * Todos os campos são opcionais para permitir atualizações parciais.
      *
      * @return array
      */
     public function rules()
     {
         return [
-            'data_competencia' => 'required',
-            'descricao' => 'required|string',
-            'valor' => 'required',
-            'tipo' => 'required|in:entrada,saida',
-            'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
-            'cost_center_id' => 'required|string',
-            'entidade_id' => 'required|string',
-            'tipo_documento' => 'required|string',
-            'numero_documento' => 'nullable|string',
+            'data_competencia' => 'nullable|date',
+            'descricao' => 'nullable|string|max:255',
+            'valor' => 'nullable|numeric|gt:0',
+            'tipo' => 'nullable|in:entrada,saida',
+            'lancamento_padrao_id' => 'nullable|exists:lancamento_padraos,id',
+            'cost_center_id' => 'nullable|exists:cost_centers,id',
+            'entidade_id' => 'nullable|exists:entidades_financeiras,id',
+            'tipo_documento' => 'nullable|string|max:255',
+            'numero_documento' => 'nullable|string|max:50',
             'files.*' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'historico_complementar' => 'nullable|string|max:500',
             'entidade_banco_id' => 'nullable|exists:entidades_financeiras,id',
-            'comprovacao_fiscal' => 'required|boolean', // 0 ou 1
-            'entidade_id' => 'required|exists:entidades_financeiras,id',
+            'comprovacao_fiscal' => 'nullable|boolean',
             'banco_id' => 'nullable|exists:cadastro_bancos,id',
+            'field_type' => 'nullable|string', // Campo usado para identificar qual campo está sendo editado
         ];
     }
 

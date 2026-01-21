@@ -28,8 +28,9 @@ class CompanyController extends Controller
      */
     public function index()
     {
-        $users = User::all();
-        $companyes = Company::all();
+        $users = User::with(['roles', 'companies'])->get();
+        $companyes = Company::with('addresses')->get();
+
         return view('app.company.index', ['companyes' => $companyes, 'users' => $users]);
     }
 
@@ -168,6 +169,9 @@ class CompanyController extends Controller
         // Obtém o parâmetro da aba ativa ou define como 'overview' por padrão
         $activeTab = $request->input('tab', 'overview');
 
+        // Buscar configuração bancária da empresa (se existir)
+        $bankConfig = \App\Models\BankConfig::where('banco_codigo', '001')->first();
+
         // Retorna a view com a empresa e os dados relevantes
         return view('app.company.show', [
             'entidades' => $entidades,
@@ -181,6 +185,7 @@ class CompanyController extends Controller
             'totalUsers' => $totalUsers,
             'areaChartData' => $areaChartData, // Dados do gráfico
             'listaBancos' => $listaBancos,
+            'bankConfig' => $bankConfig, // Configuração BB
 
 
         ]);

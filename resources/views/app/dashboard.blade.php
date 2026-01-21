@@ -1,4 +1,5 @@
-<x-tenant-app-layout>
+<x-tenant-app-layout
+    pageTitle="Dashboard">
     <!--begin::Main-->
     <div class="app-main flex-column flex-row-fluid" id="kt_app_main">
         <!--begin::Content wrapper-->
@@ -16,62 +17,75 @@
                         <span id="datetime" class="fs-6 fw-semibold text-gray-400"></span>
                     </div>
                     <!--end::DateTime-->
-                    <!--begin::Card header-->
-                    <div class="card-header text-center">
-                        <!--begin::Row-->
-                        <div class="row">
-                            @forelse($modules ?? [] as $module)
-                                <!--begin::Col - {{ $module->name }}-->
-                                <div class="col-12 col-sm-6 col-lg-4 hover-elevate-up parent-hover mb-5">
-                                    <a href="{{ route($module->route_name) }}"
-                                        class="card card-flush card-dashed btn btn-outline btn-dashed btn-active-light-primary d-flex align-items-center"
-                                        aria-label="Acessar módulo {{ $module->name }}">
-                                        <div class="d-flex align-items-center w-100">
-                                            <!--begin::Imagem/Ícone - Lado Esquerdo-->
-                                            <div class="icon-container me-4 flex-shrink-0">
-                                                @if($module->icon_path)
-                                                    @php
-                                                        // Tratar caminhos de storage vs caminhos públicos
-                                                        if (str_starts_with($module->icon_path, '/assets')) {
-                                                            $iconUrl = $module->icon_path;
-                                                        } elseif (str_starts_with($module->icon_path, 'modules/icons') || !str_starts_with($module->icon_path, '/')) {
-                                                            // Usar a rota 'file' para arquivos em storage
-                                                            $iconUrl = route('file', ['path' => $module->icon_path]);
-                                                        } else {
-                                                            $iconUrl = $module->icon_path;
-                                                        }
-                                                    @endphp
-                                                    <img loading="lazy" width="75px" height="75px"
-                                                        src="{{ $iconUrl }}" alt="Ícone {{ $module->name }}">
-                                                @elseif($module->icon_class)
-                                                    <i class="{{ $module->icon_class }} fs-1 text-primary" style="font-size: 3rem !important;"></i>
-                                                @else
-                                                    <i class="fa-solid fa-cube fs-1 text-primary" style="font-size: 3rem !important;"></i>
-                                                @endif
-                                            </div>
-                                            <!--end::Imagem/Ícone-->
-                                            <!--begin::Texto - Lado Direito-->
-                                            <div class="flex-grow-1 text-start">
-                                                <span class="text-gray-800 fw-bold d-block fs-4 mb-2 dark:text-white">{{ $module->name }}</span>
-                                                <span class="text-gray-400 fw-semibold fs-6 dark:text-gray-400">{{ $module->description }}</span>
-                                            </div>
-                                            <!--end::Texto-->
+                    <!--begin::Modules Grid-->
+                    <style>
+                        .module-card-bg {
+                            background-image: url({{ global_asset('assets/media/images/2600x1600/bg-3.png') }});
+                        }
+                        .dark .module-card-bg {
+                            background-image: url({{ global_asset('assets/media/images/2600x1600/bg-3-dark.png') }});
+                        }
+                    </style>
+                    
+                    <div class="row g-5 g-xl-8">
+                        @forelse($modules ?? [] as $module)
+                            <!--begin::Col - {{ $module->name }}-->
+                            <div class="col-12 col-sm-6 col-lg-3">
+                                <a href="{{ route($module->route_name) }}" 
+                                   class="card card-flush h-100 bg-cover bg-no-repeat module-card-bg position-relative overflow-hidden hover-elevate-up"
+                                   style="background-position: right top -1.7rem;"
+                                   aria-label="Acessar módulo {{ $module->name }}">
+                                    <!--begin::Card body-->
+                                    <div class="card-body d-flex flex-column justify-content-between p-6">
+                                        <!--begin::Icon-->
+                                        <div class="mb-6">
+                                            @if($module->icon_path)
+                                                @php
+                                                    // Tratar caminhos de storage vs caminhos públicos
+                                                    if (str_starts_with($module->icon_path, '/assets')) {
+                                                        $iconUrl = $module->icon_path;
+                                                    } elseif (str_starts_with($module->icon_path, 'modules/icons') || !str_starts_with($module->icon_path, '/')) {
+                                                        $iconUrl = route('file', ['path' => $module->icon_path]);
+                                                    } else {
+                                                        $iconUrl = $module->icon_path;
+                                                    }
+                                                @endphp
+                                                <img loading="lazy" width="48" height="48"
+                                                    src="{{ $iconUrl }}" alt="Ícone {{ $module->name }}"
+                                                    class="module-icon">
+                                            @elseif($module->icon_class)
+                                                <i class="{{ $module->icon_class }} fs-2x text-primary module-icon"></i>
+                                            @else
+                                                <i class="fa-solid fa-cube fs-2x text-primary module-icon"></i>
+                                            @endif
                                         </div>
-                                    </a>
-                                </div>
-                                <!--end::Col - {{ $module->name }}-->
-                            @empty
-                                <div class="col-12">
-                                    <div class="alert alert-info">
-                                        <i class="fa-solid fa-info-circle me-2"></i>
-                                        Nenhum módulo disponível no momento.
+                                        <!--end::Icon-->
+                                        
+                                        <!--begin::Info-->
+                                        <div>
+                                            <span class="text-gray-900 fw-bold d-block fs-3 mb-2">
+                                                {{ $module->name }}
+                                            </span>
+                                            <span class="text-gray-600 fw-semibold fs-6">
+                                                {{ $module->description }}
+                                            </span>
+                                        </div>
+                                        <!--end::Info-->
                                     </div>
+                                    <!--end::Card body-->
+                                </a>
+                            </div>
+                            <!--end::Col - {{ $module->name }}-->
+                        @empty
+                            <div class="col-12">
+                                <div class="alert alert-info">
+                                    <i class="fa-solid fa-info-circle me-2"></i>
+                                    Nenhum módulo disponível no momento.
                                 </div>
-                            @endforelse
-                        </div>
-                        <!--end::Row-->
+                            </div>
+                        @endforelse
                     </div>
-                    <!--end::Card header-->
+                    <!--end::Modules Grid-->
 
                     @can('financeiro.show')
                         <!--begin::Row-->
@@ -189,16 +203,24 @@
 
 <!--begin::Custom CSS-->
 <style>
-    .icon-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    /* Module Cards */
+    .module-card-bg {
+        transition: all 0.3s ease;
+        border: 1px solid transparent;
     }
-
-    .btn:hover {
-        background-color: #f0f0f0;
-        transform: scale(1.05);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
+    
+    .module-card-bg:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+        border-color: var(--bs-primary);
+    }
+    
+    .module-icon {
+        transition: transform 0.3s ease;
+    }
+    
+    .module-card-bg:hover .module-icon {
+        transform: scale(1.1);
     }
 
     .sr-only {

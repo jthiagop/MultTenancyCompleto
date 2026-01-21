@@ -21,7 +21,6 @@ var KTModalUpdateCaixa = function () {
         });
 
         flatpickr('[name="data_competencia"], [name="dataAquisicao"]', {
-            enableTime: false,
             dateFormat: "d/m/Y", // Formato visual
             locale: "pt",
             onChange: function (selectedDates, dateStr, instance) {
@@ -34,6 +33,11 @@ var KTModalUpdateCaixa = function () {
 
     // Função para manipular a validação e envio do formulário via AJAX
     var handleForm = function () {
+        // Verificar se o formulário existe antes de inicializar a validação
+        if (!form) {
+            return;
+        }
+        
         validator = FormValidation.formValidation(
             form,
             {
@@ -203,6 +207,11 @@ var KTModalUpdateCaixa = function () {
             submitButton = document.getElementById('kt_modal_new_card_submit');
             cancelButton = document.getElementById('kt_modal_new_card_cancel');
 
+            // Verificar se os elementos essenciais existem
+            if (!form || !submitButton || !cancelButton) {
+                return;
+            }
+
             initForm();
             handleForm();
         }
@@ -232,6 +241,11 @@ document.addEventListener('DOMContentLoaded', function() {
     const tipoSelect = document.getElementById('tipo_select');
     const lancamentoPadraoBanco = document.getElementById('lancamento_padrao_banco');
     const lancamentoPadraoCaixa = document.getElementById('lancamento_padrao_caixa');
+
+    // Adicionar verificação se o elemento existe
+    if (!tipoSelect) {
+        return; // Sai da função se o elemento não existir
+    }
 
     tipoSelect.addEventListener('change', function() {
         const selectedTipo = tipoSelect.value;

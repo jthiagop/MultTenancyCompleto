@@ -116,6 +116,12 @@ var KTAppEcommerceSaveProduct = function () {
         var slider = document.querySelector("#kt_ecommerce_add_product_discount_slider");
         var value = document.querySelector("#kt_ecommerce_add_product_discount_label");
 
+        // Verificar se os elementos existem antes de inicializar o slider
+        if (!slider || !value) {
+            console.warn('[form-dropzone.js] Elementos de slider não encontrados, pulando inicialização');
+            return;
+        }
+
         noUiSlider.create(slider, {
             start: [10],
             connect: true,
@@ -205,6 +211,12 @@ var KTAppEcommerceSaveProduct = function () {
         const percentageEl = document.getElementById('kt_ecommerce_add_product_discount_percentage');
         const fixedEl = document.getElementById('kt_ecommerce_add_product_discount_fixed');
 
+        // Verificar se os elementos existem antes de adicionar event listeners
+        if (discountOptions.length === 0 || !percentageEl || !fixedEl) {
+            console.warn('[form-dropzone.js] Elementos de discount não encontrados, pulando inicialização');
+            return;
+        }
+
         discountOptions.forEach(option => {
             option.addEventListener('change', e => {
                 const value = e.target.value;
@@ -235,6 +247,12 @@ var KTAppEcommerceSaveProduct = function () {
         const shippingOption = document.getElementById('kt_ecommerce_add_product_shipping_checkbox');
         const shippingForm = document.getElementById('kt_ecommerce_add_product_shipping');
 
+        // Verificar se os elementos existem antes de adicionar event listeners
+        if (!shippingOption || !shippingForm) {
+            console.warn('[form-dropzone.js] Elementos de shipping não encontrados, pulando inicialização');
+            return;
+        }
+
         shippingOption.addEventListener('change', e => {
             const value = e.target.checked;
 
@@ -251,6 +269,12 @@ var KTAppEcommerceSaveProduct = function () {
         const target = document.getElementById('kt_ecommerce_add_product_status');
         const select = document.getElementById('kt_ecommerce_add_product_status_select');
         const statusClasses = ['bg-success', 'bg-warning', 'bg-danger'];
+
+        // Verificar se os elementos existem antes de adicionar event listeners
+        if (!target || !select) {
+            console.warn('[form-dropzone.js] Elementos de status não encontrados, pulando inicialização');
+            return;
+        }
 
         $(select).on('change', function (e) {
             const value = e.target.value;
@@ -308,6 +332,13 @@ var KTAppEcommerceSaveProduct = function () {
     const handleConditions = () => {
         const allConditions = document.querySelectorAll('[name="method"][type="radio"]');
         const conditionMatch = document.querySelector('[data-kt-ecommerce-catalog-add-category="auto-options"]');
+        
+        // Verificar se os elementos existem antes de adicionar event listeners
+        if (allConditions.length === 0 || !conditionMatch) {
+            console.warn('[form-dropzone.js] Elementos de conditions não encontrados, pulando inicialização');
+            return;
+        }
+
         allConditions.forEach(radio => {
             radio.addEventListener('change', e => {
                 if (e.target.value === '1') {
@@ -327,6 +358,12 @@ var KTAppEcommerceSaveProduct = function () {
         // Get elements
         const form = document.getElementById('kt_ecommerce_add_product_form');
         const submitButton = document.getElementById('kt_ecommerce_add_product_submit');
+
+        // Verificar se os elementos existem antes de inicializar validação
+        if (!form || !submitButton) {
+            console.warn('[form-dropzone.js] Formulário ou botão submit não encontrados, pulando inicialização');
+            return;
+        }
 
         // Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
         validator = FormValidation.formValidation(

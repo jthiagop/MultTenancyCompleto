@@ -5,15 +5,44 @@ declare(strict_types=1);
 namespace Flasher\Laravel\Resources;
 
 return [
-    // Default notification library (e.g., 'flasher', 'toastr', 'noty', etc.)
-    'default' => 'flasher',
+    // Default notification library - usando toastr (já instalado)
+    'default' => 'toastr',
 
-    // Path to the main JavaScript file of PHPFlasher
-    'main_script' => '/vendor/flasher/flasher.min.js',
-
-    // Path to the stylesheets for PHPFlasher notifications
-    'styles' => [
-        '/vendor/flasher/flasher.min.css',
+    // Themes configuration
+    'themes' => [
+        'toastr' => [
+            'scripts' => [
+                '/vendor/flasher/flasher.min.js',
+                '/vendor/flasher/flasher-toastr.min.js',
+            ],
+            'styles' => [
+                '/vendor/flasher/flasher.min.css',
+                '/vendor/flasher/toastr.min.css',
+            ],
+            'options' => [
+                // Posição do toast
+                'positionClass' => 'toast-top-right',
+                
+                // Animações
+                'showMethod' => 'fadeIn',
+                'hideMethod' => 'fadeOut',
+                'showDuration' => 300,
+                'hideDuration' => 1000,
+                
+                // Tempo de exibição
+                'timeOut' => 5000,
+                'extendedTimeOut' => 1000,
+                
+                // Comportamento
+                'closeButton' => true,
+                'progressBar' => true,
+                'preventDuplicates' => false,
+                'newestOnTop' => true,
+                
+                // Aparência
+                'opacity' => 1,
+            ],
+        ],
     ],
 
     // Whether to translate PHPFlasher messages using Laravel's translation service
@@ -26,16 +55,13 @@ return [
     // Map Laravel session keys to PHPFlasher types
     'flash_bag' => [
         'success' => ['success'],
-
+        'error' => ['error'],
+        'warning' => ['warning'],
+        'info' => ['info'],
     ],
 
     // Filter criteria for notifications (e.g., limit number, types)
     'filter' => [
         'limit' => 5, // Limit the number of displayed notifications
-    ],
-
-    // Additional Flasher options for customization
-    'options' => [
-        'positionClass' => 'flasher-bottom', // Adiciona classe para exibição no rodapé
     ],
 ];

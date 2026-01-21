@@ -14,6 +14,7 @@ use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\ModulosAnexo;
 use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\FormasPagamento;
+use App\Models\Fornecedor;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use Carbon\Carbon;
@@ -126,7 +127,8 @@ class CaixaController extends Controller
 
         // Lançamentos Padrão da empresa ativa
         $lps = LancamentoPadrao::all();
-
+        $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
+        $fornecedores = Fornecedor::forActiveCompany()->orderBy('nome')->get();
 
         // Entidades do tipo 'Caixa' da empresa ativa
         $entidades = EntidadeFinanceira::where('company_id', $activeCompanyId)->where('tipo', 'caixa')->get();
@@ -181,6 +183,8 @@ class CaixaController extends Controller
             'valorSaidas' => $somaSaidas,   // Usando a variável já calculada
             'total' => $total,
             'lps' => $lps,
+            'formasPagamento' => $formasPagamento,
+            'fornecedores' => $fornecedores,
             'company' => $company,
             'entidades' => $entidades,
             'entidadesBanco' => $entidadesBanco,
@@ -349,7 +353,78 @@ class CaixaController extends Controller
                 $validatedData['data_competencia'] = Carbon::parse($dataCompetencia)->format('Y-m-d');
             }
         }
-        $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
+        // O valor já foi convertido no prepareForValidation do Request
+        
+        // Processa data_vencimento (já convertido no prepareForValidation, mas garante formato correto)
+        if (isset($validatedData['vencimento']) && $validatedData['vencimento']) {
+            // Remove o campo 'vencimento' se ainda existir (já foi convertido para 'data_vencimento')
+            unset($validatedData['vencimento']);
+        }
+        
+        // Se data_vencimento não foi fornecida, usa a data de competência como padrão
+        if (!isset($validatedData['data_vencimento']) || !$validatedData['data_vencimento']) {
+            $validatedData['data_vencimento'] = $validatedData['data_competencia'];
+        } else {
+            // Garante que está no formato Y-m-d (já deve estar, mas verifica)
+            if (strpos($validatedData['data_vencimento'], '/') !== false) {
+                $validatedData['data_vencimento'] = Carbon::createFromFormat('d/m/Y', $validatedData['data_vencimento'])->format('Y-m-d');
+            }
+        }
+        
+        // Processa valor_pago se fornecido
+        if (isset($validatedData['valor_pago']) && $validatedData['valor_pago']) {
+            // Já foi convertido no prepareForValidation, mas garante que seja float
+            $validatedData['valor_pago'] = (float) $validatedData['valor_pago'];
+        } else {
+            // Se não fornecido, verifica se o checkbox "pago" está marcado
+            if ($request->has('pago') && $request->input('pago')) {
+                $validatedData['valor_pago'] = (float) $validatedData['valor'];
+            } else {
+                $validatedData['valor_pago'] = 0;
+            }
+        }
+
+        // Processa juros se fornecido (já convertido no prepareForValidation)
+        if (isset($validatedData['juros'])) {
+            $validatedData['juros'] = (float) ($validatedData['juros'] ?? 0);
+        } else {
+            $validatedData['juros'] = 0;
+        }
+
+        // Processa multa se fornecido (já convertido no prepareForValidation)
+        if (isset($validatedData['multa'])) {
+            $validatedData['multa'] = (float) ($validatedData['multa'] ?? 0);
+        } else {
+            $validatedData['multa'] = 0;
+        }
+
+        // Processa desconto se fornecido (já convertido no prepareForValidation)
+        if (isset($validatedData['desconto'])) {
+            $validatedData['desconto'] = (float) ($validatedData['desconto'] ?? 0);
+        } else {
+            $validatedData['desconto'] = 0;
+        }
+
+        // Processa valor_a_pagar se fornecido, senão calcula
+        if (isset($validatedData['valor_a_pagar']) && $validatedData['valor_a_pagar']) {
+            $validatedData['valor_a_pagar'] = (float) $validatedData['valor_a_pagar'];
+        } else {
+            // Calcula: valor_a_pagar = valor + juros + multa - desconto
+            $valor = (float) $validatedData['valor'];
+            $juros = (float) ($validatedData['juros'] ?? 0);
+            $multa = (float) ($validatedData['multa'] ?? 0);
+            $desconto = (float) ($validatedData['desconto'] ?? 0);
+            $valorAPagar = $valor + $juros + $multa - $desconto;
+            $validatedData['valor_a_pagar'] = max(0, $valorAPagar); // Garante que não seja negativo
+        }
+        
+        // Processa agendado (checkbox)
+        $validatedData['agendado'] = $request->has('agendado') && $request->input('agendado') ? true : false;
+        
+        // Situação será calculada automaticamente pelo modelo, mas se fornecida manualmente, mantém
+        if (!isset($validatedData['situacao']) || !$validatedData['situacao']) {
+            $validatedData['situacao'] = 'em_aberto'; // Será recalculado pelo modelo se necessário
+        }
 
         // Adiciona informações padrão
         $validatedData['company_id'] = $activeCompanyId;

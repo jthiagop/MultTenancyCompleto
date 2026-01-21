@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste - Gráfico de Missas</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 3px solid #007bff;
+            padding-bottom: 10px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-left: 4px solid #007bff;
+            border-radius: 4px;
+        }
+        .test-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px 5px 5px 0;
+            transition: background 0.3s;
+        }
+        .test-btn:hover {
+            background: #0056b3;
+        }
+        .test-btn.secondary {
+            background: #6c757d;
+        }
+        .test-btn.secondary:hover {
+            background: #545b62;
+        }
+        .output {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        label {
+            display: block;
+            margin: 10px 0 5px 0;
+            font-weight: bold;
+            color: #333;
+        }
+        input {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input:focus {
+            outline: none;
+            border-color: #007bff;
+            box-shadow: 0 0 5px rgba(0,123,255,0.25);
+        }
+        .flex {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste - Gráfico de Missas</h1>
+        
+        <div class="info">
+            <strong>ℹ️ Ferramenta de Teste:</strong> Use esta página para testar a API do gráfico de missas e validar se as correções foram aplicadas com sucesso.
+        </div>
+
+        <!-- Configuração -->
+        <div class="section">
+            <h2>⚙️ Configuração</h2>
+            <label for="baseUrl">URL Base (sem barra final):</label>
+            <input 
+                type="text" 
+                id="baseUrl" 
+                value="http://localhost:8000"
+                placeholder="http://localhost:8000"
+            >
+            
+            <label for="startDate">Data Inicial (YYYY-MM-DD):</label>
+            <input 
+                type="date" 
+                id="startDate"
+            >
+            
+            <label for="endDate">Data Final (YYYY-MM-DD):</label>
+            <input 
+                type="date" 
+                id="endDate"
+            >
+        </div>
+
+        <!-- Testes -->
+        <div class="section">
+            <h2>🚀 Testes</h2>
+            
+            <div class="flex">
+                <button class="test-btn" onclick="testConnection()">
+                    1️⃣ Testar Conexão
+                </button>
+                <button class="test-btn" onclick="testContentType()">
+                    2️⃣ Validar Content-Type
+                </button>
+                <button class="test-btn" onclick="testJsonParsing()">
+                    3️⃣ Parsear JSON
+                </button>
+                <button class="test-btn" onclick="testDataStructure()">
+                    4️⃣ Validar Estrutura
+                </button>
+                <button class="test-btn" onclick="testRetry()">
+                    5️⃣ Testar Retry
+                </button>
+            </div>
+
+            <div class="flex">
+                <button class="test-btn secondary" onclick="clearOutput()">
+                    🗑️ Limpar
+                </button>
+                <button class="test-btn secondary" onclick="copyOutput()">
+                    📋 Copiar
+                </button>
+            </div>
+
+            <div id="output" class="output">Aguardando testes...</div>
+        </div>
+
+        <!-- Resultado Final -->
+        <div class="section">
+            <h2>✅ Resultado</h2>
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        // Configurar datas padrão (hoje e 30 dias atrás)
+        document.addEventListener('DOMContentLoaded', function() {
+            const today = new Date();
+            const thirtyDaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
+            
+            document.getElementById('endDate').value = today.toISOString().split('T')[0];
+            document.getElementById('startDate').value = thirtyDaysAgo.toISOString().split('T')[0];
+        });
+
+        // Utilitários
+        function log(message, type = 'info') {
+            const output = document.getElementById('output');
+            const timestamp = new Date().toLocaleTimeString();
+            const prefix = type === 'error' ? '❌' : type === 'success' ? '✅' : type === 'warning' ? '⚠️' : 'ℹ️';
+            output.textContent += `\n[${timestamp}] ${prefix} ${message}`;
+            output.scrollTop = output.scrollHeight;
+        }
+
+        function clearOutput() {
+            document.getElementById('output').textContent = 'Aguardando testes...';
+            document.getElementById('result').innerHTML = '';
+        }
+
+        function copyOutput() {
+            const output = document.getElementById('output');
+            navigator.clipboard.writeText(output.textContent).then(() => {
+                alert('✅ Conteúdo copiado para clipboard!');
+            });
+        }
+
+        function getUrl() {
+            const baseUrl = document.getElementById('baseUrl').value;
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!baseUrl || !startDate || !endDate) {
+                alert('⚠️ Preencha todos os campos');
+                return null;
+            }
+            
+            return `${baseUrl}/dashboard/missas-chart-data?start_date=${startDate}&end_date=${endDate}`;
+        }
+
+        // Teste 1: Conexão
+        async function testConnection() {
+            log('Iniciando Teste 1: Conexão');
+            const url = getUrl();
+            if (!url) return;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                if (response.ok) {
+                    log(`✅ Conexão bem-sucedida (Status: ${response.status})`, 'success');
+                } else {
+                    log(`❌ Erro HTTP ${response.status}: ${response.statusText}`, 'error');
+                }
+                
+                log(`URL: ${url}`, 'info');
+                log(`Status: ${response.status}`, 'info');
+                
+            } catch (error) {
+                log(`❌ Erro de conexão: ${error.message}`, 'error');
+            }
+        }
+
+        // Teste 2: Content-Type
+        async function testContentType() {
+            log('Iniciando Teste 2: Content-Type');
+            const url = getUrl();
+            if (!url) return;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const contentType = response.headers.get('content-type');
+                log(`Content-Type: ${contentType}`, 'info');
+
+                if (contentType && contentType.includes('application/json')) {
+                    log('✅ Content-Type correto (application/json)', 'success');
+                } else {
+                    log(`❌ Content-Type inválido: ${contentType}`, 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // Teste 3: JSON Parsing
+        async function testJsonParsing() {
+            log('Iniciando Teste 3: JSON Parsing');
+            const url = getUrl();
+            if (!url) return;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                let data;
+                try {
+                    data = await response.json();
+                    log('✅ JSON parseado com sucesso', 'success');
+                    log(`Chaves: ${Object.keys(data).join(', ')}`, 'info');
+                } catch (parseError) {
+                    log(`❌ Erro ao parsear JSON: ${parseError.message}`, 'error');
+                    const text = await response.text();
+                    log(`Primeiros 100 caracteres da resposta: ${text.substring(0, 100)}`, 'warning');
+                    return;
+                }
+
+                // Validar estrutura
+                if (data.success !== undefined) {
+                    log(`Success flag: ${data.success}`, 'info');
+                }
+                if (data.error) {
+                    log(`Erro no JSON: ${data.error}`, 'warning');
+                }
+
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // Teste 4: Estrutura de Dados
+        async function testDataStructure() {
+            log('Iniciando Teste 4: Estrutura de Dados');
+            const url = getUrl();
+            if (!url) return;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const data = await response.json();
+
+                // Validações
+                let valid = true;
+
+                if (!data.success) {
+                    log('❌ success !== true', 'error');
+                    valid = false;
+                } else {
+                    log('✅ success === true', 'success');
+                }
+
+                if (!Array.isArray(data.data)) {
+                    log('❌ data não é um array', 'error');
+                    valid = false;
+                } else {
+                    log(`✅ data é um array com ${data.data.length} elementos`, 'success');
+                }
+
+                if (!Array.isArray(data.categories)) {
+                    log('❌ categories não é um array', 'error');
+                    valid = false;
+                } else {
+                    log(`✅ categories é um array com ${data.categories.length} elementos`, 'success');
+                }
+
+                if (data.data.length !== data.categories.length) {
+                    log(`⚠️ Tamanhos diferentes: data=${data.data.length}, categories=${data.categories.length}`, 'warning');
+                    valid = false;
+                }
+
+                if (valid) {
+                    log('✅ Estrutura de dados válida!', 'success');
+                    log(`Categories: ${data.categories.join(', ')}`, 'info');
+                    log(`Data (valores): ${data.data.join(', ')}`, 'info');
+                } else {
+                    log('❌ Estrutura de dados inválida!', 'error');
+                }
+
+            } catch (error) {
+                log(`❌ Erro: ${error.message}`, 'error');
+            }
+        }
+
+        // Teste 5: Retry
+        async function testRetry() {
+            log('Iniciando Teste 5: Retry (simulando 3 tentativas)');
+            const url = getUrl();
+            if (!url) return;
+
+            for (let attempt = 1; attempt <= 3; attempt++) {
+                try {
+                    log(`\nTentativa ${attempt}/3...`, 'info');
+                    
+                    const response = await fetch(url, {
+                        method: 'GET',
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json'
+                        }
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.success) {
+                            log(`✅ Sucesso na tentativa ${attempt}!`, 'success');
+                            log(`Dados recebidos: ${JSON.stringify(data).substring(0, 100)}...`, 'info');
+                            return;
+                        }
+                    } else {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+
+                } catch (error) {
+                    if (attempt < 3) {
+                        log(`❌ Falha na tentativa ${attempt}: ${error.message}`, 'warning');
+                        log('Aguardando 2 segundos antes de retry...', 'info');
+                        await new Promise(resolve => setTimeout(resolve, 2000));
+                    } else {
+                        log(`❌ Falha na tentativa final: ${error.message}`, 'error');
+                    }
+                }
+            }
+        }
+
+        // Executar todos os testes
+        async function runAllTests() {
+            clearOutput();
+            log('🚀 Iniciando suite de testes completa...\n');
+            
+            await new Promise(resolve => {
+                testConnection();
+                setTimeout(resolve, 1000);
+            });
+
+            await new Promise(resolve => {
+                testContentType();
+                setTimeout(resolve, 1000);
+            });
+
+            await new Promise(resolve => {
+                testJsonParsing();
+                setTimeout(resolve, 1000);
+            });
+
+            await new Promise(resolve => {
+                testDataStructure();
+                setTimeout(resolve, 1000);
+            });
+
+            log('\n✅ Suite de testes completa!', 'success');
+        }
+    </script>
+</body>
+</html>

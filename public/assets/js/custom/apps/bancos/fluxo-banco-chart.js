@@ -333,6 +333,22 @@ var KTBancoFluxoChart = function () {
                     }
                 }
             });
+            
+            // Expose refresh function globally
+            window.refreshFluxoBancoChart = function() {
+                var daterangepickerElement = document.querySelector('[data-kt-daterangepicker="true"]');
+                if (daterangepickerElement && $(daterangepickerElement).data('daterangepicker')) {
+                    var picker = $(daterangepickerElement).data('daterangepicker');
+                    var startDate = picker.startDate.format('Y-MM-DD');
+                    var endDate = picker.endDate.format('Y-MM-DD');
+                    updateChart(startDate, endDate);
+                } else {
+                    // Fallback to defaults or current month if no picker
+                    var start = moment().startOf('month').format('Y-MM-DD');
+                    var end = moment().endOf('month').format('Y-MM-DD');
+                    updateChart(start, end);
+                }
+            };
         }
     }
 }();

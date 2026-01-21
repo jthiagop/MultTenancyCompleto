@@ -7,7 +7,7 @@
 <!-- Kendo UI (JS principal) -->
 <script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
 
-@include('app.components.modals.financeiro.lancamento.modal_lacamento')
+@include('app.components.modals.financeiro.lancamento.modal_lancamento_refatorado')
 <!--end::Modal - Upgrade plan-->
 <script>
     var lpsData = @json($lps);
@@ -20,11 +20,9 @@
 <!--begin::Vendors Javascript(used for this page only)-->
 <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
-<script src="/assets/js/custom/utilities/modals/financeiro/moduloAnexos.js"></script>
-<script src="/assets/js/custom/utilities/modals/financeiro/new-banco.js"></script>
 
 <script src="/assets/plugins/custom/formrepeater/formrepeater.bundle.js"></script>
-<script src="/assets/js/custom/apps/bancos/form-dropzone.js"></script>
+{{-- <script src="/assets/js/custom/apps/bancos/form-dropzone.js"></script> --}}
 
 <!--begin::Custom Javascript(used for this page only)-->
 <script src="/assets/js/custom/apps/bancos/shipping.js"></script>

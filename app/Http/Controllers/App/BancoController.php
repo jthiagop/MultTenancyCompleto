@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\App;
 
+use App\Helpers\BrowsershotHelper;
+use App\Helpers\TransacaoFormatter;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Financer\StoreTransacaoFinanceiraRequest;
 use App\Models\Anexo;
@@ -10,12 +12,18 @@ use App\Models\EntidadeFinanceira;
 use App\Models\Financeiro\BankStatement;
 use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\ModulosAnexo;
+use App\Models\Financeiro\Recorrencia;
 use App\Models\Financeiro\TransacaoFinanceira;
+use App\Models\Financeiro\TransacaoFracionamento;
+use App\Models\FormasPagamento;
+use App\Models\Fornecedor;
 use App\Models\HorarioMissa;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use App\Models\User;
+use App\Services\RecurrenceService;
 use App\Services\TransacaoFinanceiraService;
+use App\Services\EntidadeFinanceiraService;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Support\Str;
@@ -30,11 +38,23 @@ use Spatie\Browsershot\Browsershot;
 
 class BancoController extends Controller
 {
-    protected $transacaoService;
+    protected TransacaoFinanceiraService $transacaoService;
+    protected TransacaoFormatter $formatter;
+    protected RecurrenceService $recurrenceService;
+    protected EntidadeFinanceiraService $entidadeFinanceiraService;
 
-    public function __construct(TransacaoFinanceiraService $transacaoService)
-    {
+    public function __construct(
+        TransacaoFinanceiraService $transacaoService,
+        TransacaoFormatter $formatter,
+        RecurrenceService $recurrenceService,
+        EntidadeFinanceiraService $entidadeFinanceiraService
+    ) {
         $this->transacaoService = $transacaoService;
+        $this->formatter = $formatter;
+        $this->recurrenceService = $recurrenceService;
+        $this->entidadeFinanceiraService = $entidadeFinanceiraService;
+        $this->formatter = $formatter;
+        $this->recurrenceService = $recurrenceService;
     }
     /**
      * Display a listing of the resource.
@@ -48,6 +68,8 @@ class BancoController extends Controller
 
 
         $lps = LancamentoPadrao::all();
+        $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
+        $fornecedores = Fornecedor::forActiveCompany()->orderBy('nome')->get();
 
 
         return view('app.financeiro.index', [
@@ -55,6 +77,8 @@ class BancoController extends Controller
             'ValorSaidasBanco' => $ValorSaidasBanco,
             'lps' => $lps,
             'entidadesBanco' => $entidadesBanco,
+            'formasPagamento' => $formasPagamento,
+            'fornecedores' => $fornecedores,
         ]);
     }
 
@@ -62,7 +86,15 @@ class BancoController extends Controller
     public function list(Request $request)
     {
         // Obter o valor da aba ativa da URL, se presente
-        $activeTab = $request->input('tab', 'overview'); // 'overview' é o padrão caso não haja o parâmetro 'tab'
+        $activeTab = $request->input('tab', 'contas_receber'); // 'contas_receber' é o padrão
+
+        // Tabs válidas (removidas: 'overview', 'bancos', 'relatorios' e 'registros')
+        $validTabs = ['contas_receber', 'contas_pagar', 'extrato', 'conciliacao', 'lancamento'];
+
+        // Se a tab não for válida, redirecionar para a tab padrão
+        if (!in_array($activeTab, $validTabs)) {
+            return redirect()->route('banco.list', ['tab' => 'contas_receber']);
+        }
 
         // Suponha que você já tenha o ID da empresa disponível
         $companyId = session('active_company_id'); // ou $companyId = 1; se o ID for fixo
@@ -76,6 +108,8 @@ class BancoController extends Controller
         $perPage = max(5, min($perPage, 200)); // limites úteis
 
         $lps = LancamentoPadrao::all();
+        $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
+        $fornecedores = Fornecedor::forActiveCompany()->orderBy('nome')->get();
 
         // Filtrar as entradas e saídas pelos bancos relacionados à empresa
         list($somaEntradas, $somaSaida) = Banco::getBanco();
@@ -86,12 +120,32 @@ class BancoController extends Controller
         // 🟢 Obtém os dados do gráfico usando o Service
         $dadosGrafico = $this->transacaoService->getDadosGrafico($mesSelecionado, $anoSelecionado);
 
+        // 🟢 Obtém os dados do fluxo de caixa anual (entradas e saídas por mês)
+        $dadosFluxoCaixaAnual = $this->transacaoService->getDadosFluxoCaixaAnual($anoSelecionado);
+
         $total  = EntidadeFinanceira::getValorTotalEntidadeBC();
 
-        $entidadesBanco = EntidadeFinanceira::forActiveCompany() // 1. Usa o scope para filtrar pela empresa
-            ->where('tipo', 'banco')  // 2. Adiciona o filtro específico para bancos
-            ->with('bankStatements')  // 3. (Opcional, mas recomendado) Otimiza a consulta
+        // Buscar saldo total das entidades do tipo 'caixa'
+        $totalCaixa = EntidadeFinanceira::forActiveCompany()
+            ->where('tipo', 'caixa')
+            ->sum('saldo_atual');
+
+        // Buscar entidades financeiras (banco e caixa) para o filtro de conta
+        $entidadesFinanceiras = EntidadeFinanceira::forActiveCompany()
+            ->whereIn('tipo', ['banco', 'caixa'])
+            ->with('bankStatements')
             ->get();
+
+        // Manter $entidadesBanco separado para lógica específica de banco
+        $entidadesBanco = $entidadesFinanceiras->where('tipo', 'banco')->values();
+
+        // Buscar entidades do tipo 'caixa'
+        $entidadesCaixa = EntidadeFinanceira::forActiveCompany()
+            ->where('tipo', 'caixa')
+            ->get();
+
+        // Preparar entidades para o side-card (merge, cálculos de variação, etc)
+        $todasEntidades = $this->entidadeFinanceiraService->prepararEntidadesParaSideCard($entidadesBanco, $entidadesCaixa);
 
         // Entidades para o relatório de prestação de contas
         $entidades = EntidadeFinanceira::forActiveCompany() // 1. Usa o scope para filtrar pela empresa
@@ -112,15 +166,6 @@ class BancoController extends Controller
         $valorEntrada = Banco::getBancoEntrada();
         $ValorSaidas = Banco::getBancoSaida();
         $centrosAtivos = CostCenter::forActiveCompany()->get();
-
-        // Se a tab ativa for 'relatorios', buscar entidades financeiras do tipo 'banco' para o select
-        $entidadesRelatorio = [];
-        if ($activeTab === 'relatorios') {
-            $entidadesRelatorio = EntidadeFinanceira::forActiveCompany()
-                ->where('tipo', 'banco')
-                ->orderBy('nome')
-                ->get();
-        }
 
         // Lista de prioridades para os status de conciliação
         $prioridadeStatus = ['divergente', 'em análise', 'parcial', 'pendente', 'ajustado', 'ignorado', 'ok'];
@@ -161,13 +206,67 @@ class BancoController extends Controller
         // Verifica se existem horários de missa cadastrados para a empresa ativa
         $hasHorariosMissas = HorarioMissa::where('company_id', $companyId)->exists();
 
+        // Preparar accountOptions para as tabs (incluindo banco e caixa)
+        $accountOptions = $entidadesFinanceiras->map(function($entidade) {
+            return [
+                'id' => $entidade->id, 
+                'nome' => $entidade->nome,
+                'tipo' => $entidade->tipo
+            ];
+        })->toArray();
+
+        // 🟢 Configurações específicas para cada tab
+        $tabConfigs = [
+            'overview' => [
+                'title' => 'Visão Geral',
+                'showFilters' => true,
+                'showStats' => true,
+            ],
+            'contas_receber' => [
+                'title' => 'Contas a Receber',
+                'tipo' => 'entrada',
+                'showFilters' => true,
+                'showStats' => true,
+                'accountOptions' => $accountOptions,
+            ],
+            'contas_pagar' => [
+                'title' => 'Contas a Pagar',
+                'tipo' => 'saida',
+                'showFilters' => true,
+                'showStats' => true,
+                'accountOptions' => $accountOptions,
+            ],
+            'extrato' => [
+                'title' => 'Extrato',
+                'showFilters' => true,
+                'showStats' => true,
+                'accountOptions' => $accountOptions,
+            ],
+            'conciliacao' => [
+                'title' => 'Conciliação',
+                'showFilters' => true,
+                'showStats' => false,
+                'accountOptions' => $accountOptions,
+            ],
+            'lancamento' => [
+                'title' => 'Lançamento',
+                'showFilters' => false,
+                'showStats' => false,
+            ],
+        ];
+
         // 🟢 Retorna a View com todos os dados
         return view('app.financeiro.banco.list', array_merge([
             'valorEntrada' => $valorEntrada,
             'ValorSaidas' => $ValorSaidas,
             'total' => $total,
+            'totalCaixa' => $totalCaixa,
             'lps' => $lps,
+            'formasPagamento' => $formasPagamento,
+            'fornecedores' => $fornecedores,
             'entidadesBanco' => $entidadesBanco,
+            'entidadesCaixa' => $entidadesCaixa,
+            'todasEntidades' => $todasEntidades ?? collect(), // Entidades preparadas para side-card
             'activeTab' => $activeTab,
             'transacoes' => $transacoes,
             'centrosAtivos' => $centrosAtivos,
@@ -175,9 +274,109 @@ class BancoController extends Controller
             'anoSelecionado' => $anoSelecionado,
             'perPage' => $perPage,
             'entidades' => $entidades,
-            'entidadesRelatorio' => $entidadesRelatorio,
             'hasHorariosMissas' => $hasHorariosMissas,
+            'tabConfigs' => $tabConfigs,
+            'dadosFluxoCaixaAnual' => $dadosFluxoCaixaAnual,
+            'accountOptions' => $accountOptions,
         ], $dadosGrafico));
+    }
+
+    /**
+     * Retorna dados de resumo para atualização via AJAX
+     * Usado pelo EventBus para atualizar tabs e cards sem recarregar a página
+     */
+    public function getSummary(Request $request)
+    {
+        $companyId = session('active_company_id');
+        
+        if (!$companyId) {
+            return response()->json(['error' => 'Empresa não selecionada'], 400);
+        }
+        
+        // Parse das datas do request
+        $startDate = $request->input('start_date', Carbon::now()->startOfMonth()->format('Y-m-d'));
+        $endDate = $request->input('end_date', Carbon::now()->endOfMonth()->format('Y-m-d'));
+        $tab = $request->input('tab', 'contas_receber'); // Detecta qual tab está ativa
+        
+        // Determina se é extrato
+        $isExtrato = $tab === 'extrato';
+        
+        // Busca transações do período
+        $query = TransacaoFinanceira::forActiveCompany()
+            ->whereHas('entidadeFinanceira', function ($q) {
+                $q->whereIn('tipo', ['banco', 'caixa']); // Inclui banco e caixa
+            });
+        
+        // Aplica filtro de data baseado na tab
+        if ($isExtrato) {
+            // Para extrato, filtra por data_vencimento
+            $query->whereBetween('data_vencimento', [$startDate, $endDate]);
+        } else {
+            // Para outras tabs, filtra por data_competencia
+            $query->whereBetween('data_competencia', [$startDate, $endDate]);
+        }
+        
+        $transacoes = $query->get();
+        
+        // Formata valores
+        $formatMoney = fn($value) => 'R$ ' . number_format($value, 2, ',', '.');
+        
+        if ($isExtrato) {
+            // Stats específicas para extrato - usa método centralizado
+            $stats = $this->calculateExtratoStats($startDate, $endDate);
+            
+            if (!$stats) {
+                return response()->json(['error' => 'Erro ao calcular estatísticas'], 500);
+            }
+            
+            return response()->json([
+                'tabs' => [
+                    ['key' => 'receitas_aberto', 'value' => $formatMoney($stats['receitas_aberto'])],
+                    ['key' => 'receitas_realizadas', 'value' => $formatMoney($stats['receitas_realizadas'])],
+                    ['key' => 'despesas_aberto', 'value' => $formatMoney($stats['despesas_aberto'])],
+                    ['key' => 'despesas_realizadas', 'value' => $formatMoney($stats['despesas_realizadas'])],
+                    ['key' => 'total', 'value' => $formatMoney($stats['total'])],
+                ],
+                'meta' => [
+                    'tab' => 'extrato',
+                    'start_date' => $startDate,
+                    'end_date' => $endDate,
+                    'updated_at' => now()->format('H:i:s'),
+                ]
+            ]);
+        }
+        
+        // Stats para contas a receber/pagar (comportamento original)
+        $totalEmAberto = $transacoes->where('situacao', 'em_aberto')->sum('valor');
+        $totalAtrasado = $transacoes->where('situacao', 'atrasado')->sum('valor');
+        $totalPago = $transacoes->where('situacao', 'pago')->sum('valor');
+        $totalRecebido = $transacoes->where('situacao', 'recebido')->sum('valor');
+        $totalPrevisto = $transacoes->where('situacao', 'previsto')->sum('valor');
+        
+        // Totais por tipo
+        $totalReceitas = $transacoes->where('tipo', 'entrada')->sum('valor');
+        $totalDespesas = $transacoes->where('tipo', 'saida')->sum('valor');
+        $saldo = $totalReceitas - $totalDespesas;
+        
+        return response()->json([
+            'tabs' => [
+                ['key' => 'em_aberto', 'value' => $formatMoney($totalEmAberto)],
+                ['key' => 'atrasado', 'value' => $formatMoney($totalAtrasado)],
+                ['key' => 'pago', 'value' => $formatMoney($totalPago)],
+                ['key' => 'recebido', 'value' => $formatMoney($totalRecebido)],
+                ['key' => 'previsto', 'value' => $formatMoney($totalPrevisto)],
+            ],
+            'sideCard' => [
+                'total_receitas' => $formatMoney($totalReceitas),
+                'total_despesas' => $formatMoney($totalDespesas),
+                'saldo' => $formatMoney($saldo),
+            ],
+            'meta' => [
+                'start_date' => $startDate,
+                'end_date' => $endDate,
+                'updated_at' => now()->format('H:i:s'),
+            ]
+        ]);
     }
 
     /**
@@ -465,6 +664,150 @@ class BancoController extends Controller
     }
 
     /**
+     * Calcula estatísticas para as tabs (vencidos, hoje, a_vencer, recebidos/pagos, total)
+     */
+    public function getStatsData(Request $request)
+    {
+        $companyId = session('active_company_id');
+
+        if (!$companyId) {
+            return response()->json([
+                'vencidos' => '0,00',
+                'hoje' => '0,00',
+                'a_vencer' => '0,00',
+                'recebidos' => '0,00',
+                'total' => '0,00'
+            ]);
+        }
+
+        $tipo = $request->input('tipo', 'entrada'); // entrada ou saida
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        $entidadeId = $request->input('entidade_id'); // Filtro de conta
+
+        // Se não fornecido, usa o mês atual
+        if (!$startDate || !$endDate) {
+            $startDate = Carbon::now()->startOfMonth()->format('Y-m-d');
+            $endDate = Carbon::now()->endOfMonth()->format('Y-m-d');
+        }
+
+        $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
+        $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
+        $hoje = Carbon::now()->startOfDay();
+
+        // Query base
+        $query = TransacaoFinanceira::whereHas('entidadeFinanceira', function ($q) {
+                $q->whereIn('tipo', ['banco', 'caixa']);
+            })
+            ->where('company_id', $companyId)
+            ->where('tipo', $tipo);
+
+        // Aplicar filtro de conta se fornecido
+        if ($entidadeId) {
+            if (is_array($entidadeId)) {
+                // Múltiplas contas selecionadas
+                $query->whereIn('entidade_id', $entidadeId);
+            } else {
+                // Uma conta selecionada
+                $query->where('entidade_id', $entidadeId);
+            }
+        }
+
+        // Vencidos: usar método reutilizável
+        $vencidos = $this->aplicarFiltroVencidos(clone $query, $hoje, $start, $end)->sum('valor');
+
+        // Vencem hoje: usar método reutilizável
+        $hojeCount = 0;
+        if ($hoje->between($start, $end)) {
+            $hojeCount = $this->aplicarFiltroHoje(clone $query, $hoje, $start, $end)->sum('valor');
+        }
+
+        // A vencer: usar método reutilizável
+        $aVencer = $this->aplicarFiltroAVencer(clone $query, $hoje, $start, $end)->sum('valor');
+
+        // Recebidos/Pagos: situacao = 'pago' ou valor_pago >= valor
+        // IMPORTANTE: Considerar fracionamentos quando existirem
+        // Recebidos/Pagos: situacao = 'pago' ou 'recebido' + data_vencimento no período
+        $situacaoPaga = $tipo === 'entrada' ? 'recebido' : 'pago';
+        
+        $recebidos = (clone $query)
+            ->where('situacao', $situacaoPaga)
+            ->whereBetween('data_vencimento', [$start, $end])
+            ->sum('valor');
+
+        // Verificar se é extrato (filtra por data_pagamento)
+        $isExtrato = $request->input('tab') === 'extrato' || $request->input('is_extrato') === 'true';
+
+        if ($isExtrato) {
+            // =====================================================
+            // ESTATÍSTICAS ESPECÍFICAS PARA EXTRATO
+            // Usa método centralizado
+            // =====================================================
+            
+            $stats = $this->calculateExtratoStats($startDate, $endDate, $entidadeId);
+            
+            if (!$stats) {
+                return response()->json([
+                    'receitas_aberto' => '0,00',
+                    'receitas_realizadas' => '0,00',
+                    'despesas_aberto' => '0,00',
+                    'despesas_realizadas' => '0,00',
+                    'total' => '0,00'
+                ]);
+            }
+
+            $response = [
+                'receitas_aberto' => number_format($stats['receitas_aberto'], 2, ',', '.'),
+                'receitas_realizadas' => number_format($stats['receitas_realizadas'], 2, ',', '.'),
+                'despesas_aberto' => number_format($stats['despesas_aberto'], 2, ',', '.'),
+                'despesas_realizadas' => number_format($stats['despesas_realizadas'], 2, ',', '.'),
+                'total' => number_format($stats['total'], 2, ',', '.')
+            ];
+        } else {
+            // Total do período: todas as transações com data_vencimento OU data_competencia dentro do período
+            $total = (clone $query)
+                ->where(function($q) use ($start, $end) {
+                    $q->whereBetween('data_vencimento', [$start, $end])
+                      ->orWhere(function($subQ) use ($start, $end) {
+                          $subQ->whereNull('data_vencimento')
+                               ->whereBetween('data_competencia', [$start, $end]);
+                      });
+                })
+                ->sum('valor');
+
+            $response = [
+                'vencidos' => number_format($vencidos, 2, ',', '.'),
+                'hoje' => number_format($hojeCount, 2, ',', '.'),
+                'a_vencer' => number_format($aVencer, 2, ',', '.'),
+                'total' => number_format($total, 2, ',', '.')
+            ];
+
+            // Debug log
+            \Log::info('[STATS] Calculando stats para contas a receber/pagar', [
+                'tipo' => $tipo,
+                'vencidos_raw' => $vencidos,
+                'hoje_raw' => $hojeCount,
+                'a_vencer_raw' => $aVencer,
+                'recebidos_raw' => $recebidos,
+                'total_raw' => $total,
+                'hoje_between' => $hoje->between($start, $end),
+                'hoje_date' => $hoje->format('Y-m-d'),
+                'start_date' => $start->format('Y-m-d'),
+                'end_date' => $end->format('Y-m-d'),
+            ]);
+
+            // Para entrada usa 'recebidos', para saida usa 'pagos'
+            if ($tipo === 'entrada') {
+                $response['recebidos'] = number_format($recebidos, 2, ',', '.');
+            } else {
+                $response['pagos'] = number_format($recebidos, 2, ',', '.');
+            }
+        }
+
+        return response()->json($response);
+    }
+
+    /**
      * Fornece os dados para a DataTable com processamento do lado do servidor (server-side)
      */
     public function getTransacoesData(Request $request)
@@ -478,9 +821,9 @@ class BancoController extends Controller
             'start_date' => $request->input('start_date'),
             'end_date' => $request->input('end_date')
         ]);
-        
+
         $companyId = session('active_company_id');
-        
+
         if (!$companyId) {
             \Log::warning('getTransacoesData - Company ID não encontrado');
             return response()->json([
@@ -491,10 +834,10 @@ class BancoController extends Controller
             ]);
         }
 
-        // Query base - filtrar apenas transações de banco
-        $query = TransacaoFinanceira::with(['modulos_anexos', 'lancamentoPadrao'])
+        // Query base - filtrar transações de banco e caixa
+        $query = TransacaoFinanceira::with(['modulos_anexos', 'lancamentoPadrao', 'fracionamentos', 'recorrencia'])
             ->whereHas('entidadeFinanceira', function ($q) {
-                $q->where('tipo', 'banco');
+                $q->whereIn('tipo', ['banco', 'caixa']);
             })
             ->where('company_id', $companyId);
 
@@ -521,52 +864,250 @@ class BancoController extends Controller
             $query->where('tipo', $request->tipo);
         }
 
-        // Aplicar filtro de data (daterangepicker)
+        // Aplicar filtro de situação (em_aberto, atrasado, previsto, pago_parcial, pago, desconsiderado)
+        if ($request->filled('situacao') && $request->situacao !== 'all' && $request->situacao !== '') {
+            $query->where('situacao', $request->situacao);
+        }
+
+        // Aplicar filtro de entidade_id (conta) - pode ser array ou valor único
+        if ($request->filled('entidade_id')) {
+            $entidadeIds = $request->input('entidade_id');
+            if (is_array($entidadeIds) && count($entidadeIds) > 0) {
+                // Remove valores vazios
+                $entidadeIds = array_filter($entidadeIds, function($value) {
+                    return !empty($value);
+                });
+                if (count($entidadeIds) > 0) {
+                    $query->whereIn('entidade_id', $entidadeIds);
+                }
+            } elseif (!is_array($entidadeIds) && !empty($entidadeIds)) {
+                $query->where('entidade_id', $entidadeIds);
+            }
+        }
+
+        // Filtro por status da tab (vencidos, hoje, a_vencer, recebidos, total)
+        $status = $request->input('status');
+        $hoje = Carbon::now()->startOfDay();
+
+        // Preparar variáveis de período para uso nos filtros
+        $startDate = null;
+        $endDate = null;
+        $isContasReceberPagar = false;
+        $isExtrato = false;
+
         if ($request->filled('start_date') && $request->filled('end_date')) {
             try {
                 $startDate = Carbon::createFromFormat('Y-m-d', $request->start_date)->startOfDay();
                 $endDate = Carbon::createFromFormat('Y-m-d', $request->end_date)->endOfDay();
-                $query->whereBetween('data_competencia', [$startDate, $endDate]);
+                $tipo = $request->input('tipo');
+                $isContasReceberPagar = in_array($tipo, ['entrada', 'saida']);
+                // Detectar se estamos na aba "extrato" via parâmetro da request
+                $isExtrato = $request->input('tab') === 'extrato' || $request->input('is_extrato') === 'true';
             } catch (\Exception $e) {
                 Log::warning('Erro ao processar filtro de data no DataTables', ['error' => $e->getMessage()]);
             }
         }
 
+        // Aplicar filtro de status da tab
+        if ($status && $status !== 'total') {
+            switch ($status) {
+                // =====================================================
+                // FILTROS ESPECÍFICOS PARA EXTRATO
+                // =====================================================
+                case 'receitas_aberto':
+                    // Receitas em Aberto: entrada + não recebido + vencimento no período
+                    if ($startDate && $endDate && $isExtrato) {
+                        $query->where('tipo', 'entrada')
+                              ->whereBetween('data_vencimento', [$startDate, $endDate])
+                              ->where('situacao', '!=', 'recebido');
+                    }
+                    break;
+
+                case 'receitas_realizadas':
+                    // Receitas Realizadas: entrada + recebido + vencimento no período
+                    if ($startDate && $endDate && $isExtrato) {
+                        $query->where('tipo', 'entrada')
+                              ->whereBetween('data_vencimento', [$startDate, $endDate])
+                              ->where('situacao', 'recebido');
+                    }
+                    break;
+
+                case 'despesas_aberto':
+                    // Despesas em Aberto: saída + não pago + vencimento no período
+                    if ($startDate && $endDate && $isExtrato) {
+                        $query->where('tipo', 'saida')
+                              ->whereBetween('data_vencimento', [$startDate, $endDate])
+                              ->where(function($q) {
+                                  $q->whereNull('situacao')
+                                    ->orWhere('situacao', '!=', 'pago')
+                                    ->orWhere(function($subQ) {
+                                        $subQ->whereColumn('valor_pago', '<', 'valor')
+                                             ->orWhereNull('valor_pago');
+                                    });
+                              });
+                    }
+                    break;
+
+                case 'despesas_realizadas':
+                    // Despesas Realizadas: saída + pago + vencimento no período
+                    if ($startDate && $endDate && $isExtrato) {
+                        $query->where('tipo', 'saida')
+                              ->whereBetween('data_vencimento', [$startDate, $endDate])
+                              ->where(function($q) {
+                                  $q->where('situacao', 'pago')
+                                    ->orWhere(function($subQ) {
+                                        $subQ->whereColumn('valor_pago', '>=', 'valor')
+                                             ->whereNotNull('valor_pago');
+                                    });
+                              });
+                    }
+                    break;
+
+                // =====================================================
+                // FILTROS PARA CONTAS A RECEBER/PAGAR
+                // =====================================================
+                case 'vencidos':
+                    \Log::info('[FILTRO] Aplicando filtro VENCIDOS', [
+                        'hoje' => $hoje->format('Y-m-d'),
+                        'startDate' => $startDate?->format('Y-m-d'),
+                        'endDate' => $endDate?->format('Y-m-d'),
+                        'isContasReceberPagar' => $isContasReceberPagar
+                    ]);
+                    // Usar método reutilizável
+                    $this->aplicarFiltroVencidos($query, $hoje, $startDate, $endDate, $isContasReceberPagar);
+                    break;
+
+                case 'hoje':
+                    \Log::info('[FILTRO] Aplicando filtro HOJE', [
+                        'hoje' => $hoje->format('Y-m-d'),
+                        'startDate' => $startDate?->format('Y-m-d'),
+                        'endDate' => $endDate?->format('Y-m-d')
+                    ]);
+                    // Usar método reutilizável
+                    $this->aplicarFiltroHoje($query, $hoje, $startDate, $endDate);
+                    break;
+
+                case 'a_vencer':
+                    \Log::info('[FILTRO] Aplicando filtro A_VENCER', [
+                        'hoje' => $hoje->format('Y-m-d'),
+                        'startDate' => $startDate?->format('Y-m-d'),
+                        'endDate' => $endDate?->format('Y-m-d'),
+                        'isContasReceberPagar' => $isContasReceberPagar
+                    ]);
+                    // Usar método reutilizável
+                    $this->aplicarFiltroAVencer($query, $hoje, $startDate, $endDate, $isContasReceberPagar);
+                    break;
+
+                case 'recebidos':
+                    \Log::info('[FILTRO] Aplicando filtro RECEBIDOS', [
+                        'tipo' => 'entrada',
+                        'startDate' => $startDate?->format('Y-m-d'),
+                        'endDate' => $endDate?->format('Y-m-d')
+                    ]);
+                    // Recebidos: tipo='entrada' + situacao='recebido' + data_vencimento no período
+                    $query->where('tipo', 'entrada')
+                          ->where('situacao', 'recebido');
+                    
+                    // Aplicar filtro de período
+                    if ($startDate && $endDate) {
+                        $query->whereBetween('data_vencimento', [$startDate, $endDate]);
+                    }
+                    break;
+
+                case 'pagos':
+                    // Pagos: tipo='saida' + situacao='pago' + data_vencimento no período
+                    $query->where('tipo', 'saida')
+                          ->where('situacao', 'pago');
+                    
+                    // Aplicar filtro de período
+                    if ($startDate && $endDate) {
+                        $query->whereBetween('data_vencimento', [$startDate, $endDate]);
+                    }
+                    break;
+
+            }
+        } else {
+            // Para contas a receber (entrada) e contas a pagar (saida), quando status = 'total' ou não especificado,
+            // mostrar TODAS as transações (incluindo pagas) dentro do período
+            // Deve incluir transações que têm data_vencimento dentro do período
+            if ($startDate && $endDate) {
+                if ($isExtrato) {
+                    // Para Extrato (Total do Período): filtrar por data de vencimento dentro do período
+                    // Mostrar TODAS as transações com vencimento no período (pagas e em aberto)
+                    $query->whereBetween('data_vencimento', [$startDate, $endDate]);
+                } elseif ($isContasReceberPagar) {
+                    // Para contas a receber/pagar, filtrar apenas por data_vencimento
+                    $query->whereBetween('data_vencimento', [$startDate, $endDate]);
+                } else {
+                    // Para outras tabs, filtrar por data_competencia
+                    $query->whereBetween('data_competencia', [$startDate, $endDate]);
+                }
+            }
+        }
+
         // Contagem de registros após aplicar os filtros
         $recordsFiltered = $query->count();
+        
+        // Log do SQL gerado para debug
+        \Log::info('[QUERY] SQL gerado após filtros', [
+            'sql' => $query->toSql(),
+            'bindings' => $query->getBindings(),
+            'recordsFiltered' => $recordsFiltered
+        ]);
 
         // Aplicar ordenação
         $orderColumn = 'id'; // ID por padrão
         $orderDir = 'desc';
-        
+
         if ($request->has('order') && count($request->order)) {
             $order = $request->order[0];
             $columnIndex = (int) $order['column'];
             $orderDir = $order['dir'];
-            
+
             // Mapear índice da coluna para campo do banco
+            // Verifica se é contas a receber/pagar ou registros normais
+            $isContasReceberPagar = $request->filled('tipo') && ($request->tipo === 'entrada' || $request->tipo === 'saida');
+
+            if ($isContasReceberPagar) {
+                // Mapeamento para contas a receber/pagar (com vencimento e situação)
+                $columnMap = [
+                    0 => 'checkbox', // Checkbox não é ordenável
+                    1 => 'data_vencimento',
+                    2 => 'descricao',
+                    3 => 'valor',
+                    4 => 'valor_pago',
+                    5 => 'situacao',
+                    6 => 'origem',
+                    7 => 'actions'
+                ];
+            } else {
+                // Mapeamento padrão (para registros)
             $columnMap = [
-                0 => 'id',
+                0 => 'checkbox', // Checkbox não é ordenável
                 1 => 'data_competencia',
-                2 => 'tipo_documento',
-                3 => 'comprovacao_fiscal',
-                4 => 'descricao',
-                5 => 'tipo',
-                6 => 'valor',
-                7 => 'origem',
-                8 => 'anexos',
-                9 => 'actions'
+                2 => 'comprovacao_fiscal',
+                3 => 'descricao',
+                4 => 'tipo',
+                5 => 'valor',
+                6 => 'origem',
+                7 => 'actions'
             ];
-            
+            }
+
             $orderColumn = $columnMap[$columnIndex] ?? 'id';
-            
+
             // Campos que não devem ser ordenados (HTML)
-            $nonOrderableColumns = ['comprovacao_fiscal', 'descricao', 'anexos', 'actions'];
+            $nonOrderableColumns = ['checkbox', 'comprovacao_fiscal', 'descricao', 'anexos', 'actions', 'situacao', 'origem'];
             if (in_array($orderColumn, $nonOrderableColumns)) {
                 $orderColumn = 'id'; // Fallback para ID
             }
+
+            // Se data_vencimento não existir, usar data_competencia como fallback
+            if ($orderColumn === 'data_vencimento' && !$isContasReceberPagar) {
+                $orderColumn = 'data_competencia';
+            }
         }
-        
+
         $query->orderBy($orderColumn, $orderDir);
 
         // Aplicar paginação
@@ -574,47 +1115,201 @@ class BancoController extends Controller
         $length = $request->input('length', 50);
         $transacoes = $query->skip($start)->take($length)->get();
 
+        // Verifica se é contas a receber/pagar ou registros normais (antes do map)
+        $isContasReceberPagar = $request->filled('tipo') && ($request->tipo === 'entrada' || $request->tipo === 'saida');
+        $isExtrato = $request->input('tab') === 'extrato' || $request->input('is_extrato') === 'true';
+
         // Formatar os dados para a resposta JSON
-        $data = $transacoes->map(function($transacao) {
-            // Formatar descrição com lançamento padrão
-            // Formatar descrição com lançamento padrão
-            $descricaoHtml = '<div class="fw-bold"><a href="#" onclick="abrirDrawerTransacao(' . $transacao->id . '); return false;" class="text-gray-800 text-hover-primary">' . e($transacao->descricao) . '</a></div>';
+        $data = $transacoes->map(function($transacao) use ($request, $isContasReceberPagar, $isExtrato) {
+            // Formatar descrição com informação de recorrência (se houver)
+            $descricaoTexto = e($transacao->descricao);
+
+            // Verifica se a transação faz parte de uma recorrência
+            if ($transacao->recorrencia->isNotEmpty()) {
+                $recorrencia = $transacao->recorrencia->first();
+                $pivot = $recorrencia->pivot;
+                $numeroOcorrencia = $pivot->numero_ocorrencia ?? 1;
+                $totalOcorrencias = $recorrencia->total_ocorrencias ?? 1;
+
+                // Formato: "1/12 - Nana Banana" com ícone
+                $descricaoTexto = '<i class="bi bi-repeat text-primary me-2"></i>' . $numeroOcorrencia . '/' . $totalOcorrencias . ' - ' . $descricaoTexto;
+            }
+
+            $descricaoHtml = '<div class="fw-bold"><a href="#" onclick="abrirDrawerTransacao(' . $transacao->id . '); return false;" class="text-gray-800 text-hover-primary">' . $descricaoTexto . '</a></div>';
             if ($transacao->lancamentoPadrao) {
                 $descricaoHtml .= '<div class="text-muted small">' . e($transacao->lancamentoPadrao->description) . '</div>';
             }
-            
-            // Formatar anexos
-            $anexosHtml = $this->formatAnexos($transacao);
-            
-            // Formatar ações
-            $actionsHtml = '<div class="d-flex justify-content-end align-items-center">
-                <a href="' . route('banco.edit', $transacao->id) . '" class="btn btn-icon btn-active-light-primary w-30px h-30px ms-auto me-5">
-                    <span class="svg-icon svg-icon-3">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path opacity="0.3" d="M21.4 8.35303L19.241 10.511L13.485 4.755L15.643 2.59595C16.0248 2.21423 16.5426 1.99988 17.0825 1.99988C17.6224 1.99988 18.1402 2.21423 18.522 2.59595L21.4 5.474C21.7817 5.85581 21.9962 6.37355 21.9962 6.91345C21.9962 7.45335 21.7817 7.97122 21.4 8.35303ZM3.68699 21.932L9.88699 19.865L4.13099 14.109L2.06399 20.309C1.98815 20.5354 1.97703 20.7787 2.03189 21.0111C2.08674 21.2436 2.2054 21.4561 2.37449 21.6248C2.54359 21.7934 2.75641 21.9115 2.989 21.9658C3.22158 22.0201 3.4647 22.0084 3.69099 21.932H3.68699Z" fill="currentColor" />
-                            <path d="M5.574 21.3L3.692 21.928C3.46591 22.0032 3.22334 22.0141 2.99144 21.9594C2.75954 21.9046 2.54744 21.7864 2.3789 21.6179C2.21036 21.4495 2.09202 21.2375 2.03711 21.0056C1.9822 20.7737 1.99289 20.5312 2.06799 20.3051L2.696 18.422L5.574 21.3ZM4.13499 14.105L9.891 19.861L19.245 10.507L13.489 4.75098L4.13499 14.105Z" fill="currentColor" />
-                        </svg>
-                    </span>
-                </a>
-            </div>';
-            
-            return [
-                $transacao->id,
-                $transacao->data_competencia 
-                    ? Carbon::parse($transacao->data_competencia)->format('d/m/y') 
-                    : '-',
-                $transacao->tipo_documento ?? '-',
-                // Verifica se tem anexos ativos diretamente do relacionamento
-                $transacao->modulos_anexos->where('status', 'ativo')->isNotEmpty()
-                    ? '<i class="fas fa-check-circle text-success" title="Comprovação Fiscal"></i>'
-                    : '<i class="bi bi-x-circle-fill text-danger" title="Sem Comprovação Fiscal"></i>',
-                $descricaoHtml,
-                '<div class="badge fw-bold ' . ($transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger') . '">' . $transacao->tipo . '</div>',
-                'R$ ' . number_format($transacao->valor, 2, ',', '.'),
-                $transacao->origem ?? '-',
-                $anexosHtml,
-                $actionsHtml
-            ];
+
+            // Formatar ações usando classe Helper
+            // Mostrar "Informar pagamento" apenas se a transação não estiver completamente paga
+            $isPago = ($transacao->situacao === 'pago') ||
+                     ($transacao->valor_pago && (float)$transacao->valor_pago >= (float)$transacao->valor);
+
+            $actionsHtml = $this->formatter->formatActions($transacao, [
+                'showInformarPagamento' => !$isPago
+            ]);
+
+
+            if ($isExtrato) {
+                // Formatação para Extrato
+                // Formatar situação
+                $situacaoBadge = '';
+                if ($transacao->situacao) {
+                    $badgeClasses = [
+                        'em_aberto' => 'badge-light-warning',
+                        'atrasado' => 'badge-light-danger',
+                        'previsto' => 'badge-light-info',
+                        'pago_parcial' => 'badge-light-primary',
+                        'pago' => 'badge-light-success',
+                        'desconsiderado' => 'badge-light-secondary'
+                    ];
+                    // Converter enum para string antes de usar como chave
+                    $situacaoValue = $transacao->situacao instanceof \App\Enums\SituacaoTransacao 
+                        ? $transacao->situacao->value 
+                        : $transacao->situacao;
+                    $badgeClass = $badgeClasses[$situacaoValue] ?? 'badge-light-secondary';
+                    $situacaoLabel = ucfirst(str_replace('_', ' ', $situacaoValue));
+                    $situacaoBadge = '<div class="badge fw-bold ' . $badgeClass . '">' . $situacaoLabel . '</div>';
+                } else {
+                    $situacaoBadge = '<div class="badge fw-bold badge-light-secondary">Em Aberto</div>';
+                }
+
+
+                // Data de vencimento
+                $dataExibicao = '-';
+                if ($transacao->data_vencimento) {
+                    try {
+                        $dataExibicao = Carbon::parse($transacao->data_vencimento)->format('d/m/Y');
+                    } catch (\Exception $e) {
+                        $dataExibicao = '-';
+                    }
+                }
+
+                // Checkbox para seleção (adicionar classe row-check para identificação)
+                $checkboxHtml = '<div class="form-check form-check-sm form-check-custom form-check-solid">
+                    <input class="form-check-input row-check" type="checkbox" value="' . $transacao->id . '" />
+                </div>';
+
+                // Valor
+                $valorFormatado = 'R$ ' . number_format($transacao->valor, 2, ',', '.');
+
+                // Saldo (calculado com base no saldo da entidade ou valor pago)
+                // Para extrato, podemos usar o valor_pago como saldo
+                $saldo = $transacao->valor_pago ?? $transacao->valor;
+                $saldoFormatado = 'R$ ' . number_format($saldo, 2, ',', '.');
+
+                return [
+                    $checkboxHtml,
+                    $dataExibicao,
+                    $descricaoHtml,
+                    $situacaoBadge,
+                    $valorFormatado,
+                    $saldoFormatado,
+                    $actionsHtml
+                ];
+            } elseif ($isContasReceberPagar) {
+                // Formatar situação
+                $situacaoBadge = '';
+                if ($transacao->situacao) {
+                    $badgeClasses = [
+                        'em_aberto' => 'badge-light-warning',
+                        'atrasado' => 'badge-light-danger',
+                        'previsto' => 'badge-light-info',
+                        'pago_parcial' => 'badge-light-primary',
+                        'pago' => 'badge-light-success',
+                        'recebido' => 'badge-light-primary',  // Novo
+                        'desconsiderado' => 'badge-light-secondary'
+                    ];
+                    // Converter Enum para string
+                    $situacaoValue = $transacao->situacao instanceof \App\Enums\SituacaoTransacao 
+                        ? $transacao->situacao->value 
+                        : $transacao->situacao;
+                    
+                    $badgeClass = $badgeClasses[$situacaoValue] ?? 'badge-light-secondary';
+                    $situacaoLabel = ucfirst(str_replace('_', ' ', $situacaoValue));
+                    $situacaoBadge = '<div class="badge fw-bold ' . $badgeClass . '">' . $situacaoLabel . '</div>';
+                } else {
+                    $situacaoBadge = '<div class="badge fw-bold badge-light-secondary">Em Aberto</div>';
+                }
+
+                // Determinar qual data usar (vencimento ou competência)
+                // Formata com Y maiúsculo para mostrar 4 dígitos do ano
+                // Usa createFromFormat para garantir interpretação correta (Y-m-d do banco)
+                $dataExibicao = '-';
+                if ($transacao->data_vencimento) {
+                    try {
+                        // Se já está em formato Y-m-d do banco, usa createFromFormat
+                        if (is_string($transacao->data_vencimento) && strpos($transacao->data_vencimento, '-') !== false) {
+                            $dataExibicao = Carbon::createFromFormat('Y-m-d', $transacao->data_vencimento)->format('d/m/Y');
+                        } else {
+                            $dataExibicao = Carbon::parse($transacao->data_vencimento)->format('d/m/Y');
+                        }
+                    } catch (\Exception $e) {
+                        $dataExibicao = '-';
+                    }
+                } elseif ($transacao->data_competencia) {
+                    try {
+                        // Se já está em formato Y-m-d do banco, usa createFromFormat
+                        if (is_string($transacao->data_competencia) && strpos($transacao->data_competencia, '-') !== false) {
+                            $dataExibicao = Carbon::createFromFormat('Y-m-d', $transacao->data_competencia)->format('d/m/Y');
+                        } else {
+                            $dataExibicao = Carbon::parse($transacao->data_competencia)->format('d/m/Y');
+                        }
+                    } catch (\Exception $e) {
+                        $dataExibicao = '-';
+                    }
+                }
+
+                // Checkbox para seleção (adicionar classe row-check para identificação)
+                $checkboxHtml = '<div class="form-check form-check-sm form-check-custom form-check-solid">
+                    <input class="form-check-input row-check" type="checkbox" value="' . $transacao->id . '" />
+                </div>';
+
+                // Calcular valor "A pagar"
+                // Se houver fracionamento do tipo "em_aberto", usar o valor desse fracionamento
+                // Caso contrário, calcular: valor - valor_pago
+                $valorAPagar = 0;
+                $fracionamentoEmAberto = $transacao->fracionamentos->where('tipo', 'em_aberto')->first();
+                if ($fracionamentoEmAberto) {
+                    $valorAPagar = $fracionamentoEmAberto->valor;
+                } else {
+                    // Se não há fracionamento, calcular o que falta pagar
+                    $valorAPagar = max(0, $transacao->valor - ($transacao->valor_pago ?? 0));
+                }
+
+                return [
+                    $checkboxHtml,
+                    $dataExibicao,
+                    $descricaoHtml,
+                    'R$ ' . number_format($transacao->valor, 2, ',', '.'),
+                    'R$ ' . number_format($valorAPagar, 2, ',', '.'),
+                    $situacaoBadge,
+                    $transacao->origem ?? '-',
+                    $actionsHtml
+                ];
+            } else {
+                // Retorno padrão para registros
+                // Checkbox para seleção (adicionar classe row-check para identificação)
+                $checkboxHtml = '<div class="form-check form-check-sm form-check-custom form-check-solid">
+                    <input class="form-check-input row-check" type="checkbox" value="' . $transacao->id . '" />
+                </div>';
+
+                return [
+                    $checkboxHtml,
+                    $transacao->data_competencia
+                        ? Carbon::parse($transacao->data_competencia)->format('d/m/y')
+                        : '-',
+                    // Verifica se tem anexos ativos diretamente do relacionamento
+                    $transacao->modulos_anexos->where('status', 'ativo')->isNotEmpty()
+                        ? '<i class="fas fa-check-circle text-success" title="Comprovação Fiscal"></i>'
+                        : '<i class="bi bi-x-circle-fill text-danger" title="Sem Comprovação Fiscal"></i>',
+                    $descricaoHtml,
+                    '<div class="badge fw-bold ' . ($transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger') . '">' . $transacao->tipo . '</div>',
+                    'R$ ' . number_format($transacao->valor, 2, ',', '.'),
+                    $transacao->origem ?? '-',
+                    $actionsHtml
+                ];
+            }
         });
 
         // Retorna a resposta no formato que a DataTable espera
@@ -624,14 +1319,14 @@ class BancoController extends Controller
             'recordsFiltered' => $recordsFiltered,
             'data' => $data->toArray()
         ];
-        
+
         \Log::info('getTransacoesData - Resposta', [
             'draw' => $response['draw'],
             'recordsTotal' => $response['recordsTotal'],
             'recordsFiltered' => $response['recordsFiltered'],
             'data_count' => count($response['data'])
         ]);
-        
+
         return response()->json($response);
     }
 
@@ -641,7 +1336,7 @@ class BancoController extends Controller
     public function getDetalhes($id)
     {
         $companyId = session('active_company_id');
-        
+
         $transacao = TransacaoFinanceira::with([
                 'lancamentoPadrao',
                 'entidadeFinanceira',
@@ -653,7 +1348,7 @@ class BancoController extends Controller
             ])
             ->where('company_id', $companyId)
             ->findOrFail($id);
-            
+
         return response()->json([
             'id' => $transacao->id,
             'descricao' => $transacao->descricao,
@@ -695,73 +1390,7 @@ class BancoController extends Controller
             })
         ]);
     }
-    
-    /**
-     * Formata os anexos para exibição na tabela
-     */
-    private function formatAnexos($transacao)
-    {
-        $anexos = $transacao->modulos_anexos->take(3);
-        $remainingAnexos = $transacao->modulos_anexos->count() - 3;
-        
-        $icons = [
-            'pdf' => ['icon' => 'bi-file-earmark-pdf-fill', 'color' => 'text-danger'],
-            'jpg' => ['icon' => 'bi-file-earmark-image-fill', 'color' => 'text-warning'],
-            'jpeg' => ['icon' => 'bi-file-earmark-image-fill', 'color' => 'text-primary'],
-            'png' => ['icon' => 'bi-file-earmark-image-fill', 'color' => 'text-warning'],
-            'doc' => ['icon' => 'bi-file-earmark-word-fill', 'color' => 'text-info'],
-            'docx' => ['icon' => 'bi-file-earmark-word-fill', 'color' => 'text-info'],
-            'xls' => ['icon' => 'bi-file-earmark-spreadsheet-fill', 'color' => 'text-warning'],
-            'xlsx' => ['icon' => 'bi-file-earmark-spreadsheet-fill', 'color' => 'text-warning'],
-            'txt' => ['icon' => 'bi-file-earmark-text-fill', 'color' => 'text-muted'],
-        ];
-        $defaultIcon = ['icon' => 'bi-file-earmark-fill', 'color' => 'text-secondary'];
-        
-        $html = '<div class="symbol-group symbol-hover fs-8">';
-        
-        foreach ($anexos as $anexo) {
-            $formaAnexo = $anexo->forma_anexo ?? 'arquivo';
-            $isLink = $formaAnexo === 'link';
-            
-            if ($isLink) {
-                $href = $anexo->link ?? '#';
-                $tooltip = $anexo->link ?? 'Link';
-                $iconData = ['icon' => 'bi-link-45deg', 'color' => 'text-primary'];
-            } else {
-                $extension = pathinfo($anexo->nome_arquivo ?? '', PATHINFO_EXTENSION);
-                $iconData = $icons[strtolower($extension)] ?? $defaultIcon;
-                $tooltip = $anexo->nome_arquivo ?? 'Arquivo';
-                
-                if ($anexo->caminho_arquivo) {
-                    $href = route('file', ['path' => $anexo->caminho_arquivo]);
-                } else {
-                    $href = '#';
-                }
-            }
-            
-            $html .= '<div class="symbol symbol-30px symbol-circle bg-light-primary text-primary d-flex justify-content-center align-items-center" data-bs-toggle="tooltip" title="' . e($tooltip) . '">';
-            $html .= '<a href="' . e($href) . '" target="_blank" class="text-decoration-none">';
-            $html .= '<i class="bi ' . $iconData['icon'] . ' ' . $iconData['color'] . ' fs-3"></i>';
-            $html .= '</a></div>';
-        }
-        
-        if ($remainingAnexos > 0) {
-            $html .= '<div class="symbol symbol-25px symbol-circle" data-bs-toggle="tooltip" title="Mais ' . $remainingAnexos . ' anexos">';
-            $html .= '<a href="' . route('banco.edit', $transacao->id) . '">';
-            $html .= '<span class="symbol-label fs-8 fw-bold bg-light text-gray-800">+' . $remainingAnexos . '</span>';
-            $html .= '</a></div>';
-        }
-        
-        if ($transacao->modulos_anexos->isEmpty()) {
-            $html .= '<div class="symbol symbol-25px symbol-circle text-center" data-bs-toggle="tooltip" title="Nenhum anexo disponível">';
-            $html .= '<span class="symbol-label fs-8 fw-bold bg-light text-gray-800">0</span>';
-            $html .= '</div>';
-        }
-        
-        $html .= '</div>';
-        
-        return $html;
-    }
+
 
     /**
      * Retorna o total de conciliações pendentes para todas as entidades bancárias
@@ -851,50 +1480,99 @@ class BancoController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     * Refatorado para usar TransacaoFinanceiraService
      */
     public function store(StoreTransacaoFinanceiraRequest $request)
     {
-        // Recupera a companhia associada ao usuário autenticado
-        $subsidiary = User::getCompany();
+        try {
+            // Recupera a companhia associada ao usuário autenticado
+            $subsidiary = User::getCompany();
 
-        if (!$subsidiary) {
-            return redirect()->back()->with('error', 'Companhia não encontrada.');
+            if (!$subsidiary) {
+                return redirect()->back()->with('error', 'Companhia não encontrada.');
+            }
+
+            // Adiciona company_id aos dados validados
+            $validatedData = $request->validated();
+            $validatedData['company_id'] = $subsidiary->company_id;
+
+            // Delega a criação para o Service (com DB::transaction automático)
+            $transacao = $this->transacaoService->criarLancamento($validatedData, $request);
+
+            // Processa fracionamentos se houver pagamento parcial
+            if ($this->temPagamentoParcial($request, $validatedData)) {
+                $movimentacao = $transacao->movimentacao;
+                $this->criarLancamentosFracionados($transacao, $movimentacao, $validatedData, $request);
+            }
+
+            // Processa recorrência se houver
+            if ($this->temRecorrencia($request)) {
+                $movimentacao = $transacao->movimentacao;
+                $this->criarRecorrencia($transacao, $movimentacao, $validatedData, $request);
+            }
+
+            // Processa parcelas se houver
+            if ($this->temParcelas($request)) {
+                $movimentacao = $transacao->movimentacao;
+                $this->criarParcelas($transacao, $movimentacao, $validatedData, $request);
+                // Remove a transação principal, pois as parcelas são as transações reais
+                $transacao->delete();
+            }
+
+            // Mensagem de sucesso
+            Flasher::addSuccess('Lançamento criado com sucesso!');
+            return redirect()->back()->with('message', 'Lançamento criado com sucesso!');
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao criar lançamento', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            Flasher::addError('Erro ao criar lançamento: ' . $e->getMessage());
+            return redirect()->back()->withInput();
+        }
+    }
+
+    /**
+     * Verifica se tem pagamento parcial
+     */
+    protected function temPagamentoParcial(Request $request, array $data): bool
+    {
+        if (!$request->has('valor_pago') || !isset($data['valor_pago']) || $data['valor_pago'] <= 0) {
+            return false;
         }
 
-        // Validação dos dados é automática com StoreTransacaoFinanceiraRequest, não é necessário duplicar validações aqui
+        $jurosPago = (float) ($request->input('juros_pagamento', 0));
+        $multaPago = (float) ($request->input('multa_pagamento', 0));
+        $valorParaComparacao = $data['valor_pago'] + $jurosPago + $multaPago;
 
-        // Processa os dados validados
-        $validatedData = $request->validated();
+        // É parcial se o valor pago for menor que o valor total
+        return $valorParaComparacao < $data['valor'] && abs($valorParaComparacao - $data['valor']) >= 0.01;
+    }
 
-        // Converte o valor e a data para os formatos adequados
-        $validatedData['data_competencia'] = Carbon::createFromFormat('d-m-Y', $validatedData['data_competencia'])->format('Y-m-d');
-        $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
+    /**
+     * Verifica se tem recorrência
+     */
+    protected function temRecorrencia(Request $request): bool
+    {
+        return $request->has('configuracao_recorrencia') || 
+            ($request->has('intervalo_repeticao') && 
+             $request->has('frequencia') && 
+             $request->has('apos_ocorrencias'));
+    }
 
-        // Adiciona informações padrão
-        $validatedData['company_id'] = $subsidiary->company_id;
-        $validatedData['created_by'] = Auth::id();
-        $validatedData['created_by_name'] = Auth::user()->name;
-        $validatedData['updated_by'] = Auth::id();
-        $validatedData['updated_by_name'] = Auth::user()->name;
-
-        // 1) Chama o método movimentacao() e guarda o retorno
-        $movimentacao = $this->movimentacao($validatedData);
-
-        // 2) Atribui o ID retornado à chave movimentacao_id de $validatedData
-        $validatedData['movimentacao_id'] = $movimentacao->id;
-
-        // 3) Cria o registro na tabela transacoes_financeiras usando o ID que acabamos de obter
-        $caixa = TransacaoFinanceira::create($validatedData);
-
-        // Verifica e processa lançamentos padrão
-        $this->processarLancamentoPadrao($validatedData);
-
-        // Processa anexos, se existirem
-        $this->processarAnexos($request, $caixa);
-
-        // Adiciona mensagem de sucesso
-        Flasher::addSuccess('Lançamento criado com sucesso!');
-        return redirect()->back()->with('message', 'Lançamento criado com sucesso!');
+    /**
+     * Verifica se tem parcelas
+     */
+    protected function temParcelas(Request $request): bool
+    {
+        return $request->has('parcelamento') && 
+            $request->input('parcelamento') !== 'avista' && 
+            $request->input('parcelamento') !== '1x' &&
+            $request->has('parcelas') && 
+            is_array($request->input('parcelas')) && 
+            count($request->input('parcelas')) > 0;
     }
 
     /**
@@ -906,22 +1584,22 @@ class BancoController extends Controller
         $contaDebitoId = null;
         $contaCreditoId = null;
         $lancamentoPadraoId = null;
-        
+
         if (isset($validatedData['lancamento_padrao_id']) && $validatedData['lancamento_padrao_id']) {
             $lancamentoPadraoId = $validatedData['lancamento_padrao_id'];
             $lancamentoPadrao = LancamentoPadrao::find($lancamentoPadraoId);
-            
+
             if ($lancamentoPadrao) {
                 // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
                 $lancamentoPadrao->refresh();
-                
+
                 // Se não foram enviados no request, busca do lançamento padrão
                 if (!isset($validatedData['conta_debito_id']) && $lancamentoPadrao->conta_debito_id) {
                     $contaDebitoId = $lancamentoPadrao->conta_debito_id;
                 } elseif (isset($validatedData['conta_debito_id'])) {
                     $contaDebitoId = $validatedData['conta_debito_id'];
                 }
-                
+
                 if (!isset($validatedData['conta_credito_id']) && $lancamentoPadrao->conta_credito_id) {
                     $contaCreditoId = $lancamentoPadrao->conta_credito_id;
                 } elseif (isset($validatedData['conta_credito_id'])) {
@@ -929,7 +1607,7 @@ class BancoController extends Controller
                 }
             }
         }
-        
+
         // Cria o lançamento na tabela 'movimentacoes'
         $movimentacao = Movimentacao::create([
             'entidade_id' => $validatedData['entidade_id'],
@@ -964,7 +1642,7 @@ class BancoController extends Controller
 
             // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
             $lancamentoPadrao->refresh();
-            
+
             // Cria outra movimentação para "Deposito Bancário"
             $movimentacaoBanco = Movimentacao::create([
                 'entidade_id' => $validatedData['entidade_banco_id'],
@@ -1079,159 +1757,512 @@ class BancoController extends Controller
         }
     }
 
+    /**
+     * Cria uma recorrência para o lançamento
+     */
+    private function criarRecorrencia(TransacaoFinanceira $transacao, Movimentacao $movimentacao, array $validatedData, Request $request)
+    {
+        \Log::info('criarRecorrencia - Início', [
+            'transacao_id' => $transacao->id,
+            'configuracao_recorrencia' => $request->input('configuracao_recorrencia'),
+            'intervalo_repeticao' => $request->input('intervalo_repeticao'),
+            'frequencia' => $request->input('frequencia'),
+            'apos_ocorrencias' => $request->input('apos_ocorrencias')
+        ]);
 
+        $configuracaoRecorrenciaId = $request->input('configuracao_recorrencia');
+        $intervaloRepeticao = $request->input('intervalo_repeticao');
+        $frequencia = $request->input('frequencia');
+        $aposOcorrencias = $request->input('apos_ocorrencias');
 
+        $recorrencia = null;
+        
+        // Parse data_competencia (pode vir em formato brasileiro d/m/Y ou Y-m-d)
+        $dataCompetencia = $validatedData['data_competencia'];
+        if (str_contains($dataCompetencia, '/')) {
+            $dataInicio = Carbon::createFromFormat('d/m/Y', $dataCompetencia);
+        } elseif (str_contains($dataCompetencia, '-') && strlen($dataCompetencia) === 10) {
+            // Verifica se é Y-m-d ou d-m-Y
+            $parts = explode('-', $dataCompetencia);
+            if (strlen($parts[0]) === 4) {
+                $dataInicio = Carbon::createFromFormat('Y-m-d', $dataCompetencia);
+            } else {
+                $dataInicio = Carbon::createFromFormat('d-m-Y', $dataCompetencia);
+            }
+        } else {
+            $dataInicio = Carbon::parse($dataCompetencia);
+        }
+
+        // Se foi enviado um ID de configuração existente (numérico), usa ela
+        if ($configuracaoRecorrenciaId && (is_numeric($configuracaoRecorrenciaId) || (is_string($configuracaoRecorrenciaId) && ctype_digit($configuracaoRecorrenciaId)))) {
+            $id = (int) $configuracaoRecorrenciaId;
+            $recorrencia = Recorrencia::forActiveCompany()->find($id);
+
+            if (!$recorrencia) {
+                \Log::warning('Configuração de recorrência não encontrada', ['id' => $id]);
+                return;
+            }
+
+            // Usa os valores da configuração existente
+            $intervaloRepeticao = $recorrencia->intervalo_repeticao;
+            $frequencia = $recorrencia->frequencia;
+            $aposOcorrencias = $recorrencia->total_ocorrencias;
+        }
+        // Se não foi enviado ID mas tem os parâmetros, verifica se já existe ou cria nova configuração
+        elseif ($intervaloRepeticao && $frequencia && $aposOcorrencias) {
+            // Verifica se já existe uma configuração idêntica
+            $recorrenciaExistente = Recorrencia::where('company_id', $validatedData['company_id'])
+                ->where('intervalo_repeticao', $intervaloRepeticao)
+                ->where('frequencia', $frequencia)
+                ->where('total_ocorrencias', $aposOcorrencias)
+                ->where('ativo', true)
+                ->first();
+
+            if ($recorrenciaExistente) {
+                // Usa a configuração existente
+                $recorrencia = $recorrenciaExistente;
+            } else {
+                // Gera nome automático
+                $frequenciaText = [
+                    'diario' => 'Dia(s)',
+                    'semanal' => 'Semana(s)',
+                    'mensal' => 'Mês(es)',
+                    'anual' => 'Ano(s)'
+                ];
+                $nome = "A cada {$intervaloRepeticao} " . ($frequenciaText[$frequencia] ?? $frequencia) . " - Após {$aposOcorrencias} ocorrências";
+
+                // Cria nova configuração de recorrência
+                $recorrencia = Recorrencia::create([
+                    'company_id' => $validatedData['company_id'],
+                    'nome' => $nome,
+                    'intervalo_repeticao' => $intervaloRepeticao,
+                    'frequencia' => $frequencia,
+                    'total_ocorrencias' => $aposOcorrencias,
+                    'ocorrencias_geradas' => 0,
+                    'data_proxima_geracao' => $dataInicio,
+                    'data_inicio' => $dataInicio,
+                    'data_fim' => null, // Será calculado pelo RecurrenceService
+                    'ativo' => true,
+                    'created_by' => Auth::id(),
+                    'created_by_name' => Auth::user()->name,
+                    'updated_by' => Auth::id(),
+                    'updated_by_name' => Auth::user()->name,
+                ]);
+            }
+        } else {
+            // Não há dados suficientes para criar recorrência
+            return;
+        }
+
+        // Garante que temos uma recorrência válida
+        if (!$recorrencia) {
+            \Log::warning('Não foi possível criar ou encontrar recorrência');
+            return;
+        }
+
+        // Vincula a configuração de recorrência na transação original
+        $transacao->recorrencia_id = $recorrencia->id;
+        $transacao->save();
+
+        // Usa o RecurrenceService para gerar todos os lançamentos recorrentes
+        try {
+            $this->recurrenceService->generateRecurringTransactions(
+                $recorrencia,
+                $transacao,
+                $validatedData
+            );
+
+            \Log::info('Recorrência criada e lançamentos gerados com sucesso', [
+                'recorrencia_id' => $recorrencia->id,
+                'transacao_id' => $transacao->id,
+                'total_ocorrencias' => $recorrencia->total_ocorrencias
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao gerar lançamentos recorrentes', [
+                'recorrencia_id' => $recorrencia->id,
+                'transacao_id' => $transacao->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'frequencia' => $recorrencia->frequencia,
+                'validatedData' => $validatedData
+            ]);
+            // Re-lança a exceção para que o usuário saiba que algo deu errado
+            throw new \Exception('Erro ao gerar lançamentos recorrentes: ' . $e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
+     * Calcula a próxima data de geração baseada na frequência
+     */
+    private function calcularProximaDataGeracao(Carbon $dataInicio, int $intervalo, string $frequencia): Carbon
+    {
+        $data = clone $dataInicio;
+
+        switch ($frequencia) {
+            case 'diario':
+                $data->addDays($intervalo);
+                break;
+            case 'semanal':
+                $data->addWeeks($intervalo);
+                break;
+            case 'mensal':
+                $data->addMonths($intervalo);
+                break;
+            case 'anual':
+                $data->addYears($intervalo);
+                break;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Calcula a data de término baseada no total de ocorrências
+     */
+    private function calcularDataFim(Carbon $dataInicio, int $intervalo, string $frequencia, int $totalOcorrencias): Carbon
+    {
+        $data = clone $dataInicio;
+        $totalIntervalos = ($totalOcorrencias - 1) * $intervalo; // -1 porque a primeira já é a data de início
+
+        switch ($frequencia) {
+            case 'diario':
+                $data->addDays($totalIntervalos);
+                break;
+            case 'semanal':
+                $data->addWeeks($totalIntervalos);
+                break;
+            case 'mensal':
+                $data->addMonths($totalIntervalos);
+                break;
+            case 'anual':
+                $data->addYears($totalIntervalos);
+                break;
+        }
+
+        return $data;
+    }
+
+    /**
+     * Cria registros de fracionamento quando há pagamento parcial
+     * Não cria lançamentos filhos, apenas registra os fracionamentos na tabela transacao_fracionamentos
+     */
+    private function criarLancamentosFracionados(
+        TransacaoFinanceira $transacaoPrincipal,
+        Movimentacao $movimentacaoPrincipal,
+        array $validatedData,
+        Request $request
+    ) {
+        $valorTotal = (float) $validatedData['valor'];
+        $valorPago = (float) $validatedData['valor_pago'];
+
+        // Obtém valores de juros, multa e desconto do pagamento
+        $jurosPago = (float) ($request->input('juros_pagamento', 0));
+        $multaPago = (float) ($request->input('multa_pagamento', 0));
+        $descontoPago = (float) ($request->input('desconto_pagamento', 0));
+
+        // IMPORTANTE: Para calcular o valor em aberto, considera apenas valor_pago + juros + multa (SEM desconto)
+        // O desconto não reduz o valor em aberto, é apenas um ajuste no valor final pago
+        $valorParaComparacao = $valorPago + $jurosPago + $multaPago;
+
+        // Calcula o valor em aberto (valor total do lançamento - valor_pago - juros - multa)
+        $valorAberto = $valorTotal - $valorParaComparacao;
+
+        // Garante que o valor em aberto não seja negativo
+        if ($valorAberto < 0) {
+            $valorAberto = 0;
+        }
+
+        // Valor total pago (com desconto aplicado) - usado apenas no registro de fracionamento
+        $valorTotalPago = $valorParaComparacao - $descontoPago;
+
+        // Obtém data do pagamento
+        $dataPagamento = null;
+        if ($request->has('data_pagamento') && $request->input('data_pagamento')) {
+            try {
+                $dataPagamento = Carbon::createFromFormat('d/m/Y', $request->input('data_pagamento'))->format('Y-m-d');
+            } catch (\Exception $e) {
+                $dataPagamento = $validatedData['data_vencimento'] ?? $validatedData['data_competencia'];
+            }
+        } else {
+            $dataPagamento = $validatedData['data_vencimento'] ?? $validatedData['data_competencia'];
+        }
+
+        // Obtém forma de pagamento e conta
+        $formaPagamento = '';
+        $contaPagamento = '';
+
+        if ($request->has('entidade_id')) {
+            $entidadeId = $request->input('entidade_id');
+            $entidade = \App\Models\EntidadeFinanceira::find($entidadeId);
+            if ($entidade) {
+                $formaPagamento = $entidade->agencia . ' - ' . $entidade->conta;
+            }
+        }
+
+        // Tenta obter conta de pagamento (pode não existir)
+        if ($request->has('conta_pagamento_id') || $request->has('conta_financeira_id')) {
+            $contaId = $request->input('conta_pagamento_id') ?? $request->input('conta_financeira_id');
+            // Aqui você pode buscar o nome da conta se necessário
+        }
+
+        // 1. Registra o fracionamento PAGO
+        TransacaoFracionamento::create([
+            'transacao_principal_id' => $transacaoPrincipal->id,
+            'tipo' => 'pago',
+            'valor' => $valorPago,
+            'data_pagamento' => $dataPagamento,
+            'juros' => $jurosPago,
+            'multa' => $multaPago,
+            'desconto' => $descontoPago,
+            'valor_total' => $valorTotalPago,
+            'forma_pagamento' => $formaPagamento,
+            'conta_pagamento' => $contaPagamento,
+        ]);
+
+        // 2. Registra o fracionamento EM ABERTO (se houver saldo)
+        if ($valorAberto > 0.01) {
+            TransacaoFracionamento::create([
+                'transacao_principal_id' => $transacaoPrincipal->id,
+                'tipo' => 'em_aberto',
+                'valor' => $valorAberto,
+                'data_pagamento' => null,
+                'juros' => 0,
+                'multa' => 0,
+                'desconto' => 0,
+                'valor_total' => $valorAberto,
+                'forma_pagamento' => null,
+                'conta_pagamento' => null,
+            ]);
+        }
+
+        // 3. Atualiza o lançamento principal para "Pago Parcial"
+        $transacaoPrincipal->situacao = 'pago_parcial';
+        $transacaoPrincipal->valor_pago = $valorPago;
+        $transacaoPrincipal->save();
+    }
+
+    /**
+     * Cria transações financeiras para cada parcela quando o parcelamento é 2x ou mais
+     * Cada parcela é uma transação separada, mas relacionada à transação principal
+     */
+    private function criarParcelas(
+        TransacaoFinanceira $transacaoPrincipal,
+        Movimentacao $movimentacaoPrincipal,
+        array $validatedData,
+        Request $request
+    ) {
+        $parcelas = $request->input('parcelas', []);
+
+        if (empty($parcelas) || !is_array($parcelas)) {
+            return;
+        }
+
+        // Ordena as parcelas pelo índice para garantir ordem correta
+        ksort($parcelas);
+
+        foreach ($parcelas as $index => $parcela) {
+            // Prepara os dados da parcela baseado na transação principal
+            // Usa conta_pagamento_id se fornecido, senão usa entidade_id da transação principal
+            $entidadeIdParcela = $validatedData['entidade_id'];
+            if (isset($parcela['conta_pagamento_id']) && $parcela['conta_pagamento_id']) {
+                $entidadeIdParcela = $parcela['conta_pagamento_id'];
+            }
+
+            // Converte a data de vencimento da parcela de d/m/Y para Y-m-d
+            $dataVencimentoParcela = $validatedData['data_competencia']; // Valor padrão
+            if (isset($parcela['vencimento']) && $parcela['vencimento']) {
+                $vencimentoStr = trim($parcela['vencimento']);
+
+                // Remove espaços e garante formato limpo
+                $vencimentoStr = preg_replace('/\s+/', '', $vencimentoStr);
+
+                // Valida formato antes de converter
+                // Espera formato d/m/Y (ex: 01/11/2026)
+                if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $vencimentoStr, $matches)) {
+                    // Extrai dia, mês e ano explicitamente
+                    // matches[1] = dia, matches[2] = mês, matches[3] = ano
+                    $dia = (int)trim($matches[1]);
+                    $mes = (int)trim($matches[2]);
+                    $ano = (int)trim($matches[3]);
+
+                    // Valida se os valores são válidos
+                    if ($dia >= 1 && $dia <= 31 && $mes >= 1 && $mes <= 12 && $ano >= 1900 && $ano <= 2100) {
+                        try {
+                            // Cria a data explicitamente no formato correto (ano, mês, dia)
+                            // Carbon::create() espera (ano, mês, dia)
+                            $dataVencimentoParcela = Carbon::create($ano, $mes, $dia, 0, 0, 0)->format('Y-m-d');
+
+                            // Log para debug (remover depois se necessário)
+                            \Log::info('Data de vencimento da parcela convertida', [
+                                'vencimento_original' => $vencimentoStr,
+                                'dia' => $dia,
+                                'mes' => $mes,
+                                'ano' => $ano,
+                                'data_formatada' => $dataVencimentoParcela,
+                                'parcela_index' => $index
+                            ]);
+                        } catch (\Exception $e) {
+                            \Log::warning('Erro ao criar data de vencimento da parcela', [
+                                'vencimento' => $vencimentoStr,
+                                'dia' => $dia,
+                                'mes' => $mes,
+                                'ano' => $ano,
+                                'erro' => $e->getMessage(),
+                                'parcela_index' => $index
+                            ]);
+                            // Se falhar, usa a data de competência como fallback
+                            $dataVencimentoParcela = $validatedData['data_competencia'];
+                        }
+                    } else {
+                        \Log::warning('Valores de data inválidos na parcela', [
+                            'vencimento' => $vencimentoStr,
+                            'dia' => $dia,
+                            'mes' => $mes,
+                            'ano' => $ano,
+                            'parcela_index' => $index
+                        ]);
+                        $dataVencimentoParcela = $validatedData['data_competencia'];
+                    }
+                } else {
+                    // Se não está no formato esperado, tenta converter com Carbon
+                    try {
+                        $dataVencimentoParcela = Carbon::createFromFormat('d/m/Y', $vencimentoStr)
+                            ->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        \Log::warning('Erro ao converter data de vencimento da parcela - formato inválido', [
+                            'vencimento' => $vencimentoStr,
+                            'erro' => $e->getMessage(),
+                            'parcela_index' => $index
+                        ]);
+                        $dataVencimentoParcela = $validatedData['data_competencia'];
+                    }
+                }
+            }
+
+            $dadosParcela = [
+                'company_id' => $validatedData['company_id'],
+                'data_competencia' => $validatedData['data_competencia'],
+                'data_vencimento' => $dataVencimentoParcela,
+                'entidade_id' => $entidadeIdParcela, // Banco/Conta financeira
+                'tipo' => $validatedData['tipo'],
+                'valor' => isset($parcela['valor']) ? (float) $parcela['valor'] : 0,
+                'descricao' => isset($parcela['descricao']) ? $parcela['descricao'] : $validatedData['descricao'] . ' - Parcela ' . ($index + 1),
+                'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'],
+                'cost_center_id' => $validatedData['cost_center_id'],
+                'tipo_documento' => $validatedData['tipo_documento'],
+                'numero_documento' => ($validatedData['numero_documento'] ?? '') . '-' . ($index + 1), // Adiciona número da parcela ao documento
+                'origem' => $validatedData['origem'],
+                'historico_complementar' => $validatedData['historico_complementar'] ?? null,
+                'comprovacao_fiscal' => $validatedData['comprovacao_fiscal'] ?? false,
+                'situacao' => 'em_aberto',
+                'agendado' => isset($parcela['agendado']) ? (bool) $parcela['agendado'] : false,
+                'valor_pago' => 0,
+                'juros' => 0,
+                'multa' => 0,
+                'desconto' => 0,
+                'created_by' => $validatedData['created_by'],
+                'created_by_name' => $validatedData['created_by_name'],
+                'updated_by' => $validatedData['updated_by'],
+                'updated_by_name' => $validatedData['updated_by_name'],
+            ];
+
+            // Cria a movimentação para esta parcela
+            $movimentacaoParcela = $this->movimentacao($dadosParcela);
+            $dadosParcela['movimentacao_id'] = $movimentacaoParcela->id;
+
+            // Cria a transação financeira da parcela
+            $transacaoParcela = TransacaoFinanceira::create($dadosParcela);
+        }
+    }
 
     public function update(Request $request, $id)
     {
         try {
             // Obtenha a empresa do usuário autenticado
-            $subsidiaryId = User::getCompany();
-
-            // Tratar o valor do campo "valor"
-            if ($request->has('valor')) {
-                $request->merge([
-                    'valor' => str_replace(',', '.', str_replace('.', '', $request->input('valor')))
-                ]);
-            }
-
-            // Converter data_competencia para o formato correto
-            if ($request->has('data_competencia')) {
-                $request->merge([
-                    'data_competencia' => Carbon::createFromFormat('d/m/Y', $request->input('data_competencia'))->format('Y-m-d')
-                ]);
-            }
-
-            // Validação dos dados
-            $validator = Validator::make($request->all(), [
-                'data_competencia' => 'required|date',
-                'descricao' => 'required|string|max:255',
-                'valor' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-                'tipo' => 'required|in:entrada,saida',
-                'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
-                'cost_center_id' => 'required|exists:cost_centers,id',
-                'tipo_documento' => 'required|string|max:255',
-                'numero_documento' => 'nullable|string|max:50',
-                'historico_complementar' => 'nullable|string|max:500',
-                'comprovacao_fiscal' => 'required|boolean',
-                'anexos.*' => 'nullable|file|mimes:jpeg,png,pdf|max:2048',
-                'entidade_id' => 'required|exists:entidades_financeiras,id', // Valida entidade
-            ], [
-                'valor.regex' => 'O valor deve estar no formato correto (exemplo: 1234.56).',
-                'tipo.in' => 'O tipo deve ser "entrada" ou "saída".',
-            ]);
-
-            // Se a validação falhar
-            if ($validator->fails()) {
-                foreach ($validator->errors()->all() as $error) {
-                    Flasher::addError($error);
-                }
-                return redirect()->back()->withInput();
-            }
-
-            // Validação bem-sucedida
-            $validatedData = $validator->validated();
+            $companyId = session('active_company_id');
 
             // Busca o registro no banco de dados
-            $banco = TransacaoFinanceira::findOrFail($id);
-            $movimentacao = Movimentacao::findOrFail($banco->movimentacao_id);
+            $transacao = TransacaoFinanceira::where('company_id', $companyId)->findOrFail($id);
 
-            // Ajusta o saldo da entidade antes de atualizar os valores
-            // 1) Entidade antiga vinculada à movimentação
-            $oldEntidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
+            // Prepara os dados para validação e atualização
+            $dataToValidate = $request->all();
+            $dataToUpdate = [];
 
-            // Reverte o impacto do lançamento antigo no saldo da entidade
-            // 2) Reverter saldo antigo
-            if ($movimentacao->tipo === 'entrada') {
-                $oldEntidade->saldo_atual -= $movimentacao->valor;
-            } else {
-                $oldEntidade->saldo_atual += $movimentacao->valor;
+            // Validação condicional baseada no campo_type enviado
+            $rules = [];
+            $fieldType = $request->input('field_type');
+
+            // Determina qual campo está sendo editado baseado no field_type
+            if ($fieldType === 'descricao' && $request->has('descricao')) {
+                $rules['descricao'] = 'required|string|max:255';
+                $dataToUpdate['descricao'] = $request->descricao;
+            } elseif ($fieldType === 'lancamento_padrao_id' && $request->has('lancamento_padrao_id')) {
+                $rules['lancamento_padrao_id'] = 'required|exists:lancamento_padraos,id';
+                $dataToUpdate['lancamento_padrao_id'] = $request->lancamento_padrao_id;
+            } elseif ($fieldType === 'cost_center_id' && $request->has('cost_center_id')) {
+                $rules['cost_center_id'] = 'nullable|exists:cost_centers,id';
+                $dataToUpdate['cost_center_id'] = $request->cost_center_id ? $request->cost_center_id : null;
             }
-            $oldEntidade->save();
 
-            // Busca o lançamento padrão para obter conta_debito_id e conta_credito_id
-            $contaDebitoId = null;
-            $contaCreditoId = null;
-            
-            if (isset($validatedData['lancamento_padrao_id']) && $validatedData['lancamento_padrao_id']) {
-                $lancamentoPadrao = LancamentoPadrao::find($validatedData['lancamento_padrao_id']);
-                
-                if ($lancamentoPadrao) {
-                    // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
-                    $lancamentoPadrao->refresh();
-                    
-                    // Se não foram enviados no request, busca do lançamento padrão
-                    if (!isset($validatedData['conta_debito_id']) && $lancamentoPadrao->conta_debito_id) {
-                        $contaDebitoId = $lancamentoPadrao->conta_debito_id;
-                    } elseif (isset($validatedData['conta_debito_id'])) {
-                        $contaDebitoId = $validatedData['conta_debito_id'];
+            // Valida apenas os campos que foram enviados
+            if (!empty($rules)) {
+                $validator = Validator::make($dataToValidate, $rules);
+
+                // Se a validação falhar
+                if ($validator->fails()) {
+                    if ($request->expectsJson() || $request->ajax()) {
+                        return response()->json([
+                            'success' => false,
+                            'message' => 'Erro de validação',
+                            'errors' => $validator->errors()
+                        ], 422);
                     }
-                    
-                    if (!isset($validatedData['conta_credito_id']) && $lancamentoPadrao->conta_credito_id) {
-                        $contaCreditoId = $lancamentoPadrao->conta_credito_id;
-                    } elseif (isset($validatedData['conta_credito_id'])) {
-                        $contaCreditoId = $validatedData['conta_credito_id'];
+
+                    foreach ($validator->errors()->all() as $error) {
+                        Flasher::addError($error);
                     }
-                }
-            }
-            
-            // 3) Atualiza a movimentação (agora ela aponta para a nova entidade e novo valor)
-            $movimentacao->update([
-                'entidade_id' => $validatedData['entidade_id'],
-                'tipo'        => $validatedData['tipo'],
-                'valor'       => $validatedData['valor'],
-                'data'        => $validatedData['data_competencia'],
-                'descricao'   => $validatedData['descricao'],
-                'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'] ?? null,
-                'conta_debito_id' => $contaDebitoId,
-                'conta_credito_id' => $contaCreditoId,
-                'data_competencia' => $validatedData['data_competencia'],
-                'updated_by'  => Auth::user()->id,
-                'updated_by_name' => Auth::user()->name,
-            ]);
-
-            // 4) Entidade nova escolhida no form
-            $newEntidade = EntidadeFinanceira::findOrFail($validatedData['entidade_id']);
-
-            // 5) Aplicar o valor atualizado na nova entidade
-            if ($validatedData['tipo'] === 'entrada') {
-                $newEntidade->saldo_atual += $validatedData['valor'];
-            } else {
-                $newEntidade->saldo_atual -= $validatedData['valor'];
-            }
-            $newEntidade->save();
-
-            // Atualiza os dados do banco
-            $validatedData['movimentacao_id'] = $movimentacao->id; // Mantém o vínculo com a movimentação
-            $banco->update($validatedData);
-
-            // Verifica se há anexos enviados
-            if ($request->hasFile('anexos')) {
-                foreach ($request->file('anexos') as $anexo) {
-                    // Gera um nome único para o anexo
-                    $anexoName = Str::uuid() . '_' . $anexo->getClientOriginalName();
-
-                    // Salva o arquivo no diretório público
-                    $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
-
-                    // Cria o registro do anexo no banco de dados
-                    Anexo::create([
-                        'banco_id' => $banco->id,
-                        'nome_arquivo' => $anexoName,
-                        'caminho_arquivo' => $anexoPath,
-                        'created_by' => Auth::user()->id,
-                        'updated_by' => Auth::user()->id,
-                    ]);
+                    return redirect()->back()->withInput();
                 }
             }
 
-            // Adiciona mensagem de sucesso
-            Flasher::addSuccess('Lançamento atualiazado com sucesso!');
-            return redirect()->back()->with('message', 'Atualizado com sucesso!');
+            // Se nenhum campo foi enviado para atualizar
+            if (empty($dataToUpdate)) {
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Nenhum campo foi enviado para atualizar'
+                    ], 422);
+                }
+                Flasher::addError('Nenhum campo foi enviado para atualizar');
+                return redirect()->back();
+            }
+
+            // Atualiza apenas os campos que foram enviados
+            $transacao->update($dataToUpdate);
+
+            // Resposta de sucesso
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Campo atualizado com sucesso!'
+                ]);
+            }
+
+            Flasher::addSuccess('Campo atualizado com sucesso!');
+            return redirect()->back();
         } catch (\Exception $e) {
             // Log de erro e mensagem de retorno
-            Log::error('Erro ao atualizar movimentação: ' . $e->getMessage());
-            return redirect()->back()->withInput()->with('error', 'Erro ao atualizar: ' . $e->getMessage());
+            Log::error('Erro ao atualizar campo: ' . $e->getMessage());
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao atualizar campo: ' . $e->getMessage()
+                ], 500);
+            }
+
+            Flasher::addError('Erro ao atualizar campo: ' . $e->getMessage());
+            return redirect()->back()->withInput();
         }
     }
 
@@ -1252,7 +2283,13 @@ class BancoController extends Controller
         $companyId = session('active_company_id');
 
         // Buscar o banco com o ID e verificar se pertence à empresa do usuário
-        $banco = TransacaoFinanceira::with('modulos_anexos')
+        $banco = TransacaoFinanceira::with([
+                'modulos_anexos',
+                'recorrenciaConfig',
+                'recorrencia' => function($query) {
+                    $query->withPivot('numero_ocorrencia', 'data_geracao');
+                }
+            ])
             ->where('company_id', $companyId) // Filtrar pelo company_id do usuário
             ->findOrFail($id);
 
@@ -1276,58 +2313,161 @@ class BancoController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
+            // Get delete scope from request (current|all)
+            $deleteScope = $request->input('delete_scope', 'current');
+            
             // 1) Localiza a transação financeira pelo ID
             $transacao = TransacaoFinanceira::findOrFail($id);
-
-            // 2) Localiza a movimentação associada
-            $movimentacao = Movimentacao::findOrFail($transacao->movimentacao_id);
-
-            // 3) Localiza a entidade financeira associada
-            $entidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
-
-            // 4) Ajusta o saldo da entidade financeira
-            // Obs.: aqui deve subtrair ou somar usando $movimentacao->valor (não $entidade->valor)
-            if ($movimentacao->tipo === 'entrada') {
-                // Se a movimentação era uma entrada, subtrai o valor do saldo atual
-                $entidade->saldo_atual -= $movimentacao->valor;
+            
+            // Check if this is a recurring transaction
+            if ($transacao->recorrencia_id && $deleteScope === 'all') {
+                // Delete entire recurrence series
+                return $this->destroyRecurrenceSeries($transacao);
             } else {
-                // Se a movimentação era uma saída, adiciona o valor ao saldo atual
-                $entidade->saldo_atual += $movimentacao->valor;
+                // Delete only current transaction
+                return $this->destroySingleTransaction($transacao);
             }
-            $entidade->save();
-
-            // 5) Excluir anexos associados (se houver)
-            $anexos = ModulosAnexo::where('anexavel_id', $transacao->id)
-                ->where('anexavel_type', TransacaoFinanceira::class)
-                ->get();
-
-            foreach ($anexos as $anexo) {
-                // Remove o arquivo do disco, se existir
-                if (Storage::disk('public')->exists($anexo->caminho_arquivo)) {
-                    Storage::disk('public')->delete($anexo->caminho_arquivo);
-                }
-                // Exclui o registro no banco
-                $anexo->delete();
-            }
-
-            // 6) Exclui a movimentação associada
-            $movimentacao->delete();
-
-            // 7) Exclui a transação financeira
-            $transacao->delete();
-
-            // 8) Mensagem de sucesso e redirecionamento
-            Flasher::addSuccess('Transação excluída com sucesso!');
-            return redirect()->route('banco.list');
+            
         } catch (\Exception $e) {
-            // 9) Em caso de erro, registra log e retorna com mensagem de erro
-            Log::error('Erro ao excluir transação: ' . $e->getMessage());
+            // Em caso de erro, registra log e retorna com mensagem de erro
+            \Log::error('Erro ao excluir transação: ' . $e->getMessage());
+            
+            // Return JSON response para AJAX
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao excluir transação: ' . $e->getMessage()
+                ], 500);
+            }
+            
             Flasher::addError('Erro ao excluir transação: ' . $e->getMessage());
             return redirect()->back();
         }
+    }
+    
+    /**
+     * Delete only a single transaction
+     */
+    protected function destroySingleTransaction(TransacaoFinanceira $transacao)
+    {
+        // 1) Localiza a movimentação associada
+        $movimentacao = Movimentacao::findOrFail($transacao->movimentacao_id);
+
+        // 2) Localiza a entidade financeira associada
+        $entidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
+
+        // 3) Ajusta o saldo da entidade financeira
+        if ($movimentacao->tipo === 'entrada') {
+            $entidade->saldo_atual -= $movimentacao->valor;
+        } else {
+            $entidade->saldo_atual += $movimentacao->valor;
+        }
+        $entidade->save();
+
+        // 4) Excluir anexos associados (se houver)
+        $anexos = ModulosAnexo::where('anexavel_id', $transacao->id)
+            ->where('anexavel_type', TransacaoFinanceira::class)
+            ->get();
+
+        foreach ($anexos as $anexo) {
+            if (Storage::disk('public')->exists($anexo->caminho_arquivo)) {
+                Storage::disk('public')->delete($anexo->caminho_arquivo);
+            }
+            $anexo->delete();
+        }
+
+        // 5) Remove from pivot table if it's part of a recurrence
+        if ($transacao->recorrencia_id) {
+            \DB::table('recorrencia_transacoes')
+                ->where('transacao_id', $transacao->id)
+                ->delete();
+        }
+
+        // 6) Exclui a movimentação associada
+        $movimentacao->delete();
+
+        // 7) Exclui a transação financeira
+        $transacao->delete();
+
+        // 8) Return success response
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Lançamento excluído com sucesso!'
+            ]);
+        }
+        
+        Flasher::addSuccess('Transação excluída com sucesso!');
+        return redirect()->route('banco.list');
+    }
+    
+    /**
+     * Delete entire recurrence series
+     */
+    protected function destroyRecurrenceSeries(TransacaoFinanceira $transacao)
+    {
+        $recorrenciaId = $transacao->recorrencia_id;
+        
+        // Find all transactions in this recurrence
+        $transacoes = TransacaoFinanceira::where('recorrencia_id', $recorrenciaId)->get();
+        
+        $deletedCount = 0;
+        foreach ($transacoes as $trans) {
+            // Delete each transaction following same logic
+            $movimentacao = Movimentacao::find($trans->movimentacao_id);
+            if ($movimentacao) {
+                $entidade = EntidadeFinanceira::find($movimentacao->entidade_id);
+                if ($entidade) {
+                    if ($movimentacao->tipo === 'entrada') {
+                        $entidade->saldo_atual -= $movimentacao->valor;
+                    } else {
+                        $entidade->saldo_atual += $movimentacao->valor;
+                    }
+                    $entidade->save();
+                }
+                
+                // Delete attachments
+                $anexos = ModulosAnexo::where('anexavel_id', $trans->id)
+                    ->where('anexavel_type', TransacaoFinanceira::class)
+                    ->get();
+                    
+                foreach ($anexos as $anexo) {
+                    if (Storage::disk('public')->exists($anexo->caminho_arquivo)) {
+                        Storage::disk('public')->delete($anexo->caminho_arquivo);
+                    }
+                    $anexo->delete();
+                }
+                
+                $movimentacao->delete();
+            }
+            
+            $trans->delete();
+            $deletedCount++;
+        }
+        
+        // Delete all pivot records
+        \DB::table('recorrencia_transacoes')
+            ->where('recorrencia_id', $recorrenciaId)
+            ->delete();
+        
+        // Delete recurrence configuration
+        \DB::table('recorrencias')
+            ->where('id', $recorrenciaId)
+            ->delete();
+        
+        // Return success response
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => "$deletedCount lançamentos da série excluídos com sucesso!"
+            ]);
+        }
+        
+        Flasher::addSuccess("$deletedCount transações da série excluídas com sucesso!");
+        return redirect()->route('banco.list');
     }
 
     /**
@@ -1408,7 +2548,7 @@ class BancoController extends Controller
             $lancamentosIds = array_filter($validated['lancamentos_padrao'], function($value) {
                 return $value !== 'todos' && !empty($value);
             });
-            
+
             if (!empty($lancamentosIds)) {
                 $query->whereIn('lancamento_padrao_id', $lancamentosIds);
             }
@@ -1420,14 +2560,14 @@ class BancoController extends Controller
         // Calcular saldos anteriores para cada origem
         $origens = $transacoes->pluck('origem')->unique();
         $saldosAnteriores = [];
-        
+
         foreach ($origens as $origem) {
             // Buscar todas as transações anteriores ao período para esta origem
             $transacoesAnteriores = TransacaoFinanceira::where('company_id', $companyId)
                 ->where('origem', $origem)
                 ->where('data_competencia', '<', $dataInicial)
                 ->get();
-            
+
             $saldoAnterior = 0;
             foreach ($transacoesAnteriores as $trans) {
                 if ($trans->tipo === 'entrada') {
@@ -1436,7 +2576,7 @@ class BancoController extends Controller
                     $saldoAnterior -= $trans->valor;
                 }
             }
-            
+
             $saldosAnteriores[$origem] = $saldoAnterior;
         }
 
@@ -1509,5 +2649,418 @@ class BancoController extends Controller
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="' . $filename . '"',
         ]);
+    }
+
+    /**
+     * Marca uma transação financeira como paga
+     */
+    public function markAsPaid(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:transacoes_financeiras,id',
+            'data_pagamento' => 'nullable|date'
+        ]);
+
+        try {
+            $companyId = session('active_company_id');
+
+            if (!$companyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma empresa selecionada.'
+                ], 403);
+            }
+
+            $transacao = TransacaoFinanceira::where('company_id', $companyId)
+                ->findOrFail($request->id);
+
+            $dataPagamento = $request->input('data_pagamento', Carbon::today()->format('Y-m-d'));
+
+            // Marcar como pago completo
+            $transacao->valor_pago = $transacao->valor;
+            $transacao->situacao = 'pago';
+            $transacao->data_pagamento = $dataPagamento;
+            $transacao->updated_by = Auth::id();
+            $transacao->updated_by_name = Auth::user()->name;
+            $transacao->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transação marcada como paga com sucesso.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao marcar transação como paga: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao marcar como pago: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Marca múltiplas transações financeiras como pagas (ação em lote)
+     */
+    public function batchMarkAsPaid(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|exists:transacoes_financeiras,id',
+            'data_pagamento' => 'nullable|date'
+        ]);
+
+        try {
+            $companyId = session('active_company_id');
+
+            if (!$companyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma empresa selecionada.'
+                ], 403);
+            }
+
+            $ids = $request->input('ids');
+            $dataPagamento = $request->input('data_pagamento', Carbon::today()->format('Y-m-d'));
+
+            // Buscar todas as transações
+            $transacoes = TransacaoFinanceira::where('company_id', $companyId)
+                ->whereIn('id', $ids)
+                ->get();
+
+            if ($transacoes->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma transação encontrada.'
+                ], 404);
+            }
+
+            // Atualizar todas as transações
+            $count = 0;
+            foreach ($transacoes as $transacao) {
+                $transacao->valor_pago = $transacao->valor;
+                $transacao->situacao = 'pago';
+                $transacao->updated_by = Auth::id();
+                $transacao->updated_by_name = Auth::user()->name;
+                $transacao->save();
+                $count++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "{$count} transação(ões) marcada(s) como paga(s) com sucesso."
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao marcar transações como pagas em lote: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao marcar como pagas: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Marca múltiplas transações financeiras como em aberto (ação em lote)
+     */
+    public function batchMarkAsOpen(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|exists:transacoes_financeiras,id'
+        ]);
+
+        try {
+            $companyId = session('active_company_id');
+
+            if (!$companyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma empresa selecionada.'
+                ], 403);
+            }
+
+            $ids = $request->input('ids');
+
+            // Buscar todas as transações
+            $transacoes = TransacaoFinanceira::where('company_id', $companyId)
+                ->whereIn('id', $ids)
+                ->get();
+
+            if ($transacoes->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma transação encontrada.'
+                ], 404);
+            }
+
+            // Atualizar todas as transações
+            $count = 0;
+            foreach ($transacoes as $transacao) {
+                $transacao->valor_pago = 0;
+                $transacao->situacao = 'em_aberto';
+                $transacao->updated_by = Auth::id();
+                $transacao->updated_by_name = Auth::user()->name;
+                $transacao->save();
+                $count++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "{$count} transação(ões) marcada(s) como em aberto com sucesso."
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao marcar transações como em aberto em lote: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao marcar como em aberto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Exclui múltiplas transações financeiras (ação em lote)
+     */
+    public function batchDelete(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|exists:transacoes_financeiras,id'
+        ]);
+
+        try {
+            $companyId = session('active_company_id');
+
+            if (!$companyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma empresa selecionada.'
+                ], 403);
+            }
+
+            $ids = $request->input('ids');
+
+            // Buscar todas as transações
+            $transacoes = TransacaoFinanceira::where('company_id', $companyId)
+                ->whereIn('id', $ids)
+                ->get();
+
+            if ($transacoes->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma transação encontrada.'
+                ], 404);
+            }
+
+            // Deletar todas as transações
+            $count = 0;
+            foreach ($transacoes as $transacao) {
+                $transacao->delete();
+                $count++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "{$count} transação(ões) excluída(s) com sucesso."
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Erro ao excluir transações em lote: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao excluir transações: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Aplica filtro para excluir transações pagas/recebidas
+     * Método reutilizável para getStatsData e getTransacoesData
+     */
+    private function aplicarFiltroNaoPagos($query)
+    {
+        return $query->where(function($q) {
+            $q->where(function($subQ) {
+                // Não tem situação definida
+                $subQ->whereNull('situacao');
+            })
+            ->orWhere(function($subQ) {
+                // Situação diferente de pago/recebido
+                $subQ->whereNotIn('situacao', ['pago', 'recebido']);
+            })
+            ->orWhere(function($subQ) {
+                // Pagamento parcial (valor_pago < valor)
+                $subQ->whereColumn('valor_pago', '<', 'valor')
+                     ->whereNotNull('valor_pago');
+            });
+        });
+    }
+
+    /**
+     * Método privado centralizado para calcular estatísticas
+     * Usado por getSummary e getStatsData para evitar duplicação de código
+     */
+    private function calculateExtratoStats($startDate, $endDate, $entidadeId = null)
+    {
+        $companyId = session('active_company_id');
+        
+        if (!$companyId) {
+            return null;
+        }
+        
+        $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
+        $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
+        
+        // Query base para extrato
+        $query = TransacaoFinanceira::whereHas('entidadeFinanceira', function ($q) {
+                $q->whereIn('tipo', ['banco', 'caixa']); // Inclui banco e caixa
+            })
+            ->where('company_id', $companyId)
+            ->whereBetween('data_vencimento', [$start, $end]); // Filtrar por data de vencimento
+        
+        // Aplicar filtro de conta se fornecido
+        if ($entidadeId) {
+            if (is_array($entidadeId)) {
+                $query->whereIn('entidade_id', $entidadeId);
+            } else {
+                $query->where('entidade_id', $entidadeId);
+            }
+        }
+        
+        
+        // Receitas em Aberto (entrada + não recebido)
+        $receitasAberto = (clone $query)
+            ->where('tipo', 'entrada')
+            ->whereNotIn('situacao', ['recebido'])
+            ->sum('valor');
+        
+        // Receitas Realizadas (entrada + recebido)
+        $receitasRealizadas = (clone $query)
+            ->where('tipo', 'entrada')
+            ->where('situacao', 'recebido')
+            ->sum('valor');
+        
+        // Despesas em Aberto (saída + não pago)
+        $despesasAberto = (clone $query)
+            ->where('tipo', 'saida')
+            ->whereNotIn('situacao', ['pago'])
+            ->sum('valor');
+        
+        // Despesas Realizadas (saída + pago)
+        $despesasRealizadas = (clone $query)
+            ->where('tipo', 'saida')
+            ->where('situacao', 'pago')
+            ->sum('valor');
+        
+        
+        // Total do período = TODAS as Receitas - TODAS as Despesas (independente da situação)
+        $totalReceitas = (clone $query)
+            ->where('tipo', 'entrada')
+            ->sum('valor');
+        
+        $totalDespesas = (clone $query)
+            ->where('tipo', 'saida')
+            ->sum('valor');
+        
+        $total = $totalReceitas - $totalDespesas;
+        
+        return [
+            'receitas_aberto' => $receitasAberto,
+            'receitas_realizadas' => $receitasRealizadas,
+            'despesas_aberto' => $despesasAberto,
+            'despesas_realizadas' => $despesasRealizadas,
+            'total' => $total,
+        ];
+    }
+
+    /**
+     * Aplica filtro de data de vencimento para transações vencidas
+     * Método reutilizável para getStatsData e getTransacoesData
+     */
+    private function aplicarFiltroVencidos($query, $hoje, $startDate, $endDate, $isContasReceberPagar = true)
+    {
+        if ($startDate && $endDate && $isContasReceberPagar) {
+            // Verificar se hoje está dentro do período
+            if ($hoje->between($startDate, $endDate)) {
+                $query->where(function($q) use ($startDate, $endDate, $hoje) {
+                    $q->where(function($subQ) use ($startDate, $endDate, $hoje) {
+                        $subQ->whereBetween('data_vencimento', [$startDate, $hoje->copy()->subDay()]);
+                    })
+                    ->orWhere(function($subQ) use ($startDate, $endDate, $hoje) {
+                        $subQ->whereNull('data_vencimento')
+                             ->whereBetween('data_competencia', [$startDate, $hoje->copy()->subDay()]);
+                    });
+                });
+            } else {
+                $query->whereRaw('1 = 0');
+            }
+        } else {
+            $query->where(function($q) use ($hoje) {
+                $q->where('data_vencimento', '<', $hoje)
+                  ->orWhere(function($subQ) use ($hoje) {
+                      $subQ->whereNull('data_vencimento')
+                           ->where('data_competencia', '<', $hoje);
+                  });
+            });
+        }
+
+        return $this->aplicarFiltroNaoPagos($query);
+    }
+
+    /**
+     * Aplica filtro para transações que vencem hoje
+     * Método reutilizável para getStatsData e getTransacoesData
+     */
+    private function aplicarFiltroHoje($query, $hoje, $startDate = null, $endDate = null)
+    {
+        if ($startDate && $endDate) {
+            if (!$hoje->between($startDate, $endDate)) {
+                return $query->whereRaw('1 = 0');
+            }
+        }
+
+        $query->where(function($q) use ($hoje) {
+            $q->where('data_vencimento', $hoje)
+              ->orWhere(function($subQ) use ($hoje) {
+                  $subQ->whereNull('data_vencimento')
+                       ->where('data_competencia', $hoje);
+              });
+        });
+
+        return $this->aplicarFiltroNaoPagos($query);
+    }
+
+    /**
+     * Aplica filtro para transações a vencer (excluindo hoje)
+     * Método reutilizável para getStatsData e getTransacoesData
+     */
+    private function aplicarFiltroAVencer($query, $hoje, $startDate, $endDate, $isContasReceberPagar = true)
+    {
+        if ($startDate && $endDate && $isContasReceberPagar) {
+            $query->where(function($q) use ($startDate, $endDate, $hoje) {
+                $q->where(function($subQ) use ($startDate, $endDate, $hoje) {
+                    if ($hoje->between($startDate, $endDate)) {
+                        $subQ->whereBetween('data_vencimento', [$hoje->copy()->addDay(), $endDate]);
+                    } else {
+                        $subQ->whereBetween('data_vencimento', [$startDate, $endDate]);
+                    }
+                })
+                ->orWhere(function($subQ) use ($startDate, $endDate, $hoje) {
+                    $subQ->whereNull('data_vencimento');
+                    if ($hoje->between($startDate, $endDate)) {
+                        $subQ->whereBetween('data_competencia', [$hoje->copy()->addDay(), $endDate]);
+                    } else {
+                        $subQ->whereBetween('data_competencia', [$startDate, $endDate]);
+                    }
+                });
+            });
+        } else {
+            $query->where(function($q) use ($hoje) {
+                $q->where('data_vencimento', '>', $hoje)
+                  ->orWhere(function($subQ) use ($hoje) {
+                      $subQ->whereNull('data_vencimento')
+                           ->where('data_competencia', '>', $hoje);
+                  });
+            });
+        }
+
+        return $this->aplicarFiltroNaoPagos($query);
     }
 }

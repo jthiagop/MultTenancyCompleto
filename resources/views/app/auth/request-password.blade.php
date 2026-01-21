@@ -1,201 +1,90 @@
-@php
-    // Recupera a última imagem de fundo ativa ou define uma padrão
-    $backgroundImage = \App\Models\TelaDeLogin::where('status', 'ativo')->latest()->value('imagem_caminho');
-@endphp
+@extends('app.auth.layouts.auth-layout')
 
-<html lang="pt_BR">
-<!--begin::Head-->
+@section('title', 'Solicitar Nova Senha - ' . config('app.name', 'Dominus'))
+@section('meta_description', 'Solicite uma nova senha ao administrador do sistema Dominus.')
+@section('canonical_url', 'https://dominusbr.com/request-password')
 
-<head>
-    <base href="../../../" />
-    <title>Solicitar Nova Senha - {{ config('app.name', 'Dominus') }}</title>
-    <meta charset="utf-8" />
-    <meta name="description"
-        content="Solicite uma nova senha ao administrador do sistema Dominus." />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="canonical" href="https://dominusbr.com/request-password" />
-    <link rel="shortcut icon" href="assets/media/logos/favicon.ico" />
-    <!--begin::Fonts(mandatory for all pages)-->
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
-    <!--end::Fonts-->
-    <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-    <link href="../assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
-    <link href="../assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
-    <!--end::Global Stylesheets Bundle-->
-</head>
-<!--end::Head-->
-<!--begin::Body-->
-
-<body id="kt_body" class="app-blank app-blank">
-    <!--begin::Theme mode setup on page load-->
-    <script>
-        var defaultThemeMode = "light";
-        var themeMode;
-        if (document.documentElement) {
-            if (document.documentElement.hasAttribute("data-bs-theme-mode")) {
-                themeMode = document.documentElement.getAttribute("data-bs-theme-mode");
-            } else {
-                if (localStorage.getItem("data-bs-theme") !== null) {
-                    themeMode = localStorage.getItem("data-bs-theme");
-                } else {
-                    themeMode = defaultThemeMode;
-                }
-            }
-            if (themeMode === "system") {
-                themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-            }
-            document.documentElement.setAttribute("data-bs-theme", themeMode);
-        }
-    </script>
-    <!--end::Theme mode setup on page load-->
-    <!--begin::Root-->
-    <div class="d-flex flex-column flex-root" id="kt_app_root">
-        <!--begin::Authentication - Request Password -->
-        <div class="d-flex flex-column flex-lg-row flex-column-fluid">
-            <!--begin::Aside-->
-            <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                style="background-image: url('{{ $backgroundImage ? route('file', ['path' => $backgroundImage]) : asset('/assets/media/misc/penha.png') }}');">
-
-                <!--begin::Content-->
-                <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100">
-                    <!--begin::Logo-->
-                    <a href="{{ route('login') }}" class="mb-0 mb-lg-20">
-                        <img alt="Logo" src="/assets/media/logos/default.svg" class="h-40px h-lg-50px" />
-                    </a>
-                    <!--end::Logo-->
-
-                    <!--begin::Image-->
-                    <img class="d-none d-lg-block mx-auto w-300px w-lg-75 w-xl-500px mb-10 mb-lg-20"
-                        src="assets/media/misc/auth-screens.png" alt="" />
-                    <!--end::Image-->
-                    <div class="glass-effect">
-                        <!--begin::Title-->
-                        <h1 class="d-none d-lg-block text-white fs-2qx fw-bold text-center mb-7">
-                            Dominus: Rápido, Eficiente e Produtivo
-                        </h1>
-                        <!--end::Title-->
-                        <!--begin::Text-->
-                        <div class="d-none d-lg-block text-white fs-base text-center px-5"
-                            style="line-height: 1.8; max-width: 600px; margin: 0 auto;">
-                            <p class="mb-3" style="text-align: justify; text-align-last: center;">
-                                No contexto da gestão eclesial, <a href="#"
-                                    class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a> é um sistema
-                                que permite gerenciar de forma eficiente os campos de pastorais, patrimônio e
-                                financeiro.
-                            </p>
-                            <p class="mb-0" style="text-align: justify; text-align-last: center;">
-                                Com <a href="#"
-                                    class="opacity-75-hover text-warning fw-semibold me-1">Dominus</a>,
-                                a administração de sua paróquia se torna mais organizada e produtiva, facilitando a
-                                gestão de recursos e atividades eclesiais.
-                            </p>
-                        </div>
-                        <!--end::Text-->
-                    </div>
+@section('aside_content')
+    <!--begin::Text-->
+    <div class="d-none d-lg-block text-white fs-base text-center">
+        @if (isset($randomImage) && $randomImage)
+            <!--begin::Image Info - Discreto-->
+            <div class="d-none d-lg-block position-absolute bottom-0 start-50 translate-middle-x mb-10 px-5 text-center"
+                style="z-index: 2;">
+                <div class="text-white fs-6 fw-bold mb-1"
+                    style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+                    {{ $randomImage->descricao }}
                 </div>
-                <!--end::Content-->
+                <div class="text-white fs-7 fw-bold"
+                    style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+                    <i class="fas fa-map-marker-alt text-white "></i> {{ $randomImage->localidade }}
+                </div>
             </div>
-            <!--begin::Aside-->
-            <!--begin::Body-->
-            <div class="d-flex flex-column flex-lg-row-fluid w-lg-50 p-10">
-                <!--begin::Form-->
-                <div class="d-flex flex-center flex-column flex-lg-row-fluid">
-                    <!--begin::Logo-->
-                    <a href="{{ route('login') }}" class="mb-0 mb-lg-10">
-                        <img alt="Logo" src="assets/media/logos/apple-touch-icon.svg" class="h-100px h-lg-100px" />
-                    </a>
-                    <!--begin::Wrapper-->
-                    <div class="w-lg-500px p-10">
-                        <!--begin::Form-->
-                        <form class="form w-100" method="POST" action="{{ route('password.request.admin.store') }}" id="kt_request_password_form">
-                            @csrf
-                            <!--begin::Heading-->
-                            <div class="text-center mb-10">
-                                <!--begin::Title-->
-                                <h1 class="text-dark fw-bolder mb-3">Solicitar Nova Senha</h1>
-                                <!--end::Title-->
-                                <!--begin::Subtitle-->
-                                <div class="text-gray-500 fw-semibold fs-6">Informe seu email para solicitar uma nova senha ao administrador</div>
-                                <!--end::Subtitle=-->
-                            </div>
-                            <!--begin::Heading-->
-                            <!--begin::Alert para erros-->
-                            <div id="kt_request_password_alert" class="alert alert-dismissible d-none" role="alert">
-                                <span id="kt_request_password_alert_message"></span>
-                            </div>
-                            <!--end::Alert para erros-->
-                            <!--begin::Input group=-->
-                            <div class="fv-row mb-8">
-                                <!--begin::Email-->
-                                <input type="text" placeholder="Email" name="email" autocomplete="off"
-                                    class="form-control form-control-sm bg-transparent" />
-                                <div class="fv-plugins-message-container">
-                                    <div class="fv-help-block">
-                                        <span role="alert"></span>
-                                    </div>
-                                </div>
-                                <!--end::Email-->
-                            </div>
-                            <!--end::Input group=-->
-                            <!--begin::Wrapper-->
-                            <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-8">
-                                <div></div>
-                                <!--begin::Link-->
-                                <a href="{{ route('login') }}" class="link-primary">Voltar para o login</a>
-                                <!--end::Link-->
-                            </div>
-                            <!--end::Wrapper-->
-                            <!--begin::Submit button-->
-                            <div class="d-grid mb-10">
-                                <button type="submit" id="kt_request_password_submit" class="btn btn-sm btn-primary">
-                                    <!--begin::Indicator label-->
-                                    <span class="indicator-label"><i class="fas fa-paper-plane"></i> Solicitar</span>
-                                    <!--end::Indicator label-->
-                                    <!--begin::Indicator progress-->
-                                    <span class="indicator-progress">Enviando...
-                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                                    <!--end::Indicator progress-->
-                                </button>
-                            </div>
-                            <!--end::Submit button-->
-
-                        </form>
-                        <!--end::Form-->
-                    </div>
-                    <!--end::Wrapper-->
-                </div>
-                @if (session('status'))
-                    <div class="alert alert-warning">
-                        {{ session('status') }}
-                    </div>
-                @endif
-                <!--end::Form-->
-                <!--begin::Footer-->
-                <div class="d-flex flex-center flex-wrap px-5">
-                    <!--begin::Links-->
-                    <div class="d-flex fw-semibold text-primary fs-base">
-                        <a href="#" class="px-5" target="_blank">Termos</a>
-                        <a href="#" class="px-5" target="_blank">Plans</a>
-                        <a href="#" class="px-5" target="_blank">Contato</a>
-                    </div>
-                    <!--end::Links-->
-                </div>
-                <!--end::Footer-->
-            </div>
-            <!--end::Body-->
-        </div>
-        <!--end::Authentication - Request Password-->
+            <!--end::Image Info-->
+        @endif
     </div>
-    <!--end::Root-->
-    <!--begin::Javascript-->
-    <script>
-        var hostUrl = "assets/";
-    </script>
-    <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-    <script src="/assets/plugins/global/plugins.bundle.js"></script>
-    <script src="/assets/js/scripts.bundle.js"></script>
-    <!--end::Global Javascript Bundle-->
-    <!--begin::Custom Javascript(used for this page only)-->
+    <!--end::Text-->
+@endsection
+
+@section('form_content')
+    <!--begin::Form-->
+    <form class="form w-100" method="POST" action="{{ route('password.request.admin.store') }}" id="kt_request_password_form">
+        @csrf
+        <!--begin::Heading-->
+        <div class="text-center mb-10">
+            <!--begin::Title-->
+            <h1 class="text-dark fw-bolder mb-3">Solicitar Nova Senha</h1>
+            <!--end::Title-->
+            <!--begin::Subtitle-->
+            <div class="text-gray-500 fw-semibold fs-6">Informe seu email para solicitar uma nova senha ao administrador</div>
+            <!--end::Subtitle=-->
+        </div>
+        <!--begin::Heading-->
+        <!--begin::Alert para erros-->
+        <div id="kt_request_password_alert" class="alert alert-dismissible d-none" role="alert">
+            <span id="kt_request_password_alert_message"></span>
+        </div>
+        <!--end::Alert para erros-->
+        <!--begin::Input group=-->
+        <div class="fv-row mb-8">
+            <!--begin::Email-->
+            <input type="text" placeholder="Email" name="email" autocomplete="off"
+                class="form-control form-control-sm bg-transparent" />
+            <div class="fv-plugins-message-container">
+                <div class="fv-help-block">
+                    <span role="alert"></span>
+                </div>
+            </div>
+            <!--end::Email-->
+        </div>
+        <!--end::Input group=-->
+        <!--begin::Wrapper-->
+        <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-8">
+            <div></div>
+            <!--begin::Link-->
+            <a href="{{ route('login') }}" class="link-primary">Voltar para o login</a>
+            <!--end::Link-->
+        </div>
+        <!--end::Wrapper-->
+        <!--begin::Submit button-->
+        <div class="d-grid mb-10">
+            <button type="submit" id="kt_request_password_submit" class="btn btn-sm btn-primary">
+                <!--begin::Indicator label-->
+                <span class="indicator-label"><i class="fas fa-paper-plane"></i> Solicitar</span>
+                <!--end::Indicator label-->
+                <!--begin::Indicator progress-->
+                <span class="indicator-progress">Enviando...
+                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                <!--end::Indicator progress-->
+            </button>
+        </div>
+        <!--end::Submit button-->
+
+    </form>
+    <!--end::Form-->
+@endsection
+
+@push('scripts')
     <script>
         "use strict";
 
@@ -403,10 +292,4 @@
             KTRequestPassword.init();
         });
     </script>
-    <!--end::Custom Javascript-->
-    <!--end::Javascript-->
-</body>
-<!--end::Body-->
-
-</html>
-
+@endpush

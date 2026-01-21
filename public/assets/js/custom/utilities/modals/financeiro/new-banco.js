@@ -11,8 +11,20 @@ var DMModalNewBanco = function () {
 
 	// Init form inputs
 	var initForm = function() {
+		// Verificar se o formulário existe antes de tentar acessar seus elementos
+		if (!form) {
+			console.warn('[new-banco.js] Formulário não encontrado, pulando inicialização');
+			return;
+		}
+
 		// Tags. For more info, please visit the official plugin site: https://yaireo.github.io/tagify/
-		var tags = new Tagify(form.querySelector('[name="tags"]'), {
+		var tagsElement = form.querySelector('[name="tags"]');
+		if (!tagsElement) {
+			console.warn('[new-banco.js] Elemento tags não encontrado');
+			return;
+		}
+
+		var tags = new Tagify(tagsElement, {
 			whitelist: ["Important", "Urgent", "High", "Medium", "Low"],
 			maxTags: 5,
 			dropdown: {
@@ -27,7 +39,7 @@ var DMModalNewBanco = function () {
 		});
 
         // Due date. For more info, please visit the official plugin site: https://flatpickr.js.org/
-        var dueDates = document.querySelectorAll('[name="data_competencia"]');
+        var dueDates = document.querySelectorAll('[name=""]');
 
         dueDates.forEach(function(dueDate) {
             flatpickr(dueDate, {
@@ -49,6 +61,12 @@ var DMModalNewBanco = function () {
 
 	// Handle form validation and submittion
 	var handleForm = function() {
+		// Verificar se o formulário existe antes de inicializar validação
+		if (!form) {
+			console.warn('[new-banco.js] Formulário não encontrado, pulando validação');
+			return;
+		}
+
 		// Stepper custom navigation
 
 		// Init form validation rules. For more info check the FormValidation plugin's official documentation:https://formvalidation.io/
@@ -576,8 +594,8 @@ var DMModalNewBanco = function () {
 				confirmButtonText: "Sim, cancelar!",
 				cancelButtonText: "Não, voltar",
 				customClass: {
-					confirmButton: "btn btn-sm btn-primary",
-					cancelButton: "btn btn-sm btn-active-light"
+					confirmButton: "btn btn-sm btn-danger",
+					cancelButton: "btn btn-sm btn-primary-light"
 				}
 			}).then(function (result) {
 				if (result.value) {

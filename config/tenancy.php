@@ -16,12 +16,20 @@ return [
      *
      * Only relevant if you're using the domain or subdomain identification middleware.
      */
-    'central_domains' => [
+    'central_domains' => match(env('APP_ENV', 'production')) {
+        'local' => [
+            'companies',
+            env('CENTRAL_DOMAIN_1', '127.0.0.1'),
+            env('CENTRAL_DOMAIN_2', 'localhost'),
+        ],
+        default => [
         'companies',
         env('CENTRAL_DOMAIN_1', '127.0.0.1'),
         env('CENTRAL_DOMAIN_2', 'localhost'),
-        //env('CENTRAL_DOMAIN_3', 'dominusbr.com'),
+        env('CENTRAL_DOMAIN_3', 'dominus.eco.br'),
+            env('CENTRAL_DOMAIN_5', 'www.dominus.eco.br'),
     ],
+    },
 
     /**
      * Tenancy bootstrappers are executed when tenancy is initialized.

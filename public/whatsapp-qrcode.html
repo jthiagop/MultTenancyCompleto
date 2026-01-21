@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code WhatsApp - Dominus Bot</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 500px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+        }
+        #qrcode {
+            margin: 30px 0;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        #qrcode img {
+            max-width: 300px;
+            height: auto;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .status {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 10px;
+            font-weight: 500;
+        }
+        .status.loading {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+        .status.success {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+        .status.error {
+            background: #ffebee;
+            color: #d32f2f;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 20px;
+            transition: all 0.3s;
+        }
+        button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Conectar WhatsApp</h1>
+        <p class="subtitle">Escaneie o QR Code para conectar sua conta</p>
+        
+        <div id="qrcode">
+            <div class="spinner"></div>
+        </div>
+        
+        <div id="status" class="status loading">
+            Gerando QR Code...
+        </div>
+        
+        <button id="refresh" onclick="loadQRCode()" disabled>
+            🔄 Gerar Novo QR Code
+        </button>
+    </div>
+
+    <script>
+        let retryCount = 0;
+        const maxRetries = 10;
+
+        async function loadQRCode() {
+            const qrcodeDiv = document.getElementById('qrcode');
+            const statusDiv = document.getElementById('status');
+            const refreshBtn = document.getElementById('refresh');
+            
+            refreshBtn.disabled = true;
+            statusDiv.className = 'status loading';
+            statusDiv.textContent = 'Gerando QR Code...';
+            qrcodeDiv.innerHTML = '<div class="spinner"></div>';
+
+            try {
+                // Tentar criar/reconectar instância
+                const createResponse = await fetch('http://localhost:8081/instance/create', {
+                    method: 'POST',
+                    headers: {
+                        'apikey': '19931993',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        instanceName: 'dominus_bot',
+                        integration: 'WHATSAPP-BAILEYS',
+                        qrcode: true
+                    })
+                });
+
+                // Aguardar inicialização
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                // Buscar QR Code
+                const qrResponse = await fetch('http://localhost:8081/instance/connect/dominus_bot', {
+                    headers: {
+                        'apikey': '19931993'
+                    }
+                });
+
+                const qrData = await qrResponse.json();
+                console.log('QR Data:', qrData);
+
+                if (qrData.base64) {
+                    qrcodeDiv.innerHTML = `<img src="${qrData.base64}" alt="QR Code">`;
+                    statusDiv.className = 'status success';
+                    statusDiv.textContent = '✅ QR Code gerado! Escaneie com seu WhatsApp';
+                    refreshBtn.disabled = false;
+                    retryCount = 0;
+                } else if (qrData.count === 0 && retryCount < maxRetries) {
+                    // QR Code ainda não disponível, tentar novamente
+                    retryCount++;
+                    statusDiv.textContent = `Aguardando QR Code... (tentativa ${retryCount}/${maxRetries})`;
+                    setTimeout(loadQRCode, 2000);
+                } else {
+                    throw new Error('QR Code não disponível após múltiplas tentativas');
+                }
+            } catch (error) {
+                console.error('Erro:', error);
+                qrcodeDiv.innerHTML = `
+                    <div style="color: #d32f2f;">
+                        <p>❌ Erro ao gerar QR Code</p>
+                        <small>${error.message}</small>
+                    </div>
+                `;
+                statusDiv.className = 'status error';
+                statusDiv.textContent = 'Erro ao gerar QR Code. Tente novamente.';
+                refreshBtn.disabled = false;
+            }
+        }
+
+        // Carregar automaticamente ao abrir a página
+        window.addEventListener('load', loadQRCode);
+    </script>
+</body>
+</html>

@@ -61,10 +61,17 @@ class Module extends Model
      */
     public function userHasPermission($user): bool
     {
+        // Super usuários com role 'global' têm acesso a todos os módulos
+        if ($user->hasRole('global')) {
+            return true;
+        }
+        
+        // Se o módulo não tem permissão específica, permite acesso
         if (!$this->permission) {
             return true;
         }
         
+        // Verifica se o usuário tem a permissão específica
         return $user->can($this->permission);
     }
 
@@ -90,9 +97,13 @@ class Module extends Model
 
     /**
      * Scope para filtrar por company_id
+     * Inclui módulos globais (sem company_id) e módulos específicos da empresa
      */
     public function scopeForCompany($query, $companyId)
     {
-        return $query->where('company_id', $companyId);
+        return $query->where(function ($q) use ($companyId) {
+            $q->where('company_id', $companyId)
+              ->orWhereNull('company_id'); // Módulos globais (sem company_id) são visíveis para todos
+        });
     }
 }
