@@ -32,7 +32,7 @@ class FinanceiroController extends Controller
                 ->toArray();
         }
         
-        return inertia('Financeiro/Index', [
+        return view('app.financeiro.index', [
             'stats' => [
                 'saldoTotal' => 125450.75,
                 'receitasMes' => 45230.00,

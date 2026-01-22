@@ -58,7 +58,7 @@ use App\Models\Financeiro\ModulosAnexo;
 use App\Models\TenantFilial;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
+
 use Stancl\Tenancy\Middleware\InitializeTenancyByDomain;
 use Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains;
 

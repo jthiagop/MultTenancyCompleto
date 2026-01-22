@@ -390,7 +390,6 @@ return Application::configure(basePath: dirname(__DIR__))
             \App\Http\Middleware\CheckSessionExpiration::class, // Verificar expiração de sessão
             \App\Http\Middleware\HandleSessionExpiration::class, // Tratar erros 419 de forma elegante
             \App\Http\Middleware\RequirePasswordChange::class, // Verificar se usuário precisa trocar senha
-            \App\Http\Middleware\HandleInertiaRequests::class, // Inertia.js middleware
         ]);
     })
 
