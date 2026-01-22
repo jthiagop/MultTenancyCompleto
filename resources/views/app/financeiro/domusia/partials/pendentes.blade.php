@@ -119,8 +119,8 @@
         window.documentList = [];
     </script>
 
-    {{-- Carregar o módulo JavaScript do Domusia Pendentes --}}
-    @vite('resources/js/domusia/pendentes.js')
+    {{-- Carregar o módulo JavaScript do Domusia Pendentes (método tradicional) --}}
+    <script src="{{ asset('js/domusia/pendentes.js') }}"></script>
 
     <script>
         // Inicializar o módulo quando o DOM estiver pronto

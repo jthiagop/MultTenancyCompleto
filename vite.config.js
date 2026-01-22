@@ -10,7 +10,6 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/js/app.js',
                 'resources/js/app-inertia.tsx',
-                'resources/js/domusia/pendentes.js',
             ],
             refresh: true,
         }),
