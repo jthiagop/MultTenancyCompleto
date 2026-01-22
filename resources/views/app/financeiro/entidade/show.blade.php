@@ -4,8 +4,7 @@
 <script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
 
 <x-tenant-app-layout :page-title="$entidade->nome" :breadcrumbs="array(
-    array('label' => 'Financeiro', 'url' => route('caixa.index')),
-    array('label' => 'Conciliação Bancária', 'url' => route('banco.list')),
+    array('label' => 'Financeiro', 'url' => route('banco.list')),
     array('label' => 'Conciliação Bancária')
 )">
     <!--begin::Toolbar-->
