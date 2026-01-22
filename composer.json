@@ -5,7 +5,7 @@
     "keywords": ["laravel", "framework"],
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.4",
         "asgrim/ofxparser": "^1.1",
         "davidhsianturi/blade-bootstrap-icons": "^1.5",
         "doctrine/dbal": "*",
@@ -43,9 +43,6 @@
         "yajra/laravel-datatables-oracle": "^11.1"
     },
     "require-dev": {
-        "barryvdh/laravel-dompdf": "^3.1",
-        "barryvdh/laravel-debugbar": "^3.13",
-        "barryvdh/laravel-ide-helper": "^3.2",
         "fakerphp/faker": "^1.23",
         "laravel/breeze": "^2.1",
         "laravel/pint": "^1.13",
