@@ -24,10 +24,18 @@ return new class extends Migration
             $table->index(['company_id', 'tipo']);
         });
         
-        // 3. Remove campo antigo se existir (em transação separada)
-        // Isso evita problemas com ordem de execução
+        // 3. Remove campo antigo se existir
+        // Primeiro remove a foreign key constraint, depois a coluna
         if (Schema::hasColumn('movimentacoes', 'movimentacao_id')) {
             Schema::table('movimentacoes', function (Blueprint $table) {
+                // ✅ NOVO: Dropar a foreign key constraint ANTES da coluna
+                try {
+                    $table->dropForeign(['movimentacao_id']);
+                } catch (\Exception $e) {
+                    // Se a constraint não existir, continua normalmente
+                }
+                
+                // Agora pode dropar a coluna com segurança
                 $table->dropColumn('movimentacao_id');
             });
         }
