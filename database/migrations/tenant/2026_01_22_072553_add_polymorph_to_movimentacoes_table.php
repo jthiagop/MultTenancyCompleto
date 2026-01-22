@@ -12,23 +12,29 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('movimentacoes', function (Blueprint $table) {
-            // 1. Adiciona os campos polimórficos (cria 'origem_type' e 'origem_id')
-            // Estou chamando de 'origem' para ficar claro: "Qual a origem desse dinheiro?"
-            // Indexa automaticamente para busca rápida.
-            $table->nullableMorphs('origem'); 
+            // 1. Adiciona os campos polimórficos APENAS se não existirem
+            // Verificar se as colunas já existem evita erro de duplicação
+            if (!Schema::hasColumn('movimentacoes', 'origem_type')) {
+                $table->nullableMorphs('origem');
+            }
             
             // 2. Melhoria de Performance com índices compostos
             // Essencial para relatórios financeiros rápidos
             // Nota: nullableMorphs() já cria índice para origem_type + origem_id
-            $table->index(['entidade_id', 'data']);
-            $table->index(['company_id', 'tipo']);
+            if (!Schema::hasIndex('movimentacoes', 'movimentacoes_entidade_id_data_index')) {
+                $table->index(['entidade_id', 'data']);
+            }
+            
+            if (!Schema::hasIndex('movimentacoes', 'movimentacoes_company_id_tipo_index')) {
+                $table->index(['company_id', 'tipo']);
+            }
         });
         
         // 3. Remove campo antigo se existir
         // Primeiro remove a foreign key constraint, depois a coluna
         if (Schema::hasColumn('movimentacoes', 'movimentacao_id')) {
             Schema::table('movimentacoes', function (Blueprint $table) {
-                // ✅ NOVO: Dropar a foreign key constraint ANTES da coluna
+                // ✅ Dropar a foreign key constraint ANTES da coluna
                 try {
                     $table->dropForeign(['movimentacao_id']);
                 } catch (\Exception $e) {
