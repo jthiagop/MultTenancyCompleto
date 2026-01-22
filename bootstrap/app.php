@@ -412,19 +412,4 @@ return Application::configure(basePath: dirname(__DIR__))
                 return redirect()->route('login')->with('error', 'Sua sessão expirou por inatividade. Faça login novamente para continuar.');
             }
         });
-
-        // Capturar exceções gerais e retornar JSON para requisições que esperam JSON
-        $exceptions->render(function (\Throwable $e, $request) {
-            // Se a requisição espera JSON (AJAX, API, etc), retornar JSON
-            if ($request->expectsJson() || $request->is('api/*') || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-                $status = method_exists($e, 'getStatusCode') ? $e->getStatusCode() : 500;
-                $status = $status >= 100 && $status < 600 ? $status : 500;
-                
-                return response()->json([
-                    'message' => config('app.debug') ? $e->getMessage() : 'Erro ao processar solicitação.',
-                    'error' => class_basename($e),
-                    'status' => $status
-                ], $status);
-            }
-        });
     })->create();

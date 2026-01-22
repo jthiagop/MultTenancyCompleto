@@ -1505,12 +1505,6 @@ class BancoController extends Controller
                 $this->criarLancamentosFracionados($transacao, $movimentacao, $validatedData, $request);
             }
 
-            // Processa recorrência se houver
-            if ($this->temRecorrencia($request)) {
-                $movimentacao = $transacao->movimentacao;
-                $this->criarRecorrencia($transacao, $movimentacao, $validatedData, $request);
-            }
-
             // Processa parcelas se houver
             if ($this->temParcelas($request)) {
                 $movimentacao = $transacao->movimentacao;
@@ -1577,8 +1571,9 @@ class BancoController extends Controller
 
     /**
      * Processa movimentacao.
+     * Agora vincula a Movimentacao à TransacaoFinanceira via relacionamento polimórfico usando Eloquent
      */
-    private function movimentacao(array $validatedData)
+    private function movimentacao(TransacaoFinanceira $transacao, array $validatedData)
     {
         // Busca o lançamento padrão para obter conta_debito_id e conta_credito_id se não foram enviados
         $contaDebitoId = null;
@@ -1590,10 +1585,8 @@ class BancoController extends Controller
             $lancamentoPadrao = LancamentoPadrao::find($lancamentoPadraoId);
 
             if ($lancamentoPadrao) {
-                // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
                 $lancamentoPadrao->refresh();
 
-                // Se não foram enviados no request, busca do lançamento padrão
                 if (!isset($validatedData['conta_debito_id']) && $lancamentoPadrao->conta_debito_id) {
                     $contaDebitoId = $lancamentoPadrao->conta_debito_id;
                 } elseif (isset($validatedData['conta_debito_id'])) {
@@ -1608,8 +1601,9 @@ class BancoController extends Controller
             }
         }
 
-        // Cria o lançamento na tabela 'movimentacoes'
-        $movimentacao = Movimentacao::create([
+        // 🔗 Usa Eloquent para criar a movimentação via relacionamento polimórfico
+        // Eloquent automatically sets origem_type e origem_id
+        $movimentacao = $transacao->movimentacao()->create([
             'entidade_id' => $validatedData['entidade_id'],
             'tipo'        => $validatedData['tipo'],
             'valor'       => $validatedData['valor'],
@@ -1626,14 +1620,14 @@ class BancoController extends Controller
             'data_competencia' => $validatedData['data_competencia'],
         ]);
 
-        // Retorna o objeto Movimentacao recém-criado, de onde poderemos pegar o ID
         return $movimentacao;
     }
 
     /**
      * Processa lançamentos padrão.
+     * Agora vincula via polimorfismo em vez de usar movimentacao_id
      */
-    private function processarLancamentoPadrao(array $validatedData)
+    private function processarLancamentoPadrao(TransacaoFinanceira $transacao, array $validatedData)
     {
         $lancamentoPadrao = LancamentoPadrao::find($validatedData['lancamento_padrao_id']);
         if ($lancamentoPadrao && $lancamentoPadrao->description === 'Deposito Bancário') {
@@ -1643,7 +1637,7 @@ class BancoController extends Controller
             // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
             $lancamentoPadrao->refresh();
 
-            // Cria outra movimentação para "Deposito Bancário"
+            // Cria outra movimentação para "Deposito Bancário" com polimorfismo
             $movimentacaoBanco = Movimentacao::create([
                 'entidade_id' => $validatedData['entidade_banco_id'],
                 'tipo' => $validatedData['tipo'],
@@ -1658,10 +1652,12 @@ class BancoController extends Controller
                 'conta_debito_id' => $lancamentoPadrao->conta_debito_id ?? null,
                 'conta_credito_id' => $lancamentoPadrao->conta_credito_id ?? null,
                 'data_competencia' => $validatedData['data_competencia'],
+                // 🔗 POLIMORFISMO: Vincula a movimentação à transação
+                'origem_type' => TransacaoFinanceira::class,
+                'origem_id' => $transacao->id,
             ]);
 
-            // Cria o lançamento no banco
-            $validatedData['movimentacao_id'] = $movimentacaoBanco->id;
+            // Cria o lançamento no banco (SEM usar movimentacao_id)
             Banco::create($validatedData);
         }
     }
@@ -1759,8 +1755,9 @@ class BancoController extends Controller
 
     /**
      * Cria uma recorrência para o lançamento
+     * Agora obtém a movimentação via relacionamento polimórfico
      */
-    private function criarRecorrencia(TransacaoFinanceira $transacao, Movimentacao $movimentacao, array $validatedData, Request $request)
+    private function criarRecorrencia(TransacaoFinanceira $transacao, array $validatedData, Request $request)
     {
         \Log::info('criarRecorrencia - Início', [
             'transacao_id' => $transacao->id,
@@ -2057,42 +2054,28 @@ class BancoController extends Controller
             return;
         }
 
-        // Ordena as parcelas pelo índice para garantir ordem correta
         ksort($parcelas);
 
         foreach ($parcelas as $index => $parcela) {
-            // Prepara os dados da parcela baseado na transação principal
-            // Usa conta_pagamento_id se fornecido, senão usa entidade_id da transação principal
             $entidadeIdParcela = $validatedData['entidade_id'];
             if (isset($parcela['conta_pagamento_id']) && $parcela['conta_pagamento_id']) {
                 $entidadeIdParcela = $parcela['conta_pagamento_id'];
             }
 
-            // Converte a data de vencimento da parcela de d/m/Y para Y-m-d
-            $dataVencimentoParcela = $validatedData['data_competencia']; // Valor padrão
+            $dataVencimentoParcela = $validatedData['data_competencia'];
             if (isset($parcela['vencimento']) && $parcela['vencimento']) {
                 $vencimentoStr = trim($parcela['vencimento']);
-
-                // Remove espaços e garante formato limpo
                 $vencimentoStr = preg_replace('/\s+/', '', $vencimentoStr);
 
-                // Valida formato antes de converter
-                // Espera formato d/m/Y (ex: 01/11/2026)
                 if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $vencimentoStr, $matches)) {
-                    // Extrai dia, mês e ano explicitamente
-                    // matches[1] = dia, matches[2] = mês, matches[3] = ano
                     $dia = (int)trim($matches[1]);
                     $mes = (int)trim($matches[2]);
                     $ano = (int)trim($matches[3]);
 
-                    // Valida se os valores são válidos
                     if ($dia >= 1 && $dia <= 31 && $mes >= 1 && $mes <= 12 && $ano >= 1900 && $ano <= 2100) {
                         try {
-                            // Cria a data explicitamente no formato correto (ano, mês, dia)
-                            // Carbon::create() espera (ano, mês, dia)
                             $dataVencimentoParcela = Carbon::create($ano, $mes, $dia, 0, 0, 0)->format('Y-m-d');
 
-                            // Log para debug (remover depois se necessário)
                             \Log::info('Data de vencimento da parcela convertida', [
                                 'vencimento_original' => $vencimentoStr,
                                 'dia' => $dia,
@@ -2110,7 +2093,6 @@ class BancoController extends Controller
                                 'erro' => $e->getMessage(),
                                 'parcela_index' => $index
                             ]);
-                            // Se falhar, usa a data de competência como fallback
                             $dataVencimentoParcela = $validatedData['data_competencia'];
                         }
                     } else {
@@ -2124,7 +2106,6 @@ class BancoController extends Controller
                         $dataVencimentoParcela = $validatedData['data_competencia'];
                     }
                 } else {
-                    // Se não está no formato esperado, tenta converter com Carbon
                     try {
                         $dataVencimentoParcela = Carbon::createFromFormat('d/m/Y', $vencimentoStr)
                             ->format('Y-m-d');
@@ -2143,14 +2124,14 @@ class BancoController extends Controller
                 'company_id' => $validatedData['company_id'],
                 'data_competencia' => $validatedData['data_competencia'],
                 'data_vencimento' => $dataVencimentoParcela,
-                'entidade_id' => $entidadeIdParcela, // Banco/Conta financeira
+                'entidade_id' => $entidadeIdParcela,
                 'tipo' => $validatedData['tipo'],
                 'valor' => isset($parcela['valor']) ? (float) $parcela['valor'] : 0,
                 'descricao' => isset($parcela['descricao']) ? $parcela['descricao'] : $validatedData['descricao'] . ' - Parcela ' . ($index + 1),
                 'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'],
                 'cost_center_id' => $validatedData['cost_center_id'],
                 'tipo_documento' => $validatedData['tipo_documento'],
-                'numero_documento' => ($validatedData['numero_documento'] ?? '') . '-' . ($index + 1), // Adiciona número da parcela ao documento
+                'numero_documento' => ($validatedData['numero_documento'] ?? '') . '-' . ($index + 1),
                 'origem' => $validatedData['origem'],
                 'historico_complementar' => $validatedData['historico_complementar'] ?? null,
                 'comprovacao_fiscal' => $validatedData['comprovacao_fiscal'] ?? false,
@@ -2166,12 +2147,24 @@ class BancoController extends Controller
                 'updated_by_name' => $validatedData['updated_by_name'],
             ];
 
-            // Cria a movimentação para esta parcela
-            $movimentacaoParcela = $this->movimentacao($dadosParcela);
-            $dadosParcela['movimentacao_id'] = $movimentacaoParcela->id;
-
-            // Cria a transação financeira da parcela
+            // 1. Cria a transação financeira da parcela PRIMEIRO
             $transacaoParcela = TransacaoFinanceira::create($dadosParcela);
+
+            // 2. Cria a movimentação para esta parcela usando Eloquent (sem precisar de movimentacao_id)
+            $transacaoParcela->movimentacao()->create([
+                'entidade_id' => $entidadeIdParcela,
+                'tipo' => $validatedData['tipo'],
+                'valor' => $dadosParcela['valor'],
+                'data' => $validatedData['data_competencia'],
+                'descricao' => $dadosParcela['descricao'],
+                'company_id' => $validatedData['company_id'],
+                'created_by' => $validatedData['created_by'],
+                'created_by_name' => $validatedData['created_by_name'],
+                'updated_by' => $validatedData['updated_by'],
+                'updated_by_name' => $validatedData['updated_by_name'],
+                'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'],
+                'data_competencia' => $validatedData['data_competencia'],
+            ]);
         }
     }
 
@@ -2350,11 +2343,16 @@ class BancoController extends Controller
     
     /**
      * Delete only a single transaction
+     * Agora usa relacionamento polimórfico para localizar movimentação
      */
     protected function destroySingleTransaction(TransacaoFinanceira $transacao)
     {
-        // 1) Localiza a movimentação associada
-        $movimentacao = Movimentacao::findOrFail($transacao->movimentacao_id);
+        // 1) Localiza a movimentação associada via relacionamento polimórfico
+        $movimentacao = $transacao->movimentacao;
+        
+        if (!$movimentacao) {
+            throw new \Exception('Movimentação não encontrada para esta transação');
+        }
 
         // 2) Localiza a entidade financeira associada
         $entidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
@@ -2417,7 +2415,8 @@ class BancoController extends Controller
         $deletedCount = 0;
         foreach ($transacoes as $trans) {
             // Delete each transaction following same logic
-            $movimentacao = Movimentacao::find($trans->movimentacao_id);
+            // 🔗 Usa o relacionamento polimórfico ao invés de movimentacao_id
+            $movimentacao = $trans->movimentacao;
             if ($movimentacao) {
                 $entidade = EntidadeFinanceira::find($movimentacao->entidade_id);
                 if ($entidade) {
@@ -2736,11 +2735,47 @@ class BancoController extends Controller
             // Atualizar todas as transações
             $count = 0;
             foreach ($transacoes as $transacao) {
+                // Validação: Skip se já estava pago (idempotência)
+                if ($transacao->situacao === 'pago') {
+                    continue;
+                }
+
+                // Salvar situação anterior para auditoria
+                $situacaoAnterior = $transacao->situacao;
+
                 $transacao->valor_pago = $transacao->valor;
                 $transacao->situacao = 'pago';
                 $transacao->updated_by = Auth::id();
                 $transacao->updated_by_name = Auth::user()->name;
                 $transacao->save();
+
+                // Atualizar saldo da entidade
+                $entidade = $transacao->entidadeFinanceira;
+                
+                if ($entidade) {
+                    if ($transacao->tipo === 'entrada') {
+                        $entidade->saldo_atual += $transacao->valor;
+                    } else {
+                        $entidade->saldo_atual -= $transacao->valor;
+                    }
+                    $entidade->save();
+
+                    Log::info('Saldo atualizado ao marcar transação como pago', [
+                        'transacao_id' => $transacao->id,
+                        'entidade_id' => $entidade->id,
+                        'tipo' => $transacao->tipo,
+                        'valor' => $transacao->valor,
+                        'situacao_anterior' => $situacaoAnterior,
+                        'novo_saldo' => $entidade->saldo_atual,
+                        'usuario_id' => Auth::id(),
+                    ]);
+                } else {
+                    Log::warning('Entidade não encontrada ao atualizar saldo', [
+                        'transacao_id' => $transacao->id,
+                        'entidade_id' => $transacao->entidade_id,
+                    ]);
+                }
+
                 $count++;
             }
 

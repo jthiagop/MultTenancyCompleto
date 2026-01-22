@@ -21,7 +21,6 @@ class TransacaoFinanceira extends Model
     protected $table = 'transacoes_financeiras';
 
     use HasFactory, SoftDeletes;
-
     protected $fillable = [
         'company_id',
         'data_competencia',
@@ -37,7 +36,7 @@ class TransacaoFinanceira extends Model
         'valor_a_pagar',
         'descricao',
         'lancamento_padrao_id',
-        'movimentacao_id',
+        // 'movimentacao_id', // ❌ REMOVIDO: Use $transacao->movimentacao()->create() ao invés
         'recorrencia_id',
         'cost_center_id',
         'tipo_documento',
@@ -108,7 +107,7 @@ class TransacaoFinanceira extends Model
 
     public function movimentacao()
     {
-        return $this->belongsTo(Movimentacao::class, 'movimentacao_id');
+        return $this->morphOne(Movimentacao::class, 'origem');
     }
 
     public function createdBy()
@@ -145,8 +144,8 @@ class TransacaoFinanceira extends Model
             'transacao_financeira_id',
             'recorrencia_id'
         )
-        ->withPivot('data_geracao', 'numero_ocorrencia', 'movimentacao_id')
-        ->withTimestamps();
+            ->withPivot('data_geracao', 'numero_ocorrencia', 'movimentacao_id')
+            ->withTimestamps();
     }
 
     /**
@@ -163,7 +162,7 @@ class TransacaoFinanceira extends Model
     public function fracionamentosPagos()
     {
         return $this->hasMany(TransacaoFracionamento::class, 'transacao_principal_id')
-                    ->where('tipo', 'pago');
+            ->where('tipo', 'pago');
     }
 
     /**
@@ -172,7 +171,7 @@ class TransacaoFinanceira extends Model
     public function fracionamentosEmAberto()
     {
         return $this->hasMany(TransacaoFracionamento::class, 'transacao_principal_id')
-                    ->where('tipo', 'em_aberto');
+            ->where('tipo', 'em_aberto');
     }
 
     static public function getChartSaida()
@@ -215,11 +214,11 @@ class TransacaoFinanceira extends Model
         if (!$recorrencia) {
             return null;
         }
-        
+
         $pivot = $recorrencia->pivot;
         $numeroOcorrencia = $pivot->numero_ocorrencia ?? 1;
         $totalOcorrencias = $recorrencia->total_ocorrencias ?? 1;
-        
+
         return "{$numeroOcorrencia}/{$totalOcorrencias}";
     }
 
@@ -255,7 +254,7 @@ class TransacaoFinanceira extends Model
 
         // Atualiza o campo comprovacao_fiscal
         $this->comprovacao_fiscal = $hasAnexos;
-        
+
         return $this->save();
     }
 
@@ -270,7 +269,7 @@ class TransacaoFinanceira extends Model
         if ($this->situacao === 'desconsiderado') {
             return 'desconsiderado';
         }
-        
+
         // PRIORIDADE 1: Se há fracionamentos, a situação é "pago_parcial"
         // Verifica se existem fracionamentos (carregando o relacionamento se necessário)
         if ($this->relationLoaded('fracionamentos')) {
@@ -283,30 +282,30 @@ class TransacaoFinanceira extends Model
                 return 'pago_parcial';
             }
         }
-        
+
         // Se está agendado e ainda não venceu
         if ($this->agendado && $this->data_vencimento && $this->data_vencimento > now()) {
             return 'previsto';
         }
-        
+
         // Se venceu e não foi pago completamente
         if ($this->data_vencimento && $this->data_vencimento < now() && $this->valor_pago < $this->valor) {
             return 'atrasado';
         }
-        
+
         // Se foi pago parcialmente (sem fracionamentos registrados)
         if ($this->valor_pago > 0 && $this->valor_pago < $this->valor) {
             return 'pago_parcial';
         }
-        
+
         // Se foi totalmente pago/recebido
         if ($this->valor_pago >= $this->valor && $this->valor > 0) {
             // Entrada → recebido | Saída → pago
-            return ($this->tipo === 'entrada') 
-                ? \App\Enums\SituacaoTransacao::RECEBIDO->value 
+            return ($this->tipo === 'entrada')
+                ? \App\Enums\SituacaoTransacao::RECEBIDO->value
                 : \App\Enums\SituacaoTransacao::PAGO->value;
         }
-        
+
         // Padrão: em aberto
         return 'em_aberto';
     }
@@ -343,33 +342,33 @@ class TransacaoFinanceira extends Model
                     return;
                 }
             }
-            
+
             // PRIORIDADE 2: Se foi definido manualmente como desconsiderado, mantém
             if ($transacao->situacao === \App\Enums\SituacaoTransacao::DESCONSIDERADO) {
                 return;
             }
-            
+
             // PRIORIDADE 3: Se foi definido manualmente como pago, recebido ou em_aberto, mantém
             $situacoesParaManter = [
                 \App\Enums\SituacaoTransacao::PAGO->value,
                 \App\Enums\SituacaoTransacao::RECEBIDO->value,
                 \App\Enums\SituacaoTransacao::EM_ABERTO->value
             ];
-            
+
             // Normaliza situacao para comparação (pode ser Enum ou string)
-            $situacaoValue = $transacao->situacao instanceof \App\Enums\SituacaoTransacao 
-                ? $transacao->situacao->value 
+            $situacaoValue = $transacao->situacao instanceof \App\Enums\SituacaoTransacao
+                ? $transacao->situacao->value
                 : $transacao->situacao;
-            
+
             if (in_array($situacaoValue, $situacoesParaManter)) {
                 return;
             }
-            
+
             // PRIORIDADE 4: Se foi definido manualmente como pago_parcial, mantém
             if ($situacaoValue === \App\Enums\SituacaoTransacao::PAGO_PARCIAL->value) {
                 return;
             }
-            
+
             // PRIORIDADE 5: Calcula automaticamente para outros casos
             $situacaoCalculada = $transacao->calcularSituacao();
 

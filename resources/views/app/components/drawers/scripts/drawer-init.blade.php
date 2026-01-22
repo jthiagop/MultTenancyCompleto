@@ -347,6 +347,11 @@
             $('#checkbox-recebido-wrapper').hide();
             $('#checkbox-agendado-wrapper').hide();
             
+            // Desmarca, desabilita e limpa valores dos checkboxes de pagamento
+            $('#pago_checkbox').prop('checked', false).attr('disabled', true).val('');
+            $('#recebido_checkbox').prop('checked', false).attr('disabled', true).val('');
+            $('#agendado_checkbox').prop('checked', false).attr('disabled', true).val('');
+            
             // Oculta todos os accordions de pagamento
             accordionPrevisaoPagamento.hide();
             accordionInformacoesPagamento.hide();
@@ -388,6 +393,11 @@
             wrapperDiaCobranca.hide(); // Oculta dia de cobrança quando desmarcar
             vencimentoLabel.text('Vencimento');
             $('#checkbox-agendado-wrapper').show();
+            
+            // Reabilita checkboxes ao desativar recorrência
+            $('#pago_checkbox').attr('disabled', false);
+            $('#recebido_checkbox').attr('disabled', false);
+            $('#agendado_checkbox').attr('disabled', false);
             
             // Limpa seleções de recorrência
             $('#configuracao_recorrencia').val(null).trigger('change');

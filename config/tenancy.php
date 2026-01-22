@@ -27,7 +27,7 @@ return [
         env('CENTRAL_DOMAIN_1', '127.0.0.1'),
         env('CENTRAL_DOMAIN_2', 'localhost'),
         env('CENTRAL_DOMAIN_3', 'dominus.eco.br'),
-            env('CENTRAL_DOMAIN_5', 'www.dominus.eco.br'),
+        env('CENTRAL_DOMAIN_4', 'www.dominus.eco.br'),
     ],
     },
 

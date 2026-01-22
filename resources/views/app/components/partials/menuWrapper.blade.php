@@ -204,7 +204,7 @@
                         </span>
                         <div class="menu-sub menu-sub-accordion menu-active-bg">
                             <div class="menu-item">
-                                <a class="menu-link {{ request()->routeIs('patrimonio.index') ? 'active' : '' }}"
+                                <a class="menu-link "
                                     href="{{ route('patrimonio.index') }}">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
@@ -213,8 +213,8 @@
                                 </a>
                             </div>
                             <div class="menu-item">
-                                <a class="menu-link {{ request()->routeIs('banco.list') && request()->get('tab') === 'contas_receber' ? 'active' : '' }}"
-                                    href="{{ route('banco.list', ['tab' => 'contas_receber']) }}">
+                                <a class="menu-link "
+                                    href="">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -222,8 +222,8 @@
                                 </a>
                             </div>
                             <div class="menu-item">
-                                <a class="menu-link {{ request()->routeIs('banco.list') && request()->get('tab') === 'extrato' ? 'active' : '' }}"
-                                    href="{{ route('banco.list', ['tab' => 'extrato']) }}">
+                                <a class="menu-link "
+                                    href="">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -231,8 +231,8 @@
                                 </a>
                             </div>
                             <div class="menu-item">
-                                <a class="menu-link  {{ request()->routeIs('domusia.index') ? 'active' : '' }}"
-                                    href="{{ route('domusia.index') }}">
+                                <a class="menu-link"
+                                    href="">
                                     <span class="menu-bullet ">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -240,8 +240,8 @@
                                 </a>
                             </div>
                             <div class="menu-item">
-                                <a class="menu-link {{ request()->routeIs('nfe_entrada.index') ? 'active' : '' }}"
-                                    href="{{ route('nfe_entrada.index') }}">
+                                <a class="menu-link"
+                                    href="">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>

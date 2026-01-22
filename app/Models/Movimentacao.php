@@ -4,10 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\DB;
-
-
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Support\Facades\DB;
 
 class Movimentacao extends Model
 {
@@ -25,7 +24,7 @@ class Movimentacao extends Model
         'categoria',
         'status',
         'descricao',
-        'movimentacao_id',
+        // 'movimentacao_id', // ❌ REMOVIDO: Auto-referência não deve estar aqui
         'company_id',
         'created_by',
         'updated_by',
@@ -35,7 +34,17 @@ class Movimentacao extends Model
         'conta_debito_id',
         'conta_credito_id',
         'data_competencia',
+        'origem_id',  
+        'origem_type',
     ];
+
+    /**
+     * Retorna QUEM criou essa movimentação (Transacao, Dizimo, Patrimonio).
+     */
+    public function origem(): MorphTo
+    {
+        return $this->morphTo();
+    }
 
     // Relacionamento com a entidade financeira
     public function entidade()
@@ -65,18 +74,18 @@ class Movimentacao extends Model
     {
         parent::boot();
 
-        // Atualiza saldo após criar uma movimentação
-        static::created(function ($movimentacao) {
-
-            $entidade = EntidadeFinanceira::find($movimentacao->entidade_id);
-
-            if ($movimentacao->tipo === 'entrada') {
-                $entidade->saldo_atual += $movimentacao->valor;
-            } else {
-                $entidade->saldo_atual -= $movimentacao->valor;
-            }
-            $entidade->save();
-        });
+        // ❌ DESABILITADO: Atualização automática de saldo removida
+        // Agora o usuário controla manualmente quando atualizar o saldo via "Definir como pago"
+        // 
+        // static::created(function ($movimentacao) {
+        //     $entidade = EntidadeFinanceira::find($movimentacao->entidade_id);
+        //     if ($movimentacao->tipo === 'entrada') {
+        //         $entidade->saldo_atual += $movimentacao->valor;
+        //     } else {
+        //         $entidade->saldo_atual -= $movimentacao->valor;
+        //     }
+        //     $entidade->save();
+        // });
 
         // // Reverte saldo ao excluir uma movimentação
         // static::deleting(function ($movimentacao) {

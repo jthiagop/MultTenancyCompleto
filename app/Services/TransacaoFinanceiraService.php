@@ -7,7 +7,7 @@ use App\Models\Movimentacao;
 use App\Models\LancamentoPadrao;
 use App\Models\Financeiro\Recorrencia;
 use App\Models\Banco;
-use App\Models\ModulosAnexo;
+use App\Models\Financeiro\ModulosAnexo;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -30,52 +30,73 @@ class TransacaoFinanceiraService
     /**
      * Cria um novo lançamento financeiro com todas as suas dependências
      * 
+     * Padrão profissional:
+     * - Transação DB envolvendo apenas operações em banco
+     * - Anexos processados DEPOIS do commit (DB::afterCommit)
+     * - Não retorna model deletado
+     * - Retorna sempre um model válido
+     * 
      * @param array $validatedData Dados validados do request
      * @param Request $request Request original para acessar dados não validados
-     * @return TransacaoFinanceira
+     * @return TransacaoFinanceira Transação criada ou primeira parcela se parcelado
      * @throws \Exception
      */
     public function criarLancamento(array $validatedData, Request $request): TransacaoFinanceira
     {
-        return DB::transaction(function () use ($validatedData, $request) {
+        $transacao = DB::transaction(function () use ($validatedData, $request) {
             // 1. Prepara os dados
             $data = $this->prepararDados($validatedData, $request);
             
             // 2. Calcula a situação baseada no checkbox "Pago"
             $data['situacao'] = $this->calcularSituacao($request);
             
-            // 3. Cria a movimentação
-            $movimentacao = $this->criarMovimentacao($data);
-            $data['movimentacao_id'] = $movimentacao->id;
+            // 3. Verifica se será parcelado
+            $temParcelas = $this->temParcelas($request);
             
-            // 4. Cria a transação financeira
-            $transacao = TransacaoFinanceira::create($data);
-            
-            // 5. Processa pagamento (se houver)
-            if ($this->temPagamento($request, $data)) {
-                $this->processarPagamento($transacao, $movimentacao, $data, $request);
-            }
-            
-            // 6. Processa lançamento padrão especial (Depósito Bancário)
-            $this->processarLancamentoPadrao($data);
-            
-            // 7. Processa anexos
-            $this->processarAnexos($request, $transacao);
-            
-            // 8. Processa recorrência (se houver)
-            if ($this->temRecorrencia($request)) {
-                $this->processarRecorrencia($transacao, $movimentacao, $data, $request);
-            }
-            
-            // 9. Processa parcelas (se houver)
-            if ($this->temParcelas($request)) {
-                $this->processarParcelas($transacao, $movimentacao, $data, $request);
-                // Remove a transação principal, pois as parcelas são as transações reais
-                $transacao->delete();
+            if (!$temParcelas) {
+                // Transação comum (sem parcelas)
+                $transacao = TransacaoFinanceira::create($data);
+                
+                // 4. Cria a movimentação via relacionamento polimórfico Eloquent
+                $movimentacao = $transacao->movimentacao()->create($this->prepararDadosMovimentacao($data));
+                
+                // 5. Processa pagamento (se houver)
+                if ($this->temPagamento($request, $data)) {
+                    $this->processarPagamento($transacao, $movimentacao, $data, $request);
+                }
+                
+                // 6. Processa lançamento padrão especial (Depósito Bancário)
+                $this->processarLancamentoPadrao($transacao, $data);
+                
+                // 7. Processa recorrência (se houver)
+                if ($this->temRecorrencia($request)) {
+                    $this->processarRecorrencia($transacao, $data, $request);
+                }
+            } else {
+                // Transação com parcelas (cria múltiplas transações)
+                $transacao = $this->processarParcelas(null, $data, $request);
             }
             
             return $transacao;
         });
+        
+        /** @var \App\Models\Financeiro\TransacaoFinanceira $transacao */
+        
+        // 8. Processa anexos APÓS commit
+        // Se falhar, não afeta a transação criada no banco
+        DB::afterCommit(function () use ($request, $transacao) {
+            try {
+                $this->processarAnexos($request, $transacao);
+            } catch (\Exception $e) {
+                Log::warning('Erro ao processar anexos após commit', [
+                    'transacao_id' => $transacao->id,
+                    'erro' => $e->getMessage()
+                ]);
+                // Não relança - transação já foi commitada com sucesso
+            }
+        });
+        
+        return $transacao;
     }
 
     /**
@@ -189,9 +210,10 @@ class TransacaoFinanceiraService
     }
 
     /**
-     * Cria a movimentação associada à transação
+     * Prepara os dados para criar a movimentação via Eloquent
+     * Extrai apenas os campos necessários para a tabela movimentacoes
      */
-    protected function criarMovimentacao(array $data): Movimentacao
+    protected function prepararDadosMovimentacao(array $data): array
     {
         // Busca informações do lançamento padrão
         $contaDebitoId = null;
@@ -210,7 +232,9 @@ class TransacaoFinanceiraService
             }
         }
 
-        return Movimentacao::create([
+        // Retorna apenas os dados necessários para Movimentacao
+        // O polimorfismo (origem_type e origem_id) é preenchido automaticamente pelo Eloquent
+        return [
             'entidade_id' => $data['entidade_id'],
             'tipo' => $data['tipo'],
             'valor' => $data['valor'],
@@ -225,8 +249,12 @@ class TransacaoFinanceiraService
             'conta_debito_id' => $contaDebitoId,
             'conta_credito_id' => $contaCreditoId,
             'data_competencia' => $data['data_competencia'],
-        ]);
+        ];
     }
+    
+    /**
+     * Remove o método antigo criarMovimentacao() - agora usamos Eloquent
+     */
 
     /**
      * Verifica se há pagamento a ser processado
@@ -270,8 +298,8 @@ class TransacaoFinanceiraService
             // Pagamento completo - define situação baseada no tipo
             // Entrada → recebido | Saída → pago
             $transacao->situacao = ($transacao->tipo === 'entrada') 
-                ? \App\Enums\SituacaoTransacao::RECEBIDO->value 
-                : \App\Enums\SituacaoTransacao::PAGO->value;
+                ? \App\Enums\SituacaoTransacao::RECEBIDO
+                : \App\Enums\SituacaoTransacao::PAGO;
             $transacao->valor_pago = $data['valor_pago'];
 
             if ($request->has('juros_pagamento')) {
@@ -296,8 +324,9 @@ class TransacaoFinanceiraService
 
     /**
      * Processa lançamento padrão especial (Depósito Bancário)
+     * Agora usa Eloquent para criar a movimentação via polimorfismo
      */
-    protected function processarLancamentoPadrao(array $data): void
+    protected function processarLancamentoPadrao(TransacaoFinanceira $transacao, array $data): void
     {
         if (!isset($data['lancamento_padrao_id'])) {
             return;
@@ -306,13 +335,12 @@ class TransacaoFinanceiraService
         $lancamentoPadrao = LancamentoPadrao::find($data['lancamento_padrao_id']);
         
         if ($lancamentoPadrao && $lancamentoPadrao->description === 'Deposito Bancário') {
-            $data['origem'] = 'Banco';
-            $data['tipo'] = 'entrada';
             $lancamentoPadrao->refresh();
 
-            $movimentacaoBanco = Movimentacao::create([
+            // Prepara dados para a movimentação do depósito
+            $dadosMovimentacao = [
                 'entidade_id' => $data['entidade_banco_id'],
-                'tipo' => $data['tipo'],
+                'tipo' => 'entrada',
                 'valor' => $data['valor'],
                 'descricao' => $data['descricao'],
                 'company_id' => $data['company_id'],
@@ -324,9 +352,12 @@ class TransacaoFinanceiraService
                 'conta_debito_id' => $lancamentoPadrao->conta_debito_id ?? null,
                 'conta_credito_id' => $lancamentoPadrao->conta_credito_id ?? null,
                 'data_competencia' => $data['data_competencia'],
-            ]);
+            ];
 
-            $data['movimentacao_id'] = $movimentacaoBanco->id;
+            // 🔗 Usa Eloquent para criar a movimentação via polimorfismo
+            $transacao->movimentacao()->create($dadosMovimentacao);
+
+            // Cria o lançamento no banco (SEM usar movimentacao_id)
             Banco::create($data);
         }
     }
@@ -453,15 +484,77 @@ class TransacaoFinanceiraService
 
     /**
      * Processa recorrência
-     * Método será implementado posteriormente ou delegado ao controller
+     * Cria registro de recorrência e gera as transações futuras
+     * 
+     * @param TransacaoFinanceira $transacao A transação principal (primeira ocorrência)
+     * @param array $data Dados validados da transação
+     * @param Request $request Requisição com dados de recorrência
+     * @return void
      */
     protected function processarRecorrencia(
         TransacaoFinanceira $transacao,
-        Movimentacao $movimentacao,
         array $data,
         Request $request
     ): void {
-        // Implementação futura
+        try {
+            // Obter dados da recorrência da requisição
+            $intervaloRepeticao = (int) $request->input('intervalo_repeticao', 1);
+            $frequencia = $request->input('frequencia', 'mensal');
+            $aposOcorrencias = (int) $request->input('apos_ocorrencias', 12);
+            
+            // Mapear frequência para nome legível
+            $frequenciaMap = [
+                'diario' => 'Dia(s)',
+                'semanal' => 'Semana(s)',
+                'mensal' => 'Mês(es)',
+                'anual' => 'Ano(s)',
+            ];
+            $frequenciaTexto = $frequenciaMap[$frequencia] ?? $frequencia;
+            
+            // Gerar nome descritivo da recorrência (ex: "A cada 2 Mês(es) - Após 4 ocorrências")
+            $nomeRecorrencia = "A cada {$intervaloRepeticao} {$frequenciaTexto} - Após {$aposOcorrencias} ocorrência(s)";
+            
+            // Criar registro de recorrência
+            $recorrencia = Recorrencia::create([
+                'company_id' => $data['company_id'],
+                'nome' => $nomeRecorrencia,
+                'intervalo_repeticao' => $intervaloRepeticao,
+                'frequencia' => $frequencia,
+                'total_ocorrencias' => $aposOcorrencias,
+                'ocorrencias_geradas' => 0,
+                'data_inicio' => Carbon::parse($data['data_competencia']),
+                'ativo' => true,
+                'created_by' => Auth::id(),
+                'created_by_name' => Auth::user()->name,
+                'updated_by' => Auth::id(),
+                'updated_by_name' => Auth::user()->name,
+            ]);
+            
+            // Associar a transação inicial (primeira ocorrência) ao recorrência
+            $transacao->update(['recorrencia_id' => $recorrencia->id]);
+            
+            // Gerar as demais transações recorrentes usando o RecurrenceService
+            $this->recurrenceService->generateRecurringTransactions(
+                $recorrencia,
+                $transacao,
+                $data
+            );
+            
+            Log::info('Recorrência processada com sucesso', [
+                'recorrencia_id' => $recorrencia->id,
+                'transacao_id' => $transacao->id,
+                'frequencia' => $frequencia,
+                'intervalo' => $intervaloRepeticao,
+                'total_ocorrencias' => $aposOcorrencias,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao processar recorrência', [
+                'transacao_id' => $transacao->id,
+                'erro' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            throw $e;
+        }
     }
 
     /**
@@ -479,15 +572,120 @@ class TransacaoFinanceiraService
 
     /**
      * Processa parcelas
-     * Método será implementado posteriormente ou delegado ao controller
+     * Cria múltiplas transações (uma por parcela) ao invés de deletar a transação principal
+     * 
+     * @param ?TransacaoFinanceira $transacaoPrincipal Não será usado (compatibilidade)
+     * @return TransacaoFinanceira Retorna a primeira parcela como referência
      */
     protected function processarParcelas(
-        TransacaoFinanceira $transacao,
-        Movimentacao $movimentacao,
+        ?TransacaoFinanceira $transacaoPrincipal,
         array $data,
         Request $request
-    ): void {
-        // Implementação futura
+    ): TransacaoFinanceira {
+        $parcelas = $request->input('parcelas', []);
+        $primeiraTransacao = null;
+        
+        if (empty($parcelas) || !is_array($parcelas)) {
+            throw new \Exception('Nenhuma parcela fornecida para processar');
+        }
+        
+        ksort($parcelas);
+        
+        foreach ($parcelas as $index => $parcela) {
+            $entidadeIdParcela = $data['entidade_id'];
+            if (isset($parcela['conta_pagamento_id']) && $parcela['conta_pagamento_id']) {
+                $entidadeIdParcela = $parcela['conta_pagamento_id'];
+            }
+            
+            // Converte data de vencimento da parcela
+            $dataVencimentoParcela = $data['data_competencia'];
+            if (isset($parcela['vencimento']) && $parcela['vencimento']) {
+                $dataVencimentoParcela = $this->converterDataVencimentoParcela($parcela['vencimento'], $data['data_competencia'], $index);
+            }
+            
+            $dadosParcela = [
+                'company_id' => $data['company_id'],
+                'data_competencia' => $data['data_competencia'],
+                'data_vencimento' => $dataVencimentoParcela,
+                'entidade_id' => $entidadeIdParcela,
+                'tipo' => $data['tipo'],
+                'valor' => isset($parcela['valor']) ? (float) $parcela['valor'] : 0,
+                'descricao' => isset($parcela['descricao']) ? $parcela['descricao'] : $data['descricao'] . ' - Parcela ' . ($index + 1),
+                'lancamento_padrao_id' => $data['lancamento_padrao_id'] ?? null,
+                'cost_center_id' => $data['cost_center_id'] ?? null,
+                'tipo_documento' => $data['tipo_documento'] ?? null,
+                'numero_documento' => ($data['numero_documento'] ?? '') . '-' . ($index + 1),
+                'origem' => $data['origem'] ?? null,
+                'historico_complementar' => $data['historico_complementar'] ?? null,
+                'comprovacao_fiscal' => $data['comprovacao_fiscal'] ?? false,
+                'situacao' => 'em_aberto',
+                'agendado' => isset($parcela['agendado']) ? (bool) $parcela['agendado'] : false,
+                'valor_pago' => 0,
+                'juros' => 0,
+                'multa' => 0,
+                'desconto' => 0,
+                'created_by' => $data['created_by'],
+                'created_by_name' => $data['created_by_name'],
+                'updated_by' => $data['updated_by'],
+                'updated_by_name' => $data['updated_by_name'],
+            ];
+            
+            // Cria transação para a parcela
+            $transacaoParcela = TransacaoFinanceira::create($dadosParcela);
+            
+            // Cria movimentação para a parcela
+            $transacaoParcela->movimentacao()->create([
+                'entidade_id' => $entidadeIdParcela,
+                'tipo' => $data['tipo'],
+                'valor' => $dadosParcela['valor'],
+                'data' => $data['data_competencia'],
+                'descricao' => $dadosParcela['descricao'],
+                'company_id' => $data['company_id'],
+                'created_by' => $data['created_by'],
+                'created_by_name' => $data['created_by_name'],
+                'updated_by' => $data['updated_by'],
+                'updated_by_name' => $data['updated_by_name'],
+                'lancamento_padrao_id' => $dadosParcela['lancamento_padrao_id'],
+                'data_competencia' => $data['data_competencia'],
+            ]);
+            
+            // Guarda referência da primeira parcela
+            if ($index === 0) {
+                $primeiraTransacao = $transacaoParcela;
+            }
+        }
+        
+        // Retorna primeira parcela como referência
+        return $primeiraTransacao ?? throw new \Exception('Erro ao processar parcelas');
+    }
+    
+    /**
+     * Converte data de vencimento da parcela para formato padrão Y-m-d
+     */
+    protected function converterDataVencimentoParcela(string $vencimentoStr, string $fallback, int $index): string
+    {
+        try {
+            $vencimentoStr = trim(preg_replace('/\s+/', '', $vencimentoStr));
+            
+            if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $vencimentoStr, $matches)) {
+                $dia = (int)trim($matches[1]);
+                $mes = (int)trim($matches[2]);
+                $ano = (int)trim($matches[3]);
+                
+                if ($dia >= 1 && $dia <= 31 && $mes >= 1 && $mes <= 12 && $ano >= 1900 && $ano <= 2100) {
+                    return Carbon::create($ano, $mes, $dia, 0, 0, 0)->format('Y-m-d');
+                }
+            }
+            
+            return Carbon::createFromFormat('d/m/Y', $vencimentoStr)->format('Y-m-d');
+        } catch (\Exception $e) {
+            Log::warning('Erro ao converter data de vencimento da parcela', [
+                'vencimento' => $vencimentoStr,
+                'erro' => $e->getMessage(),
+                'parcela_index' => $index
+            ]);
+            return $fallback;
+        }
     }
 
     /**
