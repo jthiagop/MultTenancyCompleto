@@ -133,7 +133,7 @@ class BancoController extends Controller
         // Buscar entidades financeiras (banco e caixa) para o filtro de conta
         $entidadesFinanceiras = EntidadeFinanceira::forActiveCompany()
             ->whereIn('tipo', ['banco', 'caixa'])
-            ->with('bankStatements')
+            // REMOVIDO: ->with('bankStatements')  // Causa timeout com muitos registros
             ->get();
 
         // Manter $entidadesBanco separado para lógica específica de banco
@@ -150,7 +150,7 @@ class BancoController extends Controller
         // Entidades para o relatório de prestação de contas
         $entidades = EntidadeFinanceira::forActiveCompany() // 1. Usa o scope para filtrar pela empresa
             ->where('tipo', 'banco')  // 2. Adiciona o filtro específico para bancos
-            ->with('bankStatements')  // 3. (Opcional, mas recomendado) Otimiza a consulta
+            // REMOVIDO: ->with('bankStatements')  // Causa timeout com muitos registros
             ->get();
 
         // Filtrar as transações de banco através do relacionamento com entidades_financeiras
@@ -173,7 +173,11 @@ class BancoController extends Controller
         // Calcula o status final de conciliação para cada entidade bancária
         foreach ($entidadesBanco as $entidade) {
             // Obtém os status de conciliação de todos os extratos bancários da entidade
-            $statusConciliação = $entidade->bankStatements->pluck('status_conciliacao')->toArray();
+            // Usa query direto para evitar carregar todos os registros na memória
+            $statusConciliação = \App\Models\Financeiro\BankStatement::where('entidade_financeira_id', $entidade->id)
+                ->distinct()
+                ->pluck('status_conciliacao')
+                ->toArray();
 
             // Define o status final com base na prioridade
             $statusFinal = 'ok'; // Assume "OK" por padrão
