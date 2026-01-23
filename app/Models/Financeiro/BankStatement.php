@@ -102,36 +102,35 @@ class BankStatement extends Model
      */
     public static function storeTransaction($account, $transaction, $entidadeId, $fileHash = null, $fileName = null)
     {
-        // Verifica se a transação já foi importada anteriormente
-        $transacaoExistente = self::where('fitid', $transaction->uniqueId)
-            ->where('dtposted', self::parseOfxDate($transaction->date))
-            ->where('amount', (float) $transaction->amount)
-            ->exists();
+        // ✅ Usa firstOrCreate com chave composta para garantir unicidade
+        // Mesmo arquivo (file_hash igual) pode ter múltiplas transações (fitid diferente)
+        $bankStatement = self::firstOrCreate(
+            [
+                // Chave composta: essas combinações devem ser únicas
+                'fitid' => $transaction->uniqueId,
+                'dtposted' => self::parseOfxDate($transaction->date),
+                'entidade_financeira_id' => $entidadeId,
+            ],
+            [
+                // Dados adicionais inseridos apenas se o registro não existir
+                'company_id'    => Auth::user()->company_id,
+                'bank_id'       => $account->routingNumber,
+                'branch_id'     => $account->agencyNumber,
+                'account_id'    => $account->accountNumber,
+                'account_type'  => $account->accountType,
+                'trntype'       => $transaction->type,
+                'amount'        => (float) $transaction->amount,
+                'checknum'      => $transaction->checkNumber,
+                'refnum'        => $transaction->referenceNumber ?? null,
+                'memo'          => $transaction->memo,
+                'reconciled'    => false,
+                'file_hash'     => $fileHash, // Hash do arquivo (múltiplas transações do mesmo arquivo)
+                'file_name'     => $fileName, // Nome do arquivo
+            ]
+        );
 
-        if ($transacaoExistente) {
-            // Se já existe, não insere duplicado
-            return null;
-        }
-
-        // Se não existe, insere no banco
-        return self::create([
-            'company_id'    => Auth::user()->company_id,
-            'entidade_financeira_id' => $entidadeId,
-            'bank_id'       => $account->routingNumber,
-            'branch_id'     => $account->agencyNumber,
-            'account_id'    => $account->accountNumber,
-            'account_type'  => $account->accountType,
-            'trntype'       => $transaction->type,
-            'dtposted'      => self::parseOfxDate($transaction->date),
-            'amount'        => (float) $transaction->amount,
-            'fitid'         => $transaction->uniqueId,
-            'checknum'      => $transaction->checkNumber,
-            'refnum'        => $transaction->referenceNumber ?? null,
-            'memo'          => $transaction->memo,
-            'reconciled'    => false,
-            'file_hash'     => $fileHash, // Salva o hash do arquivo
-            'file_name'     => $fileName, // Salva o nome do arquivo original
-        ]);
+        // Retorna o registro se foi criado, null se já existia
+        return $bankStatement->wasRecentlyCreated ? $bankStatement : null;
     }
 
     /**

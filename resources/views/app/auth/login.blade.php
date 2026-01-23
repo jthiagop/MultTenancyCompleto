@@ -1,101 +1,101 @@
 @extends('app.auth.layouts.auth-layout')
 
 @section('title', config('app.name', 'Dominus'))
-@section('meta_description', 'No contexto da gestão eclesial, Dominus é um sistema que permite gerenciar de forma eficiente os campos de pastorais, patrimônio e financeiro. Com Dominus, a administração de sua paróquia se torna mais organizada e produtiva, facilitando a gestão de recursos e atividades eclesiais.')
+@section('meta_description', 'No contexto da gestão eclesial, Dominus é um sistema que permite gerenciar de forma
+    eficiente os campos de pastorais, patrimônio e financeiro. Com Dominus, a administração de sua paróquia se torna mais
+    organizada e produtiva, facilitando a gestão de recursos e atividades eclesiais.')
 @section('canonical_url', 'https://dominusbr.com/login')
 
 @section('aside_content')
-                        <!--begin::Text-->
-                        <div class="d-none d-lg-block text-white fs-base text-center">
-                            @if (isset($randomImage) && $randomImage)
-                                <!--begin::Image Info - Discreto-->
-                                <div class="d-none d-lg-block position-absolute bottom-0 start-50 translate-middle-x mb-10 px-5 text-center"
-                                    style="z-index: 2;">
-                                    <div class="text-white fs-6 fw-bold mb-1"
-                                        style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
-                                        {{ $randomImage->descricao }}
-                                    </div>
-                                    <div class="text-white fs-7 fw-bold"
-                                        style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
-                                        <i class="fas fa-map-marker-alt text-white "></i> {{ $randomImage->localidade }}
-                                    </div>
-                                </div>
-                                <!--end::Image Info-->
-                            @endif
-                        </div>
-                        <!--end::Text-->
+    <!--begin::Text-->
+    <div class="d-none d-lg-block text-white fs-base text-center">
+        @if (isset($randomImage) && $randomImage)
+            <!--begin::Image Info - Discreto-->
+            <div class="d-none d-lg-block position-absolute bottom-0 start-50 translate-middle-x mb-10 px-5 text-center"
+                style="z-index: 2;">
+                <div class="text-white fs-6 fw-bold mb-1" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+                    {{ $randomImage->descricao }}
+                </div>
+                <div class="text-white fs-7 fw-bold" style="text-shadow: 0 2px 4px rgba(0,0,0,0.8);">
+                    <i class="fas fa-map-marker-alt text-white "></i> {{ $randomImage->localidade }}
+                </div>
+            </div>
+            <!--end::Image Info-->
+        @endif
+    </div>
+    <!--end::Text-->
 @endsection
 
 @section('form_content')
-                        <!--begin::Form-->
-                        <form class="form w-100" method="POST" action="{{ route('login') }}" id="kt_sign_in_form">
-                            @csrf
-                            <!--begin::Heading-->
-                            <div class="text-center mb-10">
-                                <!--begin::Title-->
-                                <h1 class="text-dark fw-bolder mb-3">Entrar</h1>
-                                <!--end::Title-->
-                                <!--begin::Subtitle-->
-                                <div class="text-gray-500 fw-semibold fs-6">Faça seu login e comece a usar o Dominus
-                                </div>
-                                <!--end::Subtitle=-->
-                            </div>
-                            <!--begin::Heading-->
-                            <!--begin::Alert para erros-->
-                            <div id="kt_sign_in_alert" class="alert alert-dismissible d-none" role="alert">
-                                <span id="kt_sign_in_alert_message"></span>
-                            </div>
-                            <!--end::Alert para erros-->
-                            <!--begin::Input group=-->
-                            <div class="fv-row mb-8">
-                                <!--begin::Email-->
-                                <input type="text" placeholder="Email" name="email" autocomplete="off"
-                                    class="form-control form-control-sm bg-transparent" />
-                                <div class="fv-plugins-message-container">
-                                    <div class="fv-help-block">
-                                        <span role="alert"></span>
-                                    </div>
-                                </div>
-                                <!--end::Email-->
-                            </div>
-                            <!--end::Input group=-->
-                            <div class="fv-row mb-3">
-                                <!--begin::Password-->
-                                <input type="password" placeholder="Password" name="password" autocomplete="off"
-                                    class="form-control form-control-sm bg-transparent" />
-                                <div class="fv-plugins-message-container">
-                                    <div class="fv-help-block">
-                                        <span role="alert"></span>
-                                    </div>
-                                </div>
-                                <!--end::Password-->
-                            </div>
-                            <!--end::Input group=-->
-                            <!--begin::Wrapper-->
-                            <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-8">
-                                <div></div>
-                                <!--begin::Link-->
-                                <a href="{{ route('password.request.admin') }}" class="link-primary">Esqueceu sua
-                                    senha?</a>
-                                <!--end::Link-->
-                            </div>
-                            <!--end::Wrapper-->
-                            <!--begin::Submit button-->
-                            <div class="d-grid mb-10">
-                                <button type="submit" id="kt_sign_in_submit" class="btn btn-sm btn-primary">
-                                    <!--begin::Indicator label-->
-                                    <span class="indicator-label"><i class="fas fa-sign-in-alt"></i> Entrar</span>
-                                    <!--end::Indicator label-->
-                                    <!--begin::Indicator progress-->
-                                    <span class="indicator-progress">Por favor, aguarde...
-                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                                    <!--end::Indicator progress-->
-                                </button>
-                            </div>
-                            <!--end::Submit button-->
+    <!--begin::Form-->
+    <form class="form w-100" method="POST" action="{{ route('login') }}" id="kt_sign_in_form">
+        @csrf
+        <!--begin::Heading-->
+        <div class="text-center mb-10">
+            <!--begin::Title-->
+            <h1 class="text-dark fw-bolder mb-3">Entrar</h1>
+            <!--end::Title-->
+            <!--begin::Subtitle-->
+            <div class="text-gray-500 fw-semibold fs-6">Faça seu login e comece a usar o Dominus
+            </div>
+            <!--end::Subtitle=-->
+        </div>
+        <!--begin::Heading-->
+        <!--begin::Alert para erros-->
+        <div id="kt_sign_in_alert" class="alert alert-dismissible d-none" role="alert">
+            <span id="kt_sign_in_alert_message"></span>
+        </div>
+        <!--end::Alert para erros-->
+        <!--begin::Input group=-->
+        <div class="fv-row mb-8">
+            <!--begin::Email-->
+            <input type="text" placeholder="Email" name="email" autocomplete="off"
+                class="form-control form-control-sm bg-transparent" />
+            <div class="fv-plugins-message-container">
+                <div class="fv-help-block">
+                    <span role="alert"></span>
+                </div>
+            </div>
+            <!--end::Email-->
+        </div>
+        <!--end::Input group=-->
+        <div class="fv-row mb-3">
+            <!--begin::Password-->
+            <input type="password" placeholder="Password" name="password" autocomplete="off"
+                class="form-control form-control-sm bg-transparent" />
+            <div class="fv-plugins-message-container">
+                <div class="fv-help-block">
+                    <span role="alert"></span>
+                </div>
+            </div>
+            <!--end::Password-->
+        </div>
+        <!--end::Input group=-->
+        <!--begin::Wrapper-->
+        <div class="d-flex flex-stack flex-wrap gap-3 fs-base fw-semibold mb-8">
+            <div></div>
+            <!--begin::Link-->
+            <a href="{{ route('password.request.admin') }}" class="link-primary">Esqueceu sua
+                senha?</a>
+            <!--end::Link-->
+        </div>
+        <!--end::Wrapper-->
+        <!--begin::Submit button-->
+        <div class="d-grid mb-10">
+            <button type="submit" id="kt_sign_in_submit" class="btn btn-sm btn-primary">
+                <!--begin::Indicator label-->
+                <span class="indicator-label"><i class="fas fa-sign-in-alt"></i> Entrar</span>
+                <!--end::Indicator label-->
+                <!--begin::Indicator progress-->
+                <span class="indicator-progress">Por favor, aguarde...
+                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
+                <!--end::Indicator progress-->
+            </button>
+        </div>
+        <!--end::Submit button-->
 
-                        </form>
-                        <!--end::Form-->
+    </form>
+    <!--end::Form-->
 @endsection
 
 @push('scripts')

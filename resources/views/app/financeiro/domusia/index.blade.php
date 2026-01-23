@@ -1,4 +1,6 @@
-<x-tenant-app-layout pageTitle="Domus IA - Use Inteligência Artificial para os Lançamentos" :breadcrumbs="[['label' => 'Financeiro', 'url' => route('caixa.index')], ['label' => 'Domus IA']]">
+<x-tenant-app-layout 
+    pageTitle="Domus IA - Use Inteligência Artificial para os Lançamentos" 
+    :breadcrumbs="[['label' => 'Financeiro', 'url' => route('banco.list')], ['label' => 'Domus IA']]">
 
     <!--begin::Content-->
     <div id="kt_app_content" class="app-content flex-column-fluid mt-5">

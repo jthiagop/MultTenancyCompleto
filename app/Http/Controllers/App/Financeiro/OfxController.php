@@ -46,21 +46,31 @@ class OfxController extends Controller
             // Verifica se o usuário escolheu usar horários de missa
             $usarHorariosMissas = $request->has('usar_horarios_missa') && $request->input('usar_horarios_missa') == '1';
 
-            // Processa OFX e extrai dados (retorna quantidade de transações importadas)
-            $transacoesImportadas = $this->ofxService->processOfx($file, $usarHorariosMissas, $fileHash, $fileName);
+            // Processa OFX e extrai dados (retorna array com quantidade de transações e entidades importadas)
+            $resultado = $this->ofxService->processOfx($file, $usarHorariosMissas, $fileHash, $fileName);
+            $totalTransacoes = $resultado['totalTransacoes'];
+            $entidades = $resultado['entidades'];
             
             // Verifica se alguma transação foi realmente importada
-            if ($transacoesImportadas === 0) {
+            if ($totalTransacoes === 0) {
                 return redirect()
                     ->route('banco.list', ['tab' => 'overview'])
                     ->with('warning', 'Nenhuma transação nova foi importada. Todas as transações deste arquivo já existem no sistema.');
             }
 
-            $mensagemSucesso = "Extrato OFX importado com sucesso! {$transacoesImportadas} transação(ões) importada(s).";
+            $mensagemSucesso = "Extrato OFX importado com sucesso! {$totalTransacoes} transação(ões) importada(s).";
             if ($usarHorariosMissas) {
                 $mensagemSucesso .= ' A conciliação com horários de missa foi processada.';
             }
 
+            // Se houver apenas 1 entidade importada, redireciona para o show dela
+            if (count($entidades) === 1) {
+                return redirect()
+                    ->route('entidades.show', ['entidade' => $entidades[0]['id']])
+                    ->with('success', $mensagemSucesso);
+            }
+
+            // Se houver múltiplas entidades, redireciona para a lista
             return redirect()
                 ->route('banco.list', ['tab' => 'overview'])
                 ->with('success', $mensagemSucesso);
