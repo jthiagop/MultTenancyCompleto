@@ -473,9 +473,17 @@ class TransacaoFinanceiraService
 
     /**
      * Verifica se há recorrência a ser processada
+     * O checkbox 'repetir_lancamento' deve estar marcado para processar recorrência
      */
     protected function temRecorrencia(Request $request): bool
     {
+        // Verifica se o checkbox de repetição está marcado
+        $repetirMarcado = $request->has('repetir_lancamento') && $request->input('repetir_lancamento') == 1;
+        
+        if (!$repetirMarcado) {
+            return false;
+        }
+        
         return $request->has('configuracao_recorrencia') || 
             ($request->has('intervalo_repeticao') && 
              $request->has('frequencia') && 
