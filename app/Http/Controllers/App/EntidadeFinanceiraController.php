@@ -9,6 +9,7 @@ use App\Models\EntidadeFinanceira;
 use App\Models\Financeiro\BankStatement;
 use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\TransacaoFinanceira;
+use App\Models\FormasPagamento;
 use App\Models\HorarioMissa;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
@@ -328,6 +329,8 @@ class EntidadeFinanceiraController extends Controller
         $centrosAtivos = CostCenter::forActiveCompany()->get();
 
         $lps = LancamentoPadrao::all();
+        
+        $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
 
         // 6. A sua lógica de cálculo de percentual e agrupamento por dia está ótima.
         $totalTransacoes = $entidade->transacoesFinanceiras->count();
@@ -352,6 +355,7 @@ class EntidadeFinanceiraController extends Controller
             'conciliacoesPendentes' => $bankStatements,
             'centrosAtivos' => $centrosAtivos,
             'lps' => $lps,
+            'formasPagamento' => $formasPagamento,
             'percentualConciliado' => round($percentualConciliado),
             'transacoesPorDia' => $transacoesPorDia,
             'entidadesBancos' => $entidadesBancos,

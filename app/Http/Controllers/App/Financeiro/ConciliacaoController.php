@@ -347,6 +347,9 @@ class ConciliacaoController extends Controller
             // Verifica se "descricao2" foi enviado e atribui a "descricao"
             $validatedData['descricao'] = $validatedData['descricao2'] ;
 
+            // **Define a situação baseada no tipo (entrada/saida)**
+            // Quando vem de conciliação, marca automaticamente como recebido ou pago
+            $validatedData['situacao'] = $validatedData['tipo'] === 'entrada' ? 'recebido' : 'pago';
 
             // **Garante que o valor sempre seja positivo**
             $validatedData['valor'] = abs($validatedData['valor']);

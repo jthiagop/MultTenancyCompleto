@@ -1,7 +1,7 @@
 {{-- CSS e Scripts Externos --}}
-<link href="https://kendo.cdn.telerik.com/themes/8.0.1/default/default-main.css" rel="stylesheet" />
+{{-- <link href="https://kendo.cdn.telerik.com/themes/8.0.1/default/default-main.css" rel="stylesheet" />
 <script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script>
+<script src="https://kendo.cdn.telerik.com/2024.2.514/js/kendo.all.min.js"></script> --}}
 
 <x-tenant-app-layout :page-title="$entidade->nome" :breadcrumbs="array(
     array('label' => 'Financeiro', 'url' => route('banco.list')),
