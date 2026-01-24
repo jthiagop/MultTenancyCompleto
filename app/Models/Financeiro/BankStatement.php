@@ -103,6 +103,10 @@ class BankStatement extends Model
      */
     public static function storeTransaction($account, $transaction, $entidadeId, $fileHash = null, $fileName = null)
     {
+        // ✅ Converte amount para centavos (integer)
+        $amountValue = (float) $transaction->amount;
+        $amountCents = (int) round($amountValue * 100);
+
         // ✅ Usa firstOrCreate com chave composta para garantir unicidade
         // Mesmo arquivo (file_hash igual) pode ter múltiplas transações (fitid diferente)
         $bankStatement = self::firstOrCreate(
@@ -120,7 +124,8 @@ class BankStatement extends Model
                 'account_id'    => $account->accountNumber,
                 'account_type'  => $account->accountType,
                 'trntype'       => $transaction->type,
-                'amount'        => (float) $transaction->amount,
+                'amount'        => $amountValue,
+                'amount_cents'  => $amountCents, // ✅ Novo: salvar em centavos (integer)
                 'checknum'      => $transaction->checkNumber,
                 'refnum'        => $transaction->referenceNumber ?? null,
                 'memo'          => $transaction->memo,
