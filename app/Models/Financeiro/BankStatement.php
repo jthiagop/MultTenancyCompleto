@@ -143,7 +143,8 @@ class BankStatement extends Model
             'transacao_id' => $transacao->id,
             'valor_conciliado' => $valorConciliado,
             'amount_bank_statement' => $this->amount,
-            'valor_transacao' => $transacao->valor
+            'valor_transacao' => $transacao->valor,
+            'entidade_financeira_id' => $this->entidade_financeira_id
         ]);
 
         try {
@@ -187,6 +188,34 @@ class BankStatement extends Model
                 'valor_conciliado' => $valorConciliado,
                 'status_conciliacao' => $this->status_conciliacao
             ]);
+
+            // ✅ NOVO: Atualizar saldo_atual da entidade financeira
+            if ($this->entidade_financeira_id) {
+                $entidade = \App\Models\EntidadeFinanceira::find($this->entidade_financeira_id);
+                
+                if ($entidade) {
+                    // Calcula a variação: positivo para entrada, negativo para saída
+                    $variacao = ($transacao->tipo === 'entrada') ? $valorConciliado : -$valorConciliado;
+                    
+                    // Atualiza o saldo atual (soma da variação)
+                    // Converte de centavos para reais (divide por 100) antes de somar
+                    $entidade->saldo_atual += ($variacao / 100);
+                    $entidade->save();
+                    
+                    \Log::info('Saldo da entidade financeira atualizado', [
+                        'entidade_id' => $entidade->id,
+                        'entidade_nome' => $entidade->nome,
+                        'tipo_transacao' => $transacao->tipo,
+                        'valor_conciliado_centavos' => $valorConciliado,
+                        'variacao_reais' => $variacao / 100,
+                        'novo_saldo' => $entidade->saldo_atual
+                    ]);
+                } else {
+                    \Log::warning('EntidadeFinanceira não encontrada para atualizar saldo', [
+                        'entidade_financeira_id' => $this->entidade_financeira_id
+                    ]);
+                }
+            }
 
         } catch (\Exception $e) {
             \Log::error('Erro ao conciliar no modelo BankStatement', [

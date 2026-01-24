@@ -736,7 +736,13 @@ class BancoController extends Controller
         
         $recebidos = (clone $query)
             ->where('situacao', $situacaoPaga)
-            ->whereBetween('data_vencimento', [$start, $end])
+            ->where(function($q) use ($start, $end) {
+                $q->whereBetween('data_vencimento', [$start, $end])
+                  ->orWhere(function($subQ) use ($start, $end) {
+                      $subQ->whereNull('data_vencimento')
+                           ->whereBetween('data_competencia', [$start, $end]);
+                  });
+            })
             ->sum('valor');
 
         // Verificar se é extrato (filtra por data_pagamento)
@@ -1008,24 +1014,36 @@ class BancoController extends Controller
                         'startDate' => $startDate?->format('Y-m-d'),
                         'endDate' => $endDate?->format('Y-m-d')
                     ]);
-                    // Recebidos: tipo='entrada' + situacao='recebido' + data_vencimento no período
+                    // Recebidos: tipo='entrada' + situacao='recebido' + data_vencimento/competencia no período
                     $query->where('tipo', 'entrada')
                           ->where('situacao', 'recebido');
                     
                     // Aplicar filtro de período
                     if ($startDate && $endDate) {
-                        $query->whereBetween('data_vencimento', [$startDate, $endDate]);
+                        $query->where(function($q) use ($startDate, $endDate) {
+                            $q->whereBetween('data_vencimento', [$startDate, $endDate])
+                              ->orWhere(function($subQ) use ($startDate, $endDate) {
+                                  $subQ->whereNull('data_vencimento')
+                                       ->whereBetween('data_competencia', [$startDate, $endDate]);
+                              });
+                        });
                     }
                     break;
 
                 case 'pagos':
-                    // Pagos: tipo='saida' + situacao='pago' + data_vencimento no período
+                    // Pagos: tipo='saida' + situacao='pago' + data_vencimento/competencia no período
                     $query->where('tipo', 'saida')
                           ->where('situacao', 'pago');
                     
                     // Aplicar filtro de período
                     if ($startDate && $endDate) {
-                        $query->whereBetween('data_vencimento', [$startDate, $endDate]);
+                        $query->where(function($q) use ($startDate, $endDate) {
+                            $q->whereBetween('data_vencimento', [$startDate, $endDate])
+                              ->orWhere(function($subQ) use ($startDate, $endDate) {
+                                  $subQ->whereNull('data_vencimento')
+                                       ->whereBetween('data_competencia', [$startDate, $endDate]);
+                              });
+                        });
                     }
                     break;
 
@@ -1036,12 +1054,23 @@ class BancoController extends Controller
             // Deve incluir transações que têm data_vencimento dentro do período
             if ($startDate && $endDate) {
                 if ($isExtrato) {
-                    // Para Extrato (Total do Período): filtrar por data de vencimento dentro do período
-                    // Mostrar TODAS as transações com vencimento no período (pagas e em aberto)
-                    $query->whereBetween('data_vencimento', [$startDate, $endDate]);
+                    // Para Extrato (Total do Período): filtrar por data de vencimento OU data_competencia
+                    $query->where(function($q) use ($startDate, $endDate) {
+                        $q->whereBetween('data_vencimento', [$startDate, $endDate])
+                          ->orWhere(function($subQ) use ($startDate, $endDate) {
+                              $subQ->whereNull('data_vencimento')
+                                   ->whereBetween('data_competencia', [$startDate, $endDate]);
+                          });
+                    });
                 } elseif ($isContasReceberPagar) {
-                    // Para contas a receber/pagar, filtrar apenas por data_vencimento
-                    $query->whereBetween('data_vencimento', [$startDate, $endDate]);
+                    // Para contas a receber/pagar, filtrar por data_vencimento OU data_competencia (se vencimento for null)
+                    $query->where(function($q) use ($startDate, $endDate) {
+                        $q->whereBetween('data_vencimento', [$startDate, $endDate])
+                          ->orWhere(function($subQ) use ($startDate, $endDate) {
+                              $subQ->whereNull('data_vencimento')
+                                   ->whereBetween('data_competencia', [$startDate, $endDate]);
+                          });
+                    });
                 } else {
                     // Para outras tabs, filtrar por data_competencia
                     $query->whereBetween('data_competencia', [$startDate, $endDate]);
@@ -2923,20 +2952,11 @@ class BancoController extends Controller
      */
     private function aplicarFiltroNaoPagos($query)
     {
+        // Se a transação está marcada como 'pago' ou 'recebido', ela deve ser excluída das abas de "Aberto"
+        // Independentemente do valor pago registrado no banco (que pode estar inconsistente)
         return $query->where(function($q) {
-            $q->where(function($subQ) {
-                // Não tem situação definida
-                $subQ->whereNull('situacao');
-            })
-            ->orWhere(function($subQ) {
-                // Situação diferente de pago/recebido
-                $subQ->whereNotIn('situacao', ['pago', 'recebido']);
-            })
-            ->orWhere(function($subQ) {
-                // Pagamento parcial (valor_pago < valor)
-                $subQ->whereColumn('valor_pago', '<', 'valor')
-                     ->whereNotNull('valor_pago');
-            });
+            $q->whereNull('situacao')
+              ->orWhereNotIn('situacao', ['pago', 'recebido']);
         });
     }
 
@@ -3024,19 +3044,21 @@ class BancoController extends Controller
     private function aplicarFiltroVencidos($query, $hoje, $startDate, $endDate, $isContasReceberPagar = true)
     {
         if ($startDate && $endDate && $isContasReceberPagar) {
-            // Verificar se hoje está dentro do período
-            if ($hoje->between($startDate, $endDate)) {
-                $query->where(function($q) use ($startDate, $endDate, $hoje) {
-                    $q->where(function($subQ) use ($startDate, $endDate, $hoje) {
-                        $subQ->whereBetween('data_vencimento', [$startDate, $hoje->copy()->subDay()]);
-                    })
-                    ->orWhere(function($subQ) use ($startDate, $endDate, $hoje) {
-                        $subQ->whereNull('data_vencimento')
-                             ->whereBetween('data_competencia', [$startDate, $hoje->copy()->subDay()]);
-                    });
-                });
-            } else {
+            // Se hoje é antes do início do período, não há nada vencido ainda no período
+            if ($hoje->lt($startDate)) {
                 $query->whereRaw('1 = 0');
+            } else {
+                // O limite superior para "vencidos" é ontem (hoje - 1 dia) ou o fim do período, o que for menor
+                $ontem = $hoje->copy()->subDay();
+                $limiteFim = $ontem->lt($endDate) ? $ontem : $endDate;
+
+                $query->where(function($q) use ($startDate, $limiteFim) {
+                    $q->whereBetween('data_vencimento', [$startDate, $limiteFim])
+                      ->orWhere(function($subQ) use ($startDate, $limiteFim) {
+                          $subQ->whereNull('data_vencimento')
+                               ->whereBetween('data_competencia', [$startDate, $limiteFim]);
+                      });
+                });
             }
         } else {
             $query->where(function($q) use ($hoje) {
@@ -3081,23 +3103,22 @@ class BancoController extends Controller
     private function aplicarFiltroAVencer($query, $hoje, $startDate, $endDate, $isContasReceberPagar = true)
     {
         if ($startDate && $endDate && $isContasReceberPagar) {
-            $query->where(function($q) use ($startDate, $endDate, $hoje) {
-                $q->where(function($subQ) use ($startDate, $endDate, $hoje) {
-                    if ($hoje->between($startDate, $endDate)) {
-                        $subQ->whereBetween('data_vencimento', [$hoje->copy()->addDay(), $endDate]);
-                    } else {
-                        $subQ->whereBetween('data_vencimento', [$startDate, $endDate]);
-                    }
-                })
-                ->orWhere(function($subQ) use ($startDate, $endDate, $hoje) {
-                    $subQ->whereNull('data_vencimento');
-                    if ($hoje->between($startDate, $endDate)) {
-                        $subQ->whereBetween('data_competencia', [$hoje->copy()->addDay(), $endDate]);
-                    } else {
-                        $subQ->whereBetween('data_competencia', [$startDate, $endDate]);
-                    }
+            // Se hoje é depois do fim do período, não há nada "A Vencer" (tudo já venceu ou vence hoje)
+            if ($hoje->gte($endDate)) {
+                $query->whereRaw('1 = 0');
+            } else {
+                // O limite inferior para "A Vencer" é amanhã (hoje + 1 dia) ou o início do período, o que for maior
+                $amanha = $hoje->copy()->addDay();
+                $limiteInicio = $amanha->gt($startDate) ? $amanha : $startDate;
+
+                $query->where(function($q) use ($limiteInicio, $endDate) {
+                    $q->whereBetween('data_vencimento', [$limiteInicio, $endDate])
+                      ->orWhere(function($subQ) use ($limiteInicio, $endDate) {
+                          $subQ->whereNull('data_vencimento')
+                               ->whereBetween('data_competencia', [$limiteInicio, $endDate]);
+                      });
                 });
-            });
+            }
         } else {
             $query->where(function($q) use ($hoje) {
                 $q->where('data_vencimento', '>', $hoje)
