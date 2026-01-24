@@ -25,7 +25,7 @@ Benefícios:
 @endphp
 
 <div class="card mt-5">
-    <x-tenant.segmented-tabs-toolbar :tabs="$tabs" active="all" id="conciliacao">
+    <x-tenant.segmented-tabs-toolbar :tabs="$tabs" :active="($tab ?? 'all')" id="conciliacao">
         <x-slot:actionsLeft>
             <button class="btn btn-sm btn-primary">Conciliar</button>
             <button class="btn btn-sm btn-primary">Editar</button>
@@ -38,11 +38,11 @@ Benefícios:
 
                 <x-slot:panes>
                     <!-- ABA: TODOS -->
-                    <div class="tab-pane fade show active" id="conciliacao-pane-all" role="tabpanel"
+                    <div class="tab-pane fade {{ ($tab ?? 'all') === 'all' ? 'show active' : '' }}" id="conciliacao-pane-all" role="tabpanel"
                         aria-labelledby="conciliacao-tab-all">
                         <x-conciliacao.conciliacao-pane 
                             :entidade="$entidade"
-                            :conciliacoesPendentes="$conciliacoesPendentes"
+                            :conciliacoesPendentes="($tab ?? 'all') === 'all' ? $conciliacoesPendentes : collect()"
                             :tipo="null"
                             :centrosAtivos="$centrosAtivos"
                             :lps="$lps"
@@ -51,11 +51,11 @@ Benefícios:
                     </div>
 
                     <!-- ABA: RECEBIMENTOS -->
-                    <div class="tab-pane fade" id="conciliacao-pane-received" role="tabpanel"
+                    <div class="tab-pane fade {{ ($tab ?? 'all') === 'received' ? 'show active' : '' }}" id="conciliacao-pane-received" role="tabpanel"
                         aria-labelledby="conciliacao-tab-received">
                         <x-conciliacao.conciliacao-pane 
                             :entidade="$entidade"
-                            :conciliacoesPendentes="$conciliacoesPendentes"
+                            :conciliacoesPendentes="($tab ?? 'all') === 'received' ? $conciliacoesPendentes : collect()"
                             :tipo="'entrada'"
                             :centrosAtivos="$centrosAtivos"
                             :lps="$lps"
@@ -64,11 +64,11 @@ Benefícios:
                     </div>
 
                     <!-- ABA: PAGAMENTOS -->
-                    <div class="tab-pane fade" id="conciliacao-pane-paid" role="tabpanel"
+                    <div class="tab-pane fade {{ ($tab ?? 'all') === 'paid' ? 'show active' : '' }}" id="conciliacao-pane-paid" role="tabpanel"
                         aria-labelledby="conciliacao-tab-paid">
                         <x-conciliacao.conciliacao-pane 
                             :entidade="$entidade"
-                            :conciliacoesPendentes="$conciliacoesPendentes"
+                            :conciliacoesPendentes="($tab ?? 'all') === 'paid' ? $conciliacoesPendentes : collect()"
                             :tipo="'saida'"
                             :centrosAtivos="$centrosAtivos"
                             :lps="$lps"
@@ -86,22 +86,23 @@ Benefícios:
     
     <script>
         /**
-         * ✅ Handler para mudar de tab
-         * Transforma cliques em query params: ?tab=received
+         * ✅ Mudar de tab com reload server-side
+         * Navega para ?tab=all|received|paid
          */
         document.addEventListener('DOMContentLoaded', function() {
             const tabs = document.querySelectorAll('[data-bs-toggle="tab"]');
-            
+
             tabs.forEach(tab => {
-                tab.addEventListener('shown.bs.tab', function(e) {
+                tab.addEventListener('click', function() {
                     const targetId = this.getAttribute('data-bs-target');
                     const tabKey = targetId?.replace('#conciliacao-pane-', '');
-                    
+
                     if (tabKey) {
-                        // Adiciona query param ?tab=received|paid|all
                         const url = new URL(window.location);
-                        url.searchParams.set('tab', tabKey);
-                        window.history.replaceState({}, '', url);
+                        if (url.searchParams.get('tab') !== tabKey) {
+                            url.searchParams.set('tab', tabKey);
+                            window.location.href = url.toString();
+                        }
                     }
                 });
             });

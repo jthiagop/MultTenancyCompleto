@@ -8,18 +8,8 @@
 ])
 
 @php
-    // Filtrar conciliações baseado no tipo
+    // ✅ Lista já vem filtrada do backend (server-side)
     $conciliacoesFiltradas = $conciliacoesPendentes ?? collect();
-    
-    if ($tipo === 'entrada') {
-        $conciliacoesFiltradas = $conciliacoesFiltradas->filter(function($c) {
-            return $c->trntype === 'credit' || ($c->possiveisTransacoes?->first()?->tipo === 'entrada');
-        });
-    } elseif ($tipo === 'saida') {
-        $conciliacoesFiltradas = $conciliacoesFiltradas->filter(function($c) {
-            return $c->trntype === 'debit' || ($c->possiveisTransacoes?->first()?->tipo === 'saida');
-        });
-    }
 @endphp
 
 <div class="card-body">

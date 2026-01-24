@@ -296,7 +296,7 @@ class EntidadeFinanceiraController extends Controller
             ->findOrFail($id);
 
         // ✅ 2.5. Filtragem Server-Side por Tab (amount_cents)
-        // Recebe: ?tab=all (padrão), ?tab=received (entrada/credit > 0), ?tab=paid (saída/debit < 0)
+        // Recebe: ?tab=all (padrão), ?tab=received (amount_cents > 0), ?tab=paid (amount_cents < 0)
         $tab = $request->input('tab', 'all');
 
         // Base query para conciliações pendentes
@@ -306,10 +306,10 @@ class EntidadeFinanceiraController extends Controller
 
         // Aplica filtro baseado na tab
         if ($tab === 'received') {
-            // Recebimentos: amount_cents > 0 (entrada/credit)
+            // Recebimentos: amount_cents > 0 (valores positivos)
             $query->where('amount_cents', '>', 0);
         } elseif ($tab === 'paid') {
-            // Pagamentos: amount_cents < 0 (saída/debit)
+            // Pagamentos: amount_cents < 0 (valores negativos)
             $query->where('amount_cents', '<', 0);
         }
         // Se $tab === 'all', não aplica filtro (retorna todas)
