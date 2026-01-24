@@ -174,6 +174,49 @@ class BankStatement extends Model
                 'status_conciliacao' => $this->status_conciliacao
             ]);
 
+            // ✅ Atualiza o saldo_atual da entidade financeira
+            if ($this->entidade_financeira_id) {
+                $entidade = \App\Models\EntidadeFinanceira::find($this->entidade_financeira_id);
+                
+                if ($entidade) {
+                    // Converte o valor de centavos para reais (valor_conciliado está em centavos)
+                    $valorEmReais = $valorConciliado / 100;
+                    
+                    // Atualiza o saldo baseado no tipo de transação
+                    if ($transacao->tipo === 'entrada') {
+                        $entidade->saldo_atual += $valorEmReais;
+                        \Log::info('Saldo atualizado: ENTRADA', [
+                            'entidade_id' => $entidade->id,
+                            'valor' => $valorEmReais,
+                            'saldo_anterior' => $entidade->saldo_atual - $valorEmReais,
+                            'saldo_atual' => $entidade->saldo_atual
+                        ]);
+                    } elseif ($transacao->tipo === 'saida') {
+                        $entidade->saldo_atual -= $valorEmReais;
+                        \Log::info('Saldo atualizado: SAÍDA', [
+                            'entidade_id' => $entidade->id,
+                            'valor' => $valorEmReais,
+                            'saldo_anterior' => $entidade->saldo_atual + $valorEmReais,
+                            'saldo_atual' => $entidade->saldo_atual
+                        ]);
+                    }
+                    
+                    $entidade->save();
+                    
+                    \Log::info('Saldo da entidade atualizado com sucesso', [
+                        'entidade_id' => $entidade->id,
+                        'entidade_nome' => $entidade->nome,
+                        'novo_saldo_atual' => $entidade->saldo_atual,
+                        'tipo_transacao' => $transacao->tipo,
+                        'valor_conciliado' => $valorConciliado
+                    ]);
+                } else {
+                    \Log::warning('Entidade financeira não encontrada para atualizar saldo', [
+                        'entidade_id' => $this->entidade_financeira_id
+                    ]);
+                }
+            }
+
             // ✅ Salva diretamente na tabela pivot o valor conciliado e o status
             $this->transacoes()->attach($transacao->id, [
                 'valor_conciliado' => $valorConciliado,
@@ -189,34 +232,6 @@ class BankStatement extends Model
                 'status_conciliacao' => $this->status_conciliacao
             ]);
 
-            // ✅ NOVO: Atualizar saldo_atual da entidade financeira
-            if ($this->entidade_financeira_id) {
-                $entidade = \App\Models\EntidadeFinanceira::find($this->entidade_financeira_id);
-                
-                if ($entidade) {
-                    // Calcula a variação: positivo para entrada, negativo para saída
-                    $variacao = ($transacao->tipo === 'entrada') ? $valorConciliado : -$valorConciliado;
-                    
-                    // Atualiza o saldo atual (soma da variação)
-                    // Converte de centavos para reais (divide por 100) antes de somar
-                    $entidade->saldo_atual += ($variacao / 100);
-                    $entidade->save();
-                    
-                    \Log::info('Saldo da entidade financeira atualizado', [
-                        'entidade_id' => $entidade->id,
-                        'entidade_nome' => $entidade->nome,
-                        'tipo_transacao' => $transacao->tipo,
-                        'valor_conciliado_centavos' => $valorConciliado,
-                        'variacao_reais' => $variacao / 100,
-                        'novo_saldo' => $entidade->saldo_atual
-                    ]);
-                } else {
-                    \Log::warning('EntidadeFinanceira não encontrada para atualizar saldo', [
-                        'entidade_financeira_id' => $this->entidade_financeira_id
-                    ]);
-                }
-            }
-
         } catch (\Exception $e) {
             \Log::error('Erro ao conciliar no modelo BankStatement', [
                 'message' => $e->getMessage(),
@@ -224,7 +239,8 @@ class BankStatement extends Model
                 'line' => $e->getLine(),
                 'bank_statement_id' => $this->id,
                 'transacao_id' => $transacao->id,
-                'valor_conciliado' => $valorConciliado
+                'valor_conciliado' => $valorConciliado,
+                'entidade_financeira_id' => $this->entidade_financeira_id
             ]);
             
             throw $e; // Re-lança a exceção para ser capturada pelo controller
