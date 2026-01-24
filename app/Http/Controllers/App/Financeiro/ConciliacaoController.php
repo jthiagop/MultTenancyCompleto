@@ -437,6 +437,19 @@ class ConciliacaoController extends Controller
                 'updated_at' => now(),
             ]);
 
+            // Retornar JSON se for requisição AJAX, senão redirecionar
+            if ($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Lançamento conciliado com sucesso!',
+                    'data' => [
+                        'transacao_id' => $transacao->id,
+                        'bank_statement_id' => $bankStatement->id,
+                        'status' => $status,
+                    ]
+                ]);
+            }
+
             return redirect()->back()->with('success', 'Lançamento conciliado com sucesso!');
         });
     }
@@ -517,6 +530,19 @@ class ConciliacaoController extends Controller
                     'status_conciliacao' => $bankStatement->status_conciliacao
                 ]);
 
+                // Retornar JSON se for requisição AJAX
+                if ($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Conciliação realizada com sucesso!',
+                        'data' => [
+                            'transacao_id' => $transacao->id,
+                            'bank_statement_id' => $bankStatement->id,
+                            'status' => $bankStatement->status_conciliacao,
+                        ]
+                    ]);
+                }
+
                 return redirect()->back()->with('success', 'Conciliação realizada com sucesso!');
 
             } catch (\Illuminate\Validation\ValidationException $e) {
@@ -524,6 +550,14 @@ class ConciliacaoController extends Controller
                     'errors' => $e->errors(),
                     'request_data' => $request->all()
                 ]);
+
+                if ($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Dados inválidos para conciliação.',
+                        'errors' => $e->errors()
+                    ], 422);
+                }
 
                 return redirect()->back()
                     ->withErrors($e->errors())
@@ -536,6 +570,13 @@ class ConciliacaoController extends Controller
                     'request_data' => $request->all()
                 ]);
 
+                if ($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Erro ao buscar dados para conciliação.'
+                    ], 404);
+                }
+
                 return redirect()->back()->with('error', 'Erro ao buscar dados para conciliação.');
 
             } catch (\Exception $e) {
@@ -546,6 +587,13 @@ class ConciliacaoController extends Controller
                     'trace' => $e->getTraceAsString(),
                     'request_data' => $request->all()
                 ]);
+
+                if ($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Erro interno do servidor. Verifique os logs para mais detalhes.'
+                    ], 500);
+                }
 
                 return redirect()->back()->with('error', 'Erro interno do servidor. Verifique os logs para mais detalhes.');
             }

@@ -213,36 +213,73 @@
                 return;
             }
 
-            // Coletar dados do formulário da aba
+            // Desabilitar botão enquanto processa
+            button.disabled = true;
+            const originalContent = button.innerHTML;
+            button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span>Processando...';
+
+            // Coletar dados via FormData (suporta arquivos)
             const formData = new FormData(formComponent);
-            
-            // Buscar o formulário oculto para conciliação
-            const hiddenForm = document.getElementById(`form-novo-lancamento-${conciliacaoId}`);
-            
-            if (!hiddenForm) {
-                console.error('Formulário oculto não encontrado');
-                return;
-            }
 
-            // Copiar todos os campos do formulário visível para o oculto
-            formData.forEach((value, key) => {
-                // Remover inputs antigos com o mesmo nome (exceto bank_statement_id)
-                if (key !== 'bank_statement_id') {
-                    hiddenForm.querySelectorAll(`input[name="${key}"]`).forEach(input => {
-                        if (input.type === 'hidden') input.remove();
-                    });
-                    
-                    // Adicionar novo input
-                    const input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = key;
-                    input.value = value;
-                    hiddenForm.appendChild(input);
+            // Enviar via AJAX
+            fetch(formComponent.action, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    // Sucesso! Mostrar feedback
+                    showNotification('success', data.message || 'Lançamento conciliado com sucesso!');
+                    
+                    // Remover a linha da tabela ou recarregar
+                    setTimeout(() => {
+                        location.reload(); // ou remover a linha via DOM
+                    }, 1500);
+                } else {
+                    // Erro do servidor
+                    showNotification('error', data.message || 'Erro ao conciliar');
+                }
+            })
+            .catch(error => {
+                console.error('Erro na requisição:', error);
+                showNotification('error', error.message || 'Erro ao processar requisição');
+            })
+            .finally(() => {
+                // Reabilitar botão
+                button.disabled = false;
+                button.innerHTML = originalContent;
             });
+        }
+    }
 
-            // Submeter o formulário oculto
-            hiddenForm.submit();
+    // ============================================================
+    // 8. NOTIFICAÇÕES AO USUÁRIO
+    // ============================================================
+
+    function showNotification(type, message) {
+        // Usar bibliotecas existentes (Toastr, Flasher, etc)
+        if (typeof toastr !== 'undefined') {
+            toastr[type](message);
+        } else if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: type,
+                title: type === 'success' ? 'Sucesso' : 'Erro',
+                text: message,
+                timer: 3000
+            });
+        } else {
+            // Fallback simples
+            alert(message);
         }
     }
 

@@ -212,15 +212,6 @@
                         <div class="col-xxl-1 mb-5 mb-xl-10">
                             <div class="card card-flush h-xl-100">
                                 <div class="card-body d-flex align-items-center justify-content-center h-100">
-                                    <!-- Formulário oculto para conciliação -->
-                                    <form id="form-novo-lancamento-{{ $conciliacao->id }}" 
-                                        method="POST" 
-                                        action="{{ route('conciliacao.conciliar') }}" 
-                                        style="display: none;">
-                                        @csrf
-                                        <input type="hidden" name="bank_statement_id" value="{{ $conciliacao->id }}">
-                                    </form>
-
                                     <button class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
                                         type="button"
                                         data-action="conciliar-novo-lancamento"
@@ -314,7 +305,7 @@
 
 @push('scripts')
     {{-- Carregar o handler de formulários UMA VEZ só --}}
-    <script src="{{ asset('app/financeiro/entidade/conciliacoes-form-handler.js') }}"></script>
+    <script src="{{ url('/app/financeiro/entidade/conciliacoes-form-handler.js') }}"></script>
 @endpush
 
 {{-- Include Modal de Filtro de Conciliações --}}
