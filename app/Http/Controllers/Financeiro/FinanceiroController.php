@@ -39,7 +39,17 @@ class FinanceiroController extends Controller
                 'despesasMes' => 28540.50,
                 'transacoesRecentes' => 156
             ],
-            'entidadesFinanceiras' => $entidadesFinanceiras
+            'entidadesFinanceiras' => $entidadesFinanceiras,
+            // ✅ Variáveis necessárias para receitas-container
+            'valorTotal' => 45230.00,
+            'TotalreceitasAVencer' => 15000.00,
+            'valorDespesaTotal' => 28540.50,
+            'receitasEmAberto' => collect(), // Coleção vazia (será preenchida com dados reais)
+            'receitasAVencer' => collect(), // Coleção vazia (será preenchida com dados reais)
+            // ✅ Variáveis necessárias para despesas-container
+            'valorDespesasRealizadas' => 18000.00,
+            'despesasEmAberto' => collect(), // Coleção vazia (será preenchida com dados reais)
+            'despesasRealizadas' => collect(), // Coleção vazia (será preenchida com dados reais)
         ]);
     }
 }
