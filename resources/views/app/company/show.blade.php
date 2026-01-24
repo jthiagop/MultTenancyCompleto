@@ -62,7 +62,7 @@
                             <div
                                 class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
                                 <img class="img-fluid w-100 h-100 rounded"
-                                    src="{{ $companyShow->avatar ? route('file', ['path' => $companyShow->avatar]) : '/public//assets/media/avatars/blank.png' }}"
+                                    src="{{ $companyShow->avatar ? route('file', ['path' => $companyShow->avatar]) : '/public/assets/media/avatars/blank.png' }}"
                                     alt="{{ $companyShow->name }}" />
                             </div>
                             <!--end::Image-->
@@ -308,7 +308,7 @@
                                                 <img alt="{{ $user->name }}"
                                                     src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
                                                         ? route('file', ['path' => $user->avatar])
-                                                        : '/assets/media/avatars/blank.png' }}" />
+                                                        : 'assets/media/avatars/blank.png' }}" />
                                             </div>
                                         @endforeach
 
@@ -485,7 +485,7 @@
                                         data-kt-image-input="true">
                                         <!--begin::Preview existing avatar-->
                                         <div class="image-input-wrapper w-125px h-125px"
-                                            style="background-image: url({{ old('avatar') ?? '/assets/media/avatars/blank.png' }});">
+                                            style="background-image: url({{ old('avatar') ?? 'assets/media/avatars/blank.png' }});">
                                         </div>
                                         <!--end::Preview existing avatar-->
 

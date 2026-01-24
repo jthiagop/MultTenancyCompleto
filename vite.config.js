@@ -9,15 +9,27 @@ export default defineConfig({
             input: [
                 'resources/css/app.css',
                 'resources/js/app.js',
-                'resources/js/app-inertia.tsx',
             ],
             refresh: true,
+            // Para aplicações com Laravel Tenancy, usar URL absoluta para assets
+            buildDirectory: 'build',
+            ssr: false,
         }),
         react(),
     ],
     resolve: {
         alias: {
             '@': path.resolve(__dirname, 'resources/js'),
+        },
+    },
+    build: {
+        // Garantir que os assets sejam gerados corretamente
+        outDir: 'public/build',
+        manifest: true,
+        rollupOptions: {
+            output: {
+                manualChunks: undefined,
+            },
         },
     },
 });

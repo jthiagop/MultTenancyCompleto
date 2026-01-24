@@ -1,3 +1,18 @@
+/**
+ * Main Application Stylesheet
+ * Entry point para customizações
+ * Metronic CSS é carregado direto via link tags na HEAD (não via Vite)
+ */
+
+/* ============================================================
+   1. CUSTOM STYLES
+   ============================================================ */
+@import './custom.css';
+@import './notifications-amazon.css';
+
+/* ============================================================
+   2. TAILWIND CSS
+   ============================================================ */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;

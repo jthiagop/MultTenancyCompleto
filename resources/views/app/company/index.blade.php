@@ -236,7 +236,7 @@
                                                                         <img alt="{{ $user->name }}"
                                                                             src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
                                                                                 ? route('file', ['path' => $user->avatar])
-                                                                                : '/assets/media/avatars/blank.png' }}" />
+                                                                                : 'assets/media/avatars/blank.png' }}" />
                                                                     </div>
                                                                 @endforeach
 

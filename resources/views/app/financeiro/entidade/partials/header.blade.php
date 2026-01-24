@@ -10,12 +10,7 @@
                     <div class="d-flex align-items-center gap-2 gap-lg-3">
 
 
-                        <!--begin::Horários de Missas Button-->
-                        <button class="btn btn-sm btn-primary" data-kt-action="open-conciliacao-missas" id="btnHorariosMissasHeader">
-                            <i class="bi bi-alarm me-2"></i>
-                            Horários de Missas
-                        </button>
-                        <!--end::Horários de Missas Button-->
+
                     </div>
                     <!--end::Actions-->
                 </div>

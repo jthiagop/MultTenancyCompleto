@@ -110,11 +110,12 @@
             </ul>
             <!--begin::Actions-->
             <div class="d-flex align-items-end gap-2 ms-auto">
-                <a href="{{ route('entidades.historico', $entidade->id) }}"
-                    class="btn btn-sm btn-light-success {{ ($activeTab ?? '') === 'historico' ? 'active' : '' }}">
-                    <i class="bi bi-clock-history me-1"></i>
-                    Histórico
-                </a>
+                        <!--begin::Horários de Missas Button-->
+                        <button class="btn btn-sm btn-primary" data-kt-action="open-conciliacao-missas" id="btnHorariosMissasHeader">
+                            <i class="bi bi-alarm me-2"></i>
+                            Horários de Missas
+                        </button>
+                        <!--end::Horários de Missas Button-->
             </div>
             <!--end::Actions-->
         </div>

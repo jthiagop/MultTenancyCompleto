@@ -1,10 +1,23 @@
+/**
+ * Application Entry Point
+ * Importações e inicializações principais
+ */
+
+// Bootstrap - Configurações iniciais
+import './bootstrap.js';
+
+// Importar CSS - Metronic theme
+import '../css/app.css';
+
+// Alpine.js
 import Alpine from 'alpinejs';
 
 window.Alpine = Alpine;
-
 Alpine.start();
 
+// ============================================================
 // DARK MODE TOGGLE BUTTON
+// ============================================================
 var themeToggleDarkIcon = document.getElementById("theme-toggle-dark-icon");
 var themeToggleLightIcon = document.getElementById("theme-toggle-light-icon");
 

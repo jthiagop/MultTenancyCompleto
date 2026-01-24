@@ -28,7 +28,7 @@
                         <!--begin::Preview existing avatar-->
                         <div class="image-input-wrapper w-125px h-125px bgi-position-center"
                             style="background-size: cover; background-position: center; background-repeat: no-repeat;
-                               background-image: url('{{ $companyShow->avatar ? route('file', ['path' => $companyShow->avatar]) : '/public/assets/media/avatars/blank.png' }}')">
+                               background-image: url('{{ $companyShow->avatar ? route('file', ['path' => $companyShow->avatar]) : '/publicassets/media/avatars/blank.png' }}')">
                         </div>
                         <!--end::Preview existing avatar-->
                         <!--begin::Label-->

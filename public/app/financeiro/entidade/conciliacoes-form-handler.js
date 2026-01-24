@@ -17,14 +17,17 @@
     // 1. INICIALIZAÇÃO DE SELECT2 E COMPONENTES
     // ============================================================
 
-    function initializeSelect2() {
-        document.querySelectorAll('select[data-control="select2"]').forEach(select => {
-            if (!select.classList.contains('select2-hidden-accessible')) {
-                if (typeof KTSelect2 !== 'undefined') {
-                    new KTSelect2(select);
-                } else if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
-                    $(select).select2();
-                }
+    function initializeSelect2(container = document) {
+        container.querySelectorAll('select[data-control="select2"]').forEach(select => {
+            // ✅ Evita re-inicializar: marca com data-select2-init
+            if (select.dataset.select2Init === '1') return;
+            
+            select.dataset.select2Init = '1';
+
+            if (typeof KTSelect2 !== 'undefined') {
+                new KTSelect2(select);
+            } else if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
+                $(select).select2({ width: '100%' });
             }
         });
     }
@@ -65,16 +68,18 @@
 
         if (!conciliacaoId || !entidadeOrigemId) return;
 
-        fetch('/conciliacao/contas-disponiveis', {
+        // ✅ Usar querystring para GET (não body)
+        const params = new URLSearchParams({
+            entidade_origem_id: entidadeOrigemId,
+            bank_statement_id: conciliacaoId
+        });
+
+        fetch(`/conciliacao/contas-disponiveis?${params.toString()}`, {
             method: 'GET',
             headers: {
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
-            body: new URLSearchParams({
-                entidade_origem_id: entidadeOrigemId,
-                bank_statement_id: conciliacaoId
-            })
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
         })
         .then(response => response.json())
         .then(data => {
@@ -88,11 +93,15 @@
                     selectElement.appendChild(option);
                 });
 
-                // Reinicializa Select2
+                // ✅ Reinicializa Select2 sem destruir múltiplas vezes
                 if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
-                    $(selectElement).select2('destroy').select2({
+                    if ($(selectElement).data('select2')) {
+                        $(selectElement).select2('destroy');
+                    }
+                    $(selectElement).select2({
                         placeholder: "Selecione a conta de destino",
-                        allowClear: true
+                        allowClear: true,
+                        width: '100%'
                     });
                 }
             } else {
@@ -110,20 +119,21 @@
     // ============================================================
 
     function handleComprovacaoFiscalCheckbox(event) {
-        if (event.target.matches('.comprovacao-fiscal-check')) {
-            const checkbox = event.target;
-            const conciliacaoId = checkbox.dataset.conciliacaoId;
-            const anexoContainer = document.querySelector(
-                `.anexo-container[data-conciliacao-id="${conciliacaoId}"]`
-            );
+        // ✅ Usar .closest() em vez de .matches()
+        const checkbox = event.target.closest('.comprovacao-fiscal-check');
+        if (!checkbox) return;
 
-            if (!anexoContainer) return;
+        const conciliacaoId = checkbox.dataset.conciliacaoId;
+        const anexoContainer = document.querySelector(
+            `.anexo-container[data-conciliacao-id="${conciliacaoId}"]`
+        );
 
-            if (checkbox.checked) {
-                anexoContainer.classList.remove('d-none');
-            } else {
-                anexoContainer.classList.add('d-none');
-            }
+        if (!anexoContainer) return;
+
+        if (checkbox.checked) {
+            anexoContainer.classList.remove('d-none');
+        } else {
+            anexoContainer.classList.add('d-none');
         }
     }
 
@@ -132,23 +142,24 @@
     // ============================================================
 
     function handleToggleEdit(event) {
-        if (event.target.matches('[data-action="toggle-edit"]')) {
-            const btn = event.target;
-            const conciliacaoId = btn.dataset.conciliacaoId;
-            const viewDiv = document.getElementById(`viewData-${conciliacaoId}`);
-            const editDiv = document.getElementById(`editForm-${conciliacaoId}`);
+        // ✅ Usar .closest() em vez de .matches()
+        const btn = event.target.closest('[data-action="toggle-edit"]');
+        if (!btn) return;
 
-            if (!viewDiv || !editDiv) return;
+        const conciliacaoId = btn.dataset.conciliacaoId;
+        const viewDiv = document.getElementById(`viewData-${conciliacaoId}`);
+        const editDiv = document.getElementById(`editForm-${conciliacaoId}`);
 
-            if (editDiv.classList.contains('d-none')) {
-                viewDiv.classList.add('d-none');
-                editDiv.classList.remove('d-none');
-                editDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } else {
-                editDiv.classList.add('d-none');
-                viewDiv.classList.remove('d-none');
-                viewDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
+        if (!viewDiv || !editDiv) return;
+
+        if (editDiv.classList.contains('d-none')) {
+            viewDiv.classList.add('d-none');
+            editDiv.classList.remove('d-none');
+            editDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        } else {
+            editDiv.classList.add('d-none');
+            viewDiv.classList.remove('d-none');
+            viewDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
     }
 
@@ -157,35 +168,36 @@
     // ============================================================
 
     function handleConciliarButton(event) {
-        if (event.target.matches('[data-action="conciliar"]')) {
-            const btn = event.target;
-            const conciliacaoId = btn.dataset.conciliacaoId;
+        // ✅ Usar .closest() em vez de .matches()
+        const btn = event.target.closest('[data-action="conciliar"]');
+        if (!btn) return;
 
-            // Identifica qual aba está ativa
-            const activeTab = document.querySelector(
-                `[data-conciliacao-id="${conciliacaoId}"] [role="tab"].active`
+        const conciliacaoId = btn.dataset.conciliacaoId;
+
+        // Identifica qual aba está ativa
+        const activeTab = document.querySelector(
+            `[data-conciliacao-id="${conciliacaoId}"] [role="tab"].active`
+        );
+
+        if (!activeTab) return;
+
+        const targetId = activeTab.getAttribute('data-bs-target');
+        let formToSubmit;
+
+        if (targetId.includes('novo-lancamento')) {
+            formToSubmit = document.querySelector(
+                `form[data-conciliacao-id="${conciliacaoId}"][data-form-type="novo-lancamento"]`
             );
+        } else if (targetId.includes('transferencia')) {
+            formToSubmit = document.querySelector(
+                `form[data-conciliacao-id="${conciliacaoId}"][data-form-type="transferencia"]`
+            );
+        }
 
-            if (!activeTab) return;
-
-            const targetId = activeTab.getAttribute('data-bs-target');
-            let formToSubmit;
-
-            if (targetId.includes('novo-lancamento')) {
-                formToSubmit = document.querySelector(
-                    `form[data-conciliacao-id="${conciliacaoId}"][data-form-type="novo-lancamento"]`
-                );
-            } else if (targetId.includes('transferencia')) {
-                formToSubmit = document.querySelector(
-                    `form[data-conciliacao-id="${conciliacaoId}"][data-form-type="transferencia"]`
-                );
-            }
-
-            if (formToSubmit && formToSubmit.checkValidity()) {
-                formToSubmit.submit();
-            } else if (formToSubmit) {
-                formToSubmit.reportValidity();
-            }
+        if (formToSubmit && formToSubmit.checkValidity()) {
+            formToSubmit.submit();
+        } else if (formToSubmit) {
+            formToSubmit.reportValidity();
         }
     }
 
@@ -393,8 +405,21 @@
     // 7. INICIALIZAÇÃO NO CARREGAMENTO
     // ============================================================
 
+    let select2InitTimer = null;
+
+    /**
+     * Agenda inicialização debounced do Select2
+     * Deve ser chamado após injetar HTML via AJAX (após carregar tab)
+     */
+    function scheduleSelect2Init(container = document) {
+        clearTimeout(select2InitTimer);
+        select2InitTimer = setTimeout(() => {
+            initializeSelect2(container);
+        }, 50);
+    }
+
     function init() {
-        // Inicializa Select2 para todos os selects
+        // Inicializa Select2 para selects já presentes na página
         initializeSelect2();
 
         // Event Delegation: Todos os listeners anexados UMA VEZ ao document
@@ -403,17 +428,10 @@
         document.addEventListener('click', handleConciliarButton);
         document.addEventListener('click', handleConciliarNovoLancamento);
         document.addEventListener('shown.bs.tab', handleTabSwitching);
-
-        // Re-inicializa Select2 quando novos elementos são adicionados dinamicamente
-        const observer = new MutationObserver(() => {
-            initializeSelect2();
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
     }
+
+    // Exponha scheduleSelect2Init globalmente para usar em AJAX
+    window.scheduleSelect2Init = scheduleSelect2Init;
 
     // Aguarda o DOM estar pronto
     if (document.readyState === 'loading') {

@@ -25,14 +25,9 @@
     <!--end::Fonts-->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!--begin::Vendor Stylesheets(used for this page only)-->
-    <link href="/assets/plugins/custom/fullcalendar/fullcalendar.bundle.css" rel="stylesheet" type="text/css" />
-    <link href="/assets/plugins/custom/datatables/datatables.bundle.css" rel="stylesheet" type="text/css" />
-    <!--end::Vendor Stylesheets-->
-    <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
-    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
-    <!--end::Global Stylesheets Bundle-->
+    <!--begin::Metronic CSS & Vite Styles-->
+    {!! \App\Helpers\ViteAssetHelper::renderViteStyles() !!}
+    <!--end::Metronic CSS & Vite Styles-->
     <!--begin::Sidebar State Restore (antes da renderização)-->
     <script>
         (function() {
@@ -121,36 +116,19 @@
         var hostUrl = "{{ url('') }}/assets/";
     </script>
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-    <script src="{{ url('assets/plugins/global/plugins.bundle.js') }}"></script>
-    <script src="{{ url('assets/js/scripts.bundle.js') }}"></script>
+    {{-- Removido: plugins.bundle.js e scripts.bundle.js conflitavam com o Vite --}}
+    {{-- Esses scripts agora são gerenciados pelo Vite e módulos da aplicação --}}
     <!--end::Global Javascript Bundle-->
     <!--begin::Vendors Javascript(used for this page only)-->
+    {{-- Datatables bundle carregado antes do app.js para estar disponível --}}
     <script src="{{ url('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
     <!--end::Vendors Javascript-->
-    <link href="{{ url('assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
-    <!--begin::Toast Script (converte mensagens de sessão em toasts)-->
-    <script src="{{ url('assets/js/toasts.js') }}"></script>
-    <!--end::Toast Script-->
-    <!--begin::Session Handler Script (trata expiração de sessão)-->
-    <script src="{{ url('assets/js/session-handler.js') }}"></script>
-    <!--end::Session Handler Script-->
-    <!--begin::Favorites Script-->
-    <script src="{{ url('assets/js/custom/apps/favorites.js') }}"></script>
-    <!--end::Favorites Script-->
-    <!--begin::Sidebar Menu Active State Script-->
-    <script src="{{ url('assets/js/sidebar-menu-active.js') }}"></script>
-    <!--end::Sidebar Menu Active State Script-->
-    <!--begin::Sidebar State Script-->
-    <script src="{{ url('assets/js/sidebar-state.js') }}"></script>
-    <!--end::Sidebar State Script-->
+    <!--begin::Main Application Bundle (Vite JavaScript Module)-->
+    {{-- JavaScript do Vite - CSS já foi carregado na HEAD --}}
+    {!! \App\Helpers\ViteAssetHelper::renderViteScripts() !!}
+    <!--end::Main Application Bundle-->
+
     @stack('scripts')
-
-    {{-- Tenant DataTable Pane Module - Must load after DataTables --}}
-    <script src="{{ url('assets/js/custom/tenant/tenant-datatable-pane.js') }}"></script>
-
-    {{-- Amazon-style Notifications System --}}
-    <link href="{{ url('assets/css/notifications-amazon.css') }}" rel="stylesheet" type="text/css" />
-    <script src="{{ url('assets/js/notifications-amazon.js') }}"></script>
 
     {{-- Exibir notificações da sessão Laravel --}}
     <script>

@@ -546,6 +546,9 @@ Route::middleware([
                 Route::get('entidades/{id}/historico-conciliacoes', [EntidadeFinanceiraController::class, 'historicoConciliacoes'])
                     ->name('entidades.historico-conciliacoes');
 
+                Route::get('entidades/{id}/conciliacoes-tab', [EntidadeFinanceiraController::class, 'conciliacoesTab'])
+                    ->name('entidades.conciliacoes-tab');
+
                 Route::get('entidades/{id}/total-pendentes', [EntidadeFinanceiraController::class, 'totalPendentes'])
                     ->name('entidades.total-pendentes');
 

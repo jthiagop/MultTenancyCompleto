@@ -302,7 +302,11 @@ class EntidadeFinanceiraController extends Controller
         // Base query para conciliações pendentes
         $query = BankStatement::where('entidade_financeira_id', $id)
             ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
-            ->whereDoesntHave('transacoes');
+            ->whereDoesntHave('transacoes')
+            ->where(function ($q) {
+                $q->where('conciliado_com_missa', false)
+                  ->orWhereNull('conciliado_com_missa');
+            });
 
         // Aplica filtro baseado na tab
         if ($tab === 'received') {
@@ -319,15 +323,27 @@ class EntidadeFinanceiraController extends Controller
             'all'      => BankStatement::where('entidade_financeira_id', $id)
                 ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
                 ->whereDoesntHave('transacoes')
+                ->where(function ($q) {
+                    $q->where('conciliado_com_missa', false)
+                      ->orWhereNull('conciliado_com_missa');
+                })
                 ->count(),
             'received' => BankStatement::where('entidade_financeira_id', $id)
                 ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
                 ->whereDoesntHave('transacoes')
+                ->where(function ($q) {
+                    $q->where('conciliado_com_missa', false)
+                      ->orWhereNull('conciliado_com_missa');
+                })
                 ->where('amount_cents', '>', 0)
                 ->count(),
             'paid'     => BankStatement::where('entidade_financeira_id', $id)
                 ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
                 ->whereDoesntHave('transacoes')
+                ->where(function ($q) {
+                    $q->where('conciliado_com_missa', false)
+                      ->orWhereNull('conciliado_com_missa');
+                })
                 ->where('amount_cents', '<', 0)
                 ->count(),
         ];
@@ -524,6 +540,106 @@ class EntidadeFinanceiraController extends Controller
     }
 
     /**
+     * Retorna conciliações pendentes filtradas por tab (AJAX)
+     *
+     * @param int $id
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function conciliacoesTab($id, Request $request)
+    {
+        try {
+            $activeCompanyId = session('active_company_id');
+            if (!$activeCompanyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma empresa selecionada.'
+                ], 403);
+            }
+
+            $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+            $tab = $request->input('tab', 'all');
+            $page = $request->input('page', 1);
+
+            // Query base
+            $query = BankStatement::where('entidade_financeira_id', $id)
+                ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                ->where(function ($q) {
+                    $q->where('conciliado_com_missa', false)
+                      ->orWhereNull('conciliado_com_missa');
+                });
+
+            // Filtro por tab
+            if ($tab === 'received') {
+                $query->where('amount_cents', '>', 0);
+            } elseif ($tab === 'paid') {
+                $query->where('amount_cents', '<', 0);
+            }
+
+            // Paginação com 5 itens por página para melhor performance
+            $bankStatements = $query->orderBy('dtposted', 'desc')->paginate(5, ['*'], 'page', $page);
+
+            // Buscar possíveis transações para cada lançamento
+            foreach ($bankStatements as $lancamento) {
+                $valorAbs = abs($lancamento->amount);
+                $tipo = $lancamento->amount < 0 ? 'saida' : 'entrada';
+                $dataInicio = Carbon::parse($lancamento->dtposted)->startOfDay()->subMonths(2);
+                $dataFim = Carbon::parse($lancamento->dtposted)->endOfDay()->addMonths(2);
+                $numeroDocumento = $lancamento->checknum;
+
+                $possiveis = TransacaoFinanceira::forActiveCompany()
+                    ->where('entidade_id', $id)
+                    ->where('tipo', $tipo)
+                    ->where('valor', $valorAbs)
+                    ->whereBetween('data_competencia', [$dataInicio, $dataFim])
+                    ->when($numeroDocumento, function ($query) use ($numeroDocumento) {
+                        $query->where('numero_documento', $numeroDocumento);
+                    })
+                    ->get();
+
+                $lancamento->possiveisTransacoes = $possiveis;
+            }
+
+            // Dados auxiliares
+            $centrosAtivos = CostCenter::forActiveCompany()->get();
+            $lps = LancamentoPadrao::all();
+            $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
+
+            // Renderizar o componente como HTML
+            $html = view('app.financeiro.entidade.partials.conciliacao-pane', [
+                'entidade' => $entidade,
+                'conciliacoesPendentes' => $bankStatements,
+                'tipo' => $tab !== 'all' ? ($tab === 'received' ? 'entrada' : 'saida') : null,
+                'centrosAtivos' => $centrosAtivos,
+                'lps' => $lps,
+                'formasPagamento' => $formasPagamento,
+            ])->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'pagination' => [
+                    'current_page' => $bankStatements->currentPage(),
+                    'last_page' => $bankStatements->lastPage(),
+                    'total' => $bankStatements->total(),
+                ]
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Erro em conciliacoesTab:', [
+                'message' => $e->getMessage(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao carregar conciliações: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Retorna o histórico de conciliações realizadas para uma entidade financeira
      *
      * @param int $id
@@ -679,10 +795,19 @@ class EntidadeFinanceiraController extends Controller
         $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
 
         // Conta o total de lançamentos pendentes (sem paginação, sem filtro de data)
-        $totalPendentes = BankStatement::where('entidade_financeira_id', $id)
+        $query = BankStatement::where('entidade_financeira_id', $id)
             ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
-            ->whereDoesntHave('transacoes')
-            ->count();
+            ->whereDoesntHave('transacoes');
+
+        // Aplicar filtro de amount_cents baseado na tab
+        $tab = request()->query('tab', 'all');
+        if ($tab === 'received') {
+            $query->where('amount_cents', '>', 0);
+        } elseif ($tab === 'paid') {
+            $query->where('amount_cents', '<', 0);
+        }
+
+        $totalPendentes = $query->count();
 
         return response()->json([
             'success' => true,

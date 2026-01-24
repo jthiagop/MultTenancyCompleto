@@ -306,9 +306,14 @@
             <!--end::Row-->
         @endforeach
 
-        <!-- Botões de paginação -->
-        @if($conciliacoesFiltradas instanceof \Illuminate\Pagination\Paginator)
-            {{ $conciliacoesFiltradas->links('pagination::bootstrap-5') }}
+        <!-- Botão Carregar Mais (se houver mais páginas) -->
+        @if($conciliacoesFiltradas instanceof \Illuminate\Pagination\LengthAwarePaginator && $conciliacoesFiltradas->hasMorePages())
+            <div class="text-center py-5" id="load-more-container">
+                <button type="button" class="btn btn-primary btn-load-more" data-next-page="{{ $conciliacoesFiltradas->currentPage() + 1 }}">
+                    <i class="bi bi-arrow-down-circle me-2"></i>
+                    Carregar Mais ({{ $conciliacoesFiltradas->total() - $conciliacoesFiltradas->count() }} restantes)
+                </button>
+            </div>
         @endif
     @endif
 </div>

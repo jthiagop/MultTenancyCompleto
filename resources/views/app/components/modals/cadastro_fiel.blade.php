@@ -33,7 +33,7 @@
                                 data-kt-image-input="true">
                                 <!-- Wrapper para a imagem -->
                                 <div class="image-input-wrapper w-150px h-150px rounded-circle position-relative overflow-hidden"
-                                    style="background-image: url('/assets/media/avatars/blank.png');">
+                                    style="background-image: url('assets/media/avatars/blank.png');">
                                     <!-- Vídeo da webcam (oculto por padrão) -->
                                     <video id="kt_webcam_video_inline" autoplay playsinline
                                         class="position-absolute d-none"

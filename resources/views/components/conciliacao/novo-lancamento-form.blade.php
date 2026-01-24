@@ -1,18 +1,3 @@
-{{-- 
-    Componente: Formulário de Novo Lançamento
-    
-    Renderizado como Blade em vez de JavaScript
-    Elimina renderFormFromJSON e HTML concatenado
-    
-    Props:
-    - $conciliacao: BankStatement model
-    - $transacaoSugerida: Sugestão de conciliação
-    - $centrosAtivos: Collection de centros de custo
-    - $lps: Collection de lançamentos padrão
-    - $formasPagamento: Collection de formas de pagamento
-    - $entidade: Entidade financeira
---}}
-
 @props([
     'conciliacao',
     'transacaoSugerida' => null,
@@ -83,7 +68,7 @@
     </x-tenant-select>
 
     <div class="card-footer">
-        
+
         <!-- Checkbox: Comprovação Fiscal -->
         <div class="col-md-12">
             <label class="form-check form-switch form-check-custom form-check-solid">
@@ -99,4 +84,3 @@
             <x-anexos-input name="anexos" :anexosExistentes="[]" :uniqueId="$conciliacao->id" />
         </div>
     </div>
-</form>
