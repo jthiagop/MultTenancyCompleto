@@ -7,11 +7,15 @@ export default defineConfig({
     plugins: [
         laravel({
             input: [
-                'resources/css/app.css',
                 'resources/js/app.js',
+                // ✅ Metronic CSS Bundle (from tenancy assets)
+                'resources/tenancy/assets/plugins/global/plugins.bundle.css',
+                'resources/tenancy/assets/css/style.bundle.css',
+                // ✅ Metronic JS Bundle (from tenancy assets)
+                'resources/tenancy/assets/plugins/global/plugins.bundle.js',
             ],
             refresh: true,
-            // Para aplicações com Laravel Tenancy, usar URL absoluta para assets
+            // Build directory padrão (assets será acessado via symlink tenancy/assets/build -> build)
             buildDirectory: 'build',
             ssr: false,
         }),
@@ -25,7 +29,7 @@ export default defineConfig({
     build: {
         // Garantir que os assets sejam gerados corretamente
         outDir: 'public/build',
-        manifest: true,
+        manifest: 'manifest.json',
         rollupOptions: {
             output: {
                 manualChunks: undefined,

@@ -19,15 +19,24 @@
     <meta property="og:url" content="https://dominusbr.com/" />
     <meta property="og:site_name" content="Dominus | Dominus Sistema Eclesial" />
     <link rel="canonical" href="https://dominusbr.com/login" />
-    <link rel="shortcut icon" href="{{ url('assets/media/app/mini-logo.svg') }}" />
+    <link rel="shortcut icon" href="{{ url('tenancy/assets/media/app/mini-logo.svg') }}" />
     <!--begin::Fonts(mandatory for all pages)-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <!--end::Fonts-->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!--begin::Metronic CSS & Vite Styles-->
-    {!! \App\Helpers\ViteAssetHelper::renderViteStyles() !!}
-    <!--end::Metronic CSS & Vite Styles-->
+    <!--begin::Vendor Stylesheets(used for this page only)-->
+
+    <!--end::Vendor Stylesheets-->
+    <!--end::Global Stylesheets Bundle-->
+    
+    <!--begin::Vite CSS Bundle (Metronic + Custom)-->
+    @vite([
+        'resources/tenancy/assets/plugins/global/plugins.bundle.css',
+        'resources/tenancy/assets/css/style.bundle.css',
+        //'resources/css/app.css',
+    ])
+    <!--end::Vite CSS Bundle-->
     <!--begin::Sidebar State Restore (antes da renderização)-->
     <script>
         (function() {
@@ -113,22 +122,40 @@
     <!--end::App-->
     <!--begin::Javascript-->
     <script>
-        var hostUrl = "{{ url('') }}/assets/";
+        var hostUrl = "{{ url('') }}/tenancy/assets/";
     </script>
-    <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-    {{-- Removido: plugins.bundle.js e scripts.bundle.js conflitavam com o Vite --}}
-    {{-- Esses scripts agora são gerenciados pelo Vite e módulos da aplicação --}}
+    <!--begin::Global Javascript Bundle (Metronic plugins + App)-->
+    <script src="{{ url('tenancy/assets/plugins/global/plugins.bundle.js') }}"></script>
+    <script src="{{ url('tenancy/assets/js/scripts.bundle.js') }}"></script>
+    @vite(['resources/js/app.js'])
     <!--end::Global Javascript Bundle-->
     <!--begin::Vendors Javascript(used for this page only)-->
-    {{-- Datatables bundle carregado antes do app.js para estar disponível --}}
-    <script src="{{ url('assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
+    <script src="{{ url('tenancy/assets/plugins/custom/datatables/datatables.bundle.js') }}"></script>
     <!--end::Vendors Javascript-->
-    <!--begin::Main Application Bundle (Vite JavaScript Module)-->
-    {{-- JavaScript do Vite - CSS já foi carregado na HEAD --}}
-    {!! \App\Helpers\ViteAssetHelper::renderViteScripts() !!}
-    <!--end::Main Application Bundle-->
-
+    <link href="{{ url('tenancy/assets/css/custom.css') }}" rel="stylesheet" type="text/css" />
+    <!--begin::Toast Script (converte mensagens de sessão em toasts)-->
+    <script src="{{ url('tenancy/assets/js/toasts.js') }}"></script>
+    <!--end::Toast Script-->
+    <!--begin::Session Handler Script (trata expiração de sessão)-->
+    <script src="{{ url('tenancy/assets/js/session-handler.js') }}"></script>
+    <!--end::Session Handler Script-->
+    <!--begin::Favorites Script-->
+    <script src="{{ url('tenancy/assets/js/custom/apps/favorites.js') }}"></script>
+    <!--end::Favorites Script-->
+    <!--begin::Sidebar Menu Active State Script-->
+    <script src="{{ url('tenancy/assets/js/sidebar-menu-active.js') }}"></script>
+    <!--end::Sidebar Menu Active State Script-->
+    <!--begin::Sidebar State Script-->
+    <script src="{{ url('tenancy/assets/js/sidebar-state.js') }}"></script>
+    <!--end::Sidebar State Script-->
     @stack('scripts')
+
+    {{-- Tenant DataTable Pane Module - Must load after DataTables --}}
+    <script src="{{ url('tenancy/assets/js/custom/tenant/tenant-datatable-pane.js') }}"></script>
+
+    {{-- Amazon-style Notifications System --}}
+    <link href="{{ url('tenancy/assets/css/notifications-amazon.css') }}" rel="stylesheet" type="text/css" />
+    <script src="{{ url('tenancy/assets/js/notifications-amazon.js') }}"></script>
 
     {{-- Exibir notificações da sessão Laravel --}}
     <script>

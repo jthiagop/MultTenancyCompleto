@@ -27,7 +27,7 @@
     <!--end::Fonts-->
     
     <!--begin::Vite Styles (All CSS: Metronic + Vendors + Custom + Tailwind)-->
-    {!! \App\Helpers\ViteAssetHelper::renderViteStyles() !!}
+    @vite(['resources/css/app.css', 'resources/tenancy/assets/plugins/global/plugins.bundle.css', 'resources/tenancy/assets/css/style.bundle.css'])
     <!--end::Vite Styles-->
 </head>
 <!--end::Head-->
@@ -71,18 +71,14 @@
     </div>
     <!--end::App-->
 
-    <!--begin::Javascript-->
-    <!--begin::Metronic Global Bundle (MUST load before Vite for KTUtil, jQuery, etc)-->
-    <script src="/assets/plugins/global/plugins.bundle.js"></script>
-    <script src="/assets/js/scripts.bundle.js"></script>
+    <!--begin::Metronic Global Bundle (static + Vite app)-->
+    <script src="{{ url('tenancy/assets/plugins/global/plugins.bundle.js') }}"></script>
+    <script src="{{ url('tenancy/assets/js/scripts.bundle.js') }}"></script>
+    @vite(['resources/js/app.js'])
     <!--end::Metronic Global Bundle-->
     
-    <!--begin::Vite Scripts (Main App Bundle)-->
-    {!! \App\Helpers\ViteAssetHelper::renderViteScripts() !!}
-    <!--end::Vite Scripts-->
-    
     <!--begin::Locale-specific scripts-->
-    <script src="/assets/js/flatpickr-pt.js"></script>
+    <script src="/tenancy/assets/js/flatpickr-pt.js"></script>
     <!--end::Locale-specific scripts-->
     
     {{-- Modal de Sessão Expirada --}}
