@@ -1,10 +1,10 @@
 <!-- Modal -->
-<div class="modal fade" id="modalConciliacao" tabindex="-1" aria-labelledby="modalConciliacaoLabel" aria-hidden="true">
+<div class="modal  fade" id="modalConciliacao" tabindex="-1" aria-labelledby="modalConciliacaoLabel" aria-hidden="true">
     <!-- Modal -->
-    <div class="modal-dialog modal-lg modal-dialog-top">
-        <div class="modal-content">
+    <div class="modal-dialog modal-lg modal-dialog-top ">
+        <div class="modal-content border border-active active">
             <!-- Cabeçalho -->
-            <div class="modal-header border-0 pb-2">
+            <div class="modal-header border-1 pb-2">
                 <h2 class="modal-title w-100 text-center" id="modalImportarOFXLabel">Importe seu extrato em formato OFX
                 </h2>
                 <button type="button" class="btn-close position-absolute end-0 me-3" data-bs-dismiss="modal"

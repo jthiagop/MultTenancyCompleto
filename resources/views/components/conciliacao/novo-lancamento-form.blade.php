@@ -80,7 +80,11 @@
         </div>
 
         <!-- Container de Anexos (inicialmente oculto) -->
-        <div class="col-md-12 anexo-container d-none" data-conciliacao-id="{{ $conciliacao->id }}">
-            <x-anexos-input name="anexos" :anexosExistentes="[]" :uniqueId="$conciliacao->id" />
+        <div class="col-md-12 anexo-container d-none mt-4" data-conciliacao-id="{{ $conciliacao->id }}">
+            <x-tenant-file-one 
+                name="anexo" 
+                id="anexo_{{ $conciliacao->id }}" 
+                accept=".pdf,.jpg,.jpeg,.png,.ofx" 
+            />
         </div>
     </div>
