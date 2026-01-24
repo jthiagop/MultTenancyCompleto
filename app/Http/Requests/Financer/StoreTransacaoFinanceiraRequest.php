@@ -213,13 +213,17 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
     protected function prepareForValidation(): void
     {
         // Helper para converter reais para centavos
+        // Detecta automaticamente se é formato brasileiro (1.234,56) ou padrão (1234.56)
         $reaisParaCentavos = function ($valor) {
             if (!$valor) return 0;
             
             if (is_string($valor)) {
-                // Remove pontos de milhar e substitui vírgula por ponto
-                $valor = str_replace('.', '', $valor);
-                $valor = str_replace(',', '.', $valor);
+                // Se contém vírgula, é formato brasileiro (1.234,56)
+                if (strpos($valor, ',') !== false) {
+                    $valor = str_replace('.', '', $valor);      // Remove pontos de milhar
+                    $valor = str_replace(',', '.', $valor);     // Substitui vírgula por ponto
+                }
+                // else: é formato padrão (1234.56) - mantém como está
             }
             
             // Converte para float e depois para centavos (inteiro)

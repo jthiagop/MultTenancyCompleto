@@ -61,7 +61,7 @@
 
     <!-- Lançamento Padrão -->
     <x-tenant-select name="lancamento_padrao_id" id="lancamento_padrao_id_{{ $conciliacao->id }}"
-        label="Lançamento Padrão" placeholder="Selecione o Lançamento Padrão" required class="col-md-8 mb-3">
+        label="Lançamento Padrão" placeholder="Selecione o Lançamento Padrão" required class="col-md-7 mb-3">
         @foreach ($lps as $lp)
             <option value="{{ $lp->id }}" data-type="{{ $lp->type }}">
                 {{ $lp->description }}
@@ -71,7 +71,7 @@
 
     <!-- Tipo de Documento / Forma de Pagamento -->
     <x-tenant-select name="tipo_documento" id="tipo_documento_{{ $conciliacao->id }}" label="Forma de pagamento"
-        placeholder="Selecione uma forma de pagamento" required class="col-md-4 mb-3">
+        placeholder="Selecione uma forma de pagamento" required class="col-md-5 mb-3">
         @if (isset($formasPagamento))
             @foreach ($formasPagamento as $formaPagamento)
                 <option value="{{ $formaPagamento->codigo }}"
@@ -83,6 +83,7 @@
     </x-tenant-select>
 
     <div class="card-footer">
+        
         <!-- Checkbox: Comprovação Fiscal -->
         <div class="col-md-12">
             <label class="form-check form-switch form-check-custom form-check-solid">

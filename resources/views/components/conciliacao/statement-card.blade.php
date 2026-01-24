@@ -51,11 +51,10 @@
                     <form action="{{ route('conciliacao.ignorar', $conciliacao->id) }}" method="POST" class="d-inline">
                         @csrf
                         @method('PATCH')
-                        <button type="submit" class="btn btn-sm btn-secondary">
-                            <span>🚫 Ignorar</span>
+                        <button type="submit" class="btn btn-sm btn-light-primary" data-bs-toggle="tooltip" data-bs-placement="top" title="Você ignora um lançamento quando: É uma tarifa bancária que não precisa conciliar. É um lançamento duplicado. É um erro do banco que será estornado. Não corresponde a nenhuma transação do sistema" >
+                            <i class="fa-regular fa-circle-xmark"></i>
+                             Ignorar
                         </button>
-                        <i class="fas fa-exclamation-circle fs-7 ms-2" data-bs-toggle="tooltip"
-                            title="Você ignora um lançamento quando: É uma tarifa bancária que não precisa conciliar. É um lançamento duplicado. É um erro do banco que será estornado. Não corresponde a nenhuma transação do sistema"></i>
                     </form>
                 </div>
             </div>
