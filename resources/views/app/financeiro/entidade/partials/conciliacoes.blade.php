@@ -1,24 +1,26 @@
 {{--
-REFACTORED: Conciliações Blade Template com Abas Filtradas
+REFACTORED: Conciliações Blade Template com Abas Filtradas Server-Side
 
 ✅ ARQUITETURA:
-1. Componente conciliacao-pane.blade.php responsável pela renderização
-2. Três abas com filtros automáticos por tipo
-3. Event Delegation centralizado em arquivo JS separado
-4. Replicação eficiente usando o mesmo componente
+1. Filtragem server-side com amount_cents (sem erros de rounding)
+2. Query params: ?tab=all|received|paid
+3. Componente conciliacao-pane.blade.php renderização
+4. Contadores dinâmicos baseados em tipo de transação
 
 Benefícios:
-- DRY: Reutilização de componente em 3 abas
-- Performance: Filtros no frontend (dados já carregados)
-- Maintainability: Alterações em um único arquivo
-- Escalabilidade: Fácil adicionar novas abas
+- ✅ Filtragem precisa usando centavos (integers)
+- ✅ amount_cents > 0 = Recebimento (entrada/credit)
+- ✅ amount_cents < 0 = Pagamento (saída/debit)
+- ✅ Paginação mantém query string
+- ✅ SEM truncamento ou rounding errors
 --}}
 
 @php
+    // ✅ Usa contadores server-side calculados no Controller
     $tabs = [
-        ['key' => 'all', 'label' => 'Todos', 'count' => $conciliacoesPendentes->count() ?? 0],
-        ['key' => 'received', 'label' => 'Recebimentos', 'count' => $conciliacoesPendentes?->filter(fn($c) => $c->trntype === 'credit')->count() ?? 0],
-        ['key' => 'paid', 'label' => 'Pagamentos', 'count' => $conciliacoesPendentes?->filter(fn($c) => $c->trntype === 'debit')->count() ?? 0],
+        ['key' => 'all', 'label' => 'Todos', 'count' => $counts['all'] ?? 0],
+        ['key' => 'received', 'label' => 'Recebimentos', 'count' => $counts['received'] ?? 0],
+        ['key' => 'paid', 'label' => 'Pagamentos', 'count' => $counts['paid'] ?? 0],
     ];
 @endphp
 
@@ -81,6 +83,30 @@ Benefícios:
 @push('scripts')
     {{-- Carregar o handler de formulários UMA VEZ só --}}
     <script src="{{ url('/app/financeiro/entidade/conciliacoes-form-handler.js') }}"></script>
+    
+    <script>
+        /**
+         * ✅ Handler para mudar de tab
+         * Transforma cliques em query params: ?tab=received
+         */
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabs = document.querySelectorAll('[data-bs-toggle="tab"]');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('shown.bs.tab', function(e) {
+                    const targetId = this.getAttribute('data-bs-target');
+                    const tabKey = targetId?.replace('#conciliacao-pane-', '');
+                    
+                    if (tabKey) {
+                        // Adiciona query param ?tab=received|paid|all
+                        const url = new URL(window.location);
+                        url.searchParams.set('tab', tabKey);
+                        window.history.replaceState({}, '', url);
+                    }
+                });
+            });
+        });
+    </script>
 @endpush
 
 {{-- Include Modal de Filtro de Conciliações --}}

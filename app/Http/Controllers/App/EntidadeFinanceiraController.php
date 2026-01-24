@@ -279,7 +279,7 @@ class EntidadeFinanceiraController extends Controller
         }
     }
 
-    public function show($id)
+    public function show($id, Request $request)
     {
         // 1. A fonte da verdade é a SESSÃO.
         $activeCompanyId = session('active_company_id');
@@ -295,13 +295,46 @@ class EntidadeFinanceiraController extends Controller
             }])
             ->findOrFail($id);
 
-        // 3. Busca os lançamentos do extrato pendentes para esta entidade.
-        //    Esta consulta já está correta, pois filtra pelo 'entidade_financeira_id'.
-        $bankStatements = BankStatement::where('entidade_financeira_id', $id)
+        // ✅ 2.5. Filtragem Server-Side por Tab (amount_cents)
+        // Recebe: ?tab=all (padrão), ?tab=received (entrada/credit > 0), ?tab=paid (saída/debit < 0)
+        $tab = $request->input('tab', 'all');
+
+        // Base query para conciliações pendentes
+        $query = BankStatement::where('entidade_financeira_id', $id)
             ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
-            ->whereDoesntHave('transacoes')
-            ->orderBy('dtposted', 'desc')
-            ->paginate(20);
+            ->whereDoesntHave('transacoes');
+
+        // Aplica filtro baseado na tab
+        if ($tab === 'received') {
+            // Recebimentos: amount_cents > 0 (entrada/credit)
+            $query->where('amount_cents', '>', 0);
+        } elseif ($tab === 'paid') {
+            // Pagamentos: amount_cents < 0 (saída/debit)
+            $query->where('amount_cents', '<', 0);
+        }
+        // Se $tab === 'all', não aplica filtro (retorna todas)
+
+        // Calcula contadores ANTES de paginar
+        $counts = [
+            'all'      => BankStatement::where('entidade_financeira_id', $id)
+                ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                ->whereDoesntHave('transacoes')
+                ->count(),
+            'received' => BankStatement::where('entidade_financeira_id', $id)
+                ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                ->whereDoesntHave('transacoes')
+                ->where('amount_cents', '>', 0)
+                ->count(),
+            'paid'     => BankStatement::where('entidade_financeira_id', $id)
+                ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                ->whereDoesntHave('transacoes')
+                ->where('amount_cents', '<', 0)
+                ->count(),
+        ];
+
+        // 3. Busca os lançamentos DO EXTRATO pendentes para esta entidade, FILTRADOS POR TAB
+        //    + mantém query string para paginação
+        $bankStatements = $query->orderBy('dtposted', 'desc')->paginate(20)->withQueryString();
 
         // 4. Para cada lançamento do extrato, busca possíveis correspondências.
         foreach ($bankStatements as $lancamento) {
@@ -353,6 +386,8 @@ class EntidadeFinanceiraController extends Controller
             'entidade' => $entidade,
             'transacoes' => $entidade->transacoesFinanceiras,
             'conciliacoesPendentes' => $bankStatements,
+            'counts' => $counts, // ✅ Novo: contadores por tipo
+            'tab' => $tab, // ✅ Novo: tab atual
             'centrosAtivos' => $centrosAtivos,
             'lps' => $lps,
             'formasPagamento' => $formasPagamento,

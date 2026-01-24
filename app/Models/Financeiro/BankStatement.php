@@ -24,6 +24,7 @@ class BankStatement extends Model
         'trntype',
         'dtposted',
         'amount',
+        'amount_cents', // ✅ Novo campo para centavos
         'fitid',
         'checknum',
         'refnum',
