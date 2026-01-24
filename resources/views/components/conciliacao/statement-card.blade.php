@@ -1,5 +1,5 @@
 <!--begin::Col-->
-<div class="col-xxl-4 mb-5 mb-xl-10">
+<div class="col-lg-4 col-xxl-5 mb-5 mb-xl-10">
     <!--begin::Statement Card widget 8-->
     <div class="card card-bordered h-lg-100">
         <div class="card card-bordered flex-row-fluid overflow-hidden border border-hover-primary">
@@ -15,7 +15,6 @@
                         </div>
                     </div>
                 </div>
-
                 <!-- Lado Direito: Valor em centavos formatado -->
                 <div class="card-toolbar">
                     @php

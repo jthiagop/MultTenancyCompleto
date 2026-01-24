@@ -48,8 +48,8 @@
                 <x-conciliacao.statement-card :conciliacao="$conciliacao" />
 
                 @if ($sugestoes->count() > 0)
-                    <!-- Botão Conciliar (Center: col-xxl-2) -->
-                    <div class="col-xxl-2 mb-5 mb-xl-10">
+                    <!-- Botão Conciliar (Center: col-xxl-1) -->
+                    <div class="col-lg-1 col-xxl-1 mb-5 mb-xl-10">
                         <div class="card card-flush h-xl-100">
                             <div class="card-body d-flex align-items-center justify-content-center h-100">
                                 <button class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
@@ -63,7 +63,7 @@
                     </div>
 
                     <!-- Sugestão de Conciliação (Right: col-xxl-6) -->
-                    <div class="col-xxl-6 mb-5 mb-xl-10">
+                    <div class="col-lg-7 col-xxl-6 mb-5 mb-xl-10">
                         <div class="card card-flush h-xl-100">
                             <!-- View: Sugestão encontrada -->
                             <div class="suggestion-view" data-conciliacao-id="{{ $conciliacao->id }}">
@@ -215,7 +215,7 @@
 
                 @else
                     <!-- Sem Sugestão: Botão de Conciliar + Formulários -->
-                    <div class="col-xxl-2 mb-5 mb-xl-10">
+                    <div class="col-lg-2 col-xxl-1 mb-5 mb-xl-10">
                         <div class="card card-flush h-xl-100">
                             <div class="card-body d-flex align-items-center justify-content-center h-100">
                                 <button class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
@@ -229,11 +229,11 @@
                     </div>
 
                     <!-- Formulários Tabulados -->
-                    <div class="col-xxl-6 mb-5 mb-xl-10">
-                        <div class="card card-flush h-xl-100">
-                            <div class="card card-flush flex-row-fluid overflow-hidden h-xl-100">
+                    <div class="col-lg-6 col-xxl-6 mb-5 mb-xl-10">
+                        <div class="card  h-xl-100">
+                            <div class="border border-transparent">
                                 <!-- Abas -->
-                                <ul class="nav nav-tabs" data-conciliacao-id="{{ $conciliacao->id }}"
+                                <ul class="nav nav-tabs border border-transparent" data-conciliacao-id="{{ $conciliacao->id }}"
                                     role="tablist">
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link active" data-bs-toggle="tab"
@@ -266,17 +266,14 @@
                                         <div
                                             class="alert alert-dismissible bg-light-primary border border-primary border-dashed d-flex flex-column flex-sm-row p-5 mb-10">
                                             <div class="d-flex flex-column">
-                                                <span class="fs-6 fw-bold">Lançamento não encontrado
-                                                    automaticamente:</span>
-                                                <span class="fs-6">Crie um novo ao alimentar o formulário e
-                                                    clicando no botão conciliar.</span>
+                                                <span class="fs-6 fw-bold">Lançamento não encontrado automaticamente:</span> 
+                                                <span class="fs-6">Crie um novo ao alimentar o formulário e clicando no botão conciliar.</span>
                                             </div>
-                                            <button type="button"
-                                                class="btn-close position-absolute position-sm-relative m-2 m-sm-0 top-0 end-0 ms-sm-auto"
+                                            <button type="button" class="btn-close position-absolute position-sm-relative m-2 m-sm-0 top-0 end-0 ms-sm-auto"
                                                 data-bs-dismiss="alert"></button>
                                         </div>
 
-                                                                               <x-conciliacao.novo-lancamento-form :conciliacao="$conciliacao"
+                                        <x-conciliacao.novo-lancamento-form :conciliacao="$conciliacao"
                                             :transacaoSugerida="$transacaoSugerida"
                                             :centrosAtivos="$centrosAtivos" :lps="$lps"
                                             :formasPagamento="$formasPagamento" :entidade="$entidade" />
@@ -298,8 +295,6 @@
                         </div>
                     </div>
                 @endif
-
-                <div class="separator separator-dashed border-muted my-5"></div>
             </div>
             <!--end::Row-->
         @endforeach
@@ -307,7 +302,7 @@
         <!-- Botão Carregar Mais (se houver mais páginas) -->
         @if($conciliacoesFiltradas instanceof \Illuminate\Pagination\LengthAwarePaginator && $conciliacoesFiltradas->hasMorePages())
             <div class="text-center py-5" id="load-more-container">
-                <button type="button" class="btn btn-primary btn-load-more" data-next-page="{{ $conciliacoesFiltradas->currentPage() + 1 }}">
+                <button type="button" class="btn btn-sm btn-primary btn-load-more" data-next-page="{{ $conciliacoesFiltradas->currentPage() + 1 }}">
                     <i class="bi bi-arrow-down-circle me-2"></i>
                     Carregar Mais ({{ $conciliacoesFiltradas->total() - ($conciliacoesFiltradas->currentPage() * $conciliacoesFiltradas->perPage()) }} restantes)
                 </button>
