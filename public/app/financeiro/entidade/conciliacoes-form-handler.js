@@ -219,15 +219,30 @@
                 // Highlight dos campos inválidos
                 invalidFields.forEach(field => {
                     field.classList.add('is-invalid');
-                    field.addEventListener('change', function() {
-                        if (this.checkValidity()) {
-                            this.classList.remove('is-invalid');
-                        }
-                    });
+                    
+                    // Criar feedback com mensagem genérica
+                    const existingFeedback = field.parentElement.querySelector('.invalid-feedback');
+                    if (!existingFeedback) {
+                        const feedback = document.createElement('div');
+                        feedback.className = 'invalid-feedback d-block';
+                        feedback.textContent = 'Este campo é obrigatório';
+                        field.parentElement.appendChild(feedback);
+                    }
+
+                    // Remover quando corrigir
+                    const removeError = function() {
+                        field.classList.remove('is-invalid');
+                        const fb = field.parentElement.querySelector('.invalid-feedback');
+                        if (fb) fb.remove();
+                        field.removeEventListener('input', removeError);
+                        field.removeEventListener('change', removeError);
+                    };
+                    
+                    field.addEventListener('input', removeError);
+                    field.addEventListener('change', removeError);
                 });
 
-                showNotification('error', 'Por favor, preencha os campos obrigatórios:\n\n' + 
-                    fieldNames.map(name => '• ' + name).join('\n'));
+                showNotification('error', 'Por favor, verifique os campos indicados');
                 return;
             }
 
@@ -266,21 +281,26 @@
                         location.reload();
                     }, 1500);
                 } else if (status === 422) {
-                    // Erro de validação - exibir erros específicos
+                    // Erro de validação - exibir erros específicos abaixo de cada campo
                     const errors = data.errors || {};
                     
-                    // Highlight dos campos com erro
-                    Object.keys(errors).forEach(fieldName => {
-                        const field = formComponent.querySelector(`[name="${fieldName}"]`);
-                        if (field) {
-                            field.classList.add('is-invalid');
-                            field.addEventListener('change', function() {
-                                this.classList.remove('is-invalid');
-                            });
+                    // Limpar erros anteriores
+                    formComponent.querySelectorAll('.is-invalid').forEach(field => {
+                        field.classList.remove('is-invalid');
+                    });
+                    formComponent.querySelectorAll('.invalid-feedback').forEach(fb => {
+                        fb.remove();
+                    });
+
+                    // Adicionar feedback para cada campo com erro
+                    Object.entries(errors).forEach(([fieldName, fieldErrors]) => {
+                        if (Array.isArray(fieldErrors) && fieldErrors.length > 0) {
+                            // Usar a primeira mensagem de erro
+                            addFieldErrorFeedback(formComponent, fieldName, fieldErrors[0]);
                         }
                     });
 
-                    showNotification('error', 'Erro ao validar formulário:', errors);
+                    showNotification('error', 'Por favor, verifique os campos indicados');
                 } else {
                     // Outro erro
                     showNotification('error', data.message || 'Erro ao conciliar');
@@ -303,40 +323,70 @@
     // ============================================================
 
     function showNotification(type, message, errors = null) {
-        let finalMessage = message;
-
-        // Se houver erros de validação, construir mensagem mais detalhada
+        // Se houver erros de validação, usar apenas para toast geral
         if (errors && typeof errors === 'object') {
-            const errorMessages = [];
+            const hasErrors = Object.keys(errors).length > 0;
             
-            for (const [field, fieldErrors] of Object.entries(errors)) {
-                if (Array.isArray(fieldErrors)) {
-                    fieldErrors.forEach(error => {
-                        errorMessages.push(`• ${error}`);
-                    });
-                }
-            }
-
-            if (errorMessages.length > 0) {
-                finalMessage = message + ':\n\n' + errorMessages.join('\n');
+            // Se tem erros, mostrar apenas o título, detalhes estarão nos campos
+            if (hasErrors && type === 'error') {
+                message = 'Por favor, verifique os campos indicados abaixo';
             }
         }
 
         // Usar bibliotecas existentes (Toastr, Flasher, etc)
         if (typeof toastr !== 'undefined') {
-            toastr[type](finalMessage);
+            toastr[type](message);
         } else if (typeof Swal !== 'undefined') {
             Swal.fire({
                 icon: type,
-                title: type === 'success' ? 'Sucesso' : 'Erro na Validação',
-                html: finalMessage.replace(/\n/g, '<br>'),
-                timer: type === 'error' ? 5000 : 3000,
+                title: type === 'success' ? 'Sucesso' : 'Atenção',
+                text: message,
+                timer: type === 'success' ? 3000 : 0,
                 allowOutsideClick: true
             });
         } else {
             // Fallback simples
-            alert(finalMessage);
+            alert(message);
         }
+    }
+
+    // ============================================================
+    // 9. ADICIONAR MENSAGEM DE ERRO ABAIXO DO CAMPO
+    // ============================================================
+
+    function addFieldErrorFeedback(form, fieldName, errorMessage) {
+        const field = form.querySelector(`[name="${fieldName}"]`);
+        if (!field) return;
+
+        // Remover feedback anterior se existir
+        const existingFeedback = field.parentElement.querySelector('.invalid-feedback');
+        if (existingFeedback) {
+            existingFeedback.remove();
+        }
+
+        // Adicionar classe is-invalid ao campo
+        field.classList.add('is-invalid');
+
+        // Criar elemento de feedback
+        const feedback = document.createElement('div');
+        feedback.className = 'invalid-feedback d-block';
+        feedback.textContent = errorMessage;
+
+        // Inserir após o campo
+        field.parentElement.appendChild(feedback);
+
+        // Remover feedback quando o usuário corrige o campo
+        const removeErrorHandler = function() {
+            field.classList.remove('is-invalid');
+            if (feedback.parentElement) {
+                feedback.remove();
+            }
+            field.removeEventListener('input', removeErrorHandler);
+            field.removeEventListener('change', removeErrorHandler);
+        };
+
+        field.addEventListener('input', removeErrorHandler);
+        field.addEventListener('change', removeErrorHandler);
     }
 
     // ============================================================
