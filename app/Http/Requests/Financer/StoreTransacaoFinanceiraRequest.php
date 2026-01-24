@@ -34,7 +34,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'data_competencia' => 'required',
             'descricao' => 'required|string',
             'descricao2' => 'string',
-            'valor' => 'required|numeric|gt:0',
+            'valor' => 'required|integer|gt:0',  // Em centavos
             'tipo' => 'required|in:entrada,saida',
             'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
             'cost_center_id' => 'required|string',
@@ -99,34 +99,11 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             // Validações de situação e agendamento
             'vencimento' => 'required_if:repetir_lancamento,1|nullable|date_format:d/m/Y', // Campo do formulário
             'data_vencimento' => 'nullable|date', // Campo processado
-            'valor_pago' => [
-                'nullable',
-                'numeric',
-                'min:0',
-                function ($attribute, $value, $fail) {
-                    // Validação: valor_pago não pode ser maior que valor
-                    if (!empty($value)) {
-                        $valorTotal = floatval($this->input('valor'));
-                        $valorPago = floatval($value);
-                        
-                        if ($valorPago > $valorTotal) {
-                            $fail('Valor pago não pode ser maior que o valor total.');
-                        }
-                    }
-                    
-                    // Validação: valor_pago obrigatório se pago/recebido checked
-                    $isPago = $this->input('pago') === '1' || $this->input('pago') === 1;
-                    $isRecebido = $this->input('recebido') === '1' || $this->input('recebido') === 1;
-                    
-                    if (($isPago || $isRecebido) && empty($value)) {
-                        $fail('Valor pago é obrigatório quando marcado como pago/recebido.');
-                    }
-                },
-            ],
-            'juros' => 'nullable|numeric|min:0',
-            'multa' => 'nullable|numeric|min:0',
-            'desconto' => 'nullable|numeric|min:0',
-            'valor_a_pagar' => 'nullable|numeric|min:0',
+            'valor_pago' => 'nullable|integer|min:0',  // Em centavos
+            'juros' => 'nullable|integer|min:0',  // Em centavos
+            'multa' => 'nullable|integer|min:0',  // Em centavos
+            'desconto' => 'nullable|integer|min:0',  // Em centavos
+            'valor_a_pagar' => 'nullable|integer|min:0',  // Em centavos
             'situacao' => 'nullable|in:em_aberto,desconsiderado,atrasado,pago_parcial,pago,previsto',
             'agendado' => 'nullable|boolean',
 
@@ -143,15 +120,15 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                     }
                 },
             ],
-            'juros_pagamento' => 'nullable|numeric|min:0',
-            'multa_pagamento' => 'nullable|numeric|min:0',
-            'desconto_pagamento' => 'nullable|numeric|min:0',
+            'juros_pagamento' => 'nullable|integer|min:0',  // Em centavos
+            'multa_pagamento' => 'nullable|integer|min:0',  // Em centavos
+            'desconto_pagamento' => 'nullable|integer|min:0',  // Em centavos
 
             // Validações de parcelas (quando parcelamento é 2x ou mais)
             'parcelamento' => 'nullable|string',
             'parcelas' => 'nullable|array',
             'parcelas.*.vencimento' => 'required_with:parcelas|date_format:d/m/Y',
-            'parcelas.*.valor' => 'required_with:parcelas|numeric|gt:0',
+            'parcelas.*.valor' => 'required_with:parcelas|integer|gt:0',  // Em centavos
             'parcelas.*.percentual' => 'required_with:parcelas|numeric|gt:0|max:100',
             'parcelas.*.forma_pagamento_id' => 'nullable|exists:formas_pagamento,id',
             'parcelas.*.conta_pagamento_id' => 'nullable|exists:entidades_financeiras,id',
@@ -176,7 +153,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'descricao.required' => 'A descrição é obrigatória.',
             'valor.required' => 'O valor é obrigatório.',
             'banco_id.required' => 'Selecione um banco.',
-            'valor.numeric' => 'O valor deve ser numérico.',
+            'valor.integer' => 'O valor deve ser numérico.',
             'valor.gt' => 'O valor deve ser maior que zero.',
             'tipo.required' => 'O tipo é obrigatório.',
             'tipo.in' => 'O tipo deve ser "entrada" ou "saida".',
@@ -200,21 +177,21 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'data_pagamento.required_if' => 'A data de pagamento é obrigatória quando o lançamento está marcado como pago.',
             'data_pagamento.date' => 'A data de pagamento deve ser uma data válida.',
             'valor_pago.required_if' => 'O valor pago é obrigatório quando o lançamento está marcado como pago.',
-            'valor_pago.numeric' => 'O valor pago deve ser numérico.',
+            'valor_pago.integer' => 'O valor pago deve ser numérico.',
             'valor_pago.min' => 'O valor pago deve ser maior que zero.',
-            'juros.numeric' => 'Os juros devem ser numéricos.',
+            'juros.integer' => 'Os juros devem ser numéricos.',
             'juros.min' => 'Os juros não podem ser negativos.',
-            'multa.numeric' => 'A multa deve ser numérica.',
+            'multa.integer' => 'A multa deve ser numérica.',
             'multa.min' => 'A multa não pode ser negativa.',
-            'desconto.numeric' => 'O desconto deve ser numérico.',
+            'desconto.integer' => 'O desconto deve ser numérico.',
             'desconto.min' => 'O desconto não pode ser negativo.',
-            'valor_a_pagar.numeric' => 'O valor a pagar deve ser numérico.',
+            'valor_a_pagar.integer' => 'O valor a pagar deve ser numérico.',
             'valor_a_pagar.min' => 'O valor a pagar não pode ser negativo.',
             'parcelas.array' => 'As parcelas devem ser enviadas como um array.',
             'parcelas.*.vencimento.required_with' => 'A data de vencimento é obrigatória para cada parcela.',
             'parcelas.*.vencimento.date_format' => 'A data de vencimento da parcela deve estar no formato dd/mm/aaaa.',
             'parcelas.*.valor.required_with' => 'O valor é obrigatório para cada parcela.',
-            'parcelas.*.valor.numeric' => 'O valor da parcela deve ser numérico.',
+            'parcelas.*.valor.integer' => 'O valor da parcela deve ser numérico.',
             'parcelas.*.valor.gt' => 'O valor da parcela deve ser maior que zero.',
             'parcelas.*.percentual.required_with' => 'O percentual é obrigatório para cada parcela.',
             'parcelas.*.percentual.numeric' => 'O percentual da parcela deve ser numérico.',
@@ -228,198 +205,114 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
 
     /**
      * Prepare the data for validation.
-     * Converte valores brasileiros (com vírgula) para formato numérico antes da validação.
+     * Converte valores brasileiros (com vírgula) para centavos (inteiro) antes da validação.
+     * 
+     * Exemplo: "1.234,56" → 123456 (centavos)
+     * Estratégia: String → Float → Inteiro (centavos)
      */
     protected function prepareForValidation(): void
     {
+        // Helper para converter reais para centavos
+        $reaisParaCentavos = function ($valor) {
+            if (!$valor) return 0;
+            
+            if (is_string($valor)) {
+                // Remove pontos de milhar e substitui vírgula por ponto
+                $valor = str_replace('.', '', $valor);
+                $valor = str_replace(',', '.', $valor);
+            }
+            
+            // Converte para float e depois para centavos (inteiro)
+            $reais = (float) $valor;
+            $centavos = (int) round($reais * 100);
+            
+            // Garante valor absoluto (positivo)
+            return abs($centavos);
+        };
+
         // Converte configuracao_recorrencia para inteiro se for numérico
         if ($this->has('configuracao_recorrencia') && $this->configuracao_recorrencia) {
             $value = $this->configuracao_recorrencia;
-            // Se for string numérica, converte para int
             if (is_string($value) && ctype_digit($value)) {
                 $this->merge(['configuracao_recorrencia' => (int) $value]);
             }
         }
-        // Converte o campo 'valor' do formato brasileiro para numérico
-        if ($this->has('valor') && $this->valor) {
-            $valor = $this->valor;
 
-            // Se for string, remove pontos (milhares) e substitui vírgula por ponto
-            if (is_string($valor)) {
-                $valor = str_replace('.', '', $valor); // Remove pontos de milhar
-                $valor = str_replace(',', '.', $valor); // Substitui vírgula por ponto
-            }
+        // Campos monetários em centavos
+        $camposMonetarios = [
+            'valor',
+            'valor_pago',
+            'juros',
+            'multa',
+            'desconto',
+            'valor_a_pagar'
+        ];
 
-            // Converte para float absoluto (remove negatividade) e atualiza o request
-            $this->merge([
-                'valor' => abs((float) $valor)
-            ]);
-        }
-
-        // Converte o campo 'valor_pago' se existir
-        if ($this->has('valor_pago') && $this->valor_pago) {
-            $valorPago = $this->valor_pago;
-
-            if (is_string($valorPago)) {
-                $valorPago = str_replace('.', '', $valorPago);
-                $valorPago = str_replace(',', '.', $valorPago);
-            }
-
-            $this->merge([
-                'valor_pago' => abs((float) $valorPago)
-            ]);
-        }
-
-        // Converte o campo 'juros' se existir
-        if ($this->has('juros') && $this->juros) {
-            $juros = $this->juros;
-
-            if (is_string($juros)) {
-                $juros = str_replace('.', '', $juros);
-                $juros = str_replace(',', '.', $juros);
-            }
-
-            $this->merge([
-                'juros' => abs((float) $juros)
-            ]);
-        }
-
-        // Converte o campo 'multa' se existir
-        if ($this->has('multa') && $this->multa) {
-            $multa = $this->multa;
-
-            if (is_string($multa)) {
-                $multa = str_replace('.', '', $multa);
-                $multa = str_replace(',', '.', $multa);
-            }
-
-            $this->merge([
-                'multa' => abs((float) $multa)
-            ]);
-        }
-
-        // Converte o campo 'desconto' se existir
-        if ($this->has('desconto') && $this->desconto) {
-            $desconto = $this->desconto;
-
-            if (is_string($desconto)) {
-                $desconto = str_replace('.', '', $desconto);
-                $desconto = str_replace(',', '.', $desconto);
-            }
-
-            $this->merge([
-                'desconto' => abs((float) $desconto)
-            ]);
-        }
-
-        // Converte os campos de pagamento (para lançamentos fracionados)
-        $camposPagamento = ['juros_pagamento', 'multa_pagamento', 'desconto_pagamento'];
-
-        foreach ($camposPagamento as $campo) {
-            if ($this->has($campo) && $this->input($campo)) {
-                $valor = $this->input($campo);
-
-                if (is_string($valor)) {
-                    $valor = str_replace('.', '', $valor);
-                    $valor = str_replace(',', '.', $valor);
-                }
-
+        foreach ($camposMonetarios as $campo) {
+            if ($this->has($campo) && $this->input($campo) !== null) {
                 $this->merge([
-                    $campo => abs((float) $valor)
+                    $campo => $reaisParaCentavos($this->input($campo))
                 ]);
             }
         }
 
-        // Converte o campo 'valor_a_pagar' se existir
-        if ($this->has('valor_a_pagar') && $this->valor_a_pagar) {
-            $valorAPagar = $this->valor_a_pagar;
+        // Campos de pagamento (fracionado) em centavos
+        $camposPagamento = ['juros_pagamento', 'multa_pagamento', 'desconto_pagamento'];
 
-            if (is_string($valorAPagar)) {
-                $valorAPagar = str_replace('.', '', $valorAPagar);
-                $valorAPagar = str_replace(',', '.', $valorAPagar);
+        foreach ($camposPagamento as $campo) {
+            if ($this->has($campo) && $this->input($campo) !== null) {
+                $this->merge([
+                    $campo => $reaisParaCentavos($this->input($campo))
+                ]);
             }
-
-            $this->merge([
-                'valor_a_pagar' => abs((float) $valorAPagar)
-            ]);
         }
 
-        // Processa valores das parcelas - converte do formato brasileiro para numérico
+        // Processa parcelas - converte valores para centavos
         if ($this->has('parcelas') && is_array($this->parcelas)) {
             $parcelasProcessadas = [];
+            
             foreach ($this->parcelas as $index => $parcela) {
                 $parcelaProcessada = $parcela;
 
-                // Converte valor se existir
+                // Converte valor em reais para centavos
                 if (isset($parcela['valor'])) {
-                    if (is_string($parcela['valor'])) {
-                        // Se contém vírgula, é formato brasileiro (1.500,00) - converte
-                        if (strpos($parcela['valor'], ',') !== false) {
-                            $valor = str_replace('.', '', $parcela['valor']); // Remove pontos de milhar
-                            $valor = str_replace(',', '.', $valor); // Substitui vírgula por ponto
-                            $parcelaProcessada['valor'] = abs((float) $valor);
-                        } else {
-                            // Se já está com ponto decimal (1500.00), apenas converte para float absoluto
-                            $parcelaProcessada['valor'] = abs((float) $parcela['valor']);
-                        }
-                    } elseif (is_numeric($parcela['valor'])) {
-                        $parcelaProcessada['valor'] = abs((float) $parcela['valor']);
-                    }
+                    $parcelaProcessada['valor'] = $reaisParaCentavos($parcela['valor']);
                 }
 
-                // Converte percentual se existir
-                if (isset($parcela['percentual'])) {
-                    if (is_string($parcela['percentual'])) {
-                        // Se contém vírgula, é formato brasileiro (25,00) - converte
-                        if (strpos($parcela['percentual'], ',') !== false) {
-                            $percentual = str_replace('.', '', $parcela['percentual']); // Remove pontos de milhar
-                            $percentual = str_replace(',', '.', $percentual); // Substitui vírgula por ponto
-                            $parcelaProcessada['percentual'] = abs((float) $percentual);
-                        } else {
-                            // Se já está com ponto decimal (25.00), apenas converte para float absoluto
-                            $parcelaProcessada['percentual'] = abs((float) $parcela['percentual']);
-                        }
-                    } elseif (is_numeric($parcela['percentual'])) {
-                        $parcelaProcessada['percentual'] = abs((float) $parcela['percentual']);
-                    }
+                // Percentual continua em numeric (não é dinheiro)
+                if (isset($parcela['percentual']) && is_string($parcela['percentual'])) {
+                    $percentual = $parcela['percentual'];
+                    $percentual = str_replace('.', '', $percentual);
+                    $percentual = str_replace(',', '.', $percentual);
+                    $parcelaProcessada['percentual'] = (float) $percentual;
                 }
 
-                // Limpa e normaliza a data de vencimento (remove espaços, garante formato d/m/Y)
+                // Limpa e normaliza data de vencimento
                 if (isset($parcela['vencimento']) && $parcela['vencimento']) {
                     $vencimento = trim($parcela['vencimento']);
-                    // Garante que está no formato d/m/Y (remove espaços extras, normaliza)
                     $vencimento = preg_replace('/\s+/', '', $vencimento);
-                    // Se tem hífen, pode estar em formato Y-m-d, não faz nada (será validado)
-                    // Se tem barra, mantém como está para validação
                     $parcelaProcessada['vencimento'] = $vencimento;
                 }
 
                 $parcelasProcessadas[$index] = $parcelaProcessada;
             }
 
-            $this->merge([
-                'parcelas' => $parcelasProcessadas
-            ]);
+            $this->merge(['parcelas' => $parcelasProcessadas]);
         }
 
         // Processa data_vencimento se vier como 'vencimento' do formulário
         if ($this->has('vencimento') && $this->vencimento && !$this->has('data_vencimento')) {
             $vencimento = $this->vencimento;
 
-            // Se vier no formato brasileiro (d/m/Y), converte para Y-m-d
             if (strpos($vencimento, '/') !== false) {
                 try {
                     $dataVencimento = \Carbon\Carbon::createFromFormat('d/m/Y', $vencimento)->format('Y-m-d');
-                    $this->merge([
-                        'data_vencimento' => $dataVencimento
-                    ]);
+                    $this->merge(['data_vencimento' => $dataVencimento]);
                 } catch (\Exception $e) {
                     // Se falhar, mantém o valor original
                 }
             } else {
-                $this->merge([
-                    'data_vencimento' => $vencimento
-                ]);
+                $this->merge(['data_vencimento' => $vencimento]);
             }
         }
 
@@ -427,15 +320,12 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
         if ($this->has('data_competencia') && $this->data_competencia) {
             $dataCompetencia = $this->data_competencia;
 
-            // Se vier no formato brasileiro (d/m/Y), converte para Y-m-d
             if (strpos($dataCompetencia, '/') !== false) {
                 try {
                     $dataCompetenciaConvertida = \Carbon\Carbon::createFromFormat('d/m/Y', $dataCompetencia)->format('Y-m-d');
-                    $this->merge([
-                        'data_competencia' => $dataCompetenciaConvertida
-                    ]);
+                    $this->merge(['data_competencia' => $dataCompetenciaConvertida]);
                 } catch (\Exception $e) {
-                    // Se falhar, mantém o valor original e deixa a validação pegar
+                    // Se falhar, mantém o valor original
                 }
             }
         }
@@ -444,18 +334,14 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
         if ($this->has('data_pagamento') && $this->data_pagamento) {
             $dataPagamento = $this->data_pagamento;
 
-            // Se vier no formato brasileiro (d/m/Y), converte para Y-m-d
             if (strpos($dataPagamento, '/') !== false) {
                 try {
                     $dataPagamentoConvertida = \Carbon\Carbon::createFromFormat('d/m/Y', $dataPagamento)->format('Y-m-d');
-                    $this->merge([
-                        'data_pagamento' => $dataPagamentoConvertida
-                    ]);
+                    $this->merge(['data_pagamento' => $dataPagamentoConvertida]);
                 } catch (\Exception $e) {
                     // Se falhar, mantém o valor original
                 }
             }
         }
-
     }
 }
