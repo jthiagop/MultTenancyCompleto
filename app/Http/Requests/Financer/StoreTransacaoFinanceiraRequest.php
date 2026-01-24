@@ -250,9 +250,9 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                 $valor = str_replace(',', '.', $valor); // Substitui vírgula por ponto
             }
 
-            // Converte para float e atualiza o request
+            // Converte para float absoluto (remove negatividade) e atualiza o request
             $this->merge([
-                'valor' => (float) $valor
+                'valor' => abs((float) $valor)
             ]);
         }
 
@@ -266,7 +266,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             }
 
             $this->merge([
-                'valor_pago' => (float) $valorPago
+                'valor_pago' => abs((float) $valorPago)
             ]);
         }
 
@@ -280,7 +280,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             }
 
             $this->merge([
-                'juros' => (float) $juros
+                'juros' => abs((float) $juros)
             ]);
         }
 
@@ -294,7 +294,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             }
 
             $this->merge([
-                'multa' => (float) $multa
+                'multa' => abs((float) $multa)
             ]);
         }
 
@@ -308,7 +308,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             }
 
             $this->merge([
-                'desconto' => (float) $desconto
+                'desconto' => abs((float) $desconto)
             ]);
         }
 
@@ -325,7 +325,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                 }
 
                 $this->merge([
-                    $campo => (float) $valor
+                    $campo => abs((float) $valor)
                 ]);
             }
         }
@@ -340,7 +340,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             }
 
             $this->merge([
-                'valor_a_pagar' => (float) $valorAPagar
+                'valor_a_pagar' => abs((float) $valorAPagar)
             ]);
         }
 
@@ -357,13 +357,13 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                         if (strpos($parcela['valor'], ',') !== false) {
                             $valor = str_replace('.', '', $parcela['valor']); // Remove pontos de milhar
                             $valor = str_replace(',', '.', $valor); // Substitui vírgula por ponto
-                            $parcelaProcessada['valor'] = (float) $valor;
+                            $parcelaProcessada['valor'] = abs((float) $valor);
                         } else {
-                            // Se já está com ponto decimal (1500.00), apenas converte para float
-                            $parcelaProcessada['valor'] = (float) $parcela['valor'];
+                            // Se já está com ponto decimal (1500.00), apenas converte para float absoluto
+                            $parcelaProcessada['valor'] = abs((float) $parcela['valor']);
                         }
                     } elseif (is_numeric($parcela['valor'])) {
-                        $parcelaProcessada['valor'] = (float) $parcela['valor'];
+                        $parcelaProcessada['valor'] = abs((float) $parcela['valor']);
                     }
                 }
 
@@ -374,13 +374,13 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                         if (strpos($parcela['percentual'], ',') !== false) {
                             $percentual = str_replace('.', '', $parcela['percentual']); // Remove pontos de milhar
                             $percentual = str_replace(',', '.', $percentual); // Substitui vírgula por ponto
-                            $parcelaProcessada['percentual'] = (float) $percentual;
+                            $parcelaProcessada['percentual'] = abs((float) $percentual);
                         } else {
-                            // Se já está com ponto decimal (25.00), apenas converte para float
-                            $parcelaProcessada['percentual'] = (float) $parcela['percentual'];
+                            // Se já está com ponto decimal (25.00), apenas converte para float absoluto
+                            $parcelaProcessada['percentual'] = abs((float) $parcela['percentual']);
                         }
                     } elseif (is_numeric($parcela['percentual'])) {
-                        $parcelaProcessada['percentual'] = (float) $parcela['percentual'];
+                        $parcelaProcessada['percentual'] = abs((float) $parcela['percentual']);
                     }
                 }
 
