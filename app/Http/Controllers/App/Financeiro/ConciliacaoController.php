@@ -423,18 +423,14 @@ class ConciliacaoController extends Controller
                 $status = 'pendente'; // Algo inesperado, pendente de verificação
             }
 
-            // **Atualiza bank_statements**
-            $bankStatement->update([
-                'reconciled' => true,
-                'status_conciliacao' => $status,
-            ]);
+            // **Chama o método conciliarCom() que atualiza saldo e cria pivot**
+            $bankStatement->conciliarCom($transacao, $valorConciliado);
 
-            // **Armazena na tabela pivot**
-            $bankStatement->transacoes()->attach($transacao->id, [
+            Log::info('Conciliação realizada com sucesso no método conciliar', [
+                'bank_statement_id' => $bankStatement->id,
+                'transacao_id' => $transacao->id,
                 'valor_conciliado' => $valorConciliado,
-                'status_conciliacao' => $status,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'status_conciliacao' => $bankStatement->status_conciliacao
             ]);
 
             // Retornar JSON se for requisição AJAX, senão redirecionar
@@ -445,7 +441,7 @@ class ConciliacaoController extends Controller
                     'data' => [
                         'transacao_id' => $transacao->id,
                         'bank_statement_id' => $bankStatement->id,
-                        'status' => $status,
+                        'status' => $bankStatement->status_conciliacao,
                     ]
                 ]);
             }
