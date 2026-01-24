@@ -209,7 +209,25 @@
 
             // Validar o formulário antes de submeter
             if (!formComponent.checkValidity()) {
-                formComponent.reportValidity();
+                // Listar campos inválidos para ajudar o usuário
+                const invalidFields = Array.from(formComponent.querySelectorAll(':invalid'));
+                const fieldNames = invalidFields.map(field => {
+                    const label = formComponent.querySelector(`label[for="${field.id}"]`);
+                    return label ? label.textContent.trim() : field.name || 'Campo desconhecido';
+                });
+
+                // Highlight dos campos inválidos
+                invalidFields.forEach(field => {
+                    field.classList.add('is-invalid');
+                    field.addEventListener('change', function() {
+                        if (this.checkValidity()) {
+                            this.classList.remove('is-invalid');
+                        }
+                    });
+                });
+
+                showNotification('error', 'Por favor, preencha os campos obrigatórios:\n\n' + 
+                    fieldNames.map(name => '• ' + name).join('\n'));
                 return;
             }
 
@@ -231,28 +249,46 @@
                 }
             })
             .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
+                // Capturar resposta mesmo com erro HTTP
+                return response.json().then(data => ({
+                    ok: response.ok,
+                    status: response.status,
+                    data: data
+                }));
             })
-            .then(data => {
-                if (data.success) {
+            .then(({ ok, status, data }) => {
+                if (ok) {
                     // Sucesso! Mostrar feedback
                     showNotification('success', data.message || 'Lançamento conciliado com sucesso!');
                     
                     // Remover a linha da tabela ou recarregar
                     setTimeout(() => {
-                        location.reload(); // ou remover a linha via DOM
+                        location.reload();
                     }, 1500);
+                } else if (status === 422) {
+                    // Erro de validação - exibir erros específicos
+                    const errors = data.errors || {};
+                    
+                    // Highlight dos campos com erro
+                    Object.keys(errors).forEach(fieldName => {
+                        const field = formComponent.querySelector(`[name="${fieldName}"]`);
+                        if (field) {
+                            field.classList.add('is-invalid');
+                            field.addEventListener('change', function() {
+                                this.classList.remove('is-invalid');
+                            });
+                        }
+                    });
+
+                    showNotification('error', 'Erro ao validar formulário:', errors);
                 } else {
-                    // Erro do servidor
+                    // Outro erro
                     showNotification('error', data.message || 'Erro ao conciliar');
                 }
             })
             .catch(error => {
                 console.error('Erro na requisição:', error);
-                showNotification('error', error.message || 'Erro ao processar requisição');
+                showNotification('error', 'Erro ao processar requisição: ' + (error.message || 'Desconhecido'));
             })
             .finally(() => {
                 // Reabilitar botão
@@ -266,20 +302,40 @@
     // 8. NOTIFICAÇÕES AO USUÁRIO
     // ============================================================
 
-    function showNotification(type, message) {
+    function showNotification(type, message, errors = null) {
+        let finalMessage = message;
+
+        // Se houver erros de validação, construir mensagem mais detalhada
+        if (errors && typeof errors === 'object') {
+            const errorMessages = [];
+            
+            for (const [field, fieldErrors] of Object.entries(errors)) {
+                if (Array.isArray(fieldErrors)) {
+                    fieldErrors.forEach(error => {
+                        errorMessages.push(`• ${error}`);
+                    });
+                }
+            }
+
+            if (errorMessages.length > 0) {
+                finalMessage = message + ':\n\n' + errorMessages.join('\n');
+            }
+        }
+
         // Usar bibliotecas existentes (Toastr, Flasher, etc)
         if (typeof toastr !== 'undefined') {
-            toastr[type](message);
+            toastr[type](finalMessage);
         } else if (typeof Swal !== 'undefined') {
             Swal.fire({
                 icon: type,
-                title: type === 'success' ? 'Sucesso' : 'Erro',
-                text: message,
-                timer: 3000
+                title: type === 'success' ? 'Sucesso' : 'Erro na Validação',
+                html: finalMessage.replace(/\n/g, '<br>'),
+                timer: type === 'error' ? 5000 : 3000,
+                allowOutsideClick: true
             });
         } else {
             // Fallback simples
-            alert(message);
+            alert(finalMessage);
         }
     }
 

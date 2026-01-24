@@ -308,5 +308,10 @@
     <script src="{{ url('/app/financeiro/entidade/conciliacoes-form-handler.js') }}"></script>
 @endpush
 
+@push('styles')
+    {{-- Estilos para validação de formulário --}}
+    <link rel="stylesheet" href="{{ url('/app/financeiro/entidade/form-validation.css') }}">
+@endpush
+
 {{-- Include Modal de Filtro de Conciliações --}}
 @include('app.components.modals.financeiro.conciliacao.modal_conciliacao_bancaria')
