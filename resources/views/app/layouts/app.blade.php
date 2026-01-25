@@ -25,21 +25,18 @@
     <!--end::Fonts-->
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <!--begin::Vendor Stylesheets(used for this page only)-->
 
-    <!--end::Vendor Stylesheets-->
     <!--end::Global Stylesheets Bundle-->
-    
-    <!--begin::Vite CSS Bundle (Metronic + Custom)-->
-    @vite([
-        'resources/tenancy/assets/plugins/global/plugins.bundle.css',
-        'resources/tenancy/assets/css/style.bundle.css',
-        //'resources/css/app.css',
-    ])
+    <link href="{{ url('tenancy/assets/plugins/global/plugins.bundle.css') }}" rel="stylesheet">
+    <link href="{{ url('tenancy/assets/css/style.bundle.css') }}" rel="stylesheet">
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <!--end::Vite CSS Bundle-->
+
     <!--begin::Sidebar State Restore (antes da renderização)-->
     <script>
-        (function() {
+        (function () {
             // Função para ler cookie antes do DOM estar pronto
             function getCookie(name) {
                 var value = "; " + document.cookie;
@@ -56,7 +53,7 @@
                 if (sidebarState === 'on' && document.body) {
                     document.body.setAttribute('data-kt-app-sidebar-minimize', 'on');
                     // Aguardar um pouco para o toggle estar disponível
-                    setTimeout(function() {
+                    setTimeout(function () {
                         var toggle = document.getElementById('kt_app_sidebar_toggle');
                         if (toggle) {
                             toggle.classList.add('active');
@@ -70,7 +67,7 @@
                 applySidebarState();
             } else {
                 // Aguardar o body estar disponível
-                var checkBody = setInterval(function() {
+                var checkBody = setInterval(function () {
                     if (document.body) {
                         applySidebarState();
                         clearInterval(checkBody);
@@ -92,9 +89,13 @@
 @php
     $sidebarState = request()->cookie('sidebar_minimize_state');
 @endphp
-<body id="kt_app_body" data-kt-app-layout="dark-sidebar" data-kt-app-header-fixed="true" data-kt-app-sidebar-enabled="true" data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-hoverable="true" data-kt-app-sidebar-push-header="true" data-kt-app-sidebar-push-toolbar="true" data-kt-app-sidebar-push-footer="true" data-kt-app-toolbar-enabled="true" class="app-default"{{ $sidebarState === 'on' ? ' data-kt-app-sidebar-minimize="on"' : '' }}>
+
+<body id="kt_app_body" data-kt-app-layout="dark-sidebar" data-kt-app-header-fixed="true"
+    data-kt-app-sidebar-enabled="true" data-kt-app-sidebar-fixed="true" data-kt-app-sidebar-hoverable="true"
+    data-kt-app-sidebar-push-header="true" data-kt-app-sidebar-push-toolbar="true"
+    data-kt-app-sidebar-push-footer="true" data-kt-app-toolbar-enabled="true" class="app-default" {{ $sidebarState === 'on' ? ' data-kt-app-sidebar-minimize="on"' : '' }}>
     <!--begin::Theme mode setup on page load-->
-	<script>var defaultThemeMode = "light"; var themeMode; if ( document.documentElement ) { if ( document.documentElement.hasAttribute("data-bs-theme-mode")) { themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); } else { if ( localStorage.getItem("data-bs-theme") !== null ) { themeMode = localStorage.getItem("data-bs-theme"); } else { themeMode = defaultThemeMode; } } if (themeMode === "system") { themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } document.documentElement.setAttribute("data-bs-theme", themeMode); }</script>
+    <script>var defaultThemeMode = "light"; var themeMode; if (document.documentElement) { if (document.documentElement.hasAttribute("data-bs-theme-mode")) { themeMode = document.documentElement.getAttribute("data-bs-theme-mode"); } else { if (localStorage.getItem("data-bs-theme") !== null) { themeMode = localStorage.getItem("data-bs-theme"); } else { themeMode = defaultThemeMode; } } if (themeMode === "system") { themeMode = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"; } document.documentElement.setAttribute("data-bs-theme", themeMode); }</script>
     <!--end::Theme mode setup on page load-->
 
     <style>
@@ -159,7 +160,7 @@
 
     {{-- Exibir notificações da sessão Laravel --}}
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', function () {
             // Exibir notificações da sessão
             @if(session()->has('success'))
                 notify.success("{{ session('success') }}");

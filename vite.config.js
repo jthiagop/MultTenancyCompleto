@@ -8,11 +8,9 @@ export default defineConfig({
         laravel({
             input: [
                 'resources/js/app.js',
-                // ✅ Metronic CSS Bundle (from tenancy assets)
+                'resources/css/app.css',
                 'resources/tenancy/assets/plugins/global/plugins.bundle.css',
                 'resources/tenancy/assets/css/style.bundle.css',
-                // ✅ Metronic JS Bundle (from tenancy assets)
-                'resources/tenancy/assets/plugins/global/plugins.bundle.js',
             ],
             refresh: true,
             // Build directory padrão (assets será acessado via symlink tenancy/assets/build -> build)
