@@ -29,26 +29,88 @@
         <input type="hidden" name="valor_conciliado" value="{{ $transacaoSugerida->valor }}">
     @endif
 
+    @php
+        $sugestao = $conciliacao->sugestao ?? null;
+    @endphp
+
     <!-- Descrição -->
     <x-tenant-input name="descricao2" id="descricao_{{ $conciliacao->id }}" label="Descrição"
-        placeholder="Ex: PAYMENT - Fulano" value="{{ old('descricao', $conciliacao->memo) }}" required
+        placeholder="Ex: PAYMENT - Fulano" 
+        value="{{ old('descricao', $sugestao['descricao_sugerida'] ?? $conciliacao->memo) }}" required
         class="col-md-6 mb-3" />
 
     <!-- Centro de Custo -->
     <x-tenant-select name="cost_center_id" id="cost_center_id_{{ $conciliacao->id }}" label="Centro de Custo" required
         :hidePlaceholder="true" class="col-md-6 mb-3">
         @foreach ($centrosAtivos as $centro)
-            <option value="{{ $centro->id }}" {{ old('cost_center_id') == $centro->id ? 'selected' : '' }}>
+            <option value="{{ $centro->id }}" 
+                {{ (old('cost_center_id') == $centro->id || ($sugestao && isset($sugestao['cost_center_id']) && $sugestao['cost_center_id'] == $centro->id)) ? 'selected' : '' }}>
                 {{ $centro->name }}
             </option>
         @endforeach
     </x-tenant-select>
 
     <!-- Lançamento Padrão -->
+    @php
+        $sugestao = $conciliacao->sugestao ?? null;
+        $badgeClass = '';
+        $badgeIcon = '';
+        $badgeText = '';
+        $tooltipText = '';
+        $temSugestao = $sugestao && $sugestao['confianca'] > 0;
+        
+        // DEBUG: Log para verificar sugestão
+        if ($sugestao) {
+            \Log::info('🔍 [BLADE] Sugestão encontrada', [
+                'conciliacao_id' => $conciliacao->id,
+                'confianca' => $sugestao['confianca'] ?? 'NULL',
+                'origem' => $sugestao['origem_sugestao'] ?? 'NULL',
+                'lancamento_padrao_id' => $sugestao['lancamento_padrao_id'] ?? 'NULL',
+                'tipo_documento' => $sugestao['tipo_documento'] ?? 'NULL',
+                'temSugestao' => $temSugestao ? 'TRUE' : 'FALSE',
+            ]);
+        } else {
+            \Log::warning('⚠️ [BLADE] Nenhuma sugestão encontrada', [
+                'conciliacao_id' => $conciliacao->id,
+            ]);
+        }
+        
+        if ($temSugestao) {
+            if ($sugestao['origem_sugestao'] === 'regra') {
+                $badgeClass = 'badge-success';
+                $badgeIcon = '🤖';
+                $badgeText = 'Regra Aprendida';
+                $tooltipText = '🤖 Sugestão automática baseada em regra aprendida (' . number_format($sugestao['confianca'], 0) . '% de confiança)';
+            } elseif ($sugestao['origem_sugestao'] === 'historico') {
+                $badgeClass = 'badge-warning';
+                $badgeIcon = '🕒';
+                $badgeText = 'Baseado no Histórico';
+                $tooltipText = '🕒 Sugestão baseada em transações similares anteriores (' . number_format($sugestao['confianca'], 0) . '% de confiança)';
+            } else {
+                $badgeClass = 'badge-secondary';
+                $badgeIcon = '💡';
+                $badgeText = 'Sugestão por Padrão';
+                $tooltipText = '💡 Sugestão baseada em padrões detectados na descrição (' . number_format($sugestao['confianca'], 0) . '% de confiança)';
+            }
+        }
+    @endphp
+    
     <x-tenant-select name="lancamento_padrao_id" id="lancamento_padrao_id_{{ $conciliacao->id }}"
-        label="Lançamento Padrão" placeholder="Selecione o Lançamento Padrão" required class="col-md-7 mb-3">
+        label="Lançamento Padrão" placeholder="Selecione o Lançamento Padrão" required class="col-md-7 mb-3"
+        :showSuggestionStar="$temSugestao"
+        :suggestionTooltip="$tooltipText"
+        :suggestedValue="$temSugestao && isset($sugestao['lancamento_padrao_id']) ? $sugestao['lancamento_padrao_id'] : null">
+        @if ($temSugestao)
+            <div class="mb-2">
+                <span class="badge {{ $badgeClass }}" data-bs-toggle="tooltip" 
+                      title="{{ $badgeText }} ({{ number_format($sugestao['confianca'], 0) }}% de confiança)">
+                    {{ $badgeIcon }} Sugestão: {{ $sugestao['confianca'] }}%
+                </span>
+            </div>
+        @endif
         @foreach ($lps as $lp)
-            <option value="{{ $lp->id }}" data-type="{{ $lp->type }}">
+            <option value="{{ $lp->id }}" data-type="{{ $lp->type }}"
+                {{ $sugestao && isset($sugestao['lancamento_padrao_id']) && $sugestao['lancamento_padrao_id'] == $lp->id ? 'selected' : '' }}>
                 {{ $lp->description }}
             </option>
         @endforeach
@@ -56,11 +118,14 @@
 
     <!-- Tipo de Documento / Forma de Pagamento -->
     <x-tenant-select name="tipo_documento" id="tipo_documento_{{ $conciliacao->id }}" label="Forma de pagamento"
-        placeholder="Selecione uma forma de pagamento" required class="col-md-5 mb-3">
+        placeholder="Selecione uma forma de pagamento" required class="col-md-5 mb-3"
+        :showSuggestionStar="$temSugestao && isset($sugestao['tipo_documento'])"
+        :suggestionTooltip="$tooltipText"
+        :suggestedValue="$temSugestao && isset($sugestao['tipo_documento']) ? $sugestao['tipo_documento'] : null">
         @if (isset($formasPagamento))
             @foreach ($formasPagamento as $formaPagamento)
                 <option value="{{ $formaPagamento->codigo }}"
-                    {{ old('tipo_documento') == $formaPagamento->codigo ? 'selected' : '' }}>
+                    {{ (old('tipo_documento') == $formaPagamento->codigo || ($sugestao && isset($sugestao['tipo_documento']) && $sugestao['tipo_documento'] == $formaPagamento->codigo)) ? 'selected' : '' }}>
                     {{ $formaPagamento->id }} - {{ $formaPagamento->nome }}
                 </option>
             @endforeach
@@ -78,7 +143,6 @@
                 <span class="form-check-label fw-semibold">Existe comprovação fiscal para este lançamento?</span>
             </label>
         </div>
-
         <!-- Container de Anexos (inicialmente oculto) -->
         <div class="col-md-12 anexo-container d-none mt-4" data-conciliacao-id="{{ $conciliacao->id }}">
             <x-tenant-file-one 
