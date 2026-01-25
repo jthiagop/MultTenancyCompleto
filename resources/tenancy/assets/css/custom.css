@@ -1,0 +1,150 @@
+/* Custom Styles */
+
+/* ============================================================
+   Typography scale + defaults
+   ============================================================ */
+:root{
+  /* Fonte (use Inter/Roboto/System) */
+  --app-font-sans: Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
+
+  /* Tipografia base */
+  --app-font-size: 0.875rem;   /* 14px */
+  --app-line-height: 1.45;
+
+  /* Hierarquia */
+  --app-text-xs: 0.75rem;      /* 12px */
+  --app-text-sm: 0.8125rem;    /* 13px */
+  --app-text-base: 0.875rem;   /* 14px */
+  --app-text-lg: 1rem;         /* 16px */
+  --app-text-xl: 1.125rem;     /* 18px */
+
+  /* Bordas (funciona no claro e no dark) */
+  --app-border: rgba(127,127,127,.22);
+}
+
+html, body{
+  font-family: var(--app-font-sans);
+  font-size: var(--app-font-size);
+  line-height: var(--app-line-height);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ajusta o “peso” padrão do sistema */
+.text-muted{ opacity: .85; }
+
+/* Labels e textos pequenos */
+.app-text-xs{ font-size: var(--app-text-xs); }
+.app-text-sm{ font-size: var(--app-text-sm); }
+.app-text-base{ font-size: var(--app-text-base); }
+.app-text-lg{ font-size: var(--app-text-lg); }
+.app-text-xl{ font-size: var(--app-text-xl); }
+
+/* Reduz peso geral do fw-bold para 600 */
+.fw-bold{ font-weight: 600 !important; }
+.fw-bolder{ font-weight: 700 !important; }
+.fw-semibold{ font-weight: 600 !important; }
+.fw-medium{ font-weight: 500 !important; }
+
+/* Borda consistente em claro e escuro */
+.app-border{
+  border: 1px solid var(--app-border) !important;
+}
+
+/* Para cards/tabs/inputs ficarem mais “finos” no dark */
+[data-bs-theme="dark"] .app-border{
+  border-color: rgba(255,255,255,.12) !important;
+}
+[data-bs-theme="light"] .app-border{
+  border-color: rgba(0,0,0,.10) !important;
+}
+.app-header-primary {
+    background-color: #202a45 !important;
+}
+.app-header-secundary {
+    background-color: #293558 !important;
+}
+
+/* Pulse Animation */
+@keyframes pulse {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: scale(1.2);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Ponto pulsante reutilizável */
+.pulse {
+    /* Custom props (fáceis de sobrescrever por classe/modificador) */
+    --pulse-size: .625rem;                 /* 10px */
+    --pulse-color: var(--bs-danger);
+    --pulse-speed: 1.25s;
+    --pulse-glow: color-mix(in srgb, var(--pulse-color) 40%, transparent);
+
+    display: inline-block;
+    width: var(--pulse-size);
+    aspect-ratio: 1;                        /* mantém quadrado */
+    border-radius: 50%;
+    background: var(--pulse-color);
+    position: relative;
+    margin: .3125rem;                       /* 5px */
+    box-shadow: 0 0 0 0 var(--pulse-glow);
+    animation: pulse-breath var(--pulse-speed) ease-in-out infinite;
+    will-change: transform, box-shadow;
+  }
+
+  /* Anel externo “ripple” */
+  .pulse::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    box-shadow: 0 0 0 0 var(--pulse-glow);
+    animation: pulse-wave var(--pulse-speed) ease-out infinite;
+  }
+
+  /* Animações */
+  @keyframes pulse-breath {
+    0%, 100% { transform: scale(1);   box-shadow: 0 0 0 0 var(--pulse-glow); }
+    50%      { transform: scale(1.15); box-shadow: 0 0 0 .25rem var(--pulse-glow); }
+  }
+  @keyframes pulse-wave {
+    0%   { transform: scale(1);   opacity: .7; }
+    80%  { transform: scale(2.5); opacity: 0; }
+    100% { opacity: 0; }
+  }
+
+  /* Variantes de cor (Bootstrap tokens) */
+  .pulse--success { --pulse-color: var(--bs-success); }
+  .pulse--warning { --pulse-color: var(--bs-warning); }
+  .pulse--info    { --pulse-color: var(--bs-info); }
+
+  /* Variantes de tamanho */
+  .pulse--sm { --pulse-size: .5rem; }
+  .pulse--md { --pulse-size: .75rem; }
+  .pulse--lg { --pulse-size: 1rem; }
+
+  /* Acessibilidade: respeita usuários que preferem menos movimento */
+  @media (prefers-reduced-motion: reduce) {
+    .pulse, .pulse::after { animation: none; }
+  }
+
+/* btn-light-success com borda success */
+.btn.btn-light-success {
+  border: 0.5px solid var(--bs-success) !important;
+}
+
+.btn.btn-light-success:hover,
+.btn.btn-light-success:focus,
+.btn.btn-light-success:active,
+.btn.btn-light-success.active {
+  border-color: var(--bs-success) !important;
+}
