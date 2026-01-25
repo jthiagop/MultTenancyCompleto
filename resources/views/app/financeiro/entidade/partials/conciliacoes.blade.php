@@ -19,7 +19,7 @@ Benefícios:
 // ✅ Usa contadores server-side calculados no Controller
 $tabs = [
     ['key' => 'all', 'label' => 'Todos', 'count' => $counts['all'] ?? 0],
-    ['key' => 'received', 'label' => 'Recebimentos', 'count' => $counts['received'] ?? 0],
+    ['key' => 'received', 'label' => 'Recebimentos', 'count' => $counts['received'] ?? 0], 
     ['key' => 'paid', 'label' => 'Pagamentos', 'count' => $counts['paid'] ?? 0],
 ];
 @endphp <div class="card mt-5">
@@ -154,6 +154,29 @@ $tabs = [
                                 console.log('➕ Adicionando', newItems.length, 'novos itens');
                                 newItems.forEach(item => cardBody.appendChild(item));
 
+                                // Reinicializa Select2 nos novos elementos
+                                if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
+                                    newItems.forEach(item => {
+                                        const selects = item.querySelectorAll('select[data-control="select2"]');
+                                        selects.forEach(select => {
+                                            if (!$(select).data('select2')) {
+                                                $(select).select2({
+                                                    placeholder: $(select).attr('placeholder') || 'Selecione...',
+                                                    allowClear: true,
+                                                    width: '100%'
+                                                });
+                                            }
+                                        });
+                                    });
+                                    console.log('✅ Select2 reinicializado nos novos itens');
+                                }
+
+                                // Reinicializa o suggestionStarManager para os novos elementos
+                                if (typeof window.suggestionStarManager !== 'undefined') {
+                                    window.suggestionStarManager.reinitialize();
+                                    console.log('✅ Suggestion stars reinicializadas nos novos itens');
+                                }
+
                                 // Adicionar novo botão se houver
                                 const newLoadMore = tempDiv.querySelector('#load-more-container');
                                 if (newLoadMore) {
@@ -230,6 +253,12 @@ $tabs = [
                                 window.initializeSelect2(targetPane);
                             }
 
+                            // ✅ Reinicializar gerenciador de estrelas de sugestão
+                            if (typeof window.suggestionStarManager !== 'undefined') {
+                                console.log('🌟 Reinicializando estrelas de sugestão após AJAX...');
+                                window.suggestionStarManager.reinitialize();
+                            }
+
                             initLoadMoreButton(tabKey, targetPane);
                         } else {
                             targetPane.innerHTML = `<div class="alert alert-danger m-5">${data.message}</div>`;
@@ -256,6 +285,125 @@ $tabs = [
                     loadTab(tabKey);
                 });
             });
+
+            // 3. Handler para conciliação via AJAX (sem reload de página)
+            document.addEventListener('submit', function(e) {
+                const form = e.target;
+                
+                console.log('🔍 [Debug] Form submitted:', form.className);
+                
+                // Verifica se é um form de conciliação (novo lançamento OU editar sugestão)
+                if (!form.classList.contains('conciliacao-form') && !form.classList.contains('edit-suggestion-form')) {
+                    console.log('⚠️ [Debug] Form ignorado - não é form de conciliação');
+                    return;
+                }
+
+                e.preventDefault();
+                console.log('📝 [Conciliação AJAX] Form interceptado:', form.className);
+
+                const formData = new FormData(form);
+                const conciliacaoId = form.getAttribute('data-conciliacao-id');
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalBtnText = submitBtn ? submitBtn.innerHTML : '';
+
+                // Loading state
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Conciliando...';
+                }
+
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log('✅ [Conciliação AJAX] Resposta:', data);
+
+                    if (data.success) {
+                        // 1. Remove o item visualmente com animação
+                        // Para novo lançamento: remove o card mais externo
+                        // Para editar sugestão: remove a row inteira
+                        let elementToRemove;
+                        
+                        if (form.classList.contains('conciliacao-form')) {
+                            // Novo lançamento: sobe até encontrar .row com data-conciliacao-id
+                            elementToRemove = form.closest('.row[data-conciliacao-id]');
+                            console.log('🗑️ [Debug] Removendo novo lançamento');
+                        } else if (form.classList.contains('edit-suggestion-form')) {
+                            // Editar sugestão: remove a row inteira da conciliação
+                            elementToRemove = form.closest('.row[data-conciliacao-id]');
+                            console.log('🗑️ [Debug] Removendo sugestão editada');
+                        }
+                        
+                        if (elementToRemove) {
+                            elementToRemove.style.transition = 'opacity 0.3s, transform 0.3s';
+                            elementToRemove.style.opacity = '0';
+                            elementToRemove.style.transform = 'scale(0.95)';
+                            
+                            setTimeout(() => {
+                                elementToRemove.remove();
+                                console.log('✅ [Conciliação AJAX] Item removido do DOM');
+
+                                // Reinicializa estrelas após remoção
+                                if (typeof window.suggestionStarManager !== 'undefined') {
+                                    window.suggestionStarManager.reinitialize();
+                                }
+                            }, 300);
+                        }
+
+                        // 2. Atualiza contadores usando funções globais de tabs.blade.php
+                        if (typeof window.carregarTotalPendentes === 'function') {
+                            window.carregarTotalPendentes();
+                        }
+
+                        if (typeof window.carregarInformacoes === 'function') {
+                            window.carregarInformacoes();
+                        }
+
+                        // Atualiza badges das tabs internas (all, received, paid)
+                        if (data.data && data.data.counts) {
+                            ['all', 'received', 'paid'].forEach(tabKey => {
+                                const tabBadge = document.querySelector(`#conciliacao-tab-${tabKey} .badge`);
+                                if (tabBadge && data.data.counts[tabKey] !== undefined) {
+                                    const count = data.data.counts[tabKey];
+                                    tabBadge.textContent = count;
+                                    tabBadge.style.display = count > 0 ? 'inline-block' : 'none';
+                                }
+                            });
+                        }
+
+                        // 4. Toast de sucesso
+                        if (typeof showSuccessToast === 'function') {
+                            showSuccessToast(data.message || 'Lançamento conciliado com sucesso!');
+                        } else {
+                            alert(data.message || 'Lançamento conciliado com sucesso!');
+                        }
+                    } else {
+                        throw new Error(data.message || 'Erro ao conciliar');
+                    }
+                })
+                .catch(error => {
+                    console.error('❌ [Conciliação AJAX] Erro:', error);
+                    
+                    // Restaura botão
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = originalBtnText;
+                    }
+
+                    // Toast de erro
+                    if (typeof showErrorToast === 'function') {
+                        showErrorToast(error.message || 'Erro ao conciliar lançamento');
+                    } else {
+                        alert('Erro: ' + (error.message || 'Erro ao conciliar lançamento'));
+                    }
+                });
+            }, true); // useCapture para pegar o evento antes dos handlers específicos
         });
     </script>
 @endpush

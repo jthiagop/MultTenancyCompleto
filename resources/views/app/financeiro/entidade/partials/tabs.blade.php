@@ -7,7 +7,7 @@
             <div class="card-title flex-column flex-lg-row align-items-start align-items-lg-center gap-3 gap-lg-5">
                 <!--begin::Select Banco-->
                 <div class="d-flex align-items-center">
-                    <select id="banco-select" name="entidade_id" class="form-select form-select-solid"
+                    <select id="banco-select" name="entidade_id" class="form-select"
                         data-control="select2" data-placeholder="Selecione um banco" style="min-width: 220px;">
                         <option></option>
                         @isset($entidadesBancos)
@@ -165,8 +165,8 @@
             });
         }
 
-        // Função para carregar o total de conciliações pendentes (independente do filtro de data)
-        function carregarTotalPendentes() {
+        // Função global para carregar o total de conciliações pendentes (independente do filtro de data)
+        window.carregarTotalPendentes = function() {
             fetch(`{{ route('entidades.total-pendentes', ':id') }}`.replace(':id', entidadeId), {
                 method: 'GET',
                 headers: {
@@ -322,8 +322,8 @@
             return `${dia}/${mes}/${ano} às ${horas}h${minutos}`;
         }
 
-        // Função para formatar moeda
-        function formatarMoeda(valor) {
+        // Função global para formatar moeda
+        window.formatarMoeda = function(valor) {
             if (valor === null || valor === undefined) return 'R$ 0,00';
             return 'R$ ' + parseFloat(valor).toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
@@ -331,8 +331,8 @@
             });
         }
 
-        // Carrega o contador de conciliações pendentes e informações adicionais
-        function carregarInformacoes() {
+        // Função global para carregar o contador de conciliações pendentes e informações adicionais
+        window.carregarInformacoes = function() {
             const params = new URLSearchParams();
             if (window.periodoFiltro.dataInicio) {
                 params.append('data_inicio', window.periodoFiltro.dataInicio);

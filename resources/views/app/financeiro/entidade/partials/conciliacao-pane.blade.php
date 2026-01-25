@@ -215,7 +215,7 @@
 
                 @else
                     <!-- Sem Sugestão: Botão de Conciliar + Formulários -->
-                    <div class="col-lg-2 col-xxl-1 mb-5 mb-xl-10">
+                    <div class="col-lg-1 col-xxl-1 mb-5 mb-xl-10">
                         <div class="card card-flush h-xl-100">
                             <div class="card-body d-flex align-items-center justify-content-center h-100">
                                 <button class="btn btn-lg btn-primary px-5 py-2 d-flex align-items-center"
@@ -229,11 +229,11 @@
                     </div>
 
                     <!-- Formulários Tabulados -->
-                    <div class="col-lg-6 col-xxl-6 mb-5 mb-xl-10">
+                    <div class="col-lg-7 col-xxl-6 mb-5 mb-xl-10">
                         <div class="card  h-xl-100">
-                            <div class="border border-transparent">
+                            <div class="">
                                 <!-- Abas -->
-                                <ul class="nav nav-tabs border border-transparent" data-conciliacao-id="{{ $conciliacao->id }}"
+                                <ul class="nav nav-tabs " data-conciliacao-id="{{ $conciliacao->id }}"
                                     role="tablist">
                                     <li class="nav-item" role="presentation">
                                         <button class="nav-link active" data-bs-toggle="tab"
