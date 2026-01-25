@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('tenant_filials', function (Blueprint $table) {
-            $table->bigIncrements('id')->primary();
+        if (!Schema::hasTable('tenant_filials')) {
+            Schema::create('tenant_filials', function (Blueprint $table) {
+                $table->bigIncrements('id')->primary();
 
 
-            $table->string('name')->unique();
-            $table->uuid('uuid')->nullable();
-            $table->string('photo')->nullable();
-            $table->timestamps();
-            $table->json('data')->nullable();
-        });
+                $table->string('name')->unique();
+                $table->uuid('uuid')->nullable();
+                $table->string('photo')->nullable();
+                $table->timestamps();
+                $table->json('data')->nullable();
+            });
+        }
     }
 
     /**
