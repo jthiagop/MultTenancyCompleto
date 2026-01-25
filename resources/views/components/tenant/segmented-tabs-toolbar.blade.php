@@ -60,10 +60,21 @@
         background: var(--bs-border-color-translucent);
     }
 
-    /* hover sutil */
+    /* hover sutil + linha de cor */
     .segmented-tab-header .nav-link:hover {
         background: var(--bs-secondary-bg);
         opacity: .95;
+    }
+
+    .segmented-tab-header .nav-link:hover::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        height: 3px;
+        width: 100%;
+        background: var(--seg-accent, var(--bs-primary));
+        opacity: 0.5; /* Opacidade reduzida para indicar que é hover, não active */
     }
 
     /* ativo: destaque clean */
@@ -140,17 +151,19 @@
                     $key = $tab['key'];
                     $paneId = $tab['paneId'] ?? ($id . '-pane-' . $key);
 
-                    // contador colorido (como no print)
-                    // passe 'text-primary' | 'text-success' | 'text-danger'
-                    $countClass = $tab['countClass'] ?? 'text-primary';
+                    // Lógica Automática de Cores baseada na chave (se não for passado explicitamente)
+                    // Padrão: Azul (Primary) | received/entrada: Verde (Success) | paid/saida: Vermelho (Danger)
+                    $defaultColors = match($key) {
+                        'received', 'recebimentos', 'entrada', 'credit' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
+                        'paid', 'pagamentos', 'saida', 'debit' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
+                        default => ['class' => 'text-primary', 'accent' => null] // null usa o CSS padrão (primary)
+                    };
 
-                    // cor da barra superior do tab ativo (opcional)
-                    // ex: '#3b82f6'
-                    $accent = $tab['accent'] ?? null;
+                    $countClass = $tab['countClass'] ?? $defaultColors['class'];
+                    $accent = $tab['accent'] ?? $defaultColors['accent'];
 
                     $isActive = ($active === $key);
                 @endphp
-
                 <li class="nav-item" role="presentation">
                     <button
                         class="nav-link {{ $isActive ? 'active' : '' }}"
