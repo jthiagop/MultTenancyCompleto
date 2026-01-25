@@ -16,7 +16,7 @@ use App\Models\Financeiro\Recorrencia;
 use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\Financeiro\TransacaoFracionamento;
 use App\Models\FormasPagamento;
-use App\Models\Fornecedor;
+use App\Models\Parceiro;
 use App\Models\HorarioMissa;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
@@ -69,7 +69,7 @@ class BancoController extends Controller
 
         $lps = LancamentoPadrao::all();
         $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
-        $fornecedores = Fornecedor::forActiveCompany()->orderBy('nome')->get();
+        $parceiros = Parceiro::forActiveCompany()->orderBy('nome')->get();
 
 
         return view('app.financeiro.index', [
@@ -78,7 +78,7 @@ class BancoController extends Controller
             'lps' => $lps,
             'entidadesBanco' => $entidadesBanco,
             'formasPagamento' => $formasPagamento,
-            'fornecedores' => $fornecedores,
+            'parceiros' => $parceiros,
         ]);
     }
 
@@ -109,7 +109,7 @@ class BancoController extends Controller
 
         $lps = LancamentoPadrao::all();
         $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
-        $fornecedores = Fornecedor::forActiveCompany()->orderBy('nome')->get();
+        $parceiros = Parceiro::forActiveCompany()->orderBy('nome')->get();
 
         // Filtrar as entradas e saídas pelos bancos relacionados à empresa
         list($somaEntradas, $somaSaida) = Banco::getBanco();
@@ -267,7 +267,7 @@ class BancoController extends Controller
             'totalCaixa' => $totalCaixa,
             'lps' => $lps,
             'formasPagamento' => $formasPagamento,
-            'fornecedores' => $fornecedores,
+            'parceiros' => $parceiros,
             'entidadesBanco' => $entidadesBanco,
             'entidadesCaixa' => $entidadesCaixa,
             'todasEntidades' => $todasEntidades ?? collect(), // Entidades preparadas para side-card
@@ -767,11 +767,11 @@ class BancoController extends Controller
             }
 
             $response = [
-                'receitas_aberto' => number_format($stats['receitas_aberto'], 2, ',', '.'),
-                'receitas_realizadas' => number_format($stats['receitas_realizadas'], 2, ',', '.'),
-                'despesas_aberto' => number_format($stats['despesas_aberto'], 2, ',', '.'),
-                'despesas_realizadas' => number_format($stats['despesas_realizadas'], 2, ',', '.'),
-                'total' => number_format($stats['total'], 2, ',', '.')
+                'receitas_aberto' => number_format($stats['receitas_aberto'] / 100, 2, ',', '.'),
+                'receitas_realizadas' => number_format($stats['receitas_realizadas'] / 100, 2, ',', '.'),
+                'despesas_aberto' => number_format($stats['despesas_aberto'] / 100, 2, ',', '.'),
+                'despesas_realizadas' => number_format($stats['despesas_realizadas'] / 100, 2, ',', '.'),
+                'total' => number_format($stats['total'] / 100, 2, ',', '.')
             ];
         } else {
             // Total do período: todas as transações com data_vencimento OU data_competencia dentro do período
@@ -786,10 +786,10 @@ class BancoController extends Controller
                 ->sum('valor');
 
             $response = [
-                'vencidos' => number_format($vencidos, 2, ',', '.'),
-                'hoje' => number_format($hojeCount, 2, ',', '.'),
-                'a_vencer' => number_format($aVencer, 2, ',', '.'),
-                'total' => number_format($total, 2, ',', '.')
+                'vencidos' => number_format($vencidos / 100, 2, ',', '.'),
+                'hoje' => number_format($hojeCount / 100, 2, ',', '.'),
+                'a_vencer' => number_format($aVencer / 100, 2, ',', '.'),
+                'total' => number_format($total / 100, 2, ',', '.')
             ];
 
             // Debug log
@@ -808,9 +808,9 @@ class BancoController extends Controller
 
             // Para entrada usa 'recebidos', para saida usa 'pagos'
             if ($tipo === 'entrada') {
-                $response['recebidos'] = number_format($recebidos, 2, ',', '.');
+                $response['recebidos'] = number_format($recebidos / 100, 2, ',', '.');
             } else {
-                $response['pagos'] = number_format($recebidos, 2, ',', '.');
+                $response['pagos'] = number_format($recebidos / 100, 2, ',', '.');
             }
         }
 
@@ -1224,12 +1224,12 @@ class BancoController extends Controller
                 </div>';
 
                 // Valor
-                $valorFormatado = 'R$ ' . number_format($transacao->valor, 2, ',', '.');
+                $valorFormatado = 'R$ ' . number_format($transacao->valor / 100, 2, ',', '.');
 
                 // Saldo (calculado com base no saldo da entidade ou valor pago)
                 // Para extrato, podemos usar o valor_pago como saldo
                 $saldo = $transacao->valor_pago ?? $transacao->valor;
-                $saldoFormatado = 'R$ ' . number_format($saldo, 2, ',', '.');
+                $saldoFormatado = 'R$ ' . number_format($saldo / 100, 2, ',', '.');
 
                 return [
                     $checkboxHtml,
@@ -1314,8 +1314,8 @@ class BancoController extends Controller
                     $checkboxHtml,
                     $dataExibicao,
                     $descricaoHtml,
-                    'R$ ' . number_format($transacao->valor, 2, ',', '.'),
-                    'R$ ' . number_format($valorAPagar, 2, ',', '.'),
+                    'R$ ' . number_format($transacao->valor / 100, 2, ',', '.'),
+                    'R$ ' . number_format($valorAPagar / 100, 2, ',', '.'),
                     $situacaoBadge,
                     $transacao->origem ?? '-',
                     $actionsHtml
@@ -1338,7 +1338,7 @@ class BancoController extends Controller
                         : '<i class="bi bi-x-circle-fill text-danger" title="Sem Comprovação Fiscal"></i>',
                     $descricaoHtml,
                     '<div class="badge fw-bold ' . ($transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger') . '">' . $transacao->tipo . '</div>',
-                    'R$ ' . number_format($transacao->valor, 2, ',', '.'),
+                    'R$ ' . number_format($transacao->valor / 100, 2, ',', '.'),
                     $transacao->origem ?? '-',
                     $actionsHtml
                 ];
@@ -1386,7 +1386,7 @@ class BancoController extends Controller
             'id' => $transacao->id,
             'descricao' => $transacao->descricao,
             'tipo' => $transacao->tipo,
-            'valor' => $transacao->valor,
+            'valor' => $transacao->valor / 100, // Converter centavos para reais
             'data_competencia_formatada' => $transacao->data_competencia ? Carbon::parse($transacao->data_competencia)->format('d/m/Y') : null,
             'lancamento_padrao' => $transacao->lancamentoPadrao->description ?? null,
             'tipo_documento' => $transacao->tipo_documento,

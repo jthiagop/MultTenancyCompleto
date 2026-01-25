@@ -14,7 +14,7 @@ use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\ModulosAnexo;
 use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\FormasPagamento;
-use App\Models\Fornecedor;
+use App\Models\Parceiro;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use Carbon\Carbon;
@@ -128,7 +128,7 @@ class CaixaController extends Controller
         // Lançamentos Padrão da empresa ativa
         $lps = LancamentoPadrao::all();
         $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
-        $fornecedores = Fornecedor::forActiveCompany()->orderBy('nome')->get();
+        $parceiros = Parceiro::forActiveCompany()->orderBy('nome')->get();
 
         // Entidades do tipo 'Caixa' da empresa ativa
         $entidades = EntidadeFinanceira::where('company_id', $activeCompanyId)->where('tipo', 'caixa')->get();
@@ -184,7 +184,7 @@ class CaixaController extends Controller
             'total' => $total,
             'lps' => $lps,
             'formasPagamento' => $formasPagamento,
-            'fornecedores' => $fornecedores,
+            'parceiros' => $parceiros,
             'company' => $company,
             'entidades' => $entidades,
             'entidadesBanco' => $entidadesBanco,
@@ -1149,13 +1149,13 @@ class CaixaController extends Controller
     {
         $activeCompanyId = session('active_company_id');
 
-        $fornecedores = \App\Models\Fornecedor::orderBy('nome')->get(['id', 'nome']);
+        $parceiros = \App\Models\Parceiro::orderBy('nome')->get(['id', 'nome']);
         $contas = EntidadeFinanceira::where('company_id', $activeCompanyId)
             ->orderBy('nome')
             ->get(['id', 'nome']);
 
         return response()->json([
-            'fornecedores' => $fornecedores,
+            'parceiros' => $parceiros,
             'contas' => $contas
         ]);
     }
