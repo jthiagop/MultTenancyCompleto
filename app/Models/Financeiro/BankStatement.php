@@ -104,9 +104,9 @@ class BankStatement extends Model
      */
     public static function storeTransaction($account, $transaction, $entidadeId, $fileHash = null, $fileName = null)
     {
-        // ✅ Converte amount para centavos (integer)
-        $amountValue = (float) $transaction->amount;
-        $amountCents = (int) round($amountValue * 100);
+        // ✅ Converte amount para centavos (integer) - DECIMAL para precisão
+        $amountValue = $transaction->amount; // Mantém como DECIMAL (string)
+        $amountCents = (int) round(bcmul($amountValue, '100', 2)); // Usa bcmath para precisão
 
         // ✅ Usa firstOrCreate com chave composta para garantir unicidade
         // Mesmo arquivo (file_hash igual) pode ter múltiplas transações (fitid diferente)
@@ -185,9 +185,12 @@ class BankStatement extends Model
             ]);
 
             // ✅ ATUALIZAR SALDO DA ENTIDADE (IMPORTANTE!)
+            // CRÍTICO: $valorConciliado JÁ VEM EM CENTAVOS do controller
             \Log::info('🔄 Iniciando atualização de saldo', [
                 'entidade_id' => $this->entidade_financeira_id,
                 'valor_conciliado_centavos' => $valorConciliado,
+                'bank_statement_amount' => $this->amount,
+                'bank_statement_amount_cents' => $this->amount_cents,
                 'tipo_transacao' => $transacao->tipo ?? 'desconhecido'
             ]);
             
@@ -195,12 +198,19 @@ class BankStatement extends Model
             if ($entidade) {
                 $saldoAntes = $entidade->saldo_atual;
                 
-                // Calcula incremento com base no tipo de transação
-                $valorParaAdicionar = ($transacao->tipo === 'entrada') 
-                    ? ($valorConciliado / 100)  // Converte centavos para reais
-                    : -($valorConciliado / 100);
+                // IMPORTANTE: $valorConciliado já está em CENTAVOS (integer) do controller
+                // DECIMAL: Usar bcmath para precisão financeira (NUNCA usar operadores aritméticos!)
+                $valorEmReais = bcdiv((string) $valorConciliado, '100', 2); // Converte centavos → reais
                 
-                $entidade->saldo_atual += $valorParaAdicionar;
+                // Calcula incremento com base no tipo de transação usando bcmath
+                $valorParaAdicionar = ($transacao->tipo === 'entrada') 
+                    ? $valorEmReais                  // Positivo para entrada
+                    : bcmul($valorEmReais, '-1', 2); // Negativo para saída (bcmath)
+                
+                // Atualiza saldo usando bcmath (DECIMAL precisão)
+                // CRÍTICO: Converte saldo_atual para string antes de usar bcadd
+                $saldoAtualStr = (string) $entidade->saldo_atual;
+                $entidade->saldo_atual = bcadd($saldoAtualStr, $valorParaAdicionar, 2);
                 $entidade->save();
                 
                 \Log::info('✅ Saldo da entidade atualizado após conciliação', [
@@ -208,8 +218,10 @@ class BankStatement extends Model
                     'saldo_antes' => $saldoAntes,
                     'saldo_depois' => $entidade->saldo_atual,
                     'tipo_transacao' => $transacao->tipo,
+                    'valor_conciliado_centavos' => $valorConciliado,
+                    'valor_em_reais' => $valorEmReais,
                     'valor_adicionado' => $valorParaAdicionar,
-                    'valor_conciliado_centavos' => $valorConciliado
+                    'calculo' => "{$saldoAntes} + ({$valorParaAdicionar}) = {$entidade->saldo_atual}"
                 ]);
             } else {
                 \Log::error('❌ Entidade não encontrada ao atualizar saldo', [

@@ -545,7 +545,7 @@ class EntidadeFinanceiraController extends Controller
                     'data_ultima_atualizacao' => $dataUltimaAtualizacao,
                     'data_ultimo_lancamento_importado' => $dataUltimoLancamento,
                     'valor_pendente_conciliacao' => abs($valorPendenteConciliacao),
-                    'saldo_atual' => $entidade->saldo_atual ?? 0,
+                    'saldo_atual' => $entidade->saldo_atual ?? '0.00', // DECIMAL: retorna como string para preservar precisão
                 ]
             ]
         ]);

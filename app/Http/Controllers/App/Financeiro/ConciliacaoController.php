@@ -423,14 +423,47 @@ class ConciliacaoController extends Controller
                 return redirect()->back()->with('error', 'Erro ao buscar dados para conciliação.');
             }
 
-            // Define o valor conciliado (vem em decimal/reais do Request)
-            $valorDecimal = (float) ($request->valor ?? $transacao->valor);
-            // Converte para centavos (integer) para consistência
-            $valorConciliado = (int) round($valorDecimal * 100);
+            // Define o valor conciliado
+            // CRÍTICO: O StoreTransacaoFinanceiraRequest já converte valor para CENTAVOS em prepareForValidation()
+            // O $validatedData['valor'] JÁ ESTÁ EM CENTAVOS (integer)
+            // O $transacao->valor TAMBÉM está em CENTAVOS (cast integer no modelo)
+            // NÃO devemos converter novamente!
+            
+            if (isset($validatedData['valor'])) {
+                // ✅ VALOR JÁ ESTÁ EM CENTAVOS (vindo do request validado)
+                $valorConciliado = (int) $validatedData['valor'];
+                
+                // Para logs: converte centavos → reais apenas para exibição
+                $valorEmReais = bcdiv((string) $valorConciliado, '100', 2);
+                
+                Log::info('✅ Valor conciliado (já em centavos do request validado)', [
+                    'valor_validado_centavos' => $valorConciliado,
+                    'valor_em_reais' => $valorEmReais,
+                    'transacao_valor_centavos' => $transacao->valor, // Já está em centavos (cast integer)
+                    'transacao_valor_reais' => bcdiv((string) $transacao->valor, '100', 2)
+                ]);
+            } else {
+                // Fallback: usa valor da transação (que já está em centavos devido ao cast)
+                $valorConciliado = (int) $transacao->valor;
+                
+                Log::info('⚠️ Valor não encontrado no validatedData, usando valor da transação', [
+                    'transacao_valor_centavos' => $transacao->valor,
+                    'valor_conciliado_centavos' => $valorConciliado
+                ]);
+            }
+
+            Log::info('=== CÁLCULO DE VALOR CONCILIADO ===', [
+                'valor_request_raw' => $request->valor ?? 'null',
+                'valor_validated_centavos' => $validatedData['valor'] ?? 'null',
+                'transacao_valor_reais' => $transacao->valor,
+                'valor_conciliado_centavos' => $valorConciliado,
+                'bank_statement_amount' => $bankStatement->amount,
+                'bank_statement_amount_cents' => $bankStatement->amount_cents,
+            ]);
 
             // **Lógica para definir o status**
-            // Converte amount do BankStatement para centavos para comparação justa
-            $bankStatementCentavos = (int) round($bankStatement->amount * 100);
+            // Usa amount_cents diretamente (já está em centavos - fonte única de verdade)
+            $bankStatementCentavos = $bankStatement->amount_cents;
             
             if (bccomp($valorConciliado, $bankStatementCentavos, 0) === 0) {
                 $status = 'ok'; // Conciliação perfeita
@@ -596,16 +629,35 @@ class ConciliacaoController extends Controller
                     ]
                 ]);
 
-                // ✅ Define o valor conciliado (vem em decimal/reais)
-                $valorDecimal = (float) ($request->valor_conciliado ?? $transacao->valor);
-                // Converte para centavos (integer) para consistência
-                $valorConciliado = (int) round($valorDecimal * 100);
+                // ✅ Define o valor conciliado
+                // CRÍTICO: O valor SEMPRE deve vir em REAIS (decimal) do frontend
+                // Normaliza o valor removendo formatação e converte para centavos apenas uma vez
+                $valorRequest = $request->valor_conciliado ?? $transacao->valor;
+                
+                // Normaliza o valor: remove formatação (vírgulas, pontos) e converte para decimal
+                $valorStr = (string) $valorRequest;
+                
+                // Se tem vírgula, assume formato brasileiro (1.234,56)
+                if (strpos($valorStr, ',') !== false) {
+                    // Remove pontos (milhares) e substitui vírgula por ponto (decimal)
+                    $valorNormalizado = str_replace('.', '', $valorStr);
+                    $valorNormalizado = str_replace(',', '.', $valorNormalizado);
+                    $valorDecimal = (float) $valorNormalizado;
+                } else {
+                    // Formato americano ou sem formatação (1234.56 ou 1234)
+                    $valorDecimal = (float) $valorStr;
+                }
+                
+                // ✅ CONVERSÃO ÚNICA: Reais → Centavos (multiplica por 100 apenas uma vez)
+                $valorConciliado = (int) round(bcmul((string) $valorDecimal, '100', 2));
 
-                Log::info('Valor conciliado definido', [
-                    'valor_decimal' => $valorDecimal,
+                Log::info('=== CÁLCULO DE VALOR CONCILIADO (PIVOT) ===', [
+                    'valor_request_original' => $valorRequest,
+                    'valor_normalizado_reais' => $valorDecimal,
                     'valor_conciliado_centavos' => $valorConciliado,
                     'valor_original_transacao' => $transacao->valor,
-                    'valor_bank_statement' => $bankStatement->amount
+                    'valor_bank_statement' => $bankStatement->amount,
+                    'bank_statement_amount_cents' => $bankStatement->amount_cents
                 ]);
 
                 // Verificar se já existe conciliação

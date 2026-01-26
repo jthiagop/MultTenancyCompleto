@@ -266,12 +266,30 @@ class TransacaoFinanceiraService
         
         // Para ENTRADA: só processar pagamento se checkbox "recebido" estiver marcado
         if ($tipo === 'entrada') {
-            return $request->has('recebido') && $request->input('recebido') && $request->input('recebido') !== '0';
+            $hasRecebido = $request->has('recebido') && $request->input('recebido') && $request->input('recebido') !== '0';
+            
+            Log::info('[temPagamento] Verificando checkbox recebido', [
+                'tipo' => $tipo,
+                'has_recebido' => $request->has('recebido'),
+                'input_recebido' => $request->input('recebido'),
+                'resultado' => $hasRecebido
+            ]);
+            
+            return $hasRecebido;
         }
         
         // Para SAÍDA: só processar pagamento se checkbox "pago" estiver marcado
         if ($tipo === 'saida') {
-            return $request->has('pago') && $request->input('pago') && $request->input('pago') !== '0';
+            $hasPago = $request->has('pago') && $request->input('pago') && $request->input('pago') !== '0';
+            
+            Log::info('[temPagamento] Verificando checkbox pago', [
+                'tipo' => $tipo,
+                'has_pago' => $request->has('pago'),
+                'input_pago' => $request->input('pago'),
+                'resultado' => $hasPago
+            ]);
+            
+            return $hasPago;
         }
         
         return false;
@@ -318,8 +336,73 @@ class TransacaoFinanceiraService
             }
 
             $transacao->save();
+            
+            // ✅ ATUALIZA SALDO DA ENTIDADE quando recebido/pago está marcado
+            $this->atualizarSaldoEntidade($transacao, $data);
         }
         // Pagamento parcial será tratado por método específico do controller
+    }
+    
+    /**
+     * Atualiza o saldo da entidade financeira quando recebido/pago está marcado
+     * 
+     * @param TransacaoFinanceira $transacao
+     * @param array $data
+     */
+    protected function atualizarSaldoEntidade(TransacaoFinanceira $transacao, array $data): void
+    {
+        try {
+            $entidade = \App\Models\EntidadeFinanceira::find($transacao->entidade_id);
+            
+            if (!$entidade) {
+                Log::warning('Entidade financeira não encontrada ao atualizar saldo', [
+                    'entidade_id' => $transacao->entidade_id,
+                    'transacao_id' => $transacao->id
+                ]);
+                return;
+            }
+            
+            $saldoAntes = $entidade->saldo_atual;
+            
+            // ✅ IMPORTANTE: O valor da transação está em CENTAVOS (cast integer)
+            // Converte para reais antes de atualizar o saldo
+            $valorEmReais = bcdiv((string) $transacao->valor, '100', 2);
+            
+            // Calcula incremento com base no tipo de transação usando bcmath
+            if ($transacao->tipo === 'entrada') {
+                // Entrada (recebido) → soma ao saldo
+                $valorParaAdicionar = $valorEmReais;
+            } else {
+                // Saída (pago) → subtrai do saldo
+                $valorParaAdicionar = bcmul($valorEmReais, '-1', 2);
+            }
+            
+            // Atualiza saldo usando bcmath (DECIMAL precisão)
+            $saldoAtualStr = (string) $entidade->saldo_atual;
+            $entidade->saldo_atual = bcadd($saldoAtualStr, $valorParaAdicionar, 2);
+            $entidade->save();
+            
+            Log::info('✅ Saldo da entidade atualizado após marcar como recebido/pago', [
+                'entidade_id' => $entidade->id,
+                'transacao_id' => $transacao->id,
+                'tipo_transacao' => $transacao->tipo,
+                'situacao' => $transacao->situacao->value,
+                'valor_transacao_centavos' => $transacao->valor,
+                'valor_em_reais' => $valorEmReais,
+                'valor_adicionado' => $valorParaAdicionar,
+                'saldo_antes' => $saldoAntes,
+                'saldo_depois' => $entidade->saldo_atual,
+                'calculo' => "{$saldoAntes} + ({$valorParaAdicionar}) = {$entidade->saldo_atual}"
+            ]);
+        } catch (\Exception $e) {
+            Log::error('❌ Erro ao atualizar saldo da entidade', [
+                'entidade_id' => $transacao->entidade_id,
+                'transacao_id' => $transacao->id,
+                'erro' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            // Não relança a exceção para não interromper o fluxo
+        }
     }
 
     /**
