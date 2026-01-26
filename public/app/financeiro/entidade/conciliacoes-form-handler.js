@@ -195,7 +195,9 @@
         }
 
         if (formToSubmit && formToSubmit.checkValidity()) {
-            formToSubmit.submit();
+            // Dispara evento submit que será capturado pelo handler AJAX em conciliacoes.blade.php
+            const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+            formToSubmit.dispatchEvent(submitEvent);
         } else if (formToSubmit) {
             formToSubmit.reportValidity();
         }
@@ -285,13 +287,49 @@
             })
             .then(({ ok, status, data }) => {
                 if (ok) {
-                    // Sucesso! Mostrar feedback
-                    showNotification('success', data.message || 'Lançamento conciliado com sucesso!');
+                    console.log('✅ [Conciliação AJAX] Resposta sucesso:', data);
                     
-                    // Remover a linha da tabela ou recarregar
-                    setTimeout(() => {
-                        location.reload();
-                    }, 1500);
+                    // 1. Remove o item visualmente com animação
+                    const rowElement = button.closest('.row[data-conciliacao-id]');
+                    if (rowElement) {
+                        rowElement.style.transition = 'opacity 0.3s, transform 0.3s';
+                        rowElement.style.opacity = '0';
+                        rowElement.style.transform = 'scale(0.95)';
+                        
+                        setTimeout(() => {
+                            rowElement.remove();
+                            console.log('🗑️ [Conciliação AJAX] Item removido do DOM');
+
+                            // Reinicializa estrelas após remoção
+                            if (typeof window.suggestionStarManager !== 'undefined') {
+                                window.suggestionStarManager.reinitialize();
+                            }
+                        }, 300);
+                    }
+
+                    // 2. Atualiza contadores usando funções globais de tabs.blade.php
+                    if (typeof window.carregarTotalPendentes === 'function') {
+                        window.carregarTotalPendentes();
+                    }
+
+                    if (typeof window.carregarInformacoes === 'function') {
+                        window.carregarInformacoes();
+                    }
+
+                    // Atualiza badges das tabs internas (all, received, paid)
+                    if (data.data && data.data.counts) {
+                        ['all', 'received', 'paid'].forEach(tabKey => {
+                            const tabBadge = document.querySelector(`#conciliacao-tab-${tabKey} .badge`);
+                            if (tabBadge && data.data.counts[tabKey] !== undefined) {
+                                const count = data.data.counts[tabKey];
+                                tabBadge.textContent = count;
+                                tabBadge.style.display = count > 0 ? 'inline-block' : 'none';
+                            }
+                        });
+                    }
+
+                    // 3. Sucesso! Mostrar feedback
+                    showNotification('success', data.message || 'Lançamento conciliado com sucesso!');
                 } else if (status === 422) {
                     // Erro de validação - exibir erros específicos abaixo de cada campo
                     const errors = data.errors || {};
@@ -402,6 +440,107 @@
     }
 
     // ============================================================
+    // 8. GERENCIAMENTO DE UPLOAD DE ARQUIVO (COMPONENTE TENANT-FILE-ONE)
+    // ============================================================
+
+    function updateFileUI(fileInput, file) {
+        const component = fileInput.closest('.tenant-file-one-component');
+        if (!component) return;
+
+        const id = fileInput.id;
+        const dropZone = component.querySelector('.tenant-file-dropzone');
+        const fileInfo = document.getElementById('file-info-' + id);
+        const fileNameSpan = document.getElementById('filename-' + id);
+        const fileSizeSpan = document.getElementById('filesize-' + id);
+
+        if (!dropZone || !fileInfo) return;
+
+        if (file) {
+            dropZone.classList.add('d-none');
+            fileInfo.classList.remove('d-none');
+            if (fileNameSpan) fileNameSpan.textContent = file.name;
+            
+            if (fileSizeSpan) {
+                let size = file.size;
+                let unit = 'B';
+                if (size > 1024) { size /= 1024; unit = 'KB'; }
+                if (size > 1024) { size /= 1024; unit = 'MB'; }
+                fileSizeSpan.textContent = size.toFixed(0) + unit;
+            }
+        } else {
+            dropZone.classList.remove('d-none');
+            fileInfo.classList.add('d-none');
+            if (fileNameSpan) fileNameSpan.textContent = '';
+            if (fileSizeSpan) fileSizeSpan.textContent = '';
+            fileInput.value = ''; // Limpar input
+        }
+    }
+
+    function handleFileInputChange(event) {
+        if (event.target.classList.contains('tenant-file-input')) {
+            const input = event.target;
+            if (input.files && input.files[0]) {
+                updateFileUI(input, input.files[0]);
+            }
+        }
+    }
+
+    function handleFileDropZoneClick(event) {
+        const dropZone = event.target.closest('.tenant-file-dropzone');
+        if (dropZone) {
+            const inputId = dropZone.dataset.inputId;
+            const input = document.getElementById(inputId);
+            if (input) input.click();
+        }
+    }
+
+    function handleFileRemoveClick(event) {
+        const btn = event.target.closest('.tenant-file-remove');
+        if (btn) {
+            const inputId = btn.dataset.inputId;
+            const input = document.getElementById(inputId);
+            if (input) updateFileUI(input, null);
+        }
+    }
+    
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    function handleDragOver(e) {
+        const dropZone = e.target.closest('.tenant-file-dropzone');
+        if (dropZone) {
+            preventDefaults(e);
+            dropZone.classList.add('bg-gray-200');
+        }
+    }
+
+    function handleDragLeave(e) {
+        const dropZone = e.target.closest('.tenant-file-dropzone');
+        if (dropZone) {
+            preventDefaults(e);
+            dropZone.classList.remove('bg-gray-200');
+        }
+    }
+
+    function handleDrop(e) {
+        const dropZone = e.target.closest('.tenant-file-dropzone');
+        if (dropZone) {
+            preventDefaults(e);
+            dropZone.classList.remove('bg-gray-200');
+            
+            const inputId = dropZone.dataset.inputId;
+            const input = document.getElementById(inputId);
+            
+            if (input && e.dataTransfer.files && e.dataTransfer.files[0]) {
+                input.files = e.dataTransfer.files;
+                updateFileUI(input, e.dataTransfer.files[0]);
+            }
+        }
+    }
+
+    // ============================================================
     // 7. INICIALIZAÇÃO NO CARREGAMENTO
     // ============================================================
 
@@ -428,10 +567,22 @@
         document.addEventListener('click', handleConciliarButton);
         document.addEventListener('click', handleConciliarNovoLancamento);
         document.addEventListener('shown.bs.tab', handleTabSwitching);
+
+        // Listeners para Upload de Arquivo
+        document.addEventListener('change', handleFileInputChange);
+        document.addEventListener('click', handleFileDropZoneClick);
+        document.addEventListener('click', handleFileRemoveClick);
+        
+        // Drag and Drop (Delegate to document to catch dynamically added zones)
+        document.addEventListener('dragenter', handleDragOver);
+        document.addEventListener('dragover', handleDragOver);
+        document.addEventListener('dragleave', handleDragLeave);
+        document.addEventListener('drop', handleDrop);
     }
 
-    // Exponha scheduleSelect2Init globalmente para usar em AJAX
+    // Exponha métodos globalmente para usar em AJAX
     window.scheduleSelect2Init = scheduleSelect2Init;
+    window.initializeSelect2 = initializeSelect2;
 
     // Aguarda o DOM estar pronto
     if (document.readyState === 'loading') {

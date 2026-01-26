@@ -196,6 +196,20 @@
                                     <!--end::Menu sub-->
                                 </div>
                                 <!--end::Menu item-->
+                                <div class="separator separator-dotted "></div>
+                                <!--begin::Menu item-->
+                                <div class="menu-item px-3">
+                                    <form action="{{ route('financeiro.recalcular-saldos') }}" method="POST" style="display: inline;">
+                                        @csrf
+                                        <button type="submit" class="menu-link flex-stack px-3 w-100 border-0 bg-transparent text-start" 
+                                            onclick="return confirm('⚠️ Deseja sincronizar todos os saldos com as movimentações?');">
+                                            <span>Recalcular Saldos</span>
+                                            <i class="fas fa-sync-alt ms-2 fs-7" data-bs-toggle="tooltip"
+                                                title="Sincroniza cache de saldos com movimentações (Admin only)"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                                <!--end::Menu item-->
                             </div>
                             <!--end::Menu Dropdown-->
                         </div>

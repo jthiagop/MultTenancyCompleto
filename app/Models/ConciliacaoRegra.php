@@ -43,7 +43,7 @@ class ConciliacaoRegra extends Model
 
     public function parceiro()
     {
-        return $this->belongsTo(Fornecedor::class, 'parceiro_id');
+        return $this->belongsTo(Parceiro::class, 'parceiro_id');
     }
 
     public function costCenter()

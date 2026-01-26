@@ -1,27 +1,38 @@
 <!-- Navbar -->
-<div class="card card-flush mt-5">
+<div class="card card-flush p mb-0">
     <!--begin::Card header-->
     <div class="card-header align-items-stretch py-5">
         <div class="d-flex flex-column flex-lg-row flex-stack gap-5 w-100">
             <!--begin::Card title-->
             <div class="card-title flex-column flex-lg-row align-items-start align-items-lg-center gap-3 gap-lg-5">
                 <!--begin::Select Banco-->
-                <div class="d-flex align-items-center">
-                    <select id="banco-select" name="entidade_id" class="form-select"
-                        data-control="select2" data-placeholder="Selecione um banco" style="min-width: 220px;">
-                        <option></option>
-                        @isset($entidadesBancos)
+                <div class="d-flex align-items-center" style="min-width: 250px;">
+                    <x-tenant-select name="entidade_id" id="banco-select" 
+                        placeholder="Selecione um banco" :hideSearch="true"
+                        class="w-250px">
+                        @if (isset($entidadesBancos) && $entidadesBancos->isNotEmpty())
                             @foreach ($entidadesBancos as $entidadeBanco)
                                 <option value="{{ $entidadeBanco->id }}"
+                                    data-kt-select2-icon="{{ $entidadeBanco->bank->logo_path ?? asset('assets/media/svg/bancos/default.svg') }}"
+                                    data-nome="{{ $entidadeBanco->nome }}" data-origem="Banco"
                                     {{ isset($entidade) && $entidade->id == $entidadeBanco->id ? 'selected' : '' }}>
-                                    {{ $entidadeBanco->nome }}
+                                    {{ $entidadeBanco->agencia }} - {{ $entidadeBanco->conta }}
                                 </option>
                             @endforeach
-                        @endisset
-                    </select>
+                        @endif
+                        @if (isset($entidadesCaixa) && $entidadesCaixa->isNotEmpty())
+                            @foreach ($entidadesCaixa as $entidadeCaixa)
+                                <option value="{{ $entidadeCaixa->id }}"
+                                    data-kt-select2-icon="{{ url('/assets/media/svg/bancos/caixa.svg') }}"
+                                    data-nome="{{ $entidadeCaixa->nome }}" data-origem="Caixa"
+                                    {{ isset($entidade) && $entidade->id == $entidadeCaixa->id ? 'selected' : '' }}>
+                                    {{ $entidadeCaixa->nome }}
+                                </option>
+                            @endforeach
+                        @endif
+                    </x-tenant-select>
                 </div>
                 <!--end::Select Banco-->
-
             </div>
             <!--end::Card title-->
 
@@ -82,15 +93,23 @@
     <!--end::Separator-->
 
     <!--begin::Nav Tabs-->
-    <div class="card-header">
+    <div class="card-header  pt-0 pb-0">
         <div class="d-flex justify-content-between align-items-center w-100">
             <ul class="nav nav-stretch nav-line-tabs nav-line-tabs-1x border-transparent fs-5 fw-bold">
                 <!-- Aba de Conciliações Pendentes -->
                 <li class="nav-item">
                     <a class="nav-link text-active-primary me-4 {{ ($activeTab ?? 'conciliacoes') === 'conciliacoes' ? 'active' : '' }}"
                         href="{{ route('entidades.show', $entidade->id) }}">
+                        <i class="bi bi-link-45deg fs-3 me-2"></i>
                         Conciliações Pendentes
-                        <span id="badge-conciliacoes" class="badge badge-danger ms-2" style="display: none;">0</span>
+                    </a>
+                </li>
+                <!-- Aba de Histórico -->
+                <li class="nav-item">
+                    <a class="nav-link text-active-primary me-4 {{ ($activeTab ?? 'historico') === 'historico' ? 'active' : '' }}"
+                        href="{{ route('entidades.historico', $entidade->id) }}">
+                        <i class="bi bi-clock-history fs-4 me-2" aria-hidden="true"></i>
+                        Histórico
                     </a>
                 </li>
                 <!-- Aba de Movimentação -->
@@ -110,12 +129,13 @@
             </ul>
             <!--begin::Actions-->
             <div class="d-flex align-items-end gap-2 ms-auto">
-                        <!--begin::Horários de Missas Button-->
-                        <button class="btn btn-sm btn-primary" data-kt-action="open-conciliacao-missas" id="btnHorariosMissasHeader">
-                            <i class="bi bi-alarm me-2"></i>
-                            Horários de Missas
-                        </button>
-                        <!--end::Horários de Missas Button-->
+                <!--begin::Horários de Missas Button-->
+                <button class="btn btn-sm btn-primary" data-kt-action="open-conciliacao-missas"
+                    id="btnHorariosMissasHeader">
+                    <i class="bi bi-alarm me-2"></i>
+                    Horários de Missas
+                </button>
+                <!--end::Horários de Missas Button-->
             </div>
             <!--end::Actions-->
         </div>
@@ -138,7 +158,7 @@
     };
 
     // Função global para recarregar dados das abas
-    window.recarregarDadosAbas = function() {
+    window.recarregarDadosAbas = function () {
         // Dispara evento customizado para que as abas recarreguem
         window.dispatchEvent(new CustomEvent('periodoAlterado', {
             detail: {
@@ -148,7 +168,7 @@
         }));
     };
 
-    document.addEventListener('DOMContentLoaded', function() {
+    document.addEventListener('DOMContentLoaded', function () {
         const entidadeId = {{ $entidade->id ?? 'null' }};
 
         if (!entidadeId) {
@@ -159,14 +179,14 @@
         const btnHistorico = document.getElementById('btnHistoricoConciliações');
         const linkHistorico = document.getElementById('link-historico-hidden');
         if (btnHistorico && linkHistorico) {
-            btnHistorico.addEventListener('click', function(e) {
+            btnHistorico.addEventListener('click', function (e) {
                 e.preventDefault();
                 linkHistorico.click();
             });
         }
 
         // Função global para carregar o total de conciliações pendentes (independente do filtro de data)
-        window.carregarTotalPendentes = function() {
+        window.carregarTotalPendentes = function () {
             fetch(`{{ route('entidades.total-pendentes', ':id') }}`.replace(':id', entidadeId), {
                 method: 'GET',
                 headers: {
@@ -174,32 +194,32 @@
                     'X-Requested-With': 'XMLHttpRequest'
                 }
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const total = data.total || 0;
-                    
-                    const badge = document.getElementById('badge-conciliacoes');
-                    if (badge) {
-                        if (total > 0) {
-                            badge.textContent = total;
-                            badge.style.display = 'inline-block';
-                        } else {
-                            badge.style.display = 'none';
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const total = data.total || 0;
+
+                        const badge = document.getElementById('badge-conciliacoes');
+                        if (badge) {
+                            if (total > 0) {
+                                badge.textContent = total;
+                                badge.style.display = 'inline-block';
+                            } else {
+                                badge.style.display = 'none';
+                            }
                         }
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Erro ao carregar total de pendentes:', error);
-            });
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar total de pendentes:', error);
+                });
         }
 
         // Carrega o total de pendentes ao carregar a página
         carregarTotalPendentes();
 
         // Recarrega o total quando a aba de conciliações for ativada
-        document.querySelector('a[href="#kt_tab_pane_conciliacoes"]')?.addEventListener('shown.bs.tab', function() {
+        document.querySelector('a[href="#kt_tab_pane_conciliacoes"]')?.addEventListener('shown.bs.tab', function () {
             carregarTotalPendentes();
         });
 
@@ -302,11 +322,11 @@
         cb(start, end);
 
         // Adiciona event listeners aos botões de navegação
-        $('#btn-mes-anterior').on('click', function() {
+        $('#btn-mes-anterior').on('click', function () {
             navegarMesAnterior();
         });
 
-        $('#btn-mes-proximo').on('click', function() {
+        $('#btn-mes-proximo').on('click', function () {
             navegarMesProximo();
         });
 
@@ -323,7 +343,7 @@
         }
 
         // Função global para formatar moeda
-        window.formatarMoeda = function(valor) {
+        window.formatarMoeda = function (valor) {
             if (valor === null || valor === undefined) return 'R$ 0,00';
             return 'R$ ' + parseFloat(valor).toLocaleString('pt-BR', {
                 minimumFractionDigits: 2,
@@ -332,7 +352,7 @@
         }
 
         // Função global para carregar o contador de conciliações pendentes e informações adicionais
-        window.carregarInformacoes = function() {
+        window.carregarInformacoes = function () {
             const params = new URLSearchParams();
             if (window.periodoFiltro.dataInicio) {
                 params.append('data_inicio', window.periodoFiltro.dataInicio);
@@ -342,15 +362,15 @@
             }
 
             fetch(`{{ route('entidades.show.json', ':id') }}`.replace(':id', entidadeId) + (params.toString() ?
-                    '?' + params.toString() : ''), {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                            'content') || ''
-                    }
-                })
+                '?' + params.toString() : ''), {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
+                        'content') || ''
+                }
+            })
                 .then(response => response.json())
                 .then(data => {
                     if (data.success && data.data) {
@@ -405,7 +425,7 @@
         carregarInformacoes();
 
         // Escuta mudanças no período para atualizar as informações
-        window.addEventListener('periodoAlterado', function() {
+        window.addEventListener('periodoAlterado', function () {
             carregarInformacoes();
         });
 
@@ -414,11 +434,42 @@
 
         // Inicializa o Select2 se ainda não foi inicializado
         if (bancoSelect.length && !bancoSelect.hasClass('select2-hidden-accessible')) {
+
+            const optionLog = [];
+            bancoSelect.find('option').each(function() {
+                optionLog.push({
+                    value: this.value,
+                    text: this.text,
+                    icon: this.getAttribute('data-kt-select2-icon'),
+                    origem: this.getAttribute('data-origem')
+                });
+            });
+            console.table(optionLog);
+
+            const optionFormatBanco = function(item) {
+                if (!item.id) {
+                    return item.text;
+                }
+
+                const imgUrl = item.element?.getAttribute('data-kt-select2-icon');
+                if (!imgUrl) {
+                    return item.text;
+                }
+
+                const span = document.createElement('span');
+                span.innerHTML = `<img src="${imgUrl}" class="rounded-circle h-20px me-2" alt="logo"/>${item.text}`;
+                return $(span);
+            };
+
             bancoSelect.select2({
                 placeholder: "Selecione um banco",
                 allowClear: false,
-                minimumResultsForSearch: 0
+                minimumResultsForSearch: 0,
+                templateSelection: optionFormatBanco,
+                templateResult: optionFormatBanco,
+                width: '100%'
             });
+
         }
 
         // Controle do botão Horários de Missas
@@ -427,7 +478,7 @@
 
         if (btnHorariosMissas) {
             // Previne a abertura do modal se não houver horários
-            btnHorariosMissas.addEventListener('click', function(e) {
+            btnHorariosMissas.addEventListener('click', function (e) {
                 if (!hasHorariosMissas) {
                     e.preventDefault();
                     e.stopPropagation();
@@ -443,7 +494,7 @@
                         // Fallback se showHorariosMissasToast não estiver disponível
                         console.warn(
                             'showHorariosMissasToast não está disponível. Certifique-se de que toasts.js está carregado.'
-                            );
+                        );
                     }
                     return false;
                 }
@@ -457,7 +508,7 @@
         }
 
         // Quando o usuário selecionar uma entidade financeira
-        bancoSelect.on('change', function() {
+        bancoSelect.on('change', function () {
             const entidadeId = $(this).val();
 
             if (entidadeId) {

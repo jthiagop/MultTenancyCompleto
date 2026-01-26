@@ -38,7 +38,7 @@ use App\Http\Controllers\App\Financeiro\ConciliacaoController;
 use App\Http\Controllers\App\Financeiro\ContasFinanceirasController;
 use App\Http\Controllers\App\Financeiro\CostCenterController;
 use App\Http\Controllers\App\Financeiro\FormasPagamentoController;
-use App\Http\Controllers\App\Financeiro\FornecedorController;
+use App\Http\Controllers\App\Financeiro\ParceiroController;
 use App\Http\Controllers\App\Financeiro\OfxController;
 use App\Http\Controllers\App\Relatorios\ReciboController;
 use App\Http\Controllers\App\Financeiro\TransacaoFinanceiraController;
@@ -238,7 +238,7 @@ Route::middleware([
             Route::resource('telaLogin', TelaDeLoginController::class);
 
             Route::resource('formas-pagamento', FormasPagamentoController::class);
-            Route::post('/fornecedores/store', [FornecedorController::class, 'store'])->name('fornecedores.store');
+            Route::post('/fornecedores/store', [ParceiroController::class, 'store'])->name('fornecedores.store');
         });
 
         Route::get('/session/switch-company/{company}', [SessionController::class, 'switchCompany'])->name('session.switch-company');
@@ -577,6 +577,22 @@ Route::middleware([
 
                 // Rota dedicada para fornecer dados para o gráfico do dashboard financeiro
                 Route::get('/charts/financial-summary', [CaixaController::class, 'getFinancialSummaryChartData'])->name('charts.financial_summary.data');
+
+                // ✅ NOVO: Rota para recalcular saldos financeiros
+                Route::post('financeiro/recalcular-saldos', function (Request $request) {
+                    // Apenas admins podem recalcular
+                    if (!Auth::user()->hasRole('admin')) {
+                        return back()->with('error', '❌ Acesso negado. Apenas administradores podem recalcular saldos.');
+                    }
+
+                    try {
+                        $corrigidas = \App\Models\EntidadeFinanceira::recalcularTodosSaldos();
+                        
+                        return back()->with('success', "✅ Recálculo concluído! {$corrigidas} entidade(s) sincronizada(s).");
+                    } catch (\Exception $e) {
+                        return back()->with('error', "❌ Erro ao recalcular: " . $e->getMessage());
+                    }
+                })->name('financeiro.recalcular-saldos');
 
                 // Rota que fornecerá os dados em formato JSON para a DataTable
                 Route::get('/reports/financial-data', [ReportController::class, 'getFinancialData'])->name('reports.financial.data');

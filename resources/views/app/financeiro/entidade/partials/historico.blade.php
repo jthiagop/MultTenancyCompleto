@@ -1,678 +1,139 @@
-{{-- Aba de Histórico de Conciliações --}}
-<div>
-    <div class="card card-flush mt-6">
-        <!--begin::Card header-->
-        <div class="card-header border-0 pt-5 separator">
-            <h3 class="card-title align-items-start flex-column">
-                <span class="card-label fw-bold fs-3 mb-1">Conciliações Realizadas</span>
-                <span class="text-muted mt-1 fw-semibold fs-7">Histórico de lançamentos já conciliados</span>
-            </h3>
-            <div class="card-toolbar ">
-                <div class="d-flex align-items-center gap-2 ">
-                    <!--begin::Search-->
-                    <div class="d-flex align-items-center position-relative">
-                        <i class="bi bi-search fs-3 position-absolute ms-4">
+{{-- resources/views/app/financeiro/entidade/partials/historico.blade.php --}}
+{{-- Aba de Histórico de Conciliações com Abas por Status --}}
+@php
+    // Calcular totais iniciais para passar para as tabs
+    $counts = $counts ?? []; 
+    // Garante que todos os estados tenham valor para evitar undefined
+    $counts['ok'] = $counts['ok'] ?? 0;
+    $counts['pendente'] = $counts['pendente'] ?? 0;
+    $counts['ignorado'] = $counts['ignorado'] ?? 0;
+    $counts['divergente'] = $counts['divergente'] ?? 0;
+    
+    $totalTodos = $counts['ok'] + $counts['pendente'] + $counts['ignorado'] + $counts['divergente'];
+    // Se 'all' vier do backend, usa ele, senão usa a soma
+    $totalTodos = $counts['all'] ?? $totalTodos;
 
-                        </i>
-                        <input type="text" id="busca-historico"
-                            class="form-control btn btn-sm form-control-solid w-250px ps-12"
-                            placeholder="Buscar conciliação..." />
-                    </div>
-                    <!--end::Search-->
+    $abasStatus = [
+        ['key' => 'all', 'label' => 'Todos', 'count' => $totalTodos],
+        ['key' => 'ok', 'label' => 'Conciliados', 'count' => $counts['ok']],
+        ['key' => 'pendente', 'label' => 'Pendentes', 'count' => $counts['pendente']],
+        ['key' => 'ignorado', 'label' => 'Ignorados', 'count' => $counts['ignorado']],
+        ['key' => 'divergente', 'label' => 'Divergentes', 'count' => $counts['divergente']],
+    ];
+@endphp
 
-                    <!--begin::Export-->
-                    <!--begin::Filtrar Conciliações Button-->
-                    <button type="button" class="btn btn-sm btn-light-primary" data-bs-toggle="modal"
-                        data-bs-target="#modal_conciliacao_bancaria">
-                        <i class="fa-solid fa-filter fs-4 me-2"></i>
-                        Filtrar Conciliações
-                    </button>
-                    <!--end::Filtrar Conciliações Button-->
-                    <!--end::Export-->
-                </div>
-            </div>
-        </div>
-        <!--end::Card header-->
-
-        <!--begin::Card body-->
-        <div class="card-body py-4">
-            <!--begin::Table container-->
-            <div class="table-responsive">
-                <!--begin::Table-->
-                <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_historico_conciliacoes_table">
-                    <!--begin::Table head-->
-                    <thead>
-                        <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
-                            <th class="min-w-100px">Data Conciliação</th>
-                            <th class="min-w-150px">Descrição</th>
-                            <th class="min-w-100px">Tipo</th>
-                            <th class="min-w-150px text-end">Valor</th>
-                            <th class="min-w-100px">Lançamento Padrão</th>
-                            <th class="min-w-100px">Status</th>
-                            <th class="min-w-80px">Usuário</th>
-                            <th class="min-w-80px text-end">Ações</th>
-                        </tr>
-                    </thead>
-                    <!--end::Table head-->
-                    <!--begin::Table body-->
-                    <tbody class="text-gray-600 fw-semibold" id="historico-conciliacoes-body">
-                        {{-- Conteúdo carregado via JavaScript --}}
-                        <tr>
-                            <td colspan="8" class="text-center py-10">
-                                <div class="d-flex flex-column align-items-center">
-                                    <i class="ki-duotone ki-loading fs-3x text-primary mb-3">
-                                        <span class="path1"></span>
-                                        <span class="path2"></span>
-                                    </i>
-                                    <span class="text-muted">Carregando histórico...</span>
+<x-tenant.segmented-tabs-toolbar
+    id="conciliacao-status"
+    :tabs="$abasStatus"
+    active="all"
+    class="mb-5"
+>
+    @slot('panes')
+        {{-- Loop para criar os containers de cada status --}}
+        @foreach($abasStatus as $aba)
+            <div class="tab-pane fade {{ $aba['key'] === 'all' ? 'show active' : '' }}" 
+                 id="conciliacao-status-pane-{{ $aba['key'] }}" 
+                 role="tabpanel"
+                 data-status="{{ $aba['key'] }}">
+                
+                {{-- Container para o conteúdo --}}
+                {{-- Nota: Para a tab 'all', mantemos o ID antigo para compatibilidade inicial do JS --}}
+                <div id="{{ $aba['key'] === 'all' ? 'conciliacoes-historico' : 'conciliacoes-historico-' . $aba['key'] }}"
+                     data-status="{{ $aba['key'] }}"
+                     data-entidade-id='@json($entidade?->id)'
+                     data-url-historico="{{ $entidade?->id ? route('entidades.historico-conciliacoes', $entidade->id) : '' }}"
+                     data-url-detalhes="{{ route('conciliacao.detalhes', ':id') }}"
+                     data-url-desfazer="{{ route('conciliacao.desfazer', ':id') }}"
+                     class="mt-4">
+                    
+                    <div class="card card-flush">
+                        <div class="card-header border-0 pt-5 separator">
+                            <h3 class="card-title align-items-start flex-column">
+                                <span class="card-label fw-bold fs-3 mb-1">Histórico de Conciliações</span>
+                                @if($aba['key'] !== 'all')
+                                    <span class="text-muted mt-1 fw-semibold fs-7 status-label-descricao">
+                                        Filtro: {{ $aba['label'] }}
+                                    </span>
+                                @endif
+                            </h3>
+                            <div class="card-toolbar">
+                                <div class="d-flex align-items-center gap-2">
+                                    {{-- Campo de busca (apenas no All inicialmente para não duplicar IDs complexos) --}}
+                                    @if($aba['key'] === 'all')
+                                    <div class="d-flex align-items-center position-relative">
+                                        <i class="bi bi-search fs-3 position-absolute ms-4"></i>
+                                        <input type="text" id="busca-historico"
+                                            class="form-control btn btn-sm form-control-solid w-250px ps-12"
+                                            placeholder="Buscar..." />
+                                    </div>
+                                    @endif
                                 </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                    <!--end::Table body-->
-                </table>
-                <!--end::Table-->
-                <!--begin::Pagination-->
-                <div class="d-flex justify-content-between align-items-center flex-wrap pt-5">
-                    <!--begin::Items per page-->
-                    <div class="d-flex align-items-center">
-                        <select id="items-per-page" class="form-select form-select-sm w-75px">
-                            <option value="10" selected>10</option>
-                            <option value="25">25</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
+                            </div>
+                        </div>
+                        <div class="card-body py-4">
+                            <div class="table-responsive">
+                                <table class="table table-striped table-row-bordered fs-6 gy-3" 
+                                       id="kt_historico_conciliacoes_table_{{ $aba['key'] }}">
+                                    <thead>
+                                        <tr class="fw-semibold fs-6 text-gray-800">
+                                            <th class="min-w-100px">Data Conciliação</th>
+                                            <th class="min-w-200px">Descrição</th>
+                                            <th class="min-w-50px">Tipo</th>
+                                            <th class="min-w-100px text-end">Valor</th>
+                                            <th class="min-w-100px">Status</th>
+                                            <th class="min-w-100px">Usuário</th>
+                                            <th class="min-w-100px text-end">Ações</th>
+                                        </tr>
+                                    </thead>
+                                    {{-- IDs diferenciados para cada corpo de tabela --}}
+                                    <tbody class="text-gray-600 fw-semibold" 
+                                           id="{{ $aba['key'] === 'all' ? 'historico-conciliacoes-body' : 'historico-conciliacoes-body-' . $aba['key'] }}">
+                                        {{-- Spinner inicial --}}
+                                        <tr>
+                                            <td colspan="7" class="text-center py-10">
+                                                <div class="d-flex flex-column align-items-center">
+                                                    <div class="spinner-border text-primary" role="status">
+                                                        <span class="visually-hidden">Carregando...</span>
+                                                    </div>
+                                                    <span class="text-muted mt-3">Carregando histórico...</span>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                
+                                {{-- Paginação apenas no ALL por enquanto --}}
+                                @if($aba['key'] === 'all')
+                                <div class="d-flex justify-content-between align-items-center flex-wrap pt-5">
+                                    <div class="d-flex align-items-center">
+                                        <select id="items-per-page" class="form-select form-select-sm w-75px">
+                                            <option value="10" selected>10</option>
+                                            <option value="25">25</option>
+                                            <option value="50">50</option>
+                                            <option value="100">100</option>
+                                        </select>
+                                    </div>
+                                    <ul class="pagination" id="historico-pagination"></ul>
+                                </div>
+                                @endif
+                            </div>
+                        </div>
                     </div>
-                    <!--end::Items per page-->
-
-                    <!--begin::Pages-->
-                    <ul class="pagination" id="historico-pagination">
-                        <!-- Pagination buttons will be generated by JavaScript -->
-                    </ul>
-                    <!--end::Pages-->
                 </div>
-                <!--end::Pagination-->
             </div>
-            <!--end::Table container-->
-        </div>
-        <!--end::Card body-->
-    </div>
-</div>
+        @endforeach
+    @endslot
+</x-tenant.segmented-tabs-toolbar>
 
-{{-- Include do Drawer de Detalhes da Conciliação --}}
+{{-- Drawer de detalhes --}}
 @include('app.components.drawers.conciliacao_detalhes')
 
-{{-- Script para carregar o histórico de conciliações --}}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const entidadeId = {{ $entidade->id ?? 'null' }};
-        const tbody = document.getElementById('historico-conciliacoes-body');
-        const buscaInput = document.getElementById('busca-historico');
-        const badgeHistorico = document.getElementById('badge-historico-btn');
-        const itemsPerPageSelect = document.getElementById('items-per-page');
-        const paginationContainer = document.getElementById('historico-pagination');
-
-        // Verificar se os elementos existem antes de continuar
-        if (!tbody || !itemsPerPageSelect || !paginationContainer) {
-            console.warn('Elementos do histórico não encontrados na página');
-            return;
-        }
-
-        let conciliacoesData = [];
-        let filteredData = [];
-        let currentPage = 1;
-        let itemsPerPage = 10;
-
-        // Função para formatar data
-        function formatarData(data) {
-            if (!data) return '-';
-            const date = new Date(data);
-            const dia = String(date.getDate()).padStart(2, '0');
-            const mes = String(date.getMonth() + 1).padStart(2, '0');
-            const ano = date.getFullYear();
-            return `${dia}/${mes}/${ano}`;
-        }
-
-        // Função para formatar moeda
-        function formatarMoeda(valor) {
-            if (valor === null || valor === undefined) return 'R$ 0,00';
-            return 'R$ ' + parseFloat(valor).toLocaleString('pt-BR', {
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            });
-        }
-
-        // Função para retornar o badge de status
-        function getStatusBadge(status) {
-            const statusMap = {
-                'ok': {
-                    text: 'Conciliado',
-                    class: 'badge-light-success'
-                },
-                'ignorado': {
-                    text: 'Ignorado',
-                    class: 'badge-light-warning'
-                },
-                'pendente': {
-                    text: 'Pendente',
-                    class: 'badge-light-primary'
-                },
-                'divergente': {
-                    text: 'Divergente',
-                    class: 'badge-light-danger'
-                }
-            };
-
-            const statusInfo = statusMap[status] || {
-                text: status || '-',
-                class: 'badge-light-primary'
-            };
-            return `<span class="badge ${statusInfo.class}">${statusInfo.text}</span>`;
-        }
-
-        // Função para renderizar a tabela
-        function renderizarTabela(dados) {
-            filteredData = dados || [];
-
-            if (filteredData.length === 0) {
-                tbody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center py-10">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="ki-duotone ki-document fs-3x text-muted mb-3">
-                                <span class="path1"></span>
-                                <span class="path2"></span>
-                            </i>
-                            <span class="text-muted fs-6">Nenhuma conciliação realizada ainda</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-                renderizarPaginacao(0);
-                return;
-            }
-
-            // Calcular índices para paginação
-            const startIndex = (currentPage - 1) * itemsPerPage;
-            const endIndex = startIndex + itemsPerPage;
-            const paginatedData = filteredData.slice(startIndex, endIndex);
-
-            let html = '';
-            paginatedData.forEach(function(item) {
-                const tipoClasse = item.tipo === 'entrada' ? 'badge-light-success' :
-                    'badge-light-danger';
-                const tipoTexto = item.tipo === 'entrada' ? 'Entrada' : 'Saída';
-                const valorClasse = item.tipo === 'entrada' ? 'text-success' : 'text-danger';
-
-                html += `
-                <tr data-conciliacao-id="${item.id}" data-transacao-id="${item.transacao_id}" style="cursor: pointer;">
-                    <td>${formatarData(item.data_conciliacao)}</td>
-                    <td class="descricao-conciliacao">
-                        <a href="#" class="text-gray-800 fw-bold text-hover-primary" onclick="abrirDrawerConciliacao(${item.id}, event); return false;">
-                            ${item.descricao || '-'}
-                        </a>
-                    </td>
-                    <td>
-                        <span class="badge ${tipoClasse}">${tipoTexto}</span>
-                    </td>
-                    <td class="text-end">
-                        <span class="fw-bold ${valorClasse}">${formatarMoeda(item.valor)}</span>
-                    </td>
-                    <td>${item.lancamento_padrao || '-'}</td>
-                    <td>${getStatusBadge(item.status)}</td>
-                    <td>
-                        <span class="text-muted fs-7">${item.usuario || '-'}</span>
-                    </td>
-                    <td class="text-end">
-                        <a href="#" class="btn btn-sm btn-light btn-active-light-primary"
-                           data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
-                            Ações
-                            <i class="ki-duotone ki-down fs-5 ms-1"></i>
-                        </a>
-                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
-                             data-kt-menu="true">
-                            <div class="menu-item px-3">
-                                <a href="#" class="menu-link px-3" data-action="ver-detalhes" data-id="${item.id}">
-                                    <i class="ki-duotone ki-eye fs-4 me-2">
-                                        <span class="path1"></span>
-                                        <span class="path2"></span>
-                                        <span class="path3"></span>
-                                    </i>
-                                    Ver Detalhes
-                                </a>
-                            </div>
-                            <div class="menu-item px-3">
-                                <a href="#" class="menu-link px-3" data-action="desfazer" data-id="${item.id}">
-                                    <i class="ki-duotone ki-arrow-circle-left fs-4 me-2">
-                                        <span class="path1"></span>
-                                        <span class="path2"></span>
-                                    </i>
-                                    Desfazer
-                                </a>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-            });
-
-            tbody.innerHTML = html;
-
-            // Reinicializa os menus do Metronic
-            if (typeof KTMenu !== 'undefined') {
-                KTMenu.createInstances();
-            }
-
-            // Renderizar paginação
-            renderizarPaginacao(filteredData.length);
-        }
-
-        // Função para renderizar a paginação
-        function renderizarPaginacao(totalItems) {
-            const totalPages = Math.ceil(totalItems / itemsPerPage);
-
-            if (totalPages <= 1) {
-                paginationContainer.innerHTML = '';
-                return;
-            }
-
-            let html = '';
-
-            // Botão Previous
-            html += `
-            <li class="page-item previous ${currentPage === 1 ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${currentPage - 1}">
-                    <i class="previous"></i>
-                </a>
-            </li>
-        `;
-
-            // Páginas
-            const maxVisiblePages = 5;
-            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
-            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
-
-            if (endPage - startPage < maxVisiblePages - 1) {
-                startPage = Math.max(1, endPage - maxVisiblePages + 1);
-            }
-
-            for (let i = startPage; i <= endPage; i++) {
-                html += `
-                <li class="page-item ${i === currentPage ? 'active' : ''}">
-                    <a class="page-link" href="#" data-page="${i}">${i}</a>
-                </li>
-            `;
-            }
-
-            // Botão Next
-            html += `
-            <li class="page-item next ${currentPage === totalPages ? 'disabled' : ''}">
-                <a class="page-link" href="#" data-page="${currentPage + 1}">
-                    <i class="next"></i>
-                </a>
-            </li>
-        `;
-
-            paginationContainer.innerHTML = html;
-
-            // Event listeners para os botões de paginação
-            paginationContainer.querySelectorAll('.page-link').forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    const page = parseInt(this.getAttribute('data-page'));
-                    if (page && page !== currentPage && page >= 1 && page <= totalPages) {
-                        currentPage = page;
-                        renderizarTabela(filteredData);
-                    }
-                });
-            });
-        }
-
-        // Função para carregar o histórico (carrega todos os registros, sem filtro de data)
-        function carregarHistorico() {
-            if (!entidadeId) return;
-
-            tbody.innerHTML = `
-            <tr>
-                <td colspan="8" class="text-center py-10">
-                    <div class="d-flex flex-column align-items-center">
-                        <div class="spinner-border text-primary" role="status">
-                            <span class="visually-hidden">Carregando...</span>
-                        </div>
-                        <span class="text-muted mt-3">Carregando histórico...</span>
-                    </div>
-                </td>
-            </tr>
-        `;
-
-            fetch(`{{ route('entidades.historico-conciliacoes', ':id') }}`.replace(':id', entidadeId), {
-                    method: 'GET',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute(
-                            'content') || ''
-                    }
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        conciliacoesData = data.data || [];
-                        renderizarTabela(conciliacoesData);
-
-                        // Atualiza o badge
-                        if (badgeHistorico) {
-                            if (conciliacoesData.length > 0) {
-                                badgeHistorico.textContent = conciliacoesData.length;
-                                badgeHistorico.style.display = 'inline-block';
-                            } else {
-                                badgeHistorico.style.display = 'none';
-                            }
-                        }
-                    } else {
-                        tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="text-center py-10">
-                            <div class="d-flex flex-column align-items-center">
-                                <i class="ki-duotone ki-cross-circle fs-3x text-danger mb-3">
-                                    <span class="path1"></span>
-                                    <span class="path2"></span>
-                                </i>
-                                <span class="text-danger">${data.message || 'Erro ao carregar histórico'}</span>
-                            </div>
-                        </td>
-                    </tr>
-                `;
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar histórico:', error);
-                    tbody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center py-10">
-                        <div class="d-flex flex-column align-items-center">
-                            <i class="ki-duotone ki-cross-circle fs-3x text-danger mb-3">
-                                <span class="path1"></span>
-                                <span class="path2"></span>
-                            </i>
-                            <span class="text-danger">Erro ao carregar histórico de conciliações</span>
-                        </div>
-                    </td>
-                </tr>
-            `;
-                });
-        }
-
-        // Filtro de busca
-        if (buscaInput) {
-            buscaInput.addEventListener('keyup', function() {
-                const termo = this.value.toLowerCase();
-                if (!termo) {
-                    renderizarTabela(conciliacoesData);
-                    return;
-                }
-
-                const filtrados = conciliacoesData.filter(function(item) {
-                    return (item.descricao && item.descricao.toLowerCase().includes(termo)) ||
-                        (item.lancamento_padrao && item.lancamento_padrao.toLowerCase()
-                            .includes(termo)) ||
-                        (item.status && item.status.toLowerCase().includes(termo)) ||
-                        (item.usuario && item.usuario.toLowerCase().includes(termo));
-                });
-
-                renderizarTabela(filtrados);
-            });
-        }
-
-        // Event listener para mudança de itens por página
-        itemsPerPageSelect.addEventListener('change', function() {
-            itemsPerPage = parseInt(this.value);
-            currentPage = 1; // Volta para a primeira página
-            renderizarTabela(filteredData);
-        });
-
-        // Carregar histórico automaticamente quando a página carrega
-        carregarHistorico();
-    });
-
-    // Função global para abrir o drawer com detalhes da conciliação
-    function abrirDrawerConciliacao(bankStatementId, event) {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-
-        if (!bankStatementId || bankStatementId === 0) {
-            Swal.fire({
-                text: "Conciliação não encontrada.",
-                icon: "warning",
-                buttonsStyling: false,
-                confirmButtonText: "Ok",
-                customClass: {
-                    confirmButton: "btn btn-primary"
-                }
-            });
-            return;
-        }
-
-        // Buscar dados da conciliação via AJAX
-        fetch(`{{ route('conciliacao.detalhes', ':id') }}`.replace(':id', bankStatementId))
-            .then(response => response.json())
-            .then(data => {
-                // Preencher os dados no drawer
-                document.getElementById('drawer_conciliacao_id_hidden').value = data.id || 0;
-                document.getElementById('drawer_conciliacao_id').textContent = `#${data.id}`;
-                document.getElementById('drawer_conciliacao_descricao').textContent = data.descricao ||
-                    'Sem descrição';
-
-                // Status badge
-                const statusBadgeEl = document.getElementById('drawer_conciliacao_status_badge');
-                const statusMap = {
-                    'ok': {
-                        text: 'Conciliado',
-                        class: 'badge-success'
-                    },
-                    'ignorado': {
-                        text: 'Ignorado',
-                        class: 'badge-warning'
-                    },
-                    'pendente': {
-                        text: 'Pendente',
-                        class: 'badge-primary'
-                    },
-                    'divergente': {
-                        text: 'Divergente',
-                        class: 'badge-danger'
-                    }
-                };
-                const statusInfo = statusMap[data.status_conciliacao] || {
-                    text: data.status_conciliacao || '-',
-                    class: 'badge-primary'
-                };
-                statusBadgeEl.innerHTML = `<span class="badge ${statusInfo.class}">${statusInfo.text}</span>`;
-
-                // Tipo e badge
-                const tipoBadge = document.getElementById('drawer_conciliacao_tipo_badge');
-                if (data.tipo === 'entrada') {
-                    tipoBadge.textContent = 'ENTRADA';
-                    tipoBadge.className = 'badge badge-light-success fs-7 fw-bold';
-                } else {
-                    tipoBadge.textContent = 'SAÍDA';
-                    tipoBadge.className = 'badge badge-light-danger fs-7 fw-bold';
-                }
-
-                // Valor
-                document.getElementById('drawer_conciliacao_valor').textContent =
-                    `R$ ${parseFloat(data.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-
-                // Datas
-                document.getElementById('drawer_conciliacao_data_extrato').textContent = data
-                    .data_extrato_formatada || '-';
-                document.getElementById('drawer_conciliacao_data_conciliacao').textContent = data
-                    .data_conciliacao_formatada || '-';
-
-                // Lançamento Padrão
-                document.getElementById('drawer_conciliacao_lancamento').textContent = data.lancamento_padrao ||
-                '-';
-
-                // Arquivo OFX
-                document.getElementById('drawer_conciliacao_arquivo_ofx').textContent = data.arquivo_ofx || '-';
-                document.getElementById('drawer_conciliacao_data_importacao').textContent = data
-                    .data_importacao_ofx_formatada || '-';
-                document.getElementById('drawer_conciliacao_memo').textContent = data.memo || data.descricao || '-';
-
-                // Transação Vinculada
-                document.getElementById('drawer_conciliacao_transacao_id').textContent = data.transacao_id ?
-                    `#${data.transacao_id}` : '-';
-                document.getElementById('drawer_conciliacao_entidade').textContent = data.entidade_financeira ||
-                '-';
-                document.getElementById('drawer_conciliacao_centro_custo').textContent = data.centro_custo || '-';
-
-                // Histórico
-                const historicoEl = document.getElementById('drawer_conciliacao_historico');
-                if (data.historico_complementar) {
-                    historicoEl.innerHTML = `<p class="mb-0">${data.historico_complementar}</p>`;
-                } else {
-                    historicoEl.innerHTML = '<span class="text-muted">Nenhum histórico complementar</span>';
-                }
-
-                // Anexos
-                document.getElementById('drawer_conciliacao_anexos').innerHTML =
-                    '<span class="text-muted">Nenhum anexo</span>';
-
-                // Auditoria
-                document.getElementById('drawer_conciliacao_criado_por').textContent = data.created_by_name || '-';
-                document.getElementById('drawer_conciliacao_criado_em').textContent = data.created_at_formatado ||
-                    '-';
-                document.getElementById('drawer_conciliacao_atualizado_por').textContent = data.updated_by_name ||
-                    '-';
-                document.getElementById('drawer_conciliacao_atualizado_em').textContent = data
-                    .updated_at_formatado ||
-                    '-';
-
-                // Configurar botão de desfazer conciliação
-                const btnDesfazer = document.getElementById('btn_desfazer_conciliacao');
-                if (btnDesfazer) {
-                    btnDesfazer.onclick = function() {
-                        Swal.fire({
-                            title: "Tem certeza que deseja desfazer esta conciliação?",
-                            html: `
-                                <p class="text-danger fw-bold mt-3">Esta ação não pode ser desfeita!</p>
-                            `,
-                            icon: "warning",
-                            showCancelButton: true,
-                            buttonsStyling: false,
-                            confirmButtonText: "Sim, desfazer",
-                            cancelButtonText: "Cancelar",
-                            customClass: {
-                                confirmButton: "btn btn-danger",
-                                cancelButton: "btn btn-secondary"
-                            }
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                // Mostrar loading
-                                Swal.fire({
-                                    title: 'Processando...',
-                                    text: 'Desfazendo conciliação',
-                                    allowOutsideClick: false,
-                                    didOpen: () => {
-                                        Swal.showLoading();
-                                    }
-                                });
-
-                                // Chamar API para desfazer conciliação
-                                fetch(`{{ route('conciliacao.desfazer', ':id') }}`.replace(':id', data
-                                        .id), {
-                                        method: 'POST',
-                                        headers: {
-                                            'Content-Type': 'application/json',
-                                            'X-CSRF-TOKEN': document.querySelector(
-                                                    'meta[name="csrf-token"]')
-                                                ?.getAttribute('content') || '',
-                                            'X-Requested-With': 'XMLHttpRequest'
-                                        }
-                                    })
-                                    .then(response => response.json())
-                                    .then(result => {
-                                        if (result.success) {
-                                            Swal.fire({
-                                                title: 'Sucesso!',
-                                                text: result.message ||
-                                                    'Conciliação desfeita com sucesso!',
-                                                icon: 'success',
-                                                buttonsStyling: false,
-                                                confirmButtonText: 'Ok',
-                                                customClass: {
-                                                    confirmButton: 'btn btn-primary'
-                                                }
-                                            }).then(() => {
-                                                // Fechar o drawer
-                                                const drawer = KTDrawer.getInstance(document
-                                                    .getElementById(
-                                                        'kt_drawer_conciliacao_detalhes'
-                                                        ));
-                                                if (drawer) {
-                                                    drawer.hide();
-                                                }
-
-                                                // Recarregar a lista de conciliações
-                                                carregarHistorico();
-
-                                                // Atualizar o contador de pendentes se existir
-                                                if (typeof atualizarTotalPendentes ===
-                                                    'function') {
-                                                    atualizarTotalPendentes();
-                                                }
-                                            });
-                                        } else {
-                                            Swal.fire({
-                                                title: 'Erro!',
-                                                text: result.message ||
-                                                    'Erro ao desfazer conciliação.',
-                                                icon: 'error',
-                                                buttonsStyling: false,
-                                                confirmButtonText: 'Ok',
-                                                customClass: {
-                                                    confirmButton: 'btn btn-primary'
-                                                }
-                                            });
-                                        }
-                                    })
-                                    .catch(error => {
-                                        console.error('Erro ao desfazer conciliação:', error);
-                                        Swal.fire({
-                                            title: 'Erro!',
-                                            text: 'Erro ao desfazer conciliação. Tente novamente.',
-                                            icon: 'error',
-                                            buttonsStyling: false,
-                                            confirmButtonText: 'Ok',
-                                            customClass: {
-                                                confirmButton: 'btn btn-primary'
-                                            }
-                                        });
-                                    });
-                            }
-                        });
-                    };
-                }
-
-                // Abrir o drawer
-                const drawer = KTDrawer.getInstance(document.getElementById('kt_drawer_conciliacao_detalhes'));
-                if (drawer) {
-                    drawer.show();
-                }
-            })
-            .catch(error => {
-                console.error('Erro ao carregar detalhes da conciliação:', error);
-                Swal.fire({
-                    text: "Erro ao carregar os detalhes da conciliação.",
-                    icon: "error",
-                    buttonsStyling: false,
-                    confirmButtonText: "Ok",
-                    customClass: {
-                        confirmButton: "btn btn-primary"
-                    }
-                });
-            });
-    }
-</script>
+@once
+    @push('scripts')
+        {{-- Passa os contadores iniciais para o JS --}}
+        <script>
+            window.initialConciliacaoCounts = @json($counts);
+        </script>
+        @vite('resources/js/pages/conciliacoes/historico.js')
+    @endpush
+@endonce

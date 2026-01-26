@@ -25,17 +25,17 @@ $tabs = [
 @endphp <div class="card mt-5">
     <x-tenant.segmented-tabs-toolbar :tabs="$tabs" :active="$tab ?? 'all'" id="conciliacao">
         <x-slot:actionsLeft>
-            <button class="btn btn-sm btn-light-primary">Conciliar</button>
+            {{-- <button class="btn btn-sm btn-light-primary">Conciliar</button>
             <button class="btn btn-sm btn-light-primary">Editar</button>
-            <button class="btn btn-sm btn-light-danger">Ignorar</button>
+            <button class="btn btn-sm btn-light-danger">Ignorar</button> --}}
         </x-slot>
 
         <x-slot:actionsRight>
-            <a href="{{ route('entidades.historico', $entidade->id) }}"
+            {{-- <a href=""
                 class="btn btn-sm btn-light-success {{ ($activeTab ?? '') === 'historico' ? 'active' : '' }}">
                 <i class="bi bi-clock-history me-1"></i>
                 Histórico
-            </a>
+            </a> --}}
         </x-slot>
 
         <x-slot:panes>
@@ -357,22 +357,38 @@ $tabs = [
                         }
 
                         // 2. Atualiza contadores usando funções globais de tabs.blade.php
-                        if (typeof window.carregarTotalPendentes === 'function') {
-                            window.carregarTotalPendentes();
-                        }
-
+                        // Recarrega saldos e informações financeiras
                         if (typeof window.carregarInformacoes === 'function') {
+                            console.log('💰 Atualizando saldos após conciliação...');
                             window.carregarInformacoes();
                         }
 
-                        // Atualiza badges das tabs internas (all, received, paid)
+                        // Recarrega total de pendentes (independente do filtro de data)
+                        if (typeof window.carregarTotalPendentes === 'function') {
+                            console.log('📊 Atualizando badge de conciliações pendentes...');
+                            window.carregarTotalPendentes();
+                        }
+
+                        // Atualiza badges das tabs internas (all, received, paid) com animação
                         if (data.data && data.data.counts) {
                             ['all', 'received', 'paid'].forEach(tabKey => {
-                                const tabBadge = document.querySelector(`#conciliacao-tab-${tabKey} .badge`);
-                                if (tabBadge && data.data.counts[tabKey] !== undefined) {
+                                const tabButton = document.querySelector(`#conciliacao-tab-${tabKey}`);
+                                if (!tabButton) return;
+                                
+                                const tabCount = tabButton.querySelector('.segmented-tab-count');
+                                if (tabCount && data.data.counts[tabKey] !== undefined) {
                                     const count = data.data.counts[tabKey];
-                                    tabBadge.textContent = count;
-                                    tabBadge.style.display = count > 0 ? 'inline-block' : 'none';
+                                    
+                                    // Anima a redução do contador
+                                    tabCount.style.transition = 'all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                                    tabCount.style.transform = 'scale(1.15) rotate(5deg)';
+                                    
+                                    setTimeout(() => {
+                                        tabCount.textContent = count;
+                                        tabCount.style.transform = 'scale(1) rotate(0deg)';
+                                    }, 150);
+                                    
+                                    console.log(`📋 Tab "${tabKey}" atualizada: ${count} pendentes`);
                                 }
                             });
                         }

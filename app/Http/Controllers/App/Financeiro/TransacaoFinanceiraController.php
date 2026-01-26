@@ -2,22 +2,22 @@
 
 namespace App\Http\Controllers\App\Financeiro;
 
-use App\Http\Controllers\Controller;
-use App\Models\Anexo;
-use App\Models\Banco;
-use App\Models\Financeiro\ModulosAnexo;
+use App\Http\Requests\Financer\StoreTransacaoFinanceiraRequest;
 use App\Models\Financeiro\TransacaoFinanceira;
-use App\Models\LancamentoPadrao;
-use App\Models\Movimentacao;
-use App\Models\User;
-use App\Services\RecurrenceService;
+use Yajra\DataTables\Facades\DataTables;
+use App\Models\Financeiro\ModulosAnexo;
+use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Services\RecurrenceService;
+use App\Models\LancamentoPadrao;
+use Illuminate\Http\Request;
+use App\Models\Movimentacao;
+use App\Models\Banco;
+use App\Models\User;
 use Carbon\Carbon;
 use Flasher;
-use Illuminate\Http\Request;
 use Log;
-use Validator;
-use Yajra\DataTables\Facades\DataTables;
+
 
 class TransacaoFinanceiraController extends Controller
 {
@@ -312,6 +312,21 @@ class TransacaoFinanceiraController extends Controller
             ], 404);
         }
 
+        // Validar origem da transação - apenas transações de conciliação, conciliação bancária ou transferência podem ser excluídas
+        $origensPermitidas = ['conciliacao_bancaria', 'conciliacao', 'transferencia', 'automatica'];
+        if ($transacaoFinanceira->origem && !in_array(strtolower($transacaoFinanceira->origem), $origensPermitidas)) {
+            \Log::warning('Tentativa de excluir transação com origem não permitida', [
+                'transacao_id' => $transacaoFinanceira->id,
+                'origem' => $transacaoFinanceira->origem,
+                'user_id' => Auth::id()
+            ]);
+            
+            return response()->json([
+                'success' => false,
+                'message' => 'Esta transação não pode ser excluída. Apenas transações de conciliação bancária podem ser desfeitas.'
+            ], 403);
+        }
+
         try {
             return \DB::transaction(function () use ($transacaoFinanceira) {
                 // Guardar informações para log
@@ -320,22 +335,15 @@ class TransacaoFinanceiraController extends Controller
                 $valor = $transacaoFinanceira->valor;
                 $tipo = $transacaoFinanceira->tipo;
                 $movimentacaoId = $transacaoFinanceira->movimentacao_id;
+                $origem = $transacaoFinanceira->origem;
 
-                // 1. Reverter saldo da entidade financeira
-                if ($transacaoFinanceira->entidadeFinanceira) {
-                    $entidade = $transacaoFinanceira->entidadeFinanceira;
-                    
-                    // Reverte a operação no saldo
-                    if ($tipo === 'entrada') {
-                        // Se foi entrada, subtrai do saldo
-                        $entidade->saldo_atual -= $valor;
-                    } else {
-                        // Se foi saída, adiciona ao saldo
-                        $entidade->saldo_atual += $valor;
-                    }
-                    
-                    $entidade->save();
-                }
+                // ✅ Saldo será recalculado dinamicamente via calculateBalance()
+                \Log::info('Deletando transação - saldo será recalculado dinamicamente', [
+                    'transacao_id' => $transacaoFinanceira->id,
+                    'entidade_id' => $transacaoFinanceira->entidade_id,
+                    'valor' => $valor,
+                    'tipo' => $tipo
+                ]);
 
                 // 2. Se conciliada, desfazer vínculo com bank_statement
                 if ($transacaoFinanceira->bankStatements()->exists()) {
@@ -346,15 +354,35 @@ class TransacaoFinanceiraController extends Controller
                             'reconciled' => false,
                             'status_conciliacao' => 'pendente'
                         ]);
+                        
+                        \Log::info('Bank statement resetado', [
+                            'bank_statement_id' => $bankStatement->id,
+                            'status' => 'pendente'
+                        ]);
                     }
                     
                     // Remover vínculo na tabela pivot
                     $transacaoFinanceira->bankStatements()->detach();
                 }
 
-                // 3. Deletar movimentação relacionada
+                // 3. Atualizar movimentação relacionada (se houver campo valor_conciliado)
                 if ($movimentacaoId) {
-                    Movimentacao::where('id', $movimentacaoId)->delete();
+                    $movimentacao = Movimentacao::find($movimentacaoId);
+                    
+                    if ($movimentacao) {
+                        // Se existir campo valor_conciliado, resetar para null
+                        if (\Schema::hasColumn('movimentacoes', 'valor_conciliado')) {
+                            $movimentacao->valor_conciliado = null;
+                            $movimentacao->save();
+                        }
+                        
+                        // Deletar a movimentação
+                        $movimentacao->delete();
+                        
+                        \Log::info('Movimentação deletada', [
+                            'movimentacao_id' => $movimentacaoId
+                        ]);
+                    }
                 }
 
                 // 4. Deletar a transação financeira
@@ -364,9 +392,11 @@ class TransacaoFinanceiraController extends Controller
                     'transacao_id' => $transacaoId,
                     'movimentacao_id' => $movimentacaoId,
                     'entidade_id' => $entidadeId,
-                    'valor' => $valor,
+                    'valor' => $valor / 100,
                     'tipo' => $tipo,
-                    'user_id' => Auth::id()
+                    'origem' => $origem,
+                    'user_id' => Auth::id(),
+                    'user_name' => Auth::user()->name
                 ]);
 
                 return response()->json([
@@ -378,7 +408,8 @@ class TransacaoFinanceiraController extends Controller
             \Log::error('Erro ao excluir transação', [
                 'transacao_id' => $transacaoFinanceira->id,
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
+                'trace' => $e->getTraceAsString(),
+                'user_id' => Auth::id()
             ]);
 
             return response()->json([
@@ -436,8 +467,8 @@ class TransacaoFinanceiraController extends Controller
                 }
             })
             ->editColumn('valor', function ($row) {
-                // Formata valor
-                return 'R$ ' . number_format($row->valor, 2, ',', '.');
+                // Formata valor (converte centavos para reais)
+                return 'R$ ' . number_format($row->valor / 100, 2, ',', '.');
             })
             ->rawColumns(['comprovacao_fiscal', 'tipo', 'action']) // Indica quais colunas podem ter HTML
             ->make(true);
@@ -482,15 +513,15 @@ class TransacaoFinanceiraController extends Controller
             $valorTransfEnt = $transacoesDia->where('tipo', 'transfer_in')->sum('valor');
             $valorTransfSai = $transacoesDia->where('tipo', 'transfer_out')->sum('valor');
 
-            // Atualiza o saldo acumulado
-            $saldoAcumulado += ($valorRecebimentos + $valorTransfEnt) - ($valorPagamentos + $valorTransfSai);
+            // Atualiza o saldo acumulado (converte centavos para reais)
+            $saldoAcumulado += (($valorRecebimentos + $valorTransfEnt) - ($valorPagamentos + $valorTransfSai)) / 100;
 
-            // Adiciona os valores ao array
+            // Adiciona os valores ao array (converte centavos para reais)
             $dias[] = $dia;
-            $recebimentos[] = (float) $valorRecebimentos;
-            $pagamentos[] = (float) $valorPagamentos;
-            $transfEntrada[] = (float) $valorTransfEnt;
-            $transfSaida[] = (float) $valorTransfSai;
+            $recebimentos[] = (float) ($valorRecebimentos / 100);
+            $pagamentos[] = (float) ($valorPagamentos / 100);
+            $transfEntrada[] = (float) ($valorTransfEnt / 100);
+            $transfSaida[] = (float) ($valorTransfSai / 100);
             $saldo[] = (float) $saldoAcumulado;
         }
 

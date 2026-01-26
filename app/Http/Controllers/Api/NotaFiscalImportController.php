@@ -354,7 +354,8 @@ class NotaFiscalImportController extends Controller
         // Substitui vírgula por ponto se necessário
         $valor = str_replace(',', '.', str_replace('.', '', $valor));
 
-        return (float) $valor;
+        // ✅ Garante que o valor é sempre positivo (absoluto)
+        return abs((float) $valor);
     }
 }
 

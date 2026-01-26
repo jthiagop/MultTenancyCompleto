@@ -16,6 +16,7 @@ use App\Models\Movimentacao;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Flasher\Laravel\Facade\Flasher;
 
 
@@ -63,11 +64,15 @@ class EntidadeFinanceiraController extends Controller
             return redirect()->back();
         }
 
-        // 2. Formata o saldo e adiciona o company_id (seu código aqui está perfeito)
-        $request->merge([
-            'saldo_inicial' => str_replace(['.', ','], ['', '.'], $request->saldo_inicial),
-            'company_id'    => $activeCompanyId
-        ]);
+        // 2. Formatar o saldo se foi enviado e adicionar o company_id
+        $mergeData = ['company_id' => $activeCompanyId];
+        
+        // Verificar se o campo saldo_inicial foi enviado antes de formatá-lo
+        if ($request->has('saldo_inicial') && !is_null($request->saldo_inicial)) {
+            $mergeData['saldo_inicial'] = str_replace(['.', ','], ['', '.'], $request->saldo_inicial);
+        }
+        
+        $request->merge($mergeData);
 
         // 3. Validação CORRIGIDA
         $validatedData = $request->validate([
@@ -393,6 +398,12 @@ class EntidadeFinanceiraController extends Controller
             ->orderBy('nome')
             ->get();
 
+        // 6.1.1. Carrega todas as entidades financeiras do tipo 'caixa' para o select
+        $entidadesCaixa = EntidadeFinanceira::forActiveCompany()
+            ->where('tipo', 'caixa')
+            ->orderBy('nome')
+            ->get();
+
         // 6.2. Verifica se existem horários de missa cadastrados para a empresa ativa
         $companyId = session('active_company_id');
         $hasHorariosMissas = HorarioMissa::where('company_id', $companyId)->exists();
@@ -410,6 +421,7 @@ class EntidadeFinanceiraController extends Controller
             'percentualConciliado' => round($percentualConciliado),
             'transacoesPorDia' => $transacoesPorDia,
             'entidadesBancos' => $entidadesBancos,
+            'entidadesCaixa' => $entidadesCaixa,
             'hasHorariosMissas' => $hasHorariosMissas,
             'activeTab' => 'conciliacoes', // Aba padrão
         ]);
@@ -561,15 +573,17 @@ class EntidadeFinanceiraController extends Controller
             $tab = $request->input('tab', 'all');
             $page = $request->input('page', 1);
 
-            // Query base
-            $query = BankStatement::where('entidade_financeira_id', $id)
+            // ✅ Query base com isolamento de empresa (segurança multi-tenant)
+            $query = BankStatement::where('company_id', $activeCompanyId)
+                ->where('entidade_financeira_id', $id)
                 ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                ->whereDoesntHave('transacoes') // ✅ Garante que registros já conciliados não apareçam
                 ->where(function ($q) {
                     $q->where('conciliado_com_missa', false)
                       ->orWhereNull('conciliado_com_missa');
                 });
 
-            // Filtro por tab
+            // Filtro por tab (usando amount_cents para evitar problemas com decimais)
             if ($tab === 'received') {
                 $query->where('amount_cents', '>', 0);
             } elseif ($tab === 'paid') {
@@ -579,33 +593,70 @@ class EntidadeFinanceiraController extends Controller
             // Paginação com 5 itens por página para melhor performance
             $bankStatements = $query->orderBy('dtposted', 'desc')->paginate(5, ['*'], 'page', $page);
 
-            // Buscar possíveis transações para cada lançamento
+            // 🤖 MOTOR DE SUGESTÃO INTELIGENTE - Injeta sugestões automáticas
+            try {
+                $suggestionService = new \App\Services\ConciliacaoSuggestionService();
+                foreach ($bankStatements as $lancamento) {
+                    try {
+                        $sugestaoGerada = $suggestionService->gerarSugestao($lancamento);
+                        $lancamento->sugestao = $sugestaoGerada;
+                    } catch (\Exception $e) {
+                        \Log::warning('Erro ao gerar sugestão para lançamento', [
+                            'lancamento_id' => $lancamento->id,
+                            'error' => $e->getMessage()
+                        ]);
+                        $lancamento->sugestao = null;
+                    }
+                }
+            } catch (\Exception $e) {
+                \Log::error('Erro ao inicializar serviço de sugestões', ['error' => $e->getMessage()]);
+            }
+
+            // ✅ Buscar possíveis transações para cada lançamento (otimizado)
             foreach ($bankStatements as $lancamento) {
-                $valorAbs = abs($lancamento->amount);
-                $tipo = $lancamento->amount < 0 ? 'saida' : 'entrada';
+                // Usa amount_cents em valor absoluto (positivo) para buscar
+                $valorAbsCentavos = abs($lancamento->amount_cents);
+                $tipo = $lancamento->amount_cents < 0 ? 'saida' : 'entrada';
                 $dataInicio = Carbon::parse($lancamento->dtposted)->startOfDay()->subMonths(2);
                 $dataFim = Carbon::parse($lancamento->dtposted)->endOfDay()->addMonths(2);
                 $numeroDocumento = $lancamento->checknum;
 
+                // ✅ Limita sugestões a 5 para evitar N+1 pesado
                 $possiveis = TransacaoFinanceira::forActiveCompany()
                     ->where('entidade_id', $id)
                     ->where('tipo', $tipo)
-                    ->where('valor', $valorAbs)
+                    ->where('valor', $valorAbsCentavos)
                     ->whereBetween('data_competencia', [$dataInicio, $dataFim])
-                    ->when($numeroDocumento, function ($query) use ($numeroDocumento) {
-                        $query->where('numero_documento', $numeroDocumento);
-                    })
+                    ->when($numeroDocumento, fn($q) => $q->where('numero_documento', $numeroDocumento))
+                    ->orderBy('data_competencia', 'desc')
+                    ->limit(5)
                     ->get();
 
                 $lancamento->possiveisTransacoes = $possiveis;
             }
 
-            // Dados auxiliares
+            // ✅ Dados auxiliares com cache (melhora performance)
+            // Nota: Removido cache por incompatibilidade com tenancy em drivers file/database
             $centrosAtivos = CostCenter::forActiveCompany()->get();
             $lps = LancamentoPadrao::all();
             $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
 
-            // Renderizar o componente como HTML
+            // ✅ Calcula counts atualizados para todas as tabs (UX melhor)
+            $baseQuery = BankStatement::where('company_id', $activeCompanyId)
+                ->where('entidade_financeira_id', $id)
+                ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                ->where(function ($q) {
+                    $q->where('conciliado_com_missa', false)
+                      ->orWhereNull('conciliado_com_missa');
+                });
+
+            $counts = [
+                'all' => (clone $baseQuery)->count(),
+                'received' => (clone $baseQuery)->where('amount_cents', '>', 0)->count(),
+                'paid' => (clone $baseQuery)->where('amount_cents', '<', 0)->count(),
+            ];
+
+            // Renderizar o componente como HTML (SSR approach)
             $html = view('app.financeiro.entidade.partials.conciliacao-pane', [
                 'entidade' => $entidade,
                 'conciliacoesPendentes' => $bankStatements,
@@ -622,7 +673,8 @@ class EntidadeFinanceiraController extends Controller
                     'current_page' => $bankStatements->currentPage(),
                     'last_page' => $bankStatements->lastPage(),
                     'total' => $bankStatements->total(),
-                ]
+                ],
+                'counts' => $counts, // ✅ Permite atualizar badges sem reload
             ]);
         } catch (\Exception $e) {
             \Log::error('Erro em conciliacoesTab:', [
@@ -641,6 +693,8 @@ class EntidadeFinanceiraController extends Controller
 
     /**
      * Retorna o histórico de conciliações realizadas para uma entidade financeira
+     * Agora com paginação, busca e filtro por status (ok, pendente, ignorado, divergente)
+     * Suporta requisição AJAX com retorno JSON ou direto do blade com HTML
      *
      * @param int $id
      * @param Request $request
@@ -657,50 +711,131 @@ class EntidadeFinanceiraController extends Controller
             ], 403);
         }
 
-        // Filtros de data
-        $dataInicio = $request->input('data_inicio');
-        $dataFim = $request->input('data_fim');
-
         // Verifica se a entidade pertence à empresa ativa
         $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
 
-        // Busca os lançamentos do extrato que já foram processados (ok, divergente, ignorado)
-        // Filtra por company_id e entidade_financeira_id para garantir segurança
-        $conciliacoes = BankStatement::where('company_id', $activeCompanyId)
-            ->where('entidade_financeira_id', $id)
-            ->whereIn('status_conciliacao', ['ok', 'divergente', 'ignorado'])
-            ->when($dataInicio, function ($query) use ($dataInicio) {
-                $query->whereDate('dtposted', '>=', Carbon::parse($dataInicio)->startOfDay());
-            })
-            ->when($dataFim, function ($query) use ($dataFim) {
-                $query->whereDate('dtposted', '<=', Carbon::parse($dataFim)->endOfDay());
-            })
-            ->with(['transacoes.lancamentoPadrao', 'transacoes.costCenter', 'transacoes.createdBy'])
-            ->orderBy('dtposted', 'desc')
-            ->get();
+        // Paginação: min 10, max 100
+        $perPage = min(max((int) $request->input('per_page', 10), 10), 100);
+        $q = trim((string) $request->input('q', ''));
+        $status = trim((string) $request->input('status', 'all')); // Filtro de status (default: 'all' para mostrar todos)
 
-        // Formata os dados para o frontend
-        $dados = $conciliacoes->map(function ($item) {
+        // Status permitidos: ok, pendente, ignorado, divergente, all, todos
+        $statusPermitidos = ['ok', 'pendente', 'ignorado', 'divergente', 'all', 'todos'];
+        if (!in_array($status, $statusPermitidos)) {
+            $status = 'ok';
+        }
+
+        // ✅ Calcula contadores ANTES de paginar
+        $baseQuery = BankStatement::query()
+            ->where('company_id', $activeCompanyId)
+            ->where('entidade_financeira_id', $id)
+            ->where('status_conciliacao', '!=', 'pendente');
+
+        $counts = [
+            'ok' => (clone $baseQuery)->where('status_conciliacao', 'ok')->count(),
+            'pendente' => 0,
+            'ignorado' => (clone $baseQuery)->where('status_conciliacao', 'ignorado')->count(),
+            'divergente' => (clone $baseQuery)->where('status_conciliacao', 'divergente')->count(),
+        ];
+
+        // Query base: conciliações da entidade
+        $query = BankStatement::query()
+            ->where('company_id', $activeCompanyId)
+            ->where('entidade_financeira_id', $id)
+            ->where('status_conciliacao', '!=', 'pendente');
+
+        // Filtro por status: se não for 'all' ou 'todos', filtra por status específico
+        if (!in_array($status, ['all', 'todos'])) {
+            $query->where('status_conciliacao', $status);
+        }
+
+        // Eager loading e ordenação
+        $query->with(['transacoes.lancamentoPadrao', 'transacoes.createdBy'])
+            ->latest('updated_at');
+
+        // Busca (search) por múltiplos campos
+        if ($q !== '') {
+            $query->where(function ($w) use ($q) {
+                $w->where('memo', 'like', "%{$q}%")
+                  ->orWhere('name', 'like', "%{$q}%")
+                  ->orWhereHas('transacoes.lancamentoPadrao', fn ($lp) => $lp->where('description', 'like', "%{$q}%"))
+                  ->orWhereHas('transacoes.createdBy', fn ($u) => $u->where('name', 'like', "%{$q}%"));
+            });
+        }
+
+        // Paginação
+        $paginator = $query->paginate($perPage)->appends(request()->query());
+
+        // Formata usando Resource
+        $dados = collect($paginator->items())->map(function ($item) {
             $transacao = $item->transacoes->first();
+
+            // Converte datas para Carbon se necessário
+            $dataExtrato = $item->dtposted instanceof \Carbon\Carbon 
+                ? $item->dtposted 
+                : ($item->dtposted ? \Carbon\Carbon::parse($item->dtposted) : null);
+            
+            $dataConciliacao = $item->updated_at instanceof \Carbon\Carbon
+                ? $item->updated_at
+                : ($item->updated_at ? \Carbon\Carbon::parse($item->updated_at) : null);
+
+            // 🔍 Debug: log do status sendo retornado
+            \Log::debug('📊 Status BankStatement', [
+                'id' => $item->id,
+                'status_conciliacao_raw' => $item->status_conciliacao,
+                'status_type' => gettype($item->status_conciliacao),
+            ]);
 
             return [
                 'id' => $item->id,
-                'data_conciliacao' => $item->updated_at,
-                'data_extrato' => $item->dtposted,
+                'transacao_id' => $transacao?->id,
                 'descricao' => $item->memo ?? $item->name ?? '-',
+                'memo' => $item->memo,
                 'tipo' => $item->amount >= 0 ? 'entrada' : 'saida',
                 'valor' => abs($item->amount),
-                'lancamento_padrao' => $transacao?->lancamentoPadrao?->description ?? '-',
                 'status' => $item->status_conciliacao ?? 'pendente',
+                'lancamento_padrao' => $transacao?->lancamentoPadrao?->description ?? '-',
                 'usuario' => $transacao?->createdBy?->name ?? '-',
-                'transacao_id' => $transacao?->id,
+                'data_conciliacao' => $dataConciliacao?->toDateString(),
+                'data_conciliacao_formatada' => $dataConciliacao?->format('d/m/Y'),
+                'data_extrato' => $dataExtrato?->toDateString(),
+                'data_extrato_formatada' => $dataExtrato?->format('d/m/Y'),
             ];
         });
 
+        // Se é requisição AJAX, retorna JSON com HTML renderizado
+        if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+            // Renderiza a tabela dentro do HTML
+            $html = view('app.financeiro.entidade.partials.historico-table', [
+                'dados' => $dados,
+                'entidade' => $entidade,
+                'status' => $status,
+            ])->render();
+
+            return response()->json([
+                'success' => true,
+                'html' => $html,
+                'counts' => $counts, // ✅ Novo: retorna contadores
+                'meta' => [
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'total' => $paginator->total(),
+                    'per_page' => $paginator->perPage(),
+                ],
+            ]);
+        }
+
+        // Requisição normal retorna o JSON
         return response()->json([
             'success' => true,
             'data' => $dados,
-            'total' => $dados->count()
+            'counts' => $counts, // ✅ Novo: retorna contadores
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'total' => $paginator->total(),
+                'per_page' => $paginator->perPage(),
+            ],
         ]);
     }
 
@@ -850,25 +985,28 @@ class EntidadeFinanceiraController extends Controller
 
                 // Guarda informações para log
                 $entidadeId = $transacao->entidade_id;
-                $valor = $transacao->valor;
                 $tipo = $transacao->tipo;
+                $valor = abs($transacao->valor);
                 $movimentacaoId = $transacao->movimentacao_id;
+                
+                $entidade = EntidadeFinanceira::findOrFail($entidadeId);
+                $saldoAnterior = $entidade->saldo_atual;
 
-                // 1. Atualizar o saldo da entidade financeira (reverter a operação)
-                if ($transacao->entidadeFinanceira) {
-                    $entidade = $transacao->entidadeFinanceira;
-                    
-                    // Reverte a operação no saldo
-                    if ($tipo === 'entrada') {
-                        // Se foi entrada, subtrai do saldo
-                        $entidade->saldo_atual -= $valor;
-                    } else {
-                        // Se foi saída, adiciona ao saldo
-                        $entidade->saldo_atual += $valor;
-                    }
-                    
-                    $entidade->save();
+                // 1. REVERTER O CACHE (saldo_atual) - ATOMICAMENTE
+                if ($tipo === 'entrada') {
+                    $entidade->saldo_atual -= $valor;
+                } else {
+                    $entidade->saldo_atual += $valor;
                 }
+                $entidade->save();
+
+                \Log::info('Saldo revertido', [
+                    'entidade_id' => $entidadeId,
+                    'tipo' => $tipo,
+                    'valor' => $valor,
+                    'saldo_anterior' => $saldoAnterior,
+                    'saldo_novo' => $entidade->saldo_atual
+                ]);
 
                 // 2. Deletar a movimentação relacionada
                 if ($movimentacaoId) {
@@ -892,8 +1030,8 @@ class EntidadeFinanceiraController extends Controller
                     'transacao_id' => $transacao->id,
                     'movimentacao_id' => $movimentacaoId,
                     'entidade_id' => $entidadeId,
-                    'valor' => $valor,
                     'tipo' => $tipo,
+                    'saldo_final' => $entidade->saldo_atual,
                     'user_id' => Auth::id()
                 ]);
 
@@ -930,9 +1068,21 @@ class EntidadeFinanceiraController extends Controller
         }
 
         $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+        $entidadesBancos = EntidadeFinanceira::forActiveCompany()
+            ->where('tipo', 'banco')
+            ->orderBy('nome')
+            ->get();
+        $entidadesCaixa = EntidadeFinanceira::forActiveCompany()
+            ->where('tipo', 'caixa')
+            ->orderBy('nome')
+            ->get();
+        $hasHorariosMissas = HorarioMissa::where('company_id', $activeCompanyId)->exists();
 
         return view('app.financeiro.entidade.show', [
             'entidade' => $entidade,
+            'entidadesBancos' => $entidadesBancos,
+            'entidadesCaixa' => $entidadesCaixa,
+            'hasHorariosMissas' => $hasHorariosMissas,
             'activeTab' => 'movimentacoes',
         ]);
     }
@@ -951,9 +1101,21 @@ class EntidadeFinanceiraController extends Controller
         }
 
         $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+        $entidadesBancos = EntidadeFinanceira::forActiveCompany()
+            ->where('tipo', 'banco')
+            ->orderBy('nome')
+            ->get();
+        $entidadesCaixa = EntidadeFinanceira::forActiveCompany()
+            ->where('tipo', 'caixa')
+            ->orderBy('nome')
+            ->get();
+        $hasHorariosMissas = HorarioMissa::where('company_id', $activeCompanyId)->exists();
 
         return view('app.financeiro.entidade.show', [
             'entidade' => $entidade,
+            'entidadesBancos' => $entidadesBancos,
+            'entidadesCaixa' => $entidadesCaixa,
+            'hasHorariosMissas' => $hasHorariosMissas,
             'activeTab' => 'informacoes',
         ]);
     }
@@ -972,9 +1134,35 @@ class EntidadeFinanceiraController extends Controller
         }
 
         $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+        $entidadesBancos = EntidadeFinanceira::forActiveCompany()
+            ->where('tipo', 'banco')
+            ->orderBy('nome')
+            ->get();
+        $entidadesCaixa = EntidadeFinanceira::forActiveCompany()
+            ->where('tipo', 'caixa')
+            ->orderBy('nome')
+            ->get();
+        $hasHorariosMissas = HorarioMissa::where('company_id', $activeCompanyId)->exists();
+
+        // Contadores por status para as abas do histórico
+        $baseQuery = BankStatement::query()
+            ->where('company_id', $activeCompanyId)
+            ->where('entidade_financeira_id', $id)
+            ->where('status_conciliacao', '!=', 'pendente');
+
+        $counts = [
+            'ok' => (clone $baseQuery)->where('status_conciliacao', 'ok')->count(),
+            'pendente' => 0,
+            'ignorado' => (clone $baseQuery)->where('status_conciliacao', 'ignorado')->count(),
+            'divergente' => (clone $baseQuery)->where('status_conciliacao', 'divergente')->count(),
+        ];
 
         return view('app.financeiro.entidade.show', [
             'entidade' => $entidade,
+            'counts' => $counts,
+            'entidadesBancos' => $entidadesBancos,
+            'entidadesCaixa' => $entidadesCaixa,
+            'hasHorariosMissas' => $hasHorariosMissas,
             'activeTab' => 'historico',
         ]);
     }

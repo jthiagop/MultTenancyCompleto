@@ -71,6 +71,106 @@ class EntidadeFinanceira extends Model
         $this->save(); // Salva o novo saldo no banco
     }
 
+    /**
+     * ✅ NOVO: Calcula o saldo dinamicamente baseado em movimentações e transações
+     * Sempre valores absolutos no banco + coluna tipo (entrada/saida)
+     * 
+     * Fórmula: saldo_inicial + (Σ entrada) - (Σ saida)
+     * 
+     * @return float
+     */
+    public function calculateBalance()
+    {
+        // ✅ IMPORTANTE: Não somar DUAS VEZES!
+        // A tabela transacoes_financeiras é a fonte de verdade (reconciliação bancária)
+        // A tabela movimentacoes é um histórico de auditoria
+        // Então apenas somamos transacoes_financeiras
+        
+        $saldoTransacoes = DB::table('transacoes_financeiras')
+            ->where('entidade_id', $this->id)
+            ->selectRaw("SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE -valor END) as saldo")
+            ->value('saldo') ?? 0;
+
+        return $this->saldo_inicial + $saldoTransacoes;
+    }
+
+    /**
+     * ✅ Accessor para obter saldo calculado dinamicamente
+     * Uso em views: {{ $entidade->saldo_dinamico }}
+     * 
+     * @return float
+     */
+    public function getSaldoDinamicoAttribute()
+    {
+        return $this->calculateBalance();
+    }
+
+    /**
+     * ✅ NOVO: Recalcula o saldo dinamicamente e sincroniza com a coluna estática (cache)
+     * Usar em caso de desincronização ou como "botão de cura"
+     * 
+     * @return bool
+     */
+    public function recalcularSaldo(): bool
+    {
+        // 1. Calcula a verdade absoluta
+        $saldoCalculado = $this->calculateBalance();
+        
+        // 2. Sincroniza com cache (coluna estática)
+        $saldoAnterior = $this->saldo_atual;
+        $this->saldo_atual = $saldoCalculado;
+        
+        // 3. Log da mudança
+        if ($saldoAnterior !== $saldoCalculado) {
+            \Log::warning("Saldo recalculado - Desincronização detectada", [
+                'entidade_id' => $this->id,
+                'saldo_anterior' => $saldoAnterior,
+                'saldo_novo' => $saldoCalculado,
+                'diferenca' => $saldoCalculado - $saldoAnterior,
+                'company_id' => $this->company_id,
+            ]);
+        }
+        
+        return $this->save();
+    }
+
+    /**
+     * ✅ NOVO: Função estática para recalcular TODOS os saldos da empresa
+     * Roda via Command ou Admin Dashboard
+     * 
+     * @param int|null $companyId ID da empresa (se null, usa sessão)
+     * @return int Número de entidades corrigidas
+     */
+    public static function recalcularTodosSaldos($companyId = null): int
+    {
+        $activeCompanyId = $companyId ?? session('active_company_id');
+        
+        if (!$activeCompanyId) {
+            \Log::error("recalcularTodosSaldos: Nenhuma empresa ativa");
+            return 0;
+        }
+        
+        $entidades = self::where('company_id', $activeCompanyId)->get();
+        $corrigidas = 0;
+        
+        foreach ($entidades as $entidade) {
+            $saldoAnterior = $entidade->saldo_atual;
+            $entidade->recalcularSaldo();
+            
+            if ($saldoAnterior !== $entidade->saldo_atual) {
+                $corrigidas++;
+            }
+        }
+        
+        \Log::info("Recálculo de saldos concluído", [
+            'company_id' => $activeCompanyId,
+            'total_entidades' => $entidades->count(),
+            'entidades_corrigidas' => $corrigidas,
+        ]);
+        
+        return $corrigidas;
+    }
+
     static public function getValorTotalEntidade()
     {
         $companyId = session('active_company_id'); // Recupere a empresa do usuário logado

@@ -3,6 +3,7 @@
 namespace App\Models\Financeiro;
 
 use App\Models\User;
+use App\Models\EntidadeFinanceira;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -149,6 +150,7 @@ class BankStatement extends Model
             'transacao_id' => $transacao->id,
             'valor_conciliado' => $valorConciliado,
             'amount_bank_statement' => $this->amount,
+            'amount_cents_bank_statement' => $this->amount_cents,
             'valor_transacao' => $transacao->valor,
             'entidade_financeira_id' => $this->entidade_financeira_id
         ]);
@@ -157,14 +159,16 @@ class BankStatement extends Model
             // ✅ Marca o registro como conciliado
             $this->reconciled = true;
 
-            // ✅ Define o status de conciliação com base no valor
-            if ($valorConciliado == $this->amount) {
+            // ✅ Define o status de conciliação com base no valor (ambos em centavos)
+            $bankStatementCentavos = abs($this->amount_cents); // Valor absoluto em centavos
+            
+            if ($valorConciliado == $bankStatementCentavos) {
                 $this->status_conciliacao = 'ok'; // Conciliação perfeita
                 \Log::info('Status definido como: ok (conciliação perfeita)');
-            } elseif ($valorConciliado < $this->amount) {
+            } elseif ($valorConciliado < $bankStatementCentavos) {
                 $this->status_conciliacao = 'parcial'; // Conciliação parcial (valor menor)
                 \Log::info('Status definido como: parcial (valor menor)');
-            } elseif ($valorConciliado > $this->amount) {
+            } elseif ($valorConciliado > $bankStatementCentavos) {
                 $this->status_conciliacao = 'divergente'; // Conciliação divergente (valor maior)
                 \Log::info('Status definido como: divergente (valor maior)');
             } else {
@@ -180,47 +184,37 @@ class BankStatement extends Model
                 'status_conciliacao' => $this->status_conciliacao
             ]);
 
-            // ✅ Atualiza o saldo_atual da entidade financeira
-            if ($this->entidade_financeira_id) {
-                $entidade = \App\Models\EntidadeFinanceira::find($this->entidade_financeira_id);
+            // ✅ ATUALIZAR SALDO DA ENTIDADE (IMPORTANTE!)
+            \Log::info('🔄 Iniciando atualização de saldo', [
+                'entidade_id' => $this->entidade_financeira_id,
+                'valor_conciliado_centavos' => $valorConciliado,
+                'tipo_transacao' => $transacao->tipo ?? 'desconhecido'
+            ]);
+            
+            $entidade = EntidadeFinanceira::find($this->entidade_financeira_id);
+            if ($entidade) {
+                $saldoAntes = $entidade->saldo_atual;
                 
-                if ($entidade) {
-                    // Converte o valor de centavos para reais (valor_conciliado está em centavos)
-                    $valorEmReais = $valorConciliado / 100;
-                    
-                    // Atualiza o saldo baseado no tipo de transação
-                    if ($transacao->tipo === 'entrada') {
-                        $entidade->saldo_atual += $valorEmReais;
-                        \Log::info('Saldo atualizado: ENTRADA', [
-                            'entidade_id' => $entidade->id,
-                            'valor' => $valorEmReais,
-                            'saldo_anterior' => $entidade->saldo_atual - $valorEmReais,
-                            'saldo_atual' => $entidade->saldo_atual
-                        ]);
-                    } elseif ($transacao->tipo === 'saida') {
-                        $entidade->saldo_atual -= $valorEmReais;
-                        \Log::info('Saldo atualizado: SAÍDA', [
-                            'entidade_id' => $entidade->id,
-                            'valor' => $valorEmReais,
-                            'saldo_anterior' => $entidade->saldo_atual + $valorEmReais,
-                            'saldo_atual' => $entidade->saldo_atual
-                        ]);
-                    }
-                    
-                    $entidade->save();
-                    
-                    \Log::info('Saldo da entidade atualizado com sucesso', [
-                        'entidade_id' => $entidade->id,
-                        'entidade_nome' => $entidade->nome,
-                        'novo_saldo_atual' => $entidade->saldo_atual,
-                        'tipo_transacao' => $transacao->tipo,
-                        'valor_conciliado' => $valorConciliado
-                    ]);
-                } else {
-                    \Log::warning('Entidade financeira não encontrada para atualizar saldo', [
-                        'entidade_id' => $this->entidade_financeira_id
-                    ]);
-                }
+                // Calcula incremento com base no tipo de transação
+                $valorParaAdicionar = ($transacao->tipo === 'entrada') 
+                    ? ($valorConciliado / 100)  // Converte centavos para reais
+                    : -($valorConciliado / 100);
+                
+                $entidade->saldo_atual += $valorParaAdicionar;
+                $entidade->save();
+                
+                \Log::info('✅ Saldo da entidade atualizado após conciliação', [
+                    'entidade_id' => $entidade->id,
+                    'saldo_antes' => $saldoAntes,
+                    'saldo_depois' => $entidade->saldo_atual,
+                    'tipo_transacao' => $transacao->tipo,
+                    'valor_adicionado' => $valorParaAdicionar,
+                    'valor_conciliado_centavos' => $valorConciliado
+                ]);
+            } else {
+                \Log::error('❌ Entidade não encontrada ao atualizar saldo', [
+                    'entidade_id' => $this->entidade_financeira_id
+                ]);
             }
 
             // ✅ Salva diretamente na tabela pivot o valor conciliado e o status

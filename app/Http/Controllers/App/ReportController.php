@@ -29,7 +29,7 @@ class ReportController extends Controller
                 return '<div class="badge fw-bold ' . $badgeClass . '">' . $caixa->tipo . '</div>';
             })
             ->editColumn('valor', function ($caixa) {
-                return 'R$ ' . number_format($caixa->valor, 2, ',', '.');
+                return 'R$ ' . number_format($caixa->valor / 100, 2, ',', '.');
             })
             ->addColumn('acoes', function ($caixa) {
                 $editUrl = route('caixa.edit', $caixa->id);
@@ -90,7 +90,7 @@ class ReportController extends Controller
                 'descricao' => $transacao->descricao,
                 'lancamento_padrao' => optional($transacao->lancamentoPadrao)->description,
                 'tipo' => $transacao->tipo,
-                'valor' => number_format($transacao->valor, 2, ',', '.'),
+                'valor' => number_format($transacao->valor / 100, 2, ',', '.'),
                 'origem' => $transacao->origem,
                 'anexos' => $transacao->modulos_anexos, // Passa a coleção de anexos
                 'edit_url' => route('banco.edit', $transacao->id) // Exemplo de URL para o botão de editar
@@ -206,7 +206,7 @@ class ReportController extends Controller
                 'descricao' => $transacao->descricao,
                 'lancamento_padrao' => optional($transacao->lancamentoPadrao)->description,
                 'tipo' => $transacao->tipo,
-                'valor' => number_format($transacao->valor, 2, ',', '.'),
+                'valor' => number_format($transacao->valor / 100, 2, ',', '.'),
                 'origem' => $transacao->origem,
                 'anexos' => $transacao->modulos_anexos->count(),
                 'actions' => route('banco.edit', $transacao->id)

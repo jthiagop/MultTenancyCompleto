@@ -47,6 +47,18 @@
             <!--end::Menu-->
             <!--begin::Navbar-->
             <div class="app-navbar flex-shrink-0">
+                <!--begin::Activities-->
+                <div class="app-navbar-item ms-1 ms-lg-3">
+                    <!--begin::Drawer toggle-->
+                    <div class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-primary w-35px h-35px w-md-40px h-md-40px"
+                        id="kt_activities_toggle">
+                        <!--begin::Svg Icon | path: icons/duotune/general/gen032.svg-->
+                        <i class="fa-solid fa-bell fs-3"></i>
+                        <!--end::Svg Icon-->
+                    </div>
+                    <!--end::Drawer toggle-->
+                </div>
+                <!--end::Activities-->
                 <!--begin::Theme mode-->
                 @include('app.layouts.themeMode')
                 <!--end::Theme mode-->
@@ -116,8 +128,7 @@
         <div class="app-sidebar-footer flex-column-auto pt-2 pb-6 px-6" id="kt_app_sidebar_footer">
             <a href="{{ route('company.edit') }}"
                 class="btn btn-flex flex-center btn-custom btn-primary overflow-hidden text-nowrap px-0 h-40px w-100"
-                data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss-="click"
-                title="Configurações">
+                data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss-="click" title="Configurações">
                 <span class="btn-label">Configurações do Organismo</span>
                 <!--begin::Svg Icon | path: icons/duotune/general/gen005.svg-->
                 <span class="svg-icon btn-icon svg-icon-2 m-0">

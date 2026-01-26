@@ -57,15 +57,48 @@ class TransacaoFinanceira extends Model
         'data_competencia' => \App\Casts\BrazilianDateCast::class,
         'data_vencimento' => \App\Casts\BrazilianDateCast::class,
         'data_pagamento' => \App\Casts\BrazilianDateCast::class,
-        'valor' => 'decimal:2',
-        'valor_pago' => 'decimal:2',
-        'juros' => 'decimal:2',
-        'multa' => 'decimal:2',
-        'desconto' => 'decimal:2',
-        'valor_a_pagar' => 'decimal:2',
+        'valor' => 'integer',  // Em centavos
+        'valor_pago' => 'integer',  // Em centavos
+        'juros' => 'integer',  // Em centavos
+        'multa' => 'integer',  // Em centavos
+        'desconto' => 'integer',  // Em centavos
+        'valor_a_pagar' => 'integer',  // Em centavos
         'agendado' => 'boolean',
         'comprovacao_fiscal' => 'boolean',
     ];
+
+    /**
+     * Accessors para converter centavos em reais para exibição
+     */
+    public function getValorEmReaisAttribute()
+    {
+        return $this->valor / 100;
+    }
+
+    public function getValorPagoEmReaisAttribute()
+    {
+        return $this->valor_pago ? $this->valor_pago / 100 : 0;
+    }
+
+    public function getJurosEmReaisAttribute()
+    {
+        return $this->juros ? $this->juros / 100 : 0;
+    }
+
+    public function getMultaEmReaisAttribute()
+    {
+        return $this->multa ? $this->multa / 100 : 0;
+    }
+
+    public function getDescontoEmReaisAttribute()
+    {
+        return $this->desconto ? $this->desconto / 100 : 0;
+    }
+
+    public function getValorAPagarEmReaisAttribute()
+    {
+        return $this->valor_a_pagar ? $this->valor_a_pagar / 100 : 0;
+    }
 
     // Tabela Pivot
     public function bankStatements()

@@ -156,6 +156,12 @@
                     $defaultColors = match($key) {
                         'received', 'recebimentos', 'entrada', 'credit' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
                         'paid', 'pagamentos', 'saida', 'debit' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
+                        // Status de Conciliação
+                        'all', 'todos' => ['class' => 'text-info', 'accent' => 'var(--bs-info)'],
+                        'ok', 'conciliados' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
+                        'pendente', 'pendentes' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
+                        'ignorado', 'ignorados' => ['class' => 'text-warning', 'accent' => 'var(--bs-warning)'],
+                        'divergente', 'divergentes' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
                         default => ['class' => 'text-primary', 'accent' => null] // null usa o CSS padrão (primary)
                     };
 

@@ -11,6 +11,7 @@ export default defineConfig({
                 'resources/css/app.css',
                 'resources/tenancy/assets/plugins/global/plugins.bundle.css',
                 'resources/tenancy/assets/css/style.bundle.css',
+                'resources/js/pages/conciliacoes/historico.js',
             ],
             refresh: true,
             // Build directory padrão (assets será acessado via symlink tenancy/assets/build -> build)
