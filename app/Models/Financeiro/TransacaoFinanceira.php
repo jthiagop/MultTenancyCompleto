@@ -28,6 +28,7 @@ class TransacaoFinanceira extends Model
         'data_vencimento',
         'data_pagamento',
         'entidade_id',
+        'parceiro_id',
         'tipo',
         'valor',
         'valor_pago',
@@ -134,6 +135,11 @@ class TransacaoFinanceira extends Model
     public function entidadeFinanceira()
     {
         return $this->belongsTo(EntidadeFinanceira::class, 'entidade_id');
+    }
+
+    public function parceiro()
+    {
+        return $this->belongsTo(\App\Models\Parceiro::class, 'parceiro_id');
     }
 
     public function movimentacao()

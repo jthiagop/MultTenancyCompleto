@@ -46,6 +46,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'historico_complementar' => 'nullable|string|max:500',
             'comprovacao_fiscal' => 'required|boolean', // 0 ou 1
             'entidade_id' => 'required|exists:entidades_financeiras,id',
+            'fornecedor_id' => 'nullable|exists:parceiros,id',
             'banco_id' => 'nullable|exists:cadastro_bancos,id',
             'entidade_banco_id' => [
                 'nullable',

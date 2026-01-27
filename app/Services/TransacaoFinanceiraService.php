@@ -160,6 +160,11 @@ class TransacaoFinanceiraService
         
         // Processa checkbox agendado
         $data['agendado'] = $request->has('agendado') && $request->input('agendado') ? true : false;
+
+        // Mapeia fornecedor_id (vindo do request/blade) para parceiro_id (banco de dados)
+        if (isset($data['fornecedor_id'])) {
+            $data['parceiro_id'] = $data['fornecedor_id'];
+        }
         
         // Adiciona informações de auditoria
         $data['created_by'] = Auth::id();
