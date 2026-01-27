@@ -767,11 +767,11 @@ class BancoController extends Controller
             }
 
             $response = [
-                'receitas_aberto' => number_format($stats['receitas_aberto'] / 100, 2, ',', '.'),
-                'receitas_realizadas' => number_format($stats['receitas_realizadas'] / 100, 2, ',', '.'),
-                'despesas_aberto' => number_format($stats['despesas_aberto'] / 100, 2, ',', '.'),
-                'despesas_realizadas' => number_format($stats['despesas_realizadas'] / 100, 2, ',', '.'),
-                'total' => number_format($stats['total'] / 100, 2, ',', '.')
+                'receitas_aberto' => number_format((float) $stats['receitas_aberto'], 2, ',', '.'), // Valores já estão em DECIMAL
+                'receitas_realizadas' => number_format((float) $stats['receitas_realizadas'], 2, ',', '.'),
+                'despesas_aberto' => number_format((float) $stats['despesas_aberto'], 2, ',', '.'),
+                'despesas_realizadas' => number_format((float) $stats['despesas_realizadas'], 2, ',', '.'),
+                'total' => number_format((float) $stats['total'], 2, ',', '.')
             ];
         } else {
             // Total do período: todas as transações com data_vencimento OU data_competencia dentro do período
@@ -786,10 +786,10 @@ class BancoController extends Controller
                 ->sum('valor');
 
             $response = [
-                'vencidos' => number_format($vencidos / 100, 2, ',', '.'),
-                'hoje' => number_format($hojeCount / 100, 2, ',', '.'),
-                'a_vencer' => number_format($aVencer / 100, 2, ',', '.'),
-                'total' => number_format($total / 100, 2, ',', '.')
+                'vencidos' => number_format((float) $vencidos, 2, ',', '.'), // Valores já estão em DECIMAL
+                'hoje' => number_format((float) $hojeCount, 2, ',', '.'),
+                'a_vencer' => number_format((float) $aVencer, 2, ',', '.'),
+                'total' => number_format((float) $total, 2, ',', '.')
             ];
 
             // Debug log
@@ -808,9 +808,9 @@ class BancoController extends Controller
 
             // Para entrada usa 'recebidos', para saida usa 'pagos'
             if ($tipo === 'entrada') {
-                $response['recebidos'] = number_format($recebidos / 100, 2, ',', '.');
+                $response['recebidos'] = number_format((float) $recebidos, 2, ',', '.'); // Valores já estão em DECIMAL
             } else {
-                $response['pagos'] = number_format($recebidos / 100, 2, ',', '.');
+                $response['pagos'] = number_format((float) $recebidos, 2, ',', '.');
             }
         }
 
@@ -1223,13 +1223,13 @@ class BancoController extends Controller
                     <input class="form-check-input row-check" type="checkbox" value="' . $transacao->id . '" />
                 </div>';
 
-                // Valor
-                $valorFormatado = 'R$ ' . number_format($transacao->valor / 100, 2, ',', '.');
+                // Valor (já está em DECIMAL, não precisa dividir por 100)
+                $valorFormatado = 'R$ ' . number_format((float) $transacao->valor, 2, ',', '.');
 
                 // Saldo (calculado com base no saldo da entidade ou valor pago)
                 // Para extrato, podemos usar o valor_pago como saldo
                 $saldo = $transacao->valor_pago ?? $transacao->valor;
-                $saldoFormatado = 'R$ ' . number_format($saldo / 100, 2, ',', '.');
+                $saldoFormatado = 'R$ ' . number_format((float) $saldo, 2, ',', '.');
 
                 return [
                     $checkboxHtml,
@@ -1314,8 +1314,8 @@ class BancoController extends Controller
                     $checkboxHtml,
                     $dataExibicao,
                     $descricaoHtml,
-                    'R$ ' . number_format($transacao->valor / 100, 2, ',', '.'),
-                    'R$ ' . number_format($valorAPagar / 100, 2, ',', '.'),
+                    'R$ ' . number_format((float) $transacao->valor, 2, ',', '.'),
+                    'R$ ' . number_format((float) $valorAPagar, 2, ',', '.'),
                     $situacaoBadge,
                     $transacao->origem ?? '-',
                     $actionsHtml
@@ -1338,7 +1338,7 @@ class BancoController extends Controller
                         : '<i class="bi bi-x-circle-fill text-danger" title="Sem Comprovação Fiscal"></i>',
                     $descricaoHtml,
                     '<div class="badge fw-bold ' . ($transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger') . '">' . $transacao->tipo . '</div>',
-                    'R$ ' . number_format($transacao->valor / 100, 2, ',', '.'),
+                    'R$ ' . number_format((float) $transacao->valor, 2, ',', '.'),
                     $transacao->origem ?? '-',
                     $actionsHtml
                 ];
@@ -1386,7 +1386,7 @@ class BancoController extends Controller
             'id' => $transacao->id,
             'descricao' => $transacao->descricao,
             'tipo' => $transacao->tipo,
-            'valor' => $transacao->valor / 100, // Converter centavos para reais
+            'valor' => (float) $transacao->valor, // Valor já está em DECIMAL
             'data_competencia_formatada' => $transacao->data_competencia ? Carbon::parse($transacao->data_competencia)->format('d/m/Y') : null,
             'lancamento_padrao' => $transacao->lancamentoPadrao->description ?? null,
             'tipo_documento' => $transacao->tipo_documento,

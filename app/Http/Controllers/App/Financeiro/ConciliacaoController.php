@@ -421,52 +421,47 @@ class ConciliacaoController extends Controller
             }
 
             // Define o valor conciliado
-            // CRÍTICO: O StoreTransacaoFinanceiraRequest já converte valor para CENTAVOS em prepareForValidation()
-            // O $validatedData['valor'] JÁ ESTÁ EM CENTAVOS (integer)
-            // O $transacao->valor TAMBÉM está em CENTAVOS (cast integer no modelo)
+            // CRÍTICO: O StoreTransacaoFinanceiraRequest já converte valor para DECIMAL em prepareForValidation()
+            // O $validatedData['valor'] JÁ ESTÁ EM DECIMAL (float)
+            // O $transacao->valor TAMBÉM está em DECIMAL (sem cast integer no modelo)
             // NÃO devemos converter novamente!
             
             if (isset($validatedData['valor'])) {
-                // ✅ VALOR JÁ ESTÁ EM CENTAVOS (vindo do request validado)
-                $valorConciliado = (int) $validatedData['valor'];
+                // ✅ VALOR JÁ ESTÁ EM DECIMAL (vindo do request validado)
+                $valorConciliado = (float) $validatedData['valor'];
                 
-                // Para logs: converte centavos → reais apenas para exibição
-                $valorEmReais = bcdiv((string) $valorConciliado, '100', 2);
-                
-                Log::info('✅ Valor conciliado (já em centavos do request validado)', [
-                    'valor_validado_centavos' => $valorConciliado,
-                    'valor_em_reais' => $valorEmReais,
-                    'transacao_valor_centavos' => $transacao->valor, // Já está em centavos (cast integer)
-                    'transacao_valor_reais' => bcdiv((string) $transacao->valor, '100', 2)
+                Log::info('✅ Valor conciliado (já em DECIMAL do request validado)', [
+                    'valor_validado_decimal' => $valorConciliado,
+                    'transacao_valor_decimal' => $transacao->valor
                 ]);
             } else {
-                // Fallback: usa valor da transação (que já está em centavos devido ao cast)
-                $valorConciliado = (int) $transacao->valor;
+                // Fallback: usa valor da transação (que já está em DECIMAL)
+                $valorConciliado = (float) $transacao->valor;
                 
                 Log::info('⚠️ Valor não encontrado no validatedData, usando valor da transação', [
-                    'transacao_valor_centavos' => $transacao->valor,
-                    'valor_conciliado_centavos' => $valorConciliado
+                    'transacao_valor_decimal' => $transacao->valor,
+                    'valor_conciliado_decimal' => $valorConciliado
                 ]);
             }
 
             Log::info('=== CÁLCULO DE VALOR CONCILIADO ===', [
                 'valor_request_raw' => $request->valor ?? 'null',
-                'valor_validated_centavos' => $validatedData['valor'] ?? 'null',
-                'transacao_valor_reais' => $transacao->valor,
-                'valor_conciliado_centavos' => $valorConciliado,
+                'valor_validated_decimal' => $validatedData['valor'] ?? 'null',
+                'transacao_valor_decimal' => $transacao->valor,
+                'valor_conciliado_decimal' => $valorConciliado,
                 'bank_statement_amount' => $bankStatement->amount,
                 'bank_statement_amount_cents' => $bankStatement->amount_cents,
             ]);
 
             // **Lógica para definir o status**
-            // Usa amount_cents diretamente (já está em centavos - fonte única de verdade)
-            $bankStatementCentavos = $bankStatement->amount_cents;
+            // Compara valorConciliado (DECIMAL) com amount (DECIMAL) do BankStatement
+            $bankStatementAmount = abs((float) $bankStatement->amount);
             
-            if (bccomp($valorConciliado, $bankStatementCentavos, 0) === 0) {
-                $status = 'ok'; // Conciliação perfeita
-            } elseif ($valorConciliado < $bankStatementCentavos) {
+            if (abs($valorConciliado - $bankStatementAmount) < 0.01) {
+                $status = 'ok'; // Conciliação perfeita (diferença < 1 centavo)
+            } elseif ($valorConciliado < $bankStatementAmount) {
                 $status = 'parcial'; // Conciliação parcial (falta valor)
-            } elseif ($valorConciliado > $bankStatementCentavos) {
+            } elseif ($valorConciliado > $bankStatementAmount) {
                 $status = 'divergente'; // Conciliação com excesso
             } else {
                 $status = 'pendente'; // Algo inesperado, pendente de verificação
@@ -628,26 +623,27 @@ class ConciliacaoController extends Controller
 
                 // ✅ Define o valor conciliado
                 // CRÍTICO: O valor SEMPRE deve vir em REAIS (decimal) do frontend
-                // Normaliza o valor removendo formatação e converte para centavos apenas uma vez
+                // Normaliza o valor removendo formatação e converte para DECIMAL
                 $valorRequest = $request->valor_conciliado ?? $transacao->valor;
                 
-                // Usa Money para normalizar e converter para centavos
-                // Se o valor já está em centavos (integer), converte para reais primeiro
-                if (is_int($valorRequest) || (is_string($valorRequest) && ctype_digit($valorRequest))) {
-                    // Valor já está em centavos (vindo de $transacao->valor)
-                    $money = Money::fromCents((int) $valorRequest);
+                // Usa Money para normalizar e converter para DECIMAL
+                // Se o valor já está em DECIMAL (float), usa fromDatabase
+                if (is_numeric($valorRequest) && !is_string($valorRequest)) {
+                    // Valor já está em DECIMAL (vindo de $transacao->valor que agora é DECIMAL)
+                    $money = Money::fromDatabase((float) $valorRequest);
                 } else {
-                    // Valor vem do frontend em formato brasileiro (string)
+                    // Valor vem do frontend em formato brasileiro (string) ou precisa conversão
                     $money = Money::fromHumanInput((string) $valorRequest);
                 }
                 
-                // ✅ CONVERSÃO ÚNICA: Reais → Centavos usando Money
-                $valorConciliado = $money->toCents();
+                // ✅ CONVERSÃO: Formato brasileiro → DECIMAL usando Money
+                // valor_conciliado no pivot é DECIMAL, não INTEGER
+                $valorConciliado = $money->toDatabase();
 
                 Log::info('=== CÁLCULO DE VALOR CONCILIADO (PIVOT) ===', [
                     'valor_request_original' => $valorRequest,
-                    'valor_normalizado_reais' => $valorDecimal,
-                    'valor_conciliado_centavos' => $valorConciliado,
+                    'valor_normalizado_reais' => $money->getAmount(),
+                    'valor_conciliado_decimal' => $valorConciliado,
                     'valor_original_transacao' => $transacao->valor,
                     'valor_bank_statement' => $bankStatement->amount,
                     'bank_statement_amount_cents' => $bankStatement->amount_cents
@@ -1044,7 +1040,7 @@ class ConciliacaoController extends Controller
                 $lancamentoPadrao = LancamentoPadrao::find($validated['lancamento_padrao_id']);
 
                 // Prepara os dados para criar a transação (apenas da conta de origem - conciliação)
-                // Converte valor para centavos (integer) usando Money
+                // Converte valor para DECIMAL usando Money
                 $moneyValor = Money::fromDatabase($valor);
                 
                 $validatedData = [
@@ -1052,7 +1048,7 @@ class ConciliacaoController extends Controller
                     'data_competencia' => $validated['data_transferencia'],
                     'entidade_id' => $entidadeOrigem->id,
                     'tipo' => $tipo,
-                    'valor' => $moneyValor->toCents(), // TransacaoFinanceira usa centavos (integer)
+                    'valor' => $moneyValor->toDatabase(), // TransacaoFinanceira usa DECIMAL
                     'descricao' => $validated['descricao'] ?? 'Transferência para ' . $entidadeDestino->nome,
                     'lancamento_padrao_id' => $validated['lancamento_padrao_id'],
                     'cost_center_id' => $validated['cost_center_id'] ?? null,

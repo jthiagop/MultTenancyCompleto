@@ -58,47 +58,44 @@ class TransacaoFinanceira extends Model
         'data_competencia' => \App\Casts\BrazilianDateCast::class,
         'data_vencimento' => \App\Casts\BrazilianDateCast::class,
         'data_pagamento' => \App\Casts\BrazilianDateCast::class,
-        'valor' => 'integer',  // Em centavos
-        'valor_pago' => 'integer',  // Em centavos
-        'juros' => 'integer',  // Em centavos
-        'multa' => 'integer',  // Em centavos
-        'desconto' => 'integer',  // Em centavos
-        'valor_a_pagar' => 'integer',  // Em centavos
+        // Campos monetários são DECIMAL no banco, não INTEGER
+        // Removido cast 'integer' para preservar precisão decimal
         'agendado' => 'boolean',
         'comprovacao_fiscal' => 'boolean',
     ];
 
     /**
-     * Accessors para converter centavos em reais para exibição
+     * Accessors para exibição (valores já estão em DECIMAL, não precisam conversão)
+     * Mantidos para compatibilidade com código existente que pode usar esses accessors
      */
     public function getValorEmReaisAttribute()
     {
-        return $this->valor / 100;
+        return (float) $this->valor; // Já está em DECIMAL, retorna como float
     }
 
     public function getValorPagoEmReaisAttribute()
     {
-        return $this->valor_pago ? $this->valor_pago / 100 : 0;
+        return $this->valor_pago ? (float) $this->valor_pago : 0; // Já está em DECIMAL
     }
 
     public function getJurosEmReaisAttribute()
     {
-        return $this->juros ? $this->juros / 100 : 0;
+        return $this->juros ? (float) $this->juros : 0; // Já está em DECIMAL
     }
 
     public function getMultaEmReaisAttribute()
     {
-        return $this->multa ? $this->multa / 100 : 0;
+        return $this->multa ? (float) $this->multa : 0; // Já está em DECIMAL
     }
 
     public function getDescontoEmReaisAttribute()
     {
-        return $this->desconto ? $this->desconto / 100 : 0;
+        return $this->desconto ? (float) $this->desconto : 0; // Já está em DECIMAL
     }
 
     public function getValorAPagarEmReaisAttribute()
     {
-        return $this->valor_a_pagar ? $this->valor_a_pagar / 100 : 0;
+        return $this->valor_a_pagar ? (float) $this->valor_a_pagar : 0; // Já está em DECIMAL
     }
 
     // Tabela Pivot
@@ -363,61 +360,67 @@ class TransacaoFinanceira extends Model
     /**
      * Mutator para garantir que valor sempre seja absoluto (positivo)
      * Blindagem de segurança para impedir valores negativos no banco
+     * IMPORTANTE: Usa float para preservar decimais (banco é DECIMAL, não INTEGER)
      */
     protected function valor(): Attribute
     {
         return Attribute::make(
-            set: fn ($value) => abs((int) $value),
+            set: fn ($value) => abs((float) $value),
         );
     }
 
     /**
      * Mutator para garantir que valor_pago sempre seja absoluto (positivo)
+     * IMPORTANTE: Usa float para preservar decimais (banco é DECIMAL, não INTEGER)
      */
     protected function valorPago(): Attribute
     {
         return Attribute::make(
-            set: fn ($value) => $value !== null ? abs((int) $value) : null,
+            set: fn ($value) => $value !== null ? abs((float) $value) : null,
         );
     }
 
     /**
      * Mutator para garantir que juros sempre seja absoluto (positivo)
+     * IMPORTANTE: Usa float para preservar decimais (banco é DECIMAL, não INTEGER)
      */
     protected function juros(): Attribute
     {
         return Attribute::make(
-            set: fn ($value) => $value !== null ? abs((int) $value) : null,
+            set: fn ($value) => $value !== null ? abs((float) $value) : null,
         );
     }
 
     /**
      * Mutator para garantir que multa sempre seja absoluto (positivo)
+     * IMPORTANTE: Usa float para preservar decimais (banco é DECIMAL, não INTEGER)
      */
     protected function multa(): Attribute
     {
         return Attribute::make(
-            set: fn ($value) => $value !== null ? abs((int) $value) : null,
+            set: fn ($value) => $value !== null ? abs((float) $value) : null,
         );
     }
 
     /**
      * Mutator para garantir que desconto sempre seja absoluto (positivo)
+     * IMPORTANTE: Usa float para preservar decimais (banco é DECIMAL, não INTEGER)
      */
     protected function desconto(): Attribute
     {
         return Attribute::make(
-            set: fn ($value) => $value !== null ? abs((int) $value) : null,
+            set: fn ($value) => $value !== null ? abs((float) $value) : null,
         );
     }
 
     /**
      * Mutator para garantir que valor_a_pagar sempre seja absoluto (positivo)
+     * IMPORTANTE: Usa float para preservar decimais (banco é DECIMAL, não INTEGER)
      */
     protected function valorAPagar(): Attribute
     {
         return Attribute::make(
-            set: fn ($value) => $value !== null ? abs((int) $value) : null,
+            set: fn ($value) => $value !== null ? abs((float) $value) : null,
         );
     }
 

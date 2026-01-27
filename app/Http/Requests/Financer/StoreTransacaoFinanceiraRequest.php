@@ -35,7 +35,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'data_competencia' => 'required',
             'descricao' => 'required|string',
             'descricao2' => 'string',
-            'valor' => 'required|integer|gt:0',  // Em centavos
+            'valor' => 'required|numeric|gt:0',  // Em DECIMAL (ex: 1991.44)
             'tipo' => 'required|in:entrada,saida',
             'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
             'cost_center_id' => 'required|string',
@@ -100,11 +100,11 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             // Validações de situação e agendamento
             'vencimento' => 'required_if:repetir_lancamento,1|nullable|date_format:d/m/Y', // Campo do formulário
             'data_vencimento' => 'nullable|date', // Campo processado
-            'valor_pago' => 'nullable|integer|min:0',  // Em centavos
-            'juros' => 'nullable|integer|min:0',  // Em centavos
-            'multa' => 'nullable|integer|min:0',  // Em centavos
-            'desconto' => 'nullable|integer|min:0',  // Em centavos
-            'valor_a_pagar' => 'nullable|integer|min:0',  // Em centavos
+            'valor_pago' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
+            'juros' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
+            'multa' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
+            'desconto' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
+            'valor_a_pagar' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
             'situacao' => 'nullable|in:em_aberto,desconsiderado,atrasado,pago_parcial,pago,previsto',
             'agendado' => 'nullable|boolean',
 
@@ -121,15 +121,15 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                     }
                 },
             ],
-            'juros_pagamento' => 'nullable|integer|min:0',  // Em centavos
-            'multa_pagamento' => 'nullable|integer|min:0',  // Em centavos
-            'desconto_pagamento' => 'nullable|integer|min:0',  // Em centavos
+            'juros_pagamento' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
+            'multa_pagamento' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
+            'desconto_pagamento' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
 
             // Validações de parcelas (quando parcelamento é 2x ou mais)
             'parcelamento' => 'nullable|string',
             'parcelas' => 'nullable|array',
             'parcelas.*.vencimento' => 'required_with:parcelas|date_format:d/m/Y',
-            'parcelas.*.valor' => 'required_with:parcelas|integer|gt:0',  // Em centavos
+            'parcelas.*.valor' => 'required_with:parcelas|numeric|gt:0',  // Em DECIMAL (ex: 1991.44)
             'parcelas.*.percentual' => 'required_with:parcelas|numeric|gt:0|max:100',
             'parcelas.*.forma_pagamento_id' => 'nullable|exists:formas_pagamento,id',
             'parcelas.*.conta_pagamento_id' => 'nullable|exists:entidades_financeiras,id',
@@ -154,7 +154,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'descricao.required' => 'A descrição é obrigatória.',
             'valor.required' => 'O valor é obrigatório.',
             'banco_id.required' => 'Selecione um banco.',
-            'valor.integer' => 'O valor deve ser numérico.',
+            'valor.numeric' => 'O valor deve ser numérico.',
             'valor.gt' => 'O valor deve ser maior que zero.',
             'tipo.required' => 'O tipo é obrigatório.',
             'tipo.in' => 'O tipo deve ser "entrada" ou "saida".',
@@ -178,21 +178,21 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'data_pagamento.required_if' => 'A data de pagamento é obrigatória quando o lançamento está marcado como pago.',
             'data_pagamento.date' => 'A data de pagamento deve ser uma data válida.',
             'valor_pago.required_if' => 'O valor pago é obrigatório quando o lançamento está marcado como pago.',
-            'valor_pago.integer' => 'O valor pago deve ser numérico.',
+            'valor_pago.numeric' => 'O valor pago deve ser numérico.',
             'valor_pago.min' => 'O valor pago deve ser maior que zero.',
-            'juros.integer' => 'Os juros devem ser numéricos.',
+            'juros.numeric' => 'Os juros devem ser numéricos.',
             'juros.min' => 'Os juros não podem ser negativos.',
-            'multa.integer' => 'A multa deve ser numérica.',
+            'multa.numeric' => 'A multa deve ser numérica.',
             'multa.min' => 'A multa não pode ser negativa.',
-            'desconto.integer' => 'O desconto deve ser numérico.',
+            'desconto.numeric' => 'O desconto deve ser numérico.',
             'desconto.min' => 'O desconto não pode ser negativo.',
-            'valor_a_pagar.integer' => 'O valor a pagar deve ser numérico.',
+            'valor_a_pagar.numeric' => 'O valor a pagar deve ser numérico.',
             'valor_a_pagar.min' => 'O valor a pagar não pode ser negativo.',
             'parcelas.array' => 'As parcelas devem ser enviadas como um array.',
             'parcelas.*.vencimento.required_with' => 'A data de vencimento é obrigatória para cada parcela.',
             'parcelas.*.vencimento.date_format' => 'A data de vencimento da parcela deve estar no formato dd/mm/aaaa.',
             'parcelas.*.valor.required_with' => 'O valor é obrigatório para cada parcela.',
-            'parcelas.*.valor.integer' => 'O valor da parcela deve ser numérico.',
+            'parcelas.*.valor.numeric' => 'O valor da parcela deve ser numérico.',
             'parcelas.*.valor.gt' => 'O valor da parcela deve ser maior que zero.',
             'parcelas.*.percentual.required_with' => 'O percentual é obrigatório para cada parcela.',
             'parcelas.*.percentual.numeric' => 'O percentual da parcela deve ser numérico.',
@@ -221,7 +221,9 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             }
         }
 
-        // Campos monetários em centavos - usa Money para conversão
+        // Campos monetários em DECIMAL - usa Money para conversão
+        // IMPORTANTE: Banco usa DECIMAL, não INTEGER (centavos)
+        // Usa toDatabase() para retornar float (ex: 1991.44) ao invés de toCents()
         $camposMonetarios = [
             'valor',
             'valor_pago',
@@ -234,39 +236,39 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
         foreach ($camposMonetarios as $campo) {
             if ($this->has($campo) && $this->input($campo) !== null) {
                 $valorInput = $this->input($campo);
-                // Usa Money::fromHumanInput para converter formato brasileiro → centavos
+                // Usa Money::fromHumanInput para converter formato brasileiro → DECIMAL
                 $money = Money::fromHumanInput((string) $valorInput);
                 $this->merge([
-                    $campo => $money->toCents()
+                    $campo => $money->toDatabase() // Retorna float (1991.44), não centavos
                 ]);
             }
         }
 
-        // Campos de pagamento (fracionado) em centavos - usa Money para conversão
+        // Campos de pagamento (fracionado) em DECIMAL - usa Money para conversão
         $camposPagamento = ['juros_pagamento', 'multa_pagamento', 'desconto_pagamento'];
 
         foreach ($camposPagamento as $campo) {
             if ($this->has($campo) && $this->input($campo) !== null) {
                 $valorInput = $this->input($campo);
-                // Usa Money::fromHumanInput para converter formato brasileiro → centavos
+                // Usa Money::fromHumanInput para converter formato brasileiro → DECIMAL
                 $money = Money::fromHumanInput((string) $valorInput);
                 $this->merge([
-                    $campo => $money->toCents()
+                    $campo => $money->toDatabase() // Retorna float (1991.44), não centavos
                 ]);
             }
         }
 
-        // Processa parcelas - converte valores para centavos usando Money
+        // Processa parcelas - converte valores para DECIMAL usando Money
         if ($this->has('parcelas') && is_array($this->parcelas)) {
             $parcelasProcessadas = [];
             
             foreach ($this->parcelas as $index => $parcela) {
                 $parcelaProcessada = $parcela;
 
-                // Converte valor em reais para centavos usando Money
+                // Converte valor em reais para DECIMAL usando Money
                 if (isset($parcela['valor'])) {
                     $money = Money::fromHumanInput((string) $parcela['valor']);
-                    $parcelaProcessada['valor'] = $money->toCents();
+                    $parcelaProcessada['valor'] = $money->toDatabase(); // Retorna float (1991.44), não centavos
                 }
 
                 // Percentual continua em numeric (não é dinheiro)

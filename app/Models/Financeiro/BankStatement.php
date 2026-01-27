@@ -160,16 +160,17 @@ class BankStatement extends Model
             // ✅ Marca o registro como conciliado
             $this->reconciled = true;
 
-            // ✅ Define o status de conciliação com base no valor (ambos em centavos)
-            $bankStatementCentavos = abs($this->amount_cents); // Valor absoluto em centavos
+            // ✅ Define o status de conciliação com base no valor (ambos em DECIMAL)
+            // Compara valorConciliado (DECIMAL) com amount (DECIMAL) do BankStatement
+            $bankStatementAmount = abs((float) $this->amount); // Valor absoluto em DECIMAL
             
-            if ($valorConciliado == $bankStatementCentavos) {
-                $this->status_conciliacao = 'ok'; // Conciliação perfeita
+            if (abs($valorConciliado - $bankStatementAmount) < 0.01) {
+                $this->status_conciliacao = 'ok'; // Conciliação perfeita (diferença < 1 centavo)
                 \Log::info('Status definido como: ok (conciliação perfeita)');
-            } elseif ($valorConciliado < $bankStatementCentavos) {
+            } elseif ($valorConciliado < $bankStatementAmount) {
                 $this->status_conciliacao = 'parcial'; // Conciliação parcial (valor menor)
                 \Log::info('Status definido como: parcial (valor menor)');
-            } elseif ($valorConciliado > $bankStatementCentavos) {
+            } elseif ($valorConciliado > $bankStatementAmount) {
                 $this->status_conciliacao = 'divergente'; // Conciliação divergente (valor maior)
                 \Log::info('Status definido como: divergente (valor maior)');
             } else {
@@ -186,10 +187,10 @@ class BankStatement extends Model
             ]);
 
             // ✅ ATUALIZAR SALDO DA ENTIDADE (IMPORTANTE!)
-            // CRÍTICO: $valorConciliado JÁ VEM EM CENTAVOS do controller
+            // CRÍTICO: $valorConciliado JÁ VEM EM DECIMAL do controller (ex: 1991.44)
             \Log::info('🔄 Iniciando atualização de saldo', [
                 'entidade_id' => $this->entidade_financeira_id,
-                'valor_conciliado_centavos' => $valorConciliado,
+                'valor_conciliado_decimal' => $valorConciliado,
                 'bank_statement_amount' => $this->amount,
                 'bank_statement_amount_cents' => $this->amount_cents,
                 'tipo_transacao' => $transacao->tipo ?? 'desconhecido'
@@ -199,9 +200,9 @@ class BankStatement extends Model
             if ($entidade) {
                 $saldoAntes = $entidade->saldo_atual;
                 
-                // IMPORTANTE: $valorConciliado já está em CENTAVOS (integer) do controller
+                // IMPORTANTE: $valorConciliado já está em DECIMAL (float) do controller
                 // DECIMAL: Usar bcmath para precisão financeira (NUNCA usar operadores aritméticos!)
-                $valorEmReais = bcdiv((string) $valorConciliado, '100', 2); // Converte centavos → reais
+                $valorEmReais = (string) abs((float) $valorConciliado); // Já está em reais, apenas garante positivo
                 
                 // Calcula incremento com base no tipo de transação usando bcmath
                 $valorParaAdicionar = ($transacao->tipo === 'entrada') 
@@ -219,7 +220,7 @@ class BankStatement extends Model
                     'saldo_antes' => $saldoAntes,
                     'saldo_depois' => $entidade->saldo_atual,
                     'tipo_transacao' => $transacao->tipo,
-                    'valor_conciliado_centavos' => $valorConciliado,
+                    'valor_conciliado_decimal' => $valorConciliado,
                     'valor_em_reais' => $valorEmReais,
                     'valor_adicionado' => $valorParaAdicionar,
                     'calculo' => "{$saldoAntes} + ({$valorParaAdicionar}) = {$entidade->saldo_atual}"

@@ -495,13 +495,13 @@ class ConciliacaoMissasService
             ]);
 
             // Cria TransacaoFinanceira com campos contábeis do lançamento padrão
-            // TransacaoFinanceira->valor está em centavos (integer)
+            // TransacaoFinanceira->valor está em DECIMAL
             $transacaoFinanceira = TransacaoFinanceira::create([
                 'company_id' => $bankStatement->company_id,
                 'data_competencia' => $bankStatement->transaction_datetime ?? $bankStatement->dtposted,
                 'entidade_id' => $bankStatement->entidade_financeira_id,
                 'tipo' => 'entrada',
-                'valor' => $money->toCents(), // TransacaoFinanceira usa centavos (integer)
+                'valor' => $money->toDatabase(), // TransacaoFinanceira usa DECIMAL
                 'descricao' => $bankStatement->memo ?? 'Coleta realizada durante missa',
                 'lancamento_padrao_id' => $lancamentoPadrao->id,
                 'movimentacao_id' => $movimentacao->id,

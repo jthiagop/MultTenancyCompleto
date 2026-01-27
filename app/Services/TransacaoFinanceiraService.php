@@ -364,9 +364,9 @@ class TransacaoFinanceiraService
             
             $saldoAntes = $entidade->saldo_atual;
             
-            // ✅ IMPORTANTE: O valor da transação está em CENTAVOS (cast integer)
-            // Converte para reais antes de atualizar o saldo
-            $valorEmReais = bcdiv((string) $transacao->valor, '100', 2);
+            // ✅ IMPORTANTE: O valor da transação está em DECIMAL (ex: 1991.44)
+            // Não precisa converter, já está em reais
+            $valorEmReais = (string) abs((float) $transacao->valor);
             
             // Calcula incremento com base no tipo de transação usando bcmath
             if ($transacao->tipo === 'entrada') {

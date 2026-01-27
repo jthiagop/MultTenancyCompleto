@@ -393,7 +393,7 @@ class TransacaoFinanceiraController extends Controller
                     'transacao_id' => $transacaoId,
                     'movimentacao_id' => $movimentacaoId,
                     'entidade_id' => $entidadeId,
-                    'valor' => $valor / 100,
+                    'valor' => (float) $valor, // Valor já está em DECIMAL
                     'tipo' => $tipo,
                     'origem' => $origem,
                     'user_id' => Auth::id(),
@@ -469,7 +469,7 @@ class TransacaoFinanceiraController extends Controller
             })
             ->editColumn('valor', function ($row) {
                 // Formata valor (converte centavos para reais)
-                return 'R$ ' . number_format($row->valor / 100, 2, ',', '.');
+                return 'R$ ' . number_format((float) $row->valor, 2, ',', '.'); // Valor já está em DECIMAL
             })
             ->rawColumns(['comprovacao_fiscal', 'tipo', 'action']) // Indica quais colunas podem ter HTML
             ->make(true);
@@ -514,15 +514,15 @@ class TransacaoFinanceiraController extends Controller
             $valorTransfEnt = $transacoesDia->where('tipo', 'transfer_in')->sum('valor');
             $valorTransfSai = $transacoesDia->where('tipo', 'transfer_out')->sum('valor');
 
-            // Atualiza o saldo acumulado (converte centavos para reais)
-            $saldoAcumulado += (($valorRecebimentos + $valorTransfEnt) - ($valorPagamentos + $valorTransfSai)) / 100;
+            // Atualiza o saldo acumulado (valores já estão em DECIMAL)
+            $saldoAcumulado += (($valorRecebimentos + $valorTransfEnt) - ($valorPagamentos + $valorTransfSai));
 
-            // Adiciona os valores ao array (converte centavos para reais)
+            // Adiciona os valores ao array (valores já estão em DECIMAL)
             $dias[] = $dia;
-            $recebimentos[] = (float) ($valorRecebimentos / 100);
-            $pagamentos[] = (float) ($valorPagamentos / 100);
-            $transfEntrada[] = (float) ($valorTransfEnt / 100);
-            $transfSaida[] = (float) ($valorTransfSai / 100);
+            $recebimentos[] = (float) $valorRecebimentos;
+            $pagamentos[] = (float) $valorPagamentos;
+            $transfEntrada[] = (float) $valorTransfEnt;
+            $transfSaida[] = (float) $valorTransfSai;
             $saldo[] = (float) $saldoAcumulado;
         }
 
