@@ -215,7 +215,7 @@ pageTitle="Editar Lançamento Bancário"
                                             <x-tenant-info-item label="Descrição" :value="$banco->descricao" :editable="true" field="descricao" />
                                             <x-tenant-info-item label="Tipo Documento" :value="$banco->tipo_documento" />
                                             <x-tenant-info-item label="N. Documento" :value="$banco->numero_documento" />
-                                            <x-tenant-info-item label="Valor Total" :value="$banco->valor" currency :currency-variant="$banco->tipo" />
+                                            <x-tenant-info-item label="Valor Total" :value="$banco->valor" currency :currency-variant="$banco->tipo" :editable="true" field="valor" />
                                         </x-tenant-info-grid>
                                         <!--end::Details-->
 

@@ -58,6 +58,13 @@
                         </x-tenant-select>
                     </div>
                     <!--end::Input group-->
+
+                    <!--begin::Input group - Valor (oculto por padrão)-->
+                    <div class="fv-row mb-7" id="field_valor" style="display: none;">
+                        <x-tenant-input name="valor" id="valor2" label="Valor Total"
+                            placeholder="Informe o valor" required class="money" />
+                    </div>
+                    <!--end::Input group-->
                 </form>
                 <!--end::Form-->
             </div>
@@ -88,7 +95,7 @@
             var value = button.data('value');
 
             // Oculta todos os campos
-            $('#field_descricao, #field_lancamento_padrao_id, #field_cost_center_id').hide();
+            $('#field_descricao, #field_lancamento_padrao_id, #field_cost_center_id, #field_valor').hide();
 
             // Configura o formulário baseado no campo
             if (field === 'descricao') {
@@ -122,6 +129,32 @@
                     });
                 }
                 $('#edit_cost_center_id').val(value).trigger('change');
+            } else if (field === 'valor') {
+                $('#modal_edit_field_title').text('Editar Valor Total');
+                $('#field_type').val('valor');
+                $('#field_valor').show();
+                
+                // Inicializa máscara de dinheiro se ainda não foi inicializada
+                if ($('#valor2').length > 0) {
+                    Inputmask({
+                        alias: "numeric",
+                        radixPoint: ",",
+                        groupSeparator: ".",
+                        digits: 2,
+                        autoGroup: true,
+                        prefix: "R$ ",
+                        rightAlign: false,
+                        autoUnmask: true,
+                        removeMaskOnSubmit: true
+                    }).mask("#valor2");
+                }
+
+                // Formata o valor para o padrão de moeda se necessário
+                var formattedValue = value;
+                if (!isNaN(parseFloat(value))) {
+                    formattedValue = parseFloat(value).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                }
+                $('#valor2').val(formattedValue).trigger('input');
             }
 
             // Atualiza a action do formulário

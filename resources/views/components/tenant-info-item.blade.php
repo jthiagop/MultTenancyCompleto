@@ -26,6 +26,15 @@
             <span class="fs-4 fw-bold @if($currencyVariant === 'entrada') text-success @elseif($currencyVariant === 'saida') text-danger @endif">
                 R$ {{ number_format($value, 2, ',', '.') }}
             </span>
+            @if($editable && $field)
+                <i class="fa-regular fa-pen-to-square text-primary ms-2 fs-6 cursor-pointer"
+                   style="cursor: pointer;"
+                   data-bs-toggle="modal"
+                   data-bs-target="#modal_edit_field"
+                   data-field="{{ $field }}"
+                   data-value="{{ $valueId ?? $value }}"
+                   title="Editar {{ $label }}"></i>
+            @endif
         @elseif($badge && $value)
             @if($badgeVariant === 'entrada')
                 <span class="badge badge-light-success">{{ $value }}</span>

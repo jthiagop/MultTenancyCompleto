@@ -24,6 +24,7 @@ use App\Models\User;
 use App\Services\RecurrenceService;
 use App\Services\TransacaoFinanceiraService;
 use App\Services\EntidadeFinanceiraService;
+use App\Support\Money;
 use Carbon\Carbon;
 use DB;
 use Illuminate\Support\Str;
@@ -2238,6 +2239,14 @@ class BancoController extends Controller
             } elseif ($fieldType === 'cost_center_id' && $request->has('cost_center_id')) {
                 $rules['cost_center_id'] = 'nullable|exists:cost_centers,id';
                 $dataToUpdate['cost_center_id'] = $request->cost_center_id ? $request->cost_center_id : null;
+            } elseif ($fieldType === 'valor' && $request->has('valor')) {
+                // Tratar o valor do campo "valor" usando a classe de suporte Money
+                $money = Money::fromHumanInput($request->input('valor'));
+                $valor = $money->toDatabase();
+                
+                $dataToValidate['valor'] = $valor;
+                $rules['valor'] = 'required|numeric|min:0';
+                $dataToUpdate['valor'] = $valor;
             }
 
             // Valida apenas os campos que foram enviados
