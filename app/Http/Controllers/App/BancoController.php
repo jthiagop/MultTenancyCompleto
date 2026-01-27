@@ -79,6 +79,7 @@ class BancoController extends Controller
             'entidadesBanco' => $entidadesBanco,
             'formasPagamento' => $formasPagamento,
             'parceiros' => $parceiros,
+            'fornecedores' => $parceiros,
         ]);
     }
 
@@ -282,6 +283,7 @@ class BancoController extends Controller
             'tabConfigs' => $tabConfigs,
             'dadosFluxoCaixaAnual' => $dadosFluxoCaixaAnual,
             'accountOptions' => $accountOptions,
+            'fornecedores' => $parceiros,
         ], $dadosGrafico ));
     }
 

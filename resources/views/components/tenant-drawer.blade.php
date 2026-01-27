@@ -46,7 +46,7 @@
         <!--end::Header-->
 
         <!--begin::Body-->
-        <div class="card-body position-relative drawer-body-default {{ $bodyClass }}" id="{{ $bodyId }}">
+        <div class="card-body position-relative drawer-body {{ $bodyClass }}" id="{{ $bodyId }}">
             <!--begin::Content-->
             <div id="{{ $scrollId }}" class="position-relative scroll-y me-n5 pe-5" data-kt-scroll="true"
                 data-kt-scroll-height="auto" data-kt-scroll-wrappers="#{{ $bodyId }}"

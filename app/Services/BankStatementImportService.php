@@ -23,8 +23,8 @@ class BankStatementImportService
         Carbon $endDate
     ): BankStatementImport {
         // Validar se a conta tem configuração BB
-        $bankConfig = is_object($bankAccount) && isset($bankAccount->bankConfig) 
-            ? $bankAccount->bankConfig 
+        $bankConfig = is_object($bankAccount) && isset($bankAccount->bankConfig)
+            ? $bankAccount->bankConfig
             : (method_exists($bankAccount, 'bankConfig') ? $bankAccount->bankConfig : null);
 
         if (!$bankConfig) {
@@ -32,11 +32,11 @@ class BankStatementImportService
         }
 
         $bbService = new BancoBrasilService($bankConfig);
-        
+
         $companyId = is_object($bankAccount) && isset($bankAccount->company_id)
             ? $bankAccount->company_id
             : (method_exists($bankAccount, 'company_id') ? $bankAccount->company_id : Auth::user()->company_id);
-            
+
         $bankAccountId = is_object($bankAccount) && isset($bankAccount->id)
             ? $bankAccount->id
             : (method_exists($bankAccount, 'id') ? $bankAccount->id : null);
@@ -48,7 +48,8 @@ class BankStatementImportService
         // Buscar extrato da API
         $extratoData = $bbService->getExtrato($dataInicio, $dataFim);
 
-        return DB::transaction(function () use ($companyId, $bankAccountId, $startDate, $endDate, $extratoData, $bankConfig) {
+        /** @var BankStatementImport $result */
+        $result = DB::transaction(function () use ($companyId, $bankAccountId, $startDate, $endDate, $extratoData, $bankConfig): BankStatementImport {
             // Criar registro de importação
             $importData = [
                 'company_id' => $companyId,
@@ -59,12 +60,12 @@ class BankStatementImportService
                 'imported_by' => Auth::id(),
                 'imported_at' => now(),
             ];
-            
+
             // Adiciona bank_account_id apenas se existir e não for null
             if ($bankAccountId) {
                 $importData['bank_account_id'] = $bankAccountId;
             }
-            
+
             $import = BankStatementImport::create($importData);
 
             // Processar lançamentos
@@ -78,13 +79,33 @@ class BankStatementImportService
 
                 // Determinar tipo e valor assinado usando Money
                 $tipo = strtoupper($lancamento['indicadorSinalLancamento']) === 'C' ? 'CREDIT' : 'DEBIT';
-                // Cria valor negativo se DEBIT, positivo se CREDIT
-                $valorBruto = $tipo === 'CREDIT' 
-                    ? (float) $lancamento['valorLancamento'] 
-                    : -(float) $lancamento['valorLancamento'];
+
+                // Processa o valor do lançamento
+                // O valor pode vir como número (float/int) ou string formatada do BB API
+                $valorLancamento = $lancamento['valorLancamento'];
+
+                // Se for string, pode estar formatada (ex: "1.991,44") ou numérica (ex: "1991.44")
+                if (is_string($valorLancamento)) {
+                    // Tenta usar fromHumanInput se parecer formato brasileiro (tem vírgula)
+                    if (strpos($valorLancamento, ',') !== false) {
+                        $moneyTemp = Money::fromHumanInput($valorLancamento);
+                        $valorBruto = $moneyTemp->getAmount();
+                    } else {
+                        // String numérica simples, converte para float
+                        $valorBruto = (float) $valorLancamento;
+                    }
+                } else {
+                    // Já é número (float/int)
+                    $valorBruto = (float) $valorLancamento;
+                }
+
+                // Aplica sinal baseado no tipo: negativo para DEBIT, positivo para CREDIT
+                $valorBruto = $tipo === 'CREDIT' ? $valorBruto : -$valorBruto;
+
+                // Usa Money::fromOfx para processar o valor (preserva informação de sinal)
                 $money = Money::fromOfx($valorBruto);
-                $valor = $money->toDatabase();
-                $valorAssinado = $money->getSignedAmount();
+                $valor = $money->toDatabase(); // Valor absoluto em DECIMAL para salvar no banco
+                $valorAssinado = $money->getSignedAmount(); // Valor com sinal para referência
 
                 // Gerar hash único
                 $hash = BankStatementEntry::generateHash(
@@ -126,17 +147,10 @@ class BankStatementImportService
                     }
                 }
             }
-
-            // Log de resultado
-            \Log::info('BB Extrato - Importação concluída', [
-                'import_id' => $import->id,
-                'total_lancamentos' => count($lancamentos),
-                'importados' => $imported,
-                'duplicados' => $duplicates,
-            ]);
-
             return $import;
         });
+        
+        return $result;
     }
 
     /**

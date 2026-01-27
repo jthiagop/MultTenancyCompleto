@@ -357,6 +357,7 @@ Route::middleware([
             Route::delete('/financeiro/delete', [CaixaController::class, 'deleteEntries'])->name('financeiro.delete');
             Route::get('/financeiro/filter-options', [CaixaController::class, 'getFilterOptions'])->name('financeiro.filter-options');
             Route::get('/financeiro/saldos-mensais', [CaixaController::class, 'getSaldosMensais'])->name('financeiro.saldos-mensais');
+            Route::post('/financeiro/parceiros', [ParceiroController::class, 'store'])->name('financeiro.fornecedores.store');
 
             Route::get('app/financeiro/banco/list', [BancoController::class, 'list'])->name('banco.list');
             Route::get('/banco/chart-data', [BancoController::class, 'getChartData'])->name('banco.chart.data');

@@ -1,6 +1,92 @@
 <script>
 // Script de inicialização do Drawer de Lançamento
 (function() {
+    // Função para atualizar labels de fornecedor/cliente baseado no tipo
+    function updateFornecedorLabels(tipo) {
+        if (!tipo) {
+            // Tenta obter o tipo dos campos hidden
+            var tipoInput = $('#tipo');
+            var tipoFinanceiroInput = $('#tipo_financeiro');
+            if (tipoInput.length && tipoInput.val()) {
+                tipo = tipoInput.val() === 'entrada' ? 'receita' : 'despesa';
+            } else if (tipoFinanceiroInput.length && tipoFinanceiroInput.val()) {
+                tipo = tipoFinanceiroInput.val();
+            } else {
+                tipo = 'despesa'; // Default
+            }
+        }
+
+        // Normaliza o tipo
+        if (tipo === 'entrada') tipo = 'receita';
+        if (tipo === 'saida') tipo = 'despesa';
+
+        // Define textos baseado no tipo
+        var labelText = tipo === 'receita' ? 'Cliente' : 'Fornecedor';
+        var placeholderText = tipo === 'receita' ? 'Selecione um cliente' : 'Selecione um fornecedor';
+        var buttonText = tipo === 'receita' ? 'Adicionar Cliente' : 'Adicionar Fornecedor';
+        var drawerTitle = tipo === 'receita' ? 'Novo Cliente' : 'Novo Fornecedor';
+
+        // Atualiza label do select de fornecedor no card de informações
+        var fornecedorSelect = $('#fornecedor_id');
+        if (fornecedorSelect.length) {
+            // Procura o label de várias formas
+            var labelElement = $('label[for="fornecedor_id"]');
+            if (labelElement.length === 0) {
+                labelElement = fornecedorSelect.closest('.fv-row, .col-md-4, .col-md-6').find('label').first();
+            }
+            if (labelElement.length === 0) {
+                labelElement = fornecedorSelect.closest('.fv-row').prev('label');
+            }
+            
+            if (labelElement.length) {
+                // Atualiza o texto do label, preservando elementos como <span class="required">
+                var requiredSpan = labelElement.find('span.required');
+                var hasRequired = labelElement.hasClass('required') || requiredSpan.length > 0;
+                
+                if (requiredSpan.length) {
+                    // Se tem span.required, atualiza apenas o texto dentro dele
+                    requiredSpan.text(labelText);
+                } else if (hasRequired) {
+                    // Se o label tem classe required mas não tem span, adiciona span
+                    labelElement.html('<span class="required">' + labelText + '</span>');
+                } else {
+                    // Atualiza o texto diretamente
+                    labelElement.text(labelText);
+                }
+            }
+
+            // Atualiza placeholder do select
+            fornecedorSelect.attr('data-placeholder', placeholderText);
+            // Se o Select2 já foi inicializado, atualiza o placeholder visualmente
+            if (fornecedorSelect.hasClass('select2-hidden-accessible')) {
+                var $select2Container = fornecedorSelect.next('.select2-container');
+                if ($select2Container.length) {
+                    var $placeholder = $select2Container.find('.select2-selection__placeholder');
+                    if ($placeholder.length && !fornecedorSelect.val()) {
+                        $placeholder.text(placeholderText);
+                    }
+                    // Atualiza também o atributo title do placeholder
+                    $placeholder.attr('title', placeholderText);
+                }
+            }
+        }
+
+        // Atualiza título do drawer de fornecedor
+        var fornecedorDrawerTitle = $('#fornecedor_drawer_title');
+        if (fornecedorDrawerTitle.length === 0) {
+            fornecedorDrawerTitle = $('#kt_drawer_fornecedor .card-title h3');
+        }
+        if (fornecedorDrawerTitle.length) {
+            fornecedorDrawerTitle.text(drawerTitle);
+        }
+
+        // Armazena o texto do botão para uso posterior
+        window.fornecedorButtonText = buttonText;
+    }
+
+    // Torna a função acessível globalmente
+    window.updateFornecedorLabels = updateFornecedorLabels;
+
     // Verifica se jQuery está disponível
     function initDrawerScript() {
         if (typeof $ === 'undefined') {
@@ -44,9 +130,19 @@
             }
 
             // Prepara opções
+            // Para fornecedor_id, verifica se há um placeholder atualizado baseado no tipo
+            var placeholderValue = $select.attr('data-placeholder') || 'Selecione';
+            if (selectId === 'fornecedor_id') {
+                // Tenta obter o tipo atual para definir o placeholder correto
+                var tipoAtual = $('#tipo').val() || $('#tipo_financeiro').val() || 'despesa';
+                if (tipoAtual === 'entrada') tipoAtual = 'receita';
+                if (tipoAtual === 'saida') tipoAtual = 'despesa';
+                placeholderValue = tipoAtual === 'receita' ? 'Selecione um cliente' : 'Selecione um fornecedor';
+            }
+            
             var options = {
                 dropdownParent: drawer,
-                placeholder: $select.attr('data-placeholder') || 'Selecione',
+                placeholder: placeholderValue,
                 allowClear: $select.attr('data-allow-clear') === 'true',
                 minimumResultsForSearch: $select.attr('data-hide-search') === 'true' ? Infinity : 0,
                 width: '100%',
@@ -102,12 +198,19 @@
                             // Remove botão anterior se existir
                             $results.find('.select2-add-fornecedor-footer').remove();
 
+                            // Obtém o texto do botão baseado no tipo atual
+                            var tipoAtual = $('#tipo').val() || $('#tipo_financeiro').val() || 'despesa';
+                            if (tipoAtual === 'entrada') tipoAtual = 'receita';
+                            if (tipoAtual === 'saida') tipoAtual = 'despesa';
+                            var buttonText = (window.fornecedorButtonText) ? window.fornecedorButtonText : 
+                                           (tipoAtual === 'receita' ? 'Adicionar Cliente' : 'Adicionar Fornecedor');
+
                             // Adiciona footer com botão
                             var $footer = $(
                                 '<div class="select2-add-fornecedor-footer border-top p-2 text-center"></div>'
                             );
                             var $button = $(
-                                '<button type="button" class="btn btn-sm btn-light-primary w-100"><i class="fas fa-plus"></i> Adicionar Fornecedor</button>'
+                                '<button type="button" class="btn btn-sm btn-light-primary w-100"><i class="fas fa-plus"></i> ' + buttonText + '</button>'
                             );
                             $footer.append($button);
                             $results.append($footer);
@@ -122,12 +225,37 @@
                                 // Fecha o Select2
                                 $select.select2('close');
 
+                                // Obtém o tipo atual do lançamento para atualizar labels
+                                var tipoAtual = $('#tipo').val() || $('#tipo_financeiro').val() || 'despesa';
+                                if (tipoAtual === 'entrada') tipoAtual = 'receita';
+                                if (tipoAtual === 'saida') tipoAtual = 'despesa';
+                                
+                                // ===== NOVO: Define qual select deve ser atualizado ao salvar =====
+                                // Armazena referência do select alvo para atualização após cadastro
+                                window.__drawerTargetSelect = '#' + selectId; // #fornecedor_id ou similar
+                                
+                                // Define o tipo no hidden field do drawer
+                                var parceiroTipo = tipoAtual === 'receita' ? 'cliente' : 'fornecedor';
+                                $('#parceiro_tipo_hidden').val(parceiroTipo);
+                                
+                                console.log('[DrawerInit] Abrindo drawer para:', parceiroTipo, '| Select alvo:', window.__drawerTargetSelect);
+                                // ===== FIM NOVO =====
+                                
+                                // Atualiza labels antes de abrir o drawer
+                                updateFornecedorLabels(tipoAtual);
+
                                 // Abre o drawer de fornecedor
                                 var fornecedorDrawer = document.getElementById('kt_drawer_fornecedor');
                                 if (fornecedorDrawer) {
                                     var drawerInstance = KTDrawer.getInstance(fornecedorDrawer);
                                     if (drawerInstance) {
                                         drawerInstance.show();
+                                    } else {
+                                        // Fallback: tenta criar instância se não existir
+                                        if (typeof KTDrawer.getOrCreateInstance === 'function') {
+                                            var inst = KTDrawer.getOrCreateInstance(fornecedorDrawer);
+                                            if (inst) inst.show();
+                                        }
                                     }
                                 }
                             });
@@ -254,6 +382,9 @@
             }
         }
 
+        // Atualiza labels de fornecedor/cliente baseado no tipo
+        updateFornecedorLabels(tipo);
+
         // Atualiza origem
         if (origemInput.length) {
             origemInput.val(origem || 'Banco');
@@ -274,6 +405,17 @@
             // Inicializa Select2 após abrir
             setTimeout(function() {
                 initDrawerSelect2();
+
+                // Atualiza labels novamente após inicializar Select2 (caso o DOM tenha mudado)
+                updateFornecedorLabels(tipo);
+
+                // Adiciona listener para mudanças no campo tipo (caso o usuário mude depois)
+                $('#tipo, #tipo_financeiro').on('change', function() {
+                    var tipoAtual = $('#tipo').val() || $('#tipo_financeiro').val() || 'despesa';
+                    if (tipoAtual === 'entrada') tipoAtual = 'receita';
+                    if (tipoAtual === 'saida') tipoAtual = 'despesa';
+                    updateFornecedorLabels(tipoAtual);
+                });
 
                 // Filtra lançamentos padrão se houver tipo
                 if (tipoLancamento) {

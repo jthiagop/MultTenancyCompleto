@@ -7,12 +7,37 @@
         <!--begin::Input group - Assign & Due Date-->
         <div class="row g-9 mb-8">
             <!--begin::Col-->
-            <x-tenant-date name="data_competencia" label="Data de competência"
-                placeholder="Informe a data" required />
+            <x-tenant-select name="fornecedor_id" id="fornecedor_id" label="Fornecedor" data-label-default="Fornecedor"
+                placeholder="Selecione um fornecedor" data-placeholder-default="Selecione um fornecedor"
+                :minimumResultsForSearch="0" dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-6"
+                class="col-md-3">
+                @if (isset($fornecedores))
+                    @foreach ($fornecedores as $fornecedor)
+                        <option value="{{ $fornecedor->id }}"
+                            {{ old('fornecedor_id') == $fornecedor->id ? 'selected' : '' }}>
+                            {{ $fornecedor->nome }}
+                        </option>
+                    @endforeach
+                @endif
+            </x-tenant-select>
             <!--end::Col-->
             <!--begin::Col-->
-            <x-tenant-select name="entidade_id" id="entidade_id" label="Entidade Financeira"
-                required :hideSearch="true"
+            <x-tenant-date name="data_competencia" label="Data de competência" placeholder="Informe a data" required />
+            <!--end::Col-->
+            <!--begin::Input group - Target Title-->
+            <x-tenant-input name="descricao" id="descricao" label="Descrição" placeholder="Informe a descricão" required
+                class="col-md-5" />
+
+            <!--end::Input group - Target Title-->
+            <!--begin::Input group - Valor-->
+            <x-tenant-currency name="valor" id="valor2" label="Valor" placeholder="0,00"
+                tooltip="Informe o valor da despesa" class="col-md-2" required />
+            <!--end::Input group - Valor-->
+        </div>
+        <!--begin::Input group - Assign & Due Date-->
+        <div class="row g-9 mb-8">
+            <!--begin::Col-->
+            <x-tenant-select name="entidade_id" id="entidade_id" label="Entidade Financeira" required :hideSearch="true"
                 dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" class="col-md-3">
                 @if (isset($entidadesBanco) && $entidadesBanco->isNotEmpty())
                     @foreach ($entidadesBanco as $entidade)
@@ -34,24 +59,9 @@
                 @endif
             </x-tenant-select>
             <!--end::Col-->
-
-            <!--begin::Input group - Target Title-->
-            <x-tenant-input name="descricao" id="descricao" label="Descrição"
-                placeholder="Informe a descricão" required class="col-md-5" />
-
-            <!--end::Input group - Target Title-->
-            <!--begin::Input group - Valor-->
-            <x-tenant-currency name="valor" id="valor2" label="Valor" placeholder="0,00"
-                tooltip="Informe o valor da despesa" class="col-md-2" required />
-            <!--end::Input group - Valor-->
-        </div>
-        <!--begin::Input group - Assign & Due Date-->
-        <div class="row g-9 mb-8">
-            <x-tenant-select name="lancamento_padrao_id" id="lancamento_padraos_id"
-                label="Categoria" placeholder="Escolha um Lançamento..."
-                required :allowClear="true" :minimumResultsForSearch="0"
-                dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}"
-                labelSize="fs-6" class="col-md-6">
+            <x-tenant-select name="lancamento_padrao_id" id="lancamento_padraos_id" label="Categoria"
+                placeholder="Escolha um Lançamento..." required :allowClear="true" :minimumResultsForSearch="0"
+                dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-6" class="col-md-5">
                 @foreach ($lps as $lp)
                     <option value="{{ $lp->id }}" data-description="{{ $lp->description }}"
                         data-type="{{ $lp->type }}">{{ $lp->id }} -
@@ -59,12 +69,13 @@
                 @endforeach
             </x-tenant-select>
             <!--begin::Col-->
-            <x-tenant-select name="cost_center_id" id="cost_center_id" label="Centro de Custo"
-                :allowClear="false" :minimumResultsForSearch="0"
-                dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-5" class="col-md-4">
+            <x-tenant-select name="cost_center_id" id="cost_center_id" label="Centro de Custo" :allowClear="false"
+                :minimumResultsForSearch="0" dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-5"
+                class="col-md-4">
                 @if (isset($centrosAtivos))
                     @foreach ($centrosAtivos as $index => $centro)
-                        <option value="{{ $centro->id }}" {{ $index === 0 ? 'selected' : '' }}>{{ $centro->code }} -
+                        <option value="{{ $centro->id }}" {{ $index === 0 ? 'selected' : '' }}>{{ $centro->code }}
+                            -
                             {{ $centro->name }}</option>
                     @endforeach
                 @endif
@@ -77,9 +88,8 @@
         <div class="row g-9 mb-5">
             <!--begin::Col-->
             <x-tenant-select name="tipo_documento" id="tipo_documento" label="Forma de pagamento"
-                placeholder="Selecione uma forma de pagamento" required :allowClear="true"
-                :minimumResultsForSearch="0" dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-6"
-                class="col-md-4">
+                placeholder="Selecione uma forma de pagamento" required :allowClear="true" :minimumResultsForSearch="0"
+                dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-6" class="col-md-4">
                 @if (isset($formasPagamento))
                     @foreach ($formasPagamento as $formaPagamento)
                         <option value="{{ $formaPagamento->codigo }}"
@@ -90,26 +100,11 @@
                 @endif
             </x-tenant-select>
             <!--end::Col-->
-            <x-tenant-input name="numero_documento" id="numero_documento"
-                label="Número do Documento" placeholder="1234567890" type="text"
-                class="col-md-4" />
+            <x-tenant-input name="numero_documento" id="numero_documento" label="Número do Documento"
+                placeholder="1234567890" type="text" class="col-md-4" />
 
-            <!--begin::Col-->
-            <x-tenant-select name="fornecedor_id" id="fornecedor_id" label="Fornecedor"
-                placeholder="Selecione um fornecedor" :minimumResultsForSearch="0"
-                dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-6" class="col-md-4">
-                @if (isset($fornecedores))
-                    @foreach ($fornecedores as $fornecedor)
-                        <option value="{{ $fornecedor->id }}"
-                            {{ old('fornecedor_id') == $fornecedor->id ? 'selected' : '' }}>
-                            {{ $fornecedor->nome }}
-                        </option>
-                    @endforeach
-                @endif
-            </x-tenant-select>
-            <!--end::Col-->
+
         </div>
         <!--end::Input group-->
     </div>
 </div>
-

@@ -4618,6 +4618,13 @@ textarea.form-control-lg {
   color: var(--bs-card-color);
 }
 
+.drawer-body {
+  position: relative;
+  flex: 1 1 auto;
+  padding: var(--bs-modal-padding);
+  background-color: var(--bs-light);
+}
+
 .card-title {
   margin-bottom: var(--bs-card-title-spacer-y);
   color: var(--bs-card-title-color);

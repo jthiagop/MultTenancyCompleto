@@ -32,7 +32,7 @@
             <!--end::Coluna Direita-->
         </div>
     </div>
-    <div class="card-body px-10">
+    <div class="rawer-body px-10">
 
         <!--begin::Input group-->
         <div class="d-flex flex-stack w-lg-50 g-9 mb-5">
@@ -106,7 +106,7 @@
 
             <!--begin::Col - Checkboxes por Tipo (Entrada vs Saída)-->
             <div class="col-md-6 d-flex align-items-end gap-5 pb-2">
-                
+
                 <!--begin::Wrapper Checkboxes Entrada (Receita) - Apenas Recebido-->
                 <div id="checkboxes-entrada-wrapper" style="display: none;">
                     <!--begin::Checkbox Recebido (só aparece se parcelamento for À vista ou 1x)-->
@@ -120,7 +120,7 @@
                     <!--end::Checkbox Recebido-->
                 </div>
                 <!--end::Wrapper Checkboxes Entrada-->
-                
+
                 <!--begin::Wrapper Checkboxes Saída (Despesa) - Pago e Agendado-->
                 <div id="checkboxes-saida-wrapper" style="display: none;">
                     <!--begin::Checkbox Pago (só aparece se parcelamento for À vista ou 1x)-->
@@ -141,7 +141,7 @@
                     <!--end::Checkbox Agendado-->
                 </div>
                 <!--end::Wrapper Checkboxes Saída-->
-                
+
             </div>
             <!--end::Col-->
         </div>

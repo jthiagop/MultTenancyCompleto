@@ -58,8 +58,8 @@ class CaixaController extends Controller
         $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
         $entidades = Caixa::getEntidadesCaixa();
         $entidadesBanco = Caixa::getEntidadesBanco();
-
         $lps = LancamentoPadrao::all();
+        $parceiros = Parceiro::forActiveCompany()->orderBy('nome')->get();
 
         list($somaEntradas, $somaSaida) = caixa::getCaixa();
         $total = $somaEntradas - $somaSaida;
@@ -111,6 +111,8 @@ class CaixaController extends Controller
             'TotalreceitasAVencer',
             'despesasEmAberto',
             'valorDespesaTotal',
+            'parceiros',
+            'fornecedores'
         ));
     }
 
@@ -191,6 +193,7 @@ class CaixaController extends Controller
             'entidadesBanco' => $entidadesBanco,
             'activeTab' => $activeTab,
             'centrosAtivos' => $centrosAtivos,
+            'fornecedores' => $parceiros,
         ]);
     }
 

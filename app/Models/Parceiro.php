@@ -8,7 +8,7 @@ class Parceiro extends Model
 {
     protected $table = 'parceiros';
     
-    protected $fillable = ['nome', 'cnpj', 'telefone', 'email', 'company_id'];
+    protected $fillable = ['nome', 'nome_fantasia', 'cnpj', 'telefone', 'email', 'company_id', 'address_id', 'created_by', 'created_by_name'];
 
     /**
      * Scope: Filtra a busca para incluir apenas os registros da empresa ativa na sessão.
@@ -22,5 +22,10 @@ class Parceiro extends Model
         }
 
         return $query->whereRaw('1 = 0');
+    }
+
+    public function address()
+    {
+        return $this->belongsTo(Address::class, 'address_id');
     }
 }
