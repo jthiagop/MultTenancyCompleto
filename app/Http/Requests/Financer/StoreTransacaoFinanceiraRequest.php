@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Financer;
 
 use App\Models\LancamentoPadrao;
+use App\Support\Money;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreTransacaoFinanceiraRequest extends FormRequest
@@ -207,33 +208,11 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
      * Prepare the data for validation.
      * Converte valores brasileiros (com vírgula) para centavos (inteiro) antes da validação.
      * 
+     * Agora usa a classe Money para centralizar toda a lógica de conversão.
      * Exemplo: "1.234,56" → 123456 (centavos)
-     * Estratégia: String → Float → Inteiro (centavos)
      */
     protected function prepareForValidation(): void
     {
-        // Helper para converter reais para centavos
-        // Detecta automaticamente se é formato brasileiro (1.234,56) ou padrão (1234.56)
-        $reaisParaCentavos = function ($valor) {
-            if (!$valor) return 0;
-            
-            if (is_string($valor)) {
-                // Se contém vírgula, é formato brasileiro (1.234,56)
-                if (strpos($valor, ',') !== false) {
-                    $valor = str_replace('.', '', $valor);      // Remove pontos de milhar
-                    $valor = str_replace(',', '.', $valor);     // Substitui vírgula por ponto
-                }
-                // else: é formato padrão (1234.56) - mantém como está
-            }
-            
-            // Converte para float e depois para centavos (inteiro)
-            $reais = (float) $valor;
-            $centavos = (int) round($reais * 100);
-            
-            // Garante valor absoluto (positivo)
-            return abs($centavos);
-        };
-
         // Converte configuracao_recorrencia para inteiro se for numérico
         if ($this->has('configuracao_recorrencia') && $this->configuracao_recorrencia) {
             $value = $this->configuracao_recorrencia;
@@ -242,7 +221,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             }
         }
 
-        // Campos monetários em centavos
+        // Campos monetários em centavos - usa Money para conversão
         $camposMonetarios = [
             'valor',
             'valor_pago',
@@ -254,33 +233,40 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
 
         foreach ($camposMonetarios as $campo) {
             if ($this->has($campo) && $this->input($campo) !== null) {
+                $valorInput = $this->input($campo);
+                // Usa Money::fromHumanInput para converter formato brasileiro → centavos
+                $money = Money::fromHumanInput((string) $valorInput);
                 $this->merge([
-                    $campo => $reaisParaCentavos($this->input($campo))
+                    $campo => $money->toCents()
                 ]);
             }
         }
 
-        // Campos de pagamento (fracionado) em centavos
+        // Campos de pagamento (fracionado) em centavos - usa Money para conversão
         $camposPagamento = ['juros_pagamento', 'multa_pagamento', 'desconto_pagamento'];
 
         foreach ($camposPagamento as $campo) {
             if ($this->has($campo) && $this->input($campo) !== null) {
+                $valorInput = $this->input($campo);
+                // Usa Money::fromHumanInput para converter formato brasileiro → centavos
+                $money = Money::fromHumanInput((string) $valorInput);
                 $this->merge([
-                    $campo => $reaisParaCentavos($this->input($campo))
+                    $campo => $money->toCents()
                 ]);
             }
         }
 
-        // Processa parcelas - converte valores para centavos
+        // Processa parcelas - converte valores para centavos usando Money
         if ($this->has('parcelas') && is_array($this->parcelas)) {
             $parcelasProcessadas = [];
             
             foreach ($this->parcelas as $index => $parcela) {
                 $parcelaProcessada = $parcela;
 
-                // Converte valor em reais para centavos
+                // Converte valor em reais para centavos usando Money
                 if (isset($parcela['valor'])) {
-                    $parcelaProcessada['valor'] = $reaisParaCentavos($parcela['valor']);
+                    $money = Money::fromHumanInput((string) $parcela['valor']);
+                    $parcelaProcessada['valor'] = $money->toCents();
                 }
 
                 // Percentual continua em numeric (não é dinheiro)

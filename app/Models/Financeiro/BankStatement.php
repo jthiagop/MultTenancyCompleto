@@ -104,9 +104,10 @@ class BankStatement extends Model
      */
     public static function storeTransaction($account, $transaction, $entidadeId, $fileHash = null, $fileName = null)
     {
-        // ✅ Converte amount para centavos (integer) - DECIMAL para precisão
-        $amountValue = $transaction->amount; // Mantém como DECIMAL (string)
-        $amountCents = (int) round(bcmul($amountValue, '100', 2)); // Usa bcmath para precisão
+        // ✅ Usa Money::fromOfx para converter valor do OFX (pode ser negativo)
+        $money = \App\Support\Money::fromOfx((float) $transaction->amount);
+        $amountValue = $money->toDatabase(); // DECIMAL para precisão
+        $amountCents = $money->toCents(); // Integer em centavos
 
         // ✅ Usa firstOrCreate com chave composta para garantir unicidade
         // Mesmo arquivo (file_hash igual) pode ter múltiplas transações (fitid diferente)

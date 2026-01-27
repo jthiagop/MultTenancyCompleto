@@ -85,7 +85,7 @@
                     digitsOptional: false,
                     placeholder: "0,00",
                     rightAlign: false,
-                    removeMaskOnSubmit: true,
+                    removeMaskOnSubmit: false,
                     allowMinus: false,
                     clearMaskOnLostFocus: false,
                     // Configurações para melhorar o comportamento de digitação

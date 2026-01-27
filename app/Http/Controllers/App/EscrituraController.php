@@ -5,6 +5,7 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Models\Escritura;
 use App\Models\Patrimonio;
+use App\Support\Money;
 use Illuminate\Http\Request;
 
 class EscrituraController extends Controller
@@ -47,7 +48,11 @@ class EscrituraController extends Controller
                 'informacoes' => 'nullable|string|max:250',
             ]);
 
-            $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
+            // Usa Money para converter formato brasileiro → decimal
+            if (isset($validatedData['valor'])) {
+                $money = Money::fromHumanInput((string) $validatedData['valor']);
+                $validatedData['valor'] = $money->toDatabase();
+            }
 
             $escritura = Escritura::create($validatedData);
             // Mensagem de sucesso usando flash
@@ -103,7 +108,11 @@ class EscrituraController extends Controller
                 'informacoes' => 'nullable|string|max:250',
             ]);
 
-            $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
+            // Usa Money para converter formato brasileiro → decimal
+            if (isset($validatedData['valor'])) {
+                $money = Money::fromHumanInput((string) $validatedData['valor']);
+                $validatedData['valor'] = $money->toDatabase();
+            }
 
             $escritura->update($validatedData);
 

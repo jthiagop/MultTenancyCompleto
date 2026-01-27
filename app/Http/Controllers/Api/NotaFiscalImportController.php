@@ -7,6 +7,7 @@ use App\Models\EntidadeFinanceira;
 use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\Movimentacao;
 use App\Models\User;
+use App\Support\Money;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Http;
@@ -340,7 +341,7 @@ class NotaFiscalImportController extends Controller
     }
 
     /**
-     * Converte string de valor para float
+     * Converte string de valor para float usando Money
      */
     private function parseValor(?string $valor): float
     {
@@ -348,14 +349,9 @@ class NotaFiscalImportController extends Controller
             return 0.0;
         }
 
-        // Remove espaços e caracteres não numéricos exceto vírgula e ponto
-        $valor = preg_replace('/[^\d,.-]/', '', $valor);
-
-        // Substitui vírgula por ponto se necessário
-        $valor = str_replace(',', '.', str_replace('.', '', $valor));
-
-        // ✅ Garante que o valor é sempre positivo (absoluto)
-        return abs((float) $valor);
+        // Usa Money para converter formato brasileiro → decimal
+        $money = Money::fromHumanInput($valor);
+        return $money->toDatabase();
     }
 }
 

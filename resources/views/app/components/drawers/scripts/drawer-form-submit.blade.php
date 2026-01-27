@@ -427,20 +427,62 @@ class DrawerFormManager {
     
     /**
      * Converte valor do formato brasileiro para número
+     * Agora com removeMaskOnSubmit: false, o Inputmask envia a string exatamente como o usuário vê
+     * Exemplo: "1.991,44" → envia "1.991,44" (não remove máscara)
+     * O backend será responsável por fazer a conversão correta
      */
     parseValorBR(valorStr) {
         if (!valorStr || valorStr.trim() === '') return 0;
-        // Remove pontos de milhar e substitui vírgula por ponto
-        const valorLimpo = valorStr.replace(/\./g, '').replace(',', '.');
-        return parseFloat(valorLimpo) || 0;
+        
+        valorStr = valorStr.trim();
+        
+        // Se contém vírgula, é formato brasileiro (1.500,00 ou 25,00)
+        if (valorStr.indexOf(',') !== -1) {
+            // Remove pontos (milhares) e substitui vírgula por ponto
+            const valorLimpo = valorStr.replace(/\./g, '').replace(',', '.');
+            return parseFloat(valorLimpo) || 0;
+        }
+        
+        // Se contém ponto mas não vírgula, pode ser formato americano (1234.56)
+        if (valorStr.indexOf('.') !== -1 && valorStr.indexOf(',') === -1) {
+            const pontos = (valorStr.match(/\./g) || []).length;
+            // Se tem apenas 1 ponto, é separador decimal
+            if (pontos === 1) {
+                return parseFloat(valorStr) || 0;
+            }
+            // Múltiplos pontos = separadores de milhar, remove todos
+            return parseFloat(valorStr.replace(/\./g, '')) || 0;
+        }
+        
+        // Se não tem vírgula nem ponto, trata como número inteiro em reais
+        // Exemplo: "1991" → 1991.00
+        const apenasNumeros = valorStr.replace(/\D/g, '');
+        return parseFloat(apenasNumeros) || 0;
     }
     
     /**
      * Prepara o FormData para envio
-     * Nota: Conversão de valores agora é feita no backend (prepareForValidation)
+     * Com removeMaskOnSubmit: false, envia a string exatamente como o usuário vê
+     * O backend será responsável por fazer a conversão correta
      */
     prepareFormData() {
         const formData = new FormData(this.form);
+        
+        // Com removeMaskOnSubmit: false, o Inputmask envia a string formatada
+        // Exemplo: "1.991,44" → envia "1.991,44" (não remove máscara)
+        // O backend (StoreTransacaoFinanceiraRequest) fará a conversão correta
+        const valorInput = this.form.querySelector('#valor2') || this.form.querySelector('[name="valor"]');
+        if (valorInput && valorInput.value) {
+            const valorStr = valorInput.value || '';
+            
+            console.log('[prepareFormData] Valor enviado exatamente como o usuário vê', {
+                'valor_original': valorStr
+            });
+            
+            // Envia a string exatamente como está (formato brasileiro: "1.991,44")
+            formData.delete('valor');
+            formData.append('valor', valorStr);
+        }
         
         // Garante que checkboxes booleanos sejam enviados corretamente
         const booleanFields = ['comprovacao_fiscal', 'agendado', 'pago', 'recebido'];

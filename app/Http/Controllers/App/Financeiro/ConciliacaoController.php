@@ -16,6 +16,7 @@ use App\Models\User;
 use App\Services\ConciliacaoMissasService;
 use App\Services\ConciliacaoSuggestionService;
 use App\Models\ConciliacaoRegra;
+use App\Support\Money;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
@@ -219,12 +220,8 @@ class ConciliacaoController extends Controller
     public function update(Request $request, $id)
     {
         try {
-
-            // Tratamento do valor para garantir formato correto
-            if ($request->has('valor')) {
-                $valorFormatado = str_replace(',', '.', str_replace('.', '', $request->input('valor')));
-                $request->merge(['valor' => $valorFormatado]);
-            }
+            // O valor já será processado pelo StoreTransacaoFinanceiraRequest usando Money
+            // Não é necessário fazer conversão manual aqui
 
             // Converter data_competencia para formato correto
             if ($request->has('data_competencia')) {
@@ -634,22 +631,18 @@ class ConciliacaoController extends Controller
                 // Normaliza o valor removendo formatação e converte para centavos apenas uma vez
                 $valorRequest = $request->valor_conciliado ?? $transacao->valor;
                 
-                // Normaliza o valor: remove formatação (vírgulas, pontos) e converte para decimal
-                $valorStr = (string) $valorRequest;
-                
-                // Se tem vírgula, assume formato brasileiro (1.234,56)
-                if (strpos($valorStr, ',') !== false) {
-                    // Remove pontos (milhares) e substitui vírgula por ponto (decimal)
-                    $valorNormalizado = str_replace('.', '', $valorStr);
-                    $valorNormalizado = str_replace(',', '.', $valorNormalizado);
-                    $valorDecimal = (float) $valorNormalizado;
+                // Usa Money para normalizar e converter para centavos
+                // Se o valor já está em centavos (integer), converte para reais primeiro
+                if (is_int($valorRequest) || (is_string($valorRequest) && ctype_digit($valorRequest))) {
+                    // Valor já está em centavos (vindo de $transacao->valor)
+                    $money = Money::fromCents((int) $valorRequest);
                 } else {
-                    // Formato americano ou sem formatação (1234.56 ou 1234)
-                    $valorDecimal = (float) $valorStr;
+                    // Valor vem do frontend em formato brasileiro (string)
+                    $money = Money::fromHumanInput((string) $valorRequest);
                 }
                 
-                // ✅ CONVERSÃO ÚNICA: Reais → Centavos (multiplica por 100 apenas uma vez)
-                $valorConciliado = (int) round(bcmul((string) $valorDecimal, '100', 2));
+                // ✅ CONVERSÃO ÚNICA: Reais → Centavos usando Money
+                $valorConciliado = $money->toCents();
 
                 Log::info('=== CÁLCULO DE VALOR CONCILIADO (PIVOT) ===', [
                     'valor_request_original' => $valorRequest,
@@ -1032,8 +1025,9 @@ class ConciliacaoController extends Controller
                 $entidadeOrigem = EntidadeFinanceira::findOrFail($validated['entidade_origem_id']);
                 $entidadeDestino = EntidadeFinanceira::findOrFail($validated['entidade_destino_id']);
 
-                // Converte o valor do formato brasileiro para decimal
-                $valor = str_replace(['.', ','], ['', '.'], $validated['valor']);
+                // Usa Money para converter formato brasileiro → decimal
+                $money = Money::fromHumanInput((string) $validated['valor']);
+                $valor = $money->toDatabase();
 
                 // Recupera a empresa do usuário logado
                 $companyId = session('active_company_id');
@@ -1042,19 +1036,23 @@ class ConciliacaoController extends Controller
                     return redirect()->back()->with('error', 'Companhia não encontrada.');
                 }
 
-                // Determina o tipo baseado no valor do bank statement (negativo = saída, positivo = entrada)
-                $tipo = $bankStatement->amount < 0 ? 'saida' : 'entrada';
+                // Determina o tipo baseado no valor do bank statement usando Money
+                $moneyStatement = Money::fromOfx((float) $bankStatement->amount);
+                $tipo = $moneyStatement->isNegative() ? 'saida' : 'entrada';
 
                 // Busca o lançamento padrão para obter conta_debito_id e conta_credito_id
                 $lancamentoPadrao = LancamentoPadrao::find($validated['lancamento_padrao_id']);
 
                 // Prepara os dados para criar a transação (apenas da conta de origem - conciliação)
+                // Converte valor para centavos (integer) usando Money
+                $moneyValor = Money::fromDatabase($valor);
+                
                 $validatedData = [
                     'company_id' => $companyId,
                     'data_competencia' => $validated['data_transferencia'],
                     'entidade_id' => $entidadeOrigem->id,
                     'tipo' => $tipo,
-                    'valor' => abs($valor),
+                    'valor' => $moneyValor->toCents(), // TransacaoFinanceira usa centavos (integer)
                     'descricao' => $validated['descricao'] ?? 'Transferência para ' . $entidadeDestino->nome,
                     'lancamento_padrao_id' => $validated['lancamento_padrao_id'],
                     'cost_center_id' => $validated['cost_center_id'] ?? null,

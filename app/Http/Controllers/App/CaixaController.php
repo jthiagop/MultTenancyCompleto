@@ -17,6 +17,7 @@ use App\Models\FormasPagamento;
 use App\Models\Parceiro;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
+use App\Support\Money;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
@@ -674,12 +675,8 @@ class CaixaController extends Controller
             // Obtenha a empresa do usuário autenticado
             $transacao = TransacaoFinanceira::forActiveCompany()->findOrFail($id);
 
-            // Tratar o valor do campo "valor"
-            if ($request->has('valor')) {
-                $request->merge([
-                    'valor' => str_replace(',', '.', str_replace('.', '', $request->input('valor')))
-                ]);
-            }
+            // O valor já será processado pelo StoreTransacaoFinanceiraRequest usando Money
+            // Não é necessário fazer conversão manual aqui
 
             // Converter data_competencia para o formato correto
             if ($request->has('data_competencia')) {

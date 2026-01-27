@@ -56,7 +56,7 @@
                         </div>
                         <!--end::Label-->
                         <!--begin::Switch-->
-                        <label class="form-check form-switch form-check-custom">
+                        <label class="form-check form-switch form-check-custom ">
                             <!--begin::Input-->
                             <input class="form-check-input " name="usar_horarios_missa" type="checkbox" value="1"
                                 id="switchHorariosMissas" />

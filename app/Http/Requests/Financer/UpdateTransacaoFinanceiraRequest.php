@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Financer;
 
+use App\Support\Money;
 use Carbon\Carbon;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -84,6 +85,14 @@ class UpdateTransacaoFinanceiraRequest extends FormRequest
             } catch (\Exception $e) {
                 // Em caso de erro de formatação, você pode tratar aqui
             }
+        }
+
+        // Converte valor monetário se fornecido (usando Money)
+        if ($this->has('valor') && $this->valor !== null) {
+            $money = Money::fromHumanInput((string) $this->valor);
+            $this->merge([
+                'valor' => $money->toDatabase()
+            ]);
         }
     }
 

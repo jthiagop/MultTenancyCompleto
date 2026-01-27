@@ -5,6 +5,7 @@ namespace App\Http\Controllers\App\Financeiro;
 use App\Http\Controllers\Controller;
 use App\Models\ContasFinanceiras;
 use App\Models\User;
+use App\Support\Money;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -79,10 +80,11 @@ class ContasFinanceirasController extends Controller
             $validated['data_primeiro_vencimento'] = null;
         }
 
-        // 3) Ajuste do campo 'valor' (ex.: "15.000,00" -> 15000.00)
-        $valorBr = str_replace('.', '', $validated['valor']);   // remove pontos de milhar
-        $valorBr = str_replace(',', '.', $valorBr);            // troca vírgula decimal
-        $validated['valor'] = floatval($valorBr);             // converte para float
+        // 3) Ajuste do campo 'valor' usando Money
+        if (isset($validated['valor'])) {
+            $money = Money::fromHumanInput((string) $validated['valor']);
+            $validated['valor'] = $money->toDatabase();
+        }
 
         // 4) Ajustar booleans e FKs
         // 'repetir' é "on" -> converter em boolean

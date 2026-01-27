@@ -7,6 +7,7 @@ use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\HorarioMissa;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
+use App\Support\Money;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -471,11 +472,15 @@ class ConciliacaoMissasService
             // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
             $lancamentoPadrao->refresh();
 
+            // Converte amount do BankStatement usando Money
+            // BankStatement->amount está em DECIMAL, precisa converter para centavos (integer)
+            $money = Money::fromDatabase((float) $bankStatement->amount);
+            
             // Cria Movimentacao com campos contábeis do lançamento padrão
             $movimentacao = Movimentacao::create([
                 'entidade_id' => $bankStatement->entidade_financeira_id,
                 'tipo' => 'entrada',
-                'valor' => $bankStatement->amount,
+                'valor' => $money->toDatabase(), // Movimentacao usa DECIMAL
                 'descricao' => $bankStatement->memo ?? 'Coleta de missa',
                 'data' => $bankStatement->transaction_datetime ?? $bankStatement->dtposted,
                 'company_id' => $bankStatement->company_id,
@@ -490,12 +495,13 @@ class ConciliacaoMissasService
             ]);
 
             // Cria TransacaoFinanceira com campos contábeis do lançamento padrão
+            // TransacaoFinanceira->valor está em centavos (integer)
             $transacaoFinanceira = TransacaoFinanceira::create([
                 'company_id' => $bankStatement->company_id,
                 'data_competencia' => $bankStatement->transaction_datetime ?? $bankStatement->dtposted,
                 'entidade_id' => $bankStatement->entidade_financeira_id,
                 'tipo' => 'entrada',
-                'valor' => $bankStatement->amount,
+                'valor' => $money->toCents(), // TransacaoFinanceira usa centavos (integer)
                 'descricao' => $bankStatement->memo ?? 'Coleta realizada durante missa',
                 'lancamento_padrao_id' => $lancamentoPadrao->id,
                 'movimentacao_id' => $movimentacao->id,

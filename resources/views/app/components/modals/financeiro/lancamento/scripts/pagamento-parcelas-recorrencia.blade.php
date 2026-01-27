@@ -32,10 +32,35 @@
         });
 
         // Função auxiliar para converter valor brasileiro (com vírgula) para número
+        // Agora com removeMaskOnSubmit: false, o Inputmask envia a string exatamente como o usuário vê
+        // Exemplo: "1.991,44" → envia "1.991,44" (não remove máscara)
+        // O backend será responsável por fazer a conversão correta
         function parseValorBrasileiro(valorStr) {
             if (!valorStr || valorStr === '') return 0;
-            // Remove pontos (milhares) e substitui vírgula por ponto
-            return parseFloat(valorStr.replace(/\./g, '').replace(',', '.')) || 0;
+            
+            valorStr = valorStr.trim();
+            
+            // Se contém vírgula, é formato brasileiro (1.500,00 ou 25,00)
+            if (valorStr.indexOf(',') !== -1) {
+                // Remove pontos (milhares) e substitui vírgula por ponto
+                return parseFloat(valorStr.replace(/\./g, '').replace(',', '.')) || 0;
+            }
+            
+            // Se contém ponto mas não vírgula, pode ser formato americano (1234.56)
+            if (valorStr.indexOf('.') !== -1 && valorStr.indexOf(',') === -1) {
+                const pontos = (valorStr.match(/\./g) || []).length;
+                // Se tem apenas 1 ponto, é separador decimal
+                if (pontos === 1) {
+                    return parseFloat(valorStr) || 0;
+                }
+                // Múltiplos pontos = separadores de milhar, remove todos
+                return parseFloat(valorStr.replace(/\./g, '')) || 0;
+            }
+            
+            // Se não tem vírgula nem ponto, trata como número inteiro em reais
+            // Exemplo: "1991" → 1991.00
+            const apenasNumeros = valorStr.replace(/\D/g, '');
+            return parseFloat(apenasNumeros) || 0;
         }
 
         // Função auxiliar para formatar número para formato brasileiro
@@ -524,7 +549,7 @@
                             digitsOptional: false,
                             placeholder: "0,00",
                             rightAlign: false,
-                            removeMaskOnSubmit: true,
+                            removeMaskOnSubmit: false,
                             allowMinus: false,
                             clearMaskOnLostFocus: false
                         }).mask(campo[0]);

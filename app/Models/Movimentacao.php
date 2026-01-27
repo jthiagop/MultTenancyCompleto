@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Model;
@@ -68,6 +69,17 @@ class Movimentacao extends Model
     public function contaCredito()
     {
         return $this->belongsTo(\App\Models\Contabilide\ChartOfAccount::class, 'conta_credito_id');
+    }
+
+    /**
+     * Mutator para garantir que valor sempre seja absoluto (positivo)
+     * Blindagem de segurança para impedir valores negativos no banco
+     */
+    protected function valor(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => abs((float) $value),
+        );
     }
 
     public static function boot()

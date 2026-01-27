@@ -4,6 +4,7 @@ namespace App\Http\Controllers\App\Financeiro;
 
 use App\Http\Requests\Financer\StoreTransacaoFinanceiraRequest;
 use App\Models\Financeiro\TransacaoFinanceira;
+use App\Support\Money;
 use Yajra\DataTables\Facades\DataTables;
 use App\Models\Financeiro\ModulosAnexo;
 use App\Http\Controllers\Controller;
@@ -58,9 +59,9 @@ class TransacaoFinanceiraController extends Controller
         // Processa os dados validados
         $validatedData = $request->validated();
 
-        // Converte o valor e a data para os formatos adequados
+        // Converte a data para o formato adequado
+        // O valor já foi convertido para centavos pelo StoreTransacaoFinanceiraRequest usando Money
         $validatedData['data_competencia'] = Carbon::createFromFormat('d-m-Y', $validatedData['data_competencia'])->format('Y-m-d');
-        $validatedData['valor'] = str_replace(',', '.', str_replace('.', '', $validatedData['valor']));
 
         // Adiciona informações padrão
         $validatedData['company_id'] = $subsidiary->company_id;

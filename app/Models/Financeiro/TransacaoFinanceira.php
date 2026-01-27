@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Models\Financeiro\TransacaoFracionamento;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -357,6 +358,67 @@ class TransacaoFinanceira extends Model
             $this->situacao = $this->calcularSituacao();
         }
         return $this->save();
+    }
+
+    /**
+     * Mutator para garantir que valor sempre seja absoluto (positivo)
+     * Blindagem de segurança para impedir valores negativos no banco
+     */
+    protected function valor(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => abs((int) $value),
+        );
+    }
+
+    /**
+     * Mutator para garantir que valor_pago sempre seja absoluto (positivo)
+     */
+    protected function valorPago(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => $value !== null ? abs((int) $value) : null,
+        );
+    }
+
+    /**
+     * Mutator para garantir que juros sempre seja absoluto (positivo)
+     */
+    protected function juros(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => $value !== null ? abs((int) $value) : null,
+        );
+    }
+
+    /**
+     * Mutator para garantir que multa sempre seja absoluto (positivo)
+     */
+    protected function multa(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => $value !== null ? abs((int) $value) : null,
+        );
+    }
+
+    /**
+     * Mutator para garantir que desconto sempre seja absoluto (positivo)
+     */
+    protected function desconto(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => $value !== null ? abs((int) $value) : null,
+        );
+    }
+
+    /**
+     * Mutator para garantir que valor_a_pagar sempre seja absoluto (positivo)
+     */
+    protected function valorAPagar(): Attribute
+    {
+        return Attribute::make(
+            set: fn ($value) => $value !== null ? abs((int) $value) : null,
+        );
     }
 
     /**

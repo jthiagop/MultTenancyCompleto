@@ -13,6 +13,7 @@ use App\Models\FormasPagamento;
 use App\Models\HorarioMissa;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
+use App\Support\Money;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -69,7 +70,9 @@ class EntidadeFinanceiraController extends Controller
         
         // Verificar se o campo saldo_inicial foi enviado antes de formatá-lo
         if ($request->has('saldo_inicial') && !is_null($request->saldo_inicial)) {
-            $mergeData['saldo_inicial'] = str_replace(['.', ','], ['', '.'], $request->saldo_inicial);
+            // Usa Money para converter formato brasileiro → decimal
+            $money = Money::fromHumanInput((string) $request->saldo_inicial);
+            $mergeData['saldo_inicial'] = $money->toDatabase();
         }
         
         $request->merge($mergeData);

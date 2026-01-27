@@ -364,13 +364,13 @@
             clearFormErrors();
 
             // Função auxiliar para converter valor brasileiro (com vírgula) para número
+            // Agora com removeMaskOnSubmit: false, o Inputmask envia a string exatamente como o usuário vê
+            // Exemplo: "1.991,44" → envia "1.991,44" (não remove máscara)
+            // O backend será responsável por fazer a conversão correta
             var parseValorBrasileiro = function(valorStr) {
                 if (!valorStr || valorStr === '' || valorStr.trim() === '') return 0;
-
-                // Se já é um número válido (contém apenas números e um ponto decimal), retorna direto
-                if (/^\d+\.?\d*$/.test(valorStr.replace(/\s/g, ''))) {
-                    return parseFloat(valorStr) || 0;
-                }
+                
+                valorStr = valorStr.trim();
 
                 // Se contém vírgula, é formato brasileiro (1.500,00 ou 25,00)
                 if (valorStr.indexOf(',') !== -1) {
@@ -379,8 +379,25 @@
                     return parseFloat(valorLimpo) || 0;
                 }
 
-                // Se não tem vírgula nem ponto, ou tem múltiplos pontos, tenta parse direto
-                return parseFloat(valorStr.replace(/\./g, '')) || 0;
+                // Se contém ponto mas não vírgula, pode ser formato americano (1234.56)
+                if (valorStr.indexOf('.') !== -1 && valorStr.indexOf(',') === -1) {
+                    // Conta quantos pontos existem
+                    var pontos = (valorStr.match(/\./g) || []).length;
+                    
+                    // Se tem apenas 1 ponto, é separador decimal (1234.56)
+                    if (pontos === 1) {
+                        return parseFloat(valorStr) || 0;
+                    }
+                    
+                    // Se tem múltiplos pontos, são separadores de milhar (1.234.567)
+                    // Remove todos os pontos e trata como número inteiro
+                    return parseFloat(valorStr.replace(/\./g, '')) || 0;
+                }
+
+                // Se não tem vírgula nem ponto, trata como número inteiro em reais
+                // Exemplo: "1991" → 1991.00
+                var apenasNumeros = valorStr.replace(/\D/g, '');
+                return parseFloat(apenasNumeros) || 0;
             };
 
             // Valida o campo valor antes de enviar
@@ -411,14 +428,20 @@
             // Prepara os dados do formulário
             var formData = new FormData(form);
 
-            // Converte o valor do formato brasileiro para numérico antes de enviar
+            // Com removeMaskOnSubmit: false, o Inputmask envia a string formatada
+            // Exemplo: "1.991,44" → envia "1.991,44" (não remove máscara)
+            // O backend (StoreTransacaoFinanceiraRequest) fará a conversão correta
             if (valorInput && valorInput.value) {
                 var valorStr = valorInput.value || '';
-                var valorNumero = parseValorBrasileiro(valorStr);
+                
+                // Log para debug
+                console.log('[form-submit] Valor enviado exatamente como o usuário vê', {
+                    'valor_original': valorStr
+                });
 
-                // Atualiza o FormData com o valor convertido (formato numérico: 52.00)
+                // Envia a string exatamente como está (formato brasileiro: "1.991,44")
                 formData.delete('valor');
-                formData.append('valor', valorNumero.toString());
+                formData.append('valor', valorStr);
             }
 
             // Adiciona campos de pagamento se o checkbox "Pago" estiver marcado
@@ -427,9 +450,8 @@
                 var valorPagoInput = form.querySelector('#valor_pago');
                 if (valorPagoInput && valorPagoInput.value) {
                     var valorPagoStr = valorPagoInput.value || '';
-                    var valorPagoNumero = parseValorBrasileiro(valorPagoStr);
                     formData.delete('valor_pago');
-                    formData.append('valor_pago', valorPagoNumero.toString());
+                    formData.append('valor_pago', valorPagoStr);
                 }
 
                 var dataPagamentoInput = form.querySelector('#data_pagamento');
@@ -441,25 +463,22 @@
                 var jurosPagamentoInput = form.querySelector('#juros_pagamento');
                 if (jurosPagamentoInput && jurosPagamentoInput.value) {
                     var jurosPagamentoStr = jurosPagamentoInput.value || '';
-                    var jurosPagamentoNumero = parseValorBrasileiro(jurosPagamentoStr);
                     formData.delete('juros_pagamento');
-                    formData.append('juros_pagamento', jurosPagamentoNumero.toString());
+                    formData.append('juros_pagamento', jurosPagamentoStr);
                 }
 
                 var multaPagamentoInput = form.querySelector('#multa_pagamento');
                 if (multaPagamentoInput && multaPagamentoInput.value) {
                     var multaPagamentoStr = multaPagamentoInput.value || '';
-                    var multaPagamentoNumero = parseValorBrasileiro(multaPagamentoStr);
                     formData.delete('multa_pagamento');
-                    formData.append('multa_pagamento', multaPagamentoNumero.toString());
+                    formData.append('multa_pagamento', multaPagamentoStr);
                 }
 
                 var descontoPagamentoInput = form.querySelector('#desconto_pagamento');
                 if (descontoPagamentoInput && descontoPagamentoInput.value) {
                     var descontoPagamentoStr = descontoPagamentoInput.value || '';
-                    var descontoPagamentoNumero = parseValorBrasileiro(descontoPagamentoStr);
                     formData.delete('desconto_pagamento');
-                    formData.append('desconto_pagamento', descontoPagamentoNumero.toString());
+                    formData.append('desconto_pagamento', descontoPagamentoStr);
                 }
             }
 
@@ -479,31 +498,29 @@
                 formData.append('comprovacao_fiscal', comprovacaoFiscal.checked ? '1' : '0');
             }
 
-            // Processa valores das parcelas - converte do formato brasileiro para numérico
+            // Processa valores das parcelas - envia exatamente como está (formato brasileiro)
             var allInputs = form.querySelectorAll('input');
             allInputs.forEach(function(input) {
                 if (input.name && input.name.startsWith('parcelas[') && input.name.includes(
                     '][valor]')) {
                     var valorStr = input.value || '';
                     if (valorStr && valorStr.trim() !== '') {
-                        var valorNumero = parseValorBrasileiro(valorStr);
-                        // Remove o valor antigo e adiciona o convertido
+                        // Envia a string exatamente como está (formato brasileiro: "1.991,44")
                         formData.delete(input.name);
-                        formData.append(input.name, valorNumero.toString());
+                        formData.append(input.name, valorStr);
                     }
                 }
             });
 
-            // Processa percentuais das parcelas - converte do formato brasileiro para numérico
+            // Processa percentuais das parcelas - envia exatamente como está (formato brasileiro)
             allInputs.forEach(function(input) {
                 if (input.name && input.name.startsWith('parcelas[') && input.name.includes(
                         '][percentual]')) {
                     var percentualStr = input.value || '';
                     if (percentualStr && percentualStr.trim() !== '') {
-                        var percentualNumero = parseValorBrasileiro(percentualStr);
-                        // Remove o valor antigo e adiciona o convertido
+                        // Envia a string exatamente como está (formato brasileiro: "50,00")
                         formData.delete(input.name);
-                        formData.append(input.name, percentualNumero.toString());
+                        formData.append(input.name, percentualStr);
                     }
                 }
             });

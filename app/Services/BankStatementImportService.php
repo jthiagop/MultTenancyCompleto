@@ -6,6 +6,7 @@ use App\Models\BankStatementImport;
 use App\Models\BankStatementEntry;
 use App\Models\BankAccount;
 use App\Services\Banks\BancoBrasilService;
+use App\Support\Money;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -75,10 +76,15 @@ class BankStatementImportService
                 // Converter data (formato DDMMAAAA para Y-m-d)
                 $dataLancamento = $this->parseBBDate($lancamento['dataLancamento']);
 
-                // Determinar tipo e valor assinado
+                // Determinar tipo e valor assinado usando Money
                 $tipo = strtoupper($lancamento['indicadorSinalLancamento']) === 'C' ? 'CREDIT' : 'DEBIT';
-                $valor = (float) $lancamento['valorLancamento'];
-                $valorAssinado = $tipo === 'CREDIT' ? $valor : -$valor;
+                // Cria valor negativo se DEBIT, positivo se CREDIT
+                $valorBruto = $tipo === 'CREDIT' 
+                    ? (float) $lancamento['valorLancamento'] 
+                    : -(float) $lancamento['valorLancamento'];
+                $money = Money::fromOfx($valorBruto);
+                $valor = $money->toDatabase();
+                $valorAssinado = $money->getSignedAmount();
 
                 // Gerar hash único
                 $hash = BankStatementEntry::generateHash(
