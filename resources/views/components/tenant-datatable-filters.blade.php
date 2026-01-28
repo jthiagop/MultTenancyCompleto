@@ -19,17 +19,17 @@
     <!--begin::Período-->
     <div class="me-3">
         <div class="btn-group w-100" role="group">
-            <button class="btn btn-light btn-sm btn-icon btn-light-primary" type="button" id="prev-period-btn-{{ $tableId }}">
+            <button class="btn btn-light btn-sm btn-icon btn-light-primary" type="button" id="prev-period-btn-{{ $tableId }}" style="z-index: 1; position: relative;">
                 <i class="bi bi-chevron-left"></i>
             </button>
 
-            <button class="btn btn-light btn-sm flex-grow-1 btn-light-primary position-relative" type="button" id="period-selector-{{ $tableId }}">
+            <button class="btn btn-light btn-sm flex-grow-1 btn-light-primary position-relative" type="button" id="period-selector-{{ $tableId }}" style="z-index: 1;">
                 <span id="period-display-{{ $tableId }}">{{ $periodLabel }}</span>
                 {{-- Input invisível para facilitar posicionamento do Daterangepicker --}}
                 <input type="text" class="position-absolute opacity-0 top-0 start-0 w-100 h-100" id="kt_daterangepicker_{{ $tableId }}" style="cursor: pointer; z-index: 10;" readonly />
             </button>
 
-            <button class="btn btn-light btn-sm btn-icon btn-light-primary" type="button" id="next-period-btn-{{ $tableId }}">
+            <button class="btn btn-light btn-sm btn-icon btn-light-primary" type="button" id="next-period-btn-{{ $tableId }}" style="z-index: 1; position: relative;">
                 <i class="bi bi-chevron-right"></i>
             </button>
         </div>

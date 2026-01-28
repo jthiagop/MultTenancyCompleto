@@ -8,10 +8,22 @@ window.TenantFiltersRegistry = {};
  * @param {string} tableId 
  */
 window.initTenantFilters = function(tableId) {
-    if (window.TenantFiltersRegistry[tableId]) return; // Evita re-inicializar
+    if (window.TenantFiltersRegistry[tableId]) {
+        console.log('[TenantFilters] Já inicializado para:', tableId);
+        return; // Evita re-inicializar
+    }
 
     const wrapper = document.getElementById(`filters-wrapper-${tableId}`);
-    if (!wrapper) return;
+    if (!wrapper) {
+        console.warn('[TenantFilters] Wrapper não encontrado:', `filters-wrapper-${tableId}`);
+        return;
+    }
+
+    // Verifica se moment está disponível
+    if (typeof moment === 'undefined') {
+        console.error('[TenantFilters] Moment.js não está disponível');
+        return;
+    }
 
     // Estado local
     let currentStart = moment().startOf('month');
@@ -24,6 +36,13 @@ window.initTenantFilters = function(tableId) {
     const prevBtn = document.getElementById(`prev-period-btn-${tableId}`);
     const nextBtn = document.getElementById(`next-period-btn-${tableId}`);
     const periodSelector = document.getElementById(`period-selector-${tableId}`);
+    
+    console.log('[TenantFilters] Inicializando para:', tableId, {
+        prevBtn: !!prevBtn,
+        nextBtn: !!nextBtn,
+        periodSelector: !!periodSelector,
+        labelDisplay: !!labelDisplay
+    });
     
     // --- Lógica de Período ---
     const updateDisplay = () => {
@@ -46,23 +65,55 @@ window.initTenantFilters = function(tableId) {
 
     // Navegação Mês Anterior/Próximo
     if (prevBtn) {
-        prevBtn.addEventListener('click', () => {
+        prevBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('[TenantFilters] Botão anterior clicado', tableId);
+            
+            // Calcula a duração do período atual para manter
+            const duracao = currentEnd.diff(currentStart, 'days');
+            
+            // Move para o mês anterior mantendo a duração
             currentStart = currentStart.clone().subtract(1, 'month').startOf('month');
-            currentEnd = currentStart.clone().endOf('month');
+            currentEnd = currentStart.clone().add(duracao, 'days');
+            
+            // Se a duração era de um mês completo, mantém o mês completo
+            if (duracao >= 27 && duracao <= 31) {
+                currentEnd = currentStart.clone().endOf('month');
+            }
+            
             updateDisplay();
             triggerChange();
             if(pickerInitialized) updatePickerDates();
         });
+    } else {
+        console.warn('[TenantFilters] Botão anterior não encontrado:', `prev-period-btn-${tableId}`);
     }
 
     if (nextBtn) {
-        nextBtn.addEventListener('click', () => {
+        nextBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('[TenantFilters] Botão próximo clicado', tableId);
+            
+            // Calcula a duração do período atual para manter
+            const duracao = currentEnd.diff(currentStart, 'days');
+            
+            // Move para o próximo mês mantendo a duração
             currentStart = currentStart.clone().add(1, 'month').startOf('month');
-            currentEnd = currentStart.clone().endOf('month');
+            currentEnd = currentStart.clone().add(duracao, 'days');
+            
+            // Se a duração era de um mês completo, mantém o mês completo
+            if (duracao >= 27 && duracao <= 31) {
+                currentEnd = currentStart.clone().endOf('month');
+            }
+            
             updateDisplay();
             triggerChange();
             if(pickerInitialized) updatePickerDates();
         });
+    } else {
+        console.warn('[TenantFilters] Botão próximo não encontrado:', `next-period-btn-${tableId}`);
     }
 
     // --- Lazy Loading do Daterangepicker ---
