@@ -529,24 +529,55 @@
 
         // Escutar mudanças no período do filtro (escopo ao pane)
         document.addEventListener('periodChanged', function(event) {
-            if (event.detail.tableId === config.filterId) {
+            // Verifica se o evento é para este pane (pode ser tableId ou filterId)
+            const eventTableId = event.detail.tableId;
+            const matches = eventTableId === config.filterId || 
+                          eventTableId === config.tableId ||
+                          config.filterId === eventTableId ||
+                          config.tableId === eventTableId;
+            
+            console.log(`[Pane ${config.paneId}] Evento periodChanged recebido:`, {
+                eventTableId: eventTableId,
+                configFilterId: config.filterId,
+                configTableId: config.tableId,
+                matches: matches
+            });
+            
+            if (matches) {
+                console.log(`[Pane ${config.paneId}] Período alterado:`, event.detail);
                 state.currentStart = event.detail.start;
                 state.currentEnd = event.detail.end;
                 updateStats();
                 reloadTable();
+            } else {
+                console.log(`[Pane ${config.paneId}] Evento periodChanged ignorado (tableId não corresponde)`);
             }
         });
 
         // Escutar evento de pesquisa (escopo ao pane)
         document.addEventListener('searchTriggered', function(event) {
-            if (event.detail.tableId === config.filterId) {
+            // Verifica se o evento é para este pane (pode ser tableId ou filterId)
+            const eventTableId = event.detail.tableId;
+            const matches = eventTableId === config.filterId || 
+                          eventTableId === config.tableId ||
+                          config.filterId === eventTableId ||
+                          config.tableId === eventTableId;
+            
+            if (matches) {
+                console.log(`[Pane ${config.paneId}] Busca acionada:`, event.detail);
                 reloadTable();
             }
         });
 
         // Escutar evento de aplicação de seleção (escopo ao pane)
         document.addEventListener('selectApplied', function(event) {
-            if (event.detail.selectId === `account-filter-${config.filterId}`) {
+            // Verifica se o evento é para este pane (pode ser tableId ou filterId)
+            const expectedSelectId = `account-filter-${config.filterId}`;
+            const altSelectId = `account-filter-${config.tableId}`;
+            const matches = event.detail.selectId === expectedSelectId || 
+                          event.detail.selectId === altSelectId;
+            
+            if (matches) {
                 updateStats();
                 reloadTable();
             }
