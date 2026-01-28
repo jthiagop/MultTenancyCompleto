@@ -11,55 +11,118 @@ use Illuminate\Support\Facades\Cache;
 class ConciliacaoSuggestionService
 {
     /**
-     * Gera sugestão inteligente para conciliação bancária
-     * Hierarquia: Regras > Histórico > Padrões do Sistema
+     * Novo método genérico que atende tanto AJAX quanto OFX
      */
-    public function gerarSugestao(BankStatement $conciliacao)
+    public function sugerirPorDados(int $companyId, ?string $descricao = null, ?int $parceiroId = null, ?float $valor = null)
     {
-        $memo = Str::upper($conciliacao->memo ?? '');
-        $companyId = $conciliacao->company_id;
+        $memo = $descricao ? Str::upper($descricao) : '';
 
         // Estrutura padrão de retorno
         $sugestao = [
             'lancamento_padrao_id' => null,
-            'tipo_documento'       => null,
-            'descricao'            => $this->limparDescricao($memo),
             'cost_center_id'       => null,
-            'parceiro_id'          => null,
-            'origem_sugestao'      => null, // 'regra', 'historico' ou 'padrao'
-            'confianca'            => 0, // 0-100%
+            'parceiro_id'          => $parceiroId, // Mantém o que veio se houver
+            'tipo_documento'       => null,
+            'descricao'            => $memo ? $this->limparDescricao($memo) : null,
+            'confianca'            => 0,
+            'origem_sugestao'      => null
         ];
 
-        // NÍVEL 1: Regras Explícitas (maior prioridade vence)
-        $regra = $this->buscarRegraAplicavel($companyId, $memo);
+        // --- NÍVEL 1: Regras Explícitas (Prioridade Máxima) ---
         
-        if ($regra) {
-            $sugestao['lancamento_padrao_id'] = $regra->lancamento_padrao_id;
-            $sugestao['cost_center_id'] = $regra->cost_center_id;
-            $sugestao['parceiro_id'] = $regra->parceiro_id;
-            $sugestao['tipo_documento'] = $regra->tipo_documento;
-            $sugestao['descricao'] = $regra->descricao_sugerida ?? $sugestao['descricao'];
-            $sugestao['origem_sugestao'] = 'regra';
-            $sugestao['confianca'] = 95;
-            return $sugestao;
+        // 1.1 Regra por Parceiro
+        // Se escolheu parceiro, verifica se tem regra vinculada a ele
+        if ($parceiroId) {
+            $regraParceiro = ConciliacaoRegra::where('company_id', $companyId)
+                ->where('parceiro_id', $parceiroId)
+                ->orderBy('prioridade', 'desc')
+                ->first();
+
+            if ($regraParceiro) {
+                return $this->formatarRetornoRegra($sugestao, $regraParceiro);
+            }
         }
 
-        // NÍVEL 2: Histórico Recente (aprendizado por uso anterior)
-        $transacaoAnterior = $this->buscarHistorico($companyId, $memo, $conciliacao->amount_cents);
-        
-        if ($transacaoAnterior) {
-            $sugestao['lancamento_padrao_id'] = $transacaoAnterior->lancamento_padrao_id;
-            $sugestao['cost_center_id'] = $transacaoAnterior->cost_center_id;
-            $sugestao['origem_sugestao'] = 'historico';
-            $sugestao['confianca'] = 70;
-            return $sugestao;
+        // 1.2 Regra por Texto
+        if ($memo) {
+            $regraTexto = $this->buscarRegraAplicavel($companyId, $memo);
+            if ($regraTexto) {
+                return $this->formatarRetornoRegra($sugestao, $regraTexto);
+            }
         }
 
-        // NÍVEL 3: Padrões do Sistema (regex hardcoded)
-        $sugestao['tipo_documento'] = $this->adivinharTipoPorTexto($memo);
-        $sugestao['origem_sugestao'] = 'padrao';
-        $sugestao['confianca'] = 30;
+        // --- NÍVEL 2: Histórico Recente (Aprendizado) ---
+
+        // 2.1 Histórico por Parceiro
+        if ($parceiroId) {
+            $ultimoLancamento = TransacaoFinanceira::where('company_id', $companyId)
+                ->where('parceiro_id', $parceiroId)
+                ->whereNotNull('lancamento_padrao_id')
+                ->latest()
+                ->first();
+
+            if ($ultimoLancamento) {
+                $sugestao['lancamento_padrao_id'] = $ultimoLancamento->lancamento_padrao_id;
+                $sugestao['cost_center_id'] = $ultimoLancamento->cost_center_id;
+                $sugestao['tipo_documento'] = $ultimoLancamento->tipo_documento;
+                // Sugerimos a descrição usada anteriormente se o campo atual estiver vazio
+                if (empty($sugestao['descricao'])) {
+                    $sugestao['descricao'] = $ultimoLancamento->descricao;
+                }
+                $sugestao['confianca'] = 80;
+                $sugestao['origem_sugestao'] = 'historico_parceiro';
+                return $sugestao;
+            }
+        }
+
+        // 2.2 Histórico por Texto e Valor
+        if ($memo) {
+            $valorCentavos = $valor ? ($valor * 100) : 0;
+            $transacaoAnterior = $this->buscarHistorico($companyId, $memo, $valorCentavos);
+            
+            if ($transacaoAnterior) {
+                $sugestao['lancamento_padrao_id'] = $transacaoAnterior->lancamento_padrao_id;
+                $sugestao['cost_center_id'] = $transacaoAnterior->cost_center_id;
+                $sugestao['origem_sugestao'] = 'historico_texto';
+                $sugestao['confianca'] = 70;
+                return $sugestao;
+            }
+        }
+
+        // NÍVEL 3: Padrões do Sistema
+        if ($memo) {
+            $sugestao['tipo_documento'] = $this->adivinharTipoPorTexto($memo);
+            $sugestao['origem_sugestao'] = 'padrao';
+            $sugestao['confianca'] = 30;
+        }
+
         return $sugestao;
+    }
+
+    // Helper para formatar retorno de regra
+    private function formatarRetornoRegra($sugestao, $regra)
+    {
+        $sugestao['lancamento_padrao_id'] = $regra->lancamento_padrao_id;
+        $sugestao['cost_center_id'] = $regra->cost_center_id;
+        $sugestao['parceiro_id'] = $regra->parceiro_id ?? $sugestao['parceiro_id'];
+        $sugestao['tipo_documento'] = $regra->tipo_documento;
+        $sugestao['descricao'] = $regra->descricao_sugerida ?? $sugestao['descricao'];
+        $sugestao['origem_sugestao'] = 'regra';
+        $sugestao['confianca'] = 95;
+        return $sugestao;
+    }
+
+    /**
+     * Mantém compatibilidade com o código antigo de Conciliação OFX
+     */
+    public function gerarSugestao(BankStatement $conciliacao)
+    {
+        return $this->sugerirPorDados(
+            $conciliacao->company_id,
+            $conciliacao->memo,
+            null, // OFX geralmente não tem parceiro vinculado ainda
+            (float) $conciliacao->amount
+        );
     }
 
     /**
@@ -69,6 +132,7 @@ class ConciliacaoSuggestionService
     {
         // TODO: Implementar cache quando migrar para Redis
         $regras = ConciliacaoRegra::where('company_id', $companyId)
+            ->whereNotNull('termo_busca')
             ->orderBy('prioridade', 'desc')
             ->orderBy('created_at', 'desc')
             ->get();
@@ -88,8 +152,8 @@ class ConciliacaoSuggestionService
         
         // Primeiro: busca por texto E valor próximo (±20%)
         $margemValor = abs($valorCentavos) * 0.2; // 20% de margem (valor absoluto)
-        $valorMin = abs($valorCentavos) - $margemValor;
-        $valorMax = abs($valorCentavos) + $margemValor;
+        $valorMin = (abs($valorCentavos) - $margemValor) / 100;
+        $valorMax = (abs($valorCentavos) + $margemValor) / 100;
         
         $transacao = TransacaoFinanceira::where('company_id', $companyId)
             ->where('descricao', 'LIKE', '%' . $termoBusca . '%')

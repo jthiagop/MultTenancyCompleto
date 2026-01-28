@@ -759,7 +759,7 @@
 
             // Usa evento do KTDrawer (Metronic) se disponível
             if (typeof KTDrawer !== 'undefined') {
-                drawerElement.addEventListener('shown.kt.drawer', applyDefaultOnDrawerOpen);
+                drawerElement.addEventListener('kt.drawer.shown', applyDefaultOnDrawerOpen);
             }
 
             // Observa mudanças no atributo data-kt-drawer-shown (quando drawer é aberto)

@@ -201,7 +201,6 @@ $tabs = [
                 const targetPane = document.getElementById(`conciliacao-pane-${tabKey}`);
 
                 if (!targetPane) {
-                    console.error('❌ Tab pane não encontrado para:', tabKey);
                     return;
                 }
 
@@ -209,8 +208,6 @@ $tabs = [
                 if (targetPane.getAttribute('data-loaded') === 'true') {
                     return;
                 }
-
-                console.log('⬇️ Iniciando carregamento da tab:', tabKey);
 
                 // Marca visualmente como carregando se estiver vazio
                 if (!targetPane.innerHTML.trim() || targetPane.querySelector('.spinner-border')) {
@@ -294,12 +291,10 @@ $tabs = [
                 
                 // Verifica se é um form de conciliação (novo lançamento OU editar sugestão)
                 if (!form.classList.contains('conciliacao-form') && !form.classList.contains('edit-suggestion-form')) {
-                    console.log('⚠️ [Debug] Form ignorado - não é form de conciliação');
                     return;
                 }
 
                 e.preventDefault();
-                console.log('📝 [Conciliação AJAX] Form interceptado:', form.className);
 
                 const formData = new FormData(form);
                 const conciliacaoId = form.getAttribute('data-conciliacao-id');
@@ -322,7 +317,6 @@ $tabs = [
                 })
                 .then(response => response.json())
                 .then(data => {
-                    console.log('✅ [Conciliação AJAX] Resposta:', data);
 
                     if (data.success) {
                         // 1. Remove o item visualmente com animação
@@ -347,7 +341,6 @@ $tabs = [
                             
                             setTimeout(() => {
                                 elementToRemove.remove();
-                                console.log('✅ [Conciliação AJAX] Item removido do DOM');
 
                                 // Reinicializa estrelas após remoção
                                 if (typeof window.suggestionStarManager !== 'undefined') {
@@ -359,13 +352,11 @@ $tabs = [
                         // 2. Atualiza contadores usando funções globais de tabs.blade.php
                         // Recarrega saldos e informações financeiras
                         if (typeof window.carregarInformacoes === 'function') {
-                            console.log('💰 Atualizando saldos após conciliação...');
                             window.carregarInformacoes();
                         }
 
                         // Recarrega total de pendentes (independente do filtro de data)
                         if (typeof window.carregarTotalPendentes === 'function') {
-                            console.log('📊 Atualizando badge de conciliações pendentes...');
                             window.carregarTotalPendentes();
                         }
 

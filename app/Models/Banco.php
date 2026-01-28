@@ -2,14 +2,15 @@
 
 namespace App\Models;
 
-use App\Models\Financeiro\ModulosAnexo;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use App\Models\Financeiro\TransacaoFinanceira;
+use Illuminate\Database\Eloquent\Model;
+use App\Models\Financeiro\ModulosAnexo;
 use Illuminate\Support\Facades\Auth;
+use Vinkla\Hashids\Facades\Hashids;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use File;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\DB;
 
 class Banco extends Model
 {
@@ -218,6 +219,19 @@ class Banco extends Model
                 'icon' => asset("assets/media/svg/bancos/{$file->getFilename()}"), // Caminho público
             ];
         })->toArray();
+    }
+
+    // 1. O Laravel usa isso para gerar a URL (route('banco.show', $banco))
+    public function getRouteKey()
+    {
+        return Hashids::encode($this->getKey());
+    }
+
+    // 2. O Laravel usa isso para encontrar o model vindo da URL
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $decoded = Hashids::decode($value);
+        return $this->where('id', $decoded[0] ?? null)->firstOrFail();
     }
 
 }

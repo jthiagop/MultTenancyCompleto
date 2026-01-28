@@ -24,6 +24,7 @@ use App\Models\User;
 use App\Services\RecurrenceService;
 use App\Services\TransacaoFinanceiraService;
 use App\Services\EntidadeFinanceiraService;
+use App\Services\ConciliacaoSuggestionService;
 use App\Support\Money;
 use Carbon\Carbon;
 use DB;
@@ -43,19 +44,20 @@ class BancoController extends Controller
     protected TransacaoFormatter $formatter;
     protected RecurrenceService $recurrenceService;
     protected EntidadeFinanceiraService $entidadeFinanceiraService;
+    protected ConciliacaoSuggestionService $suggestionService;
 
     public function __construct(
         TransacaoFinanceiraService $transacaoService,
         TransacaoFormatter $formatter,
         RecurrenceService $recurrenceService,
-        EntidadeFinanceiraService $entidadeFinanceiraService
+        EntidadeFinanceiraService $entidadeFinanceiraService,
+        ConciliacaoSuggestionService $suggestionService
     ) {
         $this->transacaoService = $transacaoService;
         $this->formatter = $formatter;
         $this->recurrenceService = $recurrenceService;
         $this->entidadeFinanceiraService = $entidadeFinanceiraService;
-        $this->formatter = $formatter;
-        $this->recurrenceService = $recurrenceService;
+        $this->suggestionService = $suggestionService;
     }
     /**
      * Display a listing of the resource.
@@ -84,6 +86,34 @@ class BancoController extends Controller
         ]);
     }
 
+
+    public function getSugestao(Request $request)
+    {
+        try {
+            $companyId = session('active_company_id');
+            $parceiroId = $request->get('parceiro_id');
+            $descricao = $request->get('descricao');
+            $valor = $request->get('valor');
+
+            // Converte valor monetário se vier formatado
+            if ($valor) {
+                $money = Money::fromHumanInput($valor);
+                $valor = $money->getAmount();
+            }
+
+            $sugestao = $this->suggestionService->sugerirPorDados(
+                (int) $companyId,
+                $descricao,
+                $parceiroId ? (int) $parceiroId : null,
+                $valor ? (float) $valor : null
+            );
+
+            return response()->json($sugestao);
+        } catch (\Exception $e) {
+            Log::error('Erro ao buscar sugestão: ' . $e->getMessage());
+            return response()->json(['error' => 'Falha ao processar sugestão'], 500);
+        }
+    }
 
     public function list(Request $request)
     {

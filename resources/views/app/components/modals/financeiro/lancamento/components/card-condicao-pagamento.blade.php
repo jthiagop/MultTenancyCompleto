@@ -37,8 +37,8 @@
         <!--begin::Input group-->
         <div class="d-flex flex-stack w-lg-50 g-9 mb-5">
             <!--begin::Linha: Checkbox e Select de Recorrência-->
-            <div class="d-flex align-items-center gap-5 w-100">
-                <div class="form-check form-switch form-check-custom form-check-solid">
+            <div class="d-flex align-items-center gap-5 w-100 pt-6">
+                <div class="form-check form-switch form-check-custom form-check-solid ">
                     <input class="form-check-input" type="checkbox" role="switch" name="repetir_lancamento" value="1"
                         id="flexSwitchDefault" />
                     <label class="form-check-label" for="flexSwitchDefault">

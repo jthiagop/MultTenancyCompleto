@@ -1,4 +1,6 @@
 
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+
 <x-tenant-app-layout
 pageTitle="Lançamentos Financeiros - Banco, Caixa"
 :breadcrumbs="[['label' => 'Lançamentos Financeiros']]">

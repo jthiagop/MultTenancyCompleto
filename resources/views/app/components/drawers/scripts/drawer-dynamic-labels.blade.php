@@ -9,7 +9,7 @@ $(document).ready(function() {
         if (!tipoSelect.length) return;
         
         var tipo = tipoSelect.val();
-        var isReceita = (tipo === 'entrada');
+        var isReceita = (window.normalizeTipo ? window.normalizeTipo(tipo) : tipo) === 'receita';
         
         console.log('[Labels Dinâmicos] Tipo:', tipo, '| É Receita:', isReceita);
         

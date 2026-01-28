@@ -1,6 +1,21 @@
 <script>
 // Script de inicialização do Drawer de Lançamento
 (function() {
+    /**
+     * Normaliza tipos de transação
+     * @param {string} raw - entrada, saida, receita, despesa
+     * @returns {string} receita ou despesa
+     */
+    function normalizeTipo(raw) {
+        if (!raw) return 'despesa';
+        if (raw === 'entrada') return 'receita';
+        if (raw === 'saida') return 'despesa';
+        return raw;
+    }
+    
+    // Torna acessível globalmente
+    window.normalizeTipo = normalizeTipo;
+
     // Função para atualizar labels de fornecedor/cliente baseado no tipo
     function updateFornecedorLabels(tipo) {
         if (!tipo) {
@@ -8,17 +23,16 @@
             var tipoInput = $('#tipo');
             var tipoFinanceiroInput = $('#tipo_financeiro');
             if (tipoInput.length && tipoInput.val()) {
-                tipo = tipoInput.val() === 'entrada' ? 'receita' : 'despesa';
+                tipo = normalizeTipo(tipoInput.val());
             } else if (tipoFinanceiroInput.length && tipoFinanceiroInput.val()) {
-                tipo = tipoFinanceiroInput.val();
+                tipo = normalizeTipo(tipoFinanceiroInput.val());
             } else {
                 tipo = 'despesa'; // Default
             }
         }
 
         // Normaliza o tipo
-        if (tipo === 'entrada') tipo = 'receita';
-        if (tipo === 'saida') tipo = 'despesa';
+        tipo = normalizeTipo(tipo);
 
         // Define textos baseado no tipo
         var labelText = tipo === 'receita' ? 'Cliente' : 'Fornecedor';
@@ -134,9 +148,7 @@
             var placeholderValue = $select.attr('data-placeholder') || 'Selecione';
             if (selectId === 'fornecedor_id') {
                 // Tenta obter o tipo atual para definir o placeholder correto
-                var tipoAtual = $('#tipo').val() || $('#tipo_financeiro').val() || 'despesa';
-                if (tipoAtual === 'entrada') tipoAtual = 'receita';
-                if (tipoAtual === 'saida') tipoAtual = 'despesa';
+                var tipoAtual = normalizeTipo($('#tipo').val() || $('#tipo_financeiro').val());
                 placeholderValue = tipoAtual === 'receita' ? 'Selecione um cliente' : 'Selecione um fornecedor';
             }
             
@@ -199,9 +211,7 @@
                             $results.find('.select2-add-fornecedor-footer').remove();
 
                             // Obtém o texto do botão baseado no tipo atual
-                            var tipoAtual = $('#tipo').val() || $('#tipo_financeiro').val() || 'despesa';
-                            if (tipoAtual === 'entrada') tipoAtual = 'receita';
-                            if (tipoAtual === 'saida') tipoAtual = 'despesa';
+                            var tipoAtual = normalizeTipo($('#tipo').val() || $('#tipo_financeiro').val());
                             var buttonText = (window.fornecedorButtonText) ? window.fornecedorButtonText : 
                                            (tipoAtual === 'receita' ? 'Adicionar Cliente' : 'Adicionar Fornecedor');
 
@@ -226,9 +236,7 @@
                                 $select.select2('close');
 
                                 // Obtém o tipo atual do lançamento para atualizar labels
-                                var tipoAtual = $('#tipo').val() || $('#tipo_financeiro').val() || 'despesa';
-                                if (tipoAtual === 'entrada') tipoAtual = 'receita';
-                                if (tipoAtual === 'saida') tipoAtual = 'despesa';
+                                var tipoAtual = normalizeTipo($('#tipo').val() || $('#tipo_financeiro').val());
                                 
                                 // ===== NOVO: Define qual select deve ser atualizado ao salvar =====
                                 // Armazena referência do select alvo para atualização após cadastro
@@ -410,12 +418,12 @@
                 updateFornecedorLabels(tipo);
 
                 // Adiciona listener para mudanças no campo tipo (caso o usuário mude depois)
-                $('#tipo, #tipo_financeiro').on('change', function() {
-                    var tipoAtual = $('#tipo').val() || $('#tipo_financeiro').val() || 'despesa';
-                    if (tipoAtual === 'entrada') tipoAtual = 'receita';
-                    if (tipoAtual === 'saida') tipoAtual = 'despesa';
+                $('#tipo, #tipo_financeiro')
+                  .off('change.drawerLanc')
+                  .on('change.drawerLanc', function () {
+                    var tipoAtual = normalizeTipo($('#tipo').val() || $('#tipo_financeiro').val());
                     updateFornecedorLabels(tipoAtual);
-                });
+                  });
 
                 // Filtra lançamentos padrão se houver tipo
                 if (tipoLancamento) {
@@ -718,10 +726,14 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
         var flatpickrConfig = {
             enableTime: false,
             dateFormat: "d/m/Y",
-            locale: "pt",
             allowInput: true,
             clickOpens: true
         };
+
+        // Só adiciona locale se estiver registrado
+        if (typeof flatpickr !== 'undefined' && flatpickr.l10ns && (flatpickr.l10ns.pt || flatpickr.l10ns.pt_BR)) {
+            flatpickrConfig.locale = "pt";
+        }
         
         // Verifica se é um dia da semana (string) ou dia do mês (número)
         if (diasSemanaMap.hasOwnProperty(diaCobrancaVal)) {

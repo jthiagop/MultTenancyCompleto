@@ -29,7 +29,7 @@
     <!--begin::Card-->
     <div class="card {{ $cardClass }}">
         <!--begin::Header-->
-        <div class="card-header {{ $headerClass }}" id="{{ $headerId }}">
+        <div class="card-header  {{ $headerClass }}" id="{{ $headerId }}">
             <h3 class="card-title fw-bold text-gray-800">{{ $title }}</h3>
             <div class="card-toolbar">
                 @isset($toolbar)

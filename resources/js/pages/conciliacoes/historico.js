@@ -4,25 +4,44 @@
  */
 
 
-const el = document.getElementById('conciliacoes-historico');
+// Busca o container inicial (tab 'all' por padrão)
+const el = document.getElementById('historico-container-all') || document.getElementById('conciliacoes-historico');
 if (!el) {
+    console.warn('[Historico] Container não encontrado');
 } else {
-    
+
     // Configs do container via data-*
     const entidadeId = JSON.parse(el.dataset.entidadeId || 'null');
     const urlHistorico = el.dataset.urlHistorico;
     const urlDetalhesTpl = el.dataset.urlDetalhes;
     const urlDesfazerTpl = el.dataset.urlDesfazer;
 
-    // Elementos DOM
+    // Elementos DOM - busca inicial para tab 'all'
     let tbody = document.getElementById('historico-conciliacoes-body');
     const buscaInput = document.getElementById('busca-historico');
     const perPageSelect = document.getElementById('items-per-page');
     const paginationContainer = document.getElementById('historico-pagination');
-    
+
+    // Função auxiliar para obter tbody baseado no status
+    function getTbodyByStatus(status) {
+        const tbodyId = status === 'all'
+            ? 'historico-conciliacoes-body'
+            : `historico-conciliacoes-body-${status}`;
+        const foundTbody = document.getElementById(tbodyId);
+        if (!foundTbody) {
+            console.warn(`[Historico] Tbody não encontrado para status: ${status} (ID: ${tbodyId})`);
+        }
+        return foundTbody;
+    }
+
     if (!tbody) {
-        console.error('❌ ERRO CRÍTICO: tbody não encontrado!');
-        console.error('   ID procurado: historico-conciliacoes-body');
+        console.warn('[Historico] Tbody inicial não encontrado, será buscado na primeira troca de aba');
+        // Tenta buscar o tbody da tab ativa
+        const activePane = document.querySelector('[data-status].show.active');
+        if (activePane) {
+            const activeStatus = activePane.getAttribute('data-status') || 'all';
+            tbody = getTbodyByStatus(activeStatus);
+        }
     }
 
     // Formatadores
@@ -85,13 +104,17 @@ if (!el) {
      * Renderiza linhas da tabela
      */
     function renderRows(items) {
-        
+        // Verifica se tbody está definido
+        if (!tbody) {
+            console.error('[Historico] Tbody não definido ao renderizar linhas');
+            return;
+        }
+
         if (!items?.length) {
-            console.warn('⚠️ Array vazio ou undefined, mostrando mensagem de vazio');
+            console.warn('[Historico] Array vazio ou undefined, mostrando mensagem de vazio');
             console.warn('   items:', items);
-            console.warn('   typeof items:', typeof items);
-            console.warn('   Array.isArray(items):', Array.isArray(items));
-            
+            console.warn('   tbody.id:', tbody.id);
+
             tbody.innerHTML = `
                 <tr><td colspan="7" class="text-center py-10">
                     <div class="d-flex flex-column align-items-center">
@@ -99,35 +122,68 @@ if (!el) {
                             <span class="path1"></span>
                             <span class="path2"></span>
                         </i>
-                        <span class="text-muted fs-6">Nenhuma conciliação realizada ainda</span>
+                        <span class="text-muted fs-6">Nenhuma conciliação encontrada para este filtro</span>
                     </div>
                 </td></tr>`;
             return;
         }
 
-        
+        console.log(`[Historico] Renderizando ${items.length} itens no tbody:`, tbody.id);
+
+
         tbody.innerHTML = items.map((item, idx) => {
-            
-            const tipoIsEntrada = item.tipo === 'entrada';
-            const tipoClasse = tipoIsEntrada ? 'badge-light-success' : 'badge-light-danger';
-            const valorClasse = tipoIsEntrada ? 'text-success' : 'text-danger';
+
+        const tipoNormalizado = window.normalizeTipo ? window.normalizeTipo(item.tipo) : item.tipo;
+        const tipoIsEntrada = tipoNormalizado === 'receita' || item.tipo === 'entrada';
+        const tipoClasse = tipoIsEntrada ? 'badge-light-success' : 'badge-light-danger';
+        const valorClasse = tipoIsEntrada ? 'text-success' : 'text-danger';
             const detalhesId = Number(item.id);
-            const lancamentoPadrao = item.lancamento_padrao && item.lancamento_padrao !== '-' 
-                ? `<div class="text-muted fs-6">
-                     <i class="bi bi-tag fs-6 me-1">
-                     </i>
-                     ${escapeHtml(item.lancamento_padrao)}
-                   </div>` 
+
+            // Renderiza Lancamento Padrao badge
+            const lancamentoPadrao = item.lancamento_padrao && item.lancamento_padrao !== '-'
+                ? `<div class="mt-1">
+                     <span class="text-primary fs-8 fw-semibold border border-primary border-dashed px-2 py-0 rounded">
+                        ${escapeHtml(item.lancamento_padrao)}
+                     </span>
+                   </div>`
                 : '';
+
+            // Renderiza Parceiro e Descrição Interna
+            let detalhesInternos = '';
+            if ((item.parceiro_nome && item.parceiro_nome !== '-') ||
+                (item.transacao_descricao && item.transacao_descricao !== '-' && item.transacao_descricao !== item.descricao)) {
+
+                detalhesInternos = `<div class="d-flex align-items-center flex-wrap gap-1">`;
+
+                if (item.parceiro_nome && item.parceiro_nome !== '-') {
+                    detalhesInternos += `<span class="badge badge-light-secondary fw-bold fs-8" title="Parceiro">${escapeHtml(item.parceiro_nome)}</span>`;
+                }
+
+                if (item.transacao_descricao && item.transacao_descricao !== '-' && item.transacao_descricao !== item.descricao) {
+                    detalhesInternos += `<span class="text-gray-600 fs-7 italic">"${escapeHtml(item.transacao_descricao)}"</span>`;
+                }
+
+                detalhesInternos += `</div>`;
+            }
 
             return `
                 <tr data-id="${detalhesId}" style="cursor:pointer;">
-                    <td>${escapeHtml(item.data_conciliacao_formatada || '-')}</td>
+                    <td class="ps-0">
+                        <div class="d-flex flex-column">
+                            <span class="text-gray-800 fw-bold">${escapeHtml(item.data_extrato_formatada || '-')}</span>
+                            <span class="text-muted fs-7" title="Data da Conciliação">
+                                <i class="bi bi-clock-history fs-8 me-1"></i>${escapeHtml(item.data_conciliacao_formatada || '-')}
+                            </span>
+                        </div>
+                    </td>
                     <td class="descricao-conciliacao">
-                        <a href="#" class="text-gray-800 fw-bold text-hover-primary d-block" 
+                        <!-- Histórico do Banco (Memo) -->
+                        <a href="#" class="text-gray-800 fw-bold text-hover-primary d-block fs-6 mb-1"
                            data-action="ver-detalhes" data-id="${detalhesId}">
                             ${escapeHtml(item.descricao || '-')}
                         </a>
+
+                        ${detalhesInternos}
                         ${lancamentoPadrao}
                     </td>
                     <td><span class="badge ${tipoClasse}">${tipoIsEntrada ? 'Entrada' : 'Saída'}</span></td>
@@ -135,12 +191,12 @@ if (!el) {
                     <td>${statusBadge(item.status)}</td>
                     <td><span class="text-muted fs-7" title="${escapeHtml(item.usuario || '-')}">${escapeHtml(truncate(item.usuario, 25))}</span></td>
                     <td class="text-end">
-                        <a href="#" class="btn btn-sm btn-light btn-active-light-primary" 
+                        <a href="#" class="btn btn-sm btn-light btn-active-light-primary"
                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">
                             Ações <i class="ki-duotone ki-down fs-5 ms-1"></i>
                         </a>
-                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 
-                                    menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4" 
+                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600
+                                    menu-state-bg-light-primary fw-semibold fs-7 w-150px py-4"
                              data-kt-menu="true">
                             <div class="menu-item px-3">
                                 <a href="#" class="menu-link px-3" data-action="ver-detalhes" data-id="${detalhesId}">
@@ -218,36 +274,75 @@ if (!el) {
             return;
         }
 
-        // Detecta qual tab está ativa para passar o status correto
-        let activePane = document.querySelector('[data-status].show.active');
-        if (!activePane) activePane = document.querySelector('[data-status].show');
-        if (!activePane) activePane = document.querySelector('[data-status="all"]');
-        
-        const activeStatus = activePane ? activePane.getAttribute('data-status') : 'all';
+        // Detecta qual tab está ativa para passar o status correto de forma robusta
+        // Busca pelo botão de tab ativo do Bootstrap
+        const activeTabButton = document.querySelector('#historico-status-tabs-tabs .nav-link.active, #historico-status-tabs .nav-link.active');
+        let activeStatus = 'all';
+
+        if (activeTabButton) {
+            // Tenta obter do data-tab-key ou data-status-tab
+            activeStatus = activeTabButton.getAttribute('data-tab-key') ||
+                          activeTabButton.getAttribute('data-status-tab') ||
+                          'all';
+
+            // Se não encontrou, tenta extrair do data-bs-target
+            if (activeStatus === 'all' || !activeStatus) {
+                const targetId = activeTabButton.getAttribute('data-bs-target')?.replace('#', '');
+                if (targetId) {
+                    const targetPane = document.getElementById(targetId);
+                    if (targetPane) {
+                        activeStatus = targetPane.getAttribute('data-status') || 'all';
+                    }
+                }
+            }
+        } else {
+            // Fallback: busca pelo pane ativo
+            const activePane = document.querySelector('[data-status].show.active, [data-status].show');
+            if (activePane) {
+                activeStatus = activePane.getAttribute('data-status') || 'all';
+            }
+        }
+
+        console.log('[Historico] Status detectado para carregamento:', activeStatus);
 
 
         // Cancela requisição anterior se houver
         if (aborter) aborter.abort();
         aborter = new AbortController();
 
+        // Atualiza tbody baseado no status antes de mostrar loading
+        const tbodyForStatus = getTbodyByStatus(activeStatus);
+        if (tbodyForStatus) {
+            tbody = tbodyForStatus;
+        }
+
         // Loading state
-        tbody.innerHTML = `
-                <tr><td colspan="7" class="text-center py-10">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Carregando...</span>
-                    </div>
-                    <div class="text-muted mt-3">Carregando histórico...</div>
-                </td></tr>`;
+        if (tbody) {
+            tbody.innerHTML = `
+                    <tr><td colspan="7" class="text-center py-10">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Carregando...</span>
+                        </div>
+                        <div class="text-muted mt-3">Carregando histórico (${activeStatus})...</div>
+                    </td></tr>`;
+        }
 
         try {
             const qs = new URLSearchParams({
                 page: String(state.page),
                 per_page: String(state.per_page),
                 q: state.q || '',
-                status: activeStatus, // ✅ NOVO: Passa o status da aba ativa
+                status: activeStatus, // ✅ Passa o status da aba ativa para filtrar no backend
             });
 
             const fullUrl = `${urlHistorico}?${qs.toString()}`;
+            console.log('[Historico] Carregando dados:', {
+                status: activeStatus,
+                page: state.page,
+                per_page: state.per_page,
+                q: state.q,
+                url: fullUrl
+            });
 
             const res = await fetch(fullUrl, {
                 headers: {
@@ -263,31 +358,64 @@ if (!el) {
             }
 
             const json = await res.json();
-            
+
+            // Atualiza contadores das tabs se retornados
+            if (json.counts && typeof window.atualizarContagemStatusTabs === 'function') {
+                window.atualizarContagemStatusTabs(json.counts);
+            }
+
             // Novo padrão: controller retorna HTML renderizado
             if (json.html) {
-
-                // Renderiza HTML diretamente
-                tbody.innerHTML = json.html;
-                renderPagination(json?.meta);
-                
-                // Reinicializa menus
-                if (typeof KTMenu !== 'undefined') {
-                    KTMenu.createInstances();
+                // Atualiza contadores das tabs se retornados
+                if (json.counts && typeof window.atualizarContagemStatusTabs === 'function') {
+                    window.atualizarContagemStatusTabs(json.counts);
                 }
-                
+
+                // IMPORTANTE: Garante que está usando o tbody correto para o status atual
+                // Isso previne que dados de uma tab sejam renderizados em outra
+                const currentTbody = getTbodyByStatus(activeStatus);
+                if (currentTbody) {
+                    tbody = currentTbody;
+                    console.log('[Historico] Renderizando HTML no tbody:', currentTbody.id, 'para status:', activeStatus);
+
+                    // Renderiza HTML diretamente no tbody correto
+                    tbody.innerHTML = json.html;
+                    renderPagination(json?.meta);
+
+                    // Reinicializa menus apenas no tbody atual
+                    if (typeof KTMenu !== 'undefined') {
+                        // Busca menus apenas dentro do tbody atual para evitar conflitos
+                        const menuTriggers = tbody.closest('.card')?.querySelectorAll('[data-kt-menu-trigger]');
+                        if (menuTriggers && menuTriggers.length > 0) {
+                            KTMenu.createInstances();
+                        }
+                    }
+                } else {
+                    console.error('[Historico] Tbody não encontrado para status:', activeStatus);
+                }
+
                 return;
             }
-            
+
             // Padrão antigo: controller retorna array de dados
+            // IMPORTANTE: Garante que está usando o tbody correto para o status atual
+            const currentTbody = getTbodyByStatus(activeStatus);
+            if (currentTbody) {
+                tbody = currentTbody;
+                console.log('[Historico] Renderizando dados no tbody:', currentTbody.id, 'para status:', activeStatus);
+            } else {
+                console.error('[Historico] Tbody não encontrado para status:', activeStatus);
+                return;
+            }
+
             const items = json?.data ?? [];
-            
+
             if (!items || items.length === 0) {
-                console.warn('⚠️ Nenhum item retornado do servidor');
+                console.warn('[Historico] Nenhum item retornado do servidor para status:', activeStatus);
                 console.warn('   Success:', json?.success);
                 console.warn('   Data:', json?.data);
             }
-            
+
             renderRows(items);
             renderPagination(json?.meta);
 
@@ -295,11 +423,11 @@ if (!el) {
             if (error.name === 'AbortError') {
                 return;
             }
-            
+
             console.error('❌ Erro ao carregar histórico:', error);
             console.error('   Message:', error.message);
             console.error('   Stack:', error.stack);
-            
+
             tbody.innerHTML = `
                 <tr><td colspan="7" class="text-center py-10">
                     <div class="d-flex flex-column align-items-center">
@@ -606,7 +734,7 @@ if (!el) {
         try {
             const url = new URL(urlHistorico, window.location.origin);
             url.searchParams.append('only_counts', 'true');
-            
+
             const response = await fetch(url.toString(), {
                 headers: {
                     'Accept': 'application/json',
@@ -626,14 +754,33 @@ if (!el) {
         }
     }
 
-    // Carrega dados inicialmente
-    load().catch(console.error);
+    // Carrega dados inicialmente apenas para a tab ativa
+    // Aguarda um pouco para garantir que o DOM está pronto e as tabs estão inicializadas
+    setTimeout(() => {
+        // Verifica qual tab está ativa inicialmente
+        const initialActiveTab = document.querySelector('#historico-status-tabs-tabs .nav-link.active, #historico-status-tabs .nav-link.active');
+        const initialActivePane = document.querySelector('[data-status].show.active');
+
+        if (initialActiveTab || initialActivePane) {
+            console.log('[Historico] Carregando dados iniciais para tab ativa');
+            load().catch(console.error);
+        } else {
+            // Se não encontrou tab ativa, tenta carregar para 'all' (padrão)
+            console.log('[Historico] Nenhuma tab ativa encontrada, carregando para "all"');
+            // Força o tbody para 'all' e carrega
+            const allTbody = getTbodyByStatus('all');
+            if (allTbody) {
+                tbody = allTbody;
+                load().catch(console.error);
+            }
+        }
+    }, 300);
 
     // Expõe funções globalmente para compatibilidade
     window.recarregarHistoricoConciliacoes = function() {
         load().catch(console.error);
     };
-    
+
     window.abrirDrawerConciliacao = abrirDrawerConciliacao;
     window.desfazerConciliacao = desfazerConciliacao;
 
@@ -644,14 +791,17 @@ if (!el) {
         window.atualizarContagemStatusTabs = function(newCounts) {
             if (!newCounts) return;
 
-            const allCount = (newCounts.ok || 0) + (newCounts.pendente || 0) + (newCounts.ignorado || 0) + (newCounts.divergente || 0);
+            // Calcula total sem incluir pendentes (que não são exibidos)
+            const allCount = (newCounts.ok || 0) + (newCounts.ignorado || 0) + (newCounts.divergente || 0);
             const countsToUpdate = {
                 ...newCounts,
                 all: newCounts.all ?? allCount,
             };
 
-            ['all', 'ok', 'pendente', 'ignorado', 'divergente'].forEach(status => {
-                const tabButton = document.querySelector(`#conciliacao-status-tab-${status}`);
+            // Apenas os status que são exibidos nas tabs
+            ['all', 'ok', 'ignorado', 'divergente'].forEach(status => {
+                const tabButton = document.querySelector(`#historico-status-tabs-tab-${status}`) ||
+                                 document.querySelector(`#conciliacao-status-tab-${status}`);
                 if (!tabButton) return;
 
                 const countElement = tabButton.querySelector('.segmented-tab-count');
@@ -667,37 +817,117 @@ if (!el) {
         window.atualizarContagemStatusTabs(window.initialConciliacaoCounts);
     }
 
-    // 3. Listener para mudança de abas
-    const tabContainer = document.getElementById('conciliacao-status-tabs') || document.getElementById('conciliacao-status');
-    if (tabContainer) {
-        // Usa delegação ou busca todos os botões de tab
-        const tabButtons = tabContainer.querySelectorAll('[data-bs-toggle="pill"], [data-bs-toggle="tab"]');
-        
-        tabButtons.forEach(btn => {
-            btn.addEventListener('shown.bs.tab', (e) => {
-                const targetId = e.target.getAttribute('aria-controls') || e.target.getAttribute('data-bs-target')?.replace('#', '');
-                const targetPane = document.getElementById(targetId);
-                const status = targetPane?.getAttribute('data-status') || 'all';
-                
-                
-                // Atualiza referência do tbody
-                const newItemBodyId = status === 'all' 
-                    ? 'historico-conciliacoes-body' 
-                    : `historico-conciliacoes-body-${status}`;
-                
-                const newTbody = document.getElementById(newItemBodyId);
-                
-                if (newTbody) {
-                    tbody = newTbody; // Atualiza a variável global do escopo
-                    
-                    // Reseta paginação ao trocar de aba (opcional, mas recomendado)
-                    state.page = 1;
-                    
-                    // Recarrega dados para a nova aba
-                    load().catch(console.error);
-                } else {
+    // 3. Listener para mudança de abas - usando event delegation no document
+    // O Bootstrap dispara o evento 'shown.bs.tab' no elemento que foi clicado
+    // Usamos event delegation no document para capturar todos os eventos de tab
+
+    function handleTabChange(e) {
+        // O evento pode vir do botão ou do elemento relacionado
+        const targetButton = e.target.closest('[data-bs-toggle="tab"]') || e.target;
+
+        // Verifica se é uma tab do histórico
+        if (!targetButton || !targetButton.hasAttribute('data-bs-toggle')) {
+            return;
+        }
+
+        // Verifica se pertence ao container de histórico
+        const tabContainer = document.getElementById('historico-status-tabs-tabs');
+        if (!tabContainer || !tabContainer.contains(targetButton)) {
+            return;
+        }
+
+        const targetId = targetButton.getAttribute('data-bs-target')?.replace('#', '') ||
+                       targetButton.getAttribute('aria-controls');
+
+        if (!targetId) {
+            console.warn('[Historico] Target ID não encontrado no botão da tab');
+            return;
+        }
+
+        const targetPane = document.getElementById(targetId);
+        if (!targetPane) {
+            console.warn('[Historico] Pane não encontrado:', targetId);
+            console.warn('[Historico] Tentando encontrar pane alternativo...');
+            // Tenta encontrar pelo data-status se o ID não funcionar
+            const statusFromButton = targetButton.getAttribute('data-tab-key') || 
+                                    targetButton.getAttribute('data-status-tab');
+            if (statusFromButton) {
+                const altPane = document.querySelector(`[data-status="${statusFromButton}"]`);
+                if (altPane) {
+                    console.log('[Historico] Pane encontrado pelo data-status:', statusFromButton);
+                    // Continua com o pane alternativo
+                    const status = statusFromButton;
+                    const newItemBodyId = status === 'all' 
+                        ? 'historico-conciliacoes-body' 
+                        : `historico-conciliacoes-body-${status}`;
+                    const newTbody = document.getElementById(newItemBodyId);
+                    if (newTbody) {
+                        tbody = newTbody;
+                        state.page = 1;
+                        state.q = '';
+                        if (buscaInput && status === 'all') {
+                            buscaInput.value = '';
+                        }
+                        newTbody.innerHTML = `
+                            <tr><td colspan="7" class="text-center py-10">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Carregando...</span>
+                                </div>
+                                <div class="text-muted mt-3">Carregando histórico (${status})...</div>
+                            </td></tr>`;
+                        load().catch(console.error);
+                    }
+                    return;
                 }
-            });
-        });
+            }
+            return;
+        }
+
+        const status = targetPane.getAttribute('data-status') ||
+                      targetButton.getAttribute('data-tab-key') ||
+                      targetButton.getAttribute('data-status-tab') ||
+                      'all';
+
+        console.log('[Historico] Tab mudou para:', status, 'Pane:', targetId);
+
+        // Atualiza referência do tbody baseado no status
+        const newItemBodyId = status === 'all'
+            ? 'historico-conciliacoes-body'
+            : `historico-conciliacoes-body-${status}`;
+
+        const newTbody = document.getElementById(newItemBodyId);
+
+        if (newTbody) {
+            tbody = newTbody; // Atualiza a variável global do escopo
+            console.log('[Historico] Tbody atualizado para:', newItemBodyId);
+
+            // Reseta paginação ao trocar de aba
+            state.page = 1;
+            state.q = ''; // Limpa busca ao trocar de tab
+
+            // Limpa o campo de busca se existir (apenas na tab 'all')
+            if (buscaInput && status === 'all') {
+                buscaInput.value = '';
+            }
+
+            // Mostra loading no tbody da nova tab
+            newTbody.innerHTML = `
+                <tr><td colspan="7" class="text-center py-10">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Carregando...</span>
+                    </div>
+                    <div class="text-muted mt-3">Carregando histórico (${status})...</div>
+                </td></tr>`;
+
+            // Recarrega dados para a nova aba com o status correto
+            load().catch(console.error);
+        } else {
+            console.warn('[Historico] Tbody não encontrado:', newItemBodyId);
+        }
     }
+
+    // Registra o listener no document para capturar todos os eventos de tab
+    document.addEventListener('shown.bs.tab', handleTabChange);
+
+    console.log('[Historico] Listener de tabs registrado no document');
 }

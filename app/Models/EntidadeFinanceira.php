@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Vinkla\Hashids\Facades\Hashids;
 
 
 class EntidadeFinanceira extends Model
@@ -245,5 +246,22 @@ class EntidadeFinanceira extends Model
     public function contaContabil()
     {
         return $this->belongsTo(\App\Models\Contabilide\ChartOfAccount::class, 'conta_contabil_id');
+    }
+
+    /**
+     * 1. O Laravel usa isso para gerar a URL (route('banco.show', $banco))
+     */
+    public function getRouteKey()
+    {
+        return Hashids::encode($this->getKey());
+    }
+
+    /**
+     * 2. O Laravel usa isso para encontrar o model vindo da URL
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $decoded = Hashids::decode($value);
+        return $this->where('id', $decoded[0] ?? null)->firstOrFail();
     }
 }

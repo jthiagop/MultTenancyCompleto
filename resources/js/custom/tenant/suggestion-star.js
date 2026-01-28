@@ -127,19 +127,29 @@ class SuggestionStarManager {
         }
 
         const { starWrapper, selectElement, suggestedValue, tooltip } = star;
-        const currentValue = selectElement.value;
+        let currentValue = selectElement.value;
 
         // Se não tem valor selecionado (placeholder), esconde a estrela
         if (!currentValue || currentValue === '') {
             this.hideStar(selectId);
+            return;
         }
-        // Se o valor mudou e é diferente da sugestão, esconde a estrela
-        else if (currentValue != suggestedValue) {
-            this.hideStar(selectId);
-        } 
+
+        // Normalização para comparação (especialmente para moedas)
+        const normalize = (val) => {
+            if (typeof val !== 'string') return val;
+            // Remove R$, espaços e converte vírgula para ponto se parecer moeda
+            return val.replace('R$', '').replace(/\s/g, '').replace(',', '.').trim();
+        };
+
+        const currentNorm = normalize(currentValue);
+        const suggestedNorm = normalize(suggestedValue);
+
         // Se o valor é igual à sugestão, mostra a estrela
-        else if (currentValue == suggestedValue) {
+        if (currentNorm == suggestedNorm) {
             this.showStar(selectId);
+        } else {
+            this.hideStar(selectId);
         }
     }
 
@@ -199,6 +209,9 @@ class SuggestionStarManager {
         });
 
         this.setupEvents(selectId);
+
+        // Verifica o estado inicial imediatamente
+        this.handleSelectChange(selectId);
     }
 }
 

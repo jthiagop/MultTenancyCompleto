@@ -595,7 +595,7 @@ class DrawerFormManager {
         // Emite evento global para atualizar todos os componentes
         if (window.DominusEvents) {
             DominusEvents.emit('transaction.created', { 
-                tipo, 
+                tipo: window.normalizeTipo ? window.normalizeTipo(tipo) : tipo, 
                 valor,
                 mode,
                 timestamp: Date.now()

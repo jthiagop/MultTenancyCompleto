@@ -131,7 +131,7 @@
                 data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-dismiss-="click" title="Configurações">
                 <span class="btn-label">Configurações do Organismo</span>
                 <!--begin::Svg Icon | path: icons/duotune/general/gen005.svg-->
-                <span class="svg-icon btn-icon svg-icon-2 m-0">
+                <span class="svg-icon btn-icon svg-icon-2 m-3">
                     <i class="fa-solid fa-gear fs-3"></i>
                 </span>
                 <!--end::Svg Icon-->

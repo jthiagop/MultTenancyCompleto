@@ -64,19 +64,16 @@
 
                 // Verificar se flatpickr está disponível
                 if (typeof flatpickr === 'undefined') {
-                    console.warn('[TenantDate] Flatpickr não está disponível');
                     return;
                 }
 
                 // Verificar se o locale pt está registrado
                 if (!isLocaleRegistered()) {
-                    console.warn('[TenantDate] Locale pt não está registrado. Aguardando...');
                     // Tenta novamente após um delay
                     setTimeout(function() {
                         if (isLocaleRegistered()) {
                             initSingleDatepicker(dateInput);
                         } else {
-                            console.error('[TenantDate] Locale pt não está disponível após espera');
                             // Inicializa sem locale como fallback
                             initSingleDatepicker(dateInput, false);
                         }
@@ -112,7 +109,6 @@
 
                 flatpickr(dateInput, config);
             } catch (error) {
-                console.error('[TenantDate] Erro ao inicializar flatpickr:', error);
             }
         }
 

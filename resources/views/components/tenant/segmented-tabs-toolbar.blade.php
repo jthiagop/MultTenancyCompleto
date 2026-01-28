@@ -3,6 +3,14 @@
     'id' => 'segmented-tabs',
     'tabs' => [],
     'active' => null,
+    // Props para filtros (compatibilidade com tenant-datatable-pane)
+    'tableId' => null,
+    'periodLabel' => null,
+    'accountOptions' => [],
+    'showAccountFilter' => false,
+    'showMoreFilters' => false,
+    'moreFilters' => [],
+    'filterId' => null, // ID do filtro (fallback para tableId)
 ])
 
 <style>
@@ -142,7 +150,27 @@
     }
 </style>
 
-<div class="segmented-shell">
+<div class="segmented-shell" 
+     @if($tableId || $filterId) 
+     data-table-id="{{ $tableId ?? $filterId }}" 
+     data-filter-id="{{ $filterId ?? $tableId }}"
+     @endif>
+    
+    <!-- Filtros (se habilitados) -->
+    @if($showAccountFilter || $showMoreFilters)
+    <div class="card mb-0 border-0 rounded-0" style="border-bottom: 1px solid var(--bs-border-color-translucent) !important;">
+        <div class="card-body">
+            <x-tenant-datatable-filters 
+                :tableId="$filterId ?? $tableId ?? $id" 
+                :periodLabel="$periodLabel" 
+                :accountOptions="$accountOptions" 
+                :showAccountFilter="$showAccountFilter"
+                :showMoreFilters="$showMoreFilters" 
+                :moreFilters="$moreFilters" />
+        </div>
+    </div>
+    @endif
+    
     <!-- Tabs -->
     <div class="segmented-tab-header">
         <ul class="nav nav-justified" id="{{ $id }}-tabs" role="tablist">
@@ -154,14 +182,15 @@
                     // Lógica Automática de Cores baseada na chave (se não for passado explicitamente)
                     // Padrão: Azul (Primary) | received/entrada: Verde (Success) | paid/saida: Vermelho (Danger)
                     $defaultColors = match($key) {
-                        'received', 'recebimentos', 'entrada', 'credit' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
-                        'paid', 'pagamentos', 'saida', 'debit' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
-                        // Status de Conciliação
-                        'all', 'todos' => ['class' => 'text-info', 'accent' => 'var(--bs-info)'],
+                        'received', 'recebimentos', 'entrada', 'credit', 'recebidos' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
+                        'paid', 'pagamentos', 'saida', 'debit', 'pagos' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
+                        // Status de Conciliação e Financeiro
+                        'all', 'todos', 'total' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
                         'ok', 'conciliados' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
                         'pendente', 'pendentes' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
                         'ignorado', 'ignorados' => ['class' => 'text-warning', 'accent' => 'var(--bs-warning)'],
-                        'divergente', 'divergentes' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
+                        'divergente', 'divergentes', 'vencidos', 'hoje' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
+                        'a_vencer' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
                         default => ['class' => 'text-primary', 'accent' => null] // null usa o CSS padrão (primary)
                     };
 
@@ -177,6 +206,8 @@
                         id="{{ $id }}-tab-{{ $key }}"
                         data-bs-toggle="tab"
                         data-bs-target="#{{ $paneId }}"
+                        data-tab-key="{{ $key }}"
+                        data-status-tab="{{ $key }}"
                         type="button"
                         role="tab"
                         aria-controls="{{ $paneId }}"
@@ -204,4 +235,11 @@
     <div class="tab-content" id="{{ $id }}-content">
         {{ $panes ?? '' }}
     </div>
+    
+    <!-- Conteúdo adicional após os tab-panes (ex: tabela compartilhada) -->
+    @if(isset($tableContent))
+        <div class="px-6 py-4">
+            {{ $tableContent }}
+        </div>
+    @endif
 </div>

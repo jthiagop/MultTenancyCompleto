@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Vinkla\Hashids\Facades\Hashids;
 
 use App\Models\User;
 
@@ -112,5 +113,22 @@ class LancamentoPadrao extends Model
 
         // Se não houver, retorna uma consulta que não trará resultados para proteger os dados.
         return $query->whereRaw('1 = 0');
+    }
+
+    /**
+     * 1. O Laravel usa isso para gerar a URL (route('lancamentoPadrao.show', $lancamento))
+     */
+    public function getRouteKey()
+    {
+        return Hashids::encode($this->getKey());
+    }
+
+    /**
+     * 2. O Laravel usa isso para encontrar o model vindo da URL
+     */
+    public function resolveRouteBinding($value, $field = null)
+    {
+        $decoded = Hashids::decode($value);
+        return $this->where('id', $decoded[0] ?? null)->firstOrFail();
     }
 }

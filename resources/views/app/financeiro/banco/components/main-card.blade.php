@@ -230,12 +230,12 @@
                             <!--begin::Custom Legend-->
                             <div class="d-flex align-items-center gap-4" id="kt_card_widget_12_legend">
                                 <div class="d-flex align-items-center">
-                                    <i class="fa-regular fa-circle-up text-success me-2"></i>
-                                    <span class="text-gray-700 fs-7 fw-semibold">Entradas</span>
+                                    <i class="fa-regular fa-circle-up text-success fs-4 me-2"></i>
+                                    <span class="text-gray-700 fs-6 fw-semibold">Entradas</span>
                                 </div>
                                 <div class="d-flex align-items-center">
-                                    <i class="fa-regular fa-circle-down text-danger me-2"></i>
-                                    <span class="text-gray-700 fs-7 fw-semibold">Saídas</span>
+                                    <i class="fa-regular fa-circle-down text-danger fs-4 me-2"></i>
+                                    <span class="text-gray-700 fs-6 fw-semibold">Saídas</span>
                                 </div>
                             </div>
                             <!--end::Custom Legend-->

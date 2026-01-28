@@ -729,31 +729,33 @@ class EntidadeFinanceiraController extends Controller
         }
 
         // ✅ Calcula contadores ANTES de paginar
-        $baseQuery = BankStatement::query()
+        $countBaseQuery = BankStatement::query()
             ->where('company_id', $activeCompanyId)
-            ->where('entidade_financeira_id', $id)
-            ->where('status_conciliacao', '!=', 'pendente');
+            ->where('entidade_financeira_id', $id);
 
         $counts = [
-            'ok' => (clone $baseQuery)->where('status_conciliacao', 'ok')->count(),
-            'pendente' => 0,
-            'ignorado' => (clone $baseQuery)->where('status_conciliacao', 'ignorado')->count(),
-            'divergente' => (clone $baseQuery)->where('status_conciliacao', 'divergente')->count(),
+            'all' => (clone $countBaseQuery)->where('status_conciliacao', '!=', 'pendente')->count(),
+            'ok' => (clone $countBaseQuery)->where('status_conciliacao', 'ok')->count(),
+            'pendente' => (clone $countBaseQuery)->where('status_conciliacao', 'pendente')->count(),
+            'ignorado' => (clone $countBaseQuery)->where('status_conciliacao', 'ignorado')->count(),
+            'divergente' => (clone $countBaseQuery)->where('status_conciliacao', 'divergente')->count(),
         ];
 
         // Query base: conciliações da entidade
         $query = BankStatement::query()
             ->where('company_id', $activeCompanyId)
-            ->where('entidade_financeira_id', $id)
-            ->where('status_conciliacao', '!=', 'pendente');
+            ->where('entidade_financeira_id', $id);
 
         // Filtro por status: se não for 'all' ou 'todos', filtra por status específico
         if (!in_array($status, ['all', 'todos'])) {
             $query->where('status_conciliacao', $status);
+        } else {
+            // No status 'all', listamos tudo EXCETO os pendentes (que são o extrato aberto)
+            $query->where('status_conciliacao', '!=', 'pendente');
         }
 
         // Eager loading e ordenação
-        $query->with(['transacoes.lancamentoPadrao', 'transacoes.createdBy'])
+        $query->with(['transacoes.lancamentoPadrao', 'transacoes.parceiro', 'transacoes.createdBy'])
             ->latest('updated_at');
 
         // Busca (search) por múltiplos campos
@@ -761,6 +763,7 @@ class EntidadeFinanceiraController extends Controller
             $query->where(function ($w) use ($q) {
                 $w->where('memo', 'like', "%{$q}%")
                   ->orWhere('name', 'like', "%{$q}%")
+                  ->orWhereHas('transacoes.parceiro', fn ($p) => $p->where('nome', 'like', "%{$q}%"))
                   ->orWhereHas('transacoes.lancamentoPadrao', fn ($lp) => $lp->where('description', 'like', "%{$q}%"))
                   ->orWhereHas('transacoes.createdBy', fn ($u) => $u->where('name', 'like', "%{$q}%"));
             });
@@ -782,18 +785,13 @@ class EntidadeFinanceiraController extends Controller
                 ? $item->updated_at
                 : ($item->updated_at ? \Carbon\Carbon::parse($item->updated_at) : null);
 
-            // 🔍 Debug: log do status sendo retornado
-            \Log::debug('📊 Status BankStatement', [
-                'id' => $item->id,
-                'status_conciliacao_raw' => $item->status_conciliacao,
-                'status_type' => gettype($item->status_conciliacao),
-            ]);
-
             return [
                 'id' => $item->id,
                 'transacao_id' => $transacao?->id,
-                'descricao' => $item->memo ?? $item->name ?? '-',
+                'descricao' => $item->memo ?? $item->name ?? '-', // Histórico do Banco
                 'memo' => $item->memo,
+                'transacao_descricao' => $transacao?->descricao ?? '-',
+                'parceiro_nome' => $transacao?->parceiro?->nome ?? '-',
                 'tipo' => $item->amount >= 0 ? 'entrada' : 'saida',
                 'valor' => abs($item->amount),
                 'status' => $item->status_conciliacao ?? 'pendente',
@@ -972,18 +970,67 @@ class EntidadeFinanceiraController extends Controller
 
         try {
             return \DB::transaction(function () use ($bankStatementId, $activeCompanyId) {
-                // Busca o bank statement com a transação relacionada
+                // Busca o bank statement
                 $bankStatement = BankStatement::where('company_id', $activeCompanyId)
                     ->with(['transacoes.movimentacao', 'transacoes.entidadeFinanceira'])
                     ->findOrFail($bankStatementId);
 
+                $statusAtual = $bankStatement->status_conciliacao;
+
+                // Caso 1: Status "ignorado" ou "divergente" - apenas muda o status para pendente
+                // Não há transações/movimentações vinculadas, então não precisa mexer em nada
+                if (in_array($statusAtual, ['ignorado', 'divergente'])) {
+                    $bankStatement->update([
+                        'reconciled' => false,
+                        'status_conciliacao' => 'pendente'
+                    ]);
+
+                    \Log::info('Conciliação desfeita (status ignorado/divergente)', [
+                        'bank_statement_id' => $bankStatementId,
+                        'status_anterior' => $statusAtual,
+                        'status_novo' => 'pendente',
+                        'user_id' => Auth::id()
+                    ]);
+
+                    // Busca contadores atualizados
+                    $countBaseQuery = BankStatement::query()
+                        ->where('company_id', $activeCompanyId)
+                        ->where('entidade_financeira_id', $bankStatement->entidade_financeira_id);
+
+                    $counts = [
+                        'all' => (clone $countBaseQuery)->where('status_conciliacao', '!=', 'pendente')->count(),
+                        'ok' => (clone $countBaseQuery)->where('status_conciliacao', 'ok')->count(),
+                        'ignorado' => (clone $countBaseQuery)->where('status_conciliacao', 'ignorado')->count(),
+                        'divergente' => (clone $countBaseQuery)->where('status_conciliacao', 'divergente')->count(),
+                    ];
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Status alterado para pendente com sucesso!',
+                        'counts' => $counts
+                    ]);
+                }
+
+                // Caso 2: Status "ok" (conciliado) - precisa desfazer transação e movimentação
                 // Verifica se há transação vinculada
                 $transacao = $bankStatement->transacoes->first();
                 if (!$transacao) {
+                    // Se não há transação mas o status é "ok", apenas muda para pendente
+                    $bankStatement->update([
+                        'reconciled' => false,
+                        'status_conciliacao' => 'pendente'
+                    ]);
+
+                    \Log::warning('Conciliação desfeita sem transação vinculada', [
+                        'bank_statement_id' => $bankStatementId,
+                        'status_anterior' => $statusAtual,
+                        'user_id' => Auth::id()
+                    ]);
+
                     return response()->json([
-                        'success' => false,
-                        'message' => 'Nenhuma transação vinculada a esta conciliação.'
-                    ], 404);
+                        'success' => true,
+                        'message' => 'Status alterado para pendente com sucesso!'
+                    ]);
                 }
 
                 // Guarda informações para log
@@ -1038,9 +1085,22 @@ class EntidadeFinanceiraController extends Controller
                     'user_id' => Auth::id()
                 ]);
 
+                // Busca contadores atualizados
+                $countBaseQuery = BankStatement::query()
+                    ->where('company_id', $activeCompanyId)
+                    ->where('entidade_financeira_id', $bankStatement->entidade_financeira_id);
+
+                $counts = [
+                    'all' => (clone $countBaseQuery)->where('status_conciliacao', '!=', 'pendente')->count(),
+                    'ok' => (clone $countBaseQuery)->where('status_conciliacao', 'ok')->count(),
+                    'ignorado' => (clone $countBaseQuery)->where('status_conciliacao', 'ignorado')->count(),
+                    'divergente' => (clone $countBaseQuery)->where('status_conciliacao', 'divergente')->count(),
+                ];
+
                 return response()->json([
                     'success' => true,
-                    'message' => 'Conciliação desfeita com sucesso!'
+                    'message' => 'Conciliação desfeita com sucesso!',
+                    'counts' => $counts
                 ]);
             });
         } catch (\Exception $e) {

@@ -122,7 +122,6 @@ var KTAppBancoChartCombined = function () {
         console.log('Carregando dados do gráfico:', { mes, ano, bancoId });
 
         // Mostrar loading (ApexCharts não tem showLoading, vamos usar uma abordagem diferente)
-        console.log('Iniciando carregamento de dados...');
 
         // Fazer requisição AJAX
         var url = '/banco/chart-data?' + new URLSearchParams({

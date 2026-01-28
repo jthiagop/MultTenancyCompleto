@@ -44,6 +44,7 @@
 
 @push('scripts')
     @include('app.components.drawers.scripts.drawer-init')
+    @include('app.components.drawers.scripts.drawer-suggestions')
     @include('app.components.drawers.scripts.drawer-pagamento-parcelas')
     @include('app.components.drawers.scripts.drawer-form-submit')
     @include('app.components.drawers.scripts.drawer-dynamic-labels')

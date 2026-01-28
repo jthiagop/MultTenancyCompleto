@@ -375,6 +375,7 @@ Route::middleware([
             Route::get('/financeiro/caixa/{id}/detalhes', [CaixaController::class, 'getDetalhes'])
                 ->name('financeiro.caixa.detalhes');
             Route::get('/banco/conciliacoes-pendentes', [BancoController::class, 'getConciliacoesPendentes'])->name('banco.conciliacoes.pendentes');
+            Route::get('/banco/sugestao', [BancoController::class, 'getSugestao'])->name('banco.sugestao');
             Route::post('/banco/relatorio/gerar', [BancoController::class, 'gerarRelatorio'])->name('banco.relatorio.gerar');
             Route::resource('banco', BancoController::class);
 

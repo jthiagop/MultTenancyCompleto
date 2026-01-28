@@ -1,7 +1,7 @@
 <!--begin::Modal - Prestação de Contas-->
 <div class="modal fade" id="modal_prestacao_contas" tabindex="-1" aria-hidden="true">
     <!--begin::Modal dialog-->
-    <div class="modal-dialog modal-dialog-centered mw-800px">
+    <div class="modal-dialog modal-dialog-top mw-800px">
         <!--begin:Form-->
         <form id="kt_modal_prestacao_contas_form" class="form" action="#">
             <!--begin::Modal content-->
@@ -29,7 +29,7 @@
                         <!--begin::Col-->
                         <div class="col-md-4 fv-row">
                             <label class="required fs-6 fw-semibold mb-2">Visão</label>
-                            <select class="form-select form-select-solid" data-control="select2" data-hide-search="true"
+                            <select class="form-select" data-control="select2" data-hide-search="true"
                                 data-placeholder="Selecione a visão" name="visao" id="visao">
                                 <option value="1" selected>Convento</option>
                                 <option value="2">Centro de Custo</option>
@@ -49,7 +49,7 @@
                                 <!--end::Svg Icon-->
                                 <!--end::Icon-->
                                 <!--begin::Datepicker-->
-                                <input class="form-control form-control-solid ps-12" placeholder="Selecione uma data"
+                                <input class="form-control ps-12" placeholder="Selecione uma data"
                                     name="data_inicial" id="data_inicial" />
                                 <!--end::Datepicker-->
                             </div>
@@ -69,7 +69,7 @@
                                 <!--end::Svg Icon-->
                                 <!--end::Icon-->
                                 <!--begin::Datepicker-->
-                                <input class="form-control form-control-solid ps-12" placeholder="Selecione uma data"
+                                <input class="form-control ps-12" placeholder="Selecione uma data"
                                     name="data_final" id="data_final" />
                                 <!--end::Datepicker-->
                             </div>
@@ -86,7 +86,7 @@
                             <!--begin::Convento Display (shown when visao = 1)-->
                             <div id="convento_display">
                                 <label class="fs-6 fw-semibold mb-2">Organismo</label>
-                                <input type="text" class="form-control form-control-solid" id="company_name_input"
+                                <input type="text" class="form-control" id="company_name_input"
                                     readonly />
                             </div>
                             <!--end::Convento Display-->
@@ -94,7 +94,7 @@
                             <!--begin::Centro de Custo Select (shown when visao = 2)-->
                             <div id="centro_custo_display" style="display: none;">
                                 <label class="required fs-6 fw-semibold mb-2">Centro de Custo</label>
-                                <select class="form-select form-select-solid" data-control="select2"
+                                <select class="form-select" data-control="select2"
                                     data-hide-search="true" data-placeholder="Selecione o centro de custo"
                                     name="cost_center_id" id="cost_center_id">
                                     <option value="">Carregando...</option>
@@ -109,7 +109,7 @@
                             <label class="required fs-6 fw-semibold mb-2">Modelo</label>
                             <div class="d-flex gap-5">
                                 <!--begin::Radio Horizontal-->
-                                <label class="form-check form-check-custom form-check-solid">
+                                <label class="form-check form-check-custom">
                                     <input class="form-check-input" type="radio" name="modelo" value="horizontal"
                                         id="modelo_horizontal" />
                                     <span class="form-check-label fw-semibold">
@@ -119,7 +119,7 @@
                                 <!--end::Radio Horizontal-->
 
                                 <!--begin::Radio Vertical-->
-                                <label class="form-check form-check-custom form-check-solid">
+                                <label class="form-check form-check-custom">
                                     <input class="form-check-input" type="radio" name="modelo" value="vertical"
                                         id="modelo_vertical" />
                                     <span class="form-check-label fw-semibold">
@@ -144,10 +144,10 @@
                         <!--end::Section Title-->
 
                         <!--begin::Checkbox to enable selection-->
-                        <div class="form-check form-check-custom form-check-solid mb-5">
+                        <div class="form-check form-check-custom mb-5">
                             <input class="form-check-input" type="checkbox" name="filtrar_contas"
                                 id="filtrar_contas" />
-                            <label class="form-check-label text-gray-600 fw-semibold" for="filtrar_contas">
+                            <label class="form-check-label fw-semibold" for="filtrar_contas">
                                 Filtrar por caixa/banco
                             </label>
                         </div>
@@ -160,7 +160,7 @@
                                 <div class="col-md-3">
                                     <div class="d-flex gap-4">
                                         <!--begin::Radio Caixa-->
-                                        <label class="form-check form-check-custom form-check-solid">
+                                        <label class="form-check form-check-custom">
                                             <input class="form-check-input" type="radio" name="tipo_conta"
                                                 value="caixa" id="tipo_conta_caixa" disabled />
                                             <span class="form-check-label text-gray-600 fw-semibold">
@@ -170,7 +170,7 @@
                                         <!--end::Radio Caixa-->
 
                                         <!--begin::Radio Banco-->
-                                        <label class="form-check form-check-custom form-check-solid">
+                                        <label class="form-check form-check-custom">
                                             <input class="form-check-input" type="radio" name="tipo_conta"
                                                 value="banco" id="tipo_conta_banco" disabled />
                                             <span class="form-check-label text-gray-600 fw-semibold">
@@ -185,7 +185,7 @@
 
                                 <!--begin::Banco/Caixa select field-->
                                 <div class="col-md-9">
-                                    <select class="form-select form-select-solid" data-control="select2"
+                                    <select class="form-select" data-control="select2"
                                         data-placeholder="Selecione..." name="conta_id" id="conta_id" disabled>
                                         <option value="">Carregando...</option>
                                     </select>

@@ -26,12 +26,12 @@
             <!--end::Col-->
             <!--begin::Input group - Target Title-->
             <x-tenant-input name="descricao" id="descricao" label="Descrição" placeholder="Informe a descricão" required
-                class="col-md-5" />
+                class="col-md-5" showSuggestionStar="true" />
 
             <!--end::Input group - Target Title-->
             <!--begin::Input group - Valor-->
             <x-tenant-currency name="valor" id="valor2" label="Valor" placeholder="0,00"
-                tooltip="Informe o valor da despesa" class="col-md-2" required />
+                tooltip="Informe o valor da despesa" class="col-md-2" required showSuggestionStar="true" />
             <!--end::Input group - Valor-->
         </div>
         <!--begin::Input group - Assign & Due Date-->
@@ -61,7 +61,8 @@
             <!--end::Col-->
             <x-tenant-select name="lancamento_padrao_id" id="lancamento_padraos_id" label="Categoria"
                 placeholder="Escolha um Lançamento..." required :allowClear="true" :minimumResultsForSearch="0"
-                dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-6" class="col-md-5">
+                dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-6" class="col-md-5"
+                showSuggestionStar="true">
                 @foreach ($lps as $lp)
                     <option value="{{ $lp->id }}" data-description="{{ $lp->description }}"
                         data-type="{{ $lp->type }}">{{ $lp->id }} -
@@ -71,7 +72,7 @@
             <!--begin::Col-->
             <x-tenant-select name="cost_center_id" id="cost_center_id" label="Centro de Custo" :allowClear="false"
                 :minimumResultsForSearch="0" dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-5"
-                class="col-md-4">
+                class="col-md-4" showSuggestionStar="true">
                 @if (isset($centrosAtivos))
                     @foreach ($centrosAtivos as $index => $centro)
                         <option value="{{ $centro->id }}" {{ $index === 0 ? 'selected' : '' }}>{{ $centro->code }}
@@ -89,7 +90,8 @@
             <!--begin::Col-->
             <x-tenant-select name="tipo_documento" id="tipo_documento" label="Forma de pagamento"
                 placeholder="Selecione uma forma de pagamento" required :allowClear="true" :minimumResultsForSearch="0"
-                dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-6" class="col-md-4">
+                dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-6" class="col-md-4"
+                showSuggestionStar="true">
                 @if (isset($formasPagamento))
                     @foreach ($formasPagamento as $formaPagamento)
                         <option value="{{ $formaPagamento->codigo }}"
