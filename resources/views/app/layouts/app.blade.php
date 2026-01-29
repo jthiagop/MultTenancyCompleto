@@ -152,7 +152,7 @@
     @stack('scripts')
 
     {{-- Tenant DataTable Pane Module - Must load after DataTables --}}
-    <script src="{{ url('tenancy/assets/js/custom/tenant/tenant-datatable-pane.js') }}"></script>
+    <script src="{{ url('tenancy/assets/js/custom/tenant/tenant-datatable-pane.js') }}?v={{ filemtime(public_path('tenancy/assets/js/custom/tenant/tenant-datatable-pane.js')) }}"></script>
 
     {{-- Amazon-style Notifications System --}}
     <link href="{{ url('tenancy/assets/css/notifications-amazon.css') }}" rel="stylesheet" type="text/css" />
