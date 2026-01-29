@@ -11,4 +11,4 @@ import './custom/tenant/suggestion-star.js';
 import './custom/tenant/datatable-filters.js';
 
 // Importa o módulo de DataTable Pane (gerencia as tabelas com skeleton loading)
-import '../../tenancy/assets/js/custom/tenant/tenant-datatable-pane.js';
+import './custom/tenant/tenant-datatable-pane.js';
