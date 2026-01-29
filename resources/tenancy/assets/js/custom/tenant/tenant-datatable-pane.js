@@ -3,10 +3,16 @@
  * 
  * Inicializa e gerencia múltiplos panes de DataTables de forma isolada e escalável.
  * Cada pane é identificado por data-pane-id e funciona independentemente.
+ * 
+ * @version 2.0.1 - 2026-01-29
  */
 
 (function() {
     'use strict';
+    
+    // Versão do script para debug de cache
+    const SCRIPT_VERSION = '2.0.1';
+    console.log(`[TenantDataTablePane] Script carregado - Versão ${SCRIPT_VERSION}`);
 
     // Mensagem de estado vazio (reutilizável)
     const EMPTY_MESSAGE = `
@@ -45,6 +51,8 @@
      * @param {HTMLElement} paneEl - Elemento raiz do pane (.tenant-datatable-pane)
      */
     function initPane(paneEl) {
+        console.log(`[TenantDataTablePane] Iniciando initPane para elemento:`, paneEl.id || paneEl.dataset.tableId);
+        
         // Ler configuração dos data-* attributes
         const config = {
             paneId: paneEl.dataset.paneId,
@@ -59,6 +67,16 @@
             pageLength: parseInt(paneEl.dataset.pageLength || '50', 10),
             csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
         };
+        
+        console.log(`[TenantDataTablePane] Config do pane:`, {
+            paneId: config.paneId,
+            tableId: config.tableId,
+            key: config.key,
+            tipo: config.tipo,
+            statsUrl: config.statsUrl,
+            dataUrl: config.dataUrl,
+            columnsCount: config.columns.length
+        });
 
         // Estado interno do pane
         const state = {
