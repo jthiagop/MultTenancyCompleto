@@ -244,8 +244,16 @@
          * Inicializa/recarrega a DataTable
          */
         function initDataTable(status = state.currentStatus) {
+            // Destruir DataTable existente (se houver)
             if (state.dataTable) {
                 state.dataTable.destroy();
+                state.dataTable = null;
+            }
+            
+            // Verificar se já existe uma DataTable inicializada por outro script
+            if ($.fn.DataTable.isDataTable(`#${config.tableId}`)) {
+                console.log(`[Pane ${config.paneId}] DataTable já existe, destruindo antes de reinicializar...`);
+                $(`#${config.tableId}`).DataTable().destroy();
             }
 
             // Atualizar visibilidade da coluna Saldo
