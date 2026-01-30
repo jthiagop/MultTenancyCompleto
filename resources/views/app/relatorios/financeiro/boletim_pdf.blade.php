@@ -171,9 +171,23 @@
             {{-- Logo esquerdo --}}
             <div class="header-logo">
                 @php
-                    $logoPath = $company->avatar
-                        ? storage_path('app/public/' . $company->avatar)
-                        : public_path('assets/media/png/perfil.svg');
+                    $avatar = $avatarEmpresa ?? ($empresaRelatorio->avatar ?? null);
+                    $logoPath = null;
+
+                    if ($avatar) {
+                        $paths = [storage_path('app/public/' . $avatar), storage_path($avatar)];
+
+                        foreach ($paths as $path) {
+                            if (file_exists($path)) {
+                                $logoPath = $path;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!$logoPath || !file_exists($logoPath)) {
+                        $logoPath = public_path('assets/media/png/perfil.svg');
+                    }
                 @endphp
                 @if (file_exists($logoPath))
                     <img src="{{ $logoPath }}" alt="Logo">
@@ -182,33 +196,46 @@
 
             {{-- Texto centralizado --}}
             <div class="header-text">
-                <h4>{{ strtoupper($company->name) }}</h4>
-                <h4>{{ strtoupper($company->razao_social) }}</h4>
-
-                <div class="subtitle">BOLETIM FINANCEIRO</div>
-                <small>CNPJ: {{ $company->cnpj ?? '' }}</small>
-                <small>
-                    @if ($company->addresses->rua ?? '')
-                        {{ $company->addresses->rua }}
-                        @if ($company->addresses->numero ?? '')
-                            , {{ $company->addresses->numero }}
+                <h4 style="margin: 0; padding: 0;">{{ strtoupper($nomeEmpresa ?? ($empresaRelatorio->name ?? '')) }}
+                </h4>
+                <h5 style="margin: 5px 0; padding: 0; font-weight: normal;">
+                    {{ strtoupper($razaoSocial ?? ($empresaRelatorio->razao_social ?? '')) }}</h5>
+                <small>CNPJ: {{ $cnpjEmpresa ?? ($empresaRelatorio->cnpj ?? '') }}</small>
+                <div style="font-size: 0.75rem; color: #333;">
+                    @php
+                        $addr = $enderecoEmpresa ?? ($empresaRelatorio->addresses ?? null);
+                    @endphp
+                    @if ($addr)
+                        {{ $addr->rua ?? '' }}
+                        @if ($addr->numero ?? '')
+                            , {{ $addr->numero }}
                         @endif
-                        @if ($company->addresses->bairro ?? '')
-                            - {{ $company->addresses->bairro }}
+                        @if ($addr->bairro ?? '')
+                            - {{ $addr->bairro }}
                         @endif
-                        / {{ $company->addresses->cidade ?? '' }}-{{ $company->addresses->uf ?? '' }}
+                        @if ($addr->cidade ?? '')
+                            / {{ $addr->cidade }}
+                        @endif
+                        @if ($addr->uf ?? '')
+                            - {{ $addr->uf }}
+                        @endif
+                        @if ($addr->cep ?? '')
+                            - CEP: {{ $addr->cep }}
+                        @endif
                     @endif
-                </small>
-                @if ($company->phone || $company->website || $company->email)
+                </div>
+                @if (($empresaRelatorio->phone ?? null) || ($empresaRelatorio->website ?? null) || ($empresaRelatorio->email ?? null))
                     <small>
-                        @if ($company->phone)
-                            Fone: {{ $company->phone }}
+                        @if ($empresaRelatorio->phone ?? null)
+                            Fone: {{ $empresaRelatorio->phone }}
                         @endif
-                        @if ($company->website)
-                            {{ $company->phone ? ' - ' : '' }}Site: {{ $company->website }}
+                        @if ($empresaRelatorio->website ?? null)
+                            {{ $empresaRelatorio->phone ?? null ? ' - ' : '' }}Site:
+                            {{ $empresaRelatorio->website }}
                         @endif
-                        @if ($company->email)
-                            {{ $company->phone || $company->website ? ' - ' : '' }}E-mail: {{ $company->email }}
+                        @if ($empresaRelatorio->email ?? null)
+                            {{ ($empresaRelatorio->phone ?? null) || ($empresaRelatorio->website ?? null) ? ' - ' : '' }}E-mail:
+                            {{ $empresaRelatorio->email }}
                         @endif
                     </small>
                 @endif
@@ -227,7 +254,9 @@
     <p class="fw-bold mb-3 text-center">PERÍODO: {{ $dataInicial }} a {{ $dataFinal }}</p>
 
     {{-- 1. PRESTAÇÃO DE CONTAS --}}
-    <h5 class="text-center fw-bold mb-3">PRESTAÇÃO DE CONTAS</h5>
+    <div class="subtitle" style="margin-top: 10px; font-weight: bold; border-top: 1px solid #dee2e6; padding-top: 5px;">
+        BOLETIM FINANCEIRO</div>
+
 
     <div class="row">
         {{-- Coluna ENTRADAS --}}
