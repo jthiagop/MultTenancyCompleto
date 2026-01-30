@@ -43,7 +43,7 @@
                                     </span>
                                     <!--end::Icon-->
                                     <!--begin::Datepicker-->
-                                    <input class="form-control form-control-solid ps-12" placeholder="Selecione uma data"
+                                    <input class="form-control ps-12" placeholder="Selecione uma data"
                                         name="data_inicial" id="boletim_data_inicial" />
                                     <!--end::Datepicker-->
                                 </div>
@@ -61,7 +61,7 @@
                                     </span>
                                     <!--end::Icon-->
                                     <!--begin::Datepicker-->
-                                    <input class="form-control form-control-solid ps-12" placeholder="Selecione uma data"
+                                    <input class="form-control ps-12" placeholder="Selecione uma data"
                                         name="data_final" id="boletim_data_final" />
                                     <!--end::Datepicker-->
                                 </div>
@@ -119,7 +119,3 @@
     <!--end::Modal dialog-->
 </div>
 <!--end::Modal - Boletim Financeiro-->
-
-<!--begin::Javascript-->
-<script src="/assets/js/custom/utilities/modals/boletim-financeiro.js"></script>
-<!--end::Javascript-->

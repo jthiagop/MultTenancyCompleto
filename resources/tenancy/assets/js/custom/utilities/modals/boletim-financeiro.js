@@ -8,6 +8,7 @@ var KTModalBoletimFinanceiro = function () {
 	var form;
 	var modal;
 	var modalEl;
+	var initialized = false; // Flag para evitar dupla inicialização
 
 	// Init form inputs
 	var initForm = function() {
@@ -224,6 +225,12 @@ var KTModalBoletimFinanceiro = function () {
 	return {
 		// Public functions
 		init: function () {
+			// Evitar dupla inicialização
+			if (initialized) {
+				console.log('[BoletimFinanceiro] Já inicializado, ignorando...');
+				return;
+			}
+			
 			// Elements
 			modalEl = document.querySelector('#modal_boletim_financeiro');
 
@@ -239,6 +246,9 @@ var KTModalBoletimFinanceiro = function () {
 
 			initForm();
 			handleForm();
+			
+			initialized = true;
+			console.log('[BoletimFinanceiro] Inicializado com sucesso');
 		}
 	};
 }();
