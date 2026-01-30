@@ -164,7 +164,10 @@ var KTModalBoletimFinanceiro = function () {
 						var dataInicial = form.querySelector('[name="data_inicial"]').value;
 						var dataFinal = form.querySelector('[name="data_final"]').value;
 
-						// ===== GERAÇÃO ASSÍNCRONA COM POLLING =====
+						// ===== GERAÇÃO ASSÍNCRONA COM POLLING (Toast) =====
+						var loadingToast = null;
+						var pollInterval = null;
+						var pollTimeout = null;
 						
 						// 1. Disparar geração assíncrona via Job
 						fetch('/relatorios/boletim-financeiro/pdf-async', {
@@ -187,120 +190,114 @@ var KTModalBoletimFinanceiro = function () {
 							
 							if (data.success) {
 								var pdfId = data.pdf_id;
-								var pollInterval = null;
-								var pollTimeout = null;
 								
-								// 2. Mostrar loading com SweetAlert
-								Swal.fire({
-									title: 'Gerando Boletim...',
-									html: '<div class="d-flex flex-column align-items-center">' +
-										  '<div class="spinner-border text-primary mb-4" style="width: 3rem; height: 3rem;" role="status"></div>' +
-										  '<p class="text-gray-600 mb-0">Processando seu relatório.</p>' +
-										  '<small class="text-muted">Isso pode levar alguns segundos...</small>' +
-										  '</div>',
-									allowOutsideClick: false,
-									allowEscapeKey: false,
-									showConfirmButton: false,
-									didOpen: function() {
-										// 3. Polling a cada 2 segundos
-										pollInterval = setInterval(function() {
-											fetch('/relatorios/pdf/status/' + pdfId, {
-												headers: {
-													'Accept': 'application/json',
-													'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-												}
-											})
-											.then(function(r) { return r.json(); })
-											.then(function(statusData) {
-												console.log('[BoletimFinanceiro] Status:', statusData);
-												
-												if (statusData.status === 'completed') {
-													// Limpar polling
-													clearInterval(pollInterval);
-													clearTimeout(pollTimeout);
-													Swal.close();
-													
-													// Abrir PDF em nova aba
-													window.open(statusData.download_url, '_blank');
-													
-													// Reset estado
-													submitButton.removeAttribute('data-kt-indicator');
-													submitButton.disabled = false;
-													modal.hide();
-													form.reset();
-													
-													// Toast de sucesso
-													Swal.fire({
-														icon: 'success',
-														title: 'PDF Gerado!',
-														text: 'O boletim financeiro foi gerado com sucesso.',
-														timer: 3000,
-														timerProgressBar: true,
-														showConfirmButton: false
-													});
-												} 
-												else if (statusData.status === 'failed') {
-													// Limpar polling
-													clearInterval(pollInterval);
-													clearTimeout(pollTimeout);
-													
-													Swal.fire({
-														icon: 'error',
-														title: 'Erro na Geração',
-														text: statusData.error_message || 'Ocorreu um erro ao gerar o PDF. Tente novamente.',
-														confirmButtonText: 'Ok, entendi',
-														customClass: {
-															confirmButton: 'btn btn-primary'
-														},
-														buttonsStyling: false
-													});
-													
-													submitButton.removeAttribute('data-kt-indicator');
-													submitButton.disabled = false;
-												}
-												// Se status === 'pending' ou 'processing', continua polling
-											})
-											.catch(function(err) {
-												console.error('[BoletimFinanceiro] Erro no polling:', err);
-											});
-										}, 2000); // Poll a cada 2 segundos
+								// Fechar modal imediatamente - usuário pode continuar navegando
+								modal.hide();
+								form.reset();
+								submitButton.removeAttribute('data-kt-indicator');
+								submitButton.disabled = false;
+								
+								// 2. Mostrar Toast de Loading (não bloqueia navegação)
+								loadingToast = window.AppToast.loading(
+									'Gerando Boletim...', 
+									'Processando seu relatório. Você pode continuar navegando.'
+								);
+								
+								// 3. Polling a cada 2 segundos
+								pollInterval = setInterval(function() {
+									fetch('/relatorios/pdf/status/' + pdfId, {
+										headers: {
+											'Accept': 'application/json',
+											'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+										}
+									})
+									.then(function(r) { return r.json(); })
+									.then(function(statusData) {
+										console.log('[BoletimFinanceiro] Status:', statusData);
 										
-										// 4. Timeout de segurança (3 minutos)
-										pollTimeout = setTimeout(function() {
+										if (statusData.status === 'completed') {
+											// Limpar polling
 											clearInterval(pollInterval);
-											if (Swal.isVisible()) {
-												Swal.fire({
-													icon: 'warning',
-													title: 'Tempo Excedido',
-													text: 'A geração está demorando mais que o esperado. O relatório continuará sendo processado em segundo plano.',
-													confirmButtonText: 'Ok',
-													customClass: {
-														confirmButton: 'btn btn-primary'
-													},
-													buttonsStyling: false
-												});
-												submitButton.removeAttribute('data-kt-indicator');
-												submitButton.disabled = false;
+											clearTimeout(pollTimeout);
+											
+											// Fechar toast de loading
+											if (loadingToast) {
+												window.AppToast.close(loadingToast);
 											}
-										}, 180000); // 3 minutos
+											
+											// Mostrar Toast de sucesso com botão para abrir PDF
+											var successHtml = '<div class="d-flex flex-column">' +
+												'<span>Seu relatório foi gerado com sucesso!</span>' +
+												'<div class="mt-2 pt-2 border-top">' +
+													'<a href="' + statusData.download_url + '" target="_blank" class="btn btn-sm btn-primary w-100">' +
+														'<i class="ki-duotone ki-file-down fs-4 me-1"><span class="path1"></span><span class="path2"></span></i> Abrir PDF' +
+													'</a>' +
+												'</div>' +
+											'</div>';
+											
+											window.AppToast.success('Boletim Pronto!', successHtml, { 
+												autohide: false,
+												delay: 30000 
+											});
+										} 
+										else if (statusData.status === 'failed') {
+											// Limpar polling
+											clearInterval(pollInterval);
+											clearTimeout(pollTimeout);
+											
+											// Fechar toast de loading
+											if (loadingToast) {
+												window.AppToast.close(loadingToast);
+											}
+											
+											// Mostrar toast de erro
+											window.AppToast.error(
+												'Erro na Geração', 
+												statusData.error_message || 'Ocorreu um erro ao gerar o PDF. Tente novamente.',
+												{ autohide: false }
+											);
+										}
+										// Se status === 'pending' ou 'processing', continua polling
+									})
+									.catch(function(err) {
+										console.error('[BoletimFinanceiro] Erro no polling:', err);
+									});
+								}, 2000); // Poll a cada 2 segundos
+								
+								// 4. Timeout de segurança (3 minutos)
+								pollTimeout = setTimeout(function() {
+									clearInterval(pollInterval);
+									
+									// Fechar toast de loading
+									if (loadingToast) {
+										window.AppToast.close(loadingToast);
 									}
-								});
+									
+									// Mostrar toast de aviso
+									window.AppToast.warning(
+										'Tempo Excedido', 
+										'A geração está demorando mais que o esperado. O relatório continuará sendo processado em segundo plano.',
+										{ autohide: false }
+									);
+								}, 180000); // 3 minutos
+								
 							} else {
 								throw new Error(data.message || 'Erro ao iniciar geração do PDF');
 							}
 						})
 						.catch(function(error) {
 							console.error('[BoletimFinanceiro] Erro:', error);
-							Swal.fire({
-								icon: 'error',
-								title: 'Erro',
-								text: error.message || 'Erro ao gerar PDF. Tente novamente.',
-								confirmButtonText: 'Ok, entendi',
-								customClass: {
-									confirmButton: 'btn btn-primary'
-								},
-								buttonsStyling: false
-							});
+							
+							// Fechar toast de loading se existir
+							if (loadingToast) {
+								window.AppToast.close(loadingToast);
+							}
+							
+							window.AppToast.error(
+								'Erro', 
+								error.message || 'Erro ao gerar PDF. Tente novamente.'
+							);
+							
 							submitButton.removeAttribute('data-kt-indicator');
 							submitButton.disabled = false;
 						});

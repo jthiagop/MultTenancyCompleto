@@ -149,6 +149,11 @@
     <!--begin::Sidebar State Script-->
     <script src="{{ url('tenancy/assets/js/sidebar-state.js') }}"></script>
     <!--end::Sidebar State Script-->
+
+    {{-- Toast Stack System --}}
+    <x-tenant-toast-stack />
+    <script src="{{ url('tenancy/assets/js/toast-helper.js') }}"></script>
+
     @stack('scripts')
 
     {{-- Tenant DataTable Pane Module - Agora carregado via Vite bundle (app.js) --}}
