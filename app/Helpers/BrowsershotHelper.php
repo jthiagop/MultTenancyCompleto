@@ -27,11 +27,12 @@ class BrowsershotHelper
         // Configurar caminho do Chrome
         $browsershot->setChromePath($chromePath);
         
-        // Adicionar argumentos adicionais para compatibilidade com Snap e ambientes restritos
+        // Argumentos otimizados para estabilidade em servidores Linux
+        // NOTA: Removidos --single-process e --no-zygote que causavam "Target closed"
         $browsershot->setOption('args', [
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',
+            '--disable-dev-shm-usage',          // Usar /tmp em vez de /dev/shm
             '--disable-gpu',
             '--disable-software-rasterizer',
             '--disable-extensions',
@@ -39,23 +40,24 @@ class BrowsershotHelper
             '--disable-sync',
             '--disable-translate',
             '--no-first-run',
-            '--enable-automation',
-            '--disable-background-timer-throttling',
-            '--disable-backgrounding-occluded-windows',
-            '--disable-renderer-backgrounding',
-            '--single-process', // Reduz consumo de memória
-            '--no-zygote', // Evita processos extras
-            '--disable-accelerated-2d-canvas', // Reduz uso de GPU
-            '--disable-accelerated-jpeg-decoding',
-            '--disable-accelerated-mjpeg-decode',
-            '--disable-accelerated-video-decode',
+            '--disable-default-apps',
+            '--disable-hang-monitor',           // Evita detecção falsa de travamento
+            '--disable-popup-blocking',
+            '--disable-prompt-on-repost',
+            '--disable-client-side-phishing-detection',
+            '--disable-component-update',
+            '--disable-ipc-flooding-protection', // Evita throttling de IPC
+            '--disable-features=TranslateUI',
+            '--disable-features=site-per-process', // Reduz processos
+            '--memory-pressure-off',            // Desativa liberação agressiva de memória
+            '--max_old_space_size=4096',        // Aumenta memória do V8
         ]);
         
-        // Aumentar timeout para evitar erros em PDFs complexos
-        $browsershot->timeout(120); // 2 minutos
+        // Aumentar timeout para PDFs complexos
+        $browsershot->timeout(180); // 3 minutos
         
-        // Otimizar estratégia de carregamento
-        $browsershot->setOption('waitUntil', 'domcontentloaded'); // Mais rápido que networkidle
+        // Estratégia de carregamento - usar networkidle0 para garantir carregamento completo
+        $browsershot->setOption('waitUntil', 'networkidle0');
         
         return $browsershot;
     }

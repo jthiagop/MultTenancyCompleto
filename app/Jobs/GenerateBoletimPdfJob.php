@@ -237,9 +237,19 @@ class GenerateBoletimPdfJob implements ShouldQueue
                     ->waitUntilNetworkIdle()
             )->pdf();
 
-            // Salvar PDF
+            // Salvar PDF no storage CENTRAL (não no tenant)
+            // Usar caminho absoluto para evitar que o FilesystemTenancyBootstrapper redirecione
             $filename = "pdfs/boletins/boletim_{$this->mes}_{$this->ano}_{$this->companyId}_" . time() . ".pdf";
-            Storage::disk('public')->put($filename, $pdf);
+            $centralStoragePath = base_path('storage/app/public/' . $filename);
+            
+            // Garantir que o diretório existe
+            $directory = dirname($centralStoragePath);
+            if (!is_dir($directory)) {
+                mkdir($directory, 0755, true);
+            }
+            
+            // Salvar arquivo diretamente no storage central
+            file_put_contents($centralStoragePath, $pdf);
 
             // Atualizar status para completed
             if ($pdfGen) {

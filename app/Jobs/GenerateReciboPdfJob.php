@@ -70,9 +70,19 @@ class GenerateReciboPdfJob implements ShouldQueue
                     ->showBackground()
             )->pdf();
 
-            // Salvar PDF no storage
+            // Salvar PDF no storage CENTRAL (não no tenant)
+            // Usar caminho absoluto para evitar que o FilesystemTenancyBootstrapper redirecione
             $filename = "pdfs/recibos/recibo_{$recibo->id}_" . time() . ".pdf";
-            Storage::disk('public')->put($filename, $pdf);
+            $centralStoragePath = base_path('storage/app/public/' . $filename);
+            
+            // Garantir que o diretório existe
+            $directory = dirname($centralStoragePath);
+            if (!is_dir($directory)) {
+                mkdir($directory, 0755, true);
+            }
+            
+            // Salvar arquivo diretamente no storage central
+            file_put_contents($centralStoragePath, $pdf);
 
             // Atualizar recibo com caminho do PDF
             $recibo->update(['pdf_path' => $filename]);
