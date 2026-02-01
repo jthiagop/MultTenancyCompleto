@@ -46,4 +46,11 @@ class Address extends Model
             ->withPivot('tipo')
             ->withTimestamps();
     }
+
+    public function religiousMembers()
+    {
+        return $this->belongsToMany(ReligiousMember::class, 'religious_member_address', 'address_id', 'religious_member_id')
+            ->withPivot('tipo')
+            ->withTimestamps();
+    }
 }

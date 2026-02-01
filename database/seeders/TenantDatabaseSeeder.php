@@ -57,5 +57,9 @@ class TenantDatabaseSeeder extends Seeder
 
         // Chama o seeder de integrações
         $this->call(IntegracaoSeeder::class);
+
+        // Chama os seeders de secretaria
+        $this->call(ReligiousRoleSeeder::class);
+        $this->call(FormationStageSeeder::class);
     }
 }

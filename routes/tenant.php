@@ -50,6 +50,7 @@ use App\Http\Controllers\App\PatrimonioController;
 use App\Http\Controllers\App\BemController;
 use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\App\PatrimonioAnexoController;
+use App\Http\Controllers\App\SecretaryController;
 use App\Http\Controllers\App\TelaDeLoginController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\PermissionController;
@@ -534,6 +535,19 @@ Route::middleware([
                 Route::post('fieis/relatorio/pdf', [FielController::class, 'relatorioPdf'])->name('fieis.relatorio.pdf');
 
                 Route::resource('dizimos', DizimoController::class);
+                
+                // Secretary (Membros Religiosos)
+                Route::prefix('secretary')->name('secretary.')->group(function () {
+                    Route::get('/', [SecretaryController::class, 'index'])->name('index');
+                    Route::get('/data', [SecretaryController::class, 'getData'])->name('data');
+                    Route::get('/stats', [SecretaryController::class, 'getStats'])->name('stats');
+                    Route::post('/', [SecretaryController::class, 'store'])->name('store');
+                    Route::get('/{member}', [SecretaryController::class, 'show'])->name('show');
+                    Route::get('/{member}/edit', [SecretaryController::class, 'edit'])->name('edit');
+                    Route::put('/{member}', [SecretaryController::class, 'update'])->name('update');
+                    Route::delete('/{member}', [SecretaryController::class, 'destroy'])->name('destroy');
+                });
+                
                 Route::get('/notafiscal', [NotaFiscalController::class, 'index'])->name('notafiscal.index');
                 Route::post('/notafiscal/conta', [NotaFiscalController::class, 'storeConta'])->name('notafiscal.conta.store');
 

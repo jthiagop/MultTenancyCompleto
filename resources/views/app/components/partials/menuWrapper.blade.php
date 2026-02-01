@@ -45,16 +45,16 @@
                                 </div>
                             @endcan
                             @can('contabilidade.index')
-                            <div class="menu-item">
-                                <a class="menu-link {{ request()->routeIs('contabilidade.index') ? 'active' : '' }}"
-                                    href="{{ route('contabilidade.index') }}">
-                                    <span class="menu-bullet">
-                                        <span class="bullet bullet-dot"></span>
-                                    </span>
-                                    <span class="menu-title">Contabilidade</span>
-                                </a>
-                            </div>
-                        @endcan
+                                <div class="menu-item">
+                                    <a class="menu-link {{ request()->routeIs('contabilidade.index') ? 'active' : '' }}"
+                                        href="{{ route('contabilidade.index') }}">
+                                        <span class="menu-bullet">
+                                            <span class="bullet bullet-dot"></span>
+                                        </span>
+                                        <span class="menu-title">Contabilidade</span>
+                                    </a>
+                                </div>
+                            @endcan
                             @can('patrimonio.index')
                                 <div class="menu-item">
                                     <a class="menu-link {{ request()->routeIs('patrimonio.index') ? 'active' : '' }}"
@@ -118,6 +118,17 @@
                                             <span class="bullet bullet-dot"></span>
                                         </span>
                                         <span class="menu-title">Organismo</span>
+                                    </a>
+                                </div>
+                            @endcan
+                            @can('secretary.index')
+                                <div class="menu-item">
+                                    <a class="menu-link {{ request()->routeIs('secretary.index') ? 'active' : '' }}"
+                                        href="{{ route('secretary.index') }}">
+                                        <span class="menu-bullet">
+                                            <span class="bullet bullet-dot"></span>
+                                        </span>
+                                        <span class="menu-title">Secretaria</span>
                                     </a>
                                 </div>
                             @endcan
@@ -204,8 +215,7 @@
                         </span>
                         <div class="menu-sub menu-sub-accordion menu-active-bg">
                             <div class="menu-item">
-                                <a class="menu-link "
-                                    href="{{ route('patrimonio.index') }}">
+                                <a class="menu-link " href="{{ route('patrimonio.index') }}">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -213,8 +223,7 @@
                                 </a>
                             </div>
                             <div class="menu-item">
-                                <a class="menu-link "
-                                    href="">
+                                <a class="menu-link " href="">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -222,8 +231,7 @@
                                 </a>
                             </div>
                             <div class="menu-item">
-                                <a class="menu-link "
-                                    href="">
+                                <a class="menu-link " href="">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -231,8 +239,7 @@
                                 </a>
                             </div>
                             <div class="menu-item">
-                                <a class="menu-link"
-                                    href="">
+                                <a class="menu-link" href="">
                                     <span class="menu-bullet ">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
@@ -240,8 +247,7 @@
                                 </a>
                             </div>
                             <div class="menu-item">
-                                <a class="menu-link"
-                                    href="">
+                                <a class="menu-link" href="">
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
