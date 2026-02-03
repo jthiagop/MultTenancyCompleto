@@ -41,8 +41,8 @@ class BoletimFinanceiroController extends Controller
             ->map(function ($group) {
                 $lancamento = $group->first()->lancamentoPadrao;
                 return [
-                    'codigo' => $lancamento->id ?? '-',
-                    'descricao' => $lancamento->description ?? 'Sem descrição',
+                    'codigo' => $lancamento?->id ?? '-',
+                    'descricao' => $lancamento?->description ?? 'Sem descrição',
                     'valor' => $group->sum('valor')
                 ];
             })
@@ -58,8 +58,8 @@ class BoletimFinanceiroController extends Controller
             ->map(function ($group) {
                 $lancamento = $group->first()->lancamentoPadrao;
                 return [
-                    'codigo' => $lancamento->id ?? '-',
-                    'descricao' => $lancamento->description ?? 'Sem descrição',
+                    'codigo' => $lancamento?->id ?? '-',
+                    'descricao' => $lancamento?->description ?? 'Sem descrição',
                     'valor' => $group->sum('valor')
                 ];
             })
