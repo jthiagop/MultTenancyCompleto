@@ -546,7 +546,8 @@ class TransacaoFinanceiraService
      */
     public function reverterBaixa(TransacaoFinanceira $transacao): bool
     {
-        return DB::transaction(function () use ($transacao) {
+        /** @var bool $result */
+        $result = DB::transaction(function () use ($transacao) {
             // Verifica se existe movimentação para excluir
             $movimentacao = $transacao->movimentacao;
             
@@ -588,6 +589,8 @@ class TransacaoFinanceiraService
             
             return true;
         });
+        
+        return $result;
     }
 
     /**
