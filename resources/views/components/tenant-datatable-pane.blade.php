@@ -39,25 +39,25 @@
 
     // Colunas padrão para Contas a Receber/Pagar
     $defaultColumnsContas = [
-        ['key' => 'checkbox', 'label' => '', 'width' => 'w-10px pe-2', 'orderable' => false],
+        ['key' => 'checkbox', 'label' => '', 'width' => 'w-25px text-end', 'orderable' => false],
         ['key' => 'vencimento', 'label' => 'Vencimento', 'width' => 'min-w-70px', 'orderable' => true],
         ['key' => 'descricao', 'label' => 'Descrição', 'width' => 'min-w-175px', 'orderable' => false],
         ['key' => 'total', 'label' => 'Total (R$)', 'width' => 'min-w-50px', 'orderable' => true],
         ['key' => 'a_pagar', 'label' => 'A pagar (R$)', 'width' => 'min-w-50px', 'orderable' => true],
         ['key' => 'situacao', 'label' => 'Situação', 'width' => 'min-w-70px', 'orderable' => false],
         ['key' => 'origem', 'label' => 'Origem', 'width' => 'min-w-70px', 'orderable' => false],
-        ['key' => 'acoes', 'label' => 'Ações', 'width' => 'text-end min-w-50px', 'orderable' => false],
+        ['key' => 'acoes', 'label' => 'Ações', 'width' => 'text-start min-w-50px', 'orderable' => false],
     ];
 
     // Colunas padrão para Extrato
     $defaultColumnsExtrato = [
-        ['key' => 'checkbox', 'label' => '', 'width' => 'w-10px pe-2', 'orderable' => false],
+        ['key' => 'checkbox', 'label' => '', 'width' => 'w-25px text-end', 'orderable' => false],
         ['key' => 'data', 'label' => 'Data', 'width' => 'min-w-70px', 'orderable' => true],
         ['key' => 'descricao', 'label' => 'Descrição', 'width' => 'min-w-175px', 'orderable' => false],
         ['key' => 'situacao', 'label' => 'Situação', 'width' => 'min-w-70px', 'orderable' => false],
         ['key' => 'valor', 'label' => 'Valor (R$)', 'width' => 'min-w-50px', 'orderable' => true],
         ['key' => 'saldo', 'label' => 'Saldo (R$)', 'width' => 'min-w-50px', 'orderable' => true],
-        ['key' => 'acoes', 'label' => 'Ações', 'width' => 'text-end min-w-50px', 'orderable' => false],
+        ['key' => 'acoes', 'label' => 'Ações', 'width' => 'text-start min-w-50px', 'orderable' => false],
     ];
 
     // Determinar colunas padrão baseado no key

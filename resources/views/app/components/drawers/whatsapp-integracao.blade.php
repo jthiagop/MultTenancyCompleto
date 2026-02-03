@@ -6,6 +6,8 @@
     data-kt-drawer-toggle="#kt_drawer_integracao_button"
     data-kt-drawer-close="#kt_drawer_integracao_close"
     data-kt-drawer-width="500px"
+    data-qrcode-url="{{ route('whatsapp.qrcode') }}"
+    data-status-url-template="{{ route('whatsapp.status', ['code' => '__CODE__']) }}"
 >
     <!--begin::Card-->
     <div class="card shadow-none rounded-0 w-100">
@@ -35,9 +37,11 @@
             <!--begin::QR Code-->
             <div class="text-center mb-7">
                 <div class="p-3 rounded" id="qr_code_container">
-                    <div class="text-center py-5">
-                        <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
-                        <p class="text-muted mt-3">Gerando QR Code de Vinculação...</p>
+                    <div class="card card-bordered mb-7 text-center py-5">
+                        <div class="card-body">
+                            <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                            <p class="text-muted mt-3">Gerando QR Code de Vinculação...</p>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -126,7 +130,7 @@
 
         <!--begin::Footer-->
         <div class="card-footer d-flex justify-content-end py-6">
-            <button type="button" class="btn btn-light" id="kt_drawer_integracao_cancel">
+            <button type="button" class="btn btn-light" data-kt-drawer-dismiss="true">
                 Cancelar
             </button>
         </div>
@@ -137,303 +141,355 @@
 <!--end::Drawer-->
 
 <script>
-    // Fechar drawer ao clicar em Cancelar
-    document.getElementById('kt_drawer_integracao_cancel')?.addEventListener('click', function() {
-        const drawer = KTDrawer.getInstance(document.getElementById('kt_drawer_integracao'));
-        if (drawer) {
-            drawer.hide();
-        }
-    });
+    // Classe encapsulada para gerenciar integração WhatsApp
+    class WhatsAppIntegrationDrawer {
+        constructor(drawerId) {
+            this.drawerEl = document.getElementById(drawerId);
+            if (!this.drawerEl) return;
 
-    // Variáveis globais para o countdown
-    let countdownInterval = null;
-    let expirationTime = null;
+            this.drawer = KTDrawer.getInstance(this.drawerEl);
+            if (!this.drawer) return;
 
-    // Função para iniciar o countdown
-    function startCountdown() {
-        // Limpar intervalo anterior se existir
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-        }
+            // URLs via data-attributes
+            this.qrUrl = this.drawerEl.dataset.qrcodeUrl;
+            this.statusTemplate = this.drawerEl.dataset.statusUrlTemplate;
 
-        // Tempo de expiração: 10 minutos (600 segundos)
-        let totalSeconds = 10 * 60;
-        expirationTime = Date.now() + (totalSeconds * 1000);
+            // State management
+            this.countdownInterval = null;
+            this.statusInterval = null;
+            this.expirationTime = null;
+            this.currentCode = null;
+            this.abortController = null;
+            this.isGenerating = false;
 
-        // Mostrar timer
-        const timerElement = document.getElementById('expiration_timer');
-        const countdownElement = document.getElementById('countdown');
-        if (timerElement) {
-            timerElement.style.display = 'block';
+            // Initialize
+            this.bindDrawerEvents();
+            this.bindUIEvents();
         }
 
-        // Atualizar countdown a cada segundo
-        countdownInterval = setInterval(() => {
-            const now = Date.now();
-            const remaining = Math.max(0, expirationTime - now);
-            const minutes = Math.floor(remaining / 60000);
-            const seconds = Math.floor((remaining % 60000) / 1000);
-
-            if (countdownElement) {
-                countdownElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            }
-
-            // Se expirou
-            if (remaining === 0) {
-                clearInterval(countdownInterval);
-                countdownInterval = null;
-
-                // Mostrar alerta de expiração
-                const expiredAlert = document.getElementById('expired_alert');
-                if (expiredAlert) {
-                    expiredAlert.classList.remove('d-none');
-                }
-
-                // Esconder timer
-                if (timerElement) {
-                    timerElement.style.display = 'none';
-                }
-            }
-        }, 1000);
-    }
-
-    // Função para parar o countdown
-    function stopCountdown() {
-        if (countdownInterval) {
-            clearInterval(countdownInterval);
-            countdownInterval = null;
-        }
-        if (statusCheckInterval) {
-            clearInterval(statusCheckInterval);
-            statusCheckInterval = null;
-        }
-        const timerElement = document.getElementById('expiration_timer');
-        if (timerElement) {
-            timerElement.style.display = 'none';
-        }
-    }
-
-    // Variável para o intervalo de verificação de status
-    let statusCheckInterval = null;
-    let currentVerificationCode = null;
-
-    // Função para verificar o status da integração
-    async function checkStatus() {
-        if (!currentVerificationCode) return;
-
-        try {
-            const statusUrl = `{{ route('whatsapp.status', '') }}/${currentVerificationCode}`;
-            const response = await fetch(statusUrl);
-            const data = await response.json();
-
-            console.log('Status check:', data);
-
-            if (data.success && data.status === 'active') {
-                // Sucesso! Parar verificação e recarregar
-                stopCountdown();
-                
-                // Mostrar feedback visual
-                const qrContainer = document.getElementById('qr_code_container');
-                if (qrContainer) {
-                    qrContainer.innerHTML = `
-                        <div class="alert alert-success">
-                            <i class="fa-solid fa-check-circle me-2"></i>
-                            Integração realizada com sucesso! Recarregando...
-                        </div>
-                    `;
-                }
-                
-                // Recarregar a página após 1.5s
-                setTimeout(() => {
-                    window.location.reload();
-                }, 1500);
-            } else if (data.status === 'expired') {
-                stopCountdown();
-                // Mostrar alerta de expiração (já tratado pelo countdown, mas reforçando)
-                const expiredAlert = document.getElementById('expired_alert');
-                if (expiredAlert) {
-                    expiredAlert.classList.remove('d-none');
-                }
-            }
-        } catch (error) {
-            console.error('Erro ao verificar status:', error);
-        }
-    }
-
-    // Função para gerar o QR Code
-    async function generateQRCode() {
-        const qrCodeContainer = document.getElementById('qr_code_container');
-        const codeDisplay = document.getElementById('verification_code_display');
-        const copyButton = document.querySelector('.btn-copy-code');
-        const expiredAlert = document.getElementById('expired_alert');
-        const whatsappButtonContainer = document.getElementById('whatsapp_button_container');
-        const whatsappLinkBtn = document.getElementById('whatsapp_link_btn');
-
-        if (!qrCodeContainer) return;
-
-        // Esconder alerta de expiração
-        if (expiredAlert) {
-            expiredAlert.classList.add('d-none');
-        }
-
-        // Parar countdown anterior se existir
-        stopCountdown();
-
-        // Mostrar loading
-        qrCodeContainer.innerHTML = `
-            <div class="text-center py-5">
-                <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
-                <p class="text-muted mt-3">Gerando QR Code de Vinculação...</p>
-            </div>
-        `;
-
-        // Esconder botão WhatsApp enquanto carrega
-        if (whatsappButtonContainer) {
-            whatsappButtonContainer.style.display = 'none';
-        }
-
-        try {
-            // Buscar o QR Code de Autenticação
-            const qrUrl = '{{ route('whatsapp.qrcode') }}';
-            const qrResponse = await fetch(qrUrl);
-            const qrData = await qrResponse.json();
-
-            console.log('Auth QR response:', qrData);
-
-            if (qrData.success && qrData.base64) {
-                // Exibir QR Code gerado
-                qrCodeContainer.innerHTML = `
-                    <img src="${qrData.base64}"
-                         alt="QR Code WhatsApp"
-                         class="w-150px h-150px">
-                `;
-
-                // Atualizar o código exibido
-                if (codeDisplay && qrData.code) {
-                    codeDisplay.textContent = qrData.code;
-                    codeDisplay.parentElement.classList.remove('d-none');
-                    currentVerificationCode = qrData.code; // Store for polling
-                }
-
-                // Mostrar botão de copiar
-                if (copyButton) {
-                    copyButton.style.display = 'block';
-                }
-
-                // Atualizar botão WhatsApp com o link gerado
-                if (whatsappLinkBtn && qrData.link) {
-                    whatsappLinkBtn.href = qrData.link;
-                    if (whatsappButtonContainer) {
-                        whatsappButtonContainer.style.display = 'block';
-                    }
-                }
-
-                // Iniciar countdown
-                startCountdown();
-                
-                // Iniciar polling de status (check a cada 3 segundos)
-                statusCheckInterval = setInterval(checkStatus, 3000);
-            } else {
-                qrCodeContainer.innerHTML = `
-                    <div class="alert alert-warning">
-                        <i class="fa-solid fa-exclamation-triangle me-2"></i>
-                        Não foi possível gerar o QR Code. Tente novamente.
-                    </div>
-                `;
-            }
-        } catch (error) {
-            console.error('Erro ao carregar QR Code:', error);
-            qrCodeContainer.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="fa-solid fa-exclamation-circle me-2"></i>
-                    Erro ao conectar com o servidor: ${error.message}
-                </div>
-            `;
-        }
-    }
-
-    // Gerar QR Code quando o drawer abrir
-    const drawerElement = document.getElementById('kt_drawer_integracao');
-    if (drawerElement) {
-        // Aguardar o drawer ser inicializado
-        setTimeout(() => {
-            const drawer = KTDrawer.getInstance(drawerElement);
-
-            if (drawer) {
-                // Usar eventos do KTDrawer se disponíveis
-                drawerElement.addEventListener('shown.bs.drawer', function() {
-                    generateQRCode();
+        bindDrawerEvents() {
+            // Tentar múltiplas abordagens para detectar quando o drawer abre
+            
+            // 1. Eventos oficiais do KTDrawer (se disponíveis)
+            if (this.drawer && typeof this.drawer.on === 'function') {
+                console.log('Binding KTDrawer events...');
+                this.drawer.on("kt.drawer.shown", () => {
+                    console.log('KTDrawer shown event fired');
+                    this.generateQRCode();
                 });
-
-                drawerElement.addEventListener('hidden.bs.drawer', function() {
-                    stopCountdown();
+                this.drawer.on("kt.drawer.after.hidden", () => {
+                    console.log('KTDrawer hidden event fired');
+                    this.cleanup();
                 });
             }
 
-            // Fallback: usar MutationObserver para detectar quando o drawer é aberto
-            const observer = new MutationObserver(function(mutations) {
-                mutations.forEach(function(mutation) {
+            // 2. Fallback: observar mudanças na classe do drawer
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
                     if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                        const drawer = KTDrawer.getInstance(drawerElement);
-                        if (drawer && drawer.isShown()) {
-                            // Drawer foi aberto, gerar QR Code
-                            generateQRCode();
-                        } else {
-                            // Drawer foi fechado, parar countdown
-                            stopCountdown();
+                        const classList = this.drawerEl.classList;
+                        if (classList.contains('drawer-on') || classList.contains('show')) {
+                            console.log('Drawer opened via MutationObserver');
+                            setTimeout(() => this.generateQRCode(), 100);
+                        } else if (!classList.contains('drawer-on') && !classList.contains('show')) {
+                            console.log('Drawer closed via MutationObserver');
+                            this.cleanup();
                         }
                     }
                 });
             });
 
-            observer.observe(drawerElement, {
+            observer.observe(this.drawerEl, {
                 attributes: true,
-                attributeFilter: ['class']
+                attributeFilter: ['class', 'style']
             });
-        }, 100);
 
-        // Também gerar quando clicar no botão (fallback direto)
-        document.getElementById('kt_drawer_integracao_button')?.addEventListener('click', function() {
-            setTimeout(() => {
-                generateQRCode();
-            }, 500); // Delay para garantir que o drawer abriu completamente
-        });
-    }
-
-    // Botão para regenerar código
-    document.getElementById('regenerate_code_btn')?.addEventListener('click', function() {
-        // Gerar novo QR Code
-        generateQRCode();
-    });
-
-    // Copiar código para clipboard
-    document.addEventListener('click', function(e) {
-        if (e.target.closest('.btn-copy-code')) {
-            const code = document.getElementById('verification_code_display')?.textContent;
-            if (code && code !== 'Aguardando geração do código...') {
-                navigator.clipboard.writeText(code).then(() => {
-                    // Mostrar feedback
-                    const btn = e.target.closest('.btn-copy-code');
-                    const originalIcon = btn.innerHTML;
-                    btn.innerHTML = '<i class="fa-solid fa-check"></i>';
-                    btn.classList.add('btn-success');
-                    btn.classList.remove('btn-light-primary');
+            // 3. Fallback adicional: listener no botão que abre o drawer
+            const toggleButton = document.querySelector('#kt_drawer_integracao_button');
+            if (toggleButton) {
+                console.log('Adding click listener to toggle button');
+                toggleButton.addEventListener('click', () => {
+                    console.log('Toggle button clicked');
                     setTimeout(() => {
-                        btn.innerHTML = originalIcon;
-                        btn.classList.remove('btn-success');
-                        btn.classList.add('btn-light-primary');
-                    }, 2000);
+                        console.log('Generating QR Code after button click');
+                        this.generateQRCode();
+                    }, 500);
                 });
             }
         }
-    });
 
-    // Limpar countdown quando drawer fechar
-    document.getElementById('kt_drawer_integracao_close')?.addEventListener('click', function() {
-        stopCountdown();
-    });
-    document.getElementById('kt_drawer_integracao_cancel')?.addEventListener('click', function() {
-        stopCountdown();
+        bindUIEvents() {
+            document.getElementById('regenerate_code_btn')?.addEventListener('click', () => {
+                this.generateQRCode(true);
+            });
+
+            document.addEventListener('click', (e) => {
+                const btn = e.target.closest('.btn-copy-code');
+                if (!btn) return;
+
+                const code = document.getElementById('verification_code_display')?.textContent?.trim();
+                if (!code || code.includes('Aguardando')) return;
+
+                this.copyToClipboard(code, btn);
+            });
+        }
+
+        cleanup() {
+            this.stopCountdown();
+            this.stopStatusPolling();
+
+            if (this.abortController) {
+                this.abortController.abort();
+                this.abortController = null;
+            }
+
+            this.isGenerating = false;
+            this.currentCode = null;
+        }
+
+        stopCountdown() {
+            if (this.countdownInterval) clearInterval(this.countdownInterval);
+            this.countdownInterval = null;
+
+            const timerElement = document.getElementById('expiration_timer');
+            if (timerElement) timerElement.style.display = 'none';
+        }
+
+        stopStatusPolling() {
+            if (this.statusInterval) clearInterval(this.statusInterval);
+            this.statusInterval = null;
+        }
+
+        startCountdown(minutes = 10) {
+            this.stopCountdown();
+
+            const totalSeconds = minutes * 60;
+            this.expirationTime = Date.now() + totalSeconds * 1000;
+
+            const timerElement = document.getElementById('expiration_timer');
+            const countdownEl = document.getElementById('countdown');
+
+            if (timerElement) timerElement.style.display = 'block';
+
+            this.countdownInterval = setInterval(() => {
+                const remaining = Math.max(0, this.expirationTime - Date.now());
+                const mm = String(Math.floor(remaining / 60000)).padStart(2, '0');
+                const ss = String(Math.floor((remaining % 60000) / 1000)).padStart(2, '0');
+
+                if (countdownEl) countdownEl.textContent = `${mm}:${ss}`;
+
+                if (remaining === 0) {
+                    this.stopCountdown();
+                    this.stopStatusPolling();
+                    document.getElementById('expired_alert')?.classList.remove('d-none');
+                }
+            }, 1000);
+        }
+
+        makeStatusUrl(code) {
+            return this.statusTemplate.replace('__CODE__', encodeURIComponent(code));
+        }
+
+        async checkStatus() {
+            if (!this.currentCode) return;
+
+            try {
+                const response = await fetch(this.makeStatusUrl(this.currentCode), {
+                    headers: { 
+                        'Accept': 'application/json', 
+                        'X-Requested-With': 'XMLHttpRequest' 
+                    },
+                    signal: this.abortController?.signal
+                });
+
+                if (!response.ok) return;
+                const data = await response.json();
+
+                if (data.success && data.status === 'active') {
+                    this.cleanup();
+
+                    const qrContainer = document.getElementById('qr_code_container');
+                    if (qrContainer) {
+                        qrContainer.innerHTML = `
+                            <div class="alert alert-success">
+                                <i class="fa-solid fa-check-circle me-2"></i>
+                                Integração realizada com sucesso! Recarregando...
+                            </div>
+                        `;
+                    }
+
+                    setTimeout(() => window.location.reload(), 1500);
+                }
+
+                if (data.status === 'expired') {
+                    this.stopCountdown();
+                    this.stopStatusPolling();
+                    document.getElementById('expired_alert')?.classList.remove('d-none');
+                }
+            } catch (error) {
+                // Se foi abort, ignora silenciosamente
+                if (error.name !== 'AbortError') {
+                    console.warn('Erro ao verificar status:', error.message);
+                }
+            }
+        }
+
+        async generateQRCode(force = false) {
+            console.log('generateQRCode called, force:', force);
+            
+            if (this.isGenerating && !force) {
+                console.log('Already generating, skipping...');
+                return;
+            }
+            this.isGenerating = true;
+
+            this.cleanup();
+            this.abortController = new AbortController();
+
+            const qrCodeContainer = document.getElementById('qr_code_container');
+            const codeDisplay = document.getElementById('verification_code_display');
+            const copyButton = document.querySelector('.btn-copy-code');
+            const expiredAlert = document.getElementById('expired_alert');
+            const whatsappBtnWrap = document.getElementById('whatsapp_button_container');
+            const whatsappLinkBtn = document.getElementById('whatsapp_link_btn');
+
+            console.log('Elements found:', {
+                qrCodeContainer: !!qrCodeContainer,
+                codeDisplay: !!codeDisplay,
+                copyButton: !!copyButton
+            });
+
+            expiredAlert?.classList.add('d-none');
+            if (whatsappBtnWrap) whatsappBtnWrap.style.display = 'none';
+
+            if (qrCodeContainer) {
+                qrCodeContainer.innerHTML = `
+                    <div class="card card-bordered mb-7 text-center py-5">
+                        <div class="card-body">
+                            <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                            <p class="text-muted mt-3">Gerando QR Code de Vinculação...</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            try {
+                console.log('Fetching QR Code from:', this.qrUrl);
+                
+                const response = await fetch(this.qrUrl, {
+                    headers: { 
+                        'Accept': 'application/json', 
+                        'X-Requested-With': 'XMLHttpRequest' 
+                    },
+                    signal: this.abortController.signal
+                });
+
+                console.log('Response status:', response.status);
+                console.log('Response ok:', response.ok);
+
+                if (!response.ok) {
+                    throw new Error(`Servidor retornou status: ${response.status}`);
+                }
+
+                const qrData = await response.json();
+                console.log('QR Data received:', qrData);
+
+                if (qrData.success && qrData.base64) {
+                    if (qrCodeContainer) {
+                        qrCodeContainer.innerHTML = `
+                            <div class="position-relative d-inline-block">
+                                <div class="bg-white p-3 rounded shadow-sm d-inline-block">
+                                    <img src="${qrData.base64}" alt="QR Code WhatsApp" class="w-150px h-150px">
+                                </div>
+                                <div class="position-absolute top-50 start-50 translate-middle">
+                                    <div class="bg-white rounded-circle p-2 shadow-sm" style="width:35px;height:35px;">
+                                        <img src="{{ url('tenancy/assets/media/app/mini-logo.svg') }}"
+                                             alt="Logo" class="w-100 h-100" style="object-fit:contain;">
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    if (codeDisplay && qrData.code) {
+                        codeDisplay.textContent = qrData.code;
+                        this.currentCode = qrData.code;
+                    }
+
+                    if (copyButton) copyButton.style.display = 'block';
+
+                    if (whatsappLinkBtn && qrData.link) {
+                        whatsappLinkBtn.href = qrData.link;
+                        if (whatsappBtnWrap) whatsappBtnWrap.style.display = 'block';
+                    }
+
+                    console.log('QR Code generated successfully');
+                    this.startCountdown(10);
+                    this.statusInterval = setInterval(() => this.checkStatus(), 3000);
+                } else {
+                    console.error('Invalid QR data:', qrData);
+                    throw new Error('Não foi possível gerar o QR Code. Resposta inválida do servidor.');
+                }
+            } catch (error) {
+                console.error('Error generating QR Code:', error);
+                if (qrCodeContainer && error.name !== 'AbortError') {
+                    qrCodeContainer.innerHTML = `
+                        <div class="alert alert-danger">
+                            <i class="fa-solid fa-exclamation-circle me-2"></i>
+                            Erro: ${error.message}
+                        </div>
+                    `;
+                }
+            } finally {
+                this.isGenerating = false;
+                console.log('generateQRCode finished');
+            }
+        }
+
+        async copyToClipboard(text, btn) {
+            try {
+                await navigator.clipboard.writeText(text);
+
+                const original = btn.innerHTML;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i>';
+                btn.classList.add('btn-success');
+                btn.classList.remove('btn-light-primary');
+
+                setTimeout(() => {
+                    btn.innerHTML = original;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-light-primary');
+                }, 2000);
+            } catch (error) {
+                console.warn('Falha ao copiar para clipboard:', error);
+                // Fallback opcional: mostrar toast ou alert
+            }
+        }
+    }
+
+    // Inicializar quando o DOM estiver pronto
+    document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM Content Loaded - Initializing WhatsApp Drawer');
+        
+        // Aguardar um pouco para garantir que o KTDrawer foi inicializado
+        setTimeout(() => {
+            const drawer = new WhatsAppIntegrationDrawer('kt_drawer_integracao');
+            
+            // Fallback adicional: tentar gerar QR quando clicar no botão do drawer
+            const toggleBtn = document.querySelector('[data-kt-drawer-toggle="#kt_drawer_integracao"]');
+            if (toggleBtn) {
+                console.log('Found drawer toggle button, adding fallback listener');
+                toggleBtn.addEventListener('click', () => {
+                    console.log('Drawer toggle button clicked');
+                    setTimeout(() => {
+                        if (drawer && typeof drawer.generateQRCode === 'function') {
+                            console.log('Calling generateQRCode from toggle button');
+                            drawer.generateQRCode();
+                        }
+                    }, 600);
+                });
+            }
+        }, 500);
     });
 </script>
 

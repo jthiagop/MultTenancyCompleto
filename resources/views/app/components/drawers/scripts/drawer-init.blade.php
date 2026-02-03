@@ -367,6 +367,12 @@
 
     // Quando o drawer for aberto via função global
     window.abrirDrawerLancamento = function(tipo, origem) {
+        console.log('🎯 [Drawer-Init] Abrindo drawer para tipo:', tipo);
+        
+        // LIMPEZA PREVENTIVA: Sempre limpa antes de abrir
+        if (typeof limparFormularioDrawerCompleto === 'function') {
+            limparFormularioDrawerCompleto();
+        }
 
         var drawer = $('#kt_drawer_lancamento');
         var form = $('#kt_drawer_lancamento_form');
@@ -392,6 +398,11 @@
 
         // Atualiza labels de fornecedor/cliente baseado no tipo
         updateFornecedorLabels(tipo);
+        
+        // CORREÇÃO PROFISSIONAL: Sempre inicializa o estado visual após definir o tipo
+        setTimeout(function() {
+            inicializarEstadoDrawer();
+        }, 50);
 
         // Atualiza origem
         if (origemInput.length) {
@@ -416,6 +427,9 @@
 
                 // Atualiza labels novamente após inicializar Select2 (caso o DOM tenha mudado)
                 updateFornecedorLabels(tipo);
+                
+                // CORREÇÃO PROFISSIONAL: Reinicializa estado visual após Select2 estar pronto
+                inicializarEstadoDrawer();
 
                 // Adiciona listener para mudanças no campo tipo (caso o usuário mude depois)
                 $('#tipo, #tipo_financeiro')
@@ -506,6 +520,9 @@
             accordionPrevisaoPagamento.hide();
             accordionInformacoesPagamento.hide();
             accordionParcelas.hide();
+            
+            // Limpa os valores dos campos ocultos (Parcelas, Previsão e Informações de Pagamento)
+            limparDadosAccordions();
             
             // Inicializa Select2 do dia de cobrança se necessário
             var diaCobrancaSelect = $('#dia_cobranca');
@@ -893,65 +910,60 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
         }
     }
     
-    // Função para limpar dados dos accordions de pagamento
+    // ========================================
+    // FUNÇÕES DE LIMPEZA DE CAMPOS OCULTOS
+    // ========================================
+    
+    /**
+     * Limpa os campos do accordion de Previsão de Pagamento
+     */
+    function limparPrevisaoPagamento() {
+        $('#previsao_pagamento').val('');
+        $('#juros').val('');
+        $('#multa').val('');
+        $('#desconto').val('');
+        $('#valor_a_pagar').val('');
+    }
+    
+    /**
+     * Limpa os campos do accordion de Informações de Pagamento
+     */
+    function limparInformacoesPagamento() {
+        $('#data_pagamento').val('');
+        $('#valor_pago').val('');
+        $('#juros_pagamento').val('');
+        $('#multa_pagamento').val('');
+        $('#desconto_pagamento').val('');
+        
+        // Limpa flatpickr da data de pagamento se existir
+        var dataPagamentoInput = document.getElementById('data_pagamento');
+        if (dataPagamentoInput && dataPagamentoInput._flatpickr) {
+            dataPagamentoInput._flatpickr.clear();
+        }
+        
+        // Esconde containers de resumo
+        $('#total_pagar_container').hide();
+        $('#valor_aberto_container').hide();
+        $('#resumo_baixa_tbody').empty();
+    }
+    
+    /**
+     * Limpa os campos do accordion de Parcelas
+     */
+    function limparParcelas() {
+        $('#parcelas_table_body').empty();
+    }
+    
+    // Expõe funções de limpeza globalmente para uso em outros scripts
+    window.limparPrevisaoPagamento = limparPrevisaoPagamento;
+    window.limparInformacoesPagamento = limparInformacoesPagamento;
+    window.limparParcelas = limparParcelas;
+    
+    // Função para limpar dados dos accordions de pagamento (usa as funções específicas)
     function limparDadosAccordions() {
-        // Limpa accordion de previsão de pagamento
-        if (typeof $ !== 'undefined') {
-            $('#previsao_pagamento').val('');
-            $('#juros').val('');
-            $('#multa').val('');
-            $('#desconto').val('');
-            $('#valor_a_pagar').val('');
-            
-            // Limpa accordion de informações de pagamento
-            $('#data_pagamento').val('');
-            $('#valor_pago').val('');
-            $('#juros_pagamento').val('');
-            $('#multa_pagamento').val('');
-            $('#desconto_pagamento').val('');
-        } else {
-            // Fallback sem jQuery
-            var previsaoPagamento = document.getElementById('previsao_pagamento');
-            var juros = document.getElementById('juros');
-            var multa = document.getElementById('multa');
-            var desconto = document.getElementById('desconto');
-            var valorAPagar = document.getElementById('valor_a_pagar');
-            var dataPagamento = document.getElementById('data_pagamento');
-            var valorPago = document.getElementById('valor_pago');
-            var jurosPagamento = document.getElementById('juros_pagamento');
-            var multaPagamento = document.getElementById('multa_pagamento');
-            var descontoPagamento = document.getElementById('desconto_pagamento');
-            
-            if (previsaoPagamento) previsaoPagamento.value = '';
-            if (juros) juros.value = '';
-            if (multa) multa.value = '';
-            if (desconto) desconto.value = '';
-            if (valorAPagar) valorAPagar.value = '';
-            if (dataPagamento) dataPagamento.value = '';
-            if (valorPago) valorPago.value = '';
-            if (jurosPagamento) jurosPagamento.value = '';
-            if (multaPagamento) multaPagamento.value = '';
-            if (descontoPagamento) descontoPagamento.value = '';
-        }
-        if (typeof $ !== 'undefined') {
-            $('#total_pagar_container').hide();
-            $('#valor_aberto_container').hide();
-            $('#resumo_baixa_tbody').empty();
-            
-            // Limpa tabela de parcelas
-            $('#parcelas_table_body').empty();
-        } else {
-            // Fallback sem jQuery
-            var totalPagarContainer = document.getElementById('total_pagar_container');
-            var valorAbertoContainer = document.getElementById('valor_aberto_container');
-            var resumoBaixaTbody = document.getElementById('resumo_baixa_tbody');
-            var parcelasTableBody = document.getElementById('parcelas_table_body');
-            
-            if (totalPagarContainer) totalPagarContainer.style.display = 'none';
-            if (valorAbertoContainer) valorAbertoContainer.style.display = 'none';
-            if (resumoBaixaTbody) resumoBaixaTbody.innerHTML = '';
-            if (parcelasTableBody) parcelasTableBody.innerHTML = '';
-        }
+        limparPrevisaoPagamento();
+        limparInformacoesPagamento();
+        limparParcelas();
         
     }
 
@@ -1206,8 +1218,146 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
     // Garante estado correto após drawer estar completamente aberto
     $(document).on('kt.drawer.shown', '#kt_drawer_lancamento', function() {
         setTimeout(function() {
-            garantirEstadoInicialDiaCobranca();
+            // SOLUÇÃO PROFISSIONAL: Uma única função que gerencia todo o estado visual
+            inicializarEstadoDrawer();
         }, 100);
+    });
+    
+    // Função para inicializar o estado visual do drawer (independente de limpeza)
+    function inicializarEstadoDrawer() {
+        console.log('🔄 [Drawer-Init] Inicializando estado visual do drawer...');
+        
+        // Garante que elementos necessários estejam visíveis/ocultos conforme o estado atual
+        var tipo = $('#tipo').val() || $('#tipo_financeiro').val();
+        
+        console.log('📋 [Drawer-Init] Tipo detectado:', tipo);
+        
+        // Se há um tipo definido, configura a visibilidade dos checkboxes
+        if (tipo) {
+            console.log('✅ [Drawer-Init] Aplicando lógica de checkbox para tipo:', tipo);
+            
+            if (typeof window.toggleCheckboxesByTipo === 'function') {
+                console.log('🎯 [Drawer-Init] Chamando toggleCheckboxesByTipo...');
+                window.toggleCheckboxesByTipo(tipo);
+            } else {
+                console.warn('⚠️ [Drawer-Init] toggleCheckboxesByTipo não está disponível');
+            }
+            
+            // Pequeno delay para garantir que o DOM foi atualizado
+            setTimeout(function() {
+                if (typeof window.toggleCheckboxPago === 'function') {
+                    console.log('🎯 [Drawer-Init] Chamando toggleCheckboxPago...');
+                    window.toggleCheckboxPago();
+                } else {
+                    console.warn('⚠️ [Drawer-Init] toggleCheckboxPago não está disponível');
+                }
+            }, 50);
+        } else {
+            // Se não há tipo definido, oculta todos os checkboxes (estado inicial)
+            console.log('❌ [Drawer-Init] Nenhum tipo definido - ocultando checkboxes');
+            $('#checkboxes-entrada-wrapper, #checkboxes-saida-wrapper').hide();
+            $('#checkbox-pago-wrapper, #checkbox-recebido-wrapper').hide();
+        }
+        
+        // Garante outros estados iniciais
+        garantirEstadoInicialDiaCobranca();
+        
+        // 🔧 CORREÇÃO: Reinicializa tooltips após mudanças de estado
+        setTimeout(function() {
+            console.log('🎯 [Drawer-Init] Reinicializando tooltips do drawer...');
+            if (typeof window.initializeDrawerTooltips === 'function') {
+                window.initializeDrawerTooltips();
+            }
+        }, 100);
+        
+        console.log('✅ [Drawer-Init] Estado visual inicializado com sucesso');
+    }
+    
+    // Função para limpar completamente o formulário do drawer
+    function limparFormularioDrawerCompleto() {
+        var form = $('#kt_drawer_lancamento_form');
+        if (!form.length) return;
+        
+        console.log('🧹 [Drawer-Init] Limpando dados do formulário completo...');
+        
+        // Reset básico do formulário
+        form[0].reset();
+        
+        // Restaura valores padrão dos campos hidden
+        $('#tipo').val('');
+        $('#tipo_financeiro').val('');
+        $('#status_pagamento').val('em aberto');
+        $('#origem').val('Banco');
+        
+        console.log('📝 [Drawer-Init] Campos básicos limpos - restaurando selects e checkboxes...');
+        
+        // Limpa e reinicializa Select2 especificamente
+        form.find('select[data-control="select2"]').each(function() {
+            var $select = $(this);
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.val(null).trigger('change');
+            } else {
+                $select.val('');
+            }
+        });
+        
+        // Força limpeza de campos de texto e textarea
+        form.find('input[type="text"], input[type="email"], input[type="tel"], textarea').val('');
+        
+        // Limpa campos de data
+        form.find('input[type="date"], input[data-kt-daterangepicker]').val('');
+        
+        // Desmarca todos os checkboxes e radio buttons
+        form.find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
+        
+        // IMPORTANTE: NÃO ocultar wrappers aqui - isso será gerenciado por inicializarEstadoDrawer()
+        
+        // Oculta accordions que dependem de dados
+        $('#kt_accordion_previsao_pagamento, #kt_accordion_informacoes_pagamento, #kt_accordion_parcelas').hide();
+        
+        // Limpa tabelas dinâmicas
+        $('#parcelas_tbody, #resumo_baixa_tbody').empty();
+        
+        // Remove campos dinâmicos adicionados por JavaScript
+        form.find('input[name="intervalo_repeticao"], input[name="frequencia"], input[name="apos_ocorrencias"]').remove();
+        
+        // Esconde estrelas de sugestão
+        $('.suggestion-star-wrapper').hide();
+        
+        // Restaura parcelamento para valor padrão
+        setTimeout(function() {
+            $('#parcelamento').val('avista');
+            if ($('#parcelamento').hasClass('select2-hidden-accessible')) {
+                $('#parcelamento').trigger('change');
+            }
+        }, 100);
+        
+        console.log('✅ [Drawer-Init] Dados do formulário limpos com sucesso');
+    }
+    
+    // Torna as funções acessíveis globalmente para reutilização
+    window.inicializarEstadoDrawer = inicializarEstadoDrawer;
+    window.limparFormularioDrawerCompleto = limparFormularioDrawerCompleto;
+    
+    // Event listeners para limpeza
+    $(document).on('kt.drawer.hide', '#kt_drawer_lancamento', function() {
+        // Pequeno delay para garantir que a ação de fechamento não interfira
+        setTimeout(function() {
+            limparFormularioDrawerCompleto();
+        }, 100);
+    });
+    
+    // SOLUÇÃO PROFISSIONAL: Sempre inicializa estado quando drawer for mostrado
+    $(document).on('kt.drawer.show', '#kt_drawer_lancamento', function() {
+        setTimeout(function() {
+            inicializarEstadoDrawer();
+        }, 50);
+    });
+    
+    // Event listener para botão X (fechar) - garantir que limpe também
+    $(document).on('click', '#kt_drawer_lancamento [data-kt-drawer-dismiss="true"]:not(#kt_drawer_lancamento_cancel)', function() {
+        console.log('❌ [Drawer-Init] Botão X clicado - executando limpeza preventiva');
+        limparFormularioDrawerCompleto();
     });
     });
     }

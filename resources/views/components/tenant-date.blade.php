@@ -8,7 +8,7 @@
     'class' => ''
 ])
 
-<div class="col-md-2 fv-row {{ $class }}">
+<div class="fv-row {{ $class }}">
     @if($label)
         <label class="{{ $required ? 'required' : '' }} fs-6 fw-semibold mb-2">
             {{ $label }}
@@ -61,6 +61,23 @@
             if (dateInput._flatpickr) {
                 return;
             }
+
+                // Aplicar máscara de input com Inputmask
+                if (typeof Inputmask !== 'undefined') {
+                    // Data atual formatada para placeholder
+                    var today = new Date();
+                    var day = String(today.getDate()).padStart(2, '0');
+                    var month = String(today.getMonth() + 1).padStart(2, '0');
+                    var year = today.getFullYear();
+                    var todayFormatted = day + '/' + month + '/' + year;
+
+                    Inputmask({
+                        alias: 'datetime',
+                        inputFormat: 'dd/mm/yyyy',
+                        placeholder: todayFormatted,
+                        clearMaskOnLostFocus: false
+                    }).mask(dateInput);
+                }
 
                 // Verificar se flatpickr está disponível
                 if (typeof flatpickr === 'undefined') {

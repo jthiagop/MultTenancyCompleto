@@ -93,7 +93,6 @@ window.AppToast = (function() {
         const template = getTemplate();
         
         if (!container || !template) {
-            console.error('[AppToast] Container ou template não encontrado');
             return null;
         }
 
@@ -214,4 +213,3 @@ window.AppToast = (function() {
     };
 })();
 
-console.log('[AppToast] Sistema de Toasts carregado');

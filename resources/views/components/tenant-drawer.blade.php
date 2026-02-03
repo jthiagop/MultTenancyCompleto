@@ -8,7 +8,7 @@
     'headerClass' => '', // Classes CSS adicionais para o header
     'bodyClass' => '', // Classes CSS adicionais para o body
     'footerClass' => '', // Classes CSS adicionais para o footer
-    'cardClass' => 'shadow-none rounded-0 w-100', // Classes CSS para o card
+    'cardClass' => ' card-bordered shadow-none rounded-0 w-100', // Classes CSS para o card
 ])
 
 @php
@@ -66,7 +66,7 @@
 
         @isset($footer)
             <!--begin::Footer-->
-            <div class="card-footer py-5 text-center {{ $footerClass }}" id="{{ $footerId }}">
+            <div class="card-footer text-center {{ $footerClass }}" id="{{ $footerId }}">
                 {{ $footer }}
             </div>
             <!--end::Footer-->

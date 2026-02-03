@@ -188,7 +188,7 @@ class ProcessWhatsAppWebhook implements ShouldQueue
             // Buscar solicitação no banco central
             $authRequest = WhatsappAuthRequest::where('verification_code', $uuid)->first();
 
-            Log::info("🔍 Busca por código de vinculação", [
+            Log::info("� Busca por código de vinculação", [
                 'verification_code' => substr($uuid, 0, 20) . '...',
                 'encontrado' => $authRequest ? 'sim' : 'não',
                 'auth_request_id' => $authRequest->id ?? null,

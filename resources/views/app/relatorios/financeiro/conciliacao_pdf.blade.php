@@ -109,7 +109,7 @@
         /* Rodapé com informações completas */
         @page {
             @bottom-left {
-                content: "Relatório Gerado pelo Sistema Dominus - www.dominus.li";
+                content: "Relatório Gerado pelo Sistema Dominus - www.dominus.eco.br";
                 font-size: 0.65rem;
                 color: #6c757d;
             }

@@ -7,7 +7,10 @@ use App\Models\Address;
 use App\Models\Company;
 use App\Models\FormationStage;
 use App\Models\MemberFormationPeriod;
+use App\Models\MemberMinistry;
+use App\Models\MinistryType;
 use App\Models\ReligiousMember;
+use App\Models\ReligiousRole;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +35,11 @@ class SecretaryController extends Controller
             ->orderBy('name')
             ->get();
 
-        return view('app.modules.secretary.index', compact('formationStages', 'companies'));
+        $religiousRoles = ReligiousRole::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        return view('app.modules.secretary.index', compact('formationStages', 'companies', 'religiousRoles'));
     }
 
     /**
@@ -254,6 +261,7 @@ class SecretaryController extends Controller
             'funcao' => 'nullable|string|max:50',
             'provincia' => 'nullable|string|max:50',
             'cpf' => 'nullable|string|max:20',
+            'religious_role_id' => 'nullable|exists:religious_roles,id',
             // Campos de endereço (irão para tabela adresses)
             'cep' => 'nullable|string|max:10',
             'bairro' => 'nullable|string|max:255',
@@ -277,6 +285,7 @@ class SecretaryController extends Controller
             $member = ReligiousMember::create([
                 'name' => $validated['nome'],
                 'current_stage_id' => $validated['current_stage_id'],
+                'religious_role_id' => $validated['religious_role_id'] ?? null,
                 'birth_date' => $dataNascimento,
                 'order_registration_number' => $validated['funcao'] ?? null,
                 'cpf' => $validated['cpf'] ?? null,
@@ -429,6 +438,9 @@ class SecretaryController extends Controller
             'addresses',
             'formationPeriods' => function($q) {
                 $q->with(['formationStage', 'company'])->orderBy('start_date');
+            },
+            'ministries' => function($q) {
+                $q->with('type')->orderBy('date');
             }
         ]);
         
@@ -437,7 +449,38 @@ class SecretaryController extends Controller
             return ($address->pivot->tipo ?? null) === 'origem';
         }) ?? $member->addresses->first();
         
-        return view('app.modules.secretary.show', compact('member', 'originAddress'));
+        // Dados para o modal de edição
+        $formationStages = FormationStage::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        $companies = Company::where('status', 'active')
+            ->orderBy('name')
+            ->get();
+
+        $religiousRoles = ReligiousRole::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+
+        // Tipos de ministério para a aba de Ministérios
+        $ministryTypes = MinistryType::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get();
+        
+        // Timeline completa do membro
+        $timeline = $member->getTimeline();
+        $timelineStats = $member->getTimelineStats();
+        
+        return view('app.modules.secretary.show', compact(
+            'member', 
+            'originAddress', 
+            'formationStages', 
+            'companies',
+            'religiousRoles',
+            'ministryTypes',
+            'timeline',
+            'timelineStats'
+        ));
     }
 
     /**
@@ -513,6 +556,7 @@ class SecretaryController extends Controller
             'funcao' => 'nullable|string|max:50',
             'provincia' => 'nullable|string|max:50',
             'cpf' => 'nullable|string|max:20',
+            'religious_role_id' => 'nullable|exists:religious_roles,id',
             // Campos de endereço
             'cep' => 'nullable|string|max:10',
             'bairro' => 'nullable|string|max:255',
@@ -537,6 +581,7 @@ class SecretaryController extends Controller
             $member->update([
                 'name' => $validated['nome'],
                 'current_stage_id' => $validated['current_stage_id'],
+                'religious_role_id' => $validated['religious_role_id'] ?? null,
                 'birth_date' => $dataNascimento,
                 'order_registration_number' => $validated['funcao'] ?? null,
                 'cpf' => $validated['cpf'] ?? null,
@@ -698,5 +743,108 @@ class SecretaryController extends Controller
             'success' => true,
             'message' => 'Membro removido com sucesso!'
         ]);
+    }
+
+    /**
+     * Store a new ministry for a member.
+     */
+    public function storeMinistry(Request $request, ReligiousMember $member)
+    {
+        $validated = $request->validate([
+            'ministry_type_id' => 'required|exists:ministry_types,id',
+            'ministry_date' => 'required|date',
+            'minister_name' => 'required|string|max:255',
+            'diocese_name' => 'required|string|max:255',
+            'ministry_notes' => 'nullable|string',
+        ]);
+
+        try {
+            $ministry = MemberMinistry::create([
+                'member_id' => $member->id,
+                'ministry_type_id' => $validated['ministry_type_id'],
+                'date' => $validated['ministry_date'],
+                'minister_name' => $validated['minister_name'],
+                'diocese_name' => $validated['diocese_name'],
+                'notes' => $validated['ministry_notes'] ?? null,
+            ]);
+
+            $ministry->load('type');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ministério registrado com sucesso!',
+                'ministry' => [
+                    'id' => $ministry->id,
+                    'ministry_type_id' => $ministry->ministry_type_id,
+                    'type_name' => $ministry->type->name,
+                    'date' => $ministry->date->format('Y-m-d'),
+                    'date_formatted' => $ministry->date->format('d/m/Y'),
+                    'minister_name' => $ministry->minister_name,
+                    'diocese_name' => $ministry->diocese_name,
+                    'notes' => $ministry->notes,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao salvar ministério: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao salvar ministério: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update an existing ministry for a member.
+     */
+    public function updateMinistry(Request $request, ReligiousMember $member, MemberMinistry $ministry)
+    {
+        // Verifica se o ministério pertence ao membro
+        if ($ministry->member_id !== $member->id) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Ministério não encontrado para este membro.',
+            ], 404);
+        }
+
+        $validated = $request->validate([
+            'ministry_type_id' => 'required|exists:ministry_types,id',
+            'ministry_date' => 'required|date',
+            'minister_name' => 'required|string|max:255',
+            'diocese_name' => 'required|string|max:255',
+            'ministry_notes' => 'nullable|string',
+        ]);
+
+        try {
+            $ministry->update([
+                'ministry_type_id' => $validated['ministry_type_id'],
+                'date' => $validated['ministry_date'],
+                'minister_name' => $validated['minister_name'],
+                'diocese_name' => $validated['diocese_name'],
+                'notes' => $validated['ministry_notes'] ?? null,
+            ]);
+
+            $ministry->load('type');
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Ministério atualizado com sucesso!',
+                'ministry' => [
+                    'id' => $ministry->id,
+                    'ministry_type_id' => $ministry->ministry_type_id,
+                    'type_name' => $ministry->type->name,
+                    'date' => $ministry->date->format('Y-m-d'),
+                    'date_formatted' => $ministry->date->format('d/m/Y'),
+                    'minister_name' => $ministry->minister_name,
+                    'diocese_name' => $ministry->diocese_name,
+                    'notes' => $ministry->notes,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao atualizar ministério: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao atualizar ministério: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 }

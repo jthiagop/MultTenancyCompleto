@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasTimeline;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -11,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ReligiousMember extends Model
 {
-    use SoftDeletes;
+    use SoftDeletes, HasTimeline;
 
     protected $fillable = [
         'name',
@@ -94,6 +95,34 @@ class ReligiousMember extends Model
             ->withPivot('tipo')
             ->withTimestamps()
             ->wherePivot('tipo', 'origem');
+    }
+
+    /**
+     * Notas/Observações do membro
+     */
+    public function notes(): HasMany
+    {
+        return $this->hasMany(ReligiousMemberNote::class)
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Notas públicas do membro
+     */
+    public function publicNotes(): HasMany
+    {
+        return $this->hasMany(ReligiousMemberNote::class)
+            ->where('is_private', false)
+            ->orderBy('created_at', 'desc');
+    }
+
+    /**
+     * Ministérios recebidos pelo membro (Leitorado, Acolitato, Diaconato, etc.)
+     */
+    public function ministries(): HasMany
+    {
+        return $this->hasMany(MemberMinistry::class, 'member_id')
+            ->orderBy('date', 'asc');
     }
 
     /**

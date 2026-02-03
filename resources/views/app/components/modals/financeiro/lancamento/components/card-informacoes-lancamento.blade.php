@@ -22,7 +22,8 @@
             </x-tenant-select>
             <!--end::Col-->
             <!--begin::Col-->
-            <x-tenant-date name="data_competencia" label="Data de competência" placeholder="Informe a data" required />
+            <x-tenant-date name="data_competencia" label="Data de competência" placeholder="Informe a data" required 
+                class="col-md-2" />
             <!--end::Col-->
             <!--begin::Input group - Target Title-->
             <x-tenant-input name="descricao" id="descricao" label="Descrição" placeholder="Informe a descricão" required

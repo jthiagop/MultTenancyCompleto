@@ -24,6 +24,17 @@ class TransacaoFormatter
         $showInformarPagamento = $options['showInformarPagamento'] ?? true;
         $menuWidth = $options['menuWidth'] ?? 'w-200px';
 
+        // Converter situação para string (pode ser Enum)
+        $situacaoValue = $transacao->situacao instanceof \App\Enums\SituacaoTransacao 
+            ? $transacao->situacao->value 
+            : $transacao->situacao;
+
+        // Determinar se está pago/recebido
+        $isPago = in_array($situacaoValue, ['pago', 'recebido']);
+        
+        // Verificar se está em aberto (não mostrar opção de definir como pago)
+        $isEmAberto = ($situacaoValue === 'em_aberto');
+
         return view('app.financeiro.banco.partials.actions-button', [
             'transacao' => $transacao,
             'viewAction' => $viewAction,
@@ -36,6 +47,9 @@ class TransacaoFormatter
             'informarPagamentoLabel' => $informarPagamentoLabel,
             'showInformarPagamento' => $showInformarPagamento,
             'menuWidth' => $menuWidth,
+            'isPago' => $isPago,
+            'isEmAberto' => $isEmAberto,
+            'tipoTransacao' => $transacao->tipo,
         ])->render();
     }
 

@@ -146,11 +146,11 @@
                 @endforeach
                 <!--end::Etapas dinâmicas-->
             </div>
-            
+
             <!--begin::Função Religiosa (apenas para Votos Perpétuos)-->
             <div id="kt_religious_role_wrapper" class="card-body pt-0" style="display: none;">
                 <div class="separator separator-dashed mb-6"></div>
-                
+
                 <!--begin::Heading-->
                 <div class="mb-3">
                     <!--begin::Label-->
@@ -165,31 +165,21 @@
                     <!--end::Label-->
 
                     <!--begin::Description-->
-                    <div class="fs-7 fw-semibold text-muted">Disponível apenas para religiosos com Votos Perpétuos</div>
+                    <div class="fs-7 fw-semibold text-muted">Disponível apenas para religiosos com Votos Perpétuos
+                    </div>
                     <!--end::Description-->
                 </div>
                 <!--end::Heading-->
 
                 <!--begin::Radio group-->
-                <div class="btn-group w-100 w-lg-50" data-kt-buttons="true" data-kt-buttons-target="[data-kt-button]">
-                    <!--begin::Radio-->
-                    <label class="btn btn-outline btn-color-muted btn-active-success" data-kt-button="true">
-                        <!--begin::Input-->
-                        <input class="btn-check" type="radio" name="religious_role_id" value="1" />
-                        <!--end::Input-->
-                        Irmão
-                    </label>
-                    <!--end::Radio-->
-
-                    <!--begin::Radio-->
-                    <label class="btn btn-outline btn-color-muted btn-active-success active" data-kt-button="true">
-                        <!--begin::Input-->
-                        <input class="btn-check" type="radio" name="religious_role_id" checked="checked"
-                            value="2" />
-                        <!--end::Input-->
-                        Presbítero
-                    </label>
-                    <!--end::Radio-->
+                <div class="d-flex flex-wrap gap-5">
+                    @foreach($religiousRoles as $role)
+                        <x-tenant-radio 
+                            name="religious_role_id" 
+                            :value="$role->id" 
+                            :label="$role->name"
+                        />
+                    @endforeach
                 </div>
                 <!--end::Radio group-->
             </div>

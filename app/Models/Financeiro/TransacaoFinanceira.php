@@ -25,6 +25,7 @@ class TransacaoFinanceira extends Model
     use HasFactory, SoftDeletes;
     protected $fillable = [
         'company_id',
+        'parent_id', // Para vincular parcelas à transação pai
         'data_competencia',
         'data_vencimento',
         'data_pagamento',
@@ -192,6 +193,112 @@ class TransacaoFinanceira extends Model
     public function fracionamentos()
     {
         return $this->hasMany(TransacaoFracionamento::class, 'transacao_principal_id');
+    }
+
+    /**
+     * Relacionamento: Parcelas desta transação (quando parcelada)
+     */
+    public function parcelas()
+    {
+        return $this->hasMany(Parcelamento::class, 'transacao_financeira_id')
+            ->orderBy('numero_parcela');
+    }
+
+    /**
+     * Relacionamento: Transação pai (quando esta é uma parcela)
+     */
+    public function parent()
+    {
+        return $this->belongsTo(TransacaoFinanceira::class, 'parent_id');
+    }
+
+    /**
+     * Relacionamento: Transações filhas (parcelas desta transação)
+     */
+    public function children()
+    {
+        return $this->hasMany(TransacaoFinanceira::class, 'parent_id')
+            ->orderBy('data_vencimento');
+    }
+
+    /**
+     * Verifica se é uma transação pai (tem filhos/parcelas)
+     */
+    public function getEhTransacaoPaiAttribute(): bool
+    {
+        return $this->children()->exists();
+    }
+
+    /**
+     * Verifica se é uma transação filha (é uma parcela)
+     */
+    public function getEhParcelaAttribute(): bool
+    {
+        return $this->parent_id !== null;
+    }
+
+    /**
+     * Retorna o número da parcela (1, 2, 3...) baseado na ordem de vencimento
+     */
+    public function getNumeroParcelaAttribute(): ?int
+    {
+        if (!$this->eh_parcela) {
+            return null;
+        }
+        
+        // Busca o parcelamento associado
+        $parcelamento = Parcelamento::where('transacao_financeira_id', $this->parent_id)
+            ->where('transacao_parcela_id', $this->id)
+            ->first();
+            
+        return $parcelamento?->numero_parcela;
+    }
+
+    /**
+     * Retorna o label da parcela (ex: "1/3")
+     */
+    public function getLabelParcelaAttribute(): ?string
+    {
+        if (!$this->eh_parcela || !$this->parent) {
+            return null;
+        }
+        
+        $numero = $this->numero_parcela;
+        $total = $this->parent->children()->count();
+        
+        return $numero ? "{$numero}/{$total}" : null;
+    }
+
+    /**
+     * Verifica se a transação é parcelada
+     */
+    public function getEhParceladaAttribute(): bool
+    {
+        return $this->parcelas()->exists();
+    }
+
+    /**
+     * Retorna o total de parcelas
+     */
+    public function getTotalParcelasAttribute(): int
+    {
+        return $this->parcelas()->count();
+    }
+
+    /**
+     * Retorna o total de parcelas pagas
+     */
+    public function getParcelasPagasAttribute(): int
+    {
+        return $this->parcelas()->whereIn('situacao', ['pago', 'recebido'])->count();
+    }
+
+    /**
+     * Retorna o valor total pago das parcelas
+     */
+    public function getValorTotalPagoParcelasAttribute(): float
+    {
+        return (float) $this->parcelas()->sum('valor_pago');
     }
 
     /**

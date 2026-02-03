@@ -43,6 +43,10 @@
 @include('app.components.drawers.templates.resumo-baixa-row-template')
 
 @push('scripts')
+    {{-- Módulo compilado do Drawer (ES6) - Futuro --}}
+    {{-- @vite('resources/js/financeiro/drawer/index.js') --}}
+    
+    {{-- Scripts legados (mantidos para compatibilidade durante migração) --}}
     @include('app.components.drawers.scripts.drawer-init')
     @include('app.components.drawers.scripts.drawer-suggestions')
     @include('app.components.drawers.scripts.drawer-pagamento-parcelas')

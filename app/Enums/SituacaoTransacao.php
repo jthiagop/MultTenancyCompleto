@@ -11,6 +11,7 @@ enum SituacaoTransacao: string
     case ATRASADO = 'atrasado';
     case PREVISTO = 'previsto';
     case DESCONSIDERADO = 'desconsiderado';
+    case PARCELADO = 'parcelado'; // Transação PAI - container de parcelas (não aparece na listagem)
 
     /**
      * Retorna o label humanizado da situação
@@ -25,6 +26,7 @@ enum SituacaoTransacao: string
             self::ATRASADO => 'Atrasado',
             self::PREVISTO => 'Previsto',
             self::DESCONSIDERADO => 'Desconsiderado',
+            self::PARCELADO => 'Parcelado',
         };
     }
 
@@ -41,6 +43,7 @@ enum SituacaoTransacao: string
             self::ATRASADO => 'badge-light-danger',
             self::PREVISTO => 'badge-light-secondary',
             self::DESCONSIDERADO => 'badge-light-dark',
+            self::PARCELADO => 'badge-light-info',
         };
     }
 
@@ -50,6 +53,14 @@ enum SituacaoTransacao: string
     public function isQuitada(): bool
     {
         return in_array($this, [self::PAGO, self::RECEBIDO]);
+    }
+
+    /**
+     * Verifica se é transação pai (container de parcelas)
+     */
+    public function isParcelado(): bool
+    {
+        return $this === self::PARCELADO;
     }
 
     /**

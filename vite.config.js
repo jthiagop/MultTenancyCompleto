@@ -12,6 +12,8 @@ export default defineConfig({
                 'resources/tenancy/assets/plugins/global/plugins.bundle.css',
                 'resources/tenancy/assets/css/style.bundle.css',
                 'resources/js/pages/conciliacoes/historico.js',
+                // Módulo do Drawer de Lançamento Financeiro
+                'resources/js/financeiro/drawer/index.js',
             ],
             refresh: true,
             // Build directory padrão (assets será acessado via symlink tenancy/assets/build -> build)

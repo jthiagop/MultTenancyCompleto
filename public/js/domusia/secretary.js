@@ -409,6 +409,12 @@ class DomusiaSecretary {
         const disponivelCheckbox = this.form.querySelector('[name="disponivel_todas_casas"]');
         formData.append('disponivel_todas_casas', disponivelCheckbox?.checked ? '1' : '0');
 
+        // Função religiosa (apenas para Votos Perpétuos)
+        const religiousRoleInput = this.form.querySelector('[name="religious_role_id"]:checked');
+        if (religiousRoleInput) {
+            formData.append('religious_role_id', religiousRoleInput.value);
+        }
+
         // Avatar (arquivo)
         const avatarInput = this.form.querySelector('[name="avatar"]');
         if (avatarInput && avatarInput.files && avatarInput.files.length > 0) {
@@ -471,9 +477,39 @@ class DomusiaSecretary {
         // Resetar o modo de salvamento para o padrão
         this.saveMode = 'default';
         
-        // Recarregar DataTable e atualizar contadores (sempre)
-        this.reloadDataTable();
-        this.updateTabStats();
+        // Se estamos na página show, recarregar a página após salvar (modo padrão)
+        if (this.config.isShowPage && currentSaveMode === 'default') {
+            // Fechar modal
+            if (this.modal) {
+                const bsModal = bootstrap.Modal.getInstance(this.modal);
+                if (bsModal) bsModal.hide();
+            }
+            
+            // Mostrar toast de sucesso e recarregar
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Membro atualizado com sucesso!',
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 1500,
+                    timerProgressBar: true,
+                    didClose: () => {
+                        window.location.reload();
+                    }
+                });
+            } else {
+                window.location.reload();
+            }
+            return;
+        }
+        
+        // Recarregar DataTable e atualizar contadores (se não estiver na página show)
+        if (!this.config.isShowPage) {
+            this.reloadDataTable();
+            this.updateTabStats();
+        }
         
         // Definir mensagem de sucesso
         let successMessage = '';
@@ -844,7 +880,13 @@ class DomusiaSecretary {
         
         // Períodos de formação
         if (member.formation_periods && member.formation_periods.length > 0) {
-            this.populateFormationPeriods(member.formation_periods);
+            // Primeiro mostrar as etapas baseado no current_stage_id
+            // (já foi feito acima com updateVisibleStages)
+            
+            // Aguardar um tick para garantir que os blocos estejam visíveis
+            setTimeout(() => {
+                this.populateFormationPeriods(member.formation_periods);
+            }, 100);
         }
     }
     
@@ -855,6 +897,21 @@ class DomusiaSecretary {
         periods.forEach(period => {
             const block = document.querySelector(`.formation-stage-block[data-stage-id="${period.formation_stage_id}"]`);
             if (!block) return;
+            
+            // Garantir que o bloco esteja visível
+            block.style.display = 'block';
+            
+            // Inicializar Select2 para os selects dentro do bloco se necessário
+            const selects = block.querySelectorAll('select:not(.select2-hidden-accessible)');
+            selects.forEach(select => {
+                if (typeof $ !== 'undefined' && $.fn.select2) {
+                    $(select).select2({
+                        dropdownParent: $(this.config.modalId),
+                        placeholder: 'Selecione o local',
+                        allowClear: true
+                    });
+                }
+            });
             
             const slug = block.dataset.stageSlug;
             
@@ -927,6 +984,45 @@ class DomusiaSecretary {
         const titleElement = this.modal?.querySelector('.modal-header h1, .modal-title');
         if (titleElement) {
             titleElement.textContent = this.isEditMode ? 'Editar Membro' : 'Novo Membro';
+        }
+        
+        // Atualizar botões do footer
+        this.updateFooterButtons();
+    }
+    
+    /**
+     * Atualiza os botões do footer do modal
+     * Na página show em modo edit, mostra apenas "Atualizar" sem dropdown
+     */
+    updateFooterButtons() {
+        const btnGroup = this.modal?.querySelector('.modal-footer .btn-group');
+        const submitBtn = this.modal?.querySelector('#kt_modal_new_target_submit');
+        const dropdownToggle = this.modal?.querySelector('.modal-footer .dropdown-toggle-split');
+        const dropdownMenu = this.modal?.querySelector('.modal-footer .dropdown-menu');
+        
+        if (!submitBtn) return;
+        
+        // Se estiver na página show e em modo de edição
+        if (this.config.isShowPage && this.isEditMode) {
+            // Esconder dropdown
+            if (dropdownToggle) dropdownToggle.style.display = 'none';
+            if (dropdownMenu) dropdownMenu.style.display = 'none';
+            
+            // Alterar texto do botão para "Atualizar"
+            const labelSpan = submitBtn.querySelector('.indicator-label');
+            if (labelSpan) {
+                labelSpan.textContent = 'Atualizar';
+            }
+        } else {
+            // Modo normal - mostrar dropdown
+            if (dropdownToggle) dropdownToggle.style.display = '';
+            if (dropdownMenu) dropdownMenu.style.display = '';
+            
+            // Restaurar texto do botão
+            const labelSpan = submitBtn.querySelector('.indicator-label');
+            if (labelSpan) {
+                labelSpan.textContent = 'Salvar';
+            }
         }
     }
     
@@ -1010,6 +1106,9 @@ class DomusiaSecretary {
      * Recarrega a DataTable
      */
     reloadDataTable() {
+        // Não faz nada se estiver na página show
+        if (this.config.isShowPage) return;
+        
         // Tentar diferentes formas de acessar a DataTable
         if (typeof LaravelDataTables !== 'undefined' && LaravelDataTables['secretary-table']) {
             LaravelDataTables['secretary-table'].ajax.reload(null, false);

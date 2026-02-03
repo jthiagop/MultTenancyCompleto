@@ -502,6 +502,14 @@ class DrawerFormManager {
             formData.append('tipo', tipoInput.value);
         }
         
+        // Log de debug: mostra todos os campos que serão enviados
+        console.log('[prepareFormData] 📋 Campos enviados ao servidor:');
+        const formDataObj = {};
+        for (const [key, value] of formData.entries()) {
+            formDataObj[key] = value;
+        }
+        console.table(formDataObj);
+        
         return formData;
     }
     
@@ -558,6 +566,8 @@ class DrawerFormManager {
                 this.onSuccess(mode);
             } else if (response.status === 422) {
                 const data = await response.json();
+                console.error('[DrawerFormManager] ❌ Erro de validação 422:', data);
+                console.error('[DrawerFormManager] Erros detalhados:', data.errors);
                 if (data.errors) {
                     this.displayErrors(data.errors);
                 }

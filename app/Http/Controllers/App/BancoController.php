@@ -737,7 +737,9 @@ class BancoController extends Controller
                 $q->whereIn('tipo', ['banco', 'caixa']);
             })
             ->where('company_id', $companyId)
-            ->where('tipo', $tipo);
+            ->where('tipo', $tipo)
+            // Excluir transações PAI (parceladas) - elas são apenas containers
+            ->where('situacao', '!=', 'parcelado');
 
         // Aplicar filtro de conta se fornecido
         if ($entidadeId) {
@@ -878,11 +880,14 @@ class BancoController extends Controller
         }
 
         // Query base - filtrar transações de banco e caixa
-        $query = TransacaoFinanceira::with(['modulos_anexos', 'lancamentoPadrao', 'fracionamentos', 'recorrencia'])
+        $query = TransacaoFinanceira::with(['modulos_anexos', 'lancamentoPadrao', 'fracionamentos', 'recorrencia', 'parceiro', 'entidadeFinanceira'])
             ->whereHas('entidadeFinanceira', function ($q) {
                 $q->whereIn('tipo', ['banco', 'caixa']);
             })
-            ->where('company_id', $companyId);
+            ->where('company_id', $companyId)
+            // Excluir transações PAI (parceladas) - elas são apenas containers
+            // Apenas as transações FILHAS (parcelas individuais) devem aparecer na listagem
+            ->where('situacao', '!=', 'parcelado');
 
         // Contagem total de registros antes de qualquer filtro
         $recordsTotal = $query->count();
@@ -898,6 +903,9 @@ class BancoController extends Controller
                   ->orWhere('origem', 'like', "%{$search}%")
                   ->orWhereHas('lancamentoPadrao', function($subQ) use ($search) {
                       $subQ->where('description', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('parceiro', function($subQ) use ($search) {
+                      $subQ->where('nome', 'like', "%{$search}%");
                   });
             });
         }
@@ -1185,9 +1193,18 @@ class BancoController extends Controller
         $isContasReceberPagar = $request->filled('tipo') && ($request->tipo === 'entrada' || $request->tipo === 'saida');
         $isExtrato = $request->input('tab') === 'extrato' || $request->input('is_extrato') === 'true';
 
+        // Função auxiliar para formatar a origem com conta (se for banco)
+        $formatarOrigem = function($transacao) {
+            $origem = $transacao->origem ?? '-';
+            if (strtolower($origem) === 'banco' && $transacao->entidadeFinanceira && $transacao->entidadeFinanceira->conta) {
+                return $origem . ' - ' . $transacao->entidadeFinanceira->conta;
+            }
+            return $origem;
+        };
+
         // Formatar os dados para a resposta JSON
-        $data = $transacoes->map(function($transacao) use ($request, $isContasReceberPagar, $isExtrato) {
-            // Formatar descrição com informação de recorrência (se houver)
+        $data = $transacoes->map(function($transacao) use ($request, $isContasReceberPagar, $isExtrato, $formatarOrigem) {
+            // Formatar descrição com informação de recorrência ou parcelamento (se houver)
             $descricaoTexto = e($transacao->descricao);
 
             // Verifica se a transação faz parte de uma recorrência
@@ -1198,12 +1215,42 @@ class BancoController extends Controller
                 $totalOcorrencias = $recorrencia->total_ocorrencias ?? 1;
 
                 // Formato: "1/12 - Nana Banana" com ícone
-                $descricaoTexto = '<i class="bi bi-repeat text-primary me-2"></i>' . $numeroOcorrencia . '/' . $totalOcorrencias . ' - ' . $descricaoTexto;
+                $descricaoTexto = '<i class="bi bi-repeat text-primary me-2" title="Lançamento recorrente"></i>' . $numeroOcorrencia . '/' . $totalOcorrencias . ' - ' . $descricaoTexto;
+            }
+            // Verifica se a transação é uma parcela (tem parent_id)
+            elseif ($transacao->parent_id) {
+                // Busca os dados do parcelamento para exibir número da parcela
+                $parcelamento = \App\Models\Financeiro\Parcelamento::where('transacao_parcela_id', $transacao->id)->first();
+                if ($parcelamento) {
+                    $numeroParcela = $parcelamento->numero_parcela;
+                    $totalParcelas = $parcelamento->total_parcelas;
+                    // Formato: "1/3 - Descrição" com ícone de parcelamento
+                    $descricaoTexto = '<i class="bi bi-signpost-split text-primary me-2" title="Lançamento parcelado"></i>' . $numeroParcela . '/' . $totalParcelas . ' - ' . $descricaoTexto;
+                } else {
+                    // Se não encontrou parcelamento, apenas mostra o ícone
+                    $descricaoTexto = '<i class="bi bi-signpost-split text-primary me-2" title="Lançamento parcelado"></i>' . $descricaoTexto;
+                }
             }
 
             $descricaoHtml = '<div class="fw-bold"><a href="#" onclick="abrirDrawerTransacao(' . $transacao->id . '); return false;" class="text-gray-800 text-hover-primary">' . $descricaoTexto . '</a></div>';
+            
+            // Linha secundária: Badge do Lançamento Padrão + Nome do Fornecedor
+            $subInfo = [];
+            
+            // Lançamento Padrão com Badge colorido (verde para entrada, vermelho para saída)
             if ($transacao->lancamentoPadrao) {
-                $descricaoHtml .= '<div class="text-muted small">' . e($transacao->lancamentoPadrao->description) . '</div>';
+                $badgeClass = $transacao->tipo === 'entrada' ? 'badge-light-success' : 'badge-light-danger';
+                $subInfo[] = '<span class="badge py-1 px-2 ' . $badgeClass . ' fs-8">' . e($transacao->lancamentoPadrao->description) . '</span>';
+            }
+            
+            // Nome do fornecedor/parceiro
+            if ($transacao->parceiro) {
+                $subInfo[] = '<span class="text-muted"><i class="bi bi-person me-1"></i>' . e($transacao->parceiro->nome) . '</span>';
+            }
+            
+            // Junta as informações com separador
+            if (!empty($subInfo)) {
+                $descricaoHtml .= '<div class="d-flex align-items-center gap-2 mt-1">' . implode(' <span class="text-muted">/</span> ', $subInfo) . '</div>';
             }
 
             // Formatar ações usando classe Helper
@@ -1227,6 +1274,7 @@ class BancoController extends Controller
                         'previsto' => 'badge-light-info',
                         'pago_parcial' => 'badge-light-primary',
                         'pago' => 'badge-light-success',
+                        'recebido' => 'badge-light-success',
                         'desconsiderado' => 'badge-light-secondary'
                     ];
                     // Converter enum para string antes de usar como chave
@@ -1235,9 +1283,9 @@ class BancoController extends Controller
                         : $transacao->situacao;
                     $badgeClass = $badgeClasses[$situacaoValue] ?? 'badge-light-secondary';
                     $situacaoLabel = ucfirst(str_replace('_', ' ', $situacaoValue));
-                    $situacaoBadge = '<div class="badge fw-bold ' . $badgeClass . '">' . $situacaoLabel . '</div>';
+                    $situacaoBadge = '<div class="badge fw-bold py-2 px-3 ' . $badgeClass . '">' . $situacaoLabel . '</div>';
                 } else {
-                    $situacaoBadge = '<div class="badge fw-bold badge-light-secondary">Em Aberto</div>';
+                    $situacaoBadge = '<div class="badge fw-bold py-2 px-3 badge-light-secondary">Em Aberto</div>';
                 }
 
 
@@ -1252,7 +1300,7 @@ class BancoController extends Controller
                 }
 
                 // Checkbox para seleção (adicionar classe row-check para identificação)
-                $checkboxHtml = '<div class="form-check form-check-sm form-check-custom form-check-solid">
+                $checkboxHtml = '<div class="form-check form-check-sm form-check-custom form-check-solid justify-content-center">
                     <input class="form-check-input row-check" type="checkbox" value="' . $transacao->id . '" />
                 </div>';
 
@@ -1283,7 +1331,7 @@ class BancoController extends Controller
                         'previsto' => 'badge-light-info',
                         'pago_parcial' => 'badge-light-primary',
                         'pago' => 'badge-light-success',
-                        'recebido' => 'badge-light-primary',  // Novo
+                        'recebido' => 'badge-light-success',
                         'desconsiderado' => 'badge-light-secondary'
                     ];
                     // Converter Enum para string
@@ -1293,9 +1341,9 @@ class BancoController extends Controller
                     
                     $badgeClass = $badgeClasses[$situacaoValue] ?? 'badge-light-secondary';
                     $situacaoLabel = ucfirst(str_replace('_', ' ', $situacaoValue));
-                    $situacaoBadge = '<div class="badge fw-bold ' . $badgeClass . '">' . $situacaoLabel . '</div>';
+                    $situacaoBadge = '<div class="badge fw-bold py-2 px-3 ' . $badgeClass . '">' . $situacaoLabel . '</div>';
                 } else {
-                    $situacaoBadge = '<div class="badge fw-bold badge-light-secondary">Em Aberto</div>';
+                    $situacaoBadge = '<div class="badge fw-bold py-2 px-3 badge-light-secondary">Em Aberto</div>';
                 }
 
                 // Determinar qual data usar (vencimento ou competência)
@@ -1327,7 +1375,7 @@ class BancoController extends Controller
                 }
 
                 // Checkbox para seleção (adicionar classe row-check para identificação)
-                $checkboxHtml = '<div class="form-check form-check-sm form-check-custom form-check-solid">
+                $checkboxHtml = '<div class="form-check form-check-sm form-check-custom form-check-solid justify-content-center">
                     <input class="form-check-input row-check" type="checkbox" value="' . $transacao->id . '" />
                 </div>';
 
@@ -1350,13 +1398,13 @@ class BancoController extends Controller
                     'R$ ' . number_format((float) $transacao->valor, 2, ',', '.'),
                     'R$ ' . number_format((float) $valorAPagar, 2, ',', '.'),
                     $situacaoBadge,
-                    $transacao->origem ?? '-',
+                    $formatarOrigem($transacao),
                     $actionsHtml
                 ];
             } else {
                 // Retorno padrão para registros
                 // Checkbox para seleção (adicionar classe row-check para identificação)
-                $checkboxHtml = '<div class="form-check form-check-sm form-check-custom form-check-solid">
+                $checkboxHtml = '<div class="form-check form-check-sm form-check-custom form-check-solid justify-content-center">
                     <input class="form-check-input row-check" type="checkbox" value="' . $transacao->id . '" />
                 </div>';
 
@@ -1370,9 +1418,9 @@ class BancoController extends Controller
                         ? '<i class="fas fa-check-circle text-success" title="Comprovação Fiscal"></i>'
                         : '<i class="bi bi-x-circle-fill text-danger" title="Sem Comprovação Fiscal"></i>',
                     $descricaoHtml,
-                    '<div class="badge fw-bold ' . ($transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger') . '">' . $transacao->tipo . '</div>',
+                    '<div class="badge fw-bold py-2 px-3 ' . ($transacao->tipo == 'entrada' ? 'badge-success' : 'badge-danger') . '">' . ucfirst($transacao->tipo) . '</div>',
                     'R$ ' . number_format((float) $transacao->valor, 2, ',', '.'),
-                    $transacao->origem ?? '-',
+                    $formatarOrigem($transacao),
                     $actionsHtml
                 ];
             }
@@ -1573,10 +1621,9 @@ class BancoController extends Controller
 
             // Processa parcelas se houver
             if ($this->temParcelas($request)) {
-                $movimentacao = $transacao->movimentacao;
-                $this->criarParcelas($transacao, $movimentacao, $validatedData, $request);
-                // Remove a transação principal, pois as parcelas são as transações reais
-                $transacao->delete();
+                $this->criarParcelas($transacao, $validatedData, $request);
+                // A transação principal é mantida com o valor total
+                // As parcelas são criadas na tabela 'parcelamentos'
             }
 
             // Mensagem de sucesso
@@ -2113,12 +2160,12 @@ class BancoController extends Controller
     }
 
     /**
-     * Cria transações financeiras para cada parcela quando o parcelamento é 2x ou mais
-     * Cada parcela é uma transação separada, mas relacionada à transação principal
+     * Cria parcelas para uma transação financeira parcelada
+     * As parcelas são armazenadas na tabela 'parcelamentos'
+     * A transação principal é mantida com o valor TOTAL
      */
     private function criarParcelas(
         TransacaoFinanceira $transacaoPrincipal,
-        Movimentacao $movimentacaoPrincipal,
         array $validatedData,
         Request $request
     ) {
@@ -2129,86 +2176,59 @@ class BancoController extends Controller
         }
 
         ksort($parcelas);
+        $totalParcelas = count($parcelas);
 
         foreach ($parcelas as $index => $parcela) {
-            $entidadeIdParcela = $validatedData['entidade_id'];
-            if (isset($parcela['conta_pagamento_id']) && $parcela['conta_pagamento_id']) {
-                $entidadeIdParcela = $parcela['conta_pagamento_id'];
+            $numeroParcela = (int) $index; // O índice já é o número da parcela (1, 2, 3...)
+            
+            // Se o índice começar em 0, ajusta para começar em 1
+            if ($numeroParcela === 0) {
+                $numeroParcela = 1;
             }
 
+            // Entidade/Forma de pagamento da parcela
+            $entidadeIdParcela = $validatedData['entidade_id'];
+            if (isset($parcela['forma_pagamento_id']) && $parcela['forma_pagamento_id']) {
+                $entidadeIdParcela = $parcela['forma_pagamento_id'];
+            }
+
+            // Conta de pagamento (pode ser diferente para cada parcela)
+            $contaPagamentoId = null;
+            if (isset($parcela['conta_pagamento_id']) && $parcela['conta_pagamento_id']) {
+                $contaPagamentoId = $parcela['conta_pagamento_id'];
+            }
+
+            // Data de vencimento da parcela
             $dataVencimentoParcela = $validatedData['data_competencia'];
             if (isset($parcela['vencimento']) && $parcela['vencimento']) {
-                $vencimentoStr = trim($parcela['vencimento']);
-                $vencimentoStr = preg_replace('/\s+/', '', $vencimentoStr);
-
-                if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $vencimentoStr, $matches)) {
-                    $dia = (int)trim($matches[1]);
-                    $mes = (int)trim($matches[2]);
-                    $ano = (int)trim($matches[3]);
-
-                    if ($dia >= 1 && $dia <= 31 && $mes >= 1 && $mes <= 12 && $ano >= 1900 && $ano <= 2100) {
-                        try {
-                            $dataVencimentoParcela = Carbon::create($ano, $mes, $dia, 0, 0, 0)->format('Y-m-d');
-
-                            \Log::info('Data de vencimento da parcela convertida', [
-                                'vencimento_original' => $vencimentoStr,
-                                'dia' => $dia,
-                                'mes' => $mes,
-                                'ano' => $ano,
-                                'data_formatada' => $dataVencimentoParcela,
-                                'parcela_index' => $index
-                            ]);
-                        } catch (\Exception $e) {
-                            \Log::warning('Erro ao criar data de vencimento da parcela', [
-                                'vencimento' => $vencimentoStr,
-                                'dia' => $dia,
-                                'mes' => $mes,
-                                'ano' => $ano,
-                                'erro' => $e->getMessage(),
-                                'parcela_index' => $index
-                            ]);
-                            $dataVencimentoParcela = $validatedData['data_competencia'];
-                        }
-                    } else {
-                        \Log::warning('Valores de data inválidos na parcela', [
-                            'vencimento' => $vencimentoStr,
-                            'dia' => $dia,
-                            'mes' => $mes,
-                            'ano' => $ano,
-                            'parcela_index' => $index
-                        ]);
-                        $dataVencimentoParcela = $validatedData['data_competencia'];
-                    }
-                } else {
-                    try {
-                        $dataVencimentoParcela = Carbon::createFromFormat('d/m/Y', $vencimentoStr)
-                            ->format('Y-m-d');
-                    } catch (\Exception $e) {
-                        \Log::warning('Erro ao converter data de vencimento da parcela - formato inválido', [
-                            'vencimento' => $vencimentoStr,
-                            'erro' => $e->getMessage(),
-                            'parcela_index' => $index
-                        ]);
-                        $dataVencimentoParcela = $validatedData['data_competencia'];
-                    }
-                }
+                $dataVencimentoParcela = $this->converterDataVencimentoParcela(
+                    $parcela['vencimento'], 
+                    $validatedData['data_competencia'],
+                    $index
+                );
             }
 
-            $dadosParcela = [
-                'company_id' => $validatedData['company_id'],
-                'data_competencia' => $validatedData['data_competencia'],
+            // Valor da parcela
+            $valorParcela = isset($parcela['valor']) ? $this->converterValorParaDecimal($parcela['valor']) : 0;
+
+            // Percentual da parcela
+            $percentualParcela = isset($parcela['percentual']) ? (float) $parcela['percentual'] : 0;
+
+            // Descrição da parcela
+            $descricaoParcela = isset($parcela['descricao']) && $parcela['descricao'] 
+                ? $parcela['descricao'] 
+                : $validatedData['descricao'] . " {$numeroParcela}/{$totalParcelas}";
+
+            // Cria a parcela na tabela 'parcelamentos'
+            $transacaoPrincipal->parcelas()->create([
+                'numero_parcela' => $numeroParcela,
+                'total_parcelas' => $totalParcelas,
                 'data_vencimento' => $dataVencimentoParcela,
+                'valor' => $valorParcela,
+                'percentual' => $percentualParcela,
                 'entidade_id' => $entidadeIdParcela,
-                'tipo' => $validatedData['tipo'],
-                'valor' => isset($parcela['valor']) ? (float) $parcela['valor'] : 0,
-                'descricao' => isset($parcela['descricao']) ? $parcela['descricao'] : $validatedData['descricao'] . ' - Parcela ' . ($index + 1),
-                'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'],
-                'cost_center_id' => $validatedData['cost_center_id'],
-                'tipo_documento' => $validatedData['tipo_documento'],
-                'numero_documento' => ($validatedData['numero_documento'] ?? '') . '-' . ($index + 1),
-                'origem' => $validatedData['origem'],
-                'historico_complementar' => $validatedData['historico_complementar'] ?? null,
-                'comprovacao_fiscal' => $validatedData['comprovacao_fiscal'] ?? false,
+                'conta_pagamento_id' => $contaPagamentoId,
+                'descricao' => $descricaoParcela,
                 'situacao' => 'em_aberto',
                 'agendado' => isset($parcela['agendado']) ? (bool) $parcela['agendado'] : false,
                 'valor_pago' => 0,
@@ -2219,27 +2239,87 @@ class BancoController extends Controller
                 'created_by_name' => $validatedData['created_by_name'],
                 'updated_by' => $validatedData['updated_by'],
                 'updated_by_name' => $validatedData['updated_by_name'],
-            ];
+            ]);
 
-            // 1. Cria a transação financeira da parcela PRIMEIRO
-            $transacaoParcela = TransacaoFinanceira::create($dadosParcela);
-
-            // 2. Cria a movimentação para esta parcela usando Eloquent (sem precisar de movimentacao_id)
-            $transacaoParcela->movimentacao()->create([
-                'entidade_id' => $entidadeIdParcela,
-                'tipo' => $validatedData['tipo'],
-                'valor' => $dadosParcela['valor'],
-                'data' => $validatedData['data_competencia'],
-                'descricao' => $dadosParcela['descricao'],
-                'company_id' => $validatedData['company_id'],
-                'created_by' => $validatedData['created_by'],
-                'created_by_name' => $validatedData['created_by_name'],
-                'updated_by' => $validatedData['updated_by'],
-                'updated_by_name' => $validatedData['updated_by_name'],
-                'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'],
-                'data_competencia' => $validatedData['data_competencia'],
+            \Log::info('✅ Parcela criada', [
+                'transacao_id' => $transacaoPrincipal->id,
+                'numero_parcela' => $numeroParcela,
+                'total_parcelas' => $totalParcelas,
+                'valor' => $valorParcela,
+                'vencimento' => $dataVencimentoParcela,
+                'descricao' => $descricaoParcela
             ]);
         }
+
+        // Atualiza a situação da transação principal para indicar que é parcelada
+        $transacaoPrincipal->update([
+            'situacao' => \App\Enums\SituacaoTransacao::EM_ABERTO,
+        ]);
+
+        \Log::info('✅ Parcelamento criado com sucesso', [
+            'transacao_id' => $transacaoPrincipal->id,
+            'total_parcelas' => $totalParcelas,
+            'valor_total' => $transacaoPrincipal->valor
+        ]);
+    }
+
+    /**
+     * Converte data de vencimento da parcela para formato Y-m-d
+     */
+    private function converterDataVencimentoParcela(string $vencimentoStr, string $dataFallback, $parcelaIndex): string
+    {
+        $vencimentoStr = trim($vencimentoStr);
+        $vencimentoStr = preg_replace('/\s+/', '', $vencimentoStr);
+
+        if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $vencimentoStr, $matches)) {
+            $dia = (int)trim($matches[1]);
+            $mes = (int)trim($matches[2]);
+            $ano = (int)trim($matches[3]);
+
+            if ($dia >= 1 && $dia <= 31 && $mes >= 1 && $mes <= 12 && $ano >= 1900 && $ano <= 2100) {
+                try {
+                    return Carbon::create($ano, $mes, $dia, 0, 0, 0)->format('Y-m-d');
+                } catch (\Exception $e) {
+                    \Log::warning('Erro ao criar data de vencimento da parcela', [
+                        'vencimento' => $vencimentoStr,
+                        'erro' => $e->getMessage(),
+                        'parcela_index' => $parcelaIndex
+                    ]);
+                }
+            }
+        }
+
+        // Tenta formato alternativo
+        try {
+            return Carbon::createFromFormat('d/m/Y', $vencimentoStr)->format('Y-m-d');
+        } catch (\Exception $e) {
+            \Log::warning('Erro ao converter data de vencimento da parcela', [
+                'vencimento' => $vencimentoStr,
+                'erro' => $e->getMessage(),
+                'parcela_index' => $parcelaIndex
+            ]);
+        }
+
+        return $dataFallback;
+    }
+
+    /**
+     * Converte valor de string formatada para decimal
+     */
+    private function converterValorParaDecimal($valor): float
+    {
+        if (is_numeric($valor)) {
+            return (float) $valor;
+        }
+
+        if (is_string($valor)) {
+            // Remove pontos de milhar e substitui vírgula por ponto
+            $valor = str_replace('.', '', $valor);
+            $valor = str_replace(',', '.', $valor);
+            return (float) $valor;
+        }
+
+        return 0;
     }
 
     public function update(Request $request, $id)
@@ -2734,6 +2814,7 @@ class BancoController extends Controller
 
     /**
      * Marca uma transação financeira como paga
+     * Utiliza o TransacaoFinanceiraService para criar a movimentação (tabela da verdade)
      */
     public function markAsPaid(Request $request)
     {
@@ -2755,19 +2836,30 @@ class BancoController extends Controller
             $transacao = TransacaoFinanceira::where('company_id', $companyId)
                 ->findOrFail($request->id);
 
+            // Converter situação para string (pode ser Enum)
+            $situacaoValue = $transacao->situacao instanceof \App\Enums\SituacaoTransacao 
+                ? $transacao->situacao->value 
+                : $transacao->situacao;
+
+            // Verifica se já está pago/recebido
+            if (in_array($situacaoValue, ['pago', 'recebido'])) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transação já está marcada como ' . ($transacao->tipo === 'entrada' ? 'recebida' : 'paga') . '.'
+                ], 400);
+            }
+
             $dataPagamento = $request->input('data_pagamento', Carbon::today()->format('Y-m-d'));
 
-            // Marcar como pago completo
-            $transacao->valor_pago = $transacao->valor;
-            $transacao->situacao = 'pago';
-            $transacao->data_pagamento = $dataPagamento;
-            $transacao->updated_by = Auth::id();
-            $transacao->updated_by_name = Auth::user()->name;
-            $transacao->save();
+            // ✅ Usa o Service para registrar a baixa (cria movimentação + atualiza saldo)
+            $this->transacaoService->registrarBaixa($transacao, [
+                'valor_pago' => $transacao->valor,
+                'data_pagamento' => $dataPagamento
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => 'Transação marcada como paga com sucesso.'
+                'message' => 'Transação marcada como ' . ($transacao->tipo === 'entrada' ? 'recebida' : 'paga') . ' com sucesso.'
             ]);
         } catch (\Exception $e) {
             Log::error('Erro ao marcar transação como paga: ' . $e->getMessage());
@@ -2814,56 +2906,27 @@ class BancoController extends Controller
                 ], 404);
             }
 
-            // Atualizar todas as transações
+            // Atualizar todas as transações usando o Service
             $count = 0;
             foreach ($transacoes as $transacao) {
-                // Validação: Skip se já estava pago (idempotência)
-                if ($transacao->situacao === 'pago') {
+                // Validação: Skip se já estava pago/recebido (idempotência)
+                $situacaoPaga = $transacao->tipo === 'entrada' ? 'recebido' : 'pago';
+                if ($transacao->situacao === $situacaoPaga) {
                     continue;
                 }
 
-                // Salvar situação anterior para auditoria
-                $situacaoAnterior = $transacao->situacao;
-
-                $transacao->valor_pago = $transacao->valor;
-                $transacao->situacao = 'pago';
-                $transacao->updated_by = Auth::id();
-                $transacao->updated_by_name = Auth::user()->name;
-                $transacao->save();
-
-                // Atualizar saldo da entidade
-                $entidade = $transacao->entidadeFinanceira;
-                
-                if ($entidade) {
-                    if ($transacao->tipo === 'entrada') {
-                        $entidade->saldo_atual += $transacao->valor;
-                    } else {
-                        $entidade->saldo_atual -= $transacao->valor;
-                    }
-                    $entidade->save();
-
-                    Log::info('Saldo atualizado ao marcar transação como pago', [
-                        'transacao_id' => $transacao->id,
-                        'entidade_id' => $entidade->id,
-                        'tipo' => $transacao->tipo,
-                        'valor' => $transacao->valor,
-                        'situacao_anterior' => $situacaoAnterior,
-                        'novo_saldo' => $entidade->saldo_atual,
-                        'usuario_id' => Auth::id(),
-                    ]);
-                } else {
-                    Log::warning('Entidade não encontrada ao atualizar saldo', [
-                        'transacao_id' => $transacao->id,
-                        'entidade_id' => $transacao->entidade_id,
-                    ]);
-                }
+                // ✅ Usa o Service para registrar a baixa (cria movimentação + atualiza saldo)
+                $this->transacaoService->registrarBaixa($transacao, [
+                    'valor_pago' => $transacao->valor,
+                    'data_pagamento' => $dataPagamento
+                ]);
 
                 $count++;
             }
 
             return response()->json([
                 'success' => true,
-                'message' => "{$count} transação(ões) marcada(s) como paga(s) com sucesso."
+                'message' => "{$count} transação(ões) marcada(s) como " . ($transacoes->first()?->tipo === 'entrada' ? 'recebida(s)' : 'paga(s)') . " com sucesso."
             ]);
         } catch (\Exception $e) {
             Log::error('Erro ao marcar transações como pagas em lote: ' . $e->getMessage());
@@ -2876,6 +2939,7 @@ class BancoController extends Controller
 
     /**
      * Marca múltiplas transações financeiras como em aberto (ação em lote)
+     * Reverte os pagamentos: exclui movimentações e atualiza saldos
      */
     public function batchMarkAsOpen(Request $request)
     {
@@ -2908,14 +2972,10 @@ class BancoController extends Controller
                 ], 404);
             }
 
-            // Atualizar todas as transações
+            // ✅ Usar o Service para reverter cada transação
             $count = 0;
             foreach ($transacoes as $transacao) {
-                $transacao->valor_pago = 0;
-                $transacao->situacao = 'em_aberto';
-                $transacao->updated_by = Auth::id();
-                $transacao->updated_by_name = Auth::user()->name;
-                $transacao->save();
+                $this->transacaoService->reverterBaixa($transacao);
                 $count++;
             }
 
@@ -2925,6 +2985,58 @@ class BancoController extends Controller
             ]);
         } catch (\Exception $e) {
             Log::error('Erro ao marcar transações como em aberto em lote: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao marcar como em aberto: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Marca uma transação financeira individual como em aberto
+     * Reverte o pagamento: exclui movimentação e atualiza saldo
+     */
+    public function markAsOpen(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:transacoes_financeiras,id'
+        ]);
+
+        try {
+            $companyId = session('active_company_id');
+
+            if (!$companyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma empresa selecionada.'
+                ], 403);
+            }
+
+            $transacao = TransacaoFinanceira::where('company_id', $companyId)
+                ->findOrFail($request->id);
+
+            // Converter situação para string (pode ser Enum)
+            $situacaoValue = $transacao->situacao instanceof \App\Enums\SituacaoTransacao 
+                ? $transacao->situacao->value 
+                : $transacao->situacao;
+
+            // Verifica se já está em aberto
+            if ($situacaoValue === 'em_aberto') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Transação já está marcada como em aberto.'
+                ], 400);
+            }
+
+            // ✅ Usa o Service para reverter a baixa (exclui movimentação + reverte saldo)
+            $this->transacaoService->reverterBaixa($transacao);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Transação marcada como em aberto com sucesso.'
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao marcar transação como em aberto: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao marcar como em aberto: ' . $e->getMessage()

@@ -10,6 +10,13 @@
     $showInformarPagamento = $showInformarPagamento ?? true;
     $menuWidth = $menuWidth ?? 'w-200px';
     $menuId = 'kt_menu_' . $transacao->id;
+    
+    // Determinar status pago/recebido e em_aberto
+    $isPago = $isPago ?? false;
+    $isEmAberto = $isEmAberto ?? false;
+    $tipoTransacao = $tipoTransacao ?? $transacao->tipo;
+    $labelDefinirPago = $tipoTransacao === 'entrada' ? 'Definir como Recebido' : 'Definir como Pago';
+    $labelDefinirAberto = 'Definir como em Aberto';
 @endphp
 
 <div class="text-end">
@@ -38,7 +45,24 @@
         <!--begin::Menu item-->
         <div class="menu-item px-3">
             <a href="#" onclick="{{ $informarPagamentoAction }}" class="menu-link px-3">
-                <i class="bi bi-check-circle me-2"></i>{{ $informarPagamentoLabel }}
+                {{ $informarPagamentoLabel }}
+            </a>
+        </div>
+        <!--end::Menu item-->
+        @endif
+        @if($isPago)
+        <!--begin::Menu item - Definir como Em Aberto (apenas se está pago/recebido)-->
+        <div class="menu-item px-3">
+            <a href="#" onclick="definirComoAberto({{ $transacao->id }}); return false;" class="menu-link px-3">
+                {{ $labelDefinirAberto }}
+            </a>
+        </div>
+        <!--end::Menu item-->
+        @elseif(!$isEmAberto)
+        <!--begin::Menu item - Definir como Pago/Recebido (apenas se NÃO está em_aberto)-->
+        <div class="menu-item px-3">
+            <a href="#" onclick="definirComoPago({{ $transacao->id }}); return false;" class="menu-link px-3">
+                {{ $labelDefinirPago }}
             </a>
         </div>
         <!--end::Menu item-->

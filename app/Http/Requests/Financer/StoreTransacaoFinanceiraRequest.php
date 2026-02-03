@@ -272,11 +272,18 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                     $parcelaProcessada['valor'] = $money->toDatabase(); // Retorna float (1991.44), não centavos
                 }
 
-                // Percentual continua em numeric (não é dinheiro)
+                // Percentual - verifica se é formato brasileiro (com vírgula) ou americano (com ponto)
                 if (isset($parcela['percentual']) && is_string($parcela['percentual'])) {
-                    $percentual = $parcela['percentual'];
-                    $percentual = str_replace('.', '', $percentual);
-                    $percentual = str_replace(',', '.', $percentual);
+                    $percentual = trim($parcela['percentual']);
+                    
+                    // Se contém vírgula, é formato brasileiro (33,33)
+                    if (strpos($percentual, ',') !== false) {
+                        // Remove pontos (milhares) e troca vírgula por ponto
+                        $percentual = str_replace('.', '', $percentual);
+                        $percentual = str_replace(',', '.', $percentual);
+                    }
+                    // Se só contém ponto (33.33), já está no formato correto - não faz nada
+                    
                     $parcelaProcessada['percentual'] = (float) $percentual;
                 }
 

@@ -6,6 +6,9 @@ use App\Models\User;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Spatie\Permission\Models\Role;
+use Database\Seeders\Tenant\ReligiousRoleSeeder;
+use Database\Seeders\Tenant\FormationStageSeeder;
+use Database\Seeders\Tenant\MinistryTypeSeeder;
 
 class TenantDatabaseSeeder extends Seeder
 {
@@ -61,5 +64,6 @@ class TenantDatabaseSeeder extends Seeder
         // Chama os seeders de secretaria
         $this->call(ReligiousRoleSeeder::class);
         $this->call(FormationStageSeeder::class);
+        $this->call(MinistryTypeSeeder::class);
     }
 }

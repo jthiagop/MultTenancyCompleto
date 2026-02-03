@@ -229,5 +229,239 @@
             });
         }
     });
+
+    // Função para informar pagamento (abre confirmação e marca como pago)
+    function informarPagamento(transacaoId) {
+        Swal.fire({
+            title: 'Informar Pagamento',
+            text: 'Deseja marcar esta transação como paga/recebida?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sim, confirmar',
+            cancelButtonText: 'Cancelar',
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn btn-success me-3',
+                cancelButton: 'btn btn-secondary'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/banco/mark-as-paid', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        id: transacaoId,
+                        data_pagamento: new Date().toISOString().split('T')[0]
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            text: data.message || 'Pagamento registrado com sucesso!',
+                            icon: 'success',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        }).then(() => {
+                            reloadCurrentTable();
+                        });
+                    } else {
+                        Swal.fire({
+                            text: data.message || 'Erro ao registrar pagamento.',
+                            icon: 'error',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    Swal.fire({
+                        text: 'Erro ao processar a solicitação.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    // Função para definir transação como paga/recebida
+    function definirComoPago(transacaoId) {
+        Swal.fire({
+            title: 'Confirmar',
+            text: 'Deseja marcar esta transação como paga/recebida?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sim, confirmar',
+            cancelButtonText: 'Cancelar',
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn btn-success me-3',
+                cancelButton: 'btn btn-secondary'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/banco/mark-as-paid', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        id: transacaoId,
+                        data_pagamento: new Date().toISOString().split('T')[0]
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            text: data.message || 'Transação marcada com sucesso!',
+                            icon: 'success',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        }).then(() => {
+                            // Recarregar a tabela atual
+                            if (typeof reloadCurrentTable === 'function') {
+                                reloadCurrentTable();
+                            } else {
+                                location.reload();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            text: data.message || 'Erro ao marcar transação.',
+                            icon: 'error',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    Swal.fire({
+                        text: 'Erro ao processar a solicitação.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    // Função para definir transação como em aberto
+    function definirComoAberto(transacaoId) {
+        Swal.fire({
+            title: 'Confirmar',
+            text: 'Deseja marcar esta transação como em aberto?',
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Sim, confirmar',
+            cancelButtonText: 'Cancelar',
+            buttonsStyling: false,
+            customClass: {
+                confirmButton: 'btn btn-warning me-3',
+                cancelButton: 'btn btn-secondary'
+            }
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch('/banco/mark-as-open', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        id: transacaoId
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            text: data.message || 'Transação marcada como em aberto!',
+                            icon: 'success',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        }).then(() => {
+                            // Recarregar a tabela atual
+                            if (typeof reloadCurrentTable === 'function') {
+                                reloadCurrentTable();
+                            } else {
+                                location.reload();
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            text: data.message || 'Erro ao marcar transação.',
+                            icon: 'error',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    Swal.fire({
+                        text: 'Erro ao processar a solicitação.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                });
+            }
+        });
+    }
+
+    // Função auxiliar para recarregar a tabela atual
+    function reloadCurrentTable() {
+        // Tenta encontrar a aba ativa e recarregar sua DataTable
+        const activePane = document.querySelector('.tab-pane.active.show');
+        if (activePane) {
+            const tableId = activePane.dataset.tableId;
+            if (tableId) {
+                const table = document.getElementById(tableId);
+                if (table && $.fn.DataTable.isDataTable(table)) {
+                    $(table).DataTable().ajax.reload(null, false);
+                    return;
+                }
+            }
+        }
+        // Fallback: recarregar a página
+        location.reload();
+    }
 </script>
 

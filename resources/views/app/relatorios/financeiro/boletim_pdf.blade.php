@@ -150,7 +150,7 @@
             }
 
             @bottom-center {
-                content: "Sistema Dominus - www.dominus.li";
+                content: "Sistema Dominus - www.dominus.eco.br";
                 font-size: 0.65rem;
                 color: #6c757d;
             }
@@ -267,9 +267,9 @@
                         <th class="col-entrada text-white" colspan="3">ENTRADAS</th>
                     </tr>
                     <tr>
-                        <th style="width: 15%">CÓD</th>
+                        <th style="width: 10%">CÓD</th>
                         <th style="width: 60%">DESCRIÇÃO</th>
-                        <th style="width: 25%" class="text-end">VALOR</th>
+                        <th style="width: 30%" class="text-end">VALOR</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -302,9 +302,9 @@
                         <th class="col-saida text-white" colspan="3">SAÍDAS</th>
                     </tr>
                     <tr>
-                        <th style="width: 15%">CÓD</th>
+                        <th style="width: 10%">CÓD</th>
                         <th style="width: 60%">DESCRIÇÃO</th>
-                        <th style="width: 25%" class="text-end">VALOR</th>
+                        <th style="width: 30%" class="text-end">VALOR</th>
                     </tr>
                 </thead>
                 <tbody>

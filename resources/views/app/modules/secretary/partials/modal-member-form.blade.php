@@ -1,5 +1,5 @@
   <!--begin::Modal - Cadastro Membro-->
-  <div class="modal fade" id="kt_modal_member" tabindex="-1" aria-hidden="true">
+  <div class="modal fade" data-bs-backdrop="static" id="kt_modal_member" tabindex="-1" aria-hidden="true">
       <!--begin::Modal dialog-->
       <div class="modal-dialog modal-dialog-top mw-750px">
           <!--begin::Modal content-->

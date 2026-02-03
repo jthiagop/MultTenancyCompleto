@@ -57,23 +57,44 @@ class TransacaoFinanceiraService
                 // Transação comum (sem parcelas)
                 $transacao = TransacaoFinanceira::create($data);
                 
-                // 4. Cria a movimentação via relacionamento polimórfico Eloquent
-                $movimentacao = $transacao->movimentacao()->create($this->prepararDadosMovimentacao($data));
+                // 4. Verifica se tem pagamento REAL (checkbox pago/recebido marcado)
+                $temPagamentoReal = $this->temPagamento($request, $data);
                 
-                // 5. Processa pagamento (se houver)
-                if ($this->temPagamento($request, $data)) {
+                if ($temPagamentoReal) {
+                    // ✅ Só cria movimentação se houver pagamento/recebimento REAL
+                    // A tabela movimentacoes é a "tabela da verdade" - só registra fatos consumados
+                    $movimentacao = $transacao->movimentacao()->create($this->prepararDadosMovimentacao($data));
+                    
+                    // Processa pagamento (atualiza saldo, etc)
                     $this->processarPagamento($transacao, $movimentacao, $data, $request);
+                    
+                    Log::info('✅ Movimentação criada - Pagamento/Recebimento real', [
+                        'transacao_id' => $transacao->id,
+                        'movimentacao_id' => $movimentacao->id,
+                        'tipo' => $transacao->tipo,
+                        'situacao' => $data['situacao']
+                    ]);
+                } else {
+                    // ❌ NÃO cria movimentação para compromissos futuros
+                    // Apenas a transação_financeira é criada (é o compromisso/planejamento)
+                    Log::info('📋 Apenas transação criada (compromisso futuro) - Sem movimentação', [
+                        'transacao_id' => $transacao->id,
+                        'tipo' => $transacao->tipo,
+                        'situacao' => $data['situacao'],
+                        'data_vencimento' => $data['data_vencimento'] ?? null
+                    ]);
                 }
                 
-                // 6. Processa lançamento padrão especial (Depósito Bancário)
+                // 5. Processa lançamento padrão especial (Depósito Bancário)
                 $this->processarLancamentoPadrao($transacao, $data);
                 
-                // 7. Processa recorrência (se houver)
+                // 6. Processa recorrência (se houver)
                 if ($this->temRecorrencia($request)) {
                     $this->processarRecorrencia($transacao, $data, $request);
                 }
             } else {
                 // Transação com parcelas (cria múltiplas transações)
+                // ❌ Parcelas são compromissos futuros - NÃO criam movimentação
                 $transacao = $this->processarParcelas(null, $data, $request);
             }
             
@@ -354,6 +375,14 @@ class TransacaoFinanceiraService
      * @param TransacaoFinanceira $transacao
      * @param array $data
      */
+    /**
+     * Atualiza o saldo da entidade financeira
+     * 
+     * @param TransacaoFinanceira $transacao Transação associada
+     * @param array $data Dados com 'valor' e 'tipo' (usa dados da transação se não fornecidos)
+     *                    - valor: valor a ser aplicado no saldo
+     *                    - tipo: 'entrada' (soma) ou 'saida' (subtrai)
+     */
     protected function atualizarSaldoEntidade(TransacaoFinanceira $transacao, array $data): void
     {
         try {
@@ -369,12 +398,18 @@ class TransacaoFinanceiraService
             
             $saldoAntes = $entidade->saldo_atual;
             
-            // ✅ IMPORTANTE: O valor da transação está em DECIMAL (ex: 1991.44)
-            // Não precisa converter, já está em reais
-            $valorEmReais = (string) abs((float) $transacao->valor);
+            // ✅ Usa valor do $data se fornecido, senão usa valor da transação
+            $valor = $data['valor'] ?? $transacao->valor;
+            $valorEmReais = (string) abs((float) $valor);
             
-            // Calcula incremento com base no tipo de transação usando bcmath
-            if ($transacao->tipo === 'entrada') {
+            // ✅ Usa tipo do $data se fornecido, senão usa tipo da transação
+            // Isso permite inverter a operação no extorno
+            $tipo = $data['tipo'] ?? $transacao->tipo;
+            
+            // Calcula incremento com base no tipo usando bcmath
+            // - entrada (receita) → soma ao saldo (dinheiro entrando)
+            // - saida (despesa) → subtrai do saldo (dinheiro saindo)
+            if ($tipo === 'entrada') {
                 // Entrada (recebido) → soma ao saldo
                 $valorParaAdicionar = $valorEmReais;
             } else {
@@ -387,13 +422,12 @@ class TransacaoFinanceiraService
             $entidade->saldo_atual = bcadd($saldoAtualStr, $valorParaAdicionar, 2);
             $entidade->save();
             
-            Log::info('✅ Saldo da entidade atualizado após marcar como recebido/pago', [
+            Log::info('✅ Saldo da entidade atualizado', [
                 'entidade_id' => $entidade->id,
                 'transacao_id' => $transacao->id,
-                'tipo_transacao' => $transacao->tipo,
-                'situacao' => $transacao->situacao->value,
-                'valor_transacao_centavos' => $transacao->valor,
-                'valor_em_reais' => $valorEmReais,
+                'tipo_operacao' => $tipo,
+                'tipo_transacao_original' => $transacao->tipo,
+                'valor_aplicado' => $valorEmReais,
                 'valor_adicionado' => $valorParaAdicionar,
                 'saldo_antes' => $saldoAntes,
                 'saldo_depois' => $entidade->saldo_atual,
@@ -408,6 +442,152 @@ class TransacaoFinanceiraService
             ]);
             // Não relança a exceção para não interromper o fluxo
         }
+    }
+
+    /**
+     * Registra a baixa de uma transação (pagamento/recebimento)
+     * Este método é chamado quando uma transação que estava "em_aberto" é marcada como paga/recebida
+     * 
+     * IMPORTANTE: Este é o momento em que a MOVIMENTAÇÃO é criada
+     * A movimentação é a "tabela da verdade" - só registra fatos consumados
+     * 
+     * @param TransacaoFinanceira $transacao Transação a ser baixada
+     * @param array $dadosBaixa Dados da baixa (valor_pago, data_pagamento, juros, multa, desconto)
+     * @return Movimentacao|null Movimentação criada ou null se já existia
+     */
+    public function registrarBaixa(TransacaoFinanceira $transacao, array $dadosBaixa = []): ?Movimentacao
+    {
+        /** @var Movimentacao|null $result */
+        $result = DB::transaction(function () use ($transacao, $dadosBaixa) {
+            // Determina o valor pago (usa valor da transação se não especificado)
+            $valorPago = $dadosBaixa['valor_pago'] ?? $transacao->valor;
+            $dataPagamento = $dadosBaixa['data_pagamento'] ?? now()->format('Y-m-d');
+            
+            // Atualiza a transação com os dados da baixa (sempre atualiza)
+            $situacao = $transacao->tipo === 'entrada' 
+                ? \App\Enums\SituacaoTransacao::RECEBIDO 
+                : \App\Enums\SituacaoTransacao::PAGO;
+            
+            $transacao->update([
+                'situacao' => $situacao,
+                'valor_pago' => $valorPago,
+                'data_pagamento' => $dataPagamento,
+                'juros' => $dadosBaixa['juros'] ?? $transacao->juros ?? 0,
+                'multa' => $dadosBaixa['multa'] ?? $transacao->multa ?? 0,
+                'desconto' => $dadosBaixa['desconto'] ?? $transacao->desconto ?? 0,
+                'updated_by' => Auth::id(),
+                'updated_by_name' => Auth::user()->name ?? 'Sistema',
+            ]);
+
+            Log::info('✅ Transação atualizada para pago/recebido', [
+                'transacao_id' => $transacao->id,
+                'tipo' => $transacao->tipo,
+                'situacao' => $situacao->value,
+                'valor_pago' => $valorPago,
+                'data_pagamento' => $dataPagamento
+            ]);
+
+            // Verifica se já existe movimentação (evita duplicação)
+            if ($transacao->movimentacao()->exists()) {
+                Log::info('📋 Movimentação já existe para esta transação', [
+                    'transacao_id' => $transacao->id,
+                    'movimentacao_id' => $transacao->movimentacao->id ?? null
+                ]);
+                return $transacao->movimentacao;
+            }
+
+            // ✅ Agora sim, cria a MOVIMENTAÇÃO (registro real na tabela da verdade)
+            $dadosMovimentacao = [
+                'entidade_id' => $transacao->entidade_id,
+                'tipo' => $transacao->tipo,
+                'valor' => $valorPago,
+                'data' => $dataPagamento,
+                'descricao' => $transacao->descricao,
+                'company_id' => $transacao->company_id,
+                'created_by' => Auth::id(),
+                'created_by_name' => Auth::user()->name ?? 'Sistema',
+                'updated_by' => Auth::id(),
+                'updated_by_name' => Auth::user()->name ?? 'Sistema',
+                'lancamento_padrao_id' => $transacao->lancamento_padrao_id,
+                'data_competencia' => $transacao->data_competencia,
+            ];
+
+            $movimentacao = $transacao->movimentacao()->create($dadosMovimentacao);
+
+            // Atualiza o saldo da entidade
+            $this->atualizarSaldoEntidade($transacao, [
+                'valor' => $valorPago,
+                'tipo' => $transacao->tipo
+            ]);
+
+            Log::info('✅ Baixa registrada - Movimentação criada', [
+                'transacao_id' => $transacao->id,
+                'movimentacao_id' => $movimentacao->id,
+                'tipo' => $transacao->tipo,
+                'situacao' => $transacao->situacao->value ?? $transacao->situacao,
+                'valor_pago' => $valorPago,
+                'data_pagamento' => $dataPagamento
+            ]);
+
+            return $movimentacao;
+        });
+        
+        return $result;
+    }
+
+    /**
+     * Reverte a baixa de uma transação (marca como em_aberto)
+     * - Exclui a movimentação associada
+     * - Reverte o saldo da entidade financeira
+     * - Zera o valor_pago e muda situação para em_aberto
+     * 
+     * @param TransacaoFinanceira $transacao Transação a ser revertida
+     * @return bool True se reverteu com sucesso
+     */
+    public function reverterBaixa(TransacaoFinanceira $transacao): bool
+    {
+        return DB::transaction(function () use ($transacao) {
+            // Verifica se existe movimentação para excluir
+            $movimentacao = $transacao->movimentacao;
+            
+            if ($movimentacao) {
+                $valorMovimentacao = $movimentacao->valor;
+                $tipoMovimentacao = $movimentacao->tipo;
+                
+                // Reverte o saldo da entidade (operação inversa)
+                // Se era entrada, subtrai do saldo. Se era saída, soma ao saldo.
+                $this->atualizarSaldoEntidade($transacao, [
+                    'valor' => $valorMovimentacao,
+                    'tipo' => $tipoMovimentacao === 'entrada' ? 'saida' : 'entrada' // Inverte o tipo
+                ]);
+                
+                // Exclui a movimentação
+                $movimentacao->delete();
+                
+                Log::info('🔄 Movimentação excluída e saldo revertido', [
+                    'transacao_id' => $transacao->id,
+                    'movimentacao_id' => $movimentacao->id,
+                    'valor_revertido' => $valorMovimentacao,
+                    'tipo_original' => $tipoMovimentacao
+                ]);
+            }
+            
+            // Atualiza a transação para em_aberto
+            $transacao->update([
+                'situacao' => \App\Enums\SituacaoTransacao::EM_ABERTO,
+                'valor_pago' => 0,
+                'data_pagamento' => null,
+                'updated_by' => Auth::id(),
+                'updated_by_name' => Auth::user()->name ?? 'Sistema',
+            ]);
+            
+            Log::info('✅ Transação revertida para em_aberto', [
+                'transacao_id' => $transacao->id,
+                'tipo' => $transacao->tipo
+            ]);
+            
+            return true;
+        });
     }
 
     /**
@@ -667,11 +847,15 @@ class TransacaoFinanceiraService
     }
 
     /**
-     * Processa parcelas
-     * Cria múltiplas transações (uma por parcela) ao invés de deletar a transação principal
+     * Processa parcelas (SOLUÇÃO HÍBRIDA)
+     * 
+     * Cria:
+     * 1. Transação PAI com valor TOTAL e situação 'parcelado' (não aparece na listagem)
+     * 2. Uma TransacaoFinanceira para cada parcela (FILHA) com parent_id apontando para o PAI
+     * 3. Um registro em 'parcelamentos' com metadata (numero_parcela, percentual, etc.)
      * 
      * @param ?TransacaoFinanceira $transacaoPrincipal Não será usado (compatibilidade)
-     * @return TransacaoFinanceira Retorna a primeira parcela como referência
+     * @return TransacaoFinanceira Retorna a primeira transação filha
      */
     protected function processarParcelas(
         ?TransacaoFinanceira $transacaoPrincipal,
@@ -679,42 +863,92 @@ class TransacaoFinanceiraService
         Request $request
     ): TransacaoFinanceira {
         $parcelas = $request->input('parcelas', []);
-        $primeiraTransacao = null;
         
         if (empty($parcelas) || !is_array($parcelas)) {
             throw new \Exception('Nenhuma parcela fornecida para processar');
         }
         
         ksort($parcelas);
+        $totalParcelas = count($parcelas);
         
+        // 1. Cria a transação PAI com o valor TOTAL
+        // Situação 'parcelado' indica que é apenas um container - não aparece na listagem
+        $dadosPai = array_merge($data, [
+            'situacao' => 'parcelado', // Situação especial para transação pai
+        ]);
+        
+        $transacaoPai = TransacaoFinanceira::create($dadosPai);
+        
+        Log::info('📋 Transação PAI (parcelada) criada', [
+            'transacao_id' => $transacaoPai->id,
+            'valor_total' => $data['valor'],
+            'total_parcelas' => $totalParcelas,
+            'situacao' => 'parcelado'
+        ]);
+        
+        $primeiraTransacaoFilha = null;
+        
+        // 2. Cria uma TransacaoFinanceira para cada parcela (FILHA)
         foreach ($parcelas as $index => $parcela) {
+            $numeroParcela = (int) $index;
+            if ($numeroParcela === 0) {
+                $numeroParcela = 1;
+            }
+            
+            // Entidade/Forma de pagamento da parcela
             $entidadeIdParcela = $data['entidade_id'];
+            if (isset($parcela['forma_pagamento_id']) && $parcela['forma_pagamento_id']) {
+                $entidadeIdParcela = $parcela['forma_pagamento_id'];
+            }
+            
+            // Conta de pagamento (pode ser diferente para cada parcela)
+            $contaPagamentoId = null;
             if (isset($parcela['conta_pagamento_id']) && $parcela['conta_pagamento_id']) {
-                $entidadeIdParcela = $parcela['conta_pagamento_id'];
+                $contaPagamentoId = $parcela['conta_pagamento_id'];
             }
             
             // Converte data de vencimento da parcela
             $dataVencimentoParcela = $data['data_competencia'];
             if (isset($parcela['vencimento']) && $parcela['vencimento']) {
-                $dataVencimentoParcela = $this->converterDataVencimentoParcela($parcela['vencimento'], $data['data_competencia'], $index);
+                $dataVencimentoParcela = $this->converterDataVencimentoParcela(
+                    $parcela['vencimento'], 
+                    $data['data_competencia'], 
+                    $index
+                );
             }
             
-            $dadosParcela = [
+            // Valor da parcela
+            $valorParcela = isset($parcela['valor']) ? $this->converterValorParaDecimal($parcela['valor']) : 0;
+            
+            // Percentual da parcela
+            $percentualParcela = isset($parcela['percentual']) ? (float) $parcela['percentual'] : 0;
+            
+            // Descrição da parcela
+            $descricaoParcela = isset($parcela['descricao']) && $parcela['descricao'] 
+                ? $parcela['descricao'] 
+                : $data['descricao'] . " {$numeroParcela}/{$totalParcelas}";
+            
+            // 2.1 Cria a TransacaoFinanceira FILHA (a parcela individual)
+            $dadosFilha = [
                 'company_id' => $data['company_id'],
+                'parent_id' => $transacaoPai->id, // Vincula ao PAI
                 'data_competencia' => $data['data_competencia'],
                 'data_vencimento' => $dataVencimentoParcela,
-                'entidade_id' => $entidadeIdParcela,
+                'entidade_id' => $contaPagamentoId ?? $entidadeIdParcela,
+                'parceiro_id' => $data['parceiro_id'] ?? null,
                 'tipo' => $data['tipo'],
-                'valor' => isset($parcela['valor']) ? (float) $parcela['valor'] : 0,
-                'descricao' => isset($parcela['descricao']) ? $parcela['descricao'] : $data['descricao'] . ' - Parcela ' . ($index + 1),
+                'valor' => $valorParcela,
+                'descricao' => $descricaoParcela,
                 'lancamento_padrao_id' => $data['lancamento_padrao_id'] ?? null,
                 'cost_center_id' => $data['cost_center_id'] ?? null,
                 'tipo_documento' => $data['tipo_documento'] ?? null,
-                'numero_documento' => ($data['numero_documento'] ?? '') . '-' . ($index + 1),
+                'numero_documento' => isset($data['numero_documento']) && $data['numero_documento'] 
+                    ? $data['numero_documento'] . "-{$numeroParcela}" 
+                    : null,
                 'origem' => $data['origem'] ?? null,
                 'historico_complementar' => $data['historico_complementar'] ?? null,
                 'comprovacao_fiscal' => $data['comprovacao_fiscal'] ?? false,
-                'situacao' => 'em_aberto',
+                'situacao' => 'em_aberto', // Cada parcela começa em aberto
                 'agendado' => isset($parcela['agendado']) ? (bool) $parcela['agendado'] : false,
                 'valor_pago' => 0,
                 'juros' => 0,
@@ -726,33 +960,74 @@ class TransacaoFinanceiraService
                 'updated_by_name' => $data['updated_by_name'],
             ];
             
-            // Cria transação para a parcela
-            $transacaoParcela = TransacaoFinanceira::create($dadosParcela);
+            $transacaoFilha = TransacaoFinanceira::create($dadosFilha);
             
-            // Cria movimentação para a parcela
-            $transacaoParcela->movimentacao()->create([
+            // Guarda a primeira parcela para retornar
+            if ($primeiraTransacaoFilha === null) {
+                $primeiraTransacaoFilha = $transacaoFilha;
+            }
+            
+            // 2.2 Cria o registro de metadata em 'parcelamentos'
+            $transacaoPai->parcelas()->create([
+                'transacao_parcela_id' => $transacaoFilha->id, // Vincula à transação filha
+                'numero_parcela' => $numeroParcela,
+                'total_parcelas' => $totalParcelas,
+                'data_vencimento' => $dataVencimentoParcela,
+                'valor' => $valorParcela,
+                'percentual' => $percentualParcela,
                 'entidade_id' => $entidadeIdParcela,
-                'tipo' => $data['tipo'],
-                'valor' => $dadosParcela['valor'],
-                'data' => $data['data_competencia'],
-                'descricao' => $dadosParcela['descricao'],
-                'company_id' => $data['company_id'],
+                'conta_pagamento_id' => $contaPagamentoId,
+                'descricao' => $descricaoParcela,
+                'situacao' => 'em_aberto',
+                'agendado' => isset($parcela['agendado']) ? (bool) $parcela['agendado'] : false,
+                'valor_pago' => 0,
+                'juros' => 0,
+                'multa' => 0,
+                'desconto' => 0,
                 'created_by' => $data['created_by'],
                 'created_by_name' => $data['created_by_name'],
                 'updated_by' => $data['updated_by'],
                 'updated_by_name' => $data['updated_by_name'],
-                'lancamento_padrao_id' => $dadosParcela['lancamento_padrao_id'],
-                'data_competencia' => $data['data_competencia'],
             ]);
             
-            // Guarda referência da primeira parcela
-            if ($index === 0) {
-                $primeiraTransacao = $transacaoParcela;
-            }
+            Log::info('✅ Parcela criada (TransacaoFinanceira + Parcelamento)', [
+                'transacao_pai_id' => $transacaoPai->id,
+                'transacao_filha_id' => $transacaoFilha->id,
+                'numero_parcela' => $numeroParcela,
+                'total_parcelas' => $totalParcelas,
+                'valor' => $valorParcela,
+                'vencimento' => $dataVencimentoParcela
+            ]);
         }
         
-        // Retorna primeira parcela como referência
-        return $primeiraTransacao ?? throw new \Exception('Erro ao processar parcelas');
+        Log::info('✅ Parcelamento HÍBRIDO criado com sucesso', [
+            'transacao_pai_id' => $transacaoPai->id,
+            'total_parcelas' => $totalParcelas,
+            'valor_total' => $transacaoPai->valor,
+            'transacoes_filhas' => $transacaoPai->children()->count()
+        ]);
+        
+        // Retorna a primeira transação filha (para compatibilidade com fluxo existente)
+        return $primeiraTransacaoFilha ?? $transacaoPai;
+    }
+    
+    /**
+     * Converte valor de string formatada para decimal
+     */
+    protected function converterValorParaDecimal($valor): float
+    {
+        if (is_numeric($valor)) {
+            return (float) $valor;
+        }
+
+        if (is_string($valor)) {
+            // Remove pontos de milhar e substitui vírgula por ponto
+            $valor = str_replace('.', '', $valor);
+            $valor = str_replace(',', '.', $valor);
+            return (float) $valor;
+        }
+
+        return 0;
     }
     
     /**
@@ -854,15 +1129,19 @@ class TransacaoFinanceiraService
         // Loop para cada mês do ano
         for ($mes = 1; $mes <= 12; $mes++) {
             // Busca o total de entradas (receitas) do mês
+            // Exclui transações com situacao 'parcelado' (são transações pai, evita duplicação)
             $totalEntradas = TransacaoFinanceira::whereYear('data_competencia', $ano)
                 ->whereMonth('data_competencia', $mes)
                 ->where('tipo', 'entrada')
+                ->where('situacao', '!=', 'parcelado')
                 ->sum('valor');
 
             // Busca o total de saídas (despesas) do mês
+            // Exclui transações com situacao 'parcelado' (são transações pai, evita duplicação)
             $totalSaidas = TransacaoFinanceira::whereYear('data_competencia', $ano)
                 ->whereMonth('data_competencia', $mes)
                 ->where('tipo', 'saida')
+                ->where('situacao', '!=', 'parcelado')
                 ->sum('valor');
 
             $entradas[] = (float) $totalEntradas;

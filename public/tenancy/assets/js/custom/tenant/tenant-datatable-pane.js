@@ -12,7 +12,6 @@
     
     // Versão do script para debug de cache
     const SCRIPT_VERSION = '2.0.1';
-    console.log(`[TenantDataTablePane] Script carregado - Versão ${SCRIPT_VERSION}`);
 
     // Mensagem de estado vazio (reutilizável)
     const EMPTY_MESSAGE = `
@@ -757,10 +756,6 @@
                                      el.dataset.statsUrl && 
                                      el.dataset.dataUrl;
             
-            if (!hasRequiredAttrs) {
-                console.log('[TenantDataTablePane] Elemento ignorado (atributos incompletos):', el.id || el.className);
-            }
-            
             return hasRequiredAttrs;
         });
         
@@ -810,12 +805,10 @@
     // Aguardar DOM e dependências
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('[TenantDataTablePane] DOM carregado, aguardando dependências...');
             waitForDependenciesAndInit();
         });
     } else {
         // DOM já está pronto
-        console.log('[TenantDataTablePane] DOM já pronto, aguardando dependências...');
         waitForDependenciesAndInit();
     }
 

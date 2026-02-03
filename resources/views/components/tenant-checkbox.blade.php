@@ -96,11 +96,31 @@
                 tooltipIcon.tooltip('dispose');
             }
 
-            // Reinicializa o tooltip
+            // 🔧 CORREÇÃO: Detecta se está dentro de um drawer e configura container adequado
+            var isInDrawer = tooltipIcon.closest('[data-kt-drawer="true"]').length > 0;
+            var tooltipContainer = 'body'; // padrão
+
+            if (isInDrawer) {
+                // Se está em drawer, usa o drawer como container
+                var drawerEl = tooltipIcon.closest('[data-kt-drawer="true"]');
+                if (drawerEl.length) {
+                    tooltipContainer = drawerEl[0];
+                }
+            }
+
+            // Reinicializa o tooltip com configurações adequadas
             if (typeof bootstrap !== 'undefined' && bootstrap.Tooltip) {
-                new bootstrap.Tooltip(tooltipIcon[0]);
+                new bootstrap.Tooltip(tooltipIcon[0], {
+                    container: tooltipContainer,
+                    trigger: 'hover focus', // Garante que sai quando remove o mouse
+                    delay: { show: 300, hide: 100 } // Delay para evitar flicker
+                });
             } else if (typeof $ !== 'undefined' && $.fn.tooltip) {
-                tooltipIcon.tooltip();
+                tooltipIcon.tooltip({
+                    container: tooltipContainer,
+                    trigger: 'hover focus',
+                    delay: { show: 300, hide: 100 }
+                });
             }
         }
 
@@ -141,6 +161,24 @@
                     adicionarListenerFlatpickr();
                 }, 500);
             });
+
+            // 🔧 CORREÇÃO: Atualiza quando drawers são abertos (kt.drawer.show)
+            $(document).on('kt.drawer.show', function() {
+                setTimeout(function() {
+                    console.log('🎯 [Tenant-Checkbox] Drawer aberto - reinicializando tooltips...');
+                    atualizarTooltipDinamico();
+                    adicionarListenerFlatpickr();
+                }, 500);
+            });
+
+            // 🔧 CORREÇÃO: Inicializa tooltips específicos do drawer quando necessário
+            if (typeof window.initializeDrawerTooltips === 'undefined') {
+                window.initializeDrawerTooltips = function() {
+                    console.log('🎯 [Tenant-Checkbox] Inicializando tooltips do drawer...');
+                    atualizarTooltipDinamico();
+                    adicionarListenerFlatpickr();
+                };
+            }
         }
     })();
 </script>

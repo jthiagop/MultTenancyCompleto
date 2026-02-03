@@ -94,6 +94,22 @@ class SuggestionStarManager {
             jQuery(selectElement).on('change', () => {
                 this.handleSelectChange(selectId);
             });
+            
+            // Ajusta posicionamento quando Select2 abrir/fechar
+            jQuery(selectElement).on('select2:open', () => {
+                this.adjustStarPosition(selectId, true);
+            });
+            
+            jQuery(selectElement).on('select2:close', () => {
+                this.adjustStarPosition(selectId, false);
+            });
+            
+            // Ajusta posição quando valor mudar (clear button pode aparecer/desaparecer)
+            jQuery(selectElement).on('select2:select select2:unselect', () => {
+                setTimeout(() => {
+                    this.adjustStarPosition(selectId, false);
+                }, 50);
+            });
         } else {
             // Select nativo
             selectElement.addEventListener('change', () => {
@@ -118,6 +134,47 @@ class SuggestionStarManager {
         
         starWrapper.addEventListener('mouseenter', () => {
         });
+        
+        // Ajusta posicionamento inicial após Select2 ser inicializado
+        setTimeout(() => {
+            this.adjustStarPosition(selectId, false);
+        }, 500);
+        
+        // Verificação adicional para garantir posicionamento correto
+        setTimeout(() => {
+            this.adjustStarPosition(selectId, false);
+        }, 1000);
+    }
+
+    adjustStarPosition(selectId, isOpen) {
+        const star = this.stars.get(selectId);
+        if (!star) {
+            return;
+        }
+
+        const { starWrapper, selectElement } = star;
+        const select2Container = selectElement.parentElement?.querySelector('.select2-container');
+        
+        if (select2Container) {
+            // Verifica se o Select2 tem clear button
+            const hasClearButton = select2Container.querySelector('.select2-selection__clear');
+            
+            // Ajusta posição baseado na presença do clear button
+            if (hasClearButton) {
+                // Com clear button: Estrela + X + chevron
+                starWrapper.style.right = '50px';
+            } else {
+                // Sem clear button: Estrela + chevron
+                starWrapper.style.right = '30px';
+            }
+            
+            // Ajusta z-index baseado no estado do dropdown
+            if (isOpen) {
+                starWrapper.style.zIndex = '1';
+            } else {
+                starWrapper.style.zIndex = '3';
+            }
+        }
     }
 
     handleSelectChange(selectId) {

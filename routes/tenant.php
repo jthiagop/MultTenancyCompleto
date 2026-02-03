@@ -367,6 +367,7 @@ Route::middleware([
             Route::get('/banco/stats-data', [BancoController::class, 'getStatsData'])->name('banco.stats.data');
             Route::get('/banco/summary', [BancoController::class, 'getSummary'])->name('banco.summary');
             Route::post('/banco/mark-as-paid', [BancoController::class, 'markAsPaid'])->name('banco.mark-as-paid');
+            Route::post('/banco/mark-as-open', [BancoController::class, 'markAsOpen'])->name('banco.mark-as-open');
             Route::post('/banco/batch-mark-as-paid', [BancoController::class, 'batchMarkAsPaid'])->name('banco.batch-mark-as-paid');
             Route::post('/banco/batch-mark-as-open', [BancoController::class, 'batchMarkAsOpen'])->name('banco.batch-mark-as-open');
             Route::post('/banco/batch-delete', [BancoController::class, 'batchDelete'])->name('banco.batch-delete');
@@ -546,6 +547,10 @@ Route::middleware([
                     Route::get('/{member}/edit', [SecretaryController::class, 'edit'])->name('edit');
                     Route::put('/{member}', [SecretaryController::class, 'update'])->name('update');
                     Route::delete('/{member}', [SecretaryController::class, 'destroy'])->name('destroy');
+                    
+                    // Ministérios
+                    Route::post('/{member}/ministries', [SecretaryController::class, 'storeMinistry'])->name('ministries.store');
+                    Route::put('/{member}/ministries/{ministry}', [SecretaryController::class, 'updateMinistry'])->name('ministries.update');
                 });
                 
                 Route::get('/notafiscal', [NotaFiscalController::class, 'index'])->name('notafiscal.index');

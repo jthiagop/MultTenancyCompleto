@@ -7,16 +7,17 @@ use Illuminate\Support\Facades\Log;
 use App\Exceptions\Ai\DocumentExtractionException;
 use App\Models\FormasPagamento;
 use App\Models\LancamentoPadrao;
+use Imagick;
 
 class DocumentExtractorService
 {
     private const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
     private const MODEL = 'gpt-4o-2024-08-06'; // Snapshot com suporte garantido a Structured Outputs
     private const MAX_TOKENS = 2000;
-    
+
     // Limites de tamanho de arquivo (em bytes)
     private const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB - limite seguro para produção
-    
+
     // Configurações de conversão de PDF para imagem
     private const PDF_CONVERSION_DPI = 200; // DPI otimizado para OCR (balanço entre qualidade e tamanho)
     private const MAX_PDF_PAGES = 5; // Limite de páginas para evitar custo excessivo de tokens
@@ -63,19 +64,19 @@ class DocumentExtractorService
 
             // Para PDFs, converter para imagens (estratégia 100% documentada pela OpenAI)
             $fileContents = [];
-            
+
             if ($mimeType === 'application/pdf') {
                 Log::info('Convertendo PDF para imagens antes do processamento');
                 $startTime = microtime(true);
-                
+
                 $imagePages = $this->convertPdfToImages($base64Content);
-                
+
                 $conversionTime = round((microtime(true) - $startTime) * 1000, 2);
                 Log::info('PDF convertido com sucesso', [
                     'page_count' => count($imagePages),
                     'conversion_time_ms' => $conversionTime,
                 ]);
-                
+
                 // Construir array de conteúdo com todas as páginas
                 foreach ($imagePages as $index => $imageBase64) {
                     $fileContents[] = [
@@ -99,48 +100,48 @@ class DocumentExtractorService
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])
-            ->timeout(120)
-            ->retry(3, 100, function ($exception, $request) {
-                // Retry apenas para erros transitórios
-                if ($exception instanceof \Illuminate\Http\Client\RequestException) {
-                    // Defensive: verificar se response existe antes de acessar
-                    if (isset($exception->response)) {
-                        $status = $exception->response->status();
-                        // 429: Rate limit, 500-504: Server errors
-                        return in_array($status, [429, 500, 502, 503, 504]);
+                ->timeout(120)
+                ->retry(3, 100, function ($exception, $request) {
+                    // Retry apenas para erros transitórios
+                    if ($exception instanceof \Illuminate\Http\Client\RequestException) {
+                        // Defensive: verificar se response existe antes de acessar
+                        if (isset($exception->response)) {
+                            $status = $exception->response->status();
+                            // 429: Rate limit, 500-504: Server errors
+                            return in_array($status, [429, 500, 502, 503, 504]);
+                        }
                     }
-                }
-                return false;
-            }, throw: false)
-            ->post(self::OPENAI_API_URL, [
-                'model' => self::MODEL,
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => $systemPrompt,
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => [
-                            [
-                                'type' => 'text',
-                                'text' => 'Analise este documento fiscal brasileiro e extraia todos os dados relevantes conforme a estrutura JSON especificada. Procure por campos como juros, multa, parcelamento, impostos retidos. Retorne APENAS o JSON, sem explicações adicionais.',
+                    return false;
+                }, throw: false)
+                ->post(self::OPENAI_API_URL, [
+                    'model' => self::MODEL,
+                    'messages' => [
+                        [
+                            'role' => 'system',
+                            'content' => $systemPrompt,
+                        ],
+                        [
+                            'role' => 'user',
+                            'content' => [
+                                [
+                                    'type' => 'text',
+                                    'text' => 'Analise este documento fiscal brasileiro e extraia todos os dados relevantes conforme a estrutura JSON especificada. Procure por campos como juros, multa, parcelamento, impostos retidos. Retorne APENAS o JSON, sem explicações adicionais.',
+                                ],
+                                ...$fileContents, // Spread operator: suporta múltiplas imagens (páginas de PDF)
                             ],
-                            ...$fileContents, // Spread operator: suporta múltiplas imagens (páginas de PDF)
                         ],
                     ],
-                ],
-                'response_format' => [
-                    'type' => 'json_schema',
-                    'json_schema' => [
-                        'name' => 'document_extraction',
-                        'strict' => true,
-                        'schema' => $this->getResponseSchema(),
+                    'response_format' => [
+                        'type' => 'json_schema',
+                        'json_schema' => [
+                            'name' => 'document_extraction',
+                            'strict' => true,
+                            'schema' => $this->getResponseSchema(),
+                        ],
                     ],
-                ],
-                'temperature' => 0.0, // Zero criatividade, máxima precisão
-                'max_tokens' => self::MAX_TOKENS,
-            ]);
+                    'temperature' => 0.0, // Zero criatividade, máxima precisão
+                    'max_tokens' => self::MAX_TOKENS,
+                ]);
 
             // Verificar se a resposta existe após retries (throw: false pode retornar null)
             if (!$response) {
@@ -257,25 +258,25 @@ class DocumentExtractorService
                 'Authorization' => 'Bearer ' . $apiKey,
                 'Content-Type' => 'application/json',
             ])->timeout(30)->post(self::OPENAI_API_URL, [
-                'model' => self::MODEL,
-                'messages' => [
-                    [
-                        'role' => 'system',
-                        'content' => 'Você é um assistente que cria nomes descritivos para arquivos. Sempre retorne um nome descritivo curto baseado no conteúdo da imagem, sem extensão de arquivo, sem aspas, sem pontuação final. Se não conseguir identificar, use descrições genéricas factuais.',
-                    ],
-                    [
-                        'role' => 'user',
-                        'content' => [
+                        'model' => self::MODEL,
+                        'messages' => [
                             [
-                                'type' => 'text',
-                                'text' => 'Analise esta imagem e sugira um nome descritivo em português (máximo 80 caracteres). Se for documento fiscal, inclua: tipo, empresa e data. Se for outro tipo de imagem, descreva o conteúdo principal de forma objetiva. Exemplos: "Nota fiscal Ambev dezembro 2024", "Boleto energia elétrica venc 20-01", "Foto produto em estoque"',
+                                'role' => 'system',
+                                'content' => 'Você é um assistente que cria nomes descritivos para arquivos. Sempre retorne um nome descritivo curto baseado no conteúdo da imagem, sem extensão de arquivo, sem aspas, sem pontuação final. Se não conseguir identificar, use descrições genéricas factuais.',
                             ],
-                            $fileContent,
+                            [
+                                'role' => 'user',
+                                'content' => [
+                                    [
+                                        'type' => 'text',
+                                        'text' => 'Analise esta imagem e sugira um nome descritivo em português (máximo 80 caracteres). Se for documento fiscal, inclua: tipo, empresa e data. Se for outro tipo de imagem, descreva o conteúdo principal de forma objetiva. Exemplos: "Nota fiscal Ambev dezembro 2024", "Boleto energia elétrica venc 20-01", "Foto produto em estoque"',
+                                    ],
+                                    $fileContent,
+                                ],
+                            ],
                         ],
-                    ],
-                ],
-                'max_tokens' => 100,
-            ]);
+                        'max_tokens' => 100,
+                    ]);
 
             if (!$response->successful()) {
                 $errorData = $response->json();
@@ -459,12 +460,12 @@ class DocumentExtractorService
             if ($fileSize > self::MAX_FILE_SIZE) {
                 $fileSizeMB = round($fileSize / (1024 * 1024), 2);
                 $maxSizeMB = round(self::MAX_FILE_SIZE / (1024 * 1024), 2);
-                
+
                 Log::warning('Arquivo muito grande para upload', [
                     'file_size_mb' => $fileSizeMB,
                     'max_size_mb' => $maxSizeMB,
                 ]);
-                
+
                 throw new DocumentExtractionException(
                     "O arquivo é muito grande ({$fileSizeMB}MB). Por favor, envie um arquivo menor que {$maxSizeMB}MB. "
                     . "Dica: Se for um PDF com várias páginas, extraia apenas as páginas necessárias para reduzir o tamanho."
@@ -483,21 +484,21 @@ class DocumentExtractorService
             $response = Http::withHeaders([
                 'Authorization' => 'Bearer ' . $apiKey,
             ])
-            ->retry(3, 100, function ($exception, $request) {
-                // Retry apenas para erros transitórios
-                if ($exception instanceof \Illuminate\Http\Client\RequestException) {
-                    // Defensive: verificar se response existe antes de acessar
-                    if (isset($exception->response)) {
-                        $status = $exception->response->status();
-                        return in_array($status, [429, 500, 502, 503, 504]);
+                ->retry(3, 100, function ($exception, $request) {
+                    // Retry apenas para erros transitórios
+                    if ($exception instanceof \Illuminate\Http\Client\RequestException) {
+                        // Defensive: verificar se response existe antes de acessar
+                        if (isset($exception->response)) {
+                            $status = $exception->response->status();
+                            return in_array($status, [429, 500, 502, 503, 504]);
+                        }
                     }
-                }
-                return false;
-            }, throw: false)
-            ->attach('file', $fileContent, $filename)
-            ->post('https://api.openai.com/v1/files', [
-                'purpose' => 'user_data',
-            ]);
+                    return false;
+                }, throw: false)
+                ->attach('file', $fileContent, $filename)
+                ->post('https://api.openai.com/v1/files', [
+                    'purpose' => 'user_data',
+                ]);
 
             // Verificar se a resposta existe após retries
             if (!$response) {
@@ -572,12 +573,12 @@ class DocumentExtractorService
             if ($fileSize > self::MAX_FILE_SIZE) {
                 $fileSizeMB = round($fileSize / (1024 * 1024), 2);
                 $maxSizeMB = round(self::MAX_FILE_SIZE / (1024 * 1024), 2);
-                
+
                 Log::warning('PDF muito grande para conversão', [
                     'file_size_mb' => $fileSizeMB,
                     'max_size_mb' => $maxSizeMB,
                 ]);
-                
+
                 throw new DocumentExtractionException(
                     "O PDF é muito grande ({$fileSizeMB}MB). Por favor, envie um arquivo menor que {$maxSizeMB}MB."
                 );
@@ -585,22 +586,22 @@ class DocumentExtractorService
 
             // Criar instância do Imagick
             $imagick = new \Imagick();
-            
+
             // Configurar densidade (DPI) antes de ler o PDF
             // DPI mais alto = melhor qualidade de OCR, mas arquivo maior
             $imagick->setResolution(self::PDF_CONVERSION_DPI, self::PDF_CONVERSION_DPI);
-            
+
             // Ler PDF da memória
             $imagick->readImageBlob($pdfBinary);
-            
+
             // Obter número de páginas
             $pageCount = $imagick->getNumberImages();
-            
+
             Log::info('PDF carregado para conversão', [
                 'page_count' => $pageCount,
                 'file_size_mb' => round($fileSize / (1024 * 1024), 2),
             ]);
-            
+
             // Validar limite de páginas
             if ($pageCount > self::MAX_PDF_PAGES) {
                 Log::warning('PDF excede limite de páginas, processando apenas as primeiras', [
@@ -608,10 +609,10 @@ class DocumentExtractorService
                     'max_pages' => self::MAX_PDF_PAGES,
                 ]);
             }
-            
+
             $images = [];
             $processedPages = 0;
-            
+
             // Iterar sobre cada página
             foreach ($imagick as $pageIndex => $page) {
                 // Respeitar limite de páginas
@@ -621,29 +622,29 @@ class DocumentExtractorService
                     ]);
                     break;
                 }
-                
+
                 try {
                     // Configurar formato de saída
                     $page->setImageFormat(self::PDF_IMAGE_FORMAT);
-                    
+
                     // Qualidade de compressão (85 é um bom balanço)
                     $page->setImageCompressionQuality(85);
-                    
+
                     // Converter para RGB (necessário para PNG)
-                    $page->setImageColorspace(\Imagick::COLORSPACE_SRGB);
-                    
+                    $page->setImageColorspace(Imagick::COLORSPACE_SRGB);
+
                     // Obter imagem como blob e converter para base64
                     $imageBlob = $page->getImageBlob();
                     $imageBase64 = base64_encode($imageBlob);
-                    
+
                     $images[] = $imageBase64;
                     $processedPages++;
-                    
+
                     Log::debug('Página de PDF convertida', [
                         'page_number' => $pageIndex + 1,
                         'image_size_kb' => round(strlen($imageBlob) / 1024, 2),
                     ]);
-                    
+
                 } catch (\Exception $e) {
                     Log::error('Erro ao converter página específica do PDF', [
                         'page_number' => $pageIndex + 1,
@@ -653,11 +654,11 @@ class DocumentExtractorService
                     continue;
                 }
             }
-            
+
             // Limpar recursos do Imagick
             $imagick->clear();
             $imagick->destroy();
-            
+
             // Verificar se conseguimos converter pelo menos uma página
             if (empty($images)) {
                 Log::error('Nenhuma página do PDF pôde ser convertida');
@@ -665,9 +666,9 @@ class DocumentExtractorService
                     'Não foi possível converter o PDF. O arquivo pode estar corrompido ou protegido por senha.'
                 );
             }
-            
+
             return $images;
-            
+
         } catch (DocumentExtractionException $e) {
             // Re-lançar exceções personalizadas
             throw $e;
@@ -676,7 +677,7 @@ class DocumentExtractorService
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
-            
+
             // Mensagens amigáveis para erros comuns do Imagick
             $errorMessage = $e->getMessage();
             if (stripos($errorMessage, 'password') !== false || stripos($errorMessage, 'encrypted') !== false) {
@@ -752,11 +753,11 @@ class DocumentExtractorService
             }
 
             $query = LancamentoPadrao::where('company_id', $this->companyId);
-            
+
             if ($tipo) {
                 $query->where('type', $tipo);
             }
-            
+
             // Top 30 mais usados (ou todos se não tiver relação com transações)
             // Por enquanto, apenas ordenar por categoria e descrição
             return $query->orderBy('category')
@@ -767,7 +768,7 @@ class DocumentExtractorService
                     $lp->id => "{$lp->description} ({$lp->category})"
                 ])
                 ->toArray();
-                
+
         } catch (\Exception $e) {
             Log::error('Erro ao carregar lançamentos padrão', [
                 'error' => $e->getMessage(),
@@ -1069,17 +1070,21 @@ PROMPT;
     private function getFriendlyErrorMessage(string $errorMessage, ?string $errorType, ?string $errorCode): string
     {
         // Erro de quota/billing
-        if (stripos($errorMessage, 'quota') !== false ||
+        if (
+            stripos($errorMessage, 'quota') !== false ||
             stripos($errorMessage, 'billing') !== false ||
             stripos($errorMessage, 'exceeded') !== false ||
-            $errorCode === 'insufficient_quota') {
+            $errorCode === 'insufficient_quota'
+        ) {
             return 'A cota da API OpenAI foi excedida. Por favor, verifique seu plano e detalhes de cobrança na plataforma OpenAI. Acesse: https://platform.openai.com/account/billing';
         }
 
         // Erro de autenticação
-        if (stripos($errorMessage, 'invalid') !== false &&
+        if (
+            stripos($errorMessage, 'invalid') !== false &&
             (stripos($errorMessage, 'api key') !== false || stripos($errorMessage, 'authentication') !== false) ||
-            $errorCode === 'invalid_api_key') {
+            $errorCode === 'invalid_api_key'
+        ) {
             return 'Chave da API OpenAI inválida. Verifique a configuração da variável OPENAI_API_KEY no arquivo .env';
         }
 
@@ -1089,14 +1094,18 @@ PROMPT;
         }
 
         // Erro de modelo não disponível
-        if (stripos($errorMessage, 'model') !== false &&
-            (stripos($errorMessage, 'not found') !== false || stripos($errorMessage, 'not available') !== false)) {
+        if (
+            stripos($errorMessage, 'model') !== false &&
+            (stripos($errorMessage, 'not found') !== false || stripos($errorMessage, 'not available') !== false)
+        ) {
             return 'Modelo de IA não disponível. Verifique se o modelo gpt-4o está disponível na sua conta OpenAI.';
         }
 
         // Erro de contexto muito longo
-        if (stripos($errorMessage, 'context length') !== false ||
-            stripos($errorMessage, 'maximum context') !== false) {
+        if (
+            stripos($errorMessage, 'context length') !== false ||
+            stripos($errorMessage, 'maximum context') !== false
+        ) {
             return 'O documento é muito grande para processar. Tente com um arquivo menor ou de melhor qualidade.';
         }
 
@@ -1137,16 +1146,16 @@ PROMPT;
         // Tenta parsear formatos brasileiros comuns
         $patterns = [
             // dd/mm/yyyy ou dd-mm-yyyy
-            '/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/' => function($matches) {
+            '/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/' => function ($matches) {
                 return [$matches[3], $matches[2], $matches[1]]; // [ano, mês, dia]
             },
             // dd/mm ou dd-mm (sem ano - assume ano atual)
-            '/^(\d{1,2})[\/\-\.](\d{1,2})$/' => function($matches) {
+            '/^(\d{1,2})[\/\-\.](\d{1,2})$/' => function ($matches) {
                 $currentYear = date('Y');
                 return [$currentYear, $matches[2], $matches[1]]; // [ano, mês, dia]
             },
             // yyyy-mm-dd (já tentado acima, mas pode ter espaços)
-            '/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/' => function($matches) {
+            '/^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/' => function ($matches) {
                 return [$matches[1], $matches[2], $matches[3]]; // [ano, mês, dia]
             },
         ];
@@ -1154,7 +1163,7 @@ PROMPT;
         foreach ($patterns as $pattern => $extractor) {
             if (preg_match($pattern, $dateStr, $matches)) {
                 list($year, $month, $day) = $extractor($matches);
-                
+
                 // Normalizar com zeros à esquerda
                 $year = str_pad($year, 4, '0', STR_PAD_LEFT);
                 $month = str_pad($month, 2, '0', STR_PAD_LEFT);
@@ -1164,7 +1173,7 @@ PROMPT;
                 try {
                     $normalized = "$year-$month-$day";
                     $dt = new \DateTime($normalized);
-                    
+
                     // Verifica se a data criada corresponde aos valores fornecidos
                     // (previne datas como 2024-02-30 que são convertidas para 2024-03-02)
                     if ($dt->format('Y-m-d') === $normalized) {
@@ -1181,7 +1190,7 @@ PROMPT;
         Log::warning('Formato de data não reconhecido', [
             'date_input' => $dateStr,
         ]);
-        
+
         return null;
     }
 
