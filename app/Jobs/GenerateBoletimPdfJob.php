@@ -115,8 +115,8 @@ class GenerateBoletimPdfJob implements ShouldQueue
                 ->map(function ($grupo) {
                     $lp = $grupo->first()->lancamentoPadrao;
                     return [
-                        'codigo' => $lp?->id ?? '---',
-                        'descricao' => $lp?->description ?? 'Sem lançamento',
+                        'codigo' => $lp->id ?? '---',
+                        'descricao' => $lp->description ?? 'Sem lançamento',
                         'valor' => $grupo->sum('valor')
                     ];
                 });
@@ -126,8 +126,8 @@ class GenerateBoletimPdfJob implements ShouldQueue
                 ->map(function ($grupo) {
                     $lp = $grupo->first()->lancamentoPadrao;
                     return [
-                        'codigo' => $lp?->id ?? '---',
-                        'descricao' => $lp?->description ?? 'Sem lançamento',
+                        'codigo' => $lp->id ?? '---',
+                        'descricao' => $lp->description ?? 'Sem lançamento',
                         'valor' => $grupo->sum('valor')
                     ];
                 });
