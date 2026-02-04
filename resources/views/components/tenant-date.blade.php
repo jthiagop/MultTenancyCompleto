@@ -62,8 +62,8 @@
                 return;
             }
 
-                // Aplicar máscara de input com Inputmask
-                if (typeof Inputmask !== 'undefined') {
+                // Aplicar máscara de input com Inputmask apenas se flatpickr não estiver disponível
+                if (typeof Inputmask !== 'undefined' && typeof flatpickr === 'undefined') {
                     // Data atual formatada para placeholder
                     var today = new Date();
                     var day = String(today.getDate()).padStart(2, '0');
@@ -72,15 +72,21 @@
                     var todayFormatted = day + '/' + month + '/' + year;
 
                     Inputmask({
-                        alias: 'datetime',
+                        alias: 'date',
                         inputFormat: 'dd/mm/yyyy',
                         placeholder: todayFormatted,
-                        clearMaskOnLostFocus: false
+                        clearMaskOnLostFocus: false,
+                        onBeforeMask: function(value) {
+                            // Garante que apenas datas válidas sejam aceitas
+                            return value;
+                        }
                     }).mask(dateInput);
                 }
 
                 // Verificar se flatpickr está disponível
                 if (typeof flatpickr === 'undefined') {
+                    // Fallback: apenas máscara + validação manual se flatpickr não estiver disponível
+                    addDateValidation(dateInput);
                     return;
                 }
 
@@ -106,17 +112,25 @@
         function initSingleDatepicker(dateInput, useLocale = true) {
             try {
                 var config = {
-                enableTime: false,
-                dateFormat: "d/m/Y", // Formato pt-BR para exibição
-                allowInput: true, // Permite digitação manual
-                clickOpens: true, // Abre o calendário ao clicar
-                onChange: function(selectedDates, dateStr, instance) {
-                    // Formata para ISO 8601 e define o valor real
-                    if (selectedDates.length > 0) {
-                        const isoDate = selectedDates[0].toISOString().split('T')[0]; // YYYY-MM-DD
-                        instance.input.setAttribute('data-iso', isoDate);
+                    enableTime: false,
+                    dateFormat: "d/m/Y", // Formato brasileiro para o valor real (backend espera este formato)
+                    allowInput: true, // Permite digitação manual
+                    clickOpens: true, // Abre o calendário ao clicar
+                    parseDate: function(datestr, format) {
+                        // Parse para formato brasileiro dd/mm/yyyy quando digitado manualmente
+                        if (format === "d/m/Y") {
+                            var parts = datestr.split('/');
+                            if (parts.length === 3) {
+                                var day = parseInt(parts[0], 10);
+                                var month = parseInt(parts[1], 10) - 1;
+                                var year = parseInt(parts[2], 10);
+                                if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
+                                    return new Date(year, month, day);
+                                }
+                            }
+                        }
+                        return null;
                     }
-                }
                 };
 
                 // Só adiciona locale se estiver disponível
@@ -126,6 +140,81 @@
 
                 flatpickr(dateInput, config);
             } catch (error) {
+                console.error('Erro ao inicializar flatpickr:', error);
+            }
+        }
+
+        // Função para adicionar validação manual quando flatpickr não está disponível
+        function addDateValidation(dateInput) {
+            // Função para validar e converter data
+            function validateAndConvertDate(dateStr) {
+                var parts = dateStr.replace(/[^\d]/g, '').match(/(\d{1,2})(\d{1,2})(\d{4})/);
+                if (!parts || parts.length !== 4) {
+                    return null;
+                }
+
+                var day = parseInt(parts[1], 10);
+                var month = parseInt(parts[2], 10);
+                var year = parseInt(parts[3], 10);
+
+                // Validar se é uma data válida
+                if (day < 1 || day > 31 || month < 1 || month > 12 || year < 1900 || year > 2100) {
+                    return null;
+                }
+
+                var date = new Date(year, month - 1, day);
+                if (date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+                    return null;
+                }
+
+                return date;
+            }
+
+            // Evento para validar e formatar quando o usuário sai do campo
+            dateInput.addEventListener('blur', function() {
+                var value = this.value.trim();
+                if (!value) {
+                    return;
+                }
+
+                var date = validateAndConvertDate(value);
+                if (date) {
+                    // Formatar data para exibição brasileira
+                    var day = String(date.getDate()).padStart(2, '0');
+                    var month = String(date.getMonth() + 1).padStart(2, '0');
+                    var year = date.getFullYear();
+                    
+                    this.value = day + '/' + month + '/' + year;
+                    
+                    // Remover indicação de erro se houver
+                    this.classList.remove('is-invalid');
+                } else {
+                    // Data inválida
+                    this.classList.add('is-invalid');
+                }
+            });
+
+            // Evento para converter para formato brasileiro antes do submit
+            var form = dateInput.closest('form');
+            if (form) {
+                form.addEventListener('submit', function() {
+                    var value = dateInput.value.trim();
+                    if (value) {
+                        var date = validateAndConvertDate(value);
+                        if (date) {
+                            // Garante formato brasileiro para envio ao backend
+                            var day = String(date.getDate()).padStart(2, '0');
+                            var month = String(date.getMonth() + 1).padStart(2, '0');
+                            var year = date.getFullYear();
+                            dateInput.value = day + '/' + month + '/' + year;
+                        }
+                    }
+                });
+            }
+
+            // Inicializar com valor existente se houver
+            if (dateInput.value) {
+                dateInput.dispatchEvent(new Event('blur'));
             }
         }
 
