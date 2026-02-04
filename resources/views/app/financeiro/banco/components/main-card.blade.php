@@ -9,7 +9,7 @@
                     <li class="nav-item">
                         <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'contas_receber' ? 'active' : '' }}"
                             href="{{ route('banco.list', ['tab' => 'contas_receber', 'status' => 'total']) }}">
-                            Receitas a Receber
+                            Receitas
                         </a>
                     </li>
                     <!--end::Nav item-->
@@ -17,7 +17,7 @@
                     <li class="nav-item">
                         <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'contas_pagar' ? 'active' : '' }}"
                             href="{{ route('banco.list', ['tab' => 'contas_pagar', 'status' => 'total']) }}">
-                            Despesas a Pagar
+                            Despesas
                         </a>
                     </li>
                     <!--end::Nav item-->

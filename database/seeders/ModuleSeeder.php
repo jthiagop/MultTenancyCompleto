@@ -110,13 +110,22 @@ class ModuleSeeder extends Seeder
             foreach ($modules as $moduleData) {
                 $moduleData['company_id'] = $companyId;
 
-                $existing = Module::where('company_id', $companyId)
+                // Buscar incluindo registros soft deleted
+                $existing = Module::withTrashed()
+                    ->where('company_id', $companyId)
                     ->where('key', $moduleData['key'])
                     ->first();
 
                 if ($existing) {
-                    $existing->update($moduleData);
-                    $this->command->info("  ✓ Módulo '{$moduleData['name']}' atualizado.");
+                    if ($existing->trashed()) {
+                        // Se estava soft deleted, restaurar e atualizar
+                        $existing->restore();
+                        $existing->update($moduleData);
+                        $this->command->info("  ✓ Módulo '{$moduleData['name']}' restaurado.");
+                    } else {
+                        // Se já existe e está ativo, não fazer nada (seeder idempotente)
+                        $this->command->info("  → Módulo '{$moduleData['name']}' já existe (ignorado).");
+                    }
                 } else {
                     Module::create($moduleData);
                     $this->command->info("  ✓ Módulo '{$moduleData['name']}' criado.");

@@ -1255,8 +1255,12 @@ class BancoController extends Controller
 
             // Formatar ações usando classe Helper
             // Mostrar "Informar pagamento" apenas se a transação não estiver completamente paga
-            $isPago = ($transacao->situacao === 'pago') ||
-                     ($transacao->valor_pago && (float)$transacao->valor_pago >= (float)$transacao->valor);
+            // Priorizar a situação da transação sobre o valor_pago
+            $situacaoValue = $transacao->situacao instanceof \App\Enums\SituacaoTransacao 
+                ? $transacao->situacao->value 
+                : $transacao->situacao;
+            
+            $isPago = in_array($situacaoValue, ['pago', 'recebido']);
 
             $actionsHtml = $this->formatter->formatActions($transacao, [
                 'showInformarPagamento' => !$isPago
@@ -1289,11 +1293,11 @@ class BancoController extends Controller
                 }
 
 
-                // Data de vencimento
+                // Data de competência
                 $dataExibicao = '-';
-                if ($transacao->data_vencimento) {
+                if ($transacao->data_competencia) {
                     try {
-                        $dataExibicao = Carbon::parse($transacao->data_vencimento)->format('d/m/Y');
+                        $dataExibicao = Carbon::parse($transacao->data_competencia)->format('d/m/Y');
                     } catch (\Exception $e) {
                         $dataExibicao = '-';
                     }
