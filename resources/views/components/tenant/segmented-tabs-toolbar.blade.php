@@ -179,23 +179,38 @@
                     $key = $tab['key'];
                     $paneId = $tab['paneId'] ?? ($id . '-pane-' . $key);
 
-                    // Lógica Automática de Cores baseada na chave (se não for passado explicitamente)
-                    // Padrão: Azul (Primary) | received/entrada: Verde (Success) | paid/saida: Vermelho (Danger)
-                    $defaultColors = match($key) {
-                        'received', 'recebimentos', 'entrada', 'credit', 'recebidos' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
-                        'paid', 'pagamentos', 'saida', 'debit', 'pagos' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
-                        // Status de Conciliação e Financeiro
-                        'all', 'todos', 'total' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
-                        'ok', 'conciliados' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
-                        'pendente', 'pendentes' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
-                        'ignorado', 'ignorados' => ['class' => 'text-warning', 'accent' => 'var(--bs-warning)'],
-                        'divergente', 'divergentes', 'vencidos', 'hoje' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
-                        'a_vencer' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
-                        default => ['class' => 'text-primary', 'accent' => null] // null usa o CSS padrão (primary)
-                    };
+                    // Priorizar variant explícito se fornecido
+                    if (isset($tab['variant'])) {
+                        $variantColors = match($tab['variant']) {
+                            'success' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
+                            'danger' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
+                            'warning' => ['class' => 'text-warning', 'accent' => 'var(--bs-warning)'],
+                            'info' => ['class' => 'text-info', 'accent' => 'var(--bs-info)'],
+                            'primary' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
+                            'secondary' => ['class' => 'text-secondary', 'accent' => 'var(--bs-secondary)'],
+                            default => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)']
+                        };
+                        $countClass = $tab['countClass'] ?? $variantColors['class'];
+                        $accent = $tab['accent'] ?? $variantColors['accent'];
+                    } else {
+                        // Lógica Automática de Cores baseada na chave (se não for passado explicitamente)
+                        // Padrão: Azul (Primary) | received/entrada: Verde (Success) | paid/saida: Vermelho (Danger)
+                        $defaultColors = match($key) {
+                            'received', 'recebimentos', 'entrada', 'credit', 'recebidos' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
+                            'paid', 'pagamentos', 'saida', 'debit', 'pagos' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
+                            // Status de Conciliação e Financeiro
+                            'all', 'todos', 'total' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
+                            'ok', 'conciliados' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
+                            'pendente', 'pendentes' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
+                            'ignorado', 'ignorados' => ['class' => 'text-warning', 'accent' => 'var(--bs-warning)'],
+                            'divergente', 'divergentes', 'vencidos', 'hoje' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
+                            'a_vencer' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
+                            default => ['class' => 'text-primary', 'accent' => null] // null usa o CSS padrão (primary)
+                        };
 
-                    $countClass = $tab['countClass'] ?? $defaultColors['class'];
-                    $accent = $tab['accent'] ?? $defaultColors['accent'];
+                        $countClass = $tab['countClass'] ?? $defaultColors['class'];
+                        $accent = $tab['accent'] ?? $defaultColors['accent'];
+                    }
 
                     $isActive = ($active === $key);
                 @endphp
