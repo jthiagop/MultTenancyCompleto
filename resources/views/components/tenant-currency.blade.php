@@ -112,8 +112,7 @@
 
         // Também inicializar quando o elemento for inserido dinamicamente (ex: modais)
         var observer = new MutationObserver(function(mutations) {
-            var el = document.getElementById(inputId);
-            if (el && !el.hasAttribute('data-mask-initialized')) {
+            if (document.getElementById(inputId) && !document.getElementById(inputId).hasAttribute('data-mask-initialized')) {
                 setTimeout(initCurrencyMask, 100);
             }
         });

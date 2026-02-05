@@ -379,6 +379,7 @@ Route::middleware([
             Route::get('/banco/conciliacoes-pendentes', [BancoController::class, 'getConciliacoesPendentes'])->name('banco.conciliacoes.pendentes');
             Route::get('/banco/sugestao', [BancoController::class, 'getSugestao'])->name('banco.sugestao');
             Route::post('/banco/relatorio/gerar', [BancoController::class, 'gerarRelatorio'])->name('banco.relatorio.gerar');
+            Route::get('/banco/{id}/dados-edicao', [BancoController::class, 'getDadosEdicao'])->name('banco.dados-edicao');
             Route::resource('banco', BancoController::class);
 
             // Rotas para configurações de recorrência

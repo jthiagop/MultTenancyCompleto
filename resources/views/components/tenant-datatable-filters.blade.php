@@ -15,25 +15,21 @@
 
 <!--begin::Filtros Wrapper-->
 <div class="d-flex flex-wrap gap-3 align-items-end" id="filters-wrapper-{{ $tableId }}">
-
+    
     <!--begin::Período-->
     <div class="me-3">
         <div class="btn-group w-100" role="group">
-            <button class="btn btn-light btn-sm btn-icon btn-light-primary" type="button"
-                id="prev-period-btn-{{ $tableId }}" style="z-index: 1; position: relative;">
+            <button class="btn btn-light btn-sm btn-icon btn-light-primary" type="button" id="prev-period-btn-{{ $tableId }}" style="z-index: 1; position: relative;">
                 <i class="bi bi-chevron-left"></i>
             </button>
 
-            <button class="btn btn-light btn-sm flex-grow-1 btn-light-primary position-relative" type="button"
-                id="period-selector-{{ $tableId }}" style="z-index: 1;">
+            <button class="btn btn-light btn-sm flex-grow-1 btn-light-primary position-relative" type="button" id="period-selector-{{ $tableId }}" style="z-index: 1;">
                 <span id="period-display-{{ $tableId }}">{{ $periodLabel }}</span>
                 {{-- Input invisível para facilitar posicionamento do Daterangepicker --}}
-                <input type="text" class="position-absolute opacity-0 top-0 start-0 w-100 h-100"
-                    id="kt_daterangepicker_{{ $tableId }}" style="cursor: pointer; z-index: 10;" readonly />
+                <input type="text" class="position-absolute opacity-0 top-0 start-0 w-100 h-100" id="kt_daterangepicker_{{ $tableId }}" style="cursor: pointer; z-index: 10;" readonly />
             </button>
 
-            <button class="btn btn-light btn-sm btn-icon btn-light-primary" type="button"
-                id="next-period-btn-{{ $tableId }}" style="z-index: 1; position: relative;">
+            <button class="btn btn-light btn-sm btn-icon btn-light-primary" type="button" id="next-period-btn-{{ $tableId }}" style="z-index: 1; position: relative;">
                 <i class="bi bi-chevron-right"></i>
             </button>
         </div>
@@ -47,8 +43,13 @@
     <!--begin::Conta-->
     @if ($showAccountFilter)
         <div style="min-width: 220px;">
-            <x-tenant-select-button name="account-filter-{{ $tableId }}" id="account-filter-{{ $tableId }}"
-                placeholder="Entidade Financeira" :multiple="true" :labelSize="'fs-7'" :options="$accountOptions" />
+            <x-tenant-select-button 
+                name="account-filter-{{ $tableId }}"
+                id="account-filter-{{ $tableId }}" 
+                placeholder="Entidade Financeira" 
+                :multiple="true"
+                :labelSize="'fs-7'" 
+                :options="$accountOptions" />
         </div>
     @endif
     <!--end::Conta-->
@@ -58,34 +59,27 @@
         <div class="d-flex flex-wrap gap-3 align-items-end">
             {{-- Espaçador visual --}}
             <div style="height: 38px; border-left: 1px solid #e4e6ef; margin: 0 5px;"></div>
-
+            
             <div class="dropdown">
-                <button type="button" class="btn btn-sm btn-light-primary dropdown-toggle" data-bs-toggle="dropdown"
-                    aria-expanded="false">
+                <button type="button" class="btn btn-sm btn-light-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="bi bi-filter me-1"></i> Mais filtros
                 </button>
-
+                
                 <div class="dropdown-menu dropdown-menu-end p-4 shadow-sm" style="min-width: 300px;">
                     @if (isset($moreFilters) && count($moreFilters) > 0)
                         @foreach ($moreFilters as $index => $filter)
                             <div class="mb-3">
-                                <label
-                                    class="form-label fs-7 fw-bold text-gray-700">{{ $filter['label'] ?? 'Filtro' }}</label>
+                                <label class="form-label fs-7 fw-bold text-gray-700">{{ $filter['label'] ?? 'Filtro' }}</label>
                                 @if (($filter['type'] ?? '') === 'select')
-                                    <select class="form-select form-select-sm" name="{{ $filter['name'] ?? '' }}"
-                                        id="{{ $filter['id'] ?? 'filter-' . $index . '-' . $tableId }}">
+                                    <select class="form-select form-select-sm" name="{{ $filter['name'] ?? '' }}" id="{{ $filter['id'] ?? 'filter-'.$index.'-'.$tableId }}">
                                         @foreach ($filter['options'] ?? [] as $opt)
-                                            <option value="{{ $opt['value'] ?? $opt }}">{{ $opt['label'] ?? $opt }}
-                                            </option>
+                                            <option value="{{ $opt['value'] ?? $opt }}">{{ $opt['label'] ?? $opt }}</option>
                                         @endforeach
                                     </select>
                                 @elseif(($filter['type'] ?? '') === 'input')
-                                    <input type="{{ $filter['inputType'] ?? 'text' }}"
-                                        class="form-control form-control-sm"
-                                        placeholder="{{ $filter['placeholder'] ?? '' }}"
-                                        id="{{ $filter['id'] ?? 'filter-' . $index . '-' . $tableId }}" />
+                                    <input type="{{ $filter['inputType'] ?? 'text' }}" class="form-control form-control-sm" placeholder="{{ $filter['placeholder'] ?? '' }}" id="{{ $filter['id'] ?? 'filter-'.$index.'-'.$tableId }}" />
                                 @endif
-                                @if (isset($filter['slot']))
+                                @if(isset($filter['slot']))
                                     {!! $filter['slot'] !!}
                                 @endif
                             </div>
@@ -102,11 +96,14 @@
                             </select>
                         </div>
                     @endif
+                    
+                    <div class="separator my-2"></div>
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-sm btn-link text-danger text-decoration-none" id="clear-filters-btn-{{ $tableId }}">
+                            <i class="bi bi-trash me-1"></i> Limpar Filtros
+                        </button>
+                    </div>
                 </div>
-                <button type="button" class="btn btn-sm btn-link text-danger text-decoration-none "
-                    id="clear-filters-btn-{{ $tableId }}">
-                    <i class="bi bi-trash me-1 text-danger"></i> Limpar Filtros
-                </button>
             </div>
         </div>
     @endif
@@ -115,22 +112,22 @@
 <!--end::Filtros Wrapper-->
 
 @push('scripts')
-    <script>
-        // Inicializa via função global para evitar duplicação e melhorar performance
-        (function() {
-            function tryInit() {
-                if (typeof window.initTenantFilters === 'function') {
-                    window.initTenantFilters('{{ $tableId }}');
-                } else {
-                    setTimeout(tryInit, 100);
-                }
-            }
-
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', tryInit);
+<script>
+    // Inicializa via função global para evitar duplicação e melhorar performance
+    (function() {
+        function tryInit() {
+            if (typeof window.initTenantFilters === 'function') {
+                window.initTenantFilters('{{ $tableId }}');
             } else {
-                tryInit();
+                setTimeout(tryInit, 100);
             }
-        })();
-    </script>
+        }
+        
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', tryInit);
+        } else {
+            tryInit();
+        }
+    })();
+</script>
 @endpush
