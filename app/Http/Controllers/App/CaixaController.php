@@ -678,147 +678,297 @@ class CaixaController extends Controller
             // Obtenha a empresa do usuário autenticado
             $transacao = TransacaoFinanceira::forActiveCompany()->findOrFail($id);
 
-            // O valor já será processado pelo StoreTransacaoFinanceiraRequest usando Money
-            // Não é necessário fazer conversão manual aqui
+            // Verifica se é edição inline (com field_type) ou edição completa (drawer)
+            $fieldType = $request->input('field_type');
+            
+            if ($fieldType) {
+                // ===== MODO: Edição inline de campo único =====
+                return $this->updateInlineField($request, $transacao, $fieldType);
+            } else {
+                // ===== MODO: Edição completa via drawer =====
+                return $this->updateFullTransaction($request, $transacao);
+            }
+            
+        } catch (\Exception $e) {
+            // Log de erro e mensagem de retorno
+            \Log::error('Erro ao atualizar transação de caixa: ' . $e->getMessage());
 
-            // Converter data_competencia para o formato correto
-            if ($request->has('data_competencia')) {
-                $request->merge([
-                    'data_competencia' => Carbon::createFromFormat('d/m/Y', $request->input('data_competencia'))->format('Y-m-d')
-                ]);
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao atualizar transação: ' . $e->getMessage()
+                ], 500);
             }
 
-            // Validação dos dados
-            $validator = Validator::make($request->all(), [
-                'data_competencia' => 'required|date',
-                'descricao' => 'required|string|max:255',
-                'valor' => 'required|regex:/^\d+(\.\d{1,2})?$/',
-                'tipo' => 'required|in:entrada,saida',
-                'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
-                'cost_center_id' => 'required|exists:cost_centers,id',
-                'tipo_documento' => 'required|string|max:255',
-                'numero_documento' => 'nullable|string|max:50',
-                'historico_complementar' => 'nullable|string|max:500',
-                'comprovacao_fiscal' => 'required|boolean',
-                'anexos.*' => 'nullable|file|mimes:jpeg,png,pdf|max:2048',
-                'entidade_id' => 'required|exists:entidades_financeiras,id', // Valida entidade
-            ], [
-                'valor.regex' => 'O valor deve estar no formato correto (exemplo: 1234.56).',
-                'tipo.in' => 'O tipo deve ser "entrada" ou "saída".',
-            ]);
+            \Flasher\Laravel\Facade\Flasher::addError('Erro ao atualizar transação: ' . $e->getMessage());
+            return redirect()->back()->withInput();
+        }
+    }
+    
+    /**
+     * Atualiza um campo específico (edição inline)
+     */
+    protected function updateInlineField(Request $request, TransacaoFinanceira $transacao, string $fieldType)
+    {
+        $dataToValidate = $request->all();
+        $dataToUpdate = [];
+        $rules = [];
+
+        // Determina qual campo está sendo editado baseado no field_type
+        if ($fieldType === 'descricao' && $request->has('descricao')) {
+            $rules['descricao'] = 'required|string|max:255';
+            $dataToUpdate['descricao'] = $request->descricao;
+        } elseif ($fieldType === 'lancamento_padrao_id' && $request->has('lancamento_padrao_id')) {
+            $rules['lancamento_padrao_id'] = 'required|exists:lancamento_padraos,id';
+            $dataToUpdate['lancamento_padrao_id'] = $request->lancamento_padrao_id;
+        } elseif ($fieldType === 'cost_center_id' && $request->has('cost_center_id')) {
+            $rules['cost_center_id'] = 'nullable|exists:cost_centers,id';
+            $dataToUpdate['cost_center_id'] = $request->cost_center_id ? $request->cost_center_id : null;
+        } elseif ($fieldType === 'valor' && $request->has('valor')) {
+            // Tratar o valor do campo "valor" usando a classe de suporte Money
+            $money = Money::fromHumanInput($request->input('valor'));
+            $valor = $money->toDatabase();
+            
+            $dataToValidate['valor'] = $valor;
+            $rules['valor'] = 'required|numeric|min:0';
+            $dataToUpdate['valor'] = $valor;
+        }
+
+        // Valida apenas os campos que foram enviados
+        if (!empty($rules)) {
+            $validator = Validator::make($dataToValidate, $rules);
 
             // Se a validação falhar
             if ($validator->fails()) {
+                if ($request->expectsJson() || $request->ajax()) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Erro de validação',
+                        'errors' => $validator->errors()
+                    ], 422);
+                }
+
                 foreach ($validator->errors()->all() as $error) {
                     \Flasher\Laravel\Facade\Flasher::addError($error);
                 }
                 return redirect()->back()->withInput();
             }
+        }
 
-            // Validação bem-sucedida
-            $validatedData = $validator->validated();
+        // Atualiza o registro
+        $transacao->update($dataToUpdate);
 
-            // Busca o registro no banco de dados
-            $banco = TransacaoFinanceira::findOrFail($id);
-            $movimentacao = Movimentacao::findOrFail($banco->movimentacao_id);
-
-            // Ajusta o saldo da entidade antes de atualizar os valores
-            // 1) Entidade antiga vinculada à movimentação
-            $oldEntidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
-
-            // Reverte o impacto do lançamento antigo no saldo da entidade
-            // 2) Reverter saldo antigo
-            if ($movimentacao->tipo === 'entrada') {
-                $oldEntidade->saldo_atual -= $movimentacao->valor;
-            } else {
-                $oldEntidade->saldo_atual += $movimentacao->valor;
+        // Atualiza também a movimentação associada
+        if ($transacao->movimentacao && !empty($dataToUpdate)) {
+            $movimentacaoData = [];
+            if (isset($dataToUpdate['descricao'])) {
+                $movimentacaoData['descricao'] = $dataToUpdate['descricao'];
             }
-            $oldEntidade->save();
-
-            // Busca o lançamento padrão para obter conta_debito_id e conta_credito_id
-            $contaDebitoId = null;
-            $contaCreditoId = null;
-
-            if (isset($validatedData['lancamento_padrao_id']) && $validatedData['lancamento_padrao_id']) {
-                $lancamentoPadrao = LancamentoPadrao::find($validatedData['lancamento_padrao_id']);
-
-                if ($lancamentoPadrao) {
-                    // Recarrega o lançamento padrão para garantir que temos os campos contábeis atualizados
-                    $lancamentoPadrao->refresh();
-
-                    // Se não foram enviados no request, busca do lançamento padrão
-                    if (!isset($validatedData['conta_debito_id']) && $lancamentoPadrao->conta_debito_id) {
-                        $contaDebitoId = $lancamentoPadrao->conta_debito_id;
-                    } elseif (isset($validatedData['conta_debito_id'])) {
-                        $contaDebitoId = $validatedData['conta_debito_id'];
-                    }
-
-                    if (!isset($validatedData['conta_credito_id']) && $lancamentoPadrao->conta_credito_id) {
-                        $contaCreditoId = $lancamentoPadrao->conta_credito_id;
-                    } elseif (isset($validatedData['conta_credito_id'])) {
-                        $contaCreditoId = $validatedData['conta_credito_id'];
-                    }
-                }
+            if (isset($dataToUpdate['lancamento_padrao_id'])) {
+                $movimentacaoData['lancamento_padrao_id'] = $dataToUpdate['lancamento_padrao_id'];
             }
+            if (isset($dataToUpdate['valor'])) {
+                $movimentacaoData['valor'] = $dataToUpdate['valor'];
+            }
+            if (!empty($movimentacaoData)) {
+                $transacao->movimentacao->update($movimentacaoData);
+            }
+        }
 
-            // 3) Atualiza a movimentação (agora ela aponta para a nova entidade e novo valor)
-            $movimentacao->update([
-                'entidade_id' => $validatedData['entidade_id'],
-                'tipo'        => $validatedData['tipo'],
-                'valor'       => $validatedData['valor'],
-                'data'        => $validatedData['data_competencia'],
-                'descricao'   => $validatedData['descricao'],
-                'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'] ?? null,
-                'conta_debito_id' => $contaDebitoId,
-                'conta_credito_id' => $contaCreditoId,
-                'data_competencia' => $validatedData['data_competencia'],
-                'updated_by'  => Auth::user()->id,
-                'updated_by_name' => Auth::user()->name,
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Transação atualizada com sucesso!',
+                'data' => [
+                    'id' => $transacao->id,
+                    'descricao' => $transacao->descricao,
+                    'valor' => $transacao->valor,
+                ]
             ]);
+        }
 
-            // 4) Entidade nova escolhida no form
-            $newEntidade = EntidadeFinanceira::findOrFail($validatedData['entidade_id']);
-
-            // 5) Aplicar o valor atualizado na nova entidade
-            if ($validatedData['tipo'] === 'entrada') {
-                $newEntidade->saldo_atual += $validatedData['valor'];
-            } else {
-                $newEntidade->saldo_atual -= $validatedData['valor'];
+        \Flasher\Laravel\Facade\Flasher::addSuccess('Transação atualizada com sucesso!');
+        return redirect()->back();
+    }
+    
+    /**
+     * Atualiza a transação completa (via drawer)
+     */
+    protected function updateFullTransaction(Request $request, TransacaoFinanceira $transacao)
+    {
+        // Validação dos campos
+        $rules = [
+            'data_competencia' => 'required|date',
+            'descricao' => 'required|string|max:255',
+            'valor' => 'required',
+            'tipo' => 'required|in:entrada,saida',
+            'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
+            'cost_center_id' => 'nullable|exists:cost_centers,id',
+            'tipo_documento' => 'required|string',
+            'entidade_id' => 'required|exists:entidades_financeiras,id',
+            'fornecedor_id' => 'nullable|exists:parceiros,id',
+            'numero_documento' => 'nullable|string',
+            'historico_complementar' => 'nullable|string|max:500',
+            'comprovacao_fiscal' => 'nullable|boolean',
+        ];
+        
+        $validator = Validator::make($request->all(), $rules);
+        
+        if ($validator->fails()) {
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro de validação',
+                    'errors' => $validator->errors()
+                ], 422);
             }
-            $newEntidade->save();
-
-            // Atualiza os dados do banco
-            $validatedData['movimentacao_id'] = $movimentacao->id; // Mantém o vínculo com a movimentação
-            $transacao->update($validatedData);
-
-            // Verifica se há anexos enviados
-            if ($request->hasFile('anexos')) {
-                foreach ($request->file('anexos') as $anexo) {
-                    // Gera um nome único para o anexo
-                    $anexoName = Str::uuid() . '_' . $anexo->getClientOriginalName();
-
-                    // Salva o arquivo no diretório público
-                    $anexoPath = $anexo->storeAs('anexos', $anexoName, 'public');
-
-                    // Cria o registro do anexo no banco de dados
-                    Anexo::create([
-                        'banco_id' => $banco->id,
-                        'nome_arquivo' => $anexoName,
-                        'caminho_arquivo' => $anexoPath,
-                        'created_by' => Auth::user()->id,
-                        'updated_by' => Auth::user()->id,
+            
+            foreach ($validator->errors()->all() as $error) {
+                \Flasher\Laravel\Facade\Flasher::addError($error);
+            }
+            return redirect()->back()->withInput();
+        }
+        
+        // Prepara dados para atualização
+        $dataToUpdate = [
+            'data_competencia' => $request->input('data_competencia'),
+            'descricao' => $request->input('descricao'),
+            'valor' => Money::fromHumanInput($request->input('valor'))->toDatabase(),
+            'tipo' => $request->input('tipo'),
+            'lancamento_padrao_id' => $request->input('lancamento_padrao_id'),
+            'cost_center_id' => $request->input('cost_center_id'),
+            'tipo_documento' => $request->input('tipo_documento'),
+            'entidade_id' => $request->input('entidade_id'),
+            'parceiro_id' => $request->input('fornecedor_id'),
+            'numero_documento' => $request->input('numero_documento'),
+            'historico_complementar' => $request->input('historico_complementar'),
+            'comprovacao_fiscal' => $request->boolean('comprovacao_fiscal'),
+            'updated_by' => Auth::id(),
+            'updated_by_name' => Auth::user()?->name,
+        ];
+        
+        // Atualiza data de vencimento se fornecida
+        if ($request->has('data_vencimento') || $request->has('vencimento')) {
+            $dataToUpdate['data_vencimento'] = $request->input('data_vencimento') ?? $request->input('vencimento');
+        }
+        
+        // Guarda a entidade antiga ANTES de atualizar (para recalcular saldo se mudou)
+        $entidadeAntigaId = $transacao->entidade_id;
+        
+        // Atualiza a transação
+        $transacao->update($dataToUpdate);
+        
+        // Recarrega a transação para obter a situação atualizada
+        $transacao->refresh();
+        
+        // ✅ REGRA DE NEGÓCIO: Só atualiza movimentação se a situação for EFETIVADA (pago/recebido)
+        // Transações em_aberto são apenas previsões e não devem ter movimentação
+        $situacoesEfetivadas = ['pago', 'recebido'];
+        // Extrai o valor string do enum (se for enum) ou usa direto se já for string
+        $situacaoAtual = $transacao->situacao instanceof \App\Enums\SituacaoTransacao 
+            ? $transacao->situacao->value 
+            : $transacao->situacao;
+        $entidadeNovaId = $dataToUpdate['entidade_id'];
+        
+        // Flag para saber se precisamos recalcular saldos
+        $entidadesParaRecalcular = [];
+        
+        if (in_array($situacaoAtual, $situacoesEfetivadas)) {
+            // ✅ Atualiza o valor_pago quando a transação está efetivada
+            $transacao->update(['valor_pago' => $dataToUpdate['valor']]);
+            
+            // Se tem movimentação, atualiza. Se não tem, cria.
+            if ($transacao->movimentacao) {
+                // Verifica se a entidade mudou
+                $entidadeMovimentacaoAntiga = $transacao->movimentacao->entidade_id;
+                
+                $transacao->movimentacao->update([
+                    'entidade_id' => $dataToUpdate['entidade_id'],
+                    'tipo' => $dataToUpdate['tipo'],
+                    'valor' => $dataToUpdate['valor'],
+                    'descricao' => $dataToUpdate['descricao'],
+                    'data' => $dataToUpdate['data_competencia'],
+                    'data_competencia' => $dataToUpdate['data_competencia'],
+                    'lancamento_padrao_id' => $dataToUpdate['lancamento_padrao_id'],
+                    'updated_by' => $dataToUpdate['updated_by'],
+                    'updated_by_name' => $dataToUpdate['updated_by_name'],
+                ]);
+                
+                // Se a entidade mudou, precisamos recalcular ambas
+                if ($entidadeMovimentacaoAntiga != $entidadeNovaId) {
+                    $entidadesParaRecalcular[] = $entidadeMovimentacaoAntiga;
+                }
+                $entidadesParaRecalcular[] = $entidadeNovaId;
+            } else {
+                // Não tem movimentação mas deveria ter (situação é pago/recebido)
+                // Cria a movimentação
+                $transacao->movimentacao()->create([
+                    'entidade_id' => $dataToUpdate['entidade_id'],
+                    'tipo' => $dataToUpdate['tipo'],
+                    'valor' => $dataToUpdate['valor'],
+                    'descricao' => $dataToUpdate['descricao'],
+                    'data' => $dataToUpdate['data_competencia'],
+                    'data_competencia' => $dataToUpdate['data_competencia'],
+                    'company_id' => $transacao->company_id,
+                    'lancamento_padrao_id' => $dataToUpdate['lancamento_padrao_id'],
+                    'created_by' => $dataToUpdate['updated_by'],
+                    'created_by_name' => $dataToUpdate['updated_by_name'],
+                    'updated_by' => $dataToUpdate['updated_by'],
+                    'updated_by_name' => $dataToUpdate['updated_by_name'],
+                ]);
+                $entidadesParaRecalcular[] = $entidadeNovaId;
+            }
+        } else {
+            // Se a situação não é efetivada (ex: em_aberto) e existe movimentação, deve remover
+            // Isso acontece quando uma transação paga é revertida para em_aberto
+            if ($transacao->movimentacao) {
+                $entidadeMovimentacaoRemovida = $transacao->movimentacao->entidade_id;
+                
+                Log::info('Removendo movimentação de transação não efetivada (Caixa)', [
+                    'transacao_id' => $transacao->id,
+                    'situacao' => $situacaoAtual
+                ]);
+                $transacao->movimentacao->delete();
+                
+                // Precisa recalcular o saldo da entidade que teve movimentação removida
+                $entidadesParaRecalcular[] = $entidadeMovimentacaoRemovida;
+            }
+        }
+        
+        // ✅ ATUALIZA O SALDO_ATUAL DAS ENTIDADES AFETADAS
+        if (!empty($entidadesParaRecalcular)) {
+            $entidadesUnicas = array_unique($entidadesParaRecalcular);
+            foreach ($entidadesUnicas as $entidadeId) {
+                $entidade = EntidadeFinanceira::find($entidadeId);
+                if ($entidade) {
+                    $saldoAnterior = $entidade->saldo_atual;
+                    $entidade->recalcularSaldo();
+                    
+                    Log::info('Saldo recalculado após atualização de transação (Caixa)', [
+                        'entidade_id' => $entidadeId,
+                        'transacao_id' => $transacao->id,
+                        'saldo_anterior' => $saldoAnterior,
+                        'saldo_novo' => $entidade->saldo_atual,
                     ]);
                 }
             }
-
-            // Adiciona mensagem de sucesso
-            Flasher::addSuccess('Lançamento atualiazado com sucesso!');
-            return redirect()->back()->with('message', 'Atualizado com sucesso!');
-        } catch (\Exception $e) {
-            // Log de erro e mensagem de retorno
-            Log::error('Erro ao atualizar movimentação: ' . $e->getMessage());
-            return redirect()->back()->withInput()->with('error', 'Erro ao atualizar: ' . $e->getMessage());
         }
+        
+        // Resposta de sucesso
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Lançamento atualizado com sucesso!',
+                'data' => [
+                    'id' => $transacao->id,
+                    'descricao' => $transacao->descricao,
+                    'valor' => $transacao->valor,
+                ]
+            ]);
+        }
+        
+        \Flasher\Laravel\Facade\Flasher::addSuccess('Lançamento atualizado com sucesso!');
+        return redirect()->back();
     }
 
     /**

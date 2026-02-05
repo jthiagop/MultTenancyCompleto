@@ -73,26 +73,29 @@ class EntidadeFinanceira extends Model
     }
 
     /**
-     * ✅ NOVO: Calcula o saldo dinamicamente baseado em movimentações e transações
-     * Sempre valores absolutos no banco + coluna tipo (entrada/saida)
+     * ✅ Calcula o saldo dinamicamente baseado em MOVIMENTAÇÕES
      * 
      * Fórmula: saldo_inicial + (Σ entrada) - (Σ saida)
+     * 
+     * REGRA DE NEGÓCIO:
+     * - Movimentações SÓ existem para transações EFETIVADAS (pago/recebido)
+     * - A tabela movimentacoes é a fonte de verdade para o saldo
+     * - Transações em_aberto são previsões e NÃO têm movimentação
      * 
      * @return float
      */
     public function calculateBalance()
     {
-        // ✅ IMPORTANTE: Não somar DUAS VEZES!
-        // A tabela transacoes_financeiras é a fonte de verdade (reconciliação bancária)
-        // A tabela movimentacoes é um histórico de auditoria
-        // Então apenas somamos transacoes_financeiras
-        
-        $saldoTransacoes = DB::table('transacoes_financeiras')
+        // ✅ FONTE DE VERDADE: Tabela movimentacoes
+        // Movimentações só existem para transações efetivadas (pago/recebido)
+        // Portanto, não precisa filtrar por situação - se existe movimentação, impacta o saldo
+        $saldoMovimentacoes = DB::table('movimentacoes')
             ->where('entidade_id', $this->id)
+            ->whereNull('deleted_at')
             ->selectRaw("SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE -valor END) as saldo")
             ->value('saldo') ?? 0;
 
-        return $this->saldo_inicial + $saldoTransacoes;
+        return $this->saldo_inicial + $saldoMovimentacoes;
     }
 
     /**

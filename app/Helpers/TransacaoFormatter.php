@@ -14,7 +14,7 @@ class TransacaoFormatter
     public function formatActions(TransacaoFinanceira $transacao, array $options = []): string
     {
         $viewAction = $options['viewAction'] ?? "abrirDrawerTransacao({$transacao->id}); return false;";
-        $editRoute = $options['editRoute'] ?? route('banco.edit', $transacao->id);
+        $editAction = $options['editAction'] ?? "abrirDrawerEdicao({$transacao->id}); return false;";
         $deleteAction = $options['deleteAction'] ?? 'data-kt-transacao-table-filter="delete_row" data-transacao-id="' . $transacao->id . '"';
         $informarPagamentoAction = $options['informarPagamentoAction'] ?? "informarPagamento({$transacao->id}); return false;";
         $viewLabel = $options['viewLabel'] ?? 'Visualizar';
@@ -38,7 +38,7 @@ class TransacaoFormatter
         return view('app.financeiro.banco.partials.actions-button', [
             'transacao' => $transacao,
             'viewAction' => $viewAction,
-            'editRoute' => $editRoute,
+            'editAction' => $editAction,
             'deleteAction' => $deleteAction,
             'informarPagamentoAction' => $informarPagamentoAction,
             'viewLabel' => $viewLabel,
