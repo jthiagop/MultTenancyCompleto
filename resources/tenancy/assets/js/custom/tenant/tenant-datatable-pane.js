@@ -3,15 +3,10 @@
  * 
  * Inicializa e gerencia múltiplos panes de DataTables de forma isolada e escalável.
  * Cada pane é identificado por data-pane-id e funciona independentemente.
- * 
- * @version 2.0.1 - 2026-01-29
  */
 
 (function() {
     'use strict';
-    
-    // Versão do script para debug de cache
-    const SCRIPT_VERSION = '2.0.1';
 
     // Mensagem de estado vazio (reutilizável)
     const EMPTY_MESSAGE = `
@@ -50,8 +45,6 @@
      * @param {HTMLElement} paneEl - Elemento raiz do pane (.tenant-datatable-pane)
      */
     function initPane(paneEl) {
-        console.log(`[TenantDataTablePane] Iniciando initPane para elemento:`, paneEl.id || paneEl.dataset.tableId);
-        
         // Ler configuração dos data-* attributes
         const config = {
             paneId: paneEl.dataset.paneId,
@@ -66,16 +59,6 @@
             pageLength: parseInt(paneEl.dataset.pageLength || '50', 10),
             csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
         };
-        
-        console.log(`[TenantDataTablePane] Config do pane:`, {
-            paneId: config.paneId,
-            tableId: config.tableId,
-            key: config.key,
-            tipo: config.tipo,
-            statsUrl: config.statsUrl,
-            dataUrl: config.dataUrl,
-            columnsCount: config.columns.length
-        });
 
         // Estado interno do pane
         const state = {
@@ -123,8 +106,6 @@
             fetch(config.statsUrl + '?' + params)
                 .then(response => response.json())
                 .then(data => {
-                    console.log(`[Pane ${config.paneId}] Stats recebidas:`, data);
-                    
                     // Determinar chaves de tabs baseado no tipo de pane
                     let tabKeys;
                     
@@ -142,28 +123,21 @@
                     tabKeys.forEach(key => {
                         const tabElement = paneEl.querySelector(`[data-tab-key="${key}"]`);
                         if (tabElement) {
-                            // Tentar .segmented-tab-count primeiro (novo componente), depois .fs-2 (fallback)
-                            let valueElement = tabElement.querySelector('.segmented-tab-count');
-                            if (!valueElement) {
-                                valueElement = tabElement.querySelector('.fs-2');
-                            }
-                            
+                            const valueElement = tabElement.querySelector('.fs-2');
                             if (valueElement) {
                                 const value = data[key] || '0,00';
                                 valueElement.textContent = value;
-                                console.log(`[Pane ${config.paneId}] Tab ${key} atualizada: ${value}`);
                                 
                                 // Se o valor for negativo, aplicar classe text-danger (vermelho)
                                 if (value.startsWith('-')) {
                                     // Remover outras classes de cor e adicionar text-danger
                                     valueElement.classList.remove('text-primary', 'text-success', 'text-warning', 'text-info', 'text-secondary');
                                     valueElement.classList.add('text-danger');
+                                } else {
+                                    // Para valores positivos, restaurar a classe original se necessário
+                                    // (A classe original já está aplicada pelo Blade, então não precisamos fazer nada)
                                 }
-                            } else {
-                                console.warn(`[Pane ${config.paneId}] Elemento de valor não encontrado para tab ${key}`);
                             }
-                        } else {
-                            console.warn(`[Pane ${config.paneId}] Tab element não encontrado para key: ${key}`);
                         }
                     });
                 })
@@ -734,82 +708,33 @@
 
     // Inicializar todos os panes quando o DOM estiver pronto
     function initAllPanes() {
-        console.log('[TenantDataTablePane] Buscando panes para inicializar...');
-        
-        // Suportar tanto tenant-datatable-pane quanto elementos com data-table-id/data-filter-id
-        const oldPanes = document.querySelectorAll('.tenant-datatable-pane');
-        console.log(`[TenantDataTablePane] Encontrados ${oldPanes.length} elementos com classe .tenant-datatable-pane`);
-        
-        // Buscar elementos com data-table-id ou data-filter-id (pode estar no div pai ou no segmented-shell)
-        const elementsWithTableId = document.querySelectorAll('[data-table-id]');
-        const elementsWithFilterId = document.querySelectorAll('[data-filter-id]');
-        console.log(`[TenantDataTablePane] Encontrados ${elementsWithTableId.length} elementos com data-table-id`);
-        console.log(`[TenantDataTablePane] Encontrados ${elementsWithFilterId.length} elementos com data-filter-id`);
-        
-        // Combinar todos os seletores
-        const allElements = [...oldPanes, ...elementsWithTableId, ...elementsWithFilterId];
-        
-        // Remover duplicatas e filtrar apenas elementos que têm os atributos necessários
-        const uniquePanes = Array.from(new Set(allElements)).filter(function(el) {
-            // Deve ter data-table-id ou data-filter-id, e data-stats-url e data-data-url
-            const hasRequiredAttrs = (el.dataset.tableId || el.dataset.filterId) && 
-                                     el.dataset.statsUrl && 
-                                     el.dataset.dataUrl;
-            
-            return hasRequiredAttrs;
-        });
-        
-        console.log(`[TenantDataTablePane] Total de ${uniquePanes.length} panes válidos para inicializar`);
-        
-        uniquePanes.forEach(function(paneEl, index) {
+        const panes = document.querySelectorAll('.tenant-datatable-pane');
+        panes.forEach(function(paneEl) {
             try {
-                console.log(`[TenantDataTablePane] Inicializando pane ${index + 1}/${uniquePanes.length}:`, paneEl.id || paneEl.dataset.tableId);
                 initPane(paneEl);
             } catch (error) {
-                console.error(`[TenantDataTablePane] Erro ao inicializar pane ${index + 1}:`, paneEl, error);
+                console.error('Erro ao inicializar pane:', paneEl, error);
             }
         });
-    }
-
-    // Função para aguardar dependências e inicializar
-    function waitForDependenciesAndInit() {
-        const maxAttempts = 50; // 5 segundos máximo (50 * 100ms)
-        let attempts = 0;
-        
-        function checkAndInit() {
-            attempts++;
-            
-            const hasJQuery = typeof $ !== 'undefined' || typeof jQuery !== 'undefined';
-            const hasMoment = typeof moment !== 'undefined';
-            const hasDataTables = hasJQuery && (typeof $.fn !== 'undefined' && typeof $.fn.DataTable !== 'undefined');
-            
-            if (hasJQuery && hasMoment && hasDataTables) {
-                console.log('[TenantDataTablePane] Todas as dependências carregadas. Inicializando panes...');
-                initAllPanes();
-            } else if (attempts < maxAttempts) {
-                setTimeout(checkAndInit, 100);
-            } else {
-                console.error('[TenantDataTablePane] Timeout aguardando dependências!', {
-                    jQuery: hasJQuery,
-                    moment: hasMoment,
-                    dataTables: hasDataTables
-                });
-                // Tentar inicializar mesmo assim
-                initAllPanes();
-            }
-        }
-        
-        checkAndInit();
     }
 
     // Aguardar DOM e dependências
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            waitForDependenciesAndInit();
+            // Aguardar jQuery e moment.js
+            if (typeof $ === 'undefined' || typeof moment === 'undefined') {
+                setTimeout(initAllPanes, 100);
+            } else {
+                initAllPanes();
+            }
         });
     } else {
         // DOM já está pronto
-        waitForDependenciesAndInit();
+        if (typeof $ === 'undefined' || typeof moment === 'undefined') {
+            setTimeout(initAllPanes, 100);
+        } else {
+            initAllPanes();
+        }
     }
 
     // Exportar para uso global se necessário (opcional)

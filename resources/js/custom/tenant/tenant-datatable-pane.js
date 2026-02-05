@@ -49,7 +49,6 @@
      * @param {HTMLElement} paneEl - Elemento raiz do pane (.tenant-datatable-pane)
      */
     function initPane(paneEl) {
-        console.log(`[TenantDataTablePane] Iniciando initPane para elemento:`, paneEl.id || paneEl.dataset.tableId);
         
         // Ler configuração dos data-* attributes
         const config = {
@@ -65,16 +64,6 @@
             pageLength: parseInt(paneEl.dataset.pageLength || '50', 10),
             csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
         };
-        
-        console.log(`[TenantDataTablePane] Config do pane:`, {
-            paneId: config.paneId,
-            tableId: config.tableId,
-            key: config.key,
-            tipo: config.tipo,
-            statsUrl: config.statsUrl,
-            dataUrl: config.dataUrl,
-            columnsCount: config.columns.length
-        });
 
         // Estado interno do pane
         const state = {
@@ -321,14 +310,6 @@
                             d.status = status;
                             d.start_date = state.currentStart.format('YYYY-MM-DD');
                             d.end_date = state.currentEnd.format('YYYY-MM-DD');
-                            
-                            // Debug: log do status sendo enviado
-                            console.log('[DataTable AJAX] Enviando dados:', {
-                                tipo: d.tipo,
-                                status: d.status,
-                                start_date: d.start_date,
-                                end_date: d.end_date
-                            });
 
                             // Detectar se é extrato
                             if (config.key === 'extrato') {
@@ -783,17 +764,13 @@
 
     // Inicializar todos os panes quando o DOM estiver pronto
     function initAllPanes() {
-        console.log('[TenantDataTablePane] Buscando panes para inicializar...');
         
         // Suportar tanto tenant-datatable-pane quanto elementos com data-table-id/data-filter-id
         const oldPanes = document.querySelectorAll('.tenant-datatable-pane');
-        console.log(`[TenantDataTablePane] Encontrados ${oldPanes.length} elementos com classe .tenant-datatable-pane`);
         
         // Buscar elementos com data-table-id ou data-filter-id (pode estar no div pai ou no segmented-shell)
         const elementsWithTableId = document.querySelectorAll('[data-table-id]');
         const elementsWithFilterId = document.querySelectorAll('[data-filter-id]');
-        console.log(`[TenantDataTablePane] Encontrados ${elementsWithTableId.length} elementos com data-table-id`);
-        console.log(`[TenantDataTablePane] Encontrados ${elementsWithFilterId.length} elementos com data-filter-id`);
         
         // Combinar todos os seletores
         const allElements = [...oldPanes, ...elementsWithTableId, ...elementsWithFilterId];
@@ -808,11 +785,9 @@
             return hasRequiredAttrs;
         });
         
-        console.log(`[TenantDataTablePane] Total de ${uniquePanes.length} panes válidos para inicializar`);
         
         uniquePanes.forEach(function(paneEl, index) {
             try {
-                console.log(`[TenantDataTablePane] Inicializando pane ${index + 1}/${uniquePanes.length}:`, paneEl.id || paneEl.dataset.tableId);
                 initPane(paneEl);
             } catch (error) {
                 console.error(`[TenantDataTablePane] Erro ao inicializar pane ${index + 1}:`, paneEl, error);
@@ -833,7 +808,6 @@
             const hasDataTables = hasJQuery && (typeof $.fn !== 'undefined' && typeof $.fn.DataTable !== 'undefined');
             
             if (hasJQuery && hasMoment && hasDataTables) {
-                console.log('[TenantDataTablePane] Todas as dependências carregadas. Inicializando panes...');
                 initAllPanes();
             } else if (attempts < maxAttempts) {
                 setTimeout(checkAndInit, 100);

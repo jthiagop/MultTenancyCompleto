@@ -325,7 +325,6 @@
                     data: (d) => {
                         // Delegar construção dos dados ao adapter
                         this.adapter.buildAjaxData(d, this.config, this.state, this.paneEl, status);
-                        console.log('[DataTable AJAX] Enviando dados:', d);
                     }
                 },
                 columns: dtColumns,

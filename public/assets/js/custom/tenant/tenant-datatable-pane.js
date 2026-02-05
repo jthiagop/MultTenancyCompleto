@@ -111,14 +111,10 @@
             console.log(`[Pane ${config.paneId}] Atualizando estatísticas...`);
 
             const params = new URLSearchParams({
-                tipo: config.tipo
+                tipo: config.tipo,
+                start_date: state.currentStart.format('YYYY-MM-DD'),
+                end_date: state.currentEnd.format('YYYY-MM-DD')
             });
-
-            // Para secretaria, não precisamos de datas
-            if (config.key !== 'secretary') {
-                params.append('start_date', state.currentStart.format('YYYY-MM-DD'));
-                params.append('end_date', state.currentEnd.format('YYYY-MM-DD'));
-            }
 
             // Se for extrato, adicionar flags
             if (config.key === 'extrato') {
@@ -126,22 +122,20 @@
                 params.append('is_extrato', 'true');
             }
 
-            // Adicionar filtro de conta se houver seleção (não aplicável para secretaria)
-            if (config.key !== 'secretary') {
-                const accountSelect = paneEl.querySelector(`#account-filter-${config.filterId}`);
-                if (accountSelect) {
-                    if (accountSelect.multiple) {
-                        const selectedValues = Array.from(accountSelect.selectedOptions)
-                            .map(option => option.value)
-                            .filter(value => value !== '');
-                        if (selectedValues.length > 0) {
-                            selectedValues.forEach(value => {
-                                params.append('entidade_id[]', value);
-                            });
-                        }
-                    } else if (accountSelect.value) {
-                        params.append('entidade_id', accountSelect.value);
+            // Adicionar filtro de conta se houver seleção
+            const accountSelect = paneEl.querySelector(`#account-filter-${config.filterId}`);
+            if (accountSelect) {
+                if (accountSelect.multiple) {
+                    const selectedValues = Array.from(accountSelect.selectedOptions)
+                        .map(option => option.value)
+                        .filter(value => value !== '');
+                    if (selectedValues.length > 0) {
+                        selectedValues.forEach(value => {
+                            params.append('entidade_id[]', value);
+                        });
                     }
+                } else if (accountSelect.value) {
+                    params.append('entidade_id', accountSelect.value);
                 }
             }
 
@@ -161,10 +155,7 @@
                     // Determinar chaves de tabs baseado no tipo de pane
                     let tabKeys;
                     
-                    if (config.key === 'secretary') {
-                        // Tabs específicas para secretaria
-                        tabKeys = ['todos', 'presbiteros', 'diaconos', 'irmaos', 'votos_simples'];
-                    } else if (config.key === 'extrato') {
+                    if (config.key === 'extrato') {
                         // Tabs específicas para extrato
                         tabKeys = ['receitas_aberto', 'receitas_realizadas', 'despesas_aberto', 'despesas_realizadas', 'total'];
                     } else {
@@ -187,12 +178,12 @@
                             }
                             
                             if (valueElement) {
-                                const value = data[key] || '0';
+                                const value = data[key] || '0,00';
                                 valueElement.textContent = value;
                                 console.log(`[Pane ${config.paneId}] Atualizado tab ${key}: ${value}`);
                                 
                                 // Se o valor for negativo, aplicar classe text-danger (vermelho)
-                                if (value.toString().startsWith('-')) {
+                                if (value.startsWith('-')) {
                                     // Remover outras classes de cor e adicionar text-danger
                                     valueElement.classList.remove('text-primary', 'text-success', 'text-warning', 'text-info', 'text-secondary');
                                     valueElement.classList.add('text-danger');
@@ -292,13 +283,16 @@
             toggleSaldoColumn(status);
 
             // Construir array de colunas do DataTables a partir de config.columns
-            // Para secretary: usar 'key' pois o controller retorna dados com keys nomeadas
-            // Para financeiro (contas_pagar, contas_receber, extrato): usar índice numérico
-            const useKeyMapping = config.key === 'secretary'; // Módulos que usam keys nomeadas no backend
-            
             const dtColumns = config.columns.map((col, index) => {
+                // Para colunas especiais, usar render customizado se necessário
+                if (col.key === 'checkbox' || col.key === 'acoes') {
+                    return {
+                        data: index,
+                        orderable: col.orderable !== false
+                    };
+                }
                 return {
-                    data: useKeyMapping ? (col.key || index) : index,
+                    data: index,
                     orderable: col.orderable !== false
                 };
             });
@@ -344,55 +338,47 @@
                 ajax: {
                     url: config.dataUrl,
                     data: function(d) {
-                        // Para secretaria, usar filtros específicos
-                        if (config.key === 'secretary') {
-                            // Obter filtro da tab ativa
-                            const activePane = paneEl.querySelector('.tab-pane.active');
-                            if (activePane && activePane.dataset.filterJson) {
-                                const filter = JSON.parse(activePane.dataset.filterJson);
-                                if (filter) {
-                                    d.filter = JSON.stringify(filter);
+                        d.tipo = config.tipo;
+                        d.status = status;
+                        d.start_date = state.currentStart.format('YYYY-MM-DD');
+                        d.end_date = state.currentEnd.format('YYYY-MM-DD');
+                        
+                        // Debug: log do status sendo enviado
+                        console.log('[DataTable AJAX] Enviando dados:', {
+                            tipo: d.tipo,
+                            status: d.status,
+                            start_date: d.start_date,
+                            end_date: d.end_date
+                        });
+
+                        // Detectar se é extrato
+                        if (config.key === 'extrato') {
+                            d.is_extrato = 'true';
+                            d.tab = 'extrato';
+                        }
+
+                        // Adicionar filtros do componente tenant-datatable-filters (escopo ao pane)
+                        const searchInput = paneEl.querySelector(`#search-${config.filterId}`);
+                        if (searchInput && searchInput.value) {
+                            d.search = { value: searchInput.value };
+                        }
+
+                        const accountSelect = paneEl.querySelector(`#account-filter-${config.filterId}`);
+                        if (accountSelect) {
+                            if (accountSelect.multiple) {
+                                const selectedValues = Array.from(accountSelect.selectedOptions).map(option => option.value);
+                                if (selectedValues.length > 0) {
+                                    d.entidade_id = selectedValues;
                                 }
-                            }
-                        } else {
-                            // Lógica original para outros módulos
-                            d.tipo = config.tipo;
-                            d.status = status;
-                            d.start_date = state.currentStart.format('YYYY-MM-DD');
-                            d.end_date = state.currentEnd.format('YYYY-MM-DD');
-                            
-                            // Se for extrato, adicionar flags
-                            if (config.key === 'extrato') {
-                                d.is_extrato = 'true';
-                                d.tab = 'extrato';
-                            }
-
-                            // Adicionar filtros do componente tenant-datatable-filters (escopo ao pane)
-                            const searchInput = paneEl.querySelector(`#search-${config.filterId}`);
-                            if (searchInput && searchInput.value) {
-                                d.search = { value: searchInput.value };
-                            }
-
-                            const accountSelect = paneEl.querySelector(`#account-filter-${config.filterId}`);
-                            if (accountSelect) {
-                                if (accountSelect.multiple) {
-                                    const selectedValues = Array.from(accountSelect.selectedOptions).map(option => option.value);
-                                    if (selectedValues.length > 0) {
-                                        d.entidade_id = selectedValues;
-                                    }
-                                } else if (accountSelect.value) {
-                                    d.entidade_id = accountSelect.value;
-                                }
-                            }
-
-                            const situacaoSelect = paneEl.querySelector(`#situacao-filter-${config.filterId}`);
-                            if (situacaoSelect && situacaoSelect.value) {
-                                d.situacao = situacaoSelect.value;
+                            } else if (accountSelect.value) {
+                                d.entidade_id = accountSelect.value;
                             }
                         }
-                        
-                        // Debug: log dos dados sendo enviados
-                        console.log('[DataTable AJAX] Enviando dados:', d);
+
+                        const situacaoSelect = paneEl.querySelector(`#situacao-filter-${config.filterId}`);
+                        if (situacaoSelect && situacaoSelect.value) {
+                            d.situacao = situacaoSelect.value;
+                        }
                     }
                 },
                 columns: dtColumns,
@@ -623,22 +609,6 @@
             });
         });
 
-        // Para secretaria, escutar cliques nas tabs do segmented-tabs-toolbar
-        if (config.key === 'secretary') {
-            const segmentedTabs = paneEl.querySelectorAll('[data-bs-toggle="tab"]');
-            segmentedTabs.forEach(link => {
-                link.addEventListener('shown.bs.tab', function(e) {
-                    console.log(`[Pane ${config.paneId}] Tab da secretaria mudou`);
-                    // Recarregar DataTable ao trocar de tab
-                    if (state.dataTable) {
-                        state.dataTable.ajax.reload();
-                    }
-                    // Atualizar estatísticas
-                    updateStats();
-                });
-            });
-        }
-
         // Suportar navegação do navegador (voltar/avançar)
         window.addEventListener('popstate', function(event) {
             const urlParams = new URLSearchParams(window.location.search);
@@ -842,13 +812,17 @@
 
     // Inicializar todos os panes quando o DOM estiver pronto
     function initAllPanes() {
+        console.log('[TenantDataTablePane] Buscando panes para inicializar...');
         
         // Suportar tanto tenant-datatable-pane quanto elementos com data-table-id/data-filter-id
         const oldPanes = document.querySelectorAll('.tenant-datatable-pane');
+        console.log(`[TenantDataTablePane] Encontrados ${oldPanes.length} elementos com classe .tenant-datatable-pane`);
         
         // Buscar elementos com data-table-id ou data-filter-id (pode estar no div pai ou no segmented-shell)
         const elementsWithTableId = document.querySelectorAll('[data-table-id]');
         const elementsWithFilterId = document.querySelectorAll('[data-filter-id]');
+        console.log(`[TenantDataTablePane] Encontrados ${elementsWithTableId.length} elementos com data-table-id`);
+        console.log(`[TenantDataTablePane] Encontrados ${elementsWithFilterId.length} elementos com data-filter-id`);
         
         // Combinar todos os seletores
         const allElements = [...oldPanes, ...elementsWithTableId, ...elementsWithFilterId];
@@ -860,12 +834,23 @@
                                      el.dataset.statsUrl && 
                                      el.dataset.dataUrl;
             
+            if (!hasRequiredAttrs) {
+                console.warn('[TenantDataTablePane] Elemento sem atributos necessários:', el, {
+                    tableId: el.dataset.tableId,
+                    filterId: el.dataset.filterId,
+                    statsUrl: el.dataset.statsUrl,
+                    dataUrl: el.dataset.dataUrl
+                });
+            }
+            
             return hasRequiredAttrs;
         });
         
+        console.log(`[TenantDataTablePane] Total de ${uniquePanes.length} panes válidos para inicializar`);
         
         uniquePanes.forEach(function(paneEl, index) {
             try {
+                console.log(`[TenantDataTablePane] Inicializando pane ${index + 1}/${uniquePanes.length}...`);
                 initPane(paneEl);
             } catch (error) {
                 console.error(`[TenantDataTablePane] Erro ao inicializar pane ${index + 1}:`, paneEl, error);
@@ -885,8 +870,10 @@
             const hasMoment = typeof moment !== 'undefined';
             const hasDataTables = hasJQuery && (typeof $.fn !== 'undefined' && typeof $.fn.DataTable !== 'undefined');
             
+            console.log(`[TenantDataTablePane] Tentativa ${attempts}/${maxAttempts} - jQuery: ${hasJQuery}, Moment: ${hasMoment}, DataTables: ${hasDataTables}`);
             
             if (hasJQuery && hasMoment && hasDataTables) {
+                console.log('[TenantDataTablePane] Todas as dependências carregadas. Inicializando panes...');
                 initAllPanes();
             } else if (attempts < maxAttempts) {
                 setTimeout(checkAndInit, 100);
@@ -907,10 +894,12 @@
     // Aguardar DOM e dependências
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('[TenantDataTablePane] DOM carregado, aguardando dependências...');
             waitForDependenciesAndInit();
         });
     } else {
         // DOM já está pronto
+        console.log('[TenantDataTablePane] DOM já pronto, aguardando dependências...');
         waitForDependenciesAndInit();
     }
 
