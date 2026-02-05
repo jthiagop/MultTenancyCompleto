@@ -346,8 +346,8 @@ class BancoController extends Controller
         
         // Aplica filtro de data baseado na tab
         if ($isExtrato) {
-            // Para extrato, filtra por data_vencimento
-            $query->whereBetween('data_vencimento', [$startDate, $endDate]);
+            // Para extrato, filtra por data_competencia
+            $query->whereBetween('data_competencia', [$startDate, $endDate]);
         } else {
             // Para outras tabs, filtra por data_competencia
             $query->whereBetween('data_competencia', [$startDate, $endDate]);
@@ -895,18 +895,41 @@ class BancoController extends Controller
         // Aplicar busca geral (do campo de pesquisa do DataTables)
         if ($request->filled('search') && !empty($request->search['value'])) {
             $search = $request->search['value'];
-            $query->where(function($q) use ($search) {
+            
+            // Verificar se a busca é um valor monetário (ex: "150,00" ou "150.00" ou "1.500,00")
+            $searchNumeric = null;
+            $cleanSearch = preg_replace('/[^\d,.]/', '', $search);
+            if (!empty($cleanSearch)) {
+                // Converter formato brasileiro (1.500,00) para decimal
+                $cleanSearch = str_replace('.', '', $cleanSearch); // Remove separador de milhar
+                $cleanSearch = str_replace(',', '.', $cleanSearch); // Converte vírgula decimal
+                if (is_numeric($cleanSearch)) {
+                    $searchNumeric = (float) $cleanSearch;
+                }
+            }
+            
+            $query->where(function($q) use ($search, $searchNumeric) {
                 $q->where('id', 'like', "%{$search}%")
                   ->orWhere('descricao', 'like', "%{$search}%")
                   ->orWhere('tipo_documento', 'like', "%{$search}%")
                   ->orWhere('numero_documento', 'like', "%{$search}%")
                   ->orWhere('origem', 'like', "%{$search}%")
+                  ->orWhere('historico_complementar', 'like', "%{$search}%")
                   ->orWhereHas('lancamentoPadrao', function($subQ) use ($search) {
                       $subQ->where('description', 'like', "%{$search}%");
                   })
                   ->orWhereHas('parceiro', function($subQ) use ($search) {
                       $subQ->where('nome', 'like', "%{$search}%");
+                  })
+                  ->orWhereHas('entidadeFinanceira', function($subQ) use ($search) {
+                      $subQ->where('nome', 'like', "%{$search}%");
                   });
+                
+                // Busca por valor (com tolerância para arredondamento)
+                if ($searchNumeric !== null) {
+                    $tolerance = 0.01; // Tolerância de 1 centavo
+                    $q->orWhereBetween('valor', [$searchNumeric - $tolerance, $searchNumeric + $tolerance]);
+                }
             });
         }
 
@@ -3137,7 +3160,7 @@ class BancoController extends Controller
                 $q->whereIn('tipo', ['banco', 'caixa']); // Inclui banco e caixa
             })
             ->where('company_id', $companyId)
-            ->whereBetween('data_vencimento', [$start, $end]); // Filtrar por data de vencimento
+            ->whereBetween('data_competencia', [$start, $end]); // Filtrar por data de competência
         
         // Aplicar filtro de conta se fornecido
         if ($entidadeId) {
