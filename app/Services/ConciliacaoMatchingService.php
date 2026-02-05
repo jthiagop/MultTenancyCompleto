@@ -72,7 +72,7 @@ class ConciliacaoMatchingService
             ->where('tipo', $tipo)
             ->whereBetween('valor', [$valorMin, $valorMax])
             ->whereBetween('data_competencia', [$dataInicio, $dataFim])
-            ->whereNull('bank_statement_id') // Não conciliadas
+            ->whereDoesntHave('bankStatements') // Não conciliadas (via tabela pivot)
             ->get();
 
         // Calcula score para cada candidato
