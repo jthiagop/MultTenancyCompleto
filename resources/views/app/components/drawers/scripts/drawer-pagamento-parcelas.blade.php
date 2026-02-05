@@ -48,60 +48,6 @@
         return valor.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
     }
     
-    /**
-     * 🔧 CORREÇÃO: Funções para trabalhar com valores monetários usando centavos (integers)
-     * Isso evita erros de precisão de ponto flutuante em operações financeiras
-     */
-    
-    // Converte valor em reais (float/string) para centavos (integer)
-    function paraCentavos(valor) {
-        if (typeof valor === 'string') {
-            valor = parseValorBrasileiro(valor);
-        }
-        // Multiplica por 100 e arredonda para evitar erros de float
-        return Math.round(valor * 100);
-    }
-    
-    // Converte centavos (integer) para reais (float)
-    function paraReais(centavos) {
-        return centavos / 100;
-    }
-    
-    // Formata centavos para string brasileira (R$ 1.234,56)
-    function formatarCentavos(centavos) {
-        return formatarValorBrasileiro(paraReais(centavos));
-    }
-    
-    /**
-     * 🔧 CORREÇÃO: Divide valor total em parcelas garantindo que a soma seja exata
-     * Usa aritmética de inteiros (centavos) para evitar erros de ponto flutuante
-     * 
-     * @param {number} valorTotalCentavos - Valor total em centavos
-     * @param {number} numParcelas - Número de parcelas
-     * @returns {number[]} - Array com o valor de cada parcela em centavos
-     */
-    function dividirEmParcelas(valorTotalCentavos, numParcelas) {
-        if (numParcelas <= 0) return [];
-        
-        // Valor base de cada parcela (inteiro, sem arredondamento)
-        var valorBaseParcela = Math.floor(valorTotalCentavos / numParcelas);
-        
-        // Resto que será distribuído nas primeiras parcelas
-        var resto = valorTotalCentavos % numParcelas;
-        
-        var parcelas = [];
-        for (var i = 0; i < numParcelas; i++) {
-            // As primeiras 'resto' parcelas recebem 1 centavo a mais
-            if (i < resto) {
-                parcelas.push(valorBaseParcela + 1);
-            } else {
-                parcelas.push(valorBaseParcela);
-            }
-        }
-        
-        return parcelas;
-    }
-    
     // Função para gerar as linhas da tabela de parcelas
     function gerarParcelas(parcelamento) {
         // Extrai o número de parcelas (ex: "2x" -> 2)
@@ -116,15 +62,8 @@
         // Obtém o valor total do lançamento
         var valorTotalStr = $('#valor2').val() || '0';
         var valorTotal = parseValorBrasileiro(valorTotalStr);
-        
-        // 🔧 CORREÇÃO: Converte para centavos para evitar erros de ponto flutuante
-        var valorTotalCentavos = paraCentavos(valorTotal);
-        
-        // 🔧 CORREÇÃO: Usa a função que garante soma exata das parcelas
-        var parcelasCentavos = dividirEmParcelas(valorTotalCentavos, numParcelas);
-        
-        // Calcula percentual base (usando 2 casas decimais)
-        var percentualBase = Math.floor((10000 / numParcelas)) / 100; // Ex: 33.33 para 3 parcelas
+        var valorPorParcela = valorTotal / numParcelas;
+        var percentualPorParcela = 100 / numParcelas;
 
         // Obtém a data de vencimento base
         var dataVencimentoBase = $('#vencimento').val();
@@ -142,9 +81,6 @@
 
         // Obtém a descrição base
         var descricaoBase = $('#descricao').val() || '';
-        
-        // Calcula a soma dos percentuais das primeiras parcelas para calcular o último
-        var somaPercentuais = 0;
 
         // Gera uma linha para cada parcela
         for (var i = 1; i <= numParcelas; i++) {
@@ -155,22 +91,18 @@
                 String(dataVencimento.getMonth() + 1).padStart(2, '0') + '/' +
                 dataVencimento.getFullYear();
 
-            // 🔧 CORREÇÃO: Obtém valor da parcela já calculado corretamente (em centavos)
-            var valorParcelaCentavos = parcelasCentavos[i - 1];
-            var valorParcela = paraReais(valorParcelaCentavos);
+            // Calcula o valor da parcela (última parcela recebe o resto)
+            var valorParcela = (i === numParcelas) ?
+                valorTotal - (valorPorParcela * (numParcelas - 1)) :
+                valorPorParcela;
 
-            // 🔧 CORREÇÃO: Calcula o percentual (última parcela recebe o resto para garantir 100%)
-            var percentualParcela;
-            if (i === numParcelas) {
-                // Última parcela: garante que a soma seja exatamente 100%
-                percentualParcela = (100 - somaPercentuais).toFixed(2);
-            } else {
-                percentualParcela = percentualBase.toFixed(2);
-                somaPercentuais += parseFloat(percentualParcela);
-            }
+            // Calcula o percentual (última parcela recebe o resto)
+            var percentualParcela = (i === numParcelas) ?
+                (100 - (percentualPorParcela * (numParcelas - 1))).toFixed(2) :
+                percentualPorParcela.toFixed(2);
 
-            // Formata o valor (já está correto, sem erros de float)
-            var valorFormatado = formatarValorBrasileiro(valorParcela);
+            // Formata o valor
+            var valorFormatado = valorParcela.toFixed(2).replace('.', ',');
 
             // Clonar template
             var template = document.getElementById('parcela-row-template');
@@ -369,20 +301,18 @@
         
         if (valorTotal <= 0) return;
         
-        // 🔧 CORREÇÃO: Trabalha com centavos para evitar erros de precisão
-        var valorTotalCentavos = paraCentavos(valorTotal);
-        var somaCentavos = 0;
+        var somaValores = 0;
         
-        // Calcula a soma dos valores editáveis (exceto a última) em centavos
+        // Calcula a soma dos valores editáveis (exceto a última)
         for (var i = 1; i < numParcelas; i++) {
             var valorInput = $('input[data-parcela-input="valor"][data-parcela-num="' + i + '"]');
             var valorStr = valorInput.val() || '0';
-            var valorParcela = parseValorBrasileiro(valorStr);
-            somaCentavos += paraCentavos(valorParcela);
+            var valor = parseValorBrasileiro(valorStr);
+            somaValores += valor;
         }
         
         // Valida se a soma das parcelas não ultrapassa o valor total
-        if (somaCentavos > valorTotalCentavos) {
+        if (somaValores > valorTotal) {
             var valorInput = $('input[data-parcela-input="valor"][data-parcela-num="' + parcelaAlterada + '"]');
             valorInput.addClass('is-invalid');
             
@@ -403,11 +333,11 @@
         $('input[data-parcela-input="valor"]').removeClass('is-invalid');
         $('input[data-parcela-input="valor"]').closest('td').find('.invalid-feedback').remove();
         
-        // 🔧 CORREÇÃO: Calcula o valor da última parcela em centavos (resto exato)
-        var valorUltimaCentavos = valorTotalCentavos - somaCentavos;
+        // Calcula o valor da última parcela (resto)
+        var valorUltima = valorTotal - somaValores;
         
         // Valida se o valor da última parcela é negativo ou zero
-        if (valorUltimaCentavos <= 0) {
+        if (valorUltima <= 0) {
             var valorUltimaInput = $('input[data-parcela-input="valor"][data-parcela-num="' + numParcelas + '"]');
             valorUltimaInput.addClass('is-invalid');
             valorUltimaInput.closest('td').find('.invalid-feedback').remove();
@@ -417,29 +347,21 @@
             return;
         }
         
-        // Atualiza o valor da última parcela (convertendo de centavos para reais)
-        var valorUltimaFormatado = formatarCentavos(valorUltimaCentavos);
+        // Atualiza o valor da última parcela
+        var valorUltimaFormatado = formatarValorBrasileiro(valorUltima);
         $('input[data-parcela-input="valor"][data-parcela-num="' + numParcelas + '"]').val(valorUltimaFormatado);
         $('input[data-parcela-input="valor"][data-parcela-num="' + numParcelas + '"]').removeClass('is-invalid');
         
-        // 🔧 CORREÇÃO: Recalcula os percentuais baseado nos valores em centavos
-        var somaPercentuais = 0;
+        // Recalcula os percentuais baseado nos valores
         for (var i = 1; i <= numParcelas; i++) {
             var valorInput = $('input[data-parcela-input="valor"][data-parcela-num="' + i + '"]');
             var valorStr = valorInput.val() || '0';
-            var valorParcelaCentavos = paraCentavos(parseValorBrasileiro(valorStr));
+            var valor = parseValorBrasileiro(valorStr);
             
-            var percentual;
-            if (i === numParcelas) {
-                // Última parcela: garante 100% exato
-                percentual = (100 - somaPercentuais).toFixed(2);
-            } else {
-                // Usa centavos para calcular percentual preciso
-                percentual = ((valorParcelaCentavos / valorTotalCentavos) * 100).toFixed(2);
-                somaPercentuais += parseFloat(percentual);
-            }
+            var percentual = (valor / valorTotal) * 100;
+            var percentualFormatado = percentual.toFixed(2);
             
-            $('input[data-parcela-input="percentual"][data-parcela-num="' + i + '"]').val(percentual);
+            $('input[data-parcela-input="percentual"][data-parcela-num="' + i + '"]').val(percentualFormatado);
         }
     }
     
@@ -450,8 +372,6 @@
         
         if (valorTotal <= 0) return;
         
-        // 🔧 CORREÇÃO: Trabalha com centavos para evitar erros de precisão
-        var valorTotalCentavos = paraCentavos(valorTotal);
         var somaPercentuais = 0;
         
         // Calcula a soma dos percentuais editáveis (exceto a última)
@@ -479,32 +399,15 @@
         // Atualiza o percentual da última parcela
         $('input[data-parcela-input="percentual"][data-parcela-num="' + numParcelas + '"]').val(percentualUltima.toFixed(2));
         
-        // 🔧 CORREÇÃO: Recalcula os valores baseado nos percentuais usando centavos
-        // Primeiro, calcula os valores em centavos para cada parcela
-        var valoresCentavos = [];
-        var somaParciaisCentavos = 0;
-        
+        // Recalcula os valores baseado nos percentuais
         for (var i = 1; i <= numParcelas; i++) {
             var percentualInput = $('input[data-parcela-input="percentual"][data-parcela-num="' + i + '"]');
             var percentualStr = percentualInput.val() || '0';
             var percentual = parseFloat(percentualStr) || 0;
             
-            var valorCentavos;
-            if (i === numParcelas) {
-                // Última parcela: pega o resto para garantir soma exata
-                valorCentavos = valorTotalCentavos - somaParciaisCentavos;
-            } else {
-                // Calcula em centavos e arredonda
-                valorCentavos = Math.round((valorTotalCentavos * percentual) / 100);
-                somaParciaisCentavos += valorCentavos;
-            }
+            var valor = (valorTotal * percentual) / 100;
+            var valorFormatado = formatarValorBrasileiro(valor);
             
-            valoresCentavos.push(valorCentavos);
-        }
-        
-        // Agora aplica os valores formatados
-        for (var i = 1; i <= numParcelas; i++) {
-            var valorFormatado = formatarCentavos(valoresCentavos[i - 1]);
             $('input[data-parcela-input="valor"][data-parcela-num="' + i + '"]').val(valorFormatado);
         }
     }
@@ -596,10 +499,6 @@
         }
     }
     
-    // Torna as funções acessíveis globalmente para outros scripts
-    window.toggleCheckboxesByTipo = toggleCheckboxesByTipo;
-    window.toggleCheckboxPago = toggleCheckboxPago;
-    
     // Controla exibição do checkbox Agendado
     function toggleCheckboxAgendado() {
         var pagoCheckbox = $('#pago_checkbox');
@@ -608,30 +507,45 @@
         var accordionInformacoesPagamento = $('#kt_accordion_informacoes_pagamento');
         var accordionPrevisaoPagamento = $('#kt_accordion_previsao_pagamento');
         
+        // Verifica se descrição e valor estão preenchidos
+        var descricao = $('#descricao').val() || '';
+        var valorStr = $('#valor2').val() || '0';
+        var valorNumerico = parseValorBrasileiro(valorStr);
+        var descricaoPreenchida = descricao.trim().length > 0;
+        var valorPreenchido = valorNumerico > 0;
+        
         if (pagoCheckbox.is(':checked')) {
             agendadoWrapper.hide();
             $('#agendado_checkbox').prop('checked', false);
             
-            // Oculta todos os accordions quando Pago está marcado
-            accordionInformacoesPagamento.hide();
-            accordionPrevisaoPagamento.hide();
-            if (typeof limparInformacoesPagamento === 'function') limparInformacoesPagamento();
-            if (typeof limparPrevisaoPagamento === 'function') limparPrevisaoPagamento();
+            // Só mostra accordion se descrição e valor estiverem preenchidos
+            if (descricaoPreenchida && valorPreenchido) {
+                accordionInformacoesPagamento.show();
+                
+                // Oculta previsão se for 1x ou À Vista
+                if (parcelamento === '1x' || parcelamento === 'avista') {
+                    accordionPrevisaoPagamento.hide();
+                }
+            } else {
+                // Exibe toast de aviso se faltar dados
+                if (!descricaoPreenchida || !valorPreenchido) {
+                    var mensagem = 'Preencha ';
+                    var campos = [];
+                    if (!descricaoPreenchida) campos.push('a descrição');
+                    if (!valorPreenchido) campos.push('o valor');
+                    mensagem += campos.join(' e ') + ' para visualizar as informações de pagamento.';
+                    toastr.warning(mensagem, 'Atenção');
+                }
+            }
         } else {
             agendadoWrapper.show();
             
-            // Oculta accordion de informações e limpa seus campos
+            // Oculta accordion de informações quando desmarca Pago
             accordionInformacoesPagamento.hide();
-            if (typeof limparInformacoesPagamento === 'function') limparInformacoesPagamento();
             
             // Mostra previsão se for 1x
             if (parcelamento === '1x') {
                 accordionPrevisaoPagamento.show();
-                
-                // Calcula o "Valor a Pagar" quando mostra o accordion de previsão
-                setTimeout(function() {
-                    calcularValorAPagar();
-                }, 100);
             }
         }
     }
@@ -664,64 +578,37 @@
                     accordionParcelas.show();
                     accordionInformacoesPagamento.hide();
                     accordionPrevisaoPagamento.hide();
-                    
-                    // Limpa campos dos accordions ocultos
-                    if (typeof limparInformacoesPagamento === 'function') limparInformacoesPagamento();
-                    if (typeof limparPrevisaoPagamento === 'function') limparPrevisaoPagamento();
-                    
                     // Gera as linhas da tabela de parcelas
                     gerarParcelas(parcelamento);
                 } else {
                     accordionParcelas.hide();
                     accordionInformacoesPagamento.hide();
                     accordionPrevisaoPagamento.hide();
-                    
-                    // Limpa todos os campos quando oculta tudo
-                    if (typeof limparDadosAccordions === 'function') limparDadosAccordions();
-                    
                     toastr.warning('Preencha a descrição e o valor antes de selecionar o parcelamento', 'Atenção');
                 }
             } else {
                 accordionParcelas.hide();
                 accordionInformacoesPagamento.hide();
                 accordionPrevisaoPagamento.hide();
-                
-                // Limpa todos os campos quando oculta tudo
-                if (typeof limparDadosAccordions === 'function') limparDadosAccordions();
             }
         } else if (parcelamento === '1x') {
-            // Para 1x, mostra o accordion correto baseado no checkbox "Pago" ou "Recebido"
+            // Para 1x, mostra o accordion correto baseado no checkbox "Pago"
             accordionParcelas.hide();
-            if (typeof limparParcelas === 'function') limparParcelas();
-            
             var pagoCheckbox = $('#pago_checkbox');
-            var recebidoCheckbox = $('#recebido_checkbox');
-            
-            // Se Pago ou Recebido está marcado, não exibe nenhum card
-            if (pagoCheckbox.is(':checked') || recebidoCheckbox.is(':checked')) {
-                accordionInformacoesPagamento.hide();
+            if (pagoCheckbox.is(':checked')) {
+                // Pago marcado: mostra informações de pagamento
+                accordionInformacoesPagamento.show();
                 accordionPrevisaoPagamento.hide();
-                if (typeof limparInformacoesPagamento === 'function') limparInformacoesPagamento();
-                if (typeof limparPrevisaoPagamento === 'function') limparPrevisaoPagamento();
             } else {
-                // Pago/Recebido desmarcado: mostra previsão de pagamento
+                // Pago desmarcado: mostra previsão de pagamento
                 accordionInformacoesPagamento.hide();
                 accordionPrevisaoPagamento.show();
-                if (typeof limparInformacoesPagamento === 'function') limparInformacoesPagamento();
-                
-                // Calcula o "Valor a Pagar" quando mostra o accordion de previsão
-                setTimeout(function() {
-                    calcularValorAPagar();
-                }, 100);
             }
         } else {
-            // À Vista - limpa todos os campos
+            // À Vista
             accordionParcelas.hide();
             accordionInformacoesPagamento.hide();
             accordionPrevisaoPagamento.hide();
-            
-            // Limpa todos os campos quando à vista
-            if (typeof limparDadosAccordions === 'function') limparDadosAccordions();
         }
     });
     
@@ -738,23 +625,23 @@
         var parcelamento = $('#parcelamento').val();
         
         if (recebidoCheckbox.is(':checked')) {
-            // Oculta todos os accordions quando Recebido está marcado
-            accordionInformacoesPagamento.hide();
-            accordionPrevisaoPagamento.hide();
-            if (typeof limparInformacoesPagamento === 'function') limparInformacoesPagamento();
-            if (typeof limparPrevisaoPagamento === 'function') limparPrevisaoPagamento();
-        } else {
-            // Oculta accordion de informações e limpa seus campos
-            accordionInformacoesPagamento.hide();
-            if (typeof limparInformacoesPagamento === 'function') limparInformacoesPagamento();
+            // Verifica se descrição e valor estão preenchidos
+            var descricao = $('#descricao').val() || '';
+            var valorStr = $('#valor2').val() || '0';
+            var valorNumerico = parseValorBrasileiro(valorStr);
+            var descricaoPreenchida = descricao.trim().length > 0;
+            var valorPreenchido = valorNumerico > 0;
             
+            if (descricaoPreenchida && valorPreenchido) {
+                accordionInformacoesPagamento.show();
+                if (parcelamento === '1x' || parcelamento === 'avista') {
+                    accordionPrevisaoPagamento.hide();
+                }
+            }
+        } else {
+            accordionInformacoesPagamento.hide();
             if (parcelamento === '1x') {
                 accordionPrevisaoPagamento.show();
-                
-                // Calcula o "Valor a Pagar" quando mostra o accordion de previsão
-                setTimeout(function() {
-                    calcularValorAPagar();
-                }, 100);
             }
         }
     });
@@ -851,51 +738,14 @@
         if ($('#pago_checkbox').is(':checked')) {
             calcularResumoPagamento();
         }
-        
-        // Atualiza o "Valor a Pagar" no accordion de Previsão de Pagamento
-        if ($('#kt_accordion_previsao_pagamento').is(':visible')) {
-            calcularValorAPagar();
-        }
     });
     
-    // Event listeners para campos de pagamento (Informações de Pagamento)
+    // Event listeners para campos de pagamento
     $('#valor_pago, #juros_pagamento, #multa_pagamento, #desconto_pagamento').on('input change', function() {
         if ($('#pago_checkbox').is(':checked')) {
             calcularResumoPagamento();
         }
     });
-    
-    // Event listeners para campos de Previsão de Pagamento (juros, multa, desconto)
-    $('#juros, #multa, #desconto').on('input change', function() {
-        calcularValorAPagar();
-    });
-    
-    /**
-     * Função para calcular e atualizar o "Valor a Pagar" no accordion de Previsão de Pagamento
-     * Fórmula: valor_a_pagar = valor + juros + multa - desconto
-     */
-    function calcularValorAPagar() {
-        var valor = parseValorBrasileiro($('#valor2').val() || '0');
-        var juros = parseValorBrasileiro($('#juros').val() || '0');
-        var multa = parseValorBrasileiro($('#multa').val() || '0');
-        var desconto = parseValorBrasileiro($('#desconto').val() || '0');
-
-        // Calcula: valor_a_pagar = valor + juros + multa - desconto
-        var valorAPagar = valor + juros + multa - desconto;
-
-        // Atualiza o campo (sempre positivo ou zero)
-        if (valorAPagar < 0) valorAPagar = 0;
-
-        var valorFormatado = formatarValorBrasileiro(valorAPagar);
-        var campoValorAPagar = $('#valor_a_pagar');
-
-        // Se o Inputmask estiver aplicado, usa o método setValue para atualizar com a máscara
-        if (campoValorAPagar.length && campoValorAPagar[0].inputmask) {
-            campoValorAPagar[0].inputmask.setValue(valorFormatado);
-        } else {
-            campoValorAPagar.val(valorFormatado);
-        }
-    }
     
     // Função para calcular e exibir o resumo do pagamento
     function calcularResumoPagamento() {
@@ -912,25 +762,14 @@
         var multa = parseValorBrasileiro(multaStr);
         var desconto = parseValorBrasileiro(descontoStr);
 
-        // 🔧 CORREÇÃO: Converte para centavos para evitar erros de ponto flutuante
-        var valorPrincipalCentavos = paraCentavos(valorPrincipal);
-        var valorPagoCentavos = paraCentavos(valorPago);
-        var jurosCentavos = paraCentavos(juros);
-        var multaCentavos = paraCentavos(multa);
-        var descontoCentavos = paraCentavos(desconto);
+        // Calcula valores
+        var valorParaComparacao = valorPago + juros + multa;
+        var totalPagar = valorParaComparacao - desconto;
+        var valorAberto = valorPrincipal - valorParaComparacao;
 
-        // Calcula valores em centavos
-        var valorParaComparacaoCentavos = valorPagoCentavos + jurosCentavos + multaCentavos;
-        var totalPagarCentavos = valorParaComparacaoCentavos - descontoCentavos;
-        var valorAbertoCentavos = valorPrincipalCentavos - valorParaComparacaoCentavos;
-
-        if (valorAbertoCentavos < 0) {
-            valorAbertoCentavos = 0;
+        if (valorAberto < 0) {
+            valorAberto = 0;
         }
-
-        // Converte de volta para reais para exibição
-        var totalPagar = paraReais(totalPagarCentavos);
-        var valorAberto = paraReais(valorAbertoCentavos);
 
         var valorAbertoContainer = $('#valor_aberto_container');
         var totalPagarContainer = $('#total_pagar_container');
@@ -943,8 +782,7 @@
             totalPagarContainer.show();
             $('#total_pagar_display').text(formatarMoeda(totalPagar));
 
-            // 🔧 CORREÇÃO: Compara em centavos (1 centavo = 1)
-            if (valorAbertoCentavos > 0) {
+            if (valorAberto > 0.01) {
                 valorAbertoContainer.show();
                 $('#valor_aberto_display').text(formatarMoeda(valorAberto));
             } else {
@@ -986,23 +824,13 @@
         var multa = parseValorBrasileiro(multaStr);
         var desconto = parseValorBrasileiro(descontoStr);
 
-        // 🔧 CORREÇÃO: Converte para centavos para evitar erros de ponto flutuante
-        var valorPrincipalCentavos = paraCentavos(valorPrincipal);
-        var valorPagoCentavos = paraCentavos(valorPago);
-        var jurosCentavos = paraCentavos(juros);
-        var multaCentavos = paraCentavos(multa);
-        var descontoCentavos = paraCentavos(desconto);
+        var valorParaComparacao = valorPago + juros + multa;
+        var totalPagar = valorParaComparacao - desconto;
+        var valorAberto = valorPrincipal - valorParaComparacao;
 
-        // Calcula valores em centavos
-        var valorParaComparacaoCentavos = valorPagoCentavos + jurosCentavos + multaCentavos;
-        var valorAbertoCentavos = valorPrincipalCentavos - valorParaComparacaoCentavos;
-
-        if (valorAbertoCentavos < 0) {
-            valorAbertoCentavos = 0;
+        if (valorAberto < 0) {
+            valorAberto = 0;
         }
-
-        // Converte de volta para reais
-        var valorAberto = paraReais(valorAbertoCentavos);
 
         // Obtém valores selecionados
         var formaPagamentoId = $('#entidade_id').val() || '';
@@ -1095,8 +923,7 @@
         }
 
         // Linha 2: Lançamento Em Aberto (se houver valor em aberto)
-        // 🔧 CORREÇÃO: Compara em centavos (> 0 centavos)
-        if (valorAbertoCentavos > 0) {
+        if (valorAberto > 0.01) {
             var linhaAberto = criarLinhaResumoBaixa({
                 index: 1,
                 data: dataPagamento,
@@ -1204,29 +1031,13 @@
         setTimeout(function() {
             inicializarMascarasMoeda();
             toggleCheckboxPago(); // Inicializa visibilidade do checkbox Pago
-            toggleCheckboxesByTipo(); // CORREÇÃO: Garante que checkboxes sejam atualizados na abertura
-            
-            // Calcula o valor inicial do "Valor a Pagar" se o accordion estiver visível
-            if ($('#kt_accordion_previsao_pagamento').is(':visible')) {
-                calcularValorAPagar();
-            }
         }, 200);
     });
     
     // Chama toggleCheckboxPago ao carregar a página para definir estado inicial
     toggleCheckboxPago();
-    
-    // CORREÇÃO: Também inicializa checkboxes baseado no tipo (se já definido)
-    toggleCheckboxesByTipo();
-    
-    // CORREÇÃO: Executa novamente após um delay para garantir sincronização
-    setTimeout(function() {
-        toggleCheckboxesByTipo();
-        toggleCheckboxPago();
-    }, 200);
-    
-    }); // Fecha $(document).ready()
-    } // Fecha initDrawerPagamentoParcelas()
+    });
+    }
 
     // Inicializa quando o DOM estiver pronto
     if (document.readyState === 'loading') {

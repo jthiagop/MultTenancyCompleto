@@ -71,14 +71,15 @@
                 @endforeach
             </x-tenant-select>
             <!--begin::Col-->
-            <x-tenant-select name="cost_center_id" id="cost_center_id" label="Centro de Custo" :allowClear="false"
-                :minimumResultsForSearch="0" dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-5"
+            <x-tenant-select name="cost_center_id" id="cost_center_id" label="Centro de Custo" :allowClear="true"
+                placeholder="Selecione um centro de custo" :minimumResultsForSearch="0" 
+                dropdown-parent="{{ $dropdownParent ?? '#Dm_modal_financeiro' }}" labelSize="fs-6"
                 class="col-md-4" showSuggestionStar="true">
                 @if (isset($centrosAtivos))
-                    @foreach ($centrosAtivos as $index => $centro)
-                        <option value="{{ $centro->id }}" {{ $index === 0 ? 'selected' : '' }}>{{ $centro->code }}
-                            -
-                            {{ $centro->name }}</option>
+                    @foreach ($centrosAtivos as $centro)
+                        <option value="{{ $centro->id }}">
+                            {{ $centro->code }} - {{ $centro->name }}
+                        </option>
                     @endforeach
                 @endif
             </x-tenant-select>

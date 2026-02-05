@@ -490,6 +490,227 @@
         }
     };
 
+    /**
+     * Abre o drawer para edição de uma transação existente
+     * @param {number} transacaoId - ID da transação a ser editada
+     */
+    window.abrirDrawerEdicao = function(transacaoId) {
+        console.log('✏️ [Drawer-Init] Abrindo drawer para edição. ID:', transacaoId);
+        
+        // LIMPEZA PREVENTIVA: Sempre limpa antes de abrir
+        if (typeof limparFormularioDrawerCompleto === 'function') {
+            limparFormularioDrawerCompleto();
+        }
+        
+        var drawer = $('#kt_drawer_lancamento');
+        var form = $('#kt_drawer_lancamento_form');
+        var drawerTitle = drawer.find('.card-title').first();
+        
+        // Exibe loading
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Carregando...',
+                text: 'Buscando dados da transação',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        }
+        
+        // Busca dados da transação via AJAX
+        $.ajax({
+            url: '{{ route("banco.dados-edicao", ":id") }}'.replace(':id', transacaoId),
+            method: 'GET',
+            success: function(response) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.close();
+                }
+                
+                if (response.success && response.data) {
+                    var dados = response.data;
+                    
+                    console.log('📦 [Drawer-Init] Dados recebidos:', dados);
+                    
+                    // Define modo edição
+                    $('#transacao_id').val(dados.id);
+                    $('#_method').val('PUT');
+                    
+                    // Define o tipo
+                    var tipo = dados.tipo_financeiro || (dados.tipo === 'entrada' ? 'receita' : 'despesa');
+                    tipoLancamento = tipo;
+                    $('#tipo_financeiro').val(tipo);
+                    $('#tipo').val(dados.tipo);
+                    
+                    // Atualiza título
+                    var tituloTexto = tipo === 'receita' ? 'Editar Receita' : 'Editar Despesa';
+                    drawerTitle.text(tituloTexto + ' #' + dados.id);
+                    
+                    // Atualiza action do form para update
+                    var origem = dados.origem || 'Banco';
+                    $('#origem').val(origem);
+                    
+                    if (origem === 'Caixa') {
+                        form.attr('action', '{{ route("caixa.update", ":id") }}'.replace(':id', transacaoId));
+                    } else {
+                        form.attr('action', '{{ route("banco.update", ":id") }}'.replace(':id', transacaoId));
+                    }
+                    
+                    // Abre o drawer primeiro
+                    var drawerInstance = KTDrawer.getInstance(document.getElementById('kt_drawer_lancamento'));
+                    if (drawerInstance) {
+                        drawerInstance.show();
+                        
+                        // Preenche os campos após o drawer abrir
+                        setTimeout(function() {
+                            preencherFormularioEdicao(dados);
+                            initDrawerSelect2();
+                            updateFornecedorLabels(tipo);
+                            inicializarEstadoDrawer();
+                        }, 300);
+                    }
+                } else {
+                    if (typeof toastr !== 'undefined') {
+                        toastr.error('Erro ao carregar dados da transação', 'Erro');
+                    }
+                }
+            },
+            error: function(xhr) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.close();
+                }
+                
+                console.error('❌ [Drawer-Init] Erro ao buscar dados:', xhr);
+                
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Erro ao carregar dados da transação', 'Erro');
+                }
+            }
+        });
+    };
+    
+    /**
+     * Converte data do formato Y-m-d para d/m/Y (flatpickr brasileiro)
+     * @param {string} dateStr - Data no formato Y-m-d (ex: 2026-02-03)
+     * @returns {string} Data no formato d/m/Y (ex: 03/02/2026)
+     */
+    function formatDateToBR(dateStr) {
+        if (!dateStr) return '';
+        // Se já está no formato brasileiro, retorna como está
+        if (dateStr.includes('/')) return dateStr;
+        // Converte de Y-m-d para d/m/Y
+        var parts = dateStr.split('-');
+        if (parts.length === 3) {
+            return parts[2] + '/' + parts[1] + '/' + parts[0];
+        }
+        return dateStr;
+    }
+    
+    // Torna acessível globalmente
+    window.formatDateToBR = formatDateToBR;
+    
+    /**
+     * Preenche o formulário com os dados da transação para edição
+     * @param {object} dados - Dados da transação
+     */
+    function preencherFormularioEdicao(dados) {
+        console.log('📝 [Drawer-Init] Preenchendo formulário com dados:', dados);
+        
+        // Campos de texto simples
+        $('#descricao').val(dados.descricao || '');
+        $('#numero_documento').val(dados.numero_documento || '');
+        $('#historico_complementar').val(dados.historico_complementar || '');
+        
+        // Campos de valor (com máscara)
+        var valorInput = $('#valor2');
+        if (valorInput.length) {
+            valorInput.val(dados.valor || '');
+        }
+        
+        // Campos de data - converte para formato brasileiro (d/m/Y)
+        var dataCompetencia = formatDateToBR(dados.data_competencia);
+        var dataVencimento = formatDateToBR(dados.data_vencimento);
+        var dataPagamento = formatDateToBR(dados.data_pagamento);
+        
+        // Preenche campos de data - verifica se tem flatpickr
+        var dataCompetenciaInput = $('[name="data_competencia"]');
+        if (dataCompetenciaInput.length && dataCompetenciaInput[0]._flatpickr) {
+            dataCompetenciaInput[0]._flatpickr.setDate(dataCompetencia, true, 'd/m/Y');
+        } else {
+            dataCompetenciaInput.val(dataCompetencia);
+        }
+        
+        var dataVencimentoInput = $('[name="data_vencimento"], #vencimento');
+        if (dataVencimentoInput.length && dataVencimentoInput[0]._flatpickr) {
+            dataVencimentoInput[0]._flatpickr.setDate(dataVencimento, true, 'd/m/Y');
+        } else {
+            dataVencimentoInput.val(dataVencimento);
+        }
+        
+        var dataPagamentoInput = $('[name="data_pagamento"]');
+        if (dataPagamentoInput.length && dataPagamentoInput[0]._flatpickr) {
+            dataPagamentoInput[0]._flatpickr.setDate(dataPagamento, true, 'd/m/Y');
+        } else {
+            dataPagamentoInput.val(dataPagamento);
+        }
+        
+        // Selects - precisam ser tratados após Select2 inicializar
+        setTimeout(function() {
+            // Entidade Financeira
+            if (dados.entidade_id) {
+                $('#entidade_id').val(dados.entidade_id).trigger('change');
+            }
+            
+            // Lançamento Padrão (Categoria)
+            if (dados.lancamento_padrao_id) {
+                $('#lancamento_padraos_id').val(dados.lancamento_padrao_id).trigger('change');
+            }
+            
+            // Centro de Custo
+            if (dados.cost_center_id) {
+                $('#cost_center_id').val(dados.cost_center_id).trigger('change');
+            }
+            
+            // Forma de Pagamento
+            if (dados.tipo_documento) {
+                $('#tipo_documento').val(dados.tipo_documento).trigger('change');
+            }
+            
+            // Fornecedor/Cliente
+            if (dados.fornecedor_id) {
+                var fornecedorSelect = $('#fornecedor_id');
+                // Verifica se a opção existe
+                if (fornecedorSelect.find('option[value="' + dados.fornecedor_id + '"]').length) {
+                    fornecedorSelect.val(dados.fornecedor_id).trigger('change');
+                } else if (dados.parceiro_nome) {
+                    // Se não existe, adiciona a opção dinamicamente
+                    var newOption = new Option(dados.parceiro_nome, dados.fornecedor_id, true, true);
+                    fornecedorSelect.append(newOption).trigger('change');
+                }
+            }
+        }, 100);
+        
+        // Checkboxes
+        $('#comprovacao_fiscal_checkbox').prop('checked', dados.comprovacao_fiscal === true);
+        $('#agendado_checkbox').prop('checked', dados.agendado === true);
+        
+        // Verifica situação para marcar pago/recebido
+        var situacao = dados.situacao;
+        if (situacao === 'pago' || situacao === 'recebido') {
+            if (dados.tipo === 'entrada') {
+                $('#recebido_checkbox').prop('checked', true);
+            } else {
+                $('#pago_checkbox').prop('checked', true);
+            }
+        }
+        
+        console.log('✅ [Drawer-Init] Formulário preenchido com sucesso');
+    }
+    
+    // Torna a função acessível globalmente
+    window.preencherFormularioEdicao = preencherFormularioEdicao;
+
     // Controla exibição do select de recorrência
     $('#flexSwitchDefault').on('change', function() {
         var wrapperRecorrencia = $('#configuracao-recorrencia-wrapper');
@@ -1288,6 +1509,16 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
         $('#tipo_financeiro').val('');
         $('#status_pagamento').val('em aberto');
         $('#origem').val('Banco');
+        
+        // 🆕 Limpa campos de modo edição
+        $('#transacao_id').val('');
+        $('#_method').val('POST');
+        form.attr('action', '{{ route("banco.store") }}');
+        
+        // Restaura título padrão do drawer
+        var drawer = $('#kt_drawer_lancamento');
+        var drawerTitle = drawer.find('.card-title').first();
+        drawerTitle.text('Novo Lançamento');
         
         console.log('📝 [Drawer-Init] Campos básicos limpos - restaurando selects e checkboxes...');
         

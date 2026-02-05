@@ -11,7 +11,15 @@
 
             @include('app.components.modals.financeiro.lancamento.components.form-header')
 
-            @include('app.components.modals.financeiro.lancamento.components.card-informacoes-lancamento', ['dropdownParent' => '#kt_drawer_lancamento'])
+            @include('app.components.modals.financeiro.lancamento.components.card-informacoes-lancamento', [
+                'dropdownParent' => '#kt_drawer_lancamento',
+                'centrosAtivos' => $centrosAtivos ?? collect(),
+                'lps' => $lps ?? collect(),
+                'formasPagamento' => $formasPagamento ?? collect(),
+                'fornecedores' => $fornecedores ?? collect(),
+                'entidadesBanco' => $entidadesBanco ?? collect(),
+                'entidadesCaixa' => $entidadesCaixa ?? collect(),
+            ])
 
             @include('app.components.modals.financeiro.lancamento.components.card-condicao-pagamento', ['dropdownParent' => '#kt_drawer_lancamento'])
 

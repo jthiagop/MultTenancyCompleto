@@ -502,15 +502,27 @@ class DrawerFormManager {
             formData.append('tipo', tipoInput.value);
         }
         
-        // Log de debug: mostra todos os campos que serão enviados
-        console.log('[prepareFormData] 📋 Campos enviados ao servidor:');
-        const formDataObj = {};
-        for (const [key, value] of formData.entries()) {
-            formDataObj[key] = value;
-        }
-        console.table(formDataObj);
-        
         return formData;
+    }
+    
+    /**
+     * Verifica se está no modo de edição
+     * @returns {boolean}
+     */
+    isEditMode() {
+        // Verifica campo hidden _method=PUT
+        const methodInput = this.form?.querySelector('input[name="_method"]');
+        if (methodInput && methodInput.value.toUpperCase() === 'PUT') {
+            return true;
+        }
+        
+        // Verifica campo hidden transacao_id
+        const transacaoId = this.form?.querySelector('input[name="transacao_id"]');
+        if (transacaoId && transacaoId.value) {
+            return true;
+        }
+        
+        return false;
     }
     
     /**
@@ -548,9 +560,18 @@ class DrawerFormManager {
         this.clearErrors();
         this.showLoading();
         
+        // Detecta modo de edição
+        const isEditing = this.isEditMode();
+        
         try {
             const formData = this.prepareFormData();
-            const formAction = this.form.getAttribute('action') || this.formUrl;
+            let formAction = this.form.getAttribute('action') || this.formUrl;
+            
+            // Se está editando, adiciona _method=PUT para method spoofing do Laravel
+            if (isEditing) {
+                formData.append('_method', 'PUT');
+                console.log('[DrawerFormManager] Modo edição detectado, usando PUT', { action: formAction });
+            }
             
             const response = await fetch(formAction, {
                 method: 'POST',
@@ -566,8 +587,6 @@ class DrawerFormManager {
                 this.onSuccess(mode);
             } else if (response.status === 422) {
                 const data = await response.json();
-                console.error('[DrawerFormManager] ❌ Erro de validação 422:', data);
-                console.error('[DrawerFormManager] Erros detalhados:', data.errors);
                 if (data.errors) {
                     this.displayErrors(data.errors);
                 }
