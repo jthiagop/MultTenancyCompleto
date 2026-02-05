@@ -479,26 +479,10 @@ class EntidadeFinanceiraController extends Controller
             ->orderBy('dtposted', 'desc')
             ->paginate(20);
 
-        // 4. Para cada lançamento do extrato, busca possíveis correspondências.
+        // 4. Para cada lançamento do extrato, busca possíveis correspondências com score.
+        $matchingService = new \App\Services\ConciliacaoMatchingService();
         foreach ($bankStatements as $lancamento) {
-            $valorAbs = abs($lancamento->amount);
-            $tipo = $lancamento->amount < 0 ? 'saida' : 'entrada';
-            $dataInicio = Carbon::parse($lancamento->dtposted)->startOfDay()->subMonths(2);
-            $dataFim = Carbon::parse($lancamento->dtposted)->endOfDay()->addMonths(2);
-            $numeroDocumento = $lancamento->checknum;
-
-            // CORREÇÃO: A busca por transações agora também usa o scope.
-            $possiveis = TransacaoFinanceira::forActiveCompany()
-                ->where('entidade_id', $id)
-                ->where('tipo', $tipo)
-                ->where('valor', $valorAbs)
-                ->whereBetween('data_competencia', [$dataInicio, $dataFim])
-                ->when($numeroDocumento, function ($query) use ($numeroDocumento) {
-                    $query->where('numero_documento', $numeroDocumento);
-                })
-                ->get();
-
-            $lancamento->possiveisTransacoes = $possiveis;
+            $lancamento->possiveisTransacoes = $matchingService->buscarPossiveisTransacoes($lancamento, $id, 5);
         }
 
         // 5. CORREÇÃO: Carrega dados auxiliares usando os scopes.
@@ -615,27 +599,10 @@ class EntidadeFinanceiraController extends Controller
                 \Log::error('Erro ao inicializar serviço de sugestões', ['error' => $e->getMessage()]);
             }
 
-            // ✅ Buscar possíveis transações para cada lançamento (otimizado)
+            // ✅ Buscar possíveis transações para cada lançamento com score inteligente
+            $matchingService = new \App\Services\ConciliacaoMatchingService();
             foreach ($bankStatements as $lancamento) {
-                // Usa amount_cents em valor absoluto (positivo) para buscar
-                $valorAbsCentavos = abs($lancamento->amount_cents);
-                $tipo = $lancamento->amount_cents < 0 ? 'saida' : 'entrada';
-                $dataInicio = Carbon::parse($lancamento->dtposted)->startOfDay()->subMonths(2);
-                $dataFim = Carbon::parse($lancamento->dtposted)->endOfDay()->addMonths(2);
-                $numeroDocumento = $lancamento->checknum;
-
-                // ✅ Limita sugestões a 5 para evitar N+1 pesado
-                $possiveis = TransacaoFinanceira::forActiveCompany()
-                    ->where('entidade_id', $id)
-                    ->where('tipo', $tipo)
-                    ->where('valor', $valorAbsCentavos)
-                    ->whereBetween('data_competencia', [$dataInicio, $dataFim])
-                    ->when($numeroDocumento, fn($q) => $q->where('numero_documento', $numeroDocumento))
-                    ->orderBy('data_competencia', 'desc')
-                    ->limit(5)
-                    ->get();
-
-                $lancamento->possiveisTransacoes = $possiveis;
+                $lancamento->possiveisTransacoes = $matchingService->buscarPossiveisTransacoes($lancamento, $id, 5);
             }
 
             // ✅ Dados auxiliares com cache (melhora performance)

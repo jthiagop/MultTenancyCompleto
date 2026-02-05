@@ -38,7 +38,9 @@
             @php
                 $sugestoes = $conciliacao->possiveisTransacoes ?? collect();
                 $transacaoSugerida = $sugestoes->first();
-                $percentualConciliado = $transacaoSugerida ? 100 : 0;
+                // Usa o score de matching calculado pelo serviço
+                $matchScore = $transacaoSugerida->match_score ?? 0;
+                $matchClassificacao = \App\Services\ConciliacaoMatchingService::classificarScore($matchScore);
             @endphp
 
             <!--begin::Row-->
@@ -119,17 +121,15 @@
                                         </p>
 
                                         <div class="d-flex flex-stack">
-                                            <div class="d-flex flex-column mw-200px">
+                                            <div class="d-flex flex-column mw-250px">
                                                 <div class="d-flex align-items-center mb-2">
-                                                    <span
-                                                        class="text-gray-700 fs-6 fw-semibold me-2">{{ $percentualConciliado }}%</span>
-                                                    <span class="text-muted fs-8">Conciliação
-                                                        Bancária</span>
+                                                    <span class="text-gray-700 fs-6 fw-semibold me-2">{{ $matchScore }}%</span>
+                                                    <span class="badge badge-light-{{ $matchClassificacao['cor'] }} fs-8">{{ $matchClassificacao['texto'] }}</span>
                                                 </div>
                                                 <div class="progress h-6px w-200px">
-                                                    <div class="progress-bar bg-primary" role="progressbar"
-                                                        style="width: {{ $percentualConciliado }}%"
-                                                        aria-valuenow="{{ $percentualConciliado }}"
+                                                    <div class="progress-bar bg-{{ $matchClassificacao['cor'] }}" role="progressbar"
+                                                        style="width: {{ $matchScore }}%"
+                                                        aria-valuenow="{{ $matchScore }}"
                                                         aria-valuemin="0" aria-valuemax="100">
                                                     </div>
                                                 </div>
