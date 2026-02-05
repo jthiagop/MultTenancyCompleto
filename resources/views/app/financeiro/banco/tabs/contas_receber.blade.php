@@ -17,14 +17,14 @@
     
     // Colunas padrão para Contas a Receber/Pagar
     $tableColumns = [
-        ['key' => 'checkbox', 'label' => '', 'width' => 'w-25px text-center', 'orderable' => false],
-        ['key' => 'vencimento', 'label' => 'Vencimento', 'width' => 'w-70px', 'orderable' => true],
-        ['key' => 'descricao', 'label' => 'Descrição', 'width' => 'min-w-400px', 'orderable' => false],
-        ['key' => 'total', 'label' => 'Total (R$)', 'width' => 'min-w-70px', 'orderable' => true],
-        ['key' => 'a_pagar', 'label' => 'A receber (R$)', 'width' => 'min-w-70px', 'orderable' => true],
+        ['key' => 'checkbox', 'label' => '', 'width' => 'w-10px pe-2', 'orderable' => false],
+        ['key' => 'vencimento', 'label' => 'Vencimento', 'width' => 'min-w-70px', 'orderable' => true],
+        ['key' => 'descricao', 'label' => 'Descrição', 'width' => 'min-w-175px', 'orderable' => false],
+        ['key' => 'total', 'label' => 'Total (R$)', 'width' => 'min-w-50px', 'orderable' => true],
+        ['key' => 'a_pagar', 'label' => 'A pagar (R$)', 'width' => 'min-w-50px', 'orderable' => true],
         ['key' => 'situacao', 'label' => 'Situação', 'width' => 'min-w-70px', 'orderable' => false],
         ['key' => 'origem', 'label' => 'Origem', 'width' => 'min-w-70px', 'orderable' => false],
-        ['key' => 'acoes', 'label' => 'Ações', 'width' => 'text-center min-w-50px', 'orderable' => false],
+        ['key' => 'acoes', 'label' => 'Ações', 'width' => 'text-end min-w-50px', 'orderable' => false],
     ];
     
     // Gerar ID previsível e consistente
@@ -115,7 +115,7 @@
             <!--end::Skeleton Loading-->
 
             <!--begin::Table Wrapper-->
-            <div id="table-wrapper-{{ $tableIdFinal }}" class="d-none ">
+            <div id="table-wrapper-{{ $tableIdFinal }}" class="d-none mt-4">
                 <!--begin::Table-->
                 <table class="table align-middle table-striped table-row-dashed fs-6 gy-5 mt-7"
                     id="{{ $tableIdFinal }}">
@@ -123,8 +123,8 @@
                         <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-4">
                             @foreach ($tableColumns as $column)
                                 @if ($column['key'] === 'checkbox')
-                                    <th class="{{ $column['width'] ?? 'w-25px text-center' }}">
-                                        <div class="form-check form-check-sm form-check-custom form-check-solid justify-content-center">
+                                    <th class="{{ $column['width'] ?? 'text-end min-w-50px pe-6' }}">
+                                        <div class="form-check form-check-sm form-check-custom form-check-solid">
                                             <input class="form-check-input" type="checkbox"
                                                 data-kt-check="true"
                                                 data-kt-check-target="#{{ $tableIdFinal }} .form-check-input"

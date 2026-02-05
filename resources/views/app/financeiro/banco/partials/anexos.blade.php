@@ -30,7 +30,7 @@
 
     @if($remainingAnexos > 0)
         <div class="symbol symbol-25px symbol-circle" data-bs-toggle="tooltip" title="Mais {{ $remainingAnexos }} anexos">
-            <a href="{{ route('banco.edit', $transacao->id) }}">
+            <a href="#" onclick="abrirDrawerEdicao({{ $transacao->id }}); return false;">
                 <span class="symbol-label fs-8 fw-bold bg-light text-gray-800">+{{ $remainingAnexos }}</span>
             </a>
         </div>

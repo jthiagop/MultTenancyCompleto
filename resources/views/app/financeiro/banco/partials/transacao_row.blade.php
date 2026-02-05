@@ -71,7 +71,7 @@
             @if ($remainingAnexos > 0)
                 <div class="symbol symbol-25px symbol-circle" data-bs-toggle="tooltip"
                     title="Mais {{ $remainingAnexos }} anexos">
-                    <a href="{{ route('banco.edit', $transacao->id) }}">
+                    <a href="#" onclick="abrirDrawerEdicao({{ $transacao->id }}); return false;">
                         <span class="symbol-label fs-8 fw-bold bg-light text-gray-800">
                             +{{ $remainingAnexos }}
                         </span>
@@ -91,7 +91,7 @@
     </td>
     <td class="text-end">
         <div class="d-flex justify-content-end align-items-center">
-            <a href="{{ route('banco.edit', $transacao->id) }}"
+            <a href="#" onclick="abrirDrawerEdicao({{ $transacao->id }}); return false;"
                 class="btn btn-icon btn-active-light-primary w-30px h-30px ms-auto me-5">
                 <span class="svg-icon svg-icon-3">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">

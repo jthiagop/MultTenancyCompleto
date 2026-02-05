@@ -5,7 +5,7 @@
     
     // Stats customizadas para Extrato
     $stats = [
-        ['key' => 'receitas_aberto', 'label' => 'Receitas em Aberto (R$)', 'value' => '0,00', 'variant' => 'success'],
+        ['key' => 'receitas_aberto', 'label' => 'Receitas em Aberto (R$)', 'value' => '0,00', 'variant' => 'warning'],
         ['key' => 'receitas_realizadas', 'label' => 'Receitas Realizadas (R$)', 'value' => '0,00', 'variant' => 'success'],
         ['key' => 'despesas_aberto', 'label' => 'Despesas em Aberto (R$)', 'value' => '-0,00', 'variant' => 'danger'],
         ['key' => 'despesas_realizadas', 'label' => 'Despesas Realizadas (R$)', 'value' => '-0,00', 'variant' => 'danger'],
@@ -20,7 +20,7 @@
         ['key' => 'situacao', 'label' => 'Situação', 'width' => 'min-w-70px', 'orderable' => false],
         ['key' => 'valor', 'label' => 'Valor (R$)', 'width' => 'min-w-50px', 'orderable' => true],
         ['key' => 'saldo', 'label' => 'Saldo (R$)', 'width' => 'min-w-50px', 'orderable' => true],
-        ['key' => 'acoes', 'label' => 'Ações', 'width' => 'text-center min-w-50px', 'orderable' => false],
+        ['key' => 'acoes', 'label' => 'Ações', 'width' => 'text-end min-w-50px', 'orderable' => false],
     ];
     
     // Gerar ID previsível e consistente
@@ -52,7 +52,6 @@
             'key' => $stat['key'],
             'label' => $stat['label'],
             'count' => $stat['value'],
-            'variant' => $stat['variant'], // Adicionar variant para as cores
             'paneId' => "pane-stat-{$stat['key']}-{$tableIdFinal}",
         ];
     }, $stats);
