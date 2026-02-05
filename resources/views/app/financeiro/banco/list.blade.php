@@ -103,6 +103,96 @@
         <script src="/assets/js/custom/utilities/modals/conciliacao-bancaria.js"></script>
 
         <script>
+            // Função para excluir transação diretamente do dropdown (sem abrir drawer)
+            function excluirTransacaoDirecta(deleteUrl) {
+                Swal.fire({
+                    title: 'Excluir Transação?',
+                    html: `
+                        <p>Esta ação irá:</p>
+                        <ul class="text-start">
+                            <li>Deletar a transação financeira</li>
+                            <li>Deletar a movimentação relacionada</li>
+                            <li>Reverter o saldo da entidade</li>
+                            <li>Desfazer conciliação (se aplicável)</li>
+                        </ul>
+                        <p class="text-danger fw-bold mt-3">Esta ação não pode ser desfeita!</p>
+                    `,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    buttonsStyling: false,
+                    confirmButtonText: 'Sim, excluir',
+                    cancelButtonText: 'Cancelar',
+                    customClass: {
+                        confirmButton: 'btn btn-danger',
+                        cancelButton: 'btn btn-secondary'
+                    }
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Mostrar loading
+                        Swal.fire({
+                            title: 'Processando...',
+                            text: 'Excluindo transação',
+                            allowOutsideClick: false,
+                            didOpen: () => {
+                                Swal.showLoading();
+                            }
+                        });
+
+                        // Fazer requisição DELETE
+                        fetch(deleteUrl, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                Swal.fire({
+                                    title: 'Excluída!',
+                                    text: data.message || 'Transação excluída com sucesso.',
+                                    icon: 'success',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary'
+                                    }
+                                }).then(() => {
+                                    // Recarregar a página para atualizar a lista
+                                    location.reload();
+                                });
+                            } else {
+                                Swal.fire({
+                                    title: 'Erro!',
+                                    text: data.message || 'Erro ao excluir transação.',
+                                    icon: 'error',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary'
+                                    }
+                                });
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Erro ao excluir transação:', error);
+                            Swal.fire({
+                                title: 'Erro!',
+                                text: 'Erro ao excluir transação. Tente novamente.',
+                                icon: 'error',
+                                buttonsStyling: false,
+                                confirmButtonText: 'Ok',
+                                customClass: {
+                                    confirmButton: 'btn btn-primary'
+                                }
+                            });
+                        });
+                    }
+                });
+            }
+
             document.addEventListener('DOMContentLoaded', function() {
                 const deleteLinks = document.querySelectorAll('.delete-link');
 

@@ -167,8 +167,8 @@
                             }
                         });
 
-                        // Fazer requisição DELETE
-                        fetch(`/financeiro/transacoes-financeiras/${transacaoId}`, {
+                        // Fazer requisição DELETE usando a URL correta
+                        fetch(`/relatorios/transacoes-financeiras/${transacaoId}`, {
                             method: 'DELETE',
                             headers: {
                                 'Content-Type': 'application/json',

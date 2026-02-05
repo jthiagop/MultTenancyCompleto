@@ -77,8 +77,10 @@
                     {{ $deleteLabel }}
                 </a>
             @else
-                {{-- Transação normal: usa confirmação padrão --}}
-                <a href="#" {!! $deleteAction !!} class="menu-link px-3">{{ $deleteLabel }}</a>
+                {{-- Transação normal: usa função de exclusão direta --}}
+                <a href="#" onclick="excluirTransacaoDirecta('{{ route('transacoes-financeiras.destroy', $transacao) }}'); return false;" class="menu-link px-3 text-danger">
+                    {{ $deleteLabel }}
+                </a>
             @endif
         </div>
         <!--end::Menu item-->
