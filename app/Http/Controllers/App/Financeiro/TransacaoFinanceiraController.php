@@ -10,6 +10,7 @@ use App\Models\Financeiro\ModulosAnexo;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
 use App\Services\RecurrenceService;
+use App\Services\TransacaoDeleteService;
 use App\Models\LancamentoPadrao;
 use Illuminate\Http\Request;
 use App\Models\Movimentacao;
@@ -23,10 +24,12 @@ use Log;
 class TransacaoFinanceiraController extends Controller
 {
     protected RecurrenceService $recurrenceService;
+    protected TransacaoDeleteService $deleteService;
 
-    public function __construct(RecurrenceService $recurrenceService)
+    public function __construct(RecurrenceService $recurrenceService, TransacaoDeleteService $deleteService)
     {
         $this->recurrenceService = $recurrenceService;
+        $this->deleteService = $deleteService;
     }
 
     /**
@@ -295,7 +298,7 @@ class TransacaoFinanceiraController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(TransacaoFinanceira $transacaoFinanceira)
+    public function destroy($id)
     {
         $activeCompanyId = session('active_company_id');
         if (!$activeCompanyId) {
@@ -303,6 +306,16 @@ class TransacaoFinanceiraController extends Controller
                 'success' => false,
                 'message' => 'Nenhuma empresa selecionada.'
             ], 403);
+        }
+
+        // Buscar a transação manualmente
+        $transacaoFinanceira = TransacaoFinanceira::find($id);
+        
+        if (!$transacaoFinanceira) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Transação não encontrada.'
+            ], 404);
         }
 
         // Verificar se a transação pertence à empresa ativa
@@ -313,106 +326,19 @@ class TransacaoFinanceiraController extends Controller
             ], 404);
         }
 
-        // Validar origem da transação - apenas transações de conciliação, conciliação bancária ou transferência podem ser excluídas
-        $origensPermitidas = ['conciliacao_bancaria', 'conciliacao', 'transferencia', 'automatica'];
-        if ($transacaoFinanceira->origem && !in_array(strtolower($transacaoFinanceira->origem), $origensPermitidas)) {
-            \Log::warning('Tentativa de excluir transação com origem não permitida', [
-                'transacao_id' => $transacaoFinanceira->id,
-                'origem' => $transacaoFinanceira->origem,
-                'user_id' => Auth::id()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Esta transação não pode ser excluída. Apenas transações de conciliação bancária podem ser desfeitas.'
-            ], 403);
-        }
-
         try {
-            return \DB::transaction(function () use ($transacaoFinanceira) {
-                // Guardar informações para log
-                $transacaoId = $transacaoFinanceira->id;
-                $entidadeId = $transacaoFinanceira->entidade_id;
-                $valor = $transacaoFinanceira->valor;
-                $tipo = $transacaoFinanceira->tipo;
-                $movimentacaoId = $transacaoFinanceira->movimentacao_id;
-                $origem = $transacaoFinanceira->origem;
-
-                // ✅ Saldo será recalculado dinamicamente via calculateBalance()
-                \Log::info('Deletando transação - saldo será recalculado dinamicamente', [
-                    'transacao_id' => $transacaoFinanceira->id,
-                    'entidade_id' => $transacaoFinanceira->entidade_id,
-                    'valor' => $valor,
-                    'tipo' => $tipo
-                ]);
-
-                // 2. Se conciliada, desfazer vínculo com bank_statement
-                if ($transacaoFinanceira->bankStatements()->exists()) {
-                    $bankStatements = $transacaoFinanceira->bankStatements;
-                    
-                    foreach ($bankStatements as $bankStatement) {
-                        $bankStatement->update([
-                            'reconciled' => false,
-                            'status_conciliacao' => 'pendente'
-                        ]);
-                        
-                        \Log::info('Bank statement resetado', [
-                            'bank_statement_id' => $bankStatement->id,
-                            'status' => 'pendente'
-                        ]);
-                    }
-                    
-                    // Remover vínculo na tabela pivot
-                    $transacaoFinanceira->bankStatements()->detach();
-                }
-
-                // 3. Atualizar movimentação relacionada (se houver campo valor_conciliado)
-                if ($movimentacaoId) {
-                    $movimentacao = Movimentacao::find($movimentacaoId);
-                    
-                    if ($movimentacao) {
-                        // Se existir campo valor_conciliado, resetar para null
-                        if (\Schema::hasColumn('movimentacoes', 'valor_conciliado')) {
-                            $movimentacao->valor_conciliado = null;
-                            $movimentacao->save();
-                        }
-                        
-                        // Deletar a movimentação
-                        $movimentacao->delete();
-                        
-                        \Log::info('Movimentação deletada', [
-                            'movimentacao_id' => $movimentacaoId
-                        ]);
-                    }
-                }
-
-                // 4. Deletar a transação financeira
-                $transacaoFinanceira->delete();
-
-                \Log::info('Transação excluída com sucesso', [
-                    'transacao_id' => $transacaoId,
-                    'movimentacao_id' => $movimentacaoId,
-                    'entidade_id' => $entidadeId,
-                    'valor' => (float) $valor, // Valor já está em DECIMAL
-                    'tipo' => $tipo,
-                    'origem' => $origem,
-                    'user_id' => Auth::id(),
-                    'user_name' => Auth::user()->name
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Transação excluída com sucesso!'
-                ]);
-            });
-        } catch (\Exception $e) {
-            \Log::error('Erro ao excluir transação', [
-                'transacao_id' => $transacaoFinanceira->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_id' => Auth::id()
+            // Usar o serviço de exclusão
+            $this->deleteService->delete($transacaoFinanceira, [
+                'soft_delete' => true,
+                'update_balance' => true
             ]);
 
+            return response()->json([
+                'success' => true,
+                'message' => 'Transação excluída com sucesso!'
+            ]);
+
+        } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
                 'message' => 'Erro ao excluir transação: ' . $e->getMessage()
