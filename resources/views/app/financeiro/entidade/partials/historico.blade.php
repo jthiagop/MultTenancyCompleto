@@ -51,7 +51,7 @@
                      class="mt-4">
 
                     <div class="card card-flush">
-                        <div class="card-header border-0 separator">
+                        <div class="card-header border-0 pt-5 separator">
                             <h3 class="card-title align-items-start flex-column">
                                 <span class="card-label fw-bold fs-3 mb-1">Histórico de Conciliações</span>
                                 @if($aba['key'] !== 'all')

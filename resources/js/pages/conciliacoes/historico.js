@@ -475,8 +475,12 @@ if (!el) {
         load().catch(console.error);
     });
 
-    // Event delegation: ações da tabela
-    tbody?.addEventListener('click', (e) => {
+    // Event delegation: ações da tabela (usando document para funcionar em todas as tabs)
+    document.addEventListener('click', (e) => {
+        // Verifica se o clique foi dentro de um container de histórico
+        const container = e.target.closest('[id^="historico-container-"]');
+        if (!container) return;
+
         const a = e.target.closest('[data-action]');
         if (!a) return;
 
