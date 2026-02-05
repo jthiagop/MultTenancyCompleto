@@ -653,21 +653,6 @@ class UserController extends Controller
                 ]);
 
                 $password = $request->password;
-
-                // Validar complexidade da senha
-                $hasUppercase = preg_match('/[A-Z]/', $password);
-                $hasLowercase = preg_match('/[a-z]/', $password);
-                $hasNumbers = preg_match('/[0-9]/', $password);
-                $hasSymbols = preg_match('/[^A-Za-z0-9]/', $password);
-
-                $complexityCount = $hasUppercase + $hasLowercase + $hasNumbers + $hasSymbols;
-
-                if ($complexityCount < 3) {
-                    return response()->json([
-                        'success' => false,
-                        'message' => 'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.'
-                    ], 422);
-                }
             }
 
             // Atualizar a senha

@@ -1270,22 +1270,11 @@
             }
         }
 
-        // Função para validar complexidade da senha
-        function validatePasswordComplexity(password) {
-            const hasUppercase = /[A-Z]/.test(password);
-            const hasLowercase = /[a-z]/.test(password);
-            const hasNumbers = /[0-9]/.test(password);
-            const hasSymbols = /[^A-Za-z0-9]/.test(password);
-
-            const complexityCount = hasUppercase + hasLowercase + hasNumbers + hasSymbols;
-
+        // Função para validar senha (mínimo 8 caracteres)
+        function validatePassword(password) {
             return {
-                isValid: complexityCount >= 3,
-                count: complexityCount,
-                hasUppercase,
-                hasLowercase,
-                hasNumbers,
-                hasSymbols
+                isValid: password.length >= 8,
+                length: password.length
             };
         }
 
@@ -1357,12 +1346,10 @@
                     return;
                 }
 
-                // Validar complexidade
-                const passwordValidation = validatePasswordComplexity(password);
+                // Validar tamanho mínimo
+                const passwordValidation = validatePassword(password);
                 if (!passwordValidation.isValid) {
-                    showPasswordError('password',
-                        'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.'
-                        );
+                    showPasswordError('password', 'A senha deve ter pelo menos 8 caracteres.');
                     return;
                 }
             }
@@ -1463,11 +1450,9 @@
         passwordInput.addEventListener('input', function() {
             const password = this.value;
             if (password.length > 0) {
-                const validation = validatePasswordComplexity(password);
+                const validation = validatePassword(password);
                 if (!validation.isValid) {
-                    showPasswordError('password',
-                        'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.'
-                        );
+                    showPasswordError('password', 'A senha deve ter pelo menos 8 caracteres.');
                 } else {
                     clearPasswordErrors();
                 }
@@ -1501,7 +1486,7 @@
                     </i>
                 </div>
             </div>
-            <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
+            <div class="modal-body">
                 <div class="alert alert-warning d-flex align-items-center p-5 mb-10">
                     <i class="ki-duotone ki-shield-tick fs-2hx text-primary me-4"></i>
                     <div class="d-flex flex-column">
@@ -1514,11 +1499,7 @@
                     <div class="input-group input-group-solid">
                         <input type="text" class="form-control form-control-lg" id="generated_password_display" readonly />
                         <button class="btn btn-primary" type="button" id="copy_password_btn">
-                            <i class="ki-duotone ki-copy fs-2">
-                                <span class="path1"></span>
-                                <span class="path2"></span>
-                                <span class="path3"></span>
-                                <span class="path4"></span>
+                           <i class="fa-solid fa-copy fs-2">
                             </i>
                             Copiar
                         </button>

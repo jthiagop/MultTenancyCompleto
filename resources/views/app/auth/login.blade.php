@@ -235,6 +235,12 @@
                                             "Desculpe, ocorreu um erro. Por favor, tente novamente.";
 
                                         if (result.data) {
+                                            // Verificar se há redirecionamento obrigatório (ex: troca de senha)
+                                            if (result.data.redirect && result.data.error === 'PASSWORD_CHANGE_REQUIRED') {
+                                                location.href = result.data.redirect;
+                                                return;
+                                            }
+
                                             if (result.data.message) {
                                                 errorMessage = result.data.message;
                                             } else if (result.data.errors) {
