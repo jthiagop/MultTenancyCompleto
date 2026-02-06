@@ -814,6 +814,35 @@
         }
     });
 
+    // Atualiza a origem automaticamente ao trocar a Entidade Financeira
+    $('#entidade_id').on('change', function() {
+        var selectedOption = $(this).find('option:selected');
+        var origemEntidade = selectedOption.data('origem');
+        
+        if (origemEntidade) {
+            $('#origem').val(origemEntidade);
+            
+            var form = $('#kt_drawer_lancamento_form');
+            var transacaoId = $('#transacao_id').val();
+            
+            if (origemEntidade === 'Caixa') {
+                if (transacaoId) {
+                    form.attr('action', '{{ route("caixa.update", ":id") }}'.replace(':id', transacaoId));
+                } else {
+                    form.attr('action', '{{ route("caixa.store") }}');
+                }
+            } else {
+                if (transacaoId) {
+                    form.attr('action', '{{ route("banco.update", ":id") }}'.replace(':id', transacaoId));
+                } else {
+                    form.attr('action', '{{ route("banco.store") }}');
+                }
+            }
+            
+            console.log('🔄 [Drawer-Init] Origem atualizada para:', origemEntidade);
+        }
+    });
+
     // Controla exibição do select de recorrência
     $('#flexSwitchDefault').on('change', function() {
         var wrapperRecorrencia = $('#configuracao-recorrencia-wrapper');
