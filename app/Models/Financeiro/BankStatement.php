@@ -109,6 +109,10 @@ class BankStatement extends Model
         $amountValue = $money->toDatabase(); // DECIMAL para precisão
         $amountCents = $money->toCents(); // Integer em centavos
 
+        // ✅ Busca o company_id da entidade financeira para garantir consistência
+        $entidade = \App\Models\EntidadeFinanceira::find($entidadeId);
+        $companyId = $entidade?->company_id ?? session('active_company_id') ?? Auth::user()?->company_id;
+
         // ✅ Usa firstOrCreate com chave composta para garantir unicidade
         // Mesmo arquivo (file_hash igual) pode ter múltiplas transações (fitid diferente)
         $bankStatement = self::firstOrCreate(
@@ -120,7 +124,7 @@ class BankStatement extends Model
             ],
             [
                 // Dados adicionais inseridos apenas se o registro não existir
-                'company_id'    => Auth::user()->company_id,
+                'company_id'    => $companyId,
                 'bank_id'       => $account->routingNumber,
                 'branch_id'     => $account->agencyNumber,
                 'account_id'    => $account->accountNumber,
@@ -132,6 +136,7 @@ class BankStatement extends Model
                 'refnum'        => $transaction->referenceNumber ?? null,
                 'memo'          => $transaction->memo,
                 'reconciled'    => false,
+                'status_conciliacao' => 'pendente', // ✅ Status inicial padrão
                 'file_hash'     => $fileHash, // Hash do arquivo (múltiplas transações do mesmo arquivo)
                 'file_name'     => $fileName, // Nome do arquivo
             ]

@@ -898,7 +898,8 @@ class EntidadeFinanceiraController extends Controller
         $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
 
         // Conta o total de lançamentos pendentes (sem paginação, sem filtro de data)
-        $query = BankStatement::where('entidade_financeira_id', $id)
+        $query = BankStatement::where('company_id', $activeCompanyId)
+            ->where('entidade_financeira_id', $id)
             ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
             ->whereDoesntHave('transacoes');
 

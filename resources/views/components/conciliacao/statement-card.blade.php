@@ -6,6 +6,14 @@
             <!-- Card Header: Data + Valor -->
             <div class="card-header rounded d-flex align-items-center justify-content-between">
                 <div class="d-flex align-items-center gap-3">
+                    <!-- Checkbox para seleção -->
+                    <div class="form-check form-check-custom">
+                        <input class="form-check-input conciliacao-checkbox" 
+                               type="checkbox" 
+                               value="{{ $conciliacao->id }}"
+                               data-amount-cents="{{ $conciliacao->amount_cents }}"
+                               id="conciliacao_{{ $conciliacao->id }}" />
+                    </div>
                     <div>
                         <span class="text-dark fw-bold text-hover-primary fs-5">
                             {{ \Carbon\Carbon::parse($conciliacao->dtposted)->format('d/m/Y') }}
