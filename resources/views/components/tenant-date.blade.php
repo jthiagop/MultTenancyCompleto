@@ -62,8 +62,8 @@
                 return;
             }
 
-                // Aplicar máscara de input com Inputmask apenas se flatpickr não estiver disponível
-                if (typeof Inputmask !== 'undefined' && typeof flatpickr === 'undefined') {
+                // Aplicar máscara de input com Inputmask (sempre, independente do flatpickr)
+                if (typeof Inputmask !== 'undefined' && !dateInput._inputmask) {
                     // Data atual formatada para placeholder
                     var today = new Date();
                     var day = String(today.getDate()).padStart(2, '0');
@@ -72,14 +72,13 @@
                     var todayFormatted = day + '/' + month + '/' + year;
 
                     Inputmask({
-                        alias: 'date',
+                        alias: 'datetime',
                         inputFormat: 'dd/mm/yyyy',
                         placeholder: todayFormatted,
                         clearMaskOnLostFocus: false,
-                        onBeforeMask: function(value) {
-                            // Garante que apenas datas válidas sejam aceitas
-                            return value;
-                        }
+                        showMaskOnHover: true,
+                        showMaskOnFocus: true,
+                        rightAlign: false
                     }).mask(dateInput);
                 }
 

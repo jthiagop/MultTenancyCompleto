@@ -33,21 +33,23 @@
     <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 {{ $menuWidth }} py-4" data-kt-menu="true" id="{{ $menuId }}">
         <!--begin::Menu item-->
         <div class="menu-item px-3">
-            <i class="fa-solid fa-eye me-2"></i>
-            <a href="#" onclick="{{ $viewAction }}" class="menu-link px-3">{{ $viewLabel }}</a>
+            <a href="#" onclick="{{ $viewAction }}" class="menu-link px-3">
+                <i class="fa-solid fa-eye me-2"></i>{{ $viewLabel }}
+            </a>
         </div>
         <!--end::Menu item-->
         <!--begin::Menu item-->
         <div class="menu-item px-3">
-            <i class="fa-solid fa-pen-to-square "></i>
-            <a href="#" onclick="{{ $editAction }}" class="menu-link px-3">{{ $editLabel }}</a>
+            <a href="#" onclick="{{ $editAction }}" class="menu-link px-3">
+                <i class="fa-solid fa-pen-to-square me-2"></i>{{ $editLabel }}
+            </a>
         </div>
         <!--end::Menu item-->
         @if($showInformarPagamento)
         <!--begin::Menu item-->
         <div class="menu-item px-3">
             <a href="#" onclick="{{ $informarPagamentoAction }}" class="menu-link px-3">
-                {{ $informarPagamentoLabel }}
+                <i class="fa-solid fa-money-bill-wave me-2"></i>{{ $informarPagamentoLabel }}
             </a>
         </div>
         <!--end::Menu item-->
@@ -56,7 +58,7 @@
         <!--begin::Menu item - Definir como Em Aberto (apenas se está pago/recebido)-->
         <div class="menu-item px-3">
             <a href="#" onclick="definirComoAberto({{ $transacao->id }}); return false;" class="menu-link px-3">
-                {{ $labelDefinirAberto }}
+                <i class="fa-solid fa-rotate-left me-2"></i>{{ $labelDefinirAberto }}
             </a>
         </div>
         <!--end::Menu item-->
@@ -64,7 +66,7 @@
         <!--begin::Menu item - Definir como Pago/Recebido (apenas se NÃO está em_aberto)-->
         <div class="menu-item px-3">
             <a href="#" onclick="definirComoPago({{ $transacao->id }}); return false;" class="menu-link px-3">
-                {{ $labelDefinirPago }}
+                <i class="fa-solid fa-check-circle me-2"></i>{{ $labelDefinirPago }}
             </a>
         </div>
         <!--end::Menu item-->
@@ -76,13 +78,12 @@
                 <a href="#" 
                    onclick="openDeleteRecurrenceModal({{ $transacao->id }}); return false;" 
                    class="menu-link px-3 text-danger">
-                    {{ $deleteLabel }}
+                    <i class="fa-solid fa-trash-can me-2"></i>{{ $deleteLabel }}
                 </a>
             @else
                 {{-- Transação normal: usa função de exclusão direta --}}
-                <i class="fa-solid fa-trash-can"></i>
                 <a href="#" onclick="excluirTransacaoDirecta('{{ route('transacoes-financeiras.destroy', $transacao) }}'); return false;" class="menu-link px-3 text-danger">
-                    {{ $deleteLabel }}
+                    <i class="fa-solid fa-trash-can me-2"></i>{{ $deleteLabel }}
                 </a>
             @endif
         </div>

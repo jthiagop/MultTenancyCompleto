@@ -147,7 +147,7 @@ class TransacaoFinanceiraService
                 $lancamentoPadrao = LancamentoPadrao::find($transacao->lancamento_padrao_id);
                 
                 $dadosMovimentacao = [
-                    'entidade_financeira_id' => $transacao->entidade_id,
+                    'entidade_id' => $transacao->entidade_id,
                     'tipo' => $transacao->tipo,
                     'valor' => $valorPago,
                     'data' => $dataPagamento,
@@ -164,11 +164,82 @@ class TransacaoFinanceiraService
                 ];
 
                 $transacao->movimentacao()->create($dadosMovimentacao);
+                
+                // 4. Recalcula e sincroniza o saldo da entidade financeira (cache)
+                $entidade = \App\Models\EntidadeFinanceira::find($transacao->entidade_id);
+                if ($entidade) {
+                    $entidade->recalcularSaldo();
+                    
+                    Log::info('[registrarBaixa] Saldo da entidade recalculado', [
+                        'entidade_id' => $transacao->entidade_id,
+                        'saldo_atual' => $entidade->saldo_atual,
+                    ]);
+                }
             }
 
             Log::info('[registrarBaixa] Transação baixada com sucesso', [
                 'transacao_id' => $transacao->id,
                 'valor_pago' => $valorPago,
+                'situacao' => $transacao->situacao,
+            ]);
+
+            return $transacao;
+        });
+    }
+
+    /**
+     * Reverte uma baixa de transação financeira
+     * 
+     * Operação inversa do registrarBaixa():
+     * - Altera situação para "em_aberto"
+     * - Limpa campos de pagamento (valor_pago, data_pagamento, juros, multa, desconto)
+     * - Exclui a movimentação associada (reverte impacto no saldo)
+     * 
+     * @param TransacaoFinanceira $transacao Transação a ser reaberta
+     * @return TransacaoFinanceira Transação atualizada
+     * @throws \Exception
+     */
+    public function reverterBaixa(TransacaoFinanceira $transacao): TransacaoFinanceira
+    {
+        return DB::transaction(function () use ($transacao) {
+            // Guarda referência da entidade para recalcular saldo depois
+            $entidadeId = $transacao->entidade_id;
+            
+            // 1. Exclui a movimentação associada (reverte impacto no saldo)
+            if ($transacao->movimentacao) {
+                $movimentacaoId = $transacao->movimentacao->id;
+                $transacao->movimentacao->delete();
+                
+                Log::info('[reverterBaixa] Movimentação excluída', [
+                    'transacao_id' => $transacao->id,
+                    'movimentacao_id' => $movimentacaoId,
+                ]);
+            }
+
+            // 2. Atualiza a transação para "em_aberto"
+            $transacao->situacao = \App\Enums\SituacaoTransacao::EM_ABERTO;
+            $transacao->valor_pago = null;
+            $transacao->data_pagamento = null;
+            $transacao->juros = null;
+            $transacao->multa = null;
+            $transacao->desconto = null;
+            $transacao->updated_by = Auth::id();
+            $transacao->updated_by_name = Auth::user()->name ?? 'Sistema';
+            $transacao->save();
+
+            // 3. Recalcula e sincroniza o saldo da entidade financeira (cache)
+            $entidade = \App\Models\EntidadeFinanceira::find($entidadeId);
+            if ($entidade) {
+                $entidade->recalcularSaldo();
+                
+                Log::info('[reverterBaixa] Saldo da entidade recalculado', [
+                    'entidade_id' => $entidadeId,
+                    'saldo_atual' => $entidade->saldo_atual,
+                ]);
+            }
+
+            Log::info('[reverterBaixa] Transação reaberta com sucesso', [
+                'transacao_id' => $transacao->id,
                 'situacao' => $transacao->situacao,
             ]);
 
