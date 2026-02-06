@@ -4,7 +4,10 @@ namespace App\Http\Requests\Financer;
 
 use App\Models\LancamentoPadrao;
 use App\Support\Money;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Log;
 
 class StoreTransacaoFinanceiraRequest extends FormRequest
 {
@@ -14,6 +17,28 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
     public function authorize(): bool
     {
         return true; // Defina como `true` para permitir a validação
+    }
+
+    /**
+     * Handle a failed validation attempt.
+     * Loga os erros de validação para debug.
+     */
+    protected function failedValidation(Validator $validator)
+    {
+        Log::warning('[StoreTransacaoFinanceiraRequest] Validação falhou', [
+            'errors' => $validator->errors()->all(),
+            'input_keys' => array_keys($this->all()),
+            'parcelamento' => $this->input('parcelamento'),
+            'parcelas_count' => is_array($this->input('parcelas')) ? count($this->input('parcelas')) : 0,
+        ]);
+
+        throw new HttpResponseException(
+            response()->json([
+                'success' => false,
+                'message' => 'Erro de validação',
+                'errors' => $validator->errors()
+            ], 422)
+        );
     }
 
     /**

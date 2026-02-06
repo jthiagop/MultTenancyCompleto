@@ -185,13 +185,17 @@
             tbody.find('input[data-parcela-input="vencimento"]').each(function() {
                 if (!$(this).data('flatpickr-initialized')) {
                     if (typeof flatpickr !== 'undefined') {
-                        flatpickr(this, {
+                        var config = {
                             enableTime: false,
                             dateFormat: "d/m/Y",
-                            locale: "pt",
                             allowInput: true,
                             clickOpens: true
-                        });
+                        };
+                        // Só adiciona locale se estiver registrado
+                        if (flatpickr.l10ns && flatpickr.l10ns.pt) {
+                            config.locale = "pt";
+                        }
+                        flatpickr(this, config);
                         $(this).data('flatpickr-initialized', true);
                     }
                 }
