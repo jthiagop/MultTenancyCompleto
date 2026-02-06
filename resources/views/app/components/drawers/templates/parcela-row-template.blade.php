@@ -8,7 +8,8 @@
                 name="parcelas[][vencimento]"
                 placeholder="dd/mm/yyyy"
                 data-parcela-input="vencimento"
-                data-parcela-num="">
+                data-parcela-num=""
+                required>
         </td>
         <td style="width: 150px;">
             <div class="input-group input-group-sm">
@@ -18,7 +19,8 @@
                     name="parcelas[][valor]"
                     placeholder="0,00"
                     data-parcela-input="valor"
-                    data-parcela-num="">
+                    data-parcela-num=""
+                    required>
             </div>
         </td>
         <td style="width: 150px;">
@@ -35,14 +37,14 @@
                 data-parcela-input="forma_pagamento"
                 data-parcela-num=""
                 data-control="select2"
-                data-placeholder="Selecione"
-                data-allow-clear="true"
+                data-placeholder="Selecione *"
                 data-minimum-results-for-search="0"
-                data-dropdown-parent="#kt_drawer_lancamento">
+                data-dropdown-parent="#kt_drawer_lancamento"
+                required>
                 <option value="">Selecione</option>
-                @if (isset($formasPagamento))
-                    @foreach ($formasPagamento as $formaPagamento)
-                        <option value="{{ $formaPagamento->id }}">{{ $formaPagamento->id }} - {{ $formaPagamento->nome }}</option>
+                @if (isset($entidadesBanco))
+                    @foreach ($entidadesBanco as $entidade)
+                        <option value="{{ $entidade->id }}">{{ $entidade->agencia }} - {{ $entidade->conta }}</option>
                     @endforeach
                 @endif
             </select>

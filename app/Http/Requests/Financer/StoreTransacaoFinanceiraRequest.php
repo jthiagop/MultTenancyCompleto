@@ -127,14 +127,16 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'desconto_pagamento' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
 
             // Validações de parcelas (quando parcelamento é 2x ou mais)
+            // Obrigatórios: vencimento, valor, forma_pagamento_id
+            // Opcionais: percentual (calculado), descricao (gerada), conta_pagamento_id, agendado
             'parcelamento' => 'nullable|string',
             'parcelas' => 'nullable|array',
             'parcelas.*.vencimento' => 'required_with:parcelas|date_format:d/m/Y',
             'parcelas.*.valor' => 'required_with:parcelas|numeric|gt:0',  // Em DECIMAL (ex: 1991.44)
-            'parcelas.*.percentual' => 'required_with:parcelas|numeric|gt:0|max:100',
-            'parcelas.*.forma_pagamento_id' => 'nullable|exists:formas_pagamento,id',
+            'parcelas.*.percentual' => 'nullable|numeric|min:0|max:100',  // Calculado automaticamente se não informado
+            'parcelas.*.forma_pagamento_id' => 'required_with:parcelas|exists:entidades_financeiras,id',
             'parcelas.*.conta_pagamento_id' => 'nullable|exists:entidades_financeiras,id',
-            'parcelas.*.descricao' => 'required_with:parcelas|string',
+            'parcelas.*.descricao' => 'nullable|string|max:255',  // Gerada automaticamente se não informada
             'parcelas.*.agendado' => 'nullable|boolean',
         ];
     }
@@ -195,13 +197,13 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'parcelas.*.valor.required_with' => 'O valor é obrigatório para cada parcela.',
             'parcelas.*.valor.numeric' => 'O valor da parcela deve ser numérico.',
             'parcelas.*.valor.gt' => 'O valor da parcela deve ser maior que zero.',
-            'parcelas.*.percentual.required_with' => 'O percentual é obrigatório para cada parcela.',
             'parcelas.*.percentual.numeric' => 'O percentual da parcela deve ser numérico.',
-            'parcelas.*.percentual.gt' => 'O percentual da parcela deve ser maior que zero.',
+            'parcelas.*.percentual.min' => 'O percentual da parcela não pode ser negativo.',
             'parcelas.*.percentual.max' => 'O percentual da parcela não pode ser maior que 100%.',
+            'parcelas.*.forma_pagamento_id.required_with' => 'A forma de pagamento é obrigatória para cada parcela.',
             'parcelas.*.forma_pagamento_id.exists' => 'A forma de pagamento selecionada não é válida.',
             'parcelas.*.conta_pagamento_id.exists' => 'A conta de pagamento selecionada não é válida.',
-            'parcelas.*.descricao.required_with' => 'A descrição é obrigatória para cada parcela.',
+            'parcelas.*.descricao.max' => 'A descrição da parcela não pode ter mais que 255 caracteres.',
         ];
     }
 

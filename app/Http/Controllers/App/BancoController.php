@@ -2259,10 +2259,13 @@ class BancoController extends Controller
             // Valor da parcela
             $valorParcela = isset($parcela['valor']) ? $this->converterValorParaDecimal($parcela['valor']) : 0;
 
-            // Percentual da parcela
-            $percentualParcela = isset($parcela['percentual']) ? (float) $parcela['percentual'] : 0;
+            // Percentual da parcela (calculado automaticamente se não informado)
+            $valorTotal = (float) $transacaoPrincipal->valor;
+            $percentualParcela = isset($parcela['percentual']) && $parcela['percentual'] > 0 
+                ? (float) $parcela['percentual'] 
+                : ($valorTotal > 0 ? round(($valorParcela / $valorTotal) * 100, 2) : 0);
 
-            // Descrição da parcela
+            // Descrição da parcela (gerada automaticamente se não informada)
             $descricaoParcela = isset($parcela['descricao']) && $parcela['descricao'] 
                 ? $parcela['descricao'] 
                 : $validatedData['descricao'] . " {$numeroParcela}/{$totalParcelas}";
