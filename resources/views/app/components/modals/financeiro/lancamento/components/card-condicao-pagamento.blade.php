@@ -147,10 +147,6 @@
         </div>
         <!--end::Input group - Parcelamento e Vencimento-->
 
-        @include('app.components.modals.financeiro.lancamento.components.accordion-previsao-pagamento')
-
-        @include('app.components.modals.financeiro.lancamento.components.accordion-informacoes-pagamento')
-
         @include('app.components.modals.financeiro.lancamento.components.accordion-parcelas')
 
     </div>

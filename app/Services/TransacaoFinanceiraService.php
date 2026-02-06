@@ -33,12 +33,13 @@ class TransacaoFinanceiraService
      * Padrão profissional:
      * - Transação DB envolvendo apenas operações em banco
      * - Anexos processados DEPOIS do commit (DB::afterCommit)
-     * - Não retorna model deletado
+     * - Para parcelamentos: cria UMA transação principal, as parcelas são 
+     *   processadas pelo BancoController::criarParcelas() na tabela 'parcelamentos'
      * - Retorna sempre um model válido
      * 
      * @param array $validatedData Dados validados do request
      * @param Request $request Request original para acessar dados não validados
-     * @return TransacaoFinanceira Transação criada ou primeira parcela se parcelado
+     * @return TransacaoFinanceira Transação principal criada
      * @throws \Exception
      */
     public function criarLancamento(array $validatedData, Request $request): TransacaoFinanceira
@@ -50,37 +51,35 @@ class TransacaoFinanceiraService
             // 2. Calcula a situação baseada no checkbox "Pago"
             $data['situacao'] = $this->calcularSituacao($request);
             
-            // 3. Verifica se será parcelado
-            $temParcelas = $this->temParcelas($request);
+            // 3. Cria a transação principal (mesmo se houver parcelas)
+            // NOTA: As parcelas são processadas pelo BancoController::criarParcelas()
+            // que cria registros na tabela 'parcelamentos' vinculados a esta transação
+            $transacao = TransacaoFinanceira::create($data);
             
+            // 4. ✅ REGRA DE NEGÓCIO: Só cria movimentação se a situação for EFETIVADA (pago/recebido)
+            // Transações em_aberto são apenas previsões e não devem impactar saldo
+            // Para transações parceladas, a movimentação será criada quando cada parcela for paga
+            $temParcelas = $this->temParcelas($request);
+            $situacoesEfetivadas = ['pago', 'recebido'];
+            $movimentacao = null;
+            
+            if (!$temParcelas && in_array($data['situacao'], $situacoesEfetivadas)) {
+                $movimentacao = $transacao->movimentacao()->create($this->prepararDadosMovimentacao($data));
+            }
+            
+            // 5. Processa pagamento (se houver e não for parcelado)
+            if (!$temParcelas && $this->temPagamento($request, $data) && $movimentacao) {
+                $this->processarPagamento($transacao, $movimentacao, $data, $request);
+            }
+            
+            // 6. Processa lançamento padrão especial (Depósito Bancário)
             if (!$temParcelas) {
-                // Transação comum (sem parcelas)
-                $transacao = TransacaoFinanceira::create($data);
-                
-                // 4. ✅ REGRA DE NEGÓCIO: Só cria movimentação se a situação for EFETIVADA (pago/recebido)
-                // Transações em_aberto são apenas previsões e não devem impactar saldo
-                $situacoesEfetivadas = ['pago', 'recebido'];
-                $movimentacao = null;
-                
-                if (in_array($data['situacao'], $situacoesEfetivadas)) {
-                    $movimentacao = $transacao->movimentacao()->create($this->prepararDadosMovimentacao($data));
-                }
-                
-                // 5. Processa pagamento (se houver)
-                if ($this->temPagamento($request, $data) && $movimentacao) {
-                    $this->processarPagamento($transacao, $movimentacao, $data, $request);
-                }
-                
-                // 6. Processa lançamento padrão especial (Depósito Bancário)
                 $this->processarLancamentoPadrao($transacao, $data);
-                
-                // 7. Processa recorrência (se houver)
-                if ($this->temRecorrencia($request)) {
-                    $this->processarRecorrencia($transacao, $data, $request);
-                }
-            } else {
-                // Transação com parcelas (cria múltiplas transações)
-                $transacao = $this->processarParcelas(null, $data, $request);
+            }
+            
+            // 7. Processa recorrência (se houver e não for parcelado)
+            if (!$temParcelas && $this->temRecorrencia($request)) {
+                $this->processarRecorrencia($transacao, $data, $request);
             }
             
             return $transacao;

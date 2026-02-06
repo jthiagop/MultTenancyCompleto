@@ -195,6 +195,14 @@ class TransacaoFinanceira extends Model
     }
 
     /**
+     * Relacionamento: Parcelas desta transação (tabela parcelamentos)
+     */
+    public function parcelas()
+    {
+        return $this->hasMany(Parcelamento::class, 'transacao_financeira_id');
+    }
+
+    /**
      * Scope: Fracionamentos do tipo "pago"
      */
     public function fracionamentosPagos()
