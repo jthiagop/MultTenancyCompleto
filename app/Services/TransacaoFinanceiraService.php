@@ -106,6 +106,77 @@ class TransacaoFinanceiraService
     }
 
     /**
+     * Registra a baixa de uma transação financeira (marca como pago/recebido)
+     * 
+     * Este método:
+     * - Atualiza a situação da transação para pago/recebido
+     * - Cria a movimentação correspondente (impacta saldo)
+     * - Registra valor pago e data de pagamento
+     * 
+     * @param TransacaoFinanceira $transacao Transação a ser baixada
+     * @param array $dados Dados da baixa (valor_pago, data_pagamento, juros, multa, desconto)
+     * @return TransacaoFinanceira Transação atualizada
+     * @throws \Exception
+     */
+    public function registrarBaixa(TransacaoFinanceira $transacao, array $dados): TransacaoFinanceira
+    {
+        return DB::transaction(function () use ($transacao, $dados) {
+            // 1. Define valores padrão
+            $valorPago = $dados['valor_pago'] ?? $transacao->valor;
+            $dataPagamento = $dados['data_pagamento'] ?? Carbon::today()->format('Y-m-d');
+            $juros = $dados['juros'] ?? 0;
+            $multa = $dados['multa'] ?? 0;
+            $desconto = $dados['desconto'] ?? 0;
+
+            // 2. Atualiza a transação
+            $transacao->situacao = ($transacao->tipo === 'entrada') 
+                ? \App\Enums\SituacaoTransacao::RECEBIDO
+                : \App\Enums\SituacaoTransacao::PAGO;
+            $transacao->valor_pago = $valorPago;
+            $transacao->data_pagamento = $dataPagamento;
+            $transacao->juros = $juros;
+            $transacao->multa = $multa;
+            $transacao->desconto = $desconto;
+            $transacao->updated_by = Auth::id();
+            $transacao->updated_by_name = Auth::user()->name ?? 'Sistema';
+            $transacao->save();
+
+            // 3. Cria a movimentação (impacta saldo)
+            // Só cria se ainda não existir uma movimentação para esta transação
+            if (!$transacao->movimentacao) {
+                $lancamentoPadrao = LancamentoPadrao::find($transacao->lancamento_padrao_id);
+                
+                $dadosMovimentacao = [
+                    'entidade_financeira_id' => $transacao->entidade_id,
+                    'tipo' => $transacao->tipo,
+                    'valor' => $valorPago,
+                    'data' => $dataPagamento,
+                    'descricao' => $transacao->descricao,
+                    'company_id' => $transacao->company_id,
+                    'created_by' => Auth::id(),
+                    'created_by_name' => Auth::user()->name ?? 'Sistema',
+                    'updated_by' => Auth::id(),
+                    'updated_by_name' => Auth::user()->name ?? 'Sistema',
+                    'lancamento_padrao_id' => $transacao->lancamento_padrao_id,
+                    'conta_debito_id' => $lancamentoPadrao->debit_account_id ?? null,
+                    'conta_credito_id' => $lancamentoPadrao->credit_account_id ?? null,
+                    'data_competencia' => $transacao->data_competencia,
+                ];
+
+                $transacao->movimentacao()->create($dadosMovimentacao);
+            }
+
+            Log::info('[registrarBaixa] Transação baixada com sucesso', [
+                'transacao_id' => $transacao->id,
+                'valor_pago' => $valorPago,
+                'situacao' => $transacao->situacao,
+            ]);
+
+            return $transacao;
+        });
+    }
+
+    /**
      * Prepara os dados para criação da transação
      */
     protected function prepararDados(array $validatedData, Request $request): array
