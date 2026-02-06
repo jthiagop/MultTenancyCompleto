@@ -25,6 +25,7 @@ class TransacaoFinanceira extends Model
     use HasFactory, SoftDeletes;
     protected $fillable = [
         'company_id',
+        'parent_id',
         'data_competencia',
         'data_vencimento',
         'data_pagamento',
@@ -200,6 +201,14 @@ class TransacaoFinanceira extends Model
     public function parcelas()
     {
         return $this->hasMany(Parcelamento::class, 'transacao_financeira_id');
+    }
+
+    /**
+     * Relacionamento: Transação pai (quando esta é uma parcela filha)
+     */
+    public function parent()
+    {
+        return $this->belongsTo(TransacaoFinanceira::class, 'parent_id');
     }
 
     /**

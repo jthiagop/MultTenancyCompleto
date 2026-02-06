@@ -704,12 +704,115 @@
                 $('#pago_checkbox').prop('checked', true);
             }
         }
+
+        // Exibir card somente-leitura de parcelas (PAI com parcelas)
+        if (dados.is_parcelado && dados.parcelas && dados.parcelas.length > 0) {
+            console.log('📦 [Drawer-Init] Exibindo card de parcelas readonly:', dados.parcelas.length);
+            exibirCardParcelasReadonly(dados.parcelas, null);
+            
+            // Esconde o select de parcelamento na edição (não é editável)
+            $('#parcelamento_wrapper').hide();
+        }
+        // Se for transação FILHA (parcela individual), exibe banner informativo
+        else if (dados.parent_id && dados.parcela_info) {
+            console.log('📦 [Drawer-Init] Transação é parcela filha, parent_id:', dados.parent_id);
+            exibirCardParcelasReadonly(null, dados.parcela_info);
+        }
         
         console.log('✅ [Drawer-Init] Formulário preenchido com sucesso');
     }
     
+    /**
+     * Exibe o card somente-leitura de parcelas no drawer de edição
+     * @param {Array|null} parcelas - Array com dados das parcelas (quando é PAI)
+     * @param {Object|null} parcelaInfo - Info da parcela (quando é FILHA)
+     */
+    function exibirCardParcelasReadonly(parcelas, parcelaInfo) {
+        var card = $('#card_parcelas_readonly');
+        var badge = $('#card_parcelas_readonly_badge');
+        var tbody = $('#card_parcelas_readonly_tbody');
+        var tableWrapper = $('#card_parcelas_readonly_table_wrapper');
+        var filhaInfo = $('#card_parcela_filha_info');
+        var filhaInfoText = $('#card_parcela_filha_info_text');
+        
+        card.show();
+        tbody.empty();
+        
+        // Caso 1: Transação PAI - exibe tabela de parcelas
+        if (parcelas && parcelas.length > 0) {
+            badge.text(parcelas.length + ' parcela' + (parcelas.length > 1 ? 's' : ''));
+            tableWrapper.show();
+            filhaInfo.hide();
+            
+            parcelas.forEach(function(parcela) {
+                var situacaoBadge = '';
+                var sit = parcela.situacao || 'em_aberto';
+                if (sit === 'pago' || sit === 'recebido') {
+                    situacaoBadge = '<span class="badge badge-light-success py-1 px-2 fs-8">Pago</span>';
+                } else if (sit === 'em_aberto') {
+                    situacaoBadge = '<span class="badge badge-light-warning py-1 px-2 fs-8">Em aberto</span>';
+                } else {
+                    situacaoBadge = '<span class="badge badge-light-secondary py-1 px-2 fs-8">' + sit.replace('_', ' ') + '</span>';
+                }
+                
+                var valorStr = parcela.valor || '0,00';
+                // Se valor veio como number, formata
+                if (typeof valorStr === 'number') {
+                    valorStr = valorStr.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                }
+                
+                var editBtn = '';
+                if (parcela.transacao_parcela_id) {
+                    editBtn = '<button type="button" class="btn btn-sm btn-icon btn-light-primary btn-parcela-editar" ' +
+                        'data-transacao-id="' + parcela.transacao_parcela_id + '" title="Editar parcela">' +
+                        '<i class="bi bi-pencil-square fs-6"></i></button>';
+                }
+                
+                var row = '<tr>' +
+                    '<td class="fw-bold">' + (parcela.numero_parcela || '-') + '/' + (parcela.total_parcelas || '-') + '</td>' +
+                    '<td>' + (parcela.data_vencimento || '-') + '</td>' +
+                    '<td class="text-end">R$ ' + valorStr + '</td>' +
+                    '<td>' + situacaoBadge + '</td>' +
+                    '<td class="text-center">' + editBtn + '</td>' +
+                '</tr>';
+                
+                tbody.append(row);
+            });
+        }
+        
+        // Caso 2: Transação FILHA - exibe banner informativo
+        if (parcelaInfo) {
+            badge.text('Parcela ' + parcelaInfo.numero_parcela + '/' + parcelaInfo.total_parcelas);
+            tableWrapper.hide();
+            filhaInfo.show();
+            
+            var infoHtml = 'Esta é a <strong>parcela ' + parcelaInfo.numero_parcela + '/' + parcelaInfo.total_parcelas + '</strong>';
+            if (parcelaInfo.parent_descricao) {
+                infoHtml += ' do lançamento <strong>"' + parcelaInfo.parent_descricao + '"</strong>';
+            }
+            if (parcelaInfo.parent_id) {
+                infoHtml += ' <a href="javascript:void(0)" class="btn-parcela-editar" data-transacao-id="' + parcelaInfo.parent_id + '">' +
+                    '<i class="bi bi-box-arrow-up-right me-1"></i>Abrir lançamento pai</a>';
+            }
+            filhaInfoText.html(infoHtml);
+        }
+        
+        console.log('✅ [Drawer-Init] Card de parcelas readonly exibido');
+    }
+    
     // Torna a função acessível globalmente
     window.preencherFormularioEdicao = preencherFormularioEdicao;
+    window.exibirCardParcelasReadonly = exibirCardParcelasReadonly;
+    
+    // Handler delegado: clique no botão de editar parcela individual
+    $(document).on('click', '.btn-parcela-editar', function(e) {
+        e.preventDefault();
+        var transacaoId = $(this).data('transacao-id');
+        if (transacaoId && typeof abrirDrawerEdicao === 'function') {
+            console.log('📝 [Drawer-Init] Abrindo parcela para edição, ID:', transacaoId);
+            abrirDrawerEdicao(transacaoId);
+        }
+    });
 
     // Controla exibição do select de recorrência
     $('#flexSwitchDefault').on('change', function() {
@@ -1545,6 +1648,14 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
         
         // Oculta accordions que dependem de dados
         $('#kt_accordion_previsao_pagamento, #kt_accordion_informacoes_pagamento, #kt_accordion_parcelas').hide();
+        
+        // Oculta e limpa o card de parcelas readonly
+        $('#card_parcelas_readonly').hide();
+        $('#card_parcelas_readonly_tbody').empty();
+        $('#card_parcela_filha_info').hide();
+        
+        // Restaura visibilidade do select de parcelamento
+        $('#parcelamento_wrapper').show();
         
         // Limpa tabelas dinâmicas
         $('#parcelas_tbody, #resumo_baixa_tbody').empty();

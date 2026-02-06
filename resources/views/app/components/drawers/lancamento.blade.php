@@ -23,6 +23,8 @@
 
             @include('app.components.modals.financeiro.lancamento.components.card-condicao-pagamento', ['dropdownParent' => '#kt_drawer_lancamento'])
 
+            @include('app.components.modals.financeiro.lancamento.components.card-parcelas-readonly')
+
             @include('app.components.modals.financeiro.lancamento.components.tabs-historico-anexos')
         </form>
     </x-slot>

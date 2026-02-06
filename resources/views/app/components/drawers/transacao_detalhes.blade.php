@@ -133,6 +133,36 @@
     <div class="separator separator-dashed mb-7"></div>
     <!--end::Separator-->
 
+    <!--begin::Parcela Info (exibido quando a transação é uma parcela filha)-->
+    <div class="mb-5" id="drawer_transacao_parcela_info_section" style="display: none;">
+        <div class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-4">
+            <i class="bi bi-signpost-split text-primary fs-2 me-3"></i>
+            <div class="d-flex flex-stack flex-grow-1">
+                <div class="fw-semibold">
+                    <div class="fs-6 text-gray-700" id="drawer_transacao_parcela_info_text">
+                        <!-- Preenchido via JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!--end::Parcela Info-->
+
+    <!--begin::Parcelas (exibido apenas para transações parceladas)-->
+    <div class="mb-7" id="drawer_transacao_parcelas_section" style="display: none;">
+        <h5 class="mb-4">
+            <i class="bi bi-signpost-split text-primary me-2"></i>Parcelas
+        </h5>
+        <div id="drawer_transacao_parcelas">
+            <!-- Preenchido via JavaScript -->
+        </div>
+    </div>
+    <!--end::Parcelas-->
+
+    <!--begin::Separator-->
+    <div class="separator separator-dashed mb-7" id="drawer_parcelas_separator" style="display: none;"></div>
+    <!--end::Separator-->
+
     <!--begin::Auditoria-->
     <div class="mb-7">
         <h5 class="mb-4">Informações de Auditoria</h5>

@@ -112,8 +112,7 @@ class CaixaController extends Controller
             'despesasEmAberto',
             'valorDespesaTotal',
             'parceiros',
-            'fornecedores'
-        ));
+        ))->with('fornecedores', $parceiros);
     }
 
     public function list(Request $request)

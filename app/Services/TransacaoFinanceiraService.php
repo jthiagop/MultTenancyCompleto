@@ -119,7 +119,8 @@ class TransacaoFinanceiraService
      */
     public function registrarBaixa(TransacaoFinanceira $transacao, array $dados): TransacaoFinanceira
     {
-        return DB::transaction(function () use ($transacao, $dados) {
+        /** @var TransacaoFinanceira $result */
+        $result = DB::transaction(function () use ($transacao, $dados) {
             // 1. Define valores padrão
             $valorPago = $dados['valor_pago'] ?? $transacao->valor;
             $dataPagamento = $dados['data_pagamento'] ?? Carbon::today()->format('Y-m-d');
@@ -184,6 +185,8 @@ class TransacaoFinanceiraService
 
             return $transacao;
         });
+
+        return $result;
     }
 
     /**
@@ -200,7 +203,8 @@ class TransacaoFinanceiraService
      */
     public function reverterBaixa(TransacaoFinanceira $transacao): TransacaoFinanceira
     {
-        return DB::transaction(function () use ($transacao) {
+        /** @var TransacaoFinanceira $result */
+        $result = DB::transaction(function () use ($transacao) {
             // Guarda referência da entidade para recalcular saldo depois
             $entidadeId = $transacao->entidade_id;
             
@@ -244,6 +248,8 @@ class TransacaoFinanceiraService
 
             return $transacao;
         });
+
+        return $result;
     }
 
     /**

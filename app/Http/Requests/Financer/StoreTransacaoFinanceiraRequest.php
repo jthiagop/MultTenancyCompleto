@@ -300,10 +300,17 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                 }
 
                 // Percentual continua em numeric (não é dinheiro)
-                if (isset($parcela['percentual']) && is_string($parcela['percentual'])) {
-                    $percentual = $parcela['percentual'];
-                    $percentual = str_replace('.', '', $percentual);
-                    $percentual = str_replace(',', '.', $percentual);
+                // A máscara usa radixPoint: "." então o valor vem como "50.00" (formato americano)
+                if (isset($parcela['percentual']) && $parcela['percentual'] !== '') {
+                    $percentual = (string) $parcela['percentual'];
+                    
+                    // Se contém vírgula, é formato brasileiro (50,00)
+                    if (strpos($percentual, ',') !== false) {
+                        $percentual = str_replace('.', '', $percentual); // Remove milhares
+                        $percentual = str_replace(',', '.', $percentual); // Vírgula → ponto
+                    }
+                    // Se contém apenas ponto, já está no formato correto (50.00)
+                    
                     $parcelaProcessada['percentual'] = (float) $percentual;
                 }
 

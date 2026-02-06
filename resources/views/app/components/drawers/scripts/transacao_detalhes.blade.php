@@ -94,6 +94,67 @@
                 document.getElementById('drawer_transacao_atualizado_por').textContent = data.updated_by_name || '-';
                 document.getElementById('drawer_transacao_atualizado_em').textContent = data.updated_at_formatado || '-';
 
+                // Parcela Info (quando transação é filha)
+                const parcelaInfoSection = document.getElementById('drawer_transacao_parcela_info_section');
+                const parcelaInfoText = document.getElementById('drawer_transacao_parcela_info_text');
+                if (data.parcela_info) {
+                    parcelaInfoSection.style.display = 'block';
+                    let infoHtml = 'Esta é a <strong>parcela ' + data.parcela_info.numero_parcela + '/' + data.parcela_info.total_parcelas + '</strong>';
+                    if (data.parcela_info.parent_descricao) {
+                        infoHtml += ' do lançamento <strong>"' + data.parcela_info.parent_descricao + '"</strong>';
+                    }
+                    parcelaInfoText.innerHTML = infoHtml;
+                } else {
+                    parcelaInfoSection.style.display = 'none';
+                    parcelaInfoText.innerHTML = '';
+                }
+
+                // Parcelas
+                const parcelasSection = document.getElementById('drawer_transacao_parcelas_section');
+                const parcelasSeparator = document.getElementById('drawer_parcelas_separator');
+                const parcelasEl = document.getElementById('drawer_transacao_parcelas');
+
+                if (data.is_parcelado && data.parcelas && data.parcelas.length > 0) {
+                    parcelasSection.style.display = 'block';
+                    parcelasSeparator.style.display = 'block';
+
+                    let parcelasHtml = '<div class="table-responsive"><table class="table table-row-dashed table-row-gray-300 align-middle gs-0 gy-3">';
+                    parcelasHtml += '<thead><tr class="fw-bold text-muted fs-7">';
+                    parcelasHtml += '<th class="min-w-30px">#</th>';
+                    parcelasHtml += '<th class="min-w-80px">Vencimento</th>';
+                    parcelasHtml += '<th class="min-w-70px text-end">Valor</th>';
+                    parcelasHtml += '<th class="min-w-70px">Situação</th>';
+                    parcelasHtml += '</tr></thead><tbody>';
+
+                    data.parcelas.forEach(function(parcela) {
+                        let situacaoBadge = '';
+                        const sit = parcela.situacao || 'em_aberto';
+                        if (sit === 'pago' || sit === 'recebido') {
+                            situacaoBadge = '<span class="badge badge-light-success py-1 px-2 fs-8">Pago</span>';
+                        } else if (sit === 'em_aberto') {
+                            situacaoBadge = '<span class="badge badge-light-warning py-1 px-2 fs-8">Em aberto</span>';
+                        } else {
+                            situacaoBadge = '<span class="badge badge-light-secondary py-1 px-2 fs-8">' + sit.replace('_', ' ') + '</span>';
+                        }
+
+                        const valorFormatado = parseFloat(parcela.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                        parcelasHtml += '<tr>';
+                        parcelasHtml += '<td class="fw-bold">' + parcela.numero_parcela + '/' + parcela.total_parcelas + '</td>';
+                        parcelasHtml += '<td>' + (parcela.data_vencimento || '-') + '</td>';
+                        parcelasHtml += '<td class="text-end">R$ ' + valorFormatado + '</td>';
+                        parcelasHtml += '<td>' + situacaoBadge + '</td>';
+                        parcelasHtml += '</tr>';
+                    });
+
+                    parcelasHtml += '</tbody></table></div>';
+                    parcelasEl.innerHTML = parcelasHtml;
+                } else {
+                    parcelasSection.style.display = 'none';
+                    parcelasSeparator.style.display = 'none';
+                    parcelasEl.innerHTML = '';
+                }
+
                 // Abrir o drawer
                 const drawer = KTDrawer.getInstance(document.getElementById('kt_drawer_transacao_detalhes'));
                 if (drawer) {

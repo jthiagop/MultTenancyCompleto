@@ -1485,7 +1485,8 @@ class BancoController extends Controller
                 'modulos_anexos',
                 'createdBy',
                 'updatedBy',
-                'recibo.address' // Carregar recibo com endereço
+                'recibo.address', // Carregar recibo com endereço
+                'parcelas.entidadeFinanceira', // Carregar parcelas com entidade
             ])
             ->where('company_id', $companyId)
             ->findOrFail($id);
@@ -1528,7 +1529,35 @@ class BancoController extends Controller
                     'nome' => $anexo->nome_arquivo,
                     'url' => $anexo->caminho_arquivo ? route('file', ['path' => $anexo->caminho_arquivo]) : ($anexo->link ?? '#')
                 ];
-            })
+            }),
+            // Dados de parcelamento (para transação filha)
+            'parcela_info' => $transacao->parent_id ? (function() use ($transacao) {
+                $parcelamento = \App\Models\Financeiro\Parcelamento::where('transacao_parcela_id', $transacao->id)->first();
+                if ($parcelamento) {
+                    return [
+                        'numero_parcela' => $parcelamento->numero_parcela,
+                        'total_parcelas' => $parcelamento->total_parcelas,
+                        'parent_id' => $transacao->parent_id,
+                        'parent_descricao' => $transacao->parent?->descricao ?? null,
+                    ];
+                }
+                return null;
+            })() : null,
+            // Dados de parcelamento (para transação pai)
+            'is_parcelado' => $transacao->parcelas->isNotEmpty(),
+            'parent_id' => $transacao->parent_id,
+            'parcelas' => $transacao->parcelas->map(function ($parcela) {
+                return [
+                    'numero_parcela' => $parcela->numero_parcela,
+                    'total_parcelas' => $parcela->total_parcelas,
+                    'data_vencimento' => $parcela->data_vencimento ? $parcela->data_vencimento->format('d/m/Y') : '-',
+                    'valor' => (float) $parcela->valor,
+                    'situacao' => $parcela->situacao,
+                    'valor_pago' => (float) ($parcela->valor_pago ?? 0),
+                    'descricao' => $parcela->descricao,
+                    'entidade_nome' => $parcela->entidadeFinanceira?->nome ?? '-',
+                ];
+            })->values()->toArray(),
         ]);
     }
 
@@ -2270,8 +2299,41 @@ class BancoController extends Controller
                 ? $parcela['descricao'] 
                 : $validatedData['descricao'] . " {$numeroParcela}/{$totalParcelas}";
 
-            // Cria a parcela na tabela 'parcelamentos'
+            // 1. Cria a TransacaoFinanceira para a parcela (aparece nas listagens)
+            $transacaoParcela = TransacaoFinanceira::create([
+                'company_id' => $validatedData['company_id'],
+                'parent_id' => $transacaoPrincipal->id, // Vincula à transação PAI
+                'data_competencia' => $validatedData['data_competencia'],
+                'data_vencimento' => $dataVencimentoParcela,
+                'entidade_id' => $entidadeIdParcela,
+                'parceiro_id' => $validatedData['parceiro_id'] ?? $validatedData['fornecedor_id'] ?? null,
+                'tipo' => $validatedData['tipo'],
+                'valor' => $valorParcela,
+                'descricao' => $descricaoParcela,
+                'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'] ?? null,
+                'cost_center_id' => $validatedData['cost_center_id'] ?? null,
+                'tipo_documento' => $validatedData['tipo_documento'] ?? null,
+                'numero_documento' => isset($validatedData['numero_documento']) 
+                    ? $validatedData['numero_documento'] . '-' . $numeroParcela 
+                    : null,
+                'origem' => $validatedData['origem'] ?? 'Banco',
+                'historico_complementar' => $validatedData['historico_complementar'] ?? null,
+                'comprovacao_fiscal' => $validatedData['comprovacao_fiscal'] ?? false,
+                'situacao' => 'em_aberto',
+                'agendado' => isset($parcela['agendado']) ? (bool) $parcela['agendado'] : false,
+                'valor_pago' => 0,
+                'juros' => 0,
+                'multa' => 0,
+                'desconto' => 0,
+                'created_by' => Auth::id(),
+                'created_by_name' => Auth::user()->name ?? 'Sistema',
+                'updated_by' => Auth::id(),
+                'updated_by_name' => Auth::user()->name ?? 'Sistema',
+            ]);
+
+            // 2. Cria o registro na tabela 'parcelamentos' vinculando à transação
             $transacaoPrincipal->parcelas()->create([
+                'transacao_parcela_id' => $transacaoParcela->id, // Vincula à TransacaoFinanceira da parcela
                 'numero_parcela' => $numeroParcela,
                 'total_parcelas' => $totalParcelas,
                 'data_vencimento' => $dataVencimentoParcela,
@@ -2286,14 +2348,15 @@ class BancoController extends Controller
                 'juros' => 0,
                 'multa' => 0,
                 'desconto' => 0,
-                'created_by' => $validatedData['created_by'],
-                'created_by_name' => $validatedData['created_by_name'],
-                'updated_by' => $validatedData['updated_by'],
-                'updated_by_name' => $validatedData['updated_by_name'],
+                'created_by' => Auth::id(),
+                'created_by_name' => Auth::user()->name ?? 'Sistema',
+                'updated_by' => Auth::id(),
+                'updated_by_name' => Auth::user()->name ?? 'Sistema',
             ]);
 
             \Log::info('✅ Parcela criada', [
-                'transacao_id' => $transacaoPrincipal->id,
+                'transacao_principal_id' => $transacaoPrincipal->id,
+                'transacao_parcela_id' => $transacaoParcela->id,
                 'numero_parcela' => $numeroParcela,
                 'total_parcelas' => $totalParcelas,
                 'valor' => $valorParcela,
@@ -2304,7 +2367,7 @@ class BancoController extends Controller
 
         // Atualiza a situação da transação principal para indicar que é parcelada
         $transacaoPrincipal->update([
-            'situacao' => \App\Enums\SituacaoTransacao::EM_ABERTO,
+            'situacao' => \App\Enums\SituacaoTransacao::PARCELADO,
         ]);
 
         \Log::info('✅ Parcelamento criado com sucesso', [
@@ -2688,6 +2751,7 @@ class BancoController extends Controller
                 'entidadeFinanceira',
                 'recorrenciaConfig',
                 'modulos_anexos',
+                'parcelas.transacaoParcela',
             ])
             ->where('company_id', $companyId)
             ->findOrFail($id);
@@ -2721,6 +2785,38 @@ class BancoController extends Controller
                 'desconto' => $transacao->desconto ? number_format($transacao->desconto, 2, ',', '.') : null,
                 'recorrencia_id' => $transacao->recorrencia_id,
                 'parent_id' => $transacao->parent_id,
+                // Dados de parcela filha (quando esta transação é uma parcela individual)
+                'parcela_info' => $transacao->parent_id ? (function() use ($transacao) {
+                    $parcelamento = \App\Models\Financeiro\Parcelamento::where('transacao_parcela_id', $transacao->id)->first();
+                    if ($parcelamento) {
+                        return [
+                            'numero_parcela' => $parcelamento->numero_parcela,
+                            'total_parcelas' => $parcelamento->total_parcelas,
+                            'parent_id' => $transacao->parent_id,
+                            'parent_descricao' => $transacao->parent?->descricao ?? null,
+                        ];
+                    }
+                    return null;
+                })() : null,
+                // Dados de parcelamento (se for transação PAI)
+                'is_parcelado' => $transacao->parcelas->isNotEmpty(),
+                'parcelas' => $transacao->parcelas->map(function ($parcela) {
+                    return [
+                        'id' => $parcela->id,
+                        'numero_parcela' => $parcela->numero_parcela,
+                        'total_parcelas' => $parcela->total_parcelas,
+                        'data_vencimento' => $parcela->data_vencimento ? $parcela->data_vencimento->format('d/m/Y') : null,
+                        'valor' => number_format((float) $parcela->valor, 2, ',', '.'),
+                        'percentual' => number_format((float) $parcela->percentual, 2, ',', '.'),
+                        'situacao' => $parcela->situacao,
+                        'valor_pago' => $parcela->valor_pago ? number_format((float) $parcela->valor_pago, 2, ',', '.') : '0,00',
+                        'entidade_id' => $parcela->entidade_id,
+                        'conta_pagamento_id' => $parcela->conta_pagamento_id,
+                        'descricao' => $parcela->descricao,
+                        'agendado' => (bool) $parcela->agendado,
+                        'transacao_parcela_id' => $parcela->transacao_parcela_id,
+                    ];
+                })->values()->toArray(),
             ];
             
             return response()->json([
