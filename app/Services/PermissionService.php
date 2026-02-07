@@ -2,7 +2,9 @@
 
 namespace App\Services;
 
+use App\Models\Module;
 use Spatie\Permission\Models\Permission;
+use Illuminate\Support\Facades\Schema;
 
 class PermissionService
 {
@@ -49,23 +51,29 @@ class PermissionService
     }
 
     /**
-     * Retorna nomes amigáveis dos módulos
+     * Retorna nomes amigáveis dos módulos.
+     * Busca dinamicamente da tabela modules e mescla com fallbacks
+     * para módulos que não estão na tabela (ex: users, company).
      *
      * @return array
      */
     public function getModuleNames(): array
     {
-        return [
-            'financeiro' => 'Financeiro',
-            'patrimonio' => 'Patrimônio',
-            'contabilidade' => 'Contabilidade',
-            'fieis' => 'Cadastro de Fiéis',
-            'cemiterio' => 'Cemitério',
+        // Fallbacks para módulos que não existem na tabela modules
+        // (são gerenciados apenas por permissões, sem entry no dashboard)
+        $fallbackNames = [
             'company' => 'Organismos',
             'users' => 'Cadastro de Usuários',
-            'notafiscal' => 'Nota Fiscal',
-            'dizimos' => 'Dízimo e Doações',
         ];
+
+        // Buscar nomes do banco de dados
+        $dbNames = [];
+        if (Schema::hasTable('modules')) {
+            $dbNames = Module::pluck('name', 'key')->toArray();
+        }
+
+        // Mesclar: banco tem prioridade, fallbacks completam
+        return array_merge($fallbackNames, $dbNames);
     }
 
     /**

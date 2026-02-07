@@ -165,6 +165,50 @@ class PermissionSeeder extends Seeder
                 'description' => 'Visualizar detalhes de registros do módulo nota fiscal'
             ],
 
+            // Módulo Dízimo e Doações
+            [
+                'name' => 'dizimos.index',
+                'description' => 'Visualizar listagem de dízimos e doações'
+            ],
+            [
+                'name' => 'dizimos.create',
+                'description' => 'Criar registros de dízimos e doações'
+            ],
+            [
+                'name' => 'dizimos.edit',
+                'description' => 'Editar registros de dízimos e doações'
+            ],
+            [
+                'name' => 'dizimos.delete',
+                'description' => 'Excluir registros de dízimos e doações'
+            ],
+            [
+                'name' => 'dizimos.show',
+                'description' => 'Visualizar detalhes de dízimos e doações'
+            ],
+
+            // Módulo Secretaria
+            [
+                'name' => 'secretary.index',
+                'description' => 'Visualizar listagem da secretaria'
+            ],
+            [
+                'name' => 'secretary.create',
+                'description' => 'Criar registros na secretaria'
+            ],
+            [
+                'name' => 'secretary.edit',
+                'description' => 'Editar registros da secretaria'
+            ],
+            [
+                'name' => 'secretary.delete',
+                'description' => 'Excluir registros da secretaria'
+            ],
+            [
+                'name' => 'secretary.show',
+                'description' => 'Visualizar detalhes de registros da secretaria'
+            ],
+
             // Módulo Organismos (Company)
             [
                 'name' => 'company.index',
