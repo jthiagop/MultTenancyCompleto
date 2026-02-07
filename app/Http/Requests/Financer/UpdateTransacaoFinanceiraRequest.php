@@ -78,10 +78,11 @@ class UpdateTransacaoFinanceiraRequest extends FormRequest
         if ($this->has('data_competencia')) {
             try {
                 $dataCompetencia = trim($this->data_competencia);
-                Carbon::createFromFormat('d/m/Y', $dataCompetencia)->format('Y-m-d');
-                $this->merge([
-                    'data_competencia' => $dataCompetencia,
-                ]);
+                if (strpos($dataCompetencia, '/') !== false) {
+                    $this->merge([
+                        'data_competencia' => Carbon::createFromFormat('d/m/Y', $dataCompetencia)->format('Y-m-d'),
+                    ]);
+                }
             } catch (\Exception $e) {
                 // Em caso de erro de formatação, você pode tratar aqui
             }

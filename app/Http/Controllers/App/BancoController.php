@@ -2554,6 +2554,21 @@ class BancoController extends Controller
      */
     protected function updateFullTransaction(Request $request, TransacaoFinanceira $transacao)
     {
+        // Converte datas do formato brasileiro (dd/mm/yyyy) para Y-m-d antes da validação
+        $camposData = ['data_competencia', 'data_vencimento', 'data_pagamento'];
+        foreach ($camposData as $campoData) {
+            $valor = $request->input($campoData);
+            if ($valor && strpos($valor, '/') !== false) {
+                try {
+                    $request->merge([
+                        $campoData => \Carbon\Carbon::createFromFormat('d/m/Y', trim($valor))->format('Y-m-d'),
+                    ]);
+                } catch (\Exception $e) {
+                    // Mantém o valor original — a validação 'date' tratará o erro
+                }
+            }
+        }
+
         // Validação dos campos
         $rules = [
             'data_competencia' => 'required|date',

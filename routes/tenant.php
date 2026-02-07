@@ -313,6 +313,7 @@ Route::middleware([
 
                 // Rotas para o CRUD do Plano de Contas.
                 // O Laravel criará rotas como: /contabilidade/plano-contas, /contabilidade/plano-contas/create, etc.
+                Route::get('plano-contas/next-code', [ChartOfAccountController::class, 'getNextCode'])->name('plano-contas.next-code');
                 Route::post('plano-contas/import', [ChartOfAccountController::class, 'import'])->name('plano-contas.import');
                 Route::post('plano-contas/export', [ChartOfAccountController::class, 'export'])->name('plano-contas.export');
                 Route::resource('plano-contas', ChartOfAccountController::class)->names('plano-contas');
@@ -331,6 +332,7 @@ Route::middleware([
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
             Route::get('/lancamentoPadrao/data', [LancamentoPadraoController::class, 'getData'])->name('lancamentoPadrao.data');
+            Route::get('/lancamentoPadrao/stats', [LancamentoPadraoController::class, 'getStats'])->name('lancamentoPadrao.stats');
             Route::post('/lancamentoPadrao/validate-field', [LancamentoPadraoController::class, 'validateField'])->name('lancamentoPadrao.validate-field');
             Route::get('/lancamentoPadrao/download-template', [LancamentoPadraoController::class, 'downloadTemplate'])->name('lancamentoPadrao.download-template');
             Route::post('/lancamentoPadrao/upload-template', [LancamentoPadraoController::class, 'uploadTemplate'])->name('lancamentoPadrao.upload-template');
