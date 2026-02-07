@@ -15,8 +15,8 @@ class ContabilidadeController extends Controller
      */
     public function index(Request $request)
     {
-        // Determina qual aba deve estar ativa, com 'plano-contas' como padrão.
-        $activeTab = $request->query('tab', 'plano-contas');
+        // Determina qual aba deve estar ativa, com 'lancamento-padrao' como padrão.
+        $activeTab = $request->query('tab', 'lancamento-padrao');
 
         // 1. Busca todas as contas da empresa ativa, ordenadas pelo código.
         $allAccounts = ChartOfAccount::forActiveCompany()->orderBy('code')->get();

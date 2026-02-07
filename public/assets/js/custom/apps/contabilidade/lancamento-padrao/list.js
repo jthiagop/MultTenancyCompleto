@@ -7,6 +7,7 @@ var KTLancamentoPadraoList = function () {
     var toolbarBase;
     var toolbarSelected;
     var selectedCount;
+    var currentTypeFilter = 'todos'; // Filtro ativo das tabs
 
     // Private functions
     var initDatatable = function () {
@@ -26,7 +27,8 @@ var KTLancamentoPadraoList = function () {
                     'X-Requested-With': 'XMLHttpRequest'
                 },
                 'data': function(d) {
-                    console.log('Enviando requisição AJAX:', d);
+                    // Envia filtro de tipo ativo
+                    d.type = currentTypeFilter;
                     return d;
                 },
                 'dataSrc': function(json) {
@@ -389,6 +391,55 @@ var KTLancamentoPadraoList = function () {
         }
     }
 
+    // Handle segmented tabs (filtro por tipo)
+    var handleSegmentedTabs = function () {
+        var wrapper = document.getElementById('lp_segmented_wrapper');
+        if (!wrapper) return;
+
+        var tabButtons = wrapper.querySelectorAll('[data-tab-key]');
+        tabButtons.forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var key = btn.getAttribute('data-tab-key');
+                currentTypeFilter = key;
+                // Recarrega tabela com novo filtro
+                if (datatable) {
+                    datatable.ajax.reload();
+                }
+            });
+        });
+
+        // Carrega contagens iniciais
+        updateTabStats();
+    }
+
+    // Atualiza contagens nas tabs
+    var updateTabStats = function () {
+        var wrapper = document.getElementById('lp_segmented_wrapper');
+        if (!wrapper) return;
+
+        var statsUrl = wrapper.getAttribute('data-stats-url');
+        if (!statsUrl) return;
+
+        fetch(statsUrl, {
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            ['todos', 'entrada', 'saida'].forEach(function (key) {
+                var tab = wrapper.querySelector('[data-tab-key="' + key + '"]');
+                if (tab) {
+                    var countEl = tab.querySelector('.segmented-tab-count');
+                    if (countEl) {
+                        countEl.textContent = data[key] || 0;
+                    }
+                }
+            });
+        })
+        .catch(function (err) {
+            console.error('Erro ao carregar stats:', err);
+        });
+    }
+
     return {
         // Public functions
         init: function () {
@@ -403,6 +454,14 @@ var KTLancamentoPadraoList = function () {
             handleSearch();
             handleRowDeletion();
             handleFilter();
+            handleSegmentedTabs();
+
+            // Atualiza stats quando a tabela é redesenhada (após delete, etc.)
+            if (datatable) {
+                datatable.on('draw', function () {
+                    updateTabStats();
+                });
+            }
         }
     }
 }();

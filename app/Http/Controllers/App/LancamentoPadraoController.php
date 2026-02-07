@@ -56,14 +56,11 @@ class LancamentoPadraoController extends Controller
             $lancamentos = LancamentoPadrao::with(['contaDebito', 'contaCredito', 'user'])
                 ->select('lancamento_padraos.*');
 
-            \Log::info('LancamentoPadraoController::getData - Iniciando', [
-                'company_id' => $companyId,
-                'total_records' => $lancamentos->count()
-            ]);
-
-            \Log::info('LancamentoPadraoController::getData - Query preparada', [
-                'count' => $lancamentos->count()
-            ]);
+            // Filtro por tipo (tabs: entrada, saida, todos)
+            $typeFilter = $request->input('type');
+            if ($typeFilter && $typeFilter !== 'todos') {
+                $lancamentos->where('type', $typeFilter);
+            }
 
             $result = DataTables::of($lancamentos)
             ->addColumn('checkbox', function ($row) {
@@ -137,6 +134,22 @@ class LancamentoPadraoController extends Controller
         
         \Log::warning('LancamentoPadraoController::getData - Requisição não é AJAX');
         return response()->json(['error' => 'Requisição inválida.'], 400);
+    }
+
+    /**
+     * Retorna contagem por tipo para as tabs segmentadas
+     */
+    public function getStats(Request $request)
+    {
+        $todos   = LancamentoPadrao::count();
+        $entrada = LancamentoPadrao::where('type', 'entrada')->count();
+        $saida   = LancamentoPadrao::where('type', 'saida')->count();
+
+        return response()->json([
+            'todos'   => $todos,
+            'entrada' => $entrada,
+            'saida'   => $saida,
+        ]);
     }
 
     /**

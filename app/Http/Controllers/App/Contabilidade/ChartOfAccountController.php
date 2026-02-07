@@ -41,6 +41,7 @@ class ChartOfAccountController extends Controller
             'type' => 'required|in:ativo,passivo,patrimonio_liquido,receita,despesa',
             'parent_id' => 'nullable|integer|exists:chart_of_accounts,id',
             'allows_posting' => 'required|boolean',
+            'external_code' => 'nullable|string|max:50',
         ]);
 
         if ($validator->fails()) {
@@ -83,6 +84,86 @@ class ChartOfAccountController extends Controller
     }
 
     /**
+     * Retorna o próximo código disponível baseado na conta pai.
+     * Se não houver conta pai, retorna o próximo código raiz.
+     */
+    public function getNextCode(Request $request)
+    {
+        $parentId = $request->input('parent_id');
+        $activeCompanyId = session('active_company_id');
+        
+        if (!$activeCompanyId) {
+            return response()->json(['error' => 'Nenhuma empresa selecionada.'], 403);
+        }
+
+        if ($parentId) {
+            // Busca a conta pai para obter o código base
+            $parent = ChartOfAccount::where('company_id', $activeCompanyId)
+                ->where('id', $parentId)
+                ->first();
+
+            if (!$parent) {
+                return response()->json(['error' => 'Conta pai não encontrada.'], 404);
+            }
+
+            $parentCode = $parent->code;
+
+            // Busca todas as filhas diretas desta conta pai
+            $children = ChartOfAccount::where('company_id', $activeCompanyId)
+                ->where('parent_id', $parentId)
+                ->pluck('code')
+                ->toArray();
+
+            if (empty($children)) {
+                // Primeira filha: adiciona .001 ao código do pai
+                $nextCode = $parentCode . '.001';
+            } else {
+                // Encontra o maior número do último nível
+                $maxNumber = 0;
+                foreach ($children as $childCode) {
+                    // Extrai o último segmento do código
+                    $parts = explode('.', $childCode);
+                    $lastSegment = (int) end($parts);
+                    if ($lastSegment > $maxNumber) {
+                        $maxNumber = $lastSegment;
+                    }
+                }
+                // Próximo número formatado com 3 dígitos
+                $nextNumber = str_pad($maxNumber + 1, 3, '0', STR_PAD_LEFT);
+                $nextCode = $parentCode . '.' . $nextNumber;
+            }
+        } else {
+            // Conta raiz: busca o maior código de primeiro nível
+            $rootAccounts = ChartOfAccount::where('company_id', $activeCompanyId)
+                ->whereNull('parent_id')
+                ->pluck('code')
+                ->toArray();
+
+            if (empty($rootAccounts)) {
+                // Primeira conta raiz
+                $nextCode = '1';
+            } else {
+                // Encontra o maior número raiz
+                $maxNumber = 0;
+                foreach ($rootAccounts as $rootCode) {
+                    $parts = explode('.', $rootCode);
+                    $firstSegment = (int) $parts[0];
+                    if ($firstSegment > $maxNumber) {
+                        $maxNumber = $firstSegment;
+                    }
+                }
+                $nextCode = (string) ($maxNumber + 1);
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'next_code' => $nextCode,
+            'parent_code' => $parentId ? ($parent->code ?? null) : null
+        ]);
+    }
+
+    /**
      * Exibe o formulário para editar uma conta.
      */
     public function edit($id)
@@ -109,6 +190,7 @@ class ChartOfAccountController extends Controller
             'type' => 'required|in:ativo,passivo,patrimonio_liquido,receita,despesa',
             'parent_id' => 'nullable|integer|exists:chart_of_accounts,id',
             'allows_posting' => 'required|boolean',
+            'external_code' => 'nullable|string|max:50',
         ]);
         
         // Converte allows_posting para boolean

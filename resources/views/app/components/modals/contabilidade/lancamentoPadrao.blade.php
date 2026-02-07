@@ -1,7 +1,7 @@
 <!--begin::Modal - Cadastro de Lançamento Padrão-->
 <div class="modal fade" id="kt_modal_lancamento_padrao" tabindex="-1" aria-hidden="true">
     <!--begin::Modal dialog-->
-    <div class="modal-dialog modal-dialog-centered mw-900px">
+    <div class="modal-dialog modal-dialog-top mw-900px">
         <!--begin::Modal content-->
         <div class="modal-content rounded">
             <!--begin:Form-->
@@ -11,8 +11,13 @@
                 @csrf
                 <input type="hidden" name="lancamento_padrao_id" id="lancamento_padrao_id" value="">
                 <!--begin::Modal header-->
-                <div class="modal-header justify-content-between mb-10">
-                    <h3 class="modal-title fw-bold" id="kt_modal_lancamento_padrao_title">Cadastro de Lançamento Padrão</h3>
+                <div class="modal-header justify-content-between">
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="badge fs-6 px-4 py-3" id="badge_tipo_lancamento">
+                            <i class="bi bi-arrow-down-circle me-1"></i> Despesa (Saída)
+                        </span>
+                        <h3 class="modal-title fw-bold mb-0" id="kt_modal_lancamento_padrao_title">Cadastro de Lançamento Padrão</h3>
+                    </div>
                     <div class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
                         <span class="svg-icon svg-icon-1">
                             <i class="bi bi-x-lg fs-3"></i>
@@ -22,52 +27,30 @@
                 <!--end::Modal header-->
 
                 <!--begin::Modal body-->
-                <div class="modal-body scroll-y px-10 px-lg-15 pt-0 pb-15 ">
-
-                    <!--begin::Input group - Descrição-->
-                    <div class="d-flex flex-column mb-8 fv-row">
-                        <label class="required fs-6 fw-semibold mb-2">Descrição</label>
-                        <input type="text" class="form-control form-control-solid" name="description"
-                            id="description" placeholder="Ex: Pagamento de Internet Fibra Otica" value="{{ old('description') }}"
-                            />
-                        <div class="fv-plugins-message-container">
-                            <div class="fv-help-block">
-                                <span class="error-message text-danger fs-7" id="error-description" style="display: none;"></span>
-                            </div>
-                        </div>
-                    </div>
-                    <!--end::Input group-->
-
+                <div class="modal-body scroll-y px-10 px-lg-15 ">
+                    <!--begin::Hidden Type Field-->
+                    <input type="hidden" name="type" id="type_hidden" value="saida">
+                    <!--end::Hidden Type Field-->
                     <!--begin::Row - Tipo e Categoria-->
                     <div class="row mb-8 g-5">
                         <!--begin::Col - Tipo-->
-                        <div class="col-md-4 fv-row">
-                            <label class="required fs-6 fw-semibold mb-2">Tipo</label>
-                            <div class="d-flex gap-5">
-                                <label class="form-check form-check-custom form-check-solid">
-                                    <input class="form-check-input" type="radio" name="type" value="entrada"
-                                        id="type_entrada" {{ old('type', 'saida') === 'entrada' ? 'checked' : '' }} />
-                                    <span class="form-check-label fw-semibold">Entrada</span>
-                                </label>
-                                <label class="form-check form-check-custom form-check-solid">
-                                    <input class="form-check-input" type="radio" name="type" value="saida"
-                                        id="type_saida" {{ old('type', 'saida') === 'saida' ? 'checked' : '' }}
-                                        checked />
-                                    <span class="form-check-label fw-semibold">Saída</span>
-                                </label>
-                            </div>
+                        <div class="col-md-8 fv-row">
+                            <label class="required fs-6 fw-semibold mb-2">Descrição</label>
+                            <input type="text" class="form-control" name="description" id="description"
+                                placeholder="Ex: Pagamento de Internet Fibra Otica" value="{{ old('description') }}" />
                             <div class="fv-plugins-message-container">
                                 <div class="fv-help-block">
-                                    <span class="error-message text-danger fs-7" id="error-type" style="display: none;"></span>
+                                    <span class="error-message text-danger fs-7" id="error-description"
+                                        style="display: none;"></span>
                                 </div>
                             </div>
                         </div>
                         <!--end::Col-->
 
                         <!--begin::Col - Categoria-->
-                        <div class="col-md-8 fv-row">
-                            <label class="required fs-6 fw-semibold mb-2">Categoria</label>
-                            <select class="form-select form-select-solid" data-control="select2"
+                        <div class="col-md-4 fv-row">
+                            <label class="required fs-6 fw-semibold mb-2">Subcategoria</label>
+                            <select class="form-select" data-control="select2"
                                 data-dropdown-parent="#kt_modal_lancamento_padrao"
                                 data-placeholder="Selecione a categoria..." name="category" id="category">
                                 <option></option>
@@ -130,16 +113,14 @@
                             </select>
                             <div class="fv-plugins-message-container">
                                 <div class="fv-help-block">
-                                    <span class="error-message text-danger fs-7" id="error-category" style="display: none;"></span>
+                                    <span class="error-message text-danger fs-7" id="error-category"
+                                        style="display: none;"></span>
                                 </div>
                             </div>
                         </div>
                         <!--end::Col-->
                     </div>
                     <!--end::Row-->
-
-                    <div class="separator separator-dashed my-10"></div>
-
                     <!--begin::Heading - Regras Contábeis-->
                     <div class="mb-8">
                         <h3 class="fw-bold text-gray-800 mb-3">Regras Contábeis</h3>
@@ -147,9 +128,9 @@
                     <div class="row mb-8">
                         <!--begin::Input group - Conta de Débito-->
                         <div class="col-md-6 fv-row">
-                            <label class="required fs-6 fw-semibold mb-2">Conta de Débito (Onde aplica o
+                            <label class="required fs-6 fw-semibold ">Conta de Débito (Onde aplica o
                                 recurso?)</label>
-                            <select class="form-select form-select-solid" data-control="select2"
+                            <select class="form-select" data-control="select2"
                                 data-dropdown-parent="#kt_modal_lancamento_padrao"
                                 data-placeholder="Selecione a conta de débito..." name="conta_debito_id"
                                 id="conta_debito_id">
@@ -165,7 +146,8 @@
                             <div class="text-muted fs-7 mt-2">Selecione a conta onde o recurso será aplicado.</div>
                             <div class="fv-plugins-message-container">
                                 <div class="fv-help-block">
-                                    <span class="error-message text-danger fs-7" id="error-conta_debito_id" style="display: none;"></span>
+                                    <span class="error-message text-danger fs-7" id="error-conta_debito_id"
+                                        style="display: none;"></span>
                                 </div>
                             </div>
                         </div>
@@ -175,7 +157,7 @@
                         <div class="col-md-6 fv-row">
                             <label class="required fs-6 fw-semibold mb-2">Conta de Crédito (De onde sai o
                                 recurso?)</label>
-                            <select class="form-select form-select-solid" data-control="select2"
+                            <select class="form-select" data-control="select2"
                                 data-dropdown-parent="#kt_modal_lancamento_padrao"
                                 data-placeholder="Selecione a conta de crédito..." name="conta_credito_id"
                                 id="conta_credito_id">
@@ -196,7 +178,8 @@
                                 banco.</div>
                             <div class="fv-plugins-message-container">
                                 <div class="fv-help-block">
-                                    <span class="error-message text-danger fs-7" id="error-conta_credito_id" style="display: none;"></span>
+                                    <span class="error-message text-danger fs-7" id="error-conta_credito_id"
+                                        style="display: none;"></span>
                                 </div>
                             </div>
                         </div>
@@ -234,12 +217,12 @@
         let todasContasCredito = [];
 
         function initFiltroContas() {
-            const tipoEntrada = document.getElementById('type_entrada');
-            const tipoSaida = document.getElementById('type_saida');
+            const tipoHidden = document.getElementById('type_hidden');
+            const badgeTipo = document.getElementById('badge_tipo_lancamento');
             const contaDebitoSelect = document.getElementById('conta_debito_id');
             const contaCreditoSelect = document.getElementById('conta_credito_id');
 
-            if (!tipoEntrada || !tipoSaida || !contaDebitoSelect || !contaCreditoSelect) {
+            if (!tipoHidden || !contaDebitoSelect || !contaCreditoSelect) {
                 return;
             }
 
@@ -260,9 +243,25 @@
                 }));
             }
 
+            // Função para atualizar o badge visual do tipo
+            function atualizarBadgeTipo(tipo) {
+                if (!badgeTipo) return;
+                
+                if (tipo === 'entrada') {
+                    badgeTipo.className = 'badge badge-light-success fs-6 px-4 py-3';
+                    badgeTipo.innerHTML = '<i class="bi bi-arrow-up-circle me-1 text-success"></i> Receita (Entrada)';
+                } else {
+                    badgeTipo.className = 'badge badge-light-danger fs-6 px-4 py-3';
+                    badgeTipo.innerHTML = '<i class="bi bi-arrow-down-circle me-1 text-danger"></i> Despesa (Saída)';
+                }
+            }
+
             // Função para filtrar opções baseado no tipo
             function filtrarContas() {
-                const tipoSelecionado = tipoSaida.checked ? 'saida' : 'entrada';
+                const tipoSelecionado = tipoHidden.value || 'saida';
+                
+                // Atualiza o badge visual
+                atualizarBadgeTipo(tipoSelecionado);
 
                 // Limpa e recria as opções de Débito
                 contaDebitoSelect.innerHTML = '<option></option>';
@@ -354,14 +353,17 @@
                 }
             }
 
-            // Adiciona listeners aos radio buttons
-            tipoEntrada.addEventListener('change', filtrarContas);
-            tipoSaida.addEventListener('change', filtrarContas);
-
             // Filtra quando o modal é aberto
             const modal = document.getElementById('kt_modal_lancamento_padrao');
             if (modal) {
-                modal.addEventListener('show.bs.modal', function() {
+                modal.addEventListener('show.bs.modal', function(event) {
+                    // Verifica se há um tipo pré-selecionado via data attribute
+                    const trigger = event.relatedTarget;
+                    if (trigger && trigger.dataset.lancamentoType) {
+                        const preSelectedType = trigger.dataset.lancamentoType;
+                        tipoHidden.value = preSelectedType;
+                    }
+
                     setTimeout(function() {
                         filtrarContas();
                     }, 300);
@@ -408,7 +410,8 @@
             errorElement.textContent = '';
 
             // Remove classes de erro do campo
-            const fieldElement = document.getElementById(fieldName) || document.querySelector('[name="' + fieldName + '"]');
+            const fieldElement = document.getElementById(fieldName) || document.querySelector('[name="' +
+                fieldName + '"]');
             if (fieldElement) {
                 fieldElement.classList.remove('is-invalid');
                 fieldElement.classList.add('is-valid');
@@ -432,40 +435,40 @@
             formData.append('_token', document.querySelector('input[name="_token"]').value);
 
             // Faz requisição AJAX
-            fetch('{{ route("lancamentoPadrao.validate-field") }}', {
-                method: 'POST',
-                body: formData,
-                headers: {
-                    'X-Requested-With': 'XMLHttpRequest',
-                    'Accept': 'application/json'
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.valid) {
-                    // Exibe erro
-                    errorElement.textContent = data.message;
-                    errorElement.style.display = 'block';
-
-                    // Adiciona classe de erro ao campo
-                    if (fieldElement) {
-                        fieldElement.classList.remove('is-valid');
-                        fieldElement.classList.add('is-invalid');
+            fetch('{{ route('lancamentoPadrao.validate-field') }}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
                     }
-                } else {
-                    // Remove erro se válido
-                    errorElement.style.display = 'none';
-                    if (fieldElement) {
-                        fieldElement.classList.remove('is-invalid');
-                        if (fieldValue && fieldValue !== '') {
-                            fieldElement.classList.add('is-valid');
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.valid) {
+                        // Exibe erro
+                        errorElement.textContent = data.message;
+                        errorElement.style.display = 'block';
+
+                        // Adiciona classe de erro ao campo
+                        if (fieldElement) {
+                            fieldElement.classList.remove('is-valid');
+                            fieldElement.classList.add('is-invalid');
+                        }
+                    } else {
+                        // Remove erro se válido
+                        errorElement.style.display = 'none';
+                        if (fieldElement) {
+                            fieldElement.classList.remove('is-invalid');
+                            if (fieldValue && fieldValue !== '') {
+                                fieldElement.classList.add('is-valid');
+                            }
                         }
                     }
-                }
-            })
-            .catch(error => {
-                console.error('Erro ao validar campo:', error);
-            });
+                })
+                .catch(error => {
+                    console.error('Erro ao validar campo:', error);
+                });
         }
 
         // Função para inicializar validação AJAX
@@ -488,24 +491,10 @@
                 });
             }
 
-            // Campo Tipo (radio buttons)
-            const typeEntrada = document.getElementById('type_entrada');
-            const typeSaida = document.getElementById('type_saida');
-            if (typeEntrada && typeSaida) {
-                // Valida tipo inicial se já houver um selecionado
-                const selectedType = document.querySelector('input[name="type"]:checked');
-                if (selectedType) {
-                    validateField('type', selectedType.value);
-                }
-
-                [typeEntrada, typeSaida].forEach(radio => {
-                    radio.addEventListener('change', function() {
-                        const selectedType = document.querySelector('input[name="type"]:checked');
-                        if (selectedType) {
-                            validateField('type', selectedType.value);
-                        }
-                    });
-                });
+            // Campo Tipo (hidden field - validação automática quando o modal abre)
+            const typeHidden = document.getElementById('type_hidden');
+            if (typeHidden && typeHidden.value) {
+                validateField('type', typeHidden.value);
             }
 
             // Campo Categoria (Select2)
@@ -641,7 +630,8 @@
                 }
 
                 // Valida categoria
-                const categoryValue = category ? (typeof $ !== 'undefined' && $(category).hasClass('select2-hidden-accessible') ? $(category).val() : category.value) : '';
+                const categoryValue = category ? (typeof $ !== 'undefined' && $(category).hasClass(
+                    'select2-hidden-accessible') ? $(category).val() : category.value) : '';
                 if (!categoryValue) {
                     const errorEl = document.getElementById('error-category');
                     if (errorEl) {
@@ -653,7 +643,8 @@
                 }
 
                 // Valida conta de débito
-                const contaDebitoValue = contaDebito ? (typeof $ !== 'undefined' && $(contaDebito).hasClass('select2-hidden-accessible') ? $(contaDebito).val() : contaDebito.value) : '';
+                const contaDebitoValue = contaDebito ? (typeof $ !== 'undefined' && $(contaDebito).hasClass(
+                    'select2-hidden-accessible') ? $(contaDebito).val() : contaDebito.value) : '';
                 if (!contaDebitoValue) {
                     const errorEl = document.getElementById('error-conta_debito_id');
                     if (errorEl) {
@@ -665,8 +656,11 @@
                 }
 
                 // Valida conta de crédito (permite "0" que significa usar conta do banco/caixa)
-                const contaCreditoValue = contaCredito ? (typeof $ !== 'undefined' && $(contaCredito).hasClass('select2-hidden-accessible') ? $(contaCredito).val() : contaCredito.value) : '';
-                if (contaCreditoValue === null || contaCreditoValue === '' || contaCreditoValue === undefined) {
+                const contaCreditoValue = contaCredito ? (typeof $ !== 'undefined' && $(contaCredito)
+                        .hasClass('select2-hidden-accessible') ? $(contaCredito).val() : contaCredito.value
+                        ) : '';
+                if (contaCreditoValue === null || contaCreditoValue === '' || contaCreditoValue ===
+                    undefined) {
                     const errorEl = document.getElementById('error-conta_credito_id');
                     if (errorEl) {
                         errorEl.textContent = 'A conta de crédito é obrigatória.';
@@ -680,7 +674,10 @@
                     // Scroll para o primeiro erro
                     const firstError = form.querySelector('.is-invalid, .error-message[style*="block"]');
                     if (firstError) {
-                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center'
+                        });
                     }
                     return;
                 }
@@ -694,7 +691,8 @@
                 let formMethod = 'POST';
 
                 if (isEdit) {
-                    formAction = form.getAttribute('data-original-action').replace('/lancamentoPadrao', '/lancamentoPadrao/' + lancamentoId);
+                    formAction = form.getAttribute('data-original-action').replace('/lancamentoPadrao',
+                        '/lancamentoPadrao/' + lancamentoId);
                     formMethod = 'PUT';
                 } else {
                     formAction = form.getAttribute('data-original-action');
@@ -714,132 +712,164 @@
 
                 // Envia via AJAX
                 fetch(formAction, {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                    }
-                })
-                .then(response => {
-                    if (response.redirected) {
-                        // Se houver redirect, segue o redirect
-                        window.location.href = response.url;
-                        return null;
-                    }
-                    return response.json().catch(() => {
-                        // Se não for JSON, retorna null
-                        return null;
-                    });
-                })
-                .then(data => {
-                    submitButton.removeAttribute('data-kt-indicator');
-                    submitButton.disabled = false;
-
-                    // Se response foi redirect, data será null
-                    if (data === null) {
-                        return;
-                    }
-
-                    // Trata erros de validação do Laravel
-                    if (data && data.errors) {
-                        // Exibe erros de validação
-                        Object.keys(data.errors).forEach(field => {
-                            const errorMessages = data.errors[field];
-                            const errorEl = document.getElementById('error-' + field);
-                            const fieldEl = document.getElementById(field) || document.querySelector('[name="' + field + '"]');
-
-                            if (errorEl && errorMessages && errorMessages.length > 0) {
-                                errorEl.textContent = errorMessages[0];
-                                errorEl.style.display = 'block';
-                            }
-
-                            if (fieldEl) {
-                                fieldEl.classList.add('is-invalid');
-                                fieldEl.classList.remove('is-valid');
-                            }
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                .getAttribute('content')
+                        }
+                    })
+                    .then(response => {
+                        if (response.redirected) {
+                            // Se houver redirect, segue o redirect
+                            window.location.href = response.url;
+                            return null;
+                        }
+                        return response.json().catch(() => {
+                            // Se não for JSON, retorna null
+                            return null;
                         });
+                    })
+                    .then(data => {
+                        submitButton.removeAttribute('data-kt-indicator');
+                        submitButton.disabled = false;
 
-                        // Scroll para o primeiro erro
-                        const firstError = form.querySelector('.is-invalid, .error-message[style*="block"]');
-                        if (firstError) {
-                            firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // Se response foi redirect, data será null
+                        if (data === null) {
+                            return;
                         }
 
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                text: 'Por favor, corrija os erros no formulário.',
-                                icon: 'error',
-                                buttonsStyling: false,
-                                confirmButtonText: 'Ok, entendi!',
-                                customClass: {
-                                    confirmButton: 'btn btn-primary'
+                        // Trata erros de validação do Laravel
+                        if (data && data.errors) {
+                            // Exibe erros de validação
+                            Object.keys(data.errors).forEach(field => {
+                                const errorMessages = data.errors[field];
+                                const errorEl = document.getElementById('error-' + field);
+                                const fieldEl = document.getElementById(field) || document
+                                    .querySelector('[name="' + field + '"]');
+
+                                if (errorEl && errorMessages && errorMessages.length > 0) {
+                                    errorEl.textContent = errorMessages[0];
+                                    errorEl.style.display = 'block';
+                                }
+
+                                if (fieldEl) {
+                                    fieldEl.classList.add('is-invalid');
+                                    fieldEl.classList.remove('is-valid');
                                 }
                             });
+
+                            // Scroll para o primeiro erro
+                            const firstError = form.querySelector(
+                                '.is-invalid, .error-message[style*="block"]');
+                            if (firstError) {
+                                firstError.scrollIntoView({
+                                    behavior: 'smooth',
+                                    block: 'center'
+                                });
+                            }
+
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    text: 'Por favor, corrija os erros no formulário.',
+                                    icon: 'error',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, entendi!',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary'
+                                    }
+                                });
+                            }
+                            return;
                         }
-                        return;
-                    }
 
-                    if (data && data.success !== undefined && data.success) {
-                        // Sucesso
-                        const isEdit = document.getElementById('lancamento_padrao_id').value !== '';
-                        const successMessage = isEdit ? 'Lançamento atualizado com sucesso!' : 'Lançamento cadastrado com sucesso!';
+                        if (data && data.success !== undefined && data.success) {
+                            // Sucesso
+                            const isEdit = document.getElementById('lancamento_padrao_id').value !== '';
+                            const successMessage = isEdit ? 'Lançamento atualizado com sucesso!' :
+                                'Lançamento cadastrado com sucesso!';
 
-                        if (typeof Swal !== 'undefined') {
-                            Swal.fire({
-                                text: data.message || successMessage,
-                                icon: 'success',
-                                buttonsStyling: false,
-                                confirmButtonText: 'Ok, entendi!',
-                                customClass: {
-                                    confirmButton: 'btn btn-primary'
-                                }
-                            }).then(function() {
-                                // Fecha o modal
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    text: data.message || successMessage,
+                                    icon: 'success',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, entendi!',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary'
+                                    }
+                                }).then(function() {
+                                    // Fecha o modal
+                                    if (modalElement) {
+                                        const modal = bootstrap.Modal.getInstance(modalElement);
+                                        if (modal) {
+                                            modal.hide();
+                                        }
+                                    }
+                                    // Reseta o formulário usando função global
+                                    if (typeof window.resetLancamentoPadraoModal ===
+                                        'function') {
+                                        window.resetLancamentoPadraoModal();
+                                    } else {
+                                        form.reset();
+                                        document.getElementById('lancamento_padrao_id').value =
+                                            '';
+                                    }
+                                    // Limpa mensagens de erro
+                                    document.querySelectorAll('.error-message').forEach(el => {
+                                        el.style.display = 'none';
+                                        el.textContent = '';
+                                    });
+                                    document.querySelectorAll('.is-invalid, .is-valid').forEach(
+                                        el => {
+                                            el.classList.remove('is-invalid', 'is-valid');
+                                        });
+                                    // Recarrega a página ou atualiza a tabela
+                                    if (typeof window.location !== 'undefined') {
+                                        window.location.reload();
+                                    }
+                                });
+                            } else {
+                                // Fallback se Swal não estiver disponível
+                                alert(data.message || 'Lançamento cadastrado com sucesso!');
                                 if (modalElement) {
                                     const modal = bootstrap.Modal.getInstance(modalElement);
                                     if (modal) {
                                         modal.hide();
                                     }
                                 }
-                                // Reseta o formulário usando função global
-                                if (typeof window.resetLancamentoPadraoModal === 'function') {
-                                    window.resetLancamentoPadraoModal();
-                                } else {
-                                    form.reset();
-                                    document.getElementById('lancamento_padrao_id').value = '';
-                                }
-                                // Limpa mensagens de erro
-                                document.querySelectorAll('.error-message').forEach(el => {
-                                    el.style.display = 'none';
-                                    el.textContent = '';
-                                });
-                                document.querySelectorAll('.is-invalid, .is-valid').forEach(el => {
-                                    el.classList.remove('is-invalid', 'is-valid');
-                                });
-                                // Recarrega a página ou atualiza a tabela
-                                if (typeof window.location !== 'undefined') {
-                                    window.location.reload();
-                                }
-                            });
-                        } else {
-                            // Fallback se Swal não estiver disponível
-                            alert(data.message || 'Lançamento cadastrado com sucesso!');
-                            if (modalElement) {
-                                const modal = bootstrap.Modal.getInstance(modalElement);
-                                if (modal) {
-                                    modal.hide();
-                                }
+                                form.reset();
+                                window.location.reload();
                             }
-                            form.reset();
-                            window.location.reload();
+                        } else {
+                            // Erro genérico
+                            if (typeof Swal !== 'undefined') {
+                                Swal.fire({
+                                    text: data.message ||
+                                        'Erro ao cadastrar lançamento. Por favor, tente novamente.',
+                                    icon: 'error',
+                                    buttonsStyling: false,
+                                    confirmButtonText: 'Ok, entendi!',
+                                    customClass: {
+                                        confirmButton: 'btn btn-primary'
+                                    }
+                                });
+                            } else {
+                                alert(data.message ||
+                                    'Erro ao cadastrar lançamento. Por favor, tente novamente.');
+                            }
                         }
-                    } else {
-                        // Erro genérico
+                    })
+                    .catch(error => {
+                        console.error('Erro ao enviar formulário:', error);
+                        submitButton.removeAttribute('data-kt-indicator');
+                        submitButton.disabled = false;
+
                         if (typeof Swal !== 'undefined') {
                             Swal.fire({
-                                text: data.message || 'Erro ao cadastrar lançamento. Por favor, tente novamente.',
+                                text: 'Erro ao enviar formulário. Por favor, tente novamente.',
                                 icon: 'error',
                                 buttonsStyling: false,
                                 confirmButtonText: 'Ok, entendi!',
@@ -848,29 +878,9 @@
                                 }
                             });
                         } else {
-                            alert(data.message || 'Erro ao cadastrar lançamento. Por favor, tente novamente.');
+                            alert('Erro ao enviar formulário. Por favor, tente novamente.');
                         }
-                    }
-                })
-                .catch(error => {
-                    console.error('Erro ao enviar formulário:', error);
-                    submitButton.removeAttribute('data-kt-indicator');
-                    submitButton.disabled = false;
-
-                    if (typeof Swal !== 'undefined') {
-                        Swal.fire({
-                            text: 'Erro ao enviar formulário. Por favor, tente novamente.',
-                            icon: 'error',
-                            buttonsStyling: false,
-                            confirmButtonText: 'Ok, entendi!',
-                            customClass: {
-                                confirmButton: 'btn btn-primary'
-                            }
-                        });
-                    } else {
-                        alert('Erro ao enviar formulário. Por favor, tente novamente.');
-                    }
-                });
+                    });
             });
         }
 
@@ -915,178 +925,222 @@
 
         // Buscar dados do lançamento
         fetch(`/lancamentoPadrao/${lancamentoId}/edit`, {
-            method: 'GET',
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-            }
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (typeof Swal !== 'undefined') {
-                Swal.close();
-            }
-
-            if (data.success && data.data) {
-                const lp = data.data;
-
-                // Preencher campos básicos do formulário
-                document.getElementById('lancamento_padrao_id').value = lp.id;
-                document.getElementById('description').value = lp.description || '';
-
-                // Selecionar tipo (radio) - fazer isso antes de abrir o modal para filtrar contas
-                if (lp.type) {
-                    const typeRadio = document.querySelector(`input[name="type"][value="${lp.type}"]`);
-                    if (typeRadio) {
-                        typeRadio.checked = true;
-                        // Disparar evento change para filtrar contas
-                        if (typeof Event !== 'undefined') {
-                            typeRadio.dispatchEvent(new Event('change', { bubbles: true }));
-                        } else if (typeof jQuery !== 'undefined') {
-                            $(typeRadio).trigger('change');
-                        }
-                    }
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
                 }
-
-                // Atualizar título do modal
-                if (modalTitle) {
-                    modalTitle.textContent = 'Editar Lançamento Padrão';
-                }
-
-                // Limpar erros anteriores
-                document.querySelectorAll('.error-message').forEach(el => {
-                    el.style.display = 'none';
-                    el.textContent = '';
-                });
-                document.querySelectorAll('.is-invalid').forEach(el => {
-                    el.classList.remove('is-invalid');
-                });
-
-                // Abrir modal primeiro
-                const bootstrapModal = new bootstrap.Modal(modal);
-                bootstrapModal.show();
-
-                // Aguardar o modal abrir completamente antes de preencher Select2
-                modal.addEventListener('shown.bs.modal', function fillSelectsAfterModalOpen() {
-                    // Remover o listener para não executar múltiplas vezes
-                    modal.removeEventListener('shown.bs.modal', fillSelectsAfterModalOpen);
-
-                    // Função auxiliar para inicializar Select2 se necessário
-                    function ensureSelect2Initialized(selectElement, options) {
-                        if (typeof $ !== 'undefined' && $.fn.select2 && selectElement) {
-                            if (!$(selectElement).hasClass('select2-hidden-accessible')) {
-                                // Tentar inicializar usando KTUtil se disponível
-                                if (typeof KTUtil !== 'undefined' && KTUtil.initSelect2) {
-                                    KTUtil.initSelect2(selectElement);
-                                } else {
-                                    // Fallback para inicialização manual
-                                    $(selectElement).select2(options || {
-                                        dropdownParent: $('#kt_modal_lancamento_padrao')
-                                    });
-                                }
-                            }
-                        }
-                    }
-
-                    // Aguardar um pouco mais para garantir que Select2 está pronto
-                    setTimeout(function() {
-                        // Selecionar categoria (Select2)
-                        const categorySelect = document.getElementById('category');
-                        if (categorySelect && lp.category) {
-                            ensureSelect2Initialized(categorySelect, {
-                                dropdownParent: $('#kt_modal_lancamento_padrao')
-                            });
-                            if (typeof $ !== 'undefined' && $.fn.select2) {
-                                $(categorySelect).val(String(lp.category)).trigger('change');
-                            } else {
-                                categorySelect.value = lp.category;
-                            }
-                        }
-
-                        // Selecionar conta de débito (Select2)
-                        const contaDebitoSelect = document.getElementById('conta_debito_id');
-                        if (contaDebitoSelect && lp.conta_debito_id) {
-                            const debitoValue = String(lp.conta_debito_id);
-
-                            // Verificar se a opção existe
-                            const debitoOption = Array.from(contaDebitoSelect.options).find(opt => opt.value === debitoValue);
-
-                            if (debitoOption) {
-                                ensureSelect2Initialized(contaDebitoSelect, {
-                                    dropdownParent: $('#kt_modal_lancamento_padrao'),
-                                    placeholder: 'Selecione a conta de débito...'
-                                });
-
-                                if (typeof $ !== 'undefined' && $.fn.select2) {
-                                    // Aguardar um pouco mais para garantir que está pronto
-                                    setTimeout(function() {
-                                        // Verificar novamente se Select2 está inicializado
-                                        if ($(contaDebitoSelect).hasClass('select2-hidden-accessible')) {
-                                            $(contaDebitoSelect).val(debitoValue).trigger('change.select2');
-                                        } else {
-                                            // Se ainda não estiver, definir o valor nativo e inicializar depois
-                                            contaDebitoSelect.value = debitoValue;
-                                            ensureSelect2Initialized(contaDebitoSelect, {
-                                                dropdownParent: $('#kt_modal_lancamento_padrao'),
-                                                placeholder: 'Selecione a conta de débito...'
-                                            });
-                                            $(contaDebitoSelect).trigger('change.select2');
-                                        }
-                                    }, 200);
-                                } else {
-                                    contaDebitoSelect.value = debitoValue;
-                                }
-                            } else {
-                                console.warn('Opção de débito não encontrada no select:', debitoValue);
-                            }
-                        }
-
-                        // Selecionar conta de crédito (Select2)
-                        const contaCreditoSelect = document.getElementById('conta_credito_id');
-                        if (contaCreditoSelect) {
-                            // Converter null/undefined para '0' se necessário
-                            let contaCreditoValue = '0';
-                            if (lp.conta_credito_id !== null && lp.conta_credito_id !== undefined && lp.conta_credito_id !== '' && lp.conta_credito_id !== 0) {
-                                contaCreditoValue = String(lp.conta_credito_id);
-                            }
-
-                            // Verificar se a opção existe
-                            const creditoOption = Array.from(contaCreditoSelect.options).find(opt => opt.value === contaCreditoValue);
-
-                            if (creditoOption) {
-                                ensureSelect2Initialized(contaCreditoSelect, {
-                                    dropdownParent: $('#kt_modal_lancamento_padrao'),
-                                    placeholder: 'Selecione a conta de crédito...'
-                                });
-
-                                if (typeof $ !== 'undefined' && $.fn.select2) {
-                                    // Aguardar um pouco mais para garantir que está pronto
-                                    setTimeout(function() {
-                                        // Verificar novamente se Select2 está inicializado
-                                        if ($(contaCreditoSelect).hasClass('select2-hidden-accessible')) {
-                                            $(contaCreditoSelect).val(contaCreditoValue).trigger('change.select2');
-                                        } else {
-                                            // Se ainda não estiver, definir o valor nativo e inicializar depois
-                                            contaCreditoSelect.value = contaCreditoValue;
-                                            ensureSelect2Initialized(contaCreditoSelect, {
-                                                dropdownParent: $('#kt_modal_lancamento_padrao'),
-                                                placeholder: 'Selecione a conta de crédito...'
-                                            });
-                                            $(contaCreditoSelect).trigger('change.select2');
-                                        }
-                                    }, 250);
-                                } else {
-                                    contaCreditoSelect.value = contaCreditoValue;
-                                }
-                            } else {
-                                console.warn('Opção de crédito não encontrada no select:', contaCreditoValue);
-                            }
-                        }
-                    }, 400); // Aguardar 400ms após o modal abrir
-                }, { once: true });
-            } else {
+            })
+            .then(response => response.json())
+            .then(data => {
                 if (typeof Swal !== 'undefined') {
+                    Swal.close();
+                }
+
+                if (data.success && data.data) {
+                    const lp = data.data;
+
+                    // Preencher campos básicos do formulário
+                    document.getElementById('lancamento_padrao_id').value = lp.id;
+                    document.getElementById('description').value = lp.description || '';
+
+                    // Selecionar tipo (radio) - fazer isso antes de abrir o modal para filtrar contas
+                    if (lp.type) {
+                        const typeRadio = document.querySelector(`input[name="type"][value="${lp.type}"]`);
+                        if (typeRadio) {
+                            typeRadio.checked = true;
+                            // Disparar evento change para filtrar contas
+                            if (typeof Event !== 'undefined') {
+                                typeRadio.dispatchEvent(new Event('change', {
+                                    bubbles: true
+                                }));
+                            } else if (typeof jQuery !== 'undefined') {
+                                $(typeRadio).trigger('change');
+                            }
+                        }
+                    }
+
+                    // Atualizar título do modal
+                    if (modalTitle) {
+                        modalTitle.textContent = 'Editar Lançamento Padrão';
+                    }
+
+                    // Limpar erros anteriores
+                    document.querySelectorAll('.error-message').forEach(el => {
+                        el.style.display = 'none';
+                        el.textContent = '';
+                    });
+                    document.querySelectorAll('.is-invalid').forEach(el => {
+                        el.classList.remove('is-invalid');
+                    });
+
+                    // Abrir modal primeiro
+                    const bootstrapModal = new bootstrap.Modal(modal);
+                    bootstrapModal.show();
+
+                    // Aguardar o modal abrir completamente antes de preencher Select2
+                    modal.addEventListener('shown.bs.modal', function fillSelectsAfterModalOpen() {
+                        // Remover o listener para não executar múltiplas vezes
+                        modal.removeEventListener('shown.bs.modal', fillSelectsAfterModalOpen);
+
+                        // Função auxiliar para inicializar Select2 se necessário
+                        function ensureSelect2Initialized(selectElement, options) {
+                            if (typeof $ !== 'undefined' && $.fn.select2 && selectElement) {
+                                if (!$(selectElement).hasClass('select2-hidden-accessible')) {
+                                    // Tentar inicializar usando KTUtil se disponível
+                                    if (typeof KTUtil !== 'undefined' && KTUtil.initSelect2) {
+                                        KTUtil.initSelect2(selectElement);
+                                    } else {
+                                        // Fallback para inicialização manual
+                                        $(selectElement).select2(options || {
+                                            dropdownParent: $('#kt_modal_lancamento_padrao')
+                                        });
+                                    }
+                                }
+                            }
+                        }
+
+                        // Aguardar um pouco mais para garantir que Select2 está pronto
+                        setTimeout(function() {
+                            // Selecionar categoria (Select2)
+                            const categorySelect = document.getElementById('category');
+                            if (categorySelect && lp.category) {
+                                ensureSelect2Initialized(categorySelect, {
+                                    dropdownParent: $('#kt_modal_lancamento_padrao')
+                                });
+                                if (typeof $ !== 'undefined' && $.fn.select2) {
+                                    $(categorySelect).val(String(lp.category)).trigger(
+                                    'change');
+                                } else {
+                                    categorySelect.value = lp.category;
+                                }
+                            }
+
+                            // Selecionar conta de débito (Select2)
+                            const contaDebitoSelect = document.getElementById(
+                            'conta_debito_id');
+                            if (contaDebitoSelect && lp.conta_debito_id) {
+                                const debitoValue = String(lp.conta_debito_id);
+
+                                // Verificar se a opção existe
+                                const debitoOption = Array.from(contaDebitoSelect.options).find(
+                                    opt => opt.value === debitoValue);
+
+                                if (debitoOption) {
+                                    ensureSelect2Initialized(contaDebitoSelect, {
+                                        dropdownParent: $(
+                                            '#kt_modal_lancamento_padrao'),
+                                        placeholder: 'Selecione a conta de débito...'
+                                    });
+
+                                    if (typeof $ !== 'undefined' && $.fn.select2) {
+                                        // Aguardar um pouco mais para garantir que está pronto
+                                        setTimeout(function() {
+                                            // Verificar novamente se Select2 está inicializado
+                                            if ($(contaDebitoSelect).hasClass(
+                                                    'select2-hidden-accessible')) {
+                                                $(contaDebitoSelect).val(debitoValue)
+                                                    .trigger('change.select2');
+                                            } else {
+                                                // Se ainda não estiver, definir o valor nativo e inicializar depois
+                                                contaDebitoSelect.value = debitoValue;
+                                                ensureSelect2Initialized(
+                                                    contaDebitoSelect, {
+                                                        dropdownParent: $(
+                                                            '#kt_modal_lancamento_padrao'
+                                                            ),
+                                                        placeholder: 'Selecione a conta de débito...'
+                                                    });
+                                                $(contaDebitoSelect).trigger(
+                                                    'change.select2');
+                                            }
+                                        }, 200);
+                                    } else {
+                                        contaDebitoSelect.value = debitoValue;
+                                    }
+                                } else {
+                                    console.warn('Opção de débito não encontrada no select:',
+                                        debitoValue);
+                                }
+                            }
+
+                            // Selecionar conta de crédito (Select2)
+                            const contaCreditoSelect = document.getElementById(
+                                'conta_credito_id');
+                            if (contaCreditoSelect) {
+                                // Converter null/undefined para '0' se necessário
+                                let contaCreditoValue = '0';
+                                if (lp.conta_credito_id !== null && lp.conta_credito_id !==
+                                    undefined && lp.conta_credito_id !== '' && lp
+                                    .conta_credito_id !== 0) {
+                                    contaCreditoValue = String(lp.conta_credito_id);
+                                }
+
+                                // Verificar se a opção existe
+                                const creditoOption = Array.from(contaCreditoSelect.options)
+                                    .find(opt => opt.value === contaCreditoValue);
+
+                                if (creditoOption) {
+                                    ensureSelect2Initialized(contaCreditoSelect, {
+                                        dropdownParent: $(
+                                            '#kt_modal_lancamento_padrao'),
+                                        placeholder: 'Selecione a conta de crédito...'
+                                    });
+
+                                    if (typeof $ !== 'undefined' && $.fn.select2) {
+                                        // Aguardar um pouco mais para garantir que está pronto
+                                        setTimeout(function() {
+                                            // Verificar novamente se Select2 está inicializado
+                                            if ($(contaCreditoSelect).hasClass(
+                                                    'select2-hidden-accessible')) {
+                                                $(contaCreditoSelect).val(
+                                                    contaCreditoValue).trigger(
+                                                    'change.select2');
+                                            } else {
+                                                // Se ainda não estiver, definir o valor nativo e inicializar depois
+                                                contaCreditoSelect.value =
+                                                    contaCreditoValue;
+                                                ensureSelect2Initialized(
+                                                    contaCreditoSelect, {
+                                                        dropdownParent: $(
+                                                            '#kt_modal_lancamento_padrao'
+                                                            ),
+                                                        placeholder: 'Selecione a conta de crédito...'
+                                                    });
+                                                $(contaCreditoSelect).trigger(
+                                                    'change.select2');
+                                            }
+                                        }, 250);
+                                    } else {
+                                        contaCreditoSelect.value = contaCreditoValue;
+                                    }
+                                } else {
+                                    console.warn('Opção de crédito não encontrada no select:',
+                                        contaCreditoValue);
+                                }
+                            }
+                        }, 400); // Aguardar 400ms após o modal abrir
+                    }, {
+                        once: true
+                    });
+                } else {
+                    if (typeof Swal !== 'undefined') {
+                        Swal.fire({
+                            text: 'Erro ao carregar dados do lançamento.',
+                            icon: 'error',
+                            buttonsStyling: false,
+                            confirmButtonText: 'OK, entendi!',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        });
+                    }
+                }
+            })
+            .catch(error => {
+                if (typeof Swal !== 'undefined') {
+                    Swal.close();
                     Swal.fire({
                         text: 'Erro ao carregar dados do lançamento.',
                         icon: 'error',
@@ -1097,23 +1151,8 @@
                         }
                     });
                 }
-            }
-        })
-        .catch(error => {
-            if (typeof Swal !== 'undefined') {
-                Swal.close();
-                Swal.fire({
-                    text: 'Erro ao carregar dados do lançamento.',
-                    icon: 'error',
-                    buttonsStyling: false,
-                    confirmButtonText: 'OK, entendi!',
-                    customClass: {
-                        confirmButton: 'btn btn-primary'
-                    }
-                });
-            }
-            console.error('Erro ao carregar lançamento:', error);
-        });
+                console.error('Erro ao carregar lançamento:', error);
+            });
     };
 
     // Função para resetar modal para modo de criação

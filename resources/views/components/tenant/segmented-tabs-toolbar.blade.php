@@ -184,6 +184,9 @@
                     $defaultColors = match($key) {
                         'received', 'recebimentos', 'entrada', 'credit', 'recebidos' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
                         'paid', 'pagamentos', 'saida', 'debit', 'pagos' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
+                        // Receitas (verde) e Despesas (vermelho) do Extrato
+                        'receitas_aberto', 'receitas_realizadas' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],
+                        'despesas_aberto', 'despesas_realizadas' => ['class' => 'text-danger', 'accent' => 'var(--bs-danger)'],
                         // Status de Conciliação e Financeiro
                         'all', 'todos', 'total' => ['class' => 'text-primary', 'accent' => 'var(--bs-primary)'],
                         'ok', 'conciliados' => ['class' => 'text-success', 'accent' => 'var(--bs-success)'],

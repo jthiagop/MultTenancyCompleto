@@ -92,7 +92,8 @@
                     rightAlign: false,
                     removeMaskOnSubmit: false,
                     allowMinus: false,
-                    clearMaskOnLostFocus: false
+                    clearMaskOnLostFocus: false,
+                    numericInput: true
                 }).mask(inputElement);
 
                 // Marca como inicializado

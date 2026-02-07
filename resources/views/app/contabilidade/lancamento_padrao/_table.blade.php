@@ -1,157 +1,60 @@
 {{-- Em resources/views/app/contabilidade/lancamento_padrao/_table.blade.php --}}
 
-<!--begin::Card-->
-<div class="card card-flush">
-    <!--begin::Card header-->
-                <div class="card-header border-0 pt-6">
-                    <!--begin::Card title-->
-                    <div class="card-title">
-                        <!--begin::Search-->
-                        <div class="d-flex align-items-center position-relative my-1">
-                            <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-                            <span class="svg-icon svg-icon-1 position-absolute ms-6">
-                                <i class="bi bi-search"></i>
-                            </span>
-                            <!--end::Svg Icon-->
-                            <input type="text" data-kt-lancamento-padrao-table-filter="search"
-                                class="form-control form-control-solid w-250px ps-14"
-                                placeholder="Pesquisar Lançamentos Padrão" />
-                        </div>
-                        <!--end::Search-->
-                    </div>
-                    <!--begin::Card title-->
-                    <!--begin::Card toolbar-->
-                    <div class="card-toolbar">
-                        <!--begin::Toolbar-->
-                        <div class="d-flex justify-content-end" data-kt-lancamento-padrao-table-toolbar="base">
-                            <!--begin::Filter-->
-                            <button type="button" class="btn btn-sm btn-light-primary me-3" data-kt-menu-trigger="click"
-                                data-kt-menu-placement="bottom-end">
-                                <!--begin::Svg Icon | path: icons/duotune/general/gen031.svg-->
-                                <span class="svg-icon svg-icon-2">
-                                    <i class="bi bi-funnel fs-3"></i>
-                                </span>
-                                <!--end::Svg Icon-->Filtro</button>
-                            <!--begin::Menu 1-->
-                            <div class="menu menu-sub menu-sub-dropdown w-300px w-md-325px" data-kt-menu="true">
-                                <!--begin::Header-->
-                                <div class="px-7 py-5">
-                                    <div class="fs-5 text-dark fw-bold">Opções de Filtro</div>
-                                </div>
-                                <!--end::Header-->
-                                <!--begin::Separator-->
-                                <div class="separator border-gray-200"></div>
-                                <!--end::Separator-->
-                                <!--begin::Content-->
-                                <div class="px-7 py-5" data-kt-lancamento-padrao-table-filter="form">
-                                    <!--begin::Input group-->
-                                    <div class="mb-10">
-                                        <label class="form-label fs-6 fw-semibold">Tipo:</label>
-                                        <select class="form-select form-select-solid fw-bold" data-kt-select2="true"
-                                            data-placeholder="Selecione o tipo" data-allow-clear="true"
-                                            data-kt-lancamento-padrao-table-filter="type" data-hide-search="true">
-                                            <option></option>
-                                            <option value="entrada">Entrada</option>
-                                            <option value="saida">Saída</option>
-                                            <option value="ambos">Ambos</option>
-                                        </select>
-                                    </div>
-                                    <!--end::Input group-->
-                                    <!--begin::Input group-->
-                                    <div class="mb-10">
-                                        <label class="form-label fs-6 fw-semibold">Categoria:</label>
-                                        <select class="form-select form-select-solid fw-bold" data-kt-select2="true"
-                                            data-placeholder="Selecione a categoria" data-allow-clear="true"
-                                            data-kt-lancamento-padrao-table-filter="category" data-hide-search="true">
-                                            <option></option>
-                                            <option value="Administrativo">Administrativo</option>
-                                            <option value="Alimentação">Alimentação</option>
-                                            <option value="Cerimônias">Cerimônias</option>
-                                            <option value="Comércio">Comércio</option>
-                                            <option value="Coletas">Coletas</option>
-                                            <option value="Comunicação">Comunicação</option>
-                                            <option value="Contribuições">Contribuições</option>
-                                            <option value="Doações">Doações</option>
-                                            <option value="Educação">Educação</option>
-                                            <option value="Equipamentos">Equipamentos</option>
-                                            <option value="Eventos">Eventos</option>
-                                            <option value="Intenções">Intenções</option>
-                                            <option value="Liturgia">Liturgia</option>
-                                            <option value="Manutenção">Manutenção</option>
-                                            <option value="Material de escritório">Material de escritório</option>
-                                            <option value="Pessoal">Pessoal</option>
-                                            <option value="Rendimentos">Rendimentos</option>
-                                            <option value="Saúde">Saúde</option>
-                                            <option value="Serviços essenciais">Serviços essenciais</option>
-                                            <option value="Suprimentos">Suprimentos</option>
-                                            <option value="Financeiro">Financeiro</option>
-                                            <option value="Transporte">Transporte</option>
-                                            <option value="Telecomunicações">Telecomunicações</option>
-                                        </select>
-                                    </div>
-                                    <!--end::Input group-->
-                                    <!--begin::Actions-->
-                                    <div class="d-flex justify-content-end">
-                                        <button type="reset"
-                                            class="btn btn-light btn-active-light-primary fw-semibold me-2 px-6"
-                                            data-kt-menu-dismiss="true"
-                                            data-kt-lancamento-padrao-table-filter="reset">Reset</button>
-                                        <button type="submit" class="btn btn-primary fw-semibold px-6"
-                                            data-kt-menu-dismiss="true"
-                                            data-kt-lancamento-padrao-table-filter="filter">Aplicar</button>
-                                    </div>
-                                    <!--end::Actions-->
-                                </div>
-                                <!--end::Content-->
-                            </div>
-                            <!--end::Menu 1-->
-                            <!--end::Filter-->
-                            <!--begin::Export-->
-                            <button type="button" class="btn btn-sm btn-light-primary me-3" data-bs-toggle="modal"
-                                data-bs-target="#kt_subscriptions_export_modal">
-                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
-                                <span class="svg-icon svg-icon-2">
-                                    <i class="bi bi-box-arrow-up fs-3"></i>
-                                </span>
-                                <!--end::Svg Icon-->Exportar</button>
-                            <!--end::Export-->
-                            <!--begin::Import Bulk-->
-                            <button type="button" class="btn btn-sm btn-light-primary me-3" data-bs-toggle="modal" data-bs-target="#kt_modal_import_bulk">
-                                <span class="svg-icon svg-icon-2">
-                                    <i class="bi bi-cloud-arrow-up fs-3"></i>
-                                </span>
-                                Adicionar em Massa
-                            </button>
-                            <!--end::Import Bulk-->
-                            <!--begin::Add lancamento padrao-->
-                            <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#kt_modal_lancamento_padrao">
-                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr075.svg-->
-                                <span class="svg-icon svg-icon-2">
-                                    <i class="bi bi-plus-circle fs-3"></i>
-                                </span>
-                                <!--end::Svg Icon-->
-                                <span class="text-nowrap">Lançamento Padrão</span>
-                            </button>
-                            <!--end::Add lancamento padrao-->
-                        </div>
-                        <!--end::Toolbar-->
-                        <!--begin::Group actions-->
-                        <div class="d-flex justify-content-end align-items-center d-none"
-                            data-kt-lancamento-padrao-table-toolbar="selected">
-                            <div class="fw-bold me-5">
-                                <span class="me-2"
-                                    data-kt-lancamento-padrao-table-select="selected_count"></span>Selecionados
-                            </div>
-                            <button type="button" class="btn btn-danger"
-                                data-kt-lancamento-padrao-table-select="delete_selected">Excluir Selecionados</button>
-                        </div>
-                        <!--end::Group actions-->
-                    </div>
-                    <!--end::Card toolbar-->
+@php
+    $tableId = 'kt_lancamento_padrao_table';
+
+    // Tabs de filtro por tipo
+    $tabs = [
+        ['key' => 'todos', 'label' => 'Todos', 'count' => 0, 'paneId' => "pane-lp-todos-{$tableId}"],
+        ['key' => 'entrada', 'label' => 'Receitas (Entradas)', 'count' => 0, 'paneId' => "pane-lp-entrada-{$tableId}"],
+        ['key' => 'saida', 'label' => 'Despesas (Saídas)', 'count' => 0, 'paneId' => "pane-lp-saida-{$tableId}"],
+    ];
+@endphp
+
+<!--begin::Segmented Tabs Wrapper-->
+<div id="lp_segmented_wrapper" data-stats-url="{{ route('lancamentoPadrao.stats') }}"
+    data-data-url="{{ route('lancamentoPadrao.data') }}">
+
+    <x-tenant.segmented-tabs-toolbar :tabs="$tabs" active="todos" id="status-tabs-{{ $tableId }}"
+        :tableId="$tableId" :filterId="$tableId" :showAccountFilter="false" :showMoreFilters="false">
+
+        <x-slot:actionsRight>
+            <!--begin::Toolbar-->
+            <div class="d-flex justify-content-end" data-kt-lancamento-padrao-table-toolbar="base">
+                <!--begin::Export-->
+                <button type="button" class="btn btn-sm btn-light-primary me-3" data-bs-toggle="modal"
+                    data-bs-target="#kt_subscriptions_export_modal">
+                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
+                    <span class="svg-icon svg-icon-2">
+                        <i class="bi bi-box-arrow-up fs-3"></i>
+                    </span>
+                    <!--end::Svg Icon-->Exportar</button>
+                <!--end::Export-->
+                <!--begin::Import Bulk-->
+                <button type="button" class="btn btn-sm btn-light-primary me-3" data-bs-toggle="modal"
+                    data-bs-target="#kt_modal_import_bulk">
+                    <span class="svg-icon svg-icon-2">
+                        <i class="bi bi-cloud-arrow-up fs-3"></i>
+                    </span>
+                    Adicionar em Massa
+                </button>
+                <!--end::Import Bulk-->
+            </div>
+            <!--end::Toolbar-->
+        </x-slot>
+
+        <x-slot:panes>
+            @foreach ($tabs as $tab)
+                <div class="tab-pane fade {{ $loop->first ? 'show active' : '' }}" id="{{ $tab['paneId'] }}"
+                    role="tabpanel">
                 </div>
-                <!--end::Card header-->
+            @endforeach
+        </x-slot:panes>
+
+        <x-slot:tableContent>
+            <div class="card card-flush">
                 <!--begin::Card body-->
-                <div class="card-body pt-0">
+                <div class="card-body card-flush">
                     <!--begin::Table-->
                     <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_lancamento_padrao_table">
                         <!--begin::Table head-->
@@ -315,7 +218,7 @@
                     <!--begin::Modal content-->
                     <div class="modal-content">
                         <!--begin::Modal header-->
-                        <div class="modal-header pb-0 border-0">
+                        <div class="modal-header">
                             <!--begin::Modal title-->
                             <h2 class="fw-bold">Adicionar em Massa</h2>
                             <!--end::Modal title-->
@@ -329,16 +232,18 @@
                         </div>
                         <!--end::Modal header-->
                         <!--begin::Modal body-->
-                        <div class="modal-body scroll-y mx-5 mx-xl-10 pt-0 pb-10">
+                        <div class="modal-body">
                             <!--begin::Nav tabs-->
                             <ul class="nav nav-tabs nav-line-tabs mb-5 fs-6 border-bottom-0" role="tablist">
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link active text-danger fw-bold" data-bs-toggle="tab" href="#kt_tab_download_model" role="tab">
+                                    <a class="nav-link active text-danger fw-bold" data-bs-toggle="tab"
+                                        href="#kt_tab_download_model" role="tab">
                                         Baixar modelo
                                     </a>
                                 </li>
                                 <li class="nav-item" role="presentation">
-                                    <a class="nav-link text-danger fw-bold" data-bs-toggle="tab" href="#kt_tab_upload_file" role="tab">
+                                    <a class="nav-link text-danger fw-bold" data-bs-toggle="tab"
+                                        href="#kt_tab_upload_file" role="tab">
                                         Enviar arquivo
                                     </a>
                                 </li>
@@ -348,23 +253,25 @@
                             <!--begin::Tab content-->
                             <div class="tab-content" id="myTabContent">
                                 <!--begin::Tab pane - Download Model-->
-                                <div class="tab-pane fade show active" id="kt_tab_download_model" role="tabpanel">
+                                <div class="tab-pane fade show active " id="kt_tab_download_model" role="tabpanel">
                                     <!--begin::Content-->
-                                    <div class="py-5">
+                                    <div class="modal-body">
                                         <div class="mb-5">
                                             <h5 class="fw-bold mb-3">Formulário Básico</h5>
-                                            <p class="text-gray-600 fs-6">O formulário básico contém os campos obrigatórios para anunciar seu produto. O formulário pode ser usado para qualquer categoria.</p>
+                                            <p class="text-gray-600 fs-6">O formulário básico contém os campos
+                                                obrigatórios para
+                                                anunciar seu produto. O formulário pode ser usado para qualquer
+                                                categoria.</p>
                                         </div>
-
-                                        <!--begin::Actions-->
-                                        <div class="d-flex justify-content-start">
-                                            <button type="button" class="btn btn-danger fw-bold px-6">
-                                                Baixar
-                                            </button>
-                                        </div>
-                                        <!--end::Actions-->
                                     </div>
                                     <!--end::Content-->
+                                    <!--begin::Actions-->
+                                    <div class="d-flex modal-footer">
+                                        <button type="button" class="btn btn-danger fw-bold">
+                                            Baixar
+                                        </button>
+                                    </div>
+                                    <!--end::Actions-->
                                 </div>
                                 <!--end::Tab pane-->
 
@@ -372,10 +279,13 @@
                                 <div class="tab-pane fade" id="kt_tab_upload_file" role="tabpanel">
                                     <!--begin::Content-->
                                     <div class="py-5">
-                                        <p class="text-gray-600 fs-6 mb-8">Envie o modelo completo e você pode verificar os novos produtos criados na aba Não Publicados quando o envio for completado.</p>
+                                        <p class="text-gray-600 fs-6 mb-8">Envie o modelo completo e você pode
+                                            verificar os novos
+                                            produtos criados na aba Não Publicados quando o envio for completado.</p>
 
                                         <!--begin::Upload area-->
-                                        <div class="border border-dashed border-gray-300 rounded text-center p-10 mb-10" style="background-color: #f9f9f9;">
+                                        <div class="border border-dashed border-gray-300 rounded text-center p-10 mb-10"
+                                            style="background-color: #f9f9f9;">
                                             <!--begin::Icon-->
                                             <div class="mb-5">
                                                 <i class="bi bi-cloud-arrow-up fs-3x text-gray-400"></i>
@@ -384,24 +294,21 @@
 
                                             <!--begin::Info-->
                                             <div class="mb-5">
-                                                <p class="text-gray-700 fw-semibold fs-6 mb-1">Selecione o arquivo ou insira seus arquivos do Excel aqui</p>
+                                                <p class="text-gray-700 fw-semibold fs-6 mb-1">Selecione o arquivo ou
+                                                    insira seus
+                                                    arquivos do Excel aqui</p>
                                                 <p class="text-gray-500 fs-7">Tamanho máx.: 10.0 MB apenas xlsx</p>
                                             </div>
                                             <!--end::Info-->
 
                                             <!--begin::Button-->
-                                            <button type="button" class="btn btn-danger fw-bold">Selecionar arquivo</button>
-                                            <input type="file" id="kt_import_file_input" class="d-none" accept=".xlsx,.xls">
+                                            <button type="button" class="btn btn-danger fw-bold">Selecionar
+                                                arquivo</button>
+                                            <input type="file" id="kt_import_file_input" class="d-none"
+                                                accept=".xlsx,.xls">
                                             <!--end::Button-->
                                         </div>
                                         <!--end::Upload area-->
-
-                                        <!--begin::Records section-->
-                                        <div class="mb-5">
-                                            <h5 class="fw-bold mb-3">Registros</h5>
-                                            <p class="text-gray-500 fs-7 mb-5">A Shopee manterá seus arquivos apenas nos últimos 30 dias.</p>
-                                        </div>
-
                                         <!--begin::Table-->
                                         <div class="table-responsive">
                                             <table class="table table-row-bordered align-middle gy-4">
@@ -419,8 +326,10 @@
                                                         <td colspan="5" class="text-center py-10">
                                                             <!--begin::Empty state-->
                                                             <div class="d-flex flex-column align-items-center">
-                                                                <i class="bi bi-file-earmark-text fs-3x text-gray-400 mb-3"></i>
-                                                                <span class="text-gray-500 fs-6">Ainda não há histórico de upload</span>
+                                                                <i
+                                                                    class="bi bi-file-earmark-text fs-3x text-gray-400 mb-3"></i>
+                                                                <span class="text-gray-500 fs-6">Ainda não há histórico
+                                                                    de upload</span>
                                                             </div>
                                                             <!--end::Empty state-->
                                                         </td>
@@ -444,8 +353,9 @@
             </div>
             <!--end::Modal - Import Bulk-->
 
-            <!--end::Modals-->
+        </x-slot:tableContent>
+    </x-tenant.segmented-tabs-toolbar>
 </div>
-<!--end::Card-->
+<!--end::Segmented Tabs Wrapper-->
 
 <script src="/assets/js/custom/apps/contabilidade/lancamento-padrao/list.js"></script>

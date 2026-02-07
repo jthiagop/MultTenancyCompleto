@@ -1664,11 +1664,35 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
             }
         });
         
-        // Força limpeza de campos de texto e textarea
-        form.find('input[type="text"], input[type="email"], input[type="tel"], textarea').val('');
+        // Força limpeza de campos de texto e textarea (exceto campos de data com Inputmask)
+        form.find('input[type="text"], input[type="email"], input[type="tel"], textarea').not('[name="data_competencia"], [name="data_vencimento"], [name="data_pagamento"]').val('');
         
-        // Limpa campos de data
+        // Limpa campos de data nativos
         form.find('input[type="date"], input[data-kt-daterangepicker]').val('');
+        
+        // Restaura data_competencia e data_vencimento com a data de hoje via Flatpickr
+        var hoje = new Date();
+        var diaHoje = String(hoje.getDate()).padStart(2, '0');
+        var mesHoje = String(hoje.getMonth() + 1).padStart(2, '0');
+        var anoHoje = hoje.getFullYear();
+        var hojeFormatado = diaHoje + '/' + mesHoje + '/' + anoHoje;
+        
+        ['data_competencia', 'data_vencimento'].forEach(function(campo) {
+            var input = form.find('[name="' + campo + '"]');
+            if (input.length && input[0]._flatpickr) {
+                input[0]._flatpickr.setDate(hojeFormatado, true, 'd/m/Y');
+            } else if (input.length) {
+                input.val(hojeFormatado);
+            }
+        });
+        
+        // Limpa data_pagamento (deve ficar vazia para novo lançamento)
+        var dataPagInput = form.find('[name="data_pagamento"]');
+        if (dataPagInput.length && dataPagInput[0]._flatpickr) {
+            dataPagInput[0]._flatpickr.clear();
+        } else if (dataPagInput.length) {
+            dataPagInput.val('');
+        }
         
         // Desmarca todos os checkboxes e radio buttons
         form.find('input[type="checkbox"], input[type="radio"]').prop('checked', false);
