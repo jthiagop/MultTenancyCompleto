@@ -469,18 +469,18 @@ class UserController extends Controller
                 ->withInput();
         }
 
-        // Estratégia: manter o role (necessário para middleware de rotas),
-        // mas usar permissões diretas para COMPLEMENTAR ou RESTRINGIR.
-        // Calculamos quais permissões o role já concede e salvamos apenas as extras como diretas.
-        $rolePermissionIds = $user->getPermissionsViaRoles()->pluck('id')->toArray();
+        // Estratégia: trocar o role do usuário para 'authenticated' (role sem permissões,
+        // usada apenas para satisfazer o middleware de rotas) e definir TODAS as
+        // permissões selecionadas como diretas. Assim, desmarcar funciona corretamente.
+        $authenticatedRole = \Spatie\Permission\Models\Role::firstOrCreate(
+            ['name' => 'authenticated', 'guard_name' => 'web']
+        );
+        $user->syncRoles([$authenticatedRole->id]);
 
-        // Permissões que o admin selecionou mas que NÃO vêm do role → salvar como diretas
-        $directOnly = array_diff($validPermissions, $rolePermissionIds);
+        // Sincroniza TODAS as permissões selecionadas como diretas
+        $user->syncPermissions($validPermissions);
 
-        // Sincroniza apenas as permissões diretas extras (não duplica as do role)
-        $user->syncPermissions($directOnly);
-
-        \Log::info("Permissões do usuário #{$user->id} ({$user->email}) atualizadas. Role mantida. Diretas: " . count($directOnly));
+        \Log::info("Permissões do usuário #{$user->id} ({$user->email}) atualizadas. Role='authenticated'. Diretas: " . count($validPermissions));
 
         return redirect()->back()->with('success', 'Permissões atualizadas com sucesso!');
     }

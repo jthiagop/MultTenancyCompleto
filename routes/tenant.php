@@ -309,7 +309,7 @@ Route::middleware([
         });
 
         // Rotas de Contabilidade — acessível por qualquer role com permissão 'contabilidade.index'
-        Route::middleware(['role:user|sub_user|admin_user|admin|global', 'can:contabilidade.index'])->group(function () {
+        Route::middleware(['role:authenticated|user|sub_user|admin_user|admin|global', 'can:contabilidade.index'])->group(function () {
             Route::prefix('contabilidade')->name('contabilidade.')->group(function () {
 
                 // Rota principal que exibe a página com as abas.
@@ -331,7 +331,7 @@ Route::middleware([
         });
 
         // Rotas acessíveis para admin_user, admin e global
-        Route::middleware(['role:admin_user|admin|global'])->group(function () {
+        Route::middleware(['role:authenticated|admin_user|admin|global'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
             Route::get('/lancamentoPadrao/data', [LancamentoPadraoController::class, 'getData'])->name('lancamentoPadrao.data');
@@ -351,7 +351,7 @@ Route::middleware([
         Route::resource('costCenter', CostCenterController::class);
 
         // Rotas acessíveis para todos os usuários autenticados com role
-        Route::middleware(['role:user|sub_user|admin_user|admin|global'])->group(function () {
+        Route::middleware(['role:authenticated|user|sub_user|admin_user|admin|global'])->group(function () {
             Route::delete('/caixas/{id}', [CaixaController::class, 'destroySelected'])->name('caixas.destroySelected');
             Route::resource('caixa', CaixaController::class);
             Route::get('/charts/despesas', [CaixaController::class, 'getDespesasChartData'])->name('charts.despesas.data');

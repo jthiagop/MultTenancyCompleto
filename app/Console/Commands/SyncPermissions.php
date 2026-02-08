@@ -176,6 +176,24 @@ class SyncPermissions extends Command
             return in_array($action, ['index', 'show']) && !in_array($module, ['company', 'users']);
         });
         $this->assignToRole('sub_user', $subUserPerms);
+
+        // Role authenticated → NENHUMA permissão (apenas para middleware de rotas)
+        // Usada quando admin customiza permissões manualmente — todas viram diretas
+        $this->ensureRoleExists('authenticated');
+        $this->assignToRole('authenticated', collect([]));
+    }
+
+    /**
+     * Garante que uma role exista no sistema.
+     */
+    private function ensureRoleExists(string $roleName): void
+    {
+        $role = Role::firstOrCreate(
+            ['name' => $roleName, 'guard_name' => 'web']
+        );
+        if ($role->wasRecentlyCreated) {
+            $this->line("  <fg=green>✓</> Role criada: {$roleName}");
+        }
     }
 
     /**
