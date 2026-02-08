@@ -64,6 +64,7 @@ class PermissionService
         $fallbackNames = [
             'company' => 'Organismos',
             'users' => 'Cadastro de Usuários',
+            'notafiscal' => 'Nota Fiscal',
         ];
 
         // Buscar nomes do banco de dados

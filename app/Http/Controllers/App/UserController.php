@@ -34,6 +34,18 @@ class UserController extends Controller
         $moduleIcons = [];
         $defaultIcon = asset('assets/media/avatars/blank.png');
 
+        // Ícones para módulos que existem apenas como permissões (sem registro na tabela modules)
+        $fallbackIcons = [
+            'users' => '/assets/media/png/perfil.svg',
+            'notafiscal' => '/assets/media/png/nfe.svg',
+            'company' => '/assets/media/png/building.svg',
+        ];
+
+        // Adicionar fallbacks primeiro
+        foreach ($fallbackIcons as $key => $iconPath) {
+            $moduleIcons[$key] = $iconPath;
+        }
+
         foreach ($modules as $module) {
             if ($module->icon_path) {
                 // Se o caminho começa com /assets, usar diretamente (arquivo público estático)
