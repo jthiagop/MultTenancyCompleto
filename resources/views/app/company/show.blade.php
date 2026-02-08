@@ -62,7 +62,7 @@
                             <div
                                 class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
                                 <img class="img-fluid w-100 h-100 rounded"
-                                    src="{{ $companyShow->avatar ? route('file', ['path' => $companyShow->avatar]) : '/public/assets/media/avatars/blank.png' }}"
+                                    src="{{ $companyShow->avatar ? route('file', ['path' => $companyShow->avatar]) : '/assets/media/avatars/blank.png' }}"
                                     alt="{{ $companyShow->name }}" />
                             </div>
                             <!--end::Image-->
