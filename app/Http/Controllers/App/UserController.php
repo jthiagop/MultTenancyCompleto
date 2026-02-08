@@ -284,7 +284,15 @@ class UserController extends Controller
         $permissionService = new PermissionService();
         $permissionsByModule = $permissionService->getPermissionsByModule();
         $moduleNames = $permissionService->getModuleNames();
-        $userPermissions = $user->permissions->pluck('id')->toArray(); // Permissões atuais do usuário
+
+        // Permissões efetivas = diretas + via role (o que o usuário REALMENTE pode)
+        $userPermissions = $user->getAllPermissions()->pluck('id')->toArray();
+
+        // Permissões que vêm APENAS via role (para indicação visual na UI)
+        $rolePermissions = $user->getPermissionsViaRoles()->pluck('id')->toArray();
+
+        // Permissões diretas do usuário
+        $directPermissions = $user->getDirectPermissions()->pluck('id')->toArray();
 
         // Buscar ícones dos módulos do banco de dados
         $moduleIcons = $this->getModuleIcons();
@@ -303,6 +311,8 @@ class UserController extends Controller
                 'moduleNames' => $moduleNames,
                 'moduleIcons' => $moduleIcons,
                 'userPermissions' => $userPermissions,
+                'rolePermissions' => $rolePermissions,
+                'directPermissions' => $directPermissions,
                 'isFirstUser' => $isFirstUser,
             ]
         );

@@ -500,6 +500,18 @@
                                         $defaultIcon = asset('assets/media/avatars/blank.png');
                                     @endphp
 
+                                    <!--begin::Legenda-->
+                                    @if(!empty($rolePermissions ?? []))
+                                    <div class="alert alert-dismissible bg-light-primary border border-primary border-dashed d-flex flex-column flex-sm-row p-5 mb-6">
+                                        <i class="ki-duotone ki-shield-tick fs-2hx text-primary me-4 mb-5 mb-sm-0"><span class="path1"></span><span class="path2"></span></i>
+                                        <div class="d-flex flex-column pe-0 pe-sm-10">
+                                            <h5 class="mb-1">Permissões por Role: <span class="badge badge-primary">{{ $user->getRoleNames()->implode(', ') }}</span></h5>
+                                            <span class="text-muted fs-7">Permissões marcadas com <span class="badge badge-light-primary badge-sm"><i class="fas fa-shield-alt text-primary fs-9 me-1"></i>via role</span> são herdadas do papel do usuário. Desmarque para remover o acesso.</span>
+                                        </div>
+                                    </div>
+                                    @endif
+                                    <!--end::Legenda-->
+
                                     @if (isset($permissionsByModule) && !empty($permissionsByModule))
                                         <!--begin::Payment method-->
                                         <div class="card card-flush pt-3 mb-5 mb-lg-10" data-kt-subscriptions-form="pricing">
@@ -609,19 +621,28 @@
                                                                                         $badgeClass = 'badge-light-info';
                                                                                     }
                                                                                 @endphp
+                                                                                @php
+                                                                                    $isFromRole = in_array($permission->id, $rolePermissions ?? []);
+                                                                                    $isDirect = in_array($permission->id, $directPermissions ?? []);
+                                                                                    $isChecked = in_array($permission->id, $userPermissions ?? []);
+                                                                                    $borderClass = $isFromRole && !$isDirect ? 'border-primary border-dashed' : 'border-gray-300';
+                                                                                @endphp
                                                                                 <div class="col-md-6 col-lg-4 mb-3">
-                                                                                    <div class="form-check form-check-custom form-check-solid p-3 border border-gray-300 rounded">
+                                                                                    <div class="form-check form-check-custom form-check-solid p-3 border {{ $borderClass }} rounded">
                                                                                         <input class="form-check-input permission-checkbox"
                                                                                             type="checkbox"
                                                                                             name="permissions[]"
                                                                                             value="{{ $permission->id }}"
                                                                                             data-module="{{ $module }}"
                                                                                             id="permission_{{ $permission->id }}"
-                                                                                            @if (in_array($permission->id, $userPermissions ?? [])) checked @endif />
+                                                                                            @if ($isChecked) checked @endif />
                                                                                         <label class="form-check-label w-100" for="permission_{{ $permission->id }}">
                                                                                             <div class="d-flex align-items-center">
                                                                                                 <span class="fw-semibold text-dark me-2">{{ $actionName }}</span>
                                                                                                 <span class="badge {{ $badgeClass }} fs-8">{{ $action }}</span>
+                                                                                                @if($isFromRole && !$isDirect)
+                                                                                                    <span class="badge badge-light-primary fs-9 ms-1"><i class="fas fa-shield-alt text-primary fs-9 me-1"></i>via role</span>
+                                                                                                @endif
                                                                                             </div>
                                                                                             @if (count($parts) > 2)
                                                                                                 <div class="text-muted fs-7 mt-1">{{ $permission->name }}</div>
