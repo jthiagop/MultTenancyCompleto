@@ -16,6 +16,7 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\AtualizarStatusContas::class,
         \App\Console\Commands\SeedFormasPagamento::class,
         \App\Console\Commands\CleanExpiredWhatsappCodes::class,
+        \App\Console\Commands\CleanExpiredPdfGenerations::class,
     ];
 
     /**
@@ -27,6 +28,9 @@ class Kernel extends ConsoleKernel
 
         // Limpar códigos de vinculação WhatsApp expirados a cada hora
         $schedule->command('whatsapp:clean-expired-codes')->hourly();
+
+        // Limpar PDFs gerados expirados (após 5 dias) - roda diariamente às 3h
+        $schedule->command('pdf:clean-expired')->dailyAt('03:00');
     }
 
     /**

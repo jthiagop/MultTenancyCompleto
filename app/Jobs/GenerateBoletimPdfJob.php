@@ -254,18 +254,26 @@ class GenerateBoletimPdfJob implements ShouldQueue
             // Salvar arquivo diretamente no storage central
             file_put_contents($centralStoragePath, $pdf);
 
+            // Gerar nome amigável do arquivo
+            $mesNome = Carbon::create($this->ano, $this->mes, 1)->translatedFormat('F/Y');
+            $friendlyName = "Boletim Financeiro - {$mesNome}";
+
             // Atualizar status para completed
             if ($pdfGen) {
                 $pdfGen->update([
                     'status' => 'completed',
                     'filename' => $filename,
+                    'file_name' => $friendlyName,
                     'completed_at' => now(),
+                    'expires_at' => now()->addDays(PdfGeneration::EXPIRATION_DAYS),
                 ]);
             }
 
             Log::info("PDF Boletim gerado com sucesso", [
                 'pdf_id' => $this->pdfGenerationId,
                 'filename' => $filename,
+                'file_name' => $friendlyName,
+                'expires_at' => now()->addDays(PdfGeneration::EXPIRATION_DAYS)->toDateTimeString(),
                 'company_id' => $this->companyId,
                 'mes' => $this->mes,
                 'ano' => $this->ano,
