@@ -113,6 +113,29 @@ class Company extends Model
         return $this->hasMany(EntidadeFinanceira::class, 'company_id', 'id');
     }
 
+    /**
+     * Módulos configurados para esta company (pivot de opt-out).
+     * Se não houver registro na pivot, o módulo está disponível por padrão.
+     */
+    public function modules()
+    {
+        return $this->belongsToMany(Module::class, 'company_module')
+            ->withPivot('is_active', 'settings')
+            ->withTimestamps();
+    }
+
+    /**
+     * Retorna módulos ativos para esta company.
+     * Usa lógica opt-out: todos os módulos ativos MENOS os desativados na pivot.
+     */
+    public function activeModules()
+    {
+        return Module::active()
+            ->forCompany($this->id)
+            ->ordered()
+            ->get();
+    }
+
     public function getReceitaMes(){
 
             // Obtém o mês e ano atual

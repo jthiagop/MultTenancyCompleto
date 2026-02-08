@@ -2,15 +2,17 @@
 
 namespace Database\Seeders;
 
-use App\Models\Company;
 use App\Models\Module;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Schema;
 
 class ModuleSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     *
+     * Módulos são globais — definidos uma única vez.
+     * A tabela pivot company_module controla desativações por company (opt-out).
+     * Por padrão, toda company tem acesso a todos os módulos ativos.
      */
     public function run(): void
     {
@@ -101,50 +103,25 @@ class ModuleSeeder extends Seeder
             ],
         ];
 
-        // Obter todas as companies do tenant
-        $companies = [];
+        foreach ($modules as $moduleData) {
+            $existing = Module::withTrashed()->where('key', $moduleData['key'])->first();
 
-        if (Schema::hasTable('companies')) {
-            $companies = Company::all();
-        }
-
-        if (empty($companies) || $companies->isEmpty()) {
-            $this->command->warn("⚠️  Nenhuma company encontrada. Os módulos serão criados sem company_id.");
-            $companies = collect([null]); // Criar sem company_id como fallback
-        }
-
-        foreach ($companies as $company) {
-            $companyId = $company ? $company->id : null;
-            $companyName = $company ? $company->name : 'Sem company';
-
-            $this->command->info("\n📦 Criando módulos para: {$companyName}");
-
-            foreach ($modules as $moduleData) {
-                $moduleData['company_id'] = $companyId;
-
-                // Buscar incluindo registros soft deleted
-                $existing = Module::withTrashed()
-                    ->where('company_id', $companyId)
-                    ->where('key', $moduleData['key'])
-                    ->first();
-
-                if ($existing) {
-                    if ($existing->trashed()) {
-                        // Se estava soft deleted, restaurar e atualizar
-                        $existing->restore();
-                        $existing->update($moduleData);
-                        $this->command->info("  ✓ Módulo '{$moduleData['name']}' restaurado.");
-                    } else {
-                        // Se já existe e está ativo, não fazer nada (seeder idempotente)
-                        $this->command->info("  → Módulo '{$moduleData['name']}' já existe (ignorado).");
-                    }
+            if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                    $existing->update($moduleData);
+                    $this->command?->info("  ↻ Módulo '{$moduleData['name']}' restaurado.");
                 } else {
-                    Module::create($moduleData);
-                    $this->command->info("  ✓ Módulo '{$moduleData['name']}' criado.");
+                    // Atualizar campos que podem ter mudado (ex: permission, icon)
+                    $existing->update(collect($moduleData)->except('key')->toArray());
+                    $this->command?->info("  → Módulo '{$moduleData['name']}' atualizado.");
                 }
+            } else {
+                Module::create($moduleData);
+                $this->command?->info("  ✓ Módulo '{$moduleData['name']}' criado.");
             }
         }
 
-        $this->command->info("\n✓ Total de módulos: " . Module::count());
+        $this->command?->info("\n✓ Total de módulos: " . Module::count());
     }
 }

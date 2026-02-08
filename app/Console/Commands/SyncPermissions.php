@@ -72,16 +72,13 @@ class SyncPermissions extends Command
         // 2. Associar permissões aos roles
         $this->syncRolePermissions();
 
-        // 3. Atualizar módulo dizimos (corrigir permission null)
-        $this->fixModulePermissions();
+        // 3. Garantir que todos os módulos existam (registro global)
+        $this->syncModules();
 
-        // 4. Criar módulo secretary se não existir
-        $this->ensureSecretaryModule();
-
-        // 5. Atribuir novas permissões a usuários admin existentes
+        // 4. Atribuir novas permissões a usuários admin existentes
         $this->syncAdminUserPermissions();
 
-        // 6. Limpar cache do Spatie
+        // 5. Limpar cache do Spatie
         app()[\Spatie\Permission\PermissionRegistrar::class]->forgetCachedPermissions();
 
         $this->newLine();
@@ -196,68 +193,57 @@ class SyncPermissions extends Command
     }
 
     /**
-     * Corrige o módulo dizimos que tinha permission: null.
+     * Garante que todos os módulos existam como registros globais.
+     * Módulos agora são definidos uma única vez (sem company_id).
      */
-    private function fixModulePermissions(): void
+    private function syncModules(): void
     {
-        $this->info('📦 Etapa 3: Verificando módulos...');
+        $this->info('📦 Etapa 3: Sincronizando módulos (registro global)...');
 
         if (!Schema::hasTable('modules')) {
             $this->warn('  ⚠ Tabela modules não existe');
             return;
         }
 
-        // Corrigir dizimos
-        $dizimosModule = Module::where('key', 'dizimos')->whereNull('permission')->first();
-        if ($dizimosModule) {
-            $dizimosModule->update(['permission' => 'dizimos.index']);
-            $this->line("  <fg=green>✓</> Módulo 'dizimos' corrigido: permission = 'dizimos.index'");
-        } else {
-            $this->line("  → Módulo 'dizimos' já está correto");
-        }
-    }
+        $moduleDefinitions = [
+            ['key' => 'financeiro', 'name' => 'Financeiro', 'route_name' => 'financeiro.index', 'icon_path' => '/assets/media/png/financeiro.svg', 'icon_class' => 'fa-money-bill', 'permission' => 'financeiro.index', 'description' => 'Cadastros financeiros, movimentações', 'order_index' => 1],
+            ['key' => 'patrimonio', 'name' => 'Patrimônio', 'route_name' => 'patrimonio.index', 'icon_path' => '/assets/media/png/house3d.png', 'icon_class' => 'fa-building', 'permission' => 'patrimonio.index', 'description' => 'Gestão patrimonial, foro e laudêmio', 'order_index' => 2],
+            ['key' => 'contabilidade', 'name' => 'Contabilidade', 'route_name' => 'contabilidade.index', 'icon_path' => '/assets/media/png/contabilidade.png', 'icon_class' => 'fa-calculator', 'permission' => 'contabilidade.index', 'description' => 'Gerenciar plano de contas e DE/PARA', 'order_index' => 3],
+            ['key' => 'dizimos', 'name' => 'Dízimo e Doações', 'route_name' => 'dizimos.index', 'icon_path' => '/assets/media/png/dizimo.png', 'icon_class' => 'fa-hand-holding-dollar', 'permission' => 'dizimos.index', 'description' => 'Gerenciamento de dízimo e doações', 'order_index' => 4],
+            ['key' => 'fieis', 'name' => 'Cadastro de Fiéis', 'route_name' => 'fieis.index', 'icon_path' => '/assets/media/png/fieis.png', 'icon_class' => 'fa-users', 'permission' => 'fieis.index', 'description' => 'Gerenciamento de membros e contribuições', 'order_index' => 5],
+            ['key' => 'cemiterio', 'name' => 'Cadastro de Sepulturas', 'route_name' => 'cemiterio.index', 'icon_path' => '/assets/media/png/lapide2.png', 'icon_class' => 'fa-cross', 'permission' => 'cemiterio.index', 'description' => 'Gerenciamento de sepultamentos, manutenção e pagamentos', 'order_index' => 6],
+            ['key' => 'secretary', 'name' => 'Secretaria', 'route_name' => 'secretary.index', 'icon_path' => '/assets/media/png/secretaria.png', 'icon_class' => 'fa-file-lines', 'permission' => 'secretary.index', 'description' => 'Gerenciamento de membros religiosos e secretaria', 'order_index' => 7],
+        ];
 
-    /**
-     * Cria o módulo secretary se não existir.
-     */
-    private function ensureSecretaryModule(): void
-    {
-        if (!Schema::hasTable('modules')) {
-            return;
-        }
+        $created = 0;
+        $updated = 0;
 
-        $existing = Module::withTrashed()->where('key', 'secretary')->first();
+        foreach ($moduleDefinitions as $moduleDef) {
+            $existing = Module::withTrashed()->where('key', $moduleDef['key'])->first();
 
-        if (!$existing) {
-            // Buscar companies existentes para criar para cada uma
-            $companies = Schema::hasTable('companies') ? \App\Models\Company::all() : collect([null]);
+            if ($existing) {
+                if ($existing->trashed()) {
+                    $existing->restore();
+                    $this->line("  <fg=yellow>↻</> '{$moduleDef['name']}' restaurado");
+                }
 
-            if ($companies->isEmpty()) {
-                $companies = collect([null]);
-            }
-
-            foreach ($companies as $company) {
-                Module::create([
-                    'company_id' => $company ? $company->id : null,
-                    'key' => 'secretary',
-                    'name' => 'Secretaria',
-                    'route_name' => 'secretary.index',
-                    'icon_path' => '/assets/media/png/secretaria.png',
-                    'icon_class' => 'fa-file-lines',
-                    'permission' => 'secretary.index',
-                    'description' => 'Gerenciamento de membros religiosos e secretaria',
-                    'order_index' => 7,
+                // Atualizar permission se estava null
+                if (!$existing->permission && $moduleDef['permission']) {
+                    $existing->update(['permission' => $moduleDef['permission']]);
+                    $updated++;
+                    $this->line("  <fg=green>✓</> '{$moduleDef['name']}' permission corrigida");
+                }
+            } else {
+                Module::create(array_merge($moduleDef, [
                     'is_active' => true,
                     'show_on_dashboard' => true,
-                ]);
+                ]));
+                $created++;
+                $this->line("  <fg=green>✓</> '{$moduleDef['name']}' criado");
             }
-            $this->line("  <fg=green>✓</> Módulo 'secretary' criado");
-        } elseif ($existing->trashed()) {
-            $existing->restore();
-            $this->line("  <fg=green>✓</> Módulo 'secretary' restaurado");
-        } else {
-            $this->line("  → Módulo 'secretary' já existe");
         }
+
+        $this->info("  → {$created} criados, {$updated} atualizados, " . Module::active()->count() . " ativos no total");
     }
 
     /**

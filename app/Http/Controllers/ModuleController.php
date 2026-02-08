@@ -91,7 +91,7 @@ class ModuleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:255',
-            'key' => 'required|string|max:255',
+            'key' => 'required|string|max:255|unique:modules,key',
             'route_name' => 'required|string|max:255',
             'icon_class' => 'nullable|string|max:255',
             'permission' => 'nullable|string|max:255',
@@ -101,8 +101,6 @@ class ModuleController extends Controller
             'order_index' => 'integer',
             'icon' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
         ]);
-
-        $validated['company_id'] = auth()->user()->company_id ?? null;
 
         // Processa upload do ícone
         if ($request->hasFile('icon')) {

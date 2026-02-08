@@ -7,7 +7,8 @@ use App\Models\Module;
 class ModuleService
 {
     /**
-     * Lista de módulos disponíveis no sistema (busca do banco de dados)
+     * Lista de módulos disponíveis no sistema.
+     * Filtra por company se fornecido (opt-out: exclui módulos desativados na pivot).
      *
      * @param int|null $companyId
      * @return array
@@ -15,11 +16,11 @@ class ModuleService
     public function getAvailableModules(?int $companyId = null): array
     {
         $query = Module::active()->ordered();
-        
+
         if ($companyId) {
             $query->forCompany($companyId);
         }
-        
+
         return $query->get()
             ->map(function ($module) {
                 return [
@@ -36,7 +37,8 @@ class ModuleService
     }
 
     /**
-     * Retorna módulos para exibição no dashboard
+     * Retorna módulos para exibição no dashboard.
+     * Filtra por company (opt-out) e por permissão do usuário.
      *
      * @param \App\Models\User $user
      * @param int|null $companyId
@@ -47,11 +49,11 @@ class ModuleService
         $query = Module::active()
             ->forDashboard()
             ->ordered();
-        
+
         if ($companyId) {
             $query->forCompany($companyId);
         }
-        
+
         return $query->get()
             ->filter(function ($module) use ($user) {
                 return $module->userHasPermission($user);
@@ -59,7 +61,7 @@ class ModuleService
     }
 
     /**
-     * Retorna módulos que o usuário tem permissão (array formatado)
+     * Retorna módulos que o usuário tem permissão (array formatado).
      *
      * @param \App\Models\User $user
      * @param int|null $companyId
@@ -68,11 +70,11 @@ class ModuleService
     public function getAuthorizedModules($user, ?int $companyId = null): array
     {
         $query = Module::active()->ordered();
-        
+
         if ($companyId) {
             $query->forCompany($companyId);
         }
-        
+
         return $query->get()
             ->filter(function ($module) use ($user) {
                 return $module->userHasPermission($user);
@@ -93,7 +95,7 @@ class ModuleService
     }
 
     /**
-     * Verifica se módulo pode ser favoritado
+     * Verifica se módulo pode ser favoritado.
      *
      * @param \App\Models\User $user
      * @param string $moduleKey
@@ -103,22 +105,22 @@ class ModuleService
     public function canFavorite($user, string $moduleKey, ?int $companyId = null): bool
     {
         $query = Module::where('key', $moduleKey);
-        
+
         if ($companyId) {
             $query->forCompany($companyId);
         }
-        
+
         $module = $query->first();
-        
+
         if (!$module || !$module->is_active) {
             return false;
         }
-        
+
         return $module->userHasPermission($user);
     }
 
     /**
-     * Busca dados de um módulo específico do banco
+     * Busca dados de um módulo específico.
      *
      * @param string $moduleKey
      * @param int|null $companyId
@@ -127,11 +129,11 @@ class ModuleService
     public function getModuleByKey(string $moduleKey, ?int $companyId = null): ?Module
     {
         $query = Module::where('key', $moduleKey);
-        
+
         if ($companyId) {
             $query->forCompany($companyId);
         }
-        
+
         return $query->first();
     }
 }

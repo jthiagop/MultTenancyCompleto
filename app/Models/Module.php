@@ -11,7 +11,6 @@ class Module extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
-        'company_id',
         'key',
         'name',
         'route_name',
@@ -57,6 +56,22 @@ class Module extends Model
     }
 
     /**
+     * Scope para filtrar módulos disponíveis para uma company.
+     *
+     * Lógica opt-out: por padrão, todos os módulos ativos estão disponíveis.
+     * Exclui apenas módulos que tenham registro na pivot com is_active = false.
+     */
+    public function scopeForCompany($query, $companyId)
+    {
+        return $query->where(function ($q) use ($companyId) {
+            $q->whereDoesntHave('companies', function ($pivot) use ($companyId) {
+                $pivot->where('company_id', $companyId)
+                      ->where('company_module.is_active', false);
+            });
+        });
+    }
+
+    /**
      * Verifica se o usuário tem permissão para acessar o módulo
      */
     public function userHasPermission($user): bool
@@ -65,22 +80,41 @@ class Module extends Model
         if ($user->hasRole('global')) {
             return true;
         }
-        
+
         // Se o módulo não tem permissão específica, permite acesso
         if (!$this->permission) {
             return true;
         }
-        
+
         // Verifica se o usuário tem a permissão específica
         return $user->can($this->permission);
     }
 
     /**
-     * Relacionamento com Company
+     * Verifica se o módulo está ativo para uma company específica.
+     * Se não houver registro na pivot, o módulo está ativo (opt-out).
      */
-    public function company()
+    public function isActiveForCompany(int $companyId): bool
     {
-        return $this->belongsTo(Company::class);
+        $pivot = $this->companies()->where('company_id', $companyId)->first();
+
+        // Sem registro na pivot = ativo (padrão)
+        if (!$pivot) {
+            return $this->is_active;
+        }
+
+        return (bool) $pivot->pivot->is_active;
+    }
+
+    /**
+     * Relacionamento many-to-many com Company (pivot de configuração).
+     * A pivot controla desativações por company (opt-out).
+     */
+    public function companies()
+    {
+        return $this->belongsToMany(Company::class, 'company_module')
+            ->withPivot('is_active', 'settings')
+            ->withTimestamps();
     }
 
     /**
@@ -89,21 +123,8 @@ class Module extends Model
      */
     public function getRelatedPermissionsAttribute()
     {
-        // Se a chave do módulo for 'financeiro', buscamos permissões que começam com 'financeiro.'
         $prefix = $this->key;
 
         return \Spatie\Permission\Models\Permission::where('name', 'LIKE', "{$prefix}.%")->get();
-    }
-
-    /**
-     * Scope para filtrar por company_id
-     * Inclui módulos globais (sem company_id) e módulos específicos da empresa
-     */
-    public function scopeForCompany($query, $companyId)
-    {
-        return $query->where(function ($q) use ($companyId) {
-            $q->where('company_id', $companyId)
-              ->orWhereNull('company_id'); // Módulos globais (sem company_id) são visíveis para todos
-        });
     }
 }
