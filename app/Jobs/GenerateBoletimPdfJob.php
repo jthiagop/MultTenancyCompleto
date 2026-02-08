@@ -285,11 +285,11 @@ class GenerateBoletimPdfJob implements ShouldQueue
                 // Recarregar o model para obter o download_url atualizado
                 $pdfGen->refresh();
                 $downloadUrl = $pdfGen->download_url ?? route('relatorios.boletim.financeiro.pdf-async.status', ['id' => $this->pdfGenerationId]);
-                $mesNome = Carbon::create($this->ano, $this->mes, 1)->translatedFormat('F/Y');
                 $user->notify(new RelatorioGeradoNotification(
                     $downloadUrl,
-                    "Boletim Financeiro - {$mesNome}",
-                    $this->companyId
+                    $friendlyName,
+                    $this->companyId,
+                    $this->userId // Quem solicitou o relatório
                 ));
                 Log::info("Notificação enviada ao usuário #{$this->userId}");
             }

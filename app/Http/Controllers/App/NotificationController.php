@@ -28,6 +28,10 @@ class NotificationController extends Controller
         }
 
         $notifications = $query->latest()->take(20)->get()->map(function ($notification) {
+            // Buscar informações do usuário que disparou a notificação (se disponível)
+            $userId = $notification->data['triggered_by'] ?? null;
+            $user = $userId ? \App\Models\User::find($userId) : null;
+            
             return [
                 'id' => $notification->id,
                 'icon' => $notification->data['icon'] ?? 'ki-notification',
@@ -36,9 +40,15 @@ class NotificationController extends Controller
                 'message' => $notification->data['message'] ?? '',
                 'action_url' => $notification->data['action_url'] ?? null,
                 'target' => $notification->data['target'] ?? '_self',
+                'tipo' => $notification->data['tipo'] ?? 'geral',
                 'read_at' => $notification->read_at,
                 'created_at' => $notification->created_at->diffForHumans(),
                 'created_at_iso' => $notification->created_at->toISOString(),
+                // Dados do usuário que disparou
+                'triggered_by' => $user ? [
+                    'name' => $user->name,
+                    'avatar' => $user->avatar_url ?? null,
+                ] : null,
             ];
         });
 

@@ -243,70 +243,121 @@ document.addEventListener('DOMContentLoaded', function() {
                 item.addEventListener('click', (e) => {
                     const id = item.dataset.id;
                     const url = item.dataset.url;
+                    const target = item.dataset.target || '_self';
                     
                     // Marcar como lida
                     this.markAsRead(id);
                     
                     // Navegar se houver URL
                     if (url && url !== '#' && url !== '') {
-                        window.location.href = url;
+                        if (target === '_blank') {
+                            window.open(url, '_blank');
+                        } else {
+                            window.location.href = url;
+                        }
                     }
                 });
             });
         },
         
-        // Renderizar uma notificação
+        // Renderizar uma notificação (estilo YouTube)
         renderNotification(notification) {
-            const data = notification.data || {};
-            const icon = data.icon || 'ki-notification';
-            const color = data.color || 'primary';
-            const title = data.title || 'Notificação';
-            const message = data.message || '';
-            const url = data.action_url || '#';
+            const icon = notification.icon || 'fa-solid fa-bell';
+            const color = notification.color || 'primary';
+            const title = notification.title || 'Notificação';
+            const message = notification.message || '';
+            const url = notification.action_url || '#';
+            const target = notification.target || '_self';
+            const tipo = notification.tipo || 'geral';
             const isUnread = !notification.read_at;
-            const timeAgo = this.timeAgo(notification.created_at);
+            const timeAgo = notification.created_at || '';
+            const triggeredBy = notification.triggered_by;
+            
+            // Determinar ícone e cor baseado no tipo
+            let iconClass = 'fa-solid fa-bell';
+            let iconColor = color;
+            
+            if (tipo === 'relatorio_gerado' || icon === 'ki-file-added' || url.includes('.pdf')) {
+                iconClass = 'fa-solid fa-file-pdf';
+                iconColor = 'danger';
+            } else if (tipo === 'relatorio_erro' || icon === 'ki-cross-circle') {
+                iconClass = 'fa-solid fa-circle-xmark';
+                iconColor = 'danger';
+            } else if (tipo === 'conta_vencendo' || icon === 'ki-calendar') {
+                iconClass = 'fa-solid fa-calendar-days';
+                iconColor = 'warning';
+            } else if (tipo === 'aviso' || icon === 'ki-information') {
+                iconClass = 'fa-solid fa-circle-info';
+                iconColor = 'info';
+            }
+            
+            // Avatar do usuário que disparou (se disponível)
+            let avatarHtml = '';
+            if (triggeredBy && triggeredBy.avatar) {
+                avatarHtml = `<img src="${triggeredBy.avatar}" alt="${this.escapeHtml(triggeredBy.name)}" class="rounded-circle" style="width: 18px; height: 18px; object-fit: cover;">`;
+            } else if (triggeredBy) {
+                const initials = triggeredBy.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                avatarHtml = `<span class="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white" style="width: 18px; height: 18px; font-size: 8px; font-weight: bold;">${initials}</span>`;
+            }
             
             return `
-                <div class="d-flex flex-stack py-4 notification-item ${isUnread ? 'bg-light-primary rounded px-3' : ''}" 
+                <div class="d-flex align-items-start py-3 notification-item ${isUnread ? '' : 'opacity-75'}" 
                      data-id="${notification.id}" 
                      data-url="${url}"
-                     style="cursor: pointer;">
-                    <!--begin::Section-->
-                    <div class="d-flex align-items-center">
-                        <!--begin::Symbol-->
-                        <div class="symbol symbol-35px me-4">
-                            <span class="symbol-label bg-light-${color}">
-                                <i class="${icon} fs-2 text-${color}"></i>
-                            </span>
+                     data-target="${target}"
+                     style="cursor: pointer; transition: background 0.2s;"
+                     onmouseover="this.style.background='var(--bs-gray-100)'" 
+                     onmouseout="this.style.background='transparent'">
+                    
+                    <!--begin::Icon com Avatar sobreposto-->
+                    <div class="position-relative me-4 flex-shrink-0">
+                        <!--Ícone principal grande-->
+                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-light-${iconColor}" 
+                             style="width: 48px; height: 48px;">
+                            <i class="${iconClass} fs-1 text-${iconColor}"></i>
                         </div>
-                        <!--end::Symbol-->
-                        <!--begin::Title-->
-                        <div class="mb-0 me-2">
-                            <span class="fs-6 text-gray-800 fw-bold ${isUnread ? 'text-primary' : ''}">${this.escapeHtml(title)}</span>
-                            <div class="text-gray-400 fs-7">${this.escapeHtml(message)}</div>
+                        <!--Avatar pequeno sobreposto-->
+                        ${avatarHtml ? `
+                        <div class="position-absolute" style="bottom: -2px; right: -2px; border: 2px solid var(--bs-body-bg); border-radius: 50%;">
+                            ${avatarHtml}
                         </div>
-                        <!--end::Title-->
+                        ` : ''}
                     </div>
-                    <!--end::Section-->
-                    <!--begin::Label-->
-                    <div class="d-flex flex-column align-items-end">
-                        <span class="badge badge-light fs-8">${timeAgo}</span>
-                        ${isUnread ? '<span class="badge badge-circle badge-primary mt-1" style="width: 8px; height: 8px;"></span>' : ''}
+                    <!--end::Icon-->
+                    
+                    <!--begin::Content-->
+                    <div class="flex-grow-1 me-3 overflow-hidden">
+                        <div class="fw-bold text-gray-900 text-truncate" style="font-size: 13px;">
+                            ${this.escapeHtml(title)}
+                        </div>
+                        <div class="text-muted mt-1" style="font-size: 12px;">
+                            ${timeAgo}
+                        </div>
                     </div>
-                    <!--end::Label-->
+                    <!--end::Content-->
+                    
+                    <!--begin::Indicador de não lido-->
+                    ${isUnread ? `
+                    <div class="flex-shrink-0 align-self-center">
+                        <span class="d-inline-block rounded-circle bg-primary" style="width: 10px; height: 10px;"></span>
+                    </div>
+                    ` : ''}
+                    <!--end::Indicador-->
                 </div>
             `;
         },
         
-        // Atualizar UI de uma notificação específica
+        // Atualizar UI de uma notificação específica (marcar como lida)
         updateNotificationUI(id) {
             const item = this.list.querySelector(`[data-id="${id}"]`);
             if (item) {
-                item.classList.remove('bg-light-primary');
-                const badge = item.querySelector('.badge-primary.badge-circle');
-                if (badge) badge.remove();
-                const title = item.querySelector('.text-primary');
-                if (title) title.classList.remove('text-primary');
+                // Remover indicador de não lido
+                const indicator = item.querySelector('.bg-primary.rounded-circle');
+                if (indicator && indicator.style.width === '10px') {
+                    indicator.remove();
+                }
+                // Adicionar opacidade
+                item.classList.add('opacity-75');
             }
         },
         
