@@ -1,4 +1,4 @@
-<x-tenant-app-layout>
+<x-tenant-app-layout >
 
     <!--begin::Content wrapper-->
     <div class="d-flex flex-column flex-column-fluid">
