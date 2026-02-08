@@ -29,9 +29,9 @@
         <!--end::Heading-->
 
         <!--begin::Items-->
-        <div class="scroll-y mh-325px my-5 px-8" id="notifications-list">
+        <div class="scroll-y  my-5 px-4 " id="notifications-list">
             <!--begin::Loading-->
-            <div class="d-flex justify-content-center py-5" id="notifications-loading">
+            <div class="d-flex justify-content-center my-5 px-8" id="notifications-loading">
                 <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
                 <span class="ms-2 text-muted">Carregando...</span>
             </div>

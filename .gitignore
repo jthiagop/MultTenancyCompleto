@@ -4,7 +4,8 @@
 /public/build/
 /public/hot
 /public/storage
-
+/resources/views/app/contabilidade/.DS_Store
+/resources/views/app/.DS_Store
 # --- Ambiente / segredos ---
 .env
 .env.*
@@ -37,3 +38,5 @@ yarn-error.log
 /storage/*
 !/storage/logs/
 !/storage/logs/laravel.log
+
+

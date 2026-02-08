@@ -87,6 +87,24 @@ class User extends Authenticatable
     }
 
     /**
+     * Retorna a URL completa do avatar do usuário.
+     */
+    public function getAvatarUrlAttribute(): ?string
+    {
+        if (!$this->avatar) {
+            return null;
+        }
+
+        // Se já for uma URL completa, retorna como está
+        if (str_starts_with($this->avatar, 'http://') || str_starts_with($this->avatar, 'https://')) {
+            return $this->avatar;
+        }
+
+        // Se for um path do storage
+        return Storage::url($this->avatar);
+    }
+
+    /**
      * As empresas às quais o usuário tem acesso.
      */
     public function companies()
