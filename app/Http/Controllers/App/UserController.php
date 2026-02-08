@@ -457,7 +457,16 @@ class UserController extends Controller
                 ->withInput();
         }
 
-        // Sincroniza as permissões usando o método do Spatie
+        // Ao gerenciar permissões explicitamente, remover roles do usuário.
+        // A role serviu apenas como template inicial de permissões.
+        // A partir de agora, apenas permissões diretas serão consideradas.
+        if ($user->roles->isNotEmpty()) {
+            $removedRoles = $user->getRoleNames()->implode(', ');
+            $user->syncRoles([]);
+            \Log::info("Roles [{$removedRoles}] removidas do usuário #{$user->id} ({$user->email}) — permissões agora são gerenciadas diretamente.");
+        }
+
+        // Sincroniza as permissões diretas usando o método do Spatie
         $user->syncPermissions($validPermissions);
 
         return redirect()->back()->with('success', 'Permissões atualizadas com sucesso!');
