@@ -469,17 +469,18 @@ class UserController extends Controller
                 ->withInput();
         }
 
-        // Ao gerenciar permissões explicitamente, remover roles do usuário.
-        // A role serviu apenas como template inicial de permissões.
-        // A partir de agora, apenas permissões diretas serão consideradas.
-        if ($user->roles->isNotEmpty()) {
-            $removedRoles = $user->getRoleNames()->implode(', ');
-            $user->syncRoles([]);
-            \Log::info("Roles [{$removedRoles}] removidas do usuário #{$user->id} ({$user->email}) — permissões agora são gerenciadas diretamente.");
-        }
+        // Estratégia: manter o role (necessário para middleware de rotas),
+        // mas usar permissões diretas para COMPLEMENTAR ou RESTRINGIR.
+        // Calculamos quais permissões o role já concede e salvamos apenas as extras como diretas.
+        $rolePermissionIds = $user->getPermissionsViaRoles()->pluck('id')->toArray();
 
-        // Sincroniza as permissões diretas usando o método do Spatie
-        $user->syncPermissions($validPermissions);
+        // Permissões que o admin selecionou mas que NÃO vêm do role → salvar como diretas
+        $directOnly = array_diff($validPermissions, $rolePermissionIds);
+
+        // Sincroniza apenas as permissões diretas extras (não duplica as do role)
+        $user->syncPermissions($directOnly);
+
+        \Log::info("Permissões do usuário #{$user->id} ({$user->email}) atualizadas. Role mantida. Diretas: " . count($directOnly));
 
         return redirect()->back()->with('success', 'Permissões atualizadas com sucesso!');
     }

@@ -268,8 +268,8 @@ Route::middleware([
         Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->name('permissions.update');
         Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
 
-        // Rotas acessíveis apenas para administradores
-        Route::middleware(['role:admin'])->group(function () {
+        // Rotas acessíveis para administradores (admin e global)
+        Route::middleware(['role:admin|global'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
@@ -306,13 +306,16 @@ Route::middleware([
 
             Route::post('/filter', [RebortController::class, 'generateReport']);
 
+        });
+
+        // Rotas de Contabilidade — acessível por qualquer role com permissão 'contabilidade.index'
+        Route::middleware(['role:user|sub_user|admin_user|admin|global', 'can:contabilidade.index'])->group(function () {
             Route::prefix('contabilidade')->name('contabilidade.')->group(function () {
 
                 // Rota principal que exibe a página com as abas.
                 Route::get('/', [ContabilidadeController::class, 'index'])->name('index');
 
                 // Rotas para o CRUD do Plano de Contas.
-                // O Laravel criará rotas como: /contabilidade/plano-contas, /contabilidade/plano-contas/create, etc.
                 Route::get('plano-contas/next-code', [ChartOfAccountController::class, 'getNextCode'])->name('plano-contas.next-code');
                 Route::post('plano-contas/import', [ChartOfAccountController::class, 'import'])->name('plano-contas.import');
                 Route::post('plano-contas/export', [ChartOfAccountController::class, 'export'])->name('plano-contas.export');
@@ -327,8 +330,8 @@ Route::middleware([
             });
         });
 
-        // Rotas acessíveis apenas para administradores e usuários específicos
-        Route::middleware(['role:admin_user'])->group(function () {
+        // Rotas acessíveis para admin_user, admin e global
+        Route::middleware(['role:admin_user|admin|global'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
             Route::get('/lancamentoPadrao/data', [LancamentoPadraoController::class, 'getData'])->name('lancamentoPadrao.data');
@@ -347,8 +350,8 @@ Route::middleware([
         Route::get('/costCenter/contas-financeiras', [CostCenterController::class, 'getContasFinanceiras'])->name('costCenter.contas.financeiras');
         Route::resource('costCenter', CostCenterController::class);
 
-        // Rotas acessíveis apenas para usuários comuns
-        Route::middleware(['role:user'])->group(function () {
+        // Rotas acessíveis para todos os usuários autenticados com role
+        Route::middleware(['role:user|sub_user|admin_user|admin|global'])->group(function () {
             Route::delete('/caixas/{id}', [CaixaController::class, 'destroySelected'])->name('caixas.destroySelected');
             Route::resource('caixa', CaixaController::class);
             Route::get('/charts/despesas', [CaixaController::class, 'getDespesasChartData'])->name('charts.despesas.data');
