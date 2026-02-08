@@ -38,14 +38,14 @@
             <!--end::Loading-->
             <!--begin::Empty-->
             <div class="text-center py-5 d-none" id="notifications-empty">
-                <i class="fa-regular fa-bell-slash fs-1 text-muted mb-3"></i>
+                <img src="{{ global_asset('assets/media/illustration/search_list.png') }}" alt="Sem notificações" class="mb-3" style="max-width: 120px;">
                 <p class="text-muted mb-0">Nenhuma notificação</p>
             </div>
             <!--end::Empty-->
         </div>
         <!--end::Items-->
         <!--begin::View more-->
-        <div class="py-3 text-center border-top">
+        <div class="py-1 text-center border-top">
             <a href="{{ route('notifications.page') }}" class="btn btn-color-gray-600 btn-active-color-primary" id="view-all-notifications">
                 Ver Todas
                 <!--begin::Svg Icon | path: icons/duotune/arrows/arr064.svg-->
