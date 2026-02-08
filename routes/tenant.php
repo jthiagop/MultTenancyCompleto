@@ -55,6 +55,7 @@ use App\Http\Controllers\App\TelaDeLoginController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\PermissionController;
 use App\Http\Controllers\TenantController;
+use App\Http\Controllers\App\NotificationController;
 use App\Models\Financeiro\ModulosAnexo;
 use App\Models\TenantFilial;
 use Illuminate\Support\Facades\Route;
@@ -244,6 +245,19 @@ Route::middleware([
 
         Route::get('/session/switch-company/{company}', [SessionController::class, 'switchCompany'])->name('session.switch-company');
         Route::delete('/profile/sessions/{sessionId}', [SessionController::class, 'destroy'])->name('profile.sessions.destroy');
+
+        // =====================================================================
+        // NOTIFICAÇÕES - Sistema de notificações do usuário
+        // =====================================================================
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [NotificationController::class, 'index'])->name('index');
+            Route::get('/page', [NotificationController::class, 'page'])->name('page');
+            Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+            Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+            Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+            Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+            Route::delete('/clear/read', [NotificationController::class, 'destroyRead'])->name('destroy-read');
+        });
 
         Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
         Route::put('/company', [CompanyController::class, 'update'])->name('company.update');

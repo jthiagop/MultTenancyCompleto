@@ -15,6 +15,9 @@ use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\PdfGeneration;
 use App\Models\EntidadeFinanceira;
 use App\Models\Tenant;
+use App\Models\User;
+use App\Notifications\RelatorioGeradoNotification;
+use App\Notifications\RelatorioErroNotification;
 use Carbon\Carbon;
 
 class GenerateBoletimPdfJob implements ShouldQueue
@@ -268,6 +271,19 @@ class GenerateBoletimPdfJob implements ShouldQueue
                 'ano' => $this->ano,
             ]);
 
+            // Notificar usuário que o PDF está pronto
+            $user = User::find($this->userId);
+            if ($user) {
+                $downloadUrl = route('pdf.download', ['id' => $this->pdfGenerationId]);
+                $mesNome = Carbon::create($this->ano, $this->mes, 1)->translatedFormat('F/Y');
+                $user->notify(new RelatorioGeradoNotification(
+                    $downloadUrl,
+                    "Boletim Financeiro - {$mesNome}",
+                    $this->companyId
+                ));
+                Log::info("Notificação enviada ao usuário #{$this->userId}");
+            }
+
             return $filename;
 
         } catch (\Exception $e) {
@@ -285,6 +301,17 @@ class GenerateBoletimPdfJob implements ShouldQueue
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
+
+            // Notificar usuário sobre o erro
+            $user = User::find($this->userId);
+            if ($user) {
+                $mesNome = Carbon::create($this->ano, $this->mes, 1)->translatedFormat('F/Y');
+                $user->notify(new RelatorioErroNotification(
+                    "Boletim Financeiro - {$mesNome}",
+                    $e->getMessage(),
+                    $this->companyId
+                ));
+            }
 
             throw $e; // Re-throw para retry
         }
