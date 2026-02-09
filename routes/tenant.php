@@ -251,6 +251,7 @@ Route::middleware([
         // =====================================================================
         Route::prefix('notifications')->name('notifications.')->group(function () {
             Route::get('/', [NotificationController::class, 'index'])->name('index');
+            Route::get('/all', [NotificationController::class, 'all'])->name('all');
             Route::get('/page', [NotificationController::class, 'page'])->name('page');
             Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
             Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');

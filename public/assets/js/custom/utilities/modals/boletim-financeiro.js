@@ -154,7 +154,6 @@ var KTModalBoletimFinanceiro = function () {
 			// Validate form before submit
 			if (validator) {
 				validator.validate().then(function (status) {
-					console.log('[BoletimFinanceiro] Validação:', status);
 
 					if (status == 'Valid') {
 						submitButton.setAttribute('data-kt-indicator', 'on');
@@ -186,7 +185,6 @@ var KTModalBoletimFinanceiro = function () {
 							return response.json();
 						})
 						.then(function(data) {
-							console.log('[BoletimFinanceiro] Resposta async:', data);
 							
 							if (data.success) {
 								var pdfId = data.pdf_id;
@@ -213,7 +211,6 @@ var KTModalBoletimFinanceiro = function () {
 									})
 									.then(function(r) { return r.json(); })
 									.then(function(statusData) {
-										console.log('[BoletimFinanceiro] Status:', statusData);
 										
 										if (statusData.status === 'completed') {
 											// Limpar polling
@@ -258,9 +255,6 @@ var KTModalBoletimFinanceiro = function () {
 											);
 										}
 										// Se status === 'pending' ou 'processing', continua polling
-									})
-									.catch(function(err) {
-										console.error('[BoletimFinanceiro] Erro no polling:', err);
 									});
 								}, 2000); // Poll a cada 2 segundos
 								
@@ -286,7 +280,6 @@ var KTModalBoletimFinanceiro = function () {
 							}
 						})
 						.catch(function(error) {
-							console.error('[BoletimFinanceiro] Erro:', error);
 							
 							// Fechar toast de loading se existir
 							if (loadingToast) {
@@ -346,7 +339,6 @@ var KTModalBoletimFinanceiro = function () {
 		init: function () {
 			// Evitar dupla inicialização
 			if (initialized) {
-				console.log('[BoletimFinanceiro] Já inicializado, ignorando...');
 				return;
 			}
 			
@@ -367,7 +359,6 @@ var KTModalBoletimFinanceiro = function () {
 			handleForm();
 			
 			initialized = true;
-			console.log('[BoletimFinanceiro] Inicializado com sucesso');
 		}
 	};
 }();

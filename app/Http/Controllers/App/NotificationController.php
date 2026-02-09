@@ -3,23 +3,18 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\NotificationResource;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
 {
     /**
-     * Retorna as notificações do usuário logado.
-     * Filtra por company_id se disponível.
+     * Aplica o filtro de company_id à query de notificações.
+     * Centraliza a lógica que antes estava duplicada em 5 métodos.
      */
-    public function index(Request $request)
+    private function applyCompanyFilter($query, ?int $companyId)
     {
-        $user = Auth::user();
-        $companyId = session('active_company_id');
-
-        $query = $user->notifications();
-
-        // Filtrar por company_id se estiver no payload
         if ($companyId) {
             $query->where(function ($q) use ($companyId) {
                 $q->whereJsonContains('data->company_id', $companyId)
@@ -27,65 +22,48 @@ class NotificationController extends Controller
             });
         }
 
-        $notifications = $query->latest()->take(20)->get()->map(function ($notification) {
-            // Buscar informações do usuário que disparou a notificação (se disponível)
-            $userId = $notification->data['triggered_by'] ?? null;
-            $user = $userId ? \App\Models\User::find($userId) : null;
-            
-            return [
-                'id' => $notification->id,
-                'icon' => $notification->data['icon'] ?? 'ki-notification',
-                'color' => $notification->data['color'] ?? 'primary',
-                'title' => $notification->data['title'] ?? 'Notificação',
-                'message' => $notification->data['message'] ?? '',
-                'action_url' => $notification->data['action_url'] ?? null,
-                'target' => $notification->data['target'] ?? '_self',
-                'tipo' => $notification->data['tipo'] ?? 'geral',
-                'read_at' => $notification->read_at,
-                'created_at' => $notification->created_at->diffForHumans(),
-                'created_at_iso' => $notification->created_at->toISOString(),
-                // Dados do usuário que disparou
-                'triggered_by' => $user ? [
-                    'name' => $user->name,
-                    'avatar' => $user->avatar_url ?? null,
-                ] : null,
-            ];
-        });
+        return $query;
+    }
+
+    /**
+     * Retorna a contagem de não lidas filtrada por empresa.
+     */
+    private function getUnreadCount(?int $companyId): int
+    {
+        $query = Auth::user()->unreadNotifications();
+        return $this->applyCompanyFilter($query, $companyId)->count();
+    }
+
+    /**
+     * Retorna as notificações do usuário logado.
+     * Usa NotificationResource para transformação padronizada.
+     */
+    public function index(Request $request)
+    {
+        $user = Auth::user();
+        $companyId = session('active_company_id');
+
+        $query = $this->applyCompanyFilter($user->notifications(), $companyId);
+        $notifications = $query->latest()->take(20)->get();
 
         return response()->json([
             'success' => true,
-            'notifications' => $notifications,
-            'unread_count' => $user->unreadNotifications()
-                ->when($companyId, function ($q) use ($companyId) {
-                    $q->where(function ($q2) use ($companyId) {
-                        $q2->whereJsonContains('data->company_id', $companyId)
-                           ->orWhereNull('data->company_id');
-                    });
-                })
-                ->count(),
+            'notifications' => NotificationResource::collection($notifications),
+            'unread_count' => $this->getUnreadCount($companyId),
         ]);
     }
 
     /**
      * Retorna apenas a contagem de notificações não lidas.
+     * Chave padronizada: unread_count (consistente com index).
      */
     public function unreadCount()
     {
-        $user = Auth::user();
         $companyId = session('active_company_id');
-
-        $count = $user->unreadNotifications()
-            ->when($companyId, function ($q) use ($companyId) {
-                $q->where(function ($q2) use ($companyId) {
-                    $q2->whereJsonContains('data->company_id', $companyId)
-                       ->orWhereNull('data->company_id');
-                });
-            })
-            ->count();
 
         return response()->json([
             'success' => true,
-            'unread_count' => $count,
+            'unread_count' => $this->getUnreadCount($companyId),
         ]);
     }
 
@@ -94,8 +72,7 @@ class NotificationController extends Controller
      */
     public function markAsRead(Request $request, $id)
     {
-        $user = Auth::user();
-        $notification = $user->notifications()->where('id', $id)->first();
+        $notification = Auth::user()->notifications()->where('id', $id)->first();
 
         if (!$notification) {
             return response()->json([
@@ -117,18 +94,8 @@ class NotificationController extends Controller
      */
     public function markAllAsRead()
     {
-        $user = Auth::user();
         $companyId = session('active_company_id');
-
-        $query = $user->unreadNotifications();
-
-        if ($companyId) {
-            $query->where(function ($q) use ($companyId) {
-                $q->whereJsonContains('data->company_id', $companyId)
-                  ->orWhereNull('data->company_id');
-            });
-        }
-
+        $query = $this->applyCompanyFilter(Auth::user()->unreadNotifications(), $companyId);
         $query->update(['read_at' => now()]);
 
         return response()->json([
@@ -142,8 +109,7 @@ class NotificationController extends Controller
      */
     public function destroy($id)
     {
-        $user = Auth::user();
-        $notification = $user->notifications()->where('id', $id)->first();
+        $notification = Auth::user()->notifications()->where('id', $id)->first();
 
         if (!$notification) {
             return response()->json([
@@ -165,18 +131,8 @@ class NotificationController extends Controller
      */
     public function destroyRead()
     {
-        $user = Auth::user();
         $companyId = session('active_company_id');
-
-        $query = $user->readNotifications();
-
-        if ($companyId) {
-            $query->where(function ($q) use ($companyId) {
-                $q->whereJsonContains('data->company_id', $companyId)
-                  ->orWhereNull('data->company_id');
-            });
-        }
-
+        $query = $this->applyCompanyFilter(Auth::user()->readNotifications(), $companyId);
         $deleted = $query->delete();
 
         return response()->json([
@@ -186,24 +142,46 @@ class NotificationController extends Controller
     }
 
     /**
+     * Retorna todas as notificações paginadas (JSON para o drawer).
+     * Suporta filtro por status: all, unread, read.
+     */
+    public function all(Request $request)
+    {
+        $companyId = session('active_company_id');
+        $filter = $request->get('filter', 'all');
+        $page = $request->get('page', 1);
+
+        $user = Auth::user();
+
+        $query = match ($filter) {
+            'unread' => $user->unreadNotifications(),
+            'read'   => $user->readNotifications(),
+            default  => $user->notifications(),
+        };
+
+        $query = $this->applyCompanyFilter($query, $companyId);
+        $paginated = $query->latest()->paginate(15, ['*'], 'page', $page);
+
+        return response()->json([
+            'success'      => true,
+            'notifications' => NotificationResource::collection($paginated),
+            'unread_count' => $this->getUnreadCount($companyId),
+            'pagination'   => [
+                'current_page' => $paginated->currentPage(),
+                'last_page'    => $paginated->lastPage(),
+                'total'        => $paginated->total(),
+                'has_more'     => $paginated->hasMorePages(),
+            ],
+        ]);
+    }
+
+    /**
      * Exibe a página completa de notificações.
      */
     public function page(Request $request)
     {
-        $user = Auth::user();
         $companyId = session('active_company_id');
-
-        $query = $user->notifications();
-
-        // Filtrar por company_id se estiver no payload
-        if ($companyId) {
-            $query->where(function ($q) use ($companyId) {
-                $q->whereJsonContains('data->company_id', $companyId)
-                  ->orWhereNull('data->company_id');
-            });
-        }
-
-        // Paginação
+        $query = $this->applyCompanyFilter(Auth::user()->notifications(), $companyId);
         $notifications = $query->latest()->paginate(20);
 
         return view('app.notifications.index', compact('notifications'));

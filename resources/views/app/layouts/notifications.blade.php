@@ -1,434 +1,672 @@
-<!--begin::Notifications-->
-<div class="app-navbar-item ms-1 ms-lg-3" id="notifications-wrapper">
-    <!--begin::Menu- wrapper-->
-    <div class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-primary w-35px h-35px w-md-40px h-md-40px position-relative"
-        data-kt-menu-trigger="{default: 'click', lg: 'hover'}" data-kt-menu-attach="parent"
-        data-kt-menu-placement="bottom-end" id="notifications-trigger">
-        <!--begin::Svg Icon | path: icons/duotune/general/gen022.svg-->
-        <i class="fa-solid fa-bell fs-3"></i>
-        <!--end::Svg Icon-->
-        <!--begin::Badge-->
-        <span class="badge badge-circle badge-danger position-absolute top-0 end-0 d-none" id="notifications-badge" style="font-size: 10px; min-width: 16px; height: 16px;">0</span>
-        <!--end::Badge-->
-    </div>
-    <!--begin::Menu-->
-    <div class="menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px" data-kt-menu="true" id="notifications-menu">
-        <!--begin::Heading-->
-        <div class="d-flex flex-column bgi-no-repeat border-bottom">
-            <!--begin::Title-->
-            <div class="d-flex justify-content-between align-items-center px-9 mt-7 mb-5">
-                <h3 class="fw-semibold mb-0">Notificações
-                    <span class="fs-8 opacity-75 ps-3" id="notifications-count-text">0 notificações</span>
-                </h3>
-                <button type="button" class="btn btn-sm btn-light-primary d-none" id="mark-all-read-btn">
-                    <i class="fa-solid fa-check-double fs-7 me-1"></i> Marcar todas como lidas
-                </button>
-            </div>
-            <!--end::Title-->
-        </div>
-        <!--end::Heading-->
+{{-- ============================================================= --}}
+{{-- SISTEMA DE NOTIFICAÇÕES — Alpine.js + Drawer com dados reais --}}
+{{-- ============================================================= --}}
+<style>[x-cloak] { display: none !important; }</style>
 
-        <!--begin::Items-->
-        <div class="scroll-y  my-5 px-4 " id="notifications-list">
-            <!--begin::Loading-->
-            <div class="d-flex justify-content-center my-5 px-8" id="notifications-loading">
+{{-- ======================== DROPDOWN ======================== --}}
+<div class="app-navbar-item ms-1 ms-lg-3"
+     x-data="notificationsDropdown()"
+     @notifications-updated.window="loadNotifications()">
+
+    {{-- Trigger --}}
+    <div class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-primary w-35px h-35px w-md-40px h-md-40px position-relative"
+         data-kt-menu-trigger="{default: 'click', lg: 'hover'}"
+         data-kt-menu-attach="parent"
+         data-kt-menu-placement="bottom-end"
+         x-ref="trigger"
+         @click="loadNotifications()">
+        <i class="fa-solid fa-bell fs-3"></i>
+        {{-- Badge --}}
+        <span class="position-absolute top-20 start-100 translate-middle badge badge-circle badge-danger badge-sm"
+              :class="{ 'd-none': !(unreadCount > 0) }"
+              x-text="unreadCount > 99 ? '99+' : unreadCount"
+              x-transition></span>
+    </div>
+
+    {{-- Menu Dropdown --}}
+    <div class="menu menu-sub menu-sub-dropdown menu-column w-350px w-lg-375px"
+         data-kt-menu="true"
+         id="notifications-menu">
+
+        {{-- Header --}}
+        <div class="d-flex flex-column bgi-no-repeat border-bottom">
+            <div class="d-flex justify-content-between align-items-center px-9 mt-5 mb-5">
+                <h4 class="fw-semibold mb-0">Notificações
+                    <span class="fs-8 opacity-75 ps-3"
+                          x-text="notifications.length + ' notificação' + (notifications.length !== 1 ? 'es' : '')"></span>
+                </h4>
+                {{-- Options menu (⋯) --}}
+                <div class="position-relative" :class="{ 'd-none': !(unreadCount > 0) }">
+                    <button type="button"
+                            class="btn btn-sm btn-icon btn-active-light-primary"
+                            data-kt-menu-trigger="click"
+                            data-kt-menu-placement="bottom-end">
+                        <i class="fa-solid fa-ellipsis fs-4 text-gray-500"></i>
+                    </button>
+                    <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px py-3"
+                         data-kt-menu="true">
+                        <div class="menu-item px-3">
+                            <a href="javascript:void(0)" class="menu-link px-3" @click.prevent.stop="markAllAsRead()">
+                                <span class="menu-icon"><i class="fa-solid fa-check-double text-primary"></i></span>
+                                <span class="menu-title">Marcar todas como lidas</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Lista de notificações --}}
+        <div class="scroll-y my-5 px-4" style="max-height: 350px;">
+            {{-- Loading --}}
+            <div class="d-flex justify-content-center my-5 px-8"
+                 :class="{ 'd-none': !isLoading }">
                 <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
                 <span class="ms-2 text-muted">Carregando...</span>
             </div>
-            <!--end::Loading-->
-            <!--begin::Empty-->
-            <div class="text-center py-5 d-none" id="notifications-empty">
-                <img src="{{ global_asset('assets/media/illustration/search_list.png') }}" alt="Sem notificações" class="mb-3" style="max-width: 120px;">
+
+            {{-- Empty --}}
+            <div class="text-center py-5"
+                 :class="{ 'd-none': !(!isLoading && notifications.length === 0) }">
+                <img src="{{ global_asset('assets/media/illustration/search_list.png') }}"
+                     alt="Sem notificações" class="mb-3" style="max-width: 120px;">
                 <p class="text-muted mb-0">Nenhuma notificação</p>
             </div>
-            <!--end::Empty-->
+
+            {{-- Items --}}
+            <template x-for="n in notifications" :key="n.id">
+                <div class="d-flex align-items-start py-3 px-2 rounded notification-item"
+                     :class="{ 'opacity-65': n.read_at }"
+                     style="cursor: pointer; transition: background 0.2s;"
+                     @mouseover="$el.style.background='var(--bs-gray-100)'"
+                     @mouseout="$el.style.background='transparent'"
+                     @click="handleClick(n)">
+
+                    {{-- Icon --}}
+                    <div class="position-relative me-3 flex-shrink-0">
+                        <div class="d-flex align-items-center justify-content-center"
+                             style="width: 40px; height: 40px;">
+                            <i :class="getIcon(n).cls + ' fs-1 text-' + getIcon(n).color"></i>
+                        </div>
+                        <div class="position-absolute" style="top: -2px; right: -2px;"
+                             :class="{ 'd-none': !getStatusBadge(n) }" x-html="getStatusBadge(n)"></div>
+                    </div>
+
+                    {{-- Content --}}
+                    <div class="flex-grow-1 me-2 overflow-hidden">
+                        <div class="fw-bold text-gray-900 text-truncate" style="font-size: 13px;"
+                             x-text="n.title"></div>
+
+                        {{-- Meta info --}}
+                        <div class="text-muted mt-1" style="font-size: 11px;"
+                             :class="{ 'd-none': !getMetaInfo(n) }"
+                             x-text="getMetaInfo(n)"></div>
+
+                        <div class="text-muted mt-1" style="font-size: 11px;"
+                             x-text="n.created_at"></div>
+
+                        {{-- Barra de expiração --}}
+                        <template x-if="n.expires_percent !== null && n.expires_percent !== undefined">
+                            <div class="progress mt-2" style="height: 3px; border-radius: 2px;">
+                                <div class="progress-bar"
+                                     :class="n.expires_percent > 60 ? 'bg-success' : n.expires_percent > 30 ? 'bg-warning' : 'bg-danger'"
+                                     :style="'width:' + n.expires_percent + '%; transition: width 0.3s;'"></div>
+                            </div>
+                        </template>
+                    </div>
+
+                    {{-- Unread dot --}}
+                    <div class="flex-shrink-0 align-self-center ms-1" :class="{ 'd-none': n.read_at }">
+                        <span class="d-inline-block rounded-circle bg-primary"
+                              style="width: 10px; height: 10px;"></span>
+                    </div>
+                </div>
+            </template>
         </div>
-        <!--end::Items-->
-        <!--begin::View more-->
+
+        {{-- Footer --}}
         <div class="py-1 text-center border-top">
-            <a href="{{ route('notifications.page') }}" class="btn btn-color-gray-600 btn-active-color-primary" id="view-all-notifications">
+            <a href="javascript:void(0)" class="btn btn-active-color-primary"
+               data-kt-menu-dismiss="true"
+               @click="openDrawer()">
                 Ver Todas
-                <!--begin::Svg Icon | path: icons/duotune/arrows/arr064.svg-->
-                <span class="svg-icon svg-icon-5">
-                    <i class="fa-solid fa-arrow-right"></i>
-                </span>
-                <!--end::Svg Icon-->
+                <span class="svg-icon svg-icon-5"><i class="fa-solid fa-arrow-right"></i></span>
             </a>
         </div>
-        <!--end::View more-->
     </div>
-    <!--end::Menu-->
-    <!--end::Menu wrapper-->
 </div>
-<!--end::Notifications-->
 
-@push('scripts')
+{{-- ======================== DRAWER ======================== --}}
+<div id="kt_notifications_drawer"
+     class="bg-body"
+     data-kt-drawer="true"
+     data-kt-drawer-name="notifications-drawer"
+     data-kt-drawer-activate="true"
+     data-kt-drawer-overlay="true"
+     data-kt-drawer-width="{default:'300px', 'lg': '500px'}"
+     data-kt-drawer-direction="end"
+     data-kt-drawer-toggle="#kt_notifications_drawer_toggle"
+     data-kt-drawer-close="#kt_notifications_drawer_close"
+     x-data="notificationsDrawer()"
+     @open-notifications-drawer.window="open()"
+     x-effect="console.log('[Notif:Drawer] x-effect — isLoading=' + isLoading + ', isLoadingMore=' + isLoadingMore + ', hasMore=' + hasMore + ', count=' + notifications.length)">
+
+    <div class="card w-100 rounded-0">
+        {{-- Header --}}
+        <div class="card-header " id="kt_notifications_drawer_header">
+            <h3 class="card-title fw-bold">
+                Notificações
+            </h3>
+            <div class="card-toolbar">
+                <button type="button"
+                        class="btn btn-sm btn-icon btn-active-light-primary me-n5"
+                        id="kt_notifications_drawer_close">
+                    <i class="fa-solid fa-xmark fs-2"></i>
+                </button>
+            </div>
+        </div>
+
+        {{-- Filtros --}}
+        <div class="border-bottom px-7 py-4">
+            <div class="d-flex align-items-center gap-2">
+                <template x-for="f in filters" :key="f.key">
+                    <button class="btn btn-sm"
+                            :class="activeFilter === f.key ? 'btn-primary' : 'btn-light'"
+                            @click="setFilter(f.key)"
+                            x-text="f.label + (f.key === 'unread' ? ' (' + unreadCount + ')' : '')">
+                    </button>
+                </template>
+
+                {{-- Limpar lidas --}}
+                <button class="btn btn-sm btn-light-danger ms-auto"
+                        :class="{ 'd-none': !(activeFilter === 'read' && notifications.length > 0) }"
+                        @click="clearRead()">
+                    <i class="fa-solid fa-trash-can me-1"></i> Limpar lidas
+                </button>
+            </div>
+        </div>
+
+        {{-- Lista com scroll infinito --}}
+        <div class="card-body position-relative flex-grow-1 overflow-hidden p-0">
+            <div class="scroll-y h-100 px-7 py-5"
+                 x-ref="scrollContainer"
+                 @scroll="handleScroll($event)">
+
+                {{-- Loading inicial --}}
+                <div class="d-flex justify-content-center my-10"
+                     :class="{ 'd-none': !(isLoading && notifications.length === 0) }">
+                    <span class="spinner-border text-primary" role="status"></span>
+                </div>
+
+                {{-- Empty --}}
+                <div class="d-flex flex-column align-items-center justify-content-center py-10"
+                     :class="{ 'd-none': !(!isLoading && notifications.length === 0) }">
+                    <img src="{{ global_asset('assets/media/illustration/search_list.png') }}"
+                         alt="Sem notificações" class="mb-4" style="max-width: 160px; opacity: 0.7;">
+                    <p class="text-muted mb-0 fs-6" x-text="emptyMessage()"></p>
+                </div>
+
+                {{-- Items --}}
+                <template x-for="n in notifications" :key="n.id">
+                    <div class="d-flex align-items-start py-4 px-3 rounded mb-2 notification-drawer-item"
+                         :class="{ 'bg-light-primary': !n.read_at }"
+                         style="cursor: pointer; transition: all 0.2s;"
+                         @mouseover="$el.style.background = n.read_at ? 'var(--bs-gray-100)' : ''"
+                         @mouseout="$el.style.background = n.read_at ? 'transparent' : ''"
+                         @click="handleClick(n)">
+
+                        {{-- Icon --}}
+                        <div class="position-relative me-4 flex-shrink-0">
+                            <div class="d-flex align-items-center justify-content-center rounded-circle"
+                                 :class="'bg-light-' + getIcon(n).color"
+                                 style="width: 48px; height: 48px;">
+                                <i :class="getIcon(n).cls + ' fs-2 text-' + getIcon(n).color"></i>
+                            </div>
+                            <div class="position-absolute" style="top: -2px; right: -2px;"
+                                 :class="{ 'd-none': !getStatusBadge(n) }" x-html="getStatusBadge(n)"></div>
+                        </div>
+
+                        {{-- Content --}}
+                        <div class="flex-grow-1 overflow-hidden">
+                            <div class="d-flex justify-content-between align-items-start mb-1">
+                                <div class="fw-bold text-gray-900 text-truncate me-3" style="font-size: 13px;"
+                                     x-text="n.title"></div>
+                                <span class="text-muted flex-shrink-0" style="font-size: 11px;"
+                                      x-text="n.created_at"></span>
+                            </div>
+                            <div class="text-muted" style="font-size: 12px;"
+                                 x-text="n.message" :class="{ 'd-none': !n.message }"></div>
+
+                            {{-- Meta info --}}
+                            <div class="d-flex align-items-center gap-3 mt-2"
+                                 :class="{ 'd-none': !getMetaInfo(n) }">
+                                <span class="text-muted" style="font-size: 11px;"
+                                      x-text="getMetaInfo(n)"></span>
+                            </div>
+
+                            {{-- Barra de expiração --}}
+                            <template x-if="n.expires_percent !== null && n.expires_percent !== undefined">
+                                <div class="progress mt-2" style="height: 3px; border-radius: 2px;">
+                                    <div class="progress-bar"
+                                         :class="n.expires_percent > 60 ? 'bg-success' : n.expires_percent > 30 ? 'bg-warning' : 'bg-danger'"
+                                         :style="'width:' + n.expires_percent + '%; transition: width 0.3s;'"></div>
+                                </div>
+                            </template>
+                        </div>
+
+                        {{-- Unread dot --}}
+                        <div class="flex-shrink-0 align-self-center ms-3" :class="{ 'd-none': n.read_at }">
+                            <span class="d-inline-block rounded-circle bg-primary"
+                                  style="width: 10px; height: 10px;"></span>
+                        </div>
+                    </div>
+                </template>
+
+                {{-- Loading more (scroll infinito) --}}
+                <div class="d-flex justify-content-center py-4"
+                     :class="{ 'd-none': !isLoadingMore }">
+                    <span class="spinner-border spinner-border-sm text-primary" role="status"></span>
+                    <span class="ms-2 text-muted">Carregando mais...</span>
+                </div>
+
+                {{-- Fim da lista --}}
+                <div class="text-center py-3"
+                     :class="{ 'd-none': !(!hasMore && notifications.length > 0) }">
+                    <span class="text-muted" style="font-size: 12px;">Todas as notificações foram carregadas</span>
+                </div>
+            </div>
+        </div>
+
+        {{-- Footer --}}
+        <div class="card-footer border-top py-4 px-7">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <button class="btn btn-sm btn-light fw-semibold flex-grow-1 me-2"
+                        :class="{ 'disabled opacity-50': notifications.length === 0 }"
+                        @click="archiveAll()">
+                    <i class="fa-solid fa-box-archive me-1 text-gray-600"></i> Arquivar tudo
+                </button>
+                <button class="btn btn-sm btn-light fw-semibold flex-grow-1 ms-2"
+                        :class="{ 'disabled opacity-50': unreadCount === 0 }"
+                        @click="markAllAsRead()">
+                    <i class="fa-solid fa-check-double me-1 text-gray-600"></i> Marque tudo como lido
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+{{-- Script INLINE (não @push) — precisa ser definido ANTES do Alpine.start() --}}
+{{-- Como o @push('scripts') só roda DEPOIS do @vite (que chama Alpine.start()), --}}
+{{-- definimos as funções aqui inline para que estejam disponíveis quando Alpine --}}
+{{-- inicializar os componentes x-data no DOM acima. --}}
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    const NotificationsManager = {
-        // Elementos do DOM
-        badge: document.getElementById('notifications-badge'),
-        countText: document.getElementById('notifications-count-text'),
-        list: document.getElementById('notifications-list'),
-        loading: document.getElementById('notifications-loading'),
-        empty: document.getElementById('notifications-empty'),
-        markAllBtn: document.getElementById('mark-all-read-btn'),
-        trigger: document.getElementById('notifications-trigger'),
-        
-        // Estado
+/**
+ * Helper compartilhado — ícone e badge por tipo
+ */
+function notificationHelpers() {
+    return {
+        getIcon(n) {
+            const map = {
+                relatorio_gerado: { cls: 'fa-solid fa-file-pdf', color: 'danger' },
+                relatorio_erro:   { cls: 'fa-solid fa-file-pdf', color: 'danger' },
+                conta_vencendo:   { cls: 'fa-solid fa-calendar-days', color: 'warning' },
+                aviso:            { cls: 'fa-solid fa-circle-info', color: 'info' },
+                aviso_sistema:    { cls: 'fa-solid fa-circle-info', color: 'info' },
+            };
+            return map[n.tipo] || { cls: n.icon || 'fa-solid fa-bell', color: n.color || 'primary' };
+        },
+
+        getStatusBadge(n) {
+            const map = {
+                relatorio_gerado: '<i class="fa-solid fa-circle-check text-success" style="font-size: 10px;"></i>',
+                relatorio_erro:   '<i class="fa-solid fa-circle-xmark text-danger" style="font-size: 10px;"></i>',
+                conta_vencendo:   '<i class="fa-solid fa-clock text-warning" style="font-size: 10px;"></i>',
+            };
+            return map[n.tipo] || '';
+        },
+
+        getMetaInfo(n) {
+            const parts = [];
+            if (n.file_type) parts.push(n.file_type);
+            if (n.file_size) parts.push(n.file_size);
+            if (n.expires_in) parts.push(n.expires_in);
+            return parts.length > 0 ? parts.join(' · ') : '';
+        },
+
+        csrfToken() {
+            return document.querySelector('meta[name="csrf-token"]')?.content || '';
+        },
+
+        async apiFetch(url, options = {}) {
+            const headers = {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            };
+            // Só adicionar CSRF e Content-Type em requests que modificam dados
+            if (options.method && options.method !== 'GET') {
+                headers['X-CSRF-TOKEN'] = this.csrfToken();
+                headers['Content-Type'] = 'application/json';
+            }
+            const response = await fetch(url, { ...options, headers: { ...headers, ...(options.headers || {}) } });
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return response.json();
+        },
+
+        handleClick(n) {
+            this.markAsRead(n);
+            if (n.action_url && n.action_url !== '#') {
+                if (n.target === '_blank') {
+                    window.open(n.action_url, '_blank');
+                } else {
+                    window.location.href = n.action_url;
+                }
+            }
+        },
+
+        async markAsRead(n) {
+            if (n.read_at) return;
+            try {
+                await this.apiFetch(`/notifications/${n.id}/read`, { method: 'POST' });
+                n.read_at = new Date().toISOString();
+                this.unreadCount = Math.max(0, this.unreadCount - 1);
+            } catch (e) {
+                console.error('Erro ao marcar como lida:', e);
+            }
+        },
+    };
+}
+
+/**
+ * DROPDOWN — componente Alpine.js
+ */
+function notificationsDropdown() {
+    return {
+        ...notificationHelpers(),
+
         notifications: [],
         unreadCount: 0,
         isLoading: false,
-        
-        // Inicialização
+        _pollInterval: null,
+        _autoCloseTimer: null,
+        _initialized: false,
+
         init() {
-            this.loadNotifications();
-            this.bindEvents();
-            // Atualizar a cada 30 segundos
-            setInterval(() => this.loadUnreadCount(), 30000);
+            // Guard contra init() duplicado (Alpine 3.x chama automaticamente)
+            if (this._initialized) return;
+            this._initialized = true;
+
+            console.log('[Notif:Dropdown] init() chamado');
+
+            this.$nextTick(() => {
+                this.moveDrawerToBody();
+                this.loadNotifications();
+            });
+
+            // Polling a cada 30s, pausa quando a aba está oculta
+            this._pollInterval = setInterval(() => {
+                if (!document.hidden) this.loadUnreadCount();
+            }, 30000);
         },
-        
-        // Eventos
-        bindEvents() {
-            // Marcar todas como lidas
-            if (this.markAllBtn) {
-                this.markAllBtn.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    this.markAllAsRead();
-                });
-            }
-            
-            // Recarregar ao abrir o menu
-            if (this.trigger) {
-                this.trigger.addEventListener('click', () => {
-                    this.loadNotifications();
-                });
+
+        moveDrawerToBody() {
+            const drawer = document.getElementById('kt_notifications_drawer');
+            if (drawer && drawer.parentElement !== document.body) {
+                document.body.appendChild(drawer);
+                console.log('[Notif:Dropdown] Drawer movido para body (sem initTree)');
             }
         },
-        
-        // Carregar notificações
+
         async loadNotifications() {
             if (this.isLoading) return;
             this.isLoading = true;
-            
-            this.showLoading(true);
-            
+            console.log('[Notif:Dropdown] loadNotifications() chamado');
             try {
-                const response = await fetch('/notifications', {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-                
-                if (!response.ok) throw new Error('Erro ao carregar notificações');
-                
-                const data = await response.json();
+                const data = await this.apiFetch('/notifications');
+                console.log('[Notif:Dropdown] Resposta:', JSON.stringify(data).substring(0, 200));
                 this.notifications = data.notifications || [];
                 this.unreadCount = data.unread_count || 0;
-                
-                this.render();
-                this.updateBadge();
-            } catch (error) {
-                console.error('Erro ao carregar notificações:', error);
-                this.showEmpty();
+                console.log(`[Notif:Dropdown] ${this.notifications.length} notificações, ${this.unreadCount} não lidas`);
+            } catch (e) {
+                console.error('[Notif:Dropdown] Erro ao carregar notificações:', e);
+                this.notifications = [];
             } finally {
                 this.isLoading = false;
-                this.showLoading(false);
             }
         },
-        
-        // Carregar apenas contagem de não lidas
+
         async loadUnreadCount() {
             try {
-                const response = await fetch('/notifications/unread-count', {
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest'
-                    }
-                });
-                
-                if (!response.ok) return;
-                
-                const data = await response.json();
-                this.unreadCount = data.count || 0;
-                this.updateBadge();
-            } catch (error) {
-                console.error('Erro ao carregar contagem:', error);
-            }
-        },
-        
-        // Marcar como lida
-        async markAsRead(id) {
-            try {
-                const response = await fetch(`/notifications/${id}/read`, {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
-                    }
-                });
-                
-                if (response.ok) {
-                    // Atualizar estado local
-                    const notification = this.notifications.find(n => n.id === id);
-                    if (notification && !notification.read_at) {
-                        notification.read_at = new Date().toISOString();
-                        this.unreadCount = Math.max(0, this.unreadCount - 1);
-                        this.updateBadge();
-                        this.updateNotificationUI(id);
-                    }
+                const data = await this.apiFetch('/notifications/unread-count');
+                const newCount = data.unread_count || 0;
+
+                if (newCount > this.unreadCount) {
+                    this.unreadCount = newCount;
+                    await this.loadNotifications();
+                    this.openDropdown();
+                } else {
+                    this.unreadCount = newCount;
                 }
-            } catch (error) {
-                console.error('Erro ao marcar como lida:', error);
+            } catch (e) {
+                console.error('Erro ao carregar contagem:', e);
             }
         },
-        
-        // Marcar todas como lidas
+
+        openDropdown() {
+            const menu = document.getElementById('notifications-menu');
+            if (!menu || menu.classList.contains('show')) return;
+
+            const inst = KTMenu.getInstance(menu);
+            if (inst) {
+                inst.show(this.$refs.trigger);
+            } else {
+                menu.classList.add('show');
+                menu.style.position = 'absolute';
+            }
+
+            // Auto-close 5s
+            this._autoCloseTimer = setTimeout(() => this.closeDropdown(), 5000);
+            menu.addEventListener('mouseenter', () => {
+                if (this._autoCloseTimer) clearTimeout(this._autoCloseTimer);
+            }, { once: true });
+        },
+
+        closeDropdown() {
+            const menu = document.getElementById('notifications-menu');
+            if (!menu || !menu.classList.contains('show')) return;
+            const inst = KTMenu.getInstance(menu);
+            inst ? inst.hide(this.$refs.trigger) : menu.classList.remove('show');
+        },
+
         async markAllAsRead() {
             try {
-                const response = await fetch('/notifications/mark-all-read', {
-                    method: 'POST',
-                    headers: {
-                        'Accept': 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content
-                    }
-                });
-                
-                if (response.ok) {
-                    this.notifications.forEach(n => n.read_at = new Date().toISOString());
-                    this.unreadCount = 0;
-                    this.updateBadge();
-                    this.render();
-                }
-            } catch (error) {
-                console.error('Erro ao marcar todas como lidas:', error);
+                await this.apiFetch('/notifications/mark-all-read', { method: 'POST' });
+                this.notifications.forEach(n => n.read_at = new Date().toISOString());
+                this.unreadCount = 0;
+            } catch (e) {
+                console.error('Erro ao marcar todas como lidas:', e);
             }
         },
-        
-        // Renderizar notificações
-        render() {
-            if (this.notifications.length === 0) {
-                this.showEmpty();
+
+        openDrawer() {
+            this.closeDropdown();
+            this.$dispatch('open-notifications-drawer');
+        },
+    };
+}
+
+/**
+ * DRAWER — componente Alpine.js com scroll infinito
+ */
+function notificationsDrawer() {
+    return {
+        ...notificationHelpers(),
+
+        notifications: [],
+        unreadCount: 0,
+        isLoading: false,
+        isLoadingMore: false,
+        hasMore: true,
+        activeFilter: 'all',
+        pagination: { current_page: 0, last_page: 1, total: 0, has_more: true },
+        filters: [
+            { key: 'all',    label: 'Todas' },
+            { key: 'unread', label: 'Não lidas' },
+            { key: 'read',   label: 'Lidas' },
+        ],
+        _drawerInstance: null,
+        _opening: false,
+
+        open() {
+            // Guard contra open() duplicado (Alpine.initTree criava instância dupla)
+            if (this._opening) {
+                console.log('[Notif:Drawer] open() ignorado — já em execução');
                 return;
             }
-            
-            // Esconder empty e loading
-            if (this.empty) this.empty.classList.add('d-none');
-            if (this.loading) this.loading.classList.add('d-none');
-            
-            // Mostrar/ocultar botão marcar todas
-            if (this.markAllBtn) {
-                this.markAllBtn.classList.toggle('d-none', this.unreadCount === 0);
-            }
-            
-            // Atualizar texto de contagem
-            this.updateCountText();
-            
-            // Limpar lista (mantendo loading e empty)
-            const items = this.list.querySelectorAll('.notification-item');
-            items.forEach(item => item.remove());
-            
-            // Renderizar cada notificação
-            this.notifications.forEach(notification => {
-                const html = this.renderNotification(notification);
-                this.list.insertAdjacentHTML('beforeend', html);
-            });
-            
-            // Bind eventos de clique
-            this.list.querySelectorAll('.notification-item').forEach(item => {
-                item.addEventListener('click', (e) => {
-                    const id = item.dataset.id;
-                    const url = item.dataset.url;
-                    const target = item.dataset.target || '_self';
-                    
-                    // Marcar como lida
-                    this.markAsRead(id);
-                    
-                    // Navegar se houver URL
-                    if (url && url !== '#' && url !== '') {
-                        if (target === '_blank') {
-                            window.open(url, '_blank');
-                        } else {
-                            window.location.href = url;
-                        }
+            this._opening = true;
+            console.log('[Notif:Drawer] open() chamado');
+
+            this.notifications = [];
+            this.pagination.current_page = 0;
+            this.hasMore = true;
+            this.isLoading = false;
+            this.isLoadingMore = false;
+            this.activeFilter = 'all';
+            this.loadPage(1);
+
+            // Abrir o drawer via KTDrawer
+            this.$nextTick(() => {
+                const el = document.getElementById('kt_notifications_drawer');
+                if (el) {
+                    this._drawerInstance = KTDrawer.getInstance(el);
+                    if (this._drawerInstance) {
+                        this._drawerInstance.show();
+                        console.log('[Notif:Drawer] KTDrawer.show() OK');
+                    } else {
+                        console.warn('[Notif:Drawer] KTDrawer.getInstance() retornou null');
                     }
-                });
+                }
+                // Liberar guard após 500ms
+                setTimeout(() => { this._opening = false; }, 500);
             });
         },
-        
-        // Renderizar uma notificação (estilo YouTube)
-        renderNotification(notification) {
-            const icon = notification.icon || 'fa-solid fa-bell';
-            const color = notification.color || 'primary';
-            const title = notification.title || 'Notificação';
-            const message = notification.message || '';
-            const url = notification.action_url || '#';
-            const target = notification.target || '_self';
-            const tipo = notification.tipo || 'geral';
-            const isUnread = !notification.read_at;
-            const timeAgo = notification.created_at || '';
-            const triggeredBy = notification.triggered_by;
-            
-            // Determinar ícone e cor baseado no tipo
-            let iconClass = 'fa-solid fa-bell';
-            let iconColor = color;
-            
-            if (tipo === 'relatorio_gerado' || icon === 'ki-file-added' || url.includes('.pdf')) {
-                iconClass = 'fa-solid fa-file-pdf';
-                iconColor = 'danger';
-            } else if (tipo === 'relatorio_erro' || icon === 'ki-cross-circle') {
-                iconClass = 'fa-solid fa-circle-xmark';
-                iconColor = 'danger';
-            } else if (tipo === 'conta_vencendo' || icon === 'ki-calendar') {
-                iconClass = 'fa-solid fa-calendar-days';
-                iconColor = 'warning';
-            } else if (tipo === 'aviso' || icon === 'ki-information') {
-                iconClass = 'fa-solid fa-circle-info';
-                iconColor = 'info';
+
+        async loadPage(page) {
+            console.log(`[Notif:Drawer] loadPage(${page}) — filter=${this.activeFilter}`);
+
+            if (page === 1) {
+                this.isLoading = true;
+                this.isLoadingMore = false;
+            } else {
+                this.isLoadingMore = true;
             }
-            
-            // Avatar do usuário que disparou (se disponível)
-            let avatarHtml = '';
-            if (triggeredBy && triggeredBy.avatar) {
-                avatarHtml = `<img src="${triggeredBy.avatar}" alt="${this.escapeHtml(triggeredBy.name)}" class="rounded-circle" style="width: 18px; height: 18px; object-fit: cover;">`;
-            } else if (triggeredBy) {
-                const initials = triggeredBy.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
-                avatarHtml = `<span class="d-flex align-items-center justify-content-center rounded-circle bg-primary text-white" style="width: 18px; height: 18px; font-size: 8px; font-weight: bold;">${initials}</span>`;
-            }
-            
-            return `
-                <div class="d-flex align-items-start py-3 notification-item ${isUnread ? '' : 'opacity-75'}" 
-                     data-id="${notification.id}" 
-                     data-url="${url}"
-                     data-target="${target}"
-                     style="cursor: pointer; transition: background 0.2s;"
-                     onmouseover="this.style.background='var(--bs-gray-100)'" 
-                     onmouseout="this.style.background='transparent'">
-                    
-                    <!--begin::Icon com Avatar sobreposto-->
-                    <div class="position-relative me-4 flex-shrink-0">
-                        <!--Ícone principal grande-->
-                        <div class="d-flex align-items-center justify-content-center rounded-circle bg-light-${iconColor}" 
-                             style="width: 48px; height: 48px;">
-                            <i class="${iconClass} fs-1 text-${iconColor}"></i>
-                        </div>
-                        <!--Avatar pequeno sobreposto-->
-                        ${avatarHtml ? `
-                        <div class="position-absolute" style="bottom: -2px; right: -2px; border: 2px solid var(--bs-body-bg); border-radius: 50%;">
-                            ${avatarHtml}
-                        </div>
-                        ` : ''}
-                    </div>
-                    <!--end::Icon-->
-                    
-                    <!--begin::Content-->
-                    <div class="flex-grow-1 me-3 overflow-hidden">
-                        <div class="fw-bold text-gray-900 text-truncate" style="font-size: 13px;">
-                            ${this.escapeHtml(title)}
-                        </div>
-                        <div class="text-muted mt-1" style="font-size: 12px;">
-                            ${timeAgo}
-                        </div>
-                    </div>
-                    <!--end::Content-->
-                    
-                    <!--begin::Indicador de não lido-->
-                    ${isUnread ? `
-                    <div class="flex-shrink-0 align-self-center">
-                        <span class="d-inline-block rounded-circle bg-primary" style="width: 10px; height: 10px;"></span>
-                    </div>
-                    ` : ''}
-                    <!--end::Indicador-->
-                </div>
-            `;
-        },
-        
-        // Atualizar UI de uma notificação específica (marcar como lida)
-        updateNotificationUI(id) {
-            const item = this.list.querySelector(`[data-id="${id}"]`);
-            if (item) {
-                // Remover indicador de não lido
-                const indicator = item.querySelector('.bg-primary.rounded-circle');
-                if (indicator && indicator.style.width === '10px') {
-                    indicator.remove();
-                }
-                // Adicionar opacidade
-                item.classList.add('opacity-75');
-            }
-        },
-        
-        // Atualizar badge
-        updateBadge() {
-            if (this.badge) {
-                if (this.unreadCount > 0) {
-                    this.badge.textContent = this.unreadCount > 99 ? '99+' : this.unreadCount;
-                    this.badge.classList.remove('d-none');
+
+            try {
+                const url = `/notifications/all?filter=${this.activeFilter}&page=${page}`;
+                console.log(`[Notif:Drawer] Fetching: ${url}`);
+                const data = await this.apiFetch(url);
+                console.log('[Notif:Drawer] Resposta da API:', JSON.stringify(data).substring(0, 300));
+
+                const items = data.notifications || [];
+                console.log(`[Notif:Drawer] ${items.length} items recebidos`);
+
+                if (page === 1) {
+                    this.notifications = items;
                 } else {
-                    this.badge.classList.add('d-none');
+                    this.notifications = [...this.notifications, ...items];
                 }
+
+                this.unreadCount = data.unread_count || 0;
+                this.pagination = data.pagination || { current_page: page, last_page: 1, total: items.length, has_more: false };
+                this.hasMore = this.pagination.has_more || false;
+
+                console.log(`[Notif:Drawer] Estado final — isLoading=${this.isLoading}, isLoadingMore=${this.isLoadingMore}, hasMore=${this.hasMore}, total=${this.notifications.length}`);
+            } catch (e) {
+                console.error('[Notif:Drawer] Erro ao carregar notificações:', e);
+                if (page === 1) this.notifications = [];
+                this.hasMore = false;
+            } finally {
+                this.isLoading = false;
+                this.isLoadingMore = false;
+                console.log(`[Notif:Drawer] Finally — isLoading=${this.isLoading}, isLoadingMore=${this.isLoadingMore}`);
             }
         },
-        
-        // Atualizar texto de contagem
-        updateCountText() {
-            if (this.countText) {
-                const total = this.notifications.length;
-                this.countText.textContent = `${total} notificação${total !== 1 ? 'es' : ''}`;
+
+        setFilter(filter) {
+            if (this.activeFilter === filter) return;
+            this.activeFilter = filter;
+            this.notifications = [];
+            this.pagination.current_page = 0;
+            this.hasMore = true;
+            this.loadPage(1);
+
+            // Reset scroll
+            if (this.$refs.scrollContainer) {
+                this.$refs.scrollContainer.scrollTop = 0;
             }
         },
-        
-        // Mostrar loading
-        showLoading(show) {
-            if (this.loading) {
-                this.loading.classList.toggle('d-none', !show);
+
+        handleScroll(event) {
+            const el = event.target;
+            const threshold = 100;
+            const atBottom = el.scrollHeight - el.scrollTop - el.clientHeight < threshold;
+
+            if (atBottom && this.hasMore && !this.isLoadingMore && !this.isLoading) {
+                this.loadPage(this.pagination.current_page + 1);
             }
         },
-        
-        // Mostrar empty
-        showEmpty() {
-            if (this.empty) {
-                this.empty.classList.remove('d-none');
+
+        async clearRead() {
+            if (!confirm('Remover todas as notificações lidas?')) return;
+            try {
+                await this.apiFetch('/notifications/clear/read', { method: 'DELETE' });
+                this.notifications = this.notifications.filter(n => !n.read_at);
+                this.pagination.total = this.notifications.length;
+                window.dispatchEvent(new CustomEvent('notifications-updated'));
+            } catch (e) {
+                console.error('Erro ao limpar lidas:', e);
             }
-            if (this.loading) {
-                this.loading.classList.add('d-none');
-            }
-            if (this.markAllBtn) {
-                this.markAllBtn.classList.add('d-none');
-            }
-            this.updateCountText();
         },
-        
-        // Calcular tempo relativo
-        timeAgo(dateString) {
-            const date = new Date(dateString);
-            const now = new Date();
-            const seconds = Math.floor((now - date) / 1000);
-            
-            if (seconds < 60) return 'Agora';
-            if (seconds < 3600) return `${Math.floor(seconds / 60)} min`;
-            if (seconds < 86400) return `${Math.floor(seconds / 3600)}h`;
-            if (seconds < 604800) return `${Math.floor(seconds / 86400)}d`;
-            
-            return date.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' });
+
+        async markAllAsRead() {
+            if (this.unreadCount === 0) return;
+            try {
+                await this.apiFetch('/notifications/mark-all-read', { method: 'POST' });
+                this.notifications.forEach(n => n.read_at = n.read_at || new Date().toISOString());
+                this.unreadCount = 0;
+                window.dispatchEvent(new CustomEvent('notifications-updated'));
+            } catch (e) {
+                console.error('Erro ao marcar todas como lidas:', e);
+            }
         },
-        
-        // Escapar HTML
-        escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+
+        async archiveAll() {
+            if (this.notifications.length === 0) return;
+            if (!confirm('Arquivar todas as notificações? Isso marcará todas como lidas e removerá as lidas.')) return;
+            try {
+                // 1. Marcar todas como lidas
+                await this.apiFetch('/notifications/mark-all-read', { method: 'POST' });
+                // 2. Remover todas as lidas
+                await this.apiFetch('/notifications/clear/read', { method: 'DELETE' });
+                // 3. Limpar estado local
+                this.notifications = [];
+                this.unreadCount = 0;
+                this.pagination.total = 0;
+                this.hasMore = false;
+                window.dispatchEvent(new CustomEvent('notifications-updated'));
+            } catch (e) {
+                console.error('Erro ao arquivar notificações:', e);
+            }
+        },
+
+        emptyMessage() {
+            const map = {
+                all: 'Nenhuma notificação encontrada',
+                unread: 'Nenhuma notificação não lida',
+                read: 'Nenhuma notificação lida',
+            };
+            return map[this.activeFilter] || 'Nenhuma notificação';
+        },
     };
-    
-    // Inicializar
-    NotificationsManager.init();
-    
-    // Expor globalmente para uso externo
-    window.NotificationsManager = NotificationsManager;
-});
+}
 </script>
-@endpush

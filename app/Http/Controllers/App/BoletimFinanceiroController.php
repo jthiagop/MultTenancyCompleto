@@ -151,20 +151,11 @@ class BoletimFinanceiroController extends Controller
 
             // Validar company_id
             if (!$companyId) {
-                Log::warning('[BoletimFinanceiro] Company ID não encontrado na sessão');
                 return response()->json([
                     'success' => false,
                     'message' => 'Empresa não selecionada. Por favor, selecione uma empresa.'
                 ], 400);
             }
-
-            Log::info('[BoletimFinanceiro] Iniciando geração async', [
-                'company_id' => $companyId,
-                'tenant_id' => $tenantId,
-                'user_id' => Auth::id(),
-                'mes' => $mes,
-                'ano' => $ano,
-            ]);
 
             // Criar registro de rastreamento
             $pdfGen = PdfGeneration::create([

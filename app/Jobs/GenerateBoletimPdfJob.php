@@ -289,7 +289,8 @@ class GenerateBoletimPdfJob implements ShouldQueue
                     $downloadUrl,
                     $friendlyName,
                     $this->companyId,
-                    $this->userId // Quem solicitou o relatório
+                    $this->userId,
+                    $pdfGen // Metadados: tamanho, expiração
                 ));
                 Log::info("Notificação enviada ao usuário #{$this->userId}");
             }
