@@ -2,41 +2,54 @@
 "use strict";
 
 var ParceirosDataTable = (function () {
-    // URLs geradas pelo Laravel
     const dataUrl = '{{ route("parceiros.data", [], false) }}';
     const storeUrl = '{{ route("parceiros.store", [], false) }}';
     const statsUrl = '{{ route("parceiros.stats", [], false) }}';
     const baseUrl = '{{ url("/financeiro/parceiros") }}';
     const activeTab = '{{ $activeTab }}';
-    
+
     let dataTable = null;
     let tableId = null;
 
-    // Detectar qual tabela está na página
+    // Detectar tabela via data-attribute
     function getTableId() {
         const pane = document.querySelector('[data-table-id]');
         return pane ? pane.getAttribute('data-table-id') : null;
     }
 
-    // Colunas por tab
+    // Mapeamento de colunas por tab (checkbox + colunas + ações)
     function getColumns() {
-        const base = [
-            {
-                data: 'nome',
-                render: function (data, type, row) {
-                    let html = '<div class="d-flex flex-column">';
-                    html += '<span class="fw-bold text-gray-800">' + escapeHtml(data || '') + '</span>';
-                    if (row.nome_fantasia) {
-                        html += '<span class="text-muted fs-7">' + escapeHtml(row.nome_fantasia) + '</span>';
-                    }
-                    html += '</div>';
-                    return html;
-                }
-            }
-        ];
+        const cols = [];
 
+        // Checkbox
+        cols.push({
+            data: null,
+            orderable: false,
+            className: 'w-10px pe-2',
+            render: function (data, type, row) {
+                return '<div class="form-check form-check-sm form-check-custom form-check-solid">' +
+                    '<input class="form-check-input" type="checkbox" value="' + row.hash_id + '" />' +
+                    '</div>';
+            }
+        });
+
+        // Nome (sempre)
+        cols.push({
+            data: 'nome',
+            render: function (data, type, row) {
+                let html = '<div class="d-flex flex-column">';
+                html += '<span class="fw-bold text-gray-800">' + escapeHtml(data || '') + '</span>';
+                if (row.nome_fantasia && activeTab !== 'fornecedores') {
+                    html += '<span class="text-muted fs-7">' + escapeHtml(row.nome_fantasia) + '</span>';
+                }
+                html += '</div>';
+                return html;
+            }
+        });
+
+        // Tipo (todos e inativos)
         if (activeTab === 'todos' || activeTab === 'inativos') {
-            base.push({
+            cols.push({
                 data: 'tipo_label',
                 render: function (data, type, row) {
                     let badgeClass = 'badge-light-primary';
@@ -48,25 +61,25 @@ var ParceirosDataTable = (function () {
             });
         }
 
+        // Nome Fantasia (fornecedores)
         if (activeTab === 'fornecedores') {
-            base.push({ data: 'nome_fantasia', defaultContent: '-' });
+            cols.push({ data: 'nome_fantasia', defaultContent: '<span class="text-muted">-</span>' });
         }
 
         // Documento
-        base.push({
+        cols.push({
             data: 'documento',
-            render: function (data, type, row) {
+            render: function (data) {
                 if (!data || data === '-') return '<span class="text-muted">-</span>';
-                let label = row.tipo_documento || '';
                 return '<span class="text-gray-700">' + escapeHtml(data) + '</span>';
             }
         });
 
         // Telefone
-        base.push({ data: 'telefone', defaultContent: '<span class="text-muted">-</span>' });
+        cols.push({ data: 'telefone', defaultContent: '<span class="text-muted">-</span>' });
 
         // Email
-        base.push({
+        cols.push({
             data: 'email',
             render: function (data) {
                 if (!data) return '<span class="text-muted">-</span>';
@@ -74,20 +87,20 @@ var ParceirosDataTable = (function () {
             }
         });
 
-        // Cidade (não em inativos)
+        // Cidade (exceto inativos)
         if (activeTab !== 'inativos') {
-            base.push({ data: 'cidade', defaultContent: '<span class="text-muted">-</span>' });
+            cols.push({ data: 'cidade', defaultContent: '<span class="text-muted">-</span>' });
         }
 
         // Ações
-        base.push({
+        cols.push({
             data: null,
             orderable: false,
             className: 'text-end',
             render: function (data, type, row) {
                 let html = '<div class="d-flex justify-content-end gap-2">';
-                
-                // Botão Editar
+
+                // Editar
                 html += '<button class="btn btn-icon btn-sm btn-light-primary btn-edit-parceiro" ' +
                     'data-id="' + row.hash_id + '" ' +
                     'data-nome="' + escapeAttr(row.nome || '') + '" ' +
@@ -97,8 +110,7 @@ var ParceirosDataTable = (function () {
                     'data-cpf="' + escapeAttr(row.documento && row.tipo_documento === 'CPF' ? row.documento : '') + '" ' +
                     'data-telefone="' + escapeAttr(row.telefone || '') + '" ' +
                     'data-email="' + escapeAttr(row.email || '') + '" ' +
-                    'title="Editar">' +
-                    '<i class="bi bi-pencil fs-6"></i></button>';
+                    'title="Editar"><i class="bi bi-pencil fs-6"></i></button>';
 
                 // Toggle ativar/desativar
                 if (row.active) {
@@ -121,16 +133,19 @@ var ParceirosDataTable = (function () {
             }
         });
 
-        return base;
+        return cols;
     }
 
-    // Inicializar DataTable
+    // Inicializar DataTable com skeleton/wrapper pattern
     function initDataTable() {
         tableId = getTableId();
         if (!tableId) return;
 
         const $table = $('#' + tableId);
         if (!$table.length) return;
+
+        const $skeleton = $('#skeleton-' + tableId);
+        const $wrapper = $('#table-wrapper-' + tableId);
 
         dataTable = $table.DataTable({
             processing: true,
@@ -141,12 +156,20 @@ var ParceirosDataTable = (function () {
                 data: function (d) {
                     d.tab = activeTab;
                 },
+                dataSrc: function (json) {
+                    // Esconder skeleton e mostrar tabela no primeiro load
+                    if ($skeleton.length) $skeleton.addClass('d-none');
+                    if ($wrapper.length) $wrapper.removeClass('d-none');
+                    return json.data;
+                },
                 error: function (xhr) {
-                    console.error('Erro ao carregar parceiros:', xhr);
+                    console.error('[Parceiros] Erro ao carregar dados:', xhr);
+                    if ($skeleton.length) $skeleton.addClass('d-none');
+                    if ($wrapper.length) $wrapper.removeClass('d-none');
                 }
             },
             columns: getColumns(),
-            order: [[0, 'asc']],
+            order: [[1, 'asc']],
             pageLength: 50,
             language: {
                 url: '//cdn.datatables.net/plug-ins/2.0.0/i18n/pt-BR.json',
@@ -156,26 +179,67 @@ var ParceirosDataTable = (function () {
             },
             drawCallback: function (settings) {
                 const info = this.api().page.info();
-                const $count = $('#count-' + tableId);
+                const $count = $('#selected-count-' + tableId);
                 if ($count.length) {
                     $count.text(info.recordsTotal + ' registro(s)');
                 }
+                // Atualizar contagem de seleção
+                updateSelectedCount();
             }
         });
 
-        // Busca via input
-        $table.closest('.card').find('.parceiro-search').on('keyup', function () {
-            dataTable.search(this.value).draw();
+        // Busca ao digitar (se houver campo de busca externo)
+        $(document).on('keyup', '.parceiro-search', function () {
+            if (dataTable) dataTable.search(this.value).draw();
+        });
+
+        // Checkbox select all
+        $table.find('thead [data-kt-check]').on('change', function () {
+            updateSelectedCount();
+        });
+        $table.on('change', 'tbody .form-check-input', function () {
+            updateSelectedCount();
         });
     }
 
-    // Carregar stats para as tabs
-    function loadStats() {
-        $.get(statsUrl, function (data) {
-            // Atualizar badges das tabs (se existirem)
-            if (data.todos !== undefined) {
-                console.log('[Parceiros] Stats:', data);
+    // Atualizar contagem de selecionados
+    function updateSelectedCount() {
+        if (!tableId) return;
+        const checked = $('#' + tableId + ' tbody .form-check-input:checked').length;
+        const $count = $('#selected-count-' + tableId);
+        if ($count.length) {
+            if (checked > 0) {
+                $count.text(checked + ' registro(s) selecionado(s)');
+            } else {
+                const info = dataTable ? dataTable.page.info() : null;
+                $count.text((info ? info.recordsTotal : 0) + ' registro(s)');
             }
+        }
+    }
+
+    // Carregar e atualizar stats nos segmented tabs
+    function loadStats() {
+        $.get(statsUrl, { tab: activeTab }, function (data) {
+            if (!data) return;
+
+            // Atualizar os valores nos segmented-tab-count
+            const shell = document.querySelector('.segmented-shell');
+            if (!shell) return;
+
+            const countElements = shell.querySelectorAll('.segmented-tab-count');
+            const tabButtons = shell.querySelectorAll('[data-tab-key]');
+
+            tabButtons.forEach(function (btn) {
+                const key = btn.getAttribute('data-tab-key');
+                const countEl = btn.querySelector('.segmented-tab-count');
+                if (countEl && data[key] !== undefined) {
+                    countEl.textContent = data[key];
+                }
+            });
+
+            console.log('[Parceiros] Stats carregados:', data);
+        }).fail(function (xhr) {
+            console.error('[Parceiros] Erro ao carregar stats:', xhr);
         });
     }
 
@@ -183,7 +247,7 @@ var ParceirosDataTable = (function () {
     function openEditModal(btn) {
         const $btn = $(btn);
         const modal = $('#modal_parceiro');
-        
+
         modal.find('#modal_parceiro_title').text('Editar Parceiro');
         modal.find('#parceiro_id').val($btn.data('id'));
         modal.find('#parceiro_tipo').val($btn.data('tipo'));
@@ -195,7 +259,7 @@ var ParceirosDataTable = (function () {
         modal.find('#parceiro_email').val($btn.data('email'));
 
         toggleDocFields($btn.data('tipo'));
-        
+
         const bsModal = new bootstrap.Modal(modal[0]);
         bsModal.show();
     }
@@ -204,7 +268,7 @@ var ParceirosDataTable = (function () {
     function toggleDocFields(tipo) {
         const $cnpj = $('#campo_cnpj');
         const $cpf = $('#campo_cpf');
-        
+
         switch (tipo) {
             case 'fornecedor':
                 $cnpj.show();
@@ -214,7 +278,7 @@ var ParceirosDataTable = (function () {
                 $cnpj.hide();
                 $cpf.show();
                 break;
-            default: // ambos
+            default:
                 $cnpj.show();
                 $cpf.show();
         }
@@ -236,7 +300,6 @@ var ParceirosDataTable = (function () {
             }
         });
 
-        // Determinar URL e método
         let url = storeUrl;
         let method = 'POST';
 
@@ -245,7 +308,6 @@ var ParceirosDataTable = (function () {
             method = 'PUT';
         }
 
-        // Indicator
         $btn.attr('data-kt-indicator', 'on');
         $btn.prop('disabled', true);
 
@@ -253,9 +315,7 @@ var ParceirosDataTable = (function () {
             url: url,
             type: method,
             data: formData,
-            headers: {
-                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-            },
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
             success: function (res) {
                 if (res.success) {
                     Swal.fire({
@@ -265,12 +325,12 @@ var ParceirosDataTable = (function () {
                         showConfirmButton: false
                     });
 
-                    // Fechar modal e recarregar
                     const modal = bootstrap.Modal.getInstance($('#modal_parceiro')[0]);
                     if (modal) modal.hide();
 
                     resetForm();
                     if (dataTable) dataTable.ajax.reload(null, false);
+                    loadStats();
                 } else {
                     Swal.fire({ icon: 'error', title: 'Erro', text: res.message || 'Erro ao salvar.' });
                 }
@@ -281,8 +341,7 @@ var ParceirosDataTable = (function () {
                     msg = xhr.responseJSON.message;
                 }
                 if (xhr.responseJSON && xhr.responseJSON.errors) {
-                    const errors = xhr.responseJSON.errors;
-                    msg = Object.values(errors).flat().join('<br>');
+                    msg = Object.values(xhr.responseJSON.errors).flat().join('<br>');
                 }
                 Swal.fire({ icon: 'error', title: 'Erro', html: msg });
             },
@@ -301,7 +360,7 @@ var ParceirosDataTable = (function () {
 
         Swal.fire({
             title: action === 'ativar' ? 'Ativar parceiro?' : 'Desativar parceiro?',
-            text: action === 'ativar' 
+            text: action === 'ativar'
                 ? 'O parceiro voltará a aparecer nas listagens ativas.'
                 : 'O parceiro será movido para a aba Inativos.',
             icon: 'question',
@@ -323,6 +382,7 @@ var ParceirosDataTable = (function () {
                         if (res.success) {
                             Swal.fire({ icon: 'success', title: res.message, timer: 1500, showConfirmButton: false });
                             if (dataTable) dataTable.ajax.reload(null, false);
+                            loadStats();
                         }
                     },
                     error: function () {
@@ -361,6 +421,7 @@ var ParceirosDataTable = (function () {
                         if (res.success) {
                             Swal.fire({ icon: 'success', title: res.message, timer: 1500, showConfirmButton: false });
                             if (dataTable) dataTable.ajax.reload(null, false);
+                            loadStats();
                         }
                     },
                     error: function () {
@@ -409,21 +470,14 @@ var ParceirosDataTable = (function () {
         });
 
         // Delegação de eventos na tabela
-        $(document).on('click', '.btn-edit-parceiro', function () {
-            openEditModal(this);
-        });
-        $(document).on('click', '.btn-toggle-parceiro', function () {
-            handleToggle(this);
-        });
-        $(document).on('click', '.btn-delete-parceiro', function () {
-            handleDelete(this);
-        });
+        $(document).on('click', '.btn-edit-parceiro', function () { openEditModal(this); });
+        $(document).on('click', '.btn-toggle-parceiro', function () { handleToggle(this); });
+        $(document).on('click', '.btn-delete-parceiro', function () { handleDelete(this); });
     }
 
     return { init: init };
 })();
 
-// Inicializar quando DOM pronto
 document.addEventListener('DOMContentLoaded', function () {
     ParceirosDataTable.init();
 });

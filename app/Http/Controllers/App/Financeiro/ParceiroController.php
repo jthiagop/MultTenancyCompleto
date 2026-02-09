@@ -120,22 +120,45 @@ class ParceiroController extends Controller
 
     /**
      * Stats endpoint for tab counts.
+     * Retorna contagens conforme a aba ativa.
      */
     public function stats(Request $request)
     {
+        $tab = $request->input('tab', 'todos');
         $base = Parceiro::forActiveCompany();
 
         $todos = (clone $base)->ativos()->count();
         $fornecedores = (clone $base)->ativos()->tipo('fornecedor')->count();
         $clientes = (clone $base)->ativos()->tipo('cliente')->count();
+        $ambos = (clone $base)->ativos()->where('tipo', 'ambos')->count();
         $inativos = (clone $base)->inativos()->count();
 
-        return response()->json([
-            'todos' => $todos,
-            'fornecedores' => $fornecedores,
-            'clientes' => $clientes,
-            'inativos' => $inativos,
-        ]);
+        // Stats granulares por aba
+        $stats = match ($tab) {
+            'fornecedores' => [
+                'todos' => $fornecedores,
+                'com_cnpj' => (clone $base)->ativos()->tipo('fornecedor')->whereNotNull('cnpj')->where('cnpj', '!=', '')->count(),
+                'sem_cnpj' => (clone $base)->ativos()->tipo('fornecedor')->where(function ($q) { $q->whereNull('cnpj')->orWhere('cnpj', ''); })->count(),
+            ],
+            'clientes' => [
+                'todos' => $clientes,
+                'com_cpf' => (clone $base)->ativos()->tipo('cliente')->whereNotNull('cpf')->where('cpf', '!=', '')->count(),
+                'sem_cpf' => (clone $base)->ativos()->tipo('cliente')->where(function ($q) { $q->whereNull('cpf')->orWhere('cpf', ''); })->count(),
+            ],
+            'inativos' => [
+                'todos' => $inativos,
+                'fornecedores' => (clone $base)->inativos()->tipo('fornecedor')->count(),
+                'clientes' => (clone $base)->inativos()->tipo('cliente')->count(),
+            ],
+            default => [ // todos
+                'todos' => $todos,
+                'fornecedores' => $fornecedores,
+                'clientes' => $clientes,
+                'ambos' => $ambos,
+            ],
+        };
+
+        return response()->json($stats);
     }
 
     /**

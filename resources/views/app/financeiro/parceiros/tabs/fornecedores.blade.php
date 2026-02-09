@@ -1,54 +1,107 @@
 @php
     $key = 'fornecedores';
-    $tableId = 'kt_parceiros_fornecedores_table';
-    
-    $tableColumns = [
-        ['key' => 'nome', 'label' => 'Nome / Razão Social', 'width' => 'min-w-200px'],
-        ['key' => 'nome_fantasia', 'label' => 'Nome Fantasia', 'width' => 'min-w-150px'],
-        ['key' => 'documento', 'label' => 'CNPJ', 'width' => 'min-w-140px'],
-        ['key' => 'telefone', 'label' => 'Telefone', 'width' => 'min-w-120px'],
-        ['key' => 'email', 'label' => 'E-mail', 'width' => 'min-w-150px'],
-        ['key' => 'cidade', 'label' => 'Cidade / UF', 'width' => 'min-w-120px'],
-        ['key' => 'acoes', 'label' => 'Ações', 'width' => 'text-end min-w-80px'],
+    $parentId = 'kt_tab_parceiros';
+
+    $stats = [
+        ['key' => 'todos', 'label' => 'Total Fornecedores', 'value' => '0'],
+        ['key' => 'com_cnpj', 'label' => 'Com CNPJ', 'value' => '0'],
+        ['key' => 'sem_cnpj', 'label' => 'Sem CNPJ', 'value' => '0'],
     ];
+
+    $tableColumns = [
+        ['key' => 'checkbox', 'label' => '', 'width' => 'w-10px pe-2', 'orderable' => false],
+        ['key' => 'nome', 'label' => 'Nome / Razão Social', 'width' => 'min-w-200px', 'orderable' => true],
+        ['key' => 'nome_fantasia', 'label' => 'Nome Fantasia', 'width' => 'min-w-150px', 'orderable' => true],
+        ['key' => 'documento', 'label' => 'CNPJ', 'width' => 'min-w-140px', 'orderable' => false],
+        ['key' => 'telefone', 'label' => 'Telefone', 'width' => 'min-w-120px', 'orderable' => false],
+        ['key' => 'email', 'label' => 'E-mail', 'width' => 'min-w-150px', 'orderable' => false],
+        ['key' => 'cidade', 'label' => 'Cidade / UF', 'width' => 'min-w-120px', 'orderable' => false],
+        ['key' => 'acoes', 'label' => 'Ações', 'width' => 'text-end min-w-80px', 'orderable' => false],
+    ];
+
+    $tableIdFinal = 'kt_parceiros_' . $key . '_table';
+    $filterId = $tableIdFinal;
+
+    $mappedTabs = array_map(function ($stat) use ($tableIdFinal) {
+        return [
+            'key' => $stat['key'],
+            'label' => $stat['label'],
+            'count' => $stat['value'],
+            'paneId' => "pane-stat-{$stat['key']}-{$tableIdFinal}",
+        ];
+    }, $stats);
 @endphp
 
-<div class="tab-pane fade show active" id="kt_tab_parceiros_{{ $key }}" role="tabpanel"
-     data-tab="{{ $key }}" data-table-id="{{ $tableId }}">
-    
-    <!--begin::Card-->
-    <div class="card card-flush mt-4">
-        <div class="card-header align-items-center py-5 gap-2 gap-md-5">
-            <div class="card-title">
-                <div class="d-flex align-items-center position-relative my-1">
-                    <i class="ki-duotone ki-magnifier fs-3 position-absolute ms-4">
-                        <span class="path1"></span><span class="path2"></span>
-                    </i>
-                    <input type="text" class="form-control form-control-solid w-250px ps-12 parceiro-search"
-                           data-table="{{ $tableId }}"
-                           placeholder="Buscar fornecedor..." />
+<div class="tab-pane fade show active"
+     id="{{ $parentId }}_{{ $key }}"
+     role="tabpanel"
+     data-pane-id="{{ $parentId }}_{{ $key }}"
+     data-table-id="{{ $tableIdFinal }}"
+     data-filter-id="{{ $filterId }}"
+     data-key="{{ $key }}"
+     data-tab="{{ $key }}">
+
+    <x-tenant.segmented-tabs-toolbar
+        :tabs="$mappedTabs"
+        :active="'todos'"
+        id="status-tabs-{{ $tableIdFinal }}"
+        :tableId="$tableIdFinal"
+        :filterId="$filterId"
+        :periodLabel="null"
+        :accountOptions="[]"
+        :showAccountFilter="false"
+        :showMoreFilters="false"
+        :moreFilters="[]">
+
+        <x-slot:actionsLeft>
+            <span class="text-muted fs-7 mx-2" id="selected-count-{{ $tableIdFinal }}">0 registro(s) selecionado(s)</span>
+        </x-slot>
+
+        <x-slot:actionsRight>
+            {{-- Reservado para ações em lote --}}
+        </x-slot>
+
+        <x-slot:panes>
+            @foreach ($mappedTabs as $tab)
+                <div class="tab-pane fade {{ $tab['key'] === 'todos' ? 'show active' : '' }}"
+                    id="{{ $tab['paneId'] }}" role="tabpanel">
                 </div>
+            @endforeach
+        </x-slot:panes>
+
+        <x-slot:tableContent>
+            <!--begin::Skeleton Loading-->
+            <x-tenant-datatable-skeleton :tableId="$tableIdFinal" :columns="$tableColumns" />
+            <!--end::Skeleton Loading-->
+
+            <!--begin::Table Wrapper-->
+            <div id="table-wrapper-{{ $tableIdFinal }}" class="d-none mt-4">
+                <table class="table align-middle table-striped table-row-dashed fs-6 gy-5 mt-7"
+                    id="{{ $tableIdFinal }}">
+                    <thead>
+                        <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-4">
+                            @foreach ($tableColumns as $column)
+                                @if ($column['key'] === 'checkbox')
+                                    <th class="{{ $column['width'] ?? 'w-10px pe-2' }}">
+                                        <div class="form-check form-check-sm form-check-custom form-check-solid">
+                                            <input class="form-check-input" type="checkbox"
+                                                data-kt-check="true"
+                                                data-kt-check-target="#{{ $tableIdFinal }} .form-check-input"
+                                                value="1" />
+                                        </div>
+                                    </th>
+                                @elseif($column['key'] === 'acoes')
+                                    <th class="{{ $column['width'] ?? 'text-end min-w-80px' }}">{{ $column['label'] }}</th>
+                                @else
+                                    <th class="{{ $column['width'] ?? '' }}">{{ $column['label'] }}</th>
+                                @endif
+                            @endforeach
+                        </tr>
+                    </thead>
+                    <tbody class="text-gray-600 fw-semibold"></tbody>
+                </table>
             </div>
-            <div class="card-toolbar flex-row-fluid justify-content-end gap-5">
-                <span class="text-muted fs-7" id="count-{{ $tableId }}"></span>
-            </div>
-        </div>
-        <div class="card-body pt-0">
-            <!--begin::Table-->
-            <table class="table align-middle table-striped table-row-dashed fs-6 gy-5" id="{{ $tableId }}">
-                <thead>
-                    <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-4">
-                        @foreach ($tableColumns as $column)
-                            <th class="{{ $column['width'] ?? '' }}">{{ $column['label'] }}</th>
-                        @endforeach
-                    </tr>
-                </thead>
-                <tbody class="text-gray-600 fw-semibold">
-                    <!-- Dados carregados via DataTables -->
-                </tbody>
-            </table>
-            <!--end::Table-->
-        </div>
-    </div>
-    <!--end::Card-->
+            <!--end::Table Wrapper-->
+        </x-slot:tableContent>
+    </x-tenant.segmented-tabs-toolbar>
 </div>
