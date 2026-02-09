@@ -216,7 +216,7 @@ class Banco extends Model
             return [
                 'slug' => $filename,
                 'label' => ucfirst($filename), // Nome formatado (ex.: "Bradesco")
-                'icon' => asset("assets/media/svg/bancos/{$file->getFilename()}"), // Caminho público
+                'icon' => asset("tenancy/assets/media/svg/bancos/{$file->getFilename()}"), // Caminho público
             ];
         })->toArray();
     }

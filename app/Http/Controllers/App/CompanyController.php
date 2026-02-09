@@ -95,7 +95,7 @@ class CompanyController extends Controller
             'slug'   => $filename,
             'label'  => ucfirst($filename), // ou algo custom
             // Ex: /tenancy/assets/media/svg/bancos/bradesco.svg
-            'icon'   => asset("assets/media/svg/bancos/{$file->getFilename()}"),
+            'icon'   => asset("tenancy/assets/media/svg/bancos/{$file->getFilename()}"),
         ];
     }
 
