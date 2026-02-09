@@ -507,6 +507,71 @@
         });
     }
 
+    // Função para inverter o tipo de uma transação (Receita ↔ Despesa)
+    function inverterTipoTransacao(transacaoId) {
+        Swal.fire({
+            text: 'Deseja inverter o tipo desta transação (Receita ↔ Despesa)? As parcelas filhas também serão invertidas.',
+            icon: 'warning',
+            showCancelButton: true,
+            buttonsStyling: false,
+            confirmButtonText: 'Sim, inverter',
+            cancelButtonText: 'Cancelar',
+            customClass: {
+                confirmButton: 'btn btn-warning',
+                cancelButton: 'btn btn-active-light'
+            }
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                fetch('/banco/reverse-type', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ id: transacaoId })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        Swal.fire({
+                            text: data.message || 'Tipo invertido com sucesso.',
+                            icon: 'success',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        }).then(function() {
+                            reloadCurrentTable();
+                        });
+                    } else {
+                        Swal.fire({
+                            text: data.message || 'Erro ao inverter tipo.',
+                            icon: 'error',
+                            buttonsStyling: false,
+                            confirmButtonText: 'Ok',
+                            customClass: {
+                                confirmButton: 'btn btn-primary'
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro:', error);
+                    Swal.fire({
+                        text: 'Erro ao processar a solicitação.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok',
+                        customClass: {
+                            confirmButton: 'btn btn-primary'
+                        }
+                    });
+                });
+            }
+        });
+    }
+
     // Função auxiliar para recarregar a tabela atual
     function reloadCurrentTable() {
         // Tenta encontrar a aba ativa e recarregar sua DataTable

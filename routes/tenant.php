@@ -404,6 +404,8 @@ Route::middleware([
             Route::post('/banco/batch-mark-as-paid', [BancoController::class, 'batchMarkAsPaid'])->name('banco.batch-mark-as-paid');
             Route::post('/banco/batch-mark-as-open', [BancoController::class, 'batchMarkAsOpen'])->name('banco.batch-mark-as-open');
             Route::post('/banco/batch-delete', [BancoController::class, 'batchDelete'])->name('banco.batch-delete');
+            Route::post('/banco/reverse-type', [BancoController::class, 'reverseType'])->name('banco.reverse-type');
+            Route::post('/banco/batch-reverse-type', [BancoController::class, 'batchReverseType'])->name('banco.batch-reverse-type');
 
             Route::get('/financeiro/transacao/{id}/detalhes', [BancoController::class, 'getDetalhes'])
                 ->name('financeiro.transacao.detalhes');

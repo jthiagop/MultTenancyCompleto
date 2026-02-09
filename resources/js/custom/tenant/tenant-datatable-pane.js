@@ -627,6 +627,13 @@
                     errorMessage = 'Erro ao excluir registros.';
                     break;
 
+                case 'reverseType':
+                    if (!confirm(`Deseja inverter o tipo (Receita ↔ Despesa) de ${ids.length} registro(s)? As parcelas filhas também serão invertidas.`)) return;
+                    route = batchActionBtn.dataset.reverseTypeRoute || '/banco/batch-reverse-type';
+                    successMessage = 'Tipo dos registros invertido com sucesso.';
+                    errorMessage = 'Erro ao inverter tipo dos registros.';
+                    break;
+
                 default:
                     console.warn(`[Pane ${config.paneId}] Ação desconhecida:`, action);
                     return;

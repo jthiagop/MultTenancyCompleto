@@ -253,6 +253,78 @@ class TransacaoFinanceiraService
     }
 
     /**
+     * Inverte o tipo de uma transação (entrada ↔ saída) e de todas as filhas
+     *
+     * - Inverte tipo: entrada → saída, saída → entrada
+     * - Atualiza situação (pago ↔ recebido, mantém em_aberto)
+     * - Atualiza movimentação associada (se existir)
+     * - Recalcula saldo da entidade financeira
+     * - Inverte todas as transações filhas (parcelas)
+     *
+     * @param TransacaoFinanceira $transacao
+     * @return TransacaoFinanceira
+     * @throws \Exception
+     */
+    public function inverterTipo(TransacaoFinanceira $transacao): TransacaoFinanceira
+    {
+        return DB::transaction(function () use ($transacao) {
+            // 1. Inverte a transação principal
+            $this->inverterTipoUnico($transacao);
+
+            // 2. Inverte todas as filhas (parcelas)
+            $filhas = TransacaoFinanceira::where('parent_id', $transacao->id)->get();
+            foreach ($filhas as $filha) {
+                $this->inverterTipoUnico($filha);
+            }
+
+            Log::info('[inverterTipo] Tipo invertido com sucesso', [
+                'transacao_id' => $transacao->id,
+                'novo_tipo' => $transacao->tipo,
+                'filhas_invertidas' => $filhas->count(),
+            ]);
+
+            return $transacao;
+        });
+    }
+
+    /**
+     * Inverte o tipo de uma única transação (sem propagar para filhas)
+     */
+    protected function inverterTipoUnico(TransacaoFinanceira $transacao): void
+    {
+        $novoTipo = $transacao->tipo === 'entrada' ? 'saida' : 'entrada';
+        $transacao->tipo = $novoTipo;
+
+        // Atualiza situação se for pago/recebido
+        $situacaoValue = $transacao->situacao instanceof \App\Enums\SituacaoTransacao
+            ? $transacao->situacao->value
+            : $transacao->situacao;
+
+        if ($situacaoValue === 'pago') {
+            $transacao->situacao = \App\Enums\SituacaoTransacao::RECEBIDO;
+        } elseif ($situacaoValue === 'recebido') {
+            $transacao->situacao = \App\Enums\SituacaoTransacao::PAGO;
+        }
+        // em_aberto, parcelado, etc. permanecem inalterados
+
+        $transacao->updated_by = Auth::id();
+        $transacao->updated_by_name = Auth::user()->name ?? 'Sistema';
+        $transacao->save();
+
+        // Atualiza movimentação associada (se existir)
+        if ($transacao->movimentacao) {
+            $transacao->movimentacao->tipo = $novoTipo;
+            $transacao->movimentacao->save();
+        }
+
+        // Recalcula saldo da entidade financeira
+        $entidade = \App\Models\EntidadeFinanceira::find($transacao->entidade_id);
+        if ($entidade) {
+            $entidade->recalcularSaldo();
+        }
+    }
+
+    /**
      * Prepara os dados para criação da transação
      */
     protected function prepararDados(array $validatedData, Request $request): array

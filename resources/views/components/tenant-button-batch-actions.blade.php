@@ -3,9 +3,11 @@
     'markAsPaidRoute' => null,
     'markAsOpenRoute' => null,
     'deleteRoute' => null,
+    'reverseTypeRoute' => null,
     'markAsPaidLabel' => 'Definir como pago',
     'markAsOpenLabel' => 'Definir como em aberto',
     'deleteLabel' => 'Excluir',
+    'reverseTypeLabel' => 'Inverter tipo (Receita ↔ Despesa)',
     'menuWidth' => 'w-200px',
     'id' => null,
 ])
@@ -19,6 +21,7 @@
     $markAsPaidRoute = $markAsPaidRoute ?? route('banco.batch-mark-as-paid');
     $markAsOpenRoute = $markAsOpenRoute ?? route('banco.batch-mark-as-open');
     $deleteRoute = $deleteRoute ?? route('banco.batch-delete');
+    $reverseTypeRoute = $reverseTypeRoute ?? route('banco.batch-reverse-type');
 @endphp
 
 <!--begin::Dropdown-->
@@ -69,6 +72,20 @@
                data-table-id="{{ $tableId }}"
                data-delete-route="{{ $deleteRoute }}">
                 {{ $deleteLabel }}
+            </a>
+        </li>
+        <!--end::Menu item-->
+        @endif
+
+        @if($reverseTypeRoute)
+        <!--begin::Menu item-->
+        <li>
+            <a class="dropdown-item text-warning" 
+               href="#" 
+               data-batch-action="reverseType"
+               data-table-id="{{ $tableId }}"
+               data-reverse-type-route="{{ $reverseTypeRoute }}">
+                <i class="fa-solid fa-arrows-rotate me-2"></i>{{ $reverseTypeLabel }}
             </a>
         </li>
         <!--end::Menu item-->

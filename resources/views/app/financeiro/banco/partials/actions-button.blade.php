@@ -71,6 +71,13 @@
         </div>
         <!--end::Menu item-->
         @endif
+        <!--begin::Menu item - Inverter tipo-->
+        <div class="menu-item px-3">
+            <a href="#" onclick="inverterTipoTransacao({{ $transacao->id }}); return false;" class="menu-link px-3 text-warning">
+                <i class="fa-solid fa-arrows-rotate me-2"></i>Inverter tipo (Receita ↔ Despesa)
+            </a>
+        </div>
+        <!--end::Menu item-->
         <!--begin::Menu item-->
         <div class="menu-item px-3">
             @if($transacao->recorrencia_id)

@@ -3528,6 +3528,98 @@ class BancoController extends Controller
     }
 
     /**
+     * Inverte o tipo de uma transação individual (receita ↔ despesa)
+     */
+    public function reverseType(Request $request)
+    {
+        $request->validate([
+            'id' => 'required|exists:transacoes_financeiras,id'
+        ]);
+
+        try {
+            $companyId = session('active_company_id');
+
+            if (!$companyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma empresa selecionada.'
+                ], 403);
+            }
+
+            $transacao = TransacaoFinanceira::where('company_id', $companyId)
+                ->findOrFail($request->id);
+
+            $this->transacaoService->inverterTipo($transacao);
+
+            $novoTipo = $transacao->tipo === 'entrada' ? 'Receita' : 'Despesa';
+
+            return response()->json([
+                'success' => true,
+                'message' => "Tipo invertido para {$novoTipo} com sucesso."
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao inverter tipo da transação: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao inverter tipo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Inverte o tipo de múltiplas transações (ação em lote)
+     */
+    public function batchReverseType(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array',
+            'ids.*' => 'required|exists:transacoes_financeiras,id'
+        ]);
+
+        try {
+            $companyId = session('active_company_id');
+
+            if (!$companyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma empresa selecionada.'
+                ], 403);
+            }
+
+            $ids = $request->input('ids');
+
+            $transacoes = TransacaoFinanceira::where('company_id', $companyId)
+                ->whereIn('id', $ids)
+                ->get();
+
+            if ($transacoes->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nenhuma transação encontrada.'
+                ], 404);
+            }
+
+            $count = 0;
+            foreach ($transacoes as $transacao) {
+                $this->transacaoService->inverterTipo($transacao);
+                $count++;
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "{$count} transação(ões) invertida(s) com sucesso."
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Erro ao inverter tipo em lote: ' . $e->getMessage());
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao inverter tipo: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Aplica filtro para excluir transações pagas/recebidas
      * Método reutilizável para getStatsData e getTransacoesData
      */
