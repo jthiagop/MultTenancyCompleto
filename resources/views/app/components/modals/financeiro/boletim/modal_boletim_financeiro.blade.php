@@ -1,15 +1,15 @@
 <!--begin::Modal - Boletim Financeiro-->
 <div class="modal fade" id="modal_boletim_financeiro" tabindex="-1" aria-hidden="true">
     <!--begin::Modal dialog-->
-    <div class="modal-dialog modal-dialog-centered mw-650px">
+    <div class="modal-dialog modal-dialog-top mw-650px "> 
         <!--begin:Form-->
         <form id="kt_modal_boletim_financeiro_form" class="form" action="#">
             <!--begin::Modal content-->
-            <div class="modal-content">
+            <div class="modal-content border border-active active">
                 <!--begin::Modal header-->
-                <div class="modal-header" id="kt_modal_boletim_header">
+                <div class="modal-header btn btn-sm" id="kt_modal_boletim_header">
                     <!--begin::Modal title-->
-                    <h2>Boletim Financeiro</h2>
+                    <h3>Boletim Financeiro</h3>
                     <!--end::Modal title-->
                     <!--begin::Close-->
                     <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
@@ -32,41 +32,17 @@
                         
                         <!--begin::Input group-->
                         <div class="row g-9 mb-8">
-                            <!--begin::Col-->
-                            <div class="col-md-6 fv-row">
-                                <label class="required fs-6 fw-semibold mb-2">Período Inicial</label>
-                                <!--begin::Input-->
-                                <div class="position-relative d-flex align-items-center">
-                                    <!--begin::Icon-->
-                                    <span class="svg-icon svg-icon-2 position-absolute mx-4">
-                                        <i class="fa-solid fa-calendar-days"></i>
-                                    </span>
-                                    <!--end::Icon-->
-                                    <!--begin::Datepicker-->
-                                    <input class="form-control ps-12" placeholder="Selecione uma data"
-                                        name="data_inicial" id="boletim_data_inicial" />
-                                    <!--end::Datepicker-->
-                                </div>
-                                <!--end::Input-->
-                            </div>
+                            <!--begin::Col - Período Inicial-->
+                            <x-tenant-date name="data_inicial" id="boletim_data_inicial" label="Período Inicial"
+                                placeholder="Selecione uma data"
+                                class="col-md-6"
+                                required />
                             <!--end::Col-->
-                            <!--begin::Col-->
-                            <div class="col-md-6 fv-row">
-                                <label class="required fs-6 fw-semibold mb-2">Período Final</label>
-                                <!--begin::Input-->
-                                <div class="position-relative d-flex align-items-center">
-                                    <!--begin::Icon-->
-                                    <span class="svg-icon svg-icon-2 position-absolute mx-4">
-                                        <i class="fa-solid fa-calendar-days"></i>
-                                    </span>
-                                    <!--end::Icon-->
-                                    <!--begin::Datepicker-->
-                                    <input class="form-control ps-12" placeholder="Selecione uma data"
-                                        name="data_final" id="boletim_data_final" />
-                                    <!--end::Datepicker-->
-                                </div>
-                                <!--end::Input-->
-                            </div>
+                            <!--begin::Col - Período Final-->
+                            <x-tenant-date name="data_final" id="boletim_data_final" label="Período Final"
+                                placeholder="Selecione uma data"
+                                class="col-md-6"
+                                required />
                             <!--end::Col-->
                         </div>
                         <!--end::Input group-->
@@ -95,7 +71,7 @@
                 </div>
                 <!--end::Modal body-->
                 <!--begin::Modal footer-->
-                <div class="modal-footer flex-center">
+                <div class="modal-footer flex-center btn btn-sm">
                     <!--begin::Button-->
                     <button type="reset" id="kt_modal_boletim_cancel" class="btn btn-sm btn-light me-3">
                         <i class="fa-solid fa-xmark fs-5"></i>
@@ -103,7 +79,8 @@
                     <!--end::Button-->
                     <!--begin::Button-->
                     <button type="submit" id="kt_modal_boletim_submit" class="btn btn-sm btn-primary">
-                        <i class="fa-solid fa-file-invoice-dollar fs-5"></i>
+                        <i class="fa-solid fa-file-lines fs-5"></i>
+
                         <span class="indicator-label">Gerar Boletim</span>
                         <span class="indicator-progress">Aguarde...
                             <span class="spinner-border spinner-border-sm align-middle"></span></span>

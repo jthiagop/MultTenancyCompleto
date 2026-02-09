@@ -6,7 +6,7 @@
 {{-- ======================== DROPDOWN ======================== --}}
 <div class="app-navbar-item ms-1 ms-lg-3"
      x-data="notificationsDropdown()"
-     @notifications-updated.window="loadNotifications()">
+     @notifications-updated.window="checkNewNotifications()">
 
     {{-- Trigger --}}
     <div class="btn btn-icon btn-custom btn-icon-muted btn-active-light btn-active-color-primary w-35px h-35px w-md-40px h-md-40px position-relative"
@@ -449,6 +449,19 @@ function notificationsDropdown() {
                 }
             } catch (e) {
                 console.error('Erro ao carregar contagem:', e);
+            }
+        },
+
+        // Chamado pelo evento 'notifications-updated' (ex: boletim-financeiro.js)
+        // Força reload das notificações e abre o popup
+        async checkNewNotifications() {
+            console.log('[Notif:Dropdown] checkNewNotifications — evento recebido');
+            try {
+                await this.loadNotifications();
+                this.openDropdown();
+                console.log('[Notif:Dropdown] Popup aberto via checkNewNotifications');
+            } catch (e) {
+                console.error('[Notif:Dropdown] Erro em checkNewNotifications:', e);
             }
         },
 
