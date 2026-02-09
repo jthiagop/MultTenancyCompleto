@@ -10,6 +10,7 @@ var ParceirosDataTable = (function () {
 
     let dataTable = null;
     let tableId = null;
+    let currentStatus = 'todos';
 
     // Detectar tabela via data-attribute
     function getTableId() {
@@ -47,15 +48,12 @@ var ParceirosDataTable = (function () {
             }
         });
 
-        // Tipo (todos e inativos)
+        // Natureza (todos e inativos)
         if (activeTab === 'todos' || activeTab === 'inativos') {
             cols.push({
-                data: 'tipo_label',
+                data: 'natureza_label',
                 render: function (data, type, row) {
-                    let badgeClass = 'badge-light-primary';
-                    if (row.tipo === 'fornecedor') badgeClass = 'badge-light-info';
-                    else if (row.tipo === 'cliente') badgeClass = 'badge-light-success';
-                    else if (row.tipo === 'ambos') badgeClass = 'badge-light-warning';
+                    var badgeClass = row.natureza_badge_class || 'badge-light-primary';
                     return '<span class="badge ' + badgeClass + ' fs-7">' + escapeHtml(data || '') + '</span>';
                 }
             });
@@ -106,6 +104,7 @@ var ParceirosDataTable = (function () {
                     'data-nome="' + escapeAttr(row.nome || '') + '" ' +
                     'data-nome-fantasia="' + escapeAttr(row.nome_fantasia || '') + '" ' +
                     'data-tipo="' + escapeAttr(row.tipo || '') + '" ' +
+                    'data-natureza="' + escapeAttr(row.natureza || '') + '" ' +
                     'data-cnpj="' + escapeAttr(row.documento && row.tipo_documento === 'CNPJ' ? row.documento : '') + '" ' +
                     'data-cpf="' + escapeAttr(row.documento && row.tipo_documento === 'CPF' ? row.documento : '') + '" ' +
                     'data-telefone="' + escapeAttr(row.telefone || '') + '" ' +
@@ -155,6 +154,7 @@ var ParceirosDataTable = (function () {
                 type: 'GET',
                 data: function (d) {
                     d.tab = activeTab;
+                    d.status = currentStatus;
                 },
                 dataSrc: function (json) {
                     // Esconder skeleton e mostrar tabela no primeiro load
@@ -247,10 +247,16 @@ var ParceirosDataTable = (function () {
     function openEditModal(btn) {
         const $btn = $(btn);
         const modal = $('#modal_parceiro');
+        const tipo = $btn.data('tipo');
+        const natureza = $btn.data('natureza');
 
-        modal.find('#modal_parceiro_title').text('Editar Parceiro');
+        modal.find('#modal_parceiro_title').text('Editar Cadastro');
         modal.find('#parceiro_id').val($btn.data('id'));
-        modal.find('#parceiro_tipo').val($btn.data('tipo'));
+
+        // Select2: definir valores e disparar change
+        modal.find('#parceiro_natureza').val(natureza).trigger('change');
+        modal.find('#parceiro_tipo').val(tipo).trigger('change');
+
         modal.find('#parceiro_nome').val($btn.data('nome'));
         modal.find('#parceiro_nome_fantasia').val($btn.data('nome-fantasia'));
         modal.find('#parceiro_cnpj').val($btn.data('cnpj'));
@@ -258,29 +264,41 @@ var ParceirosDataTable = (function () {
         modal.find('#parceiro_telefone').val($btn.data('telefone'));
         modal.find('#parceiro_email').val($btn.data('email'));
 
-        toggleDocFields($btn.data('tipo'));
+        toggleDocFields(tipo);
 
         const bsModal = new bootstrap.Modal(modal[0]);
         bsModal.show();
     }
 
-    // Toggle campos CNPJ/CPF baseado no tipo
+    // Toggle campos baseado no tipo de pessoa (PJ/PF/Ambos)
     function toggleDocFields(tipo) {
         const $cnpj = $('#campo_cnpj');
         const $cpf = $('#campo_cpf');
+        const $nomeFantasia = $('#campo_nome_fantasia');
+        const $nomeLabel = $('label[for="parceiro_nome"]');
+        const $nomeInput = $('#parceiro_nome');
 
         switch (tipo) {
-            case 'fornecedor':
+            case 'pj': // Pessoa Jurídica
                 $cnpj.show();
                 $cpf.hide();
+                $nomeFantasia.show();
+                if ($nomeLabel.length) $nomeLabel.find('span').first().text('Razão Social');
+                $nomeInput.attr('placeholder', 'Razão Social da empresa');
                 break;
-            case 'cliente':
+            case 'pf': // Pessoa Física
                 $cnpj.hide();
                 $cpf.show();
+                $nomeFantasia.hide();
+                if ($nomeLabel.length) $nomeLabel.find('span').first().text('Nome Completo');
+                $nomeInput.attr('placeholder', 'Nome completo da pessoa');
                 break;
-            default:
+            default: // ambos
                 $cnpj.show();
                 $cpf.show();
+                $nomeFantasia.show();
+                if ($nomeLabel.length) $nomeLabel.find('span').first().text('Nome / Razão Social');
+                $nomeInput.attr('placeholder', 'Nome ou Razão Social');
         }
     }
 
@@ -362,7 +380,7 @@ var ParceirosDataTable = (function () {
             title: action === 'ativar' ? 'Ativar parceiro?' : 'Desativar parceiro?',
             text: action === 'ativar'
                 ? 'O parceiro voltará a aparecer nas listagens ativas.'
-                : 'O parceiro será movido para a aba Inativos.',
+                : 'O parceiro será movido para a aba Desativados.',
             icon: 'question',
             showCancelButton: true,
             confirmButtonText: action === 'ativar' ? 'Sim, ativar' : 'Sim, desativar',
@@ -436,8 +454,12 @@ var ParceirosDataTable = (function () {
     function resetForm() {
         $('#form_parceiro')[0].reset();
         $('#parceiro_id').val('');
-        $('#modal_parceiro_title').text('Novo Parceiro');
-        toggleDocFields('fornecedor');
+        $('#modal_parceiro_title').text('Novo Cadastro');
+        // Resetar Select2 para valores padrão
+        $('#parceiro_natureza').val('fornecedor').trigger('change');
+        $('#parceiro_tipo').val('pj').trigger('change');
+        $('#parceiro_uf').val('').trigger('change');
+        toggleDocFields('pj');
     }
 
     // Escape helpers
@@ -455,11 +477,11 @@ var ParceirosDataTable = (function () {
         initDataTable();
         loadStats();
 
-        // Toggle campos CNPJ/CPF ao mudar tipo
-        $('#parceiro_tipo').on('change', function () {
-            toggleDocFields(this.value);
+        // Toggle campos ao mudar tipo de pessoa (Select2)
+        $('#parceiro_tipo').on('change select2:select', function () {
+            toggleDocFields($(this).val());
         });
-        toggleDocFields('fornecedor');
+        toggleDocFields('pj');
 
         // Form submit
         $('#form_parceiro').on('submit', handleFormSubmit);
@@ -467,6 +489,22 @@ var ParceirosDataTable = (function () {
         // Reset ao fechar modal
         $('#modal_parceiro').on('hidden.bs.modal', function () {
             resetForm();
+        });
+
+        // Listener de clique nas stats tabs (segmented-tabs-toolbar)
+        $(document).on('click', '[data-status-tab]', function (e) {
+            e.preventDefault();
+            const status = $(this).data('status-tab') || 'todos';
+            currentStatus = status;
+
+            // Visual: ativar tab clicada
+            $('[data-status-tab]').removeClass('active');
+            $(this).addClass('active');
+
+            // Recarregar tabela com novo filtro
+            if (dataTable) {
+                dataTable.ajax.reload(null, true);
+            }
         });
 
         // Delegação de eventos na tabela

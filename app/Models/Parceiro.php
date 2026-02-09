@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\NaturezaParceiro;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Vinkla\Hashids\Facades\Hashids;
@@ -13,7 +14,7 @@ class Parceiro extends Model
     protected $table = 'parceiros';
     
     protected $fillable = [
-        'nome', 'nome_fantasia', 'tipo', 'cnpj', 'cpf', 
+        'nome', 'nome_fantasia', 'tipo', 'natureza', 'cnpj', 'cpf', 
         'telefone', 'email', 'active', 'observacoes',
         'company_id', 'address_id', 
         'created_by', 'created_by_name',
@@ -39,17 +40,19 @@ class Parceiro extends Model
     }
 
     /**
-     * Scope: Filtra por tipo (fornecedor, cliente, ambos)
+     * Scope: Filtra por natureza (fornecedor, cliente, etc.)
+     */
+    public function scopeNatureza($query, string $natureza)
+    {
+        return $query->where('natureza', $natureza);
+    }
+
+    /**
+     * Scope: Filtra por tipo de pessoa (pj, pf, ambos)
      */
     public function scopeTipo($query, string $tipo)
     {
-        if ($tipo === 'fornecedor') {
-            return $query->whereIn('tipo', ['fornecedor', 'ambos']);
-        }
-        if ($tipo === 'cliente') {
-            return $query->whereIn('tipo', ['cliente', 'ambos']);
-        }
-        return $query;
+        return $query->where('tipo', $tipo);
     }
 
     /**
@@ -86,16 +89,32 @@ class Parceiro extends Model
     }
 
     /**
-     * Retorna label legível do tipo
+     * Retorna label legível do tipo de pessoa
      */
     public function getTipoLabelAttribute(): string
     {
         return match ($this->tipo) {
-            'fornecedor' => 'Fornecedor',
-            'cliente' => 'Cliente',
-            'ambos' => 'Fornecedor / Cliente',
-            default => 'Não definido',
+            'pj' => 'Pessoa Jurídica',
+            'pf' => 'Pessoa Física',
+            'ambos' => 'PJ e PF',
+            default => ucfirst($this->tipo ?? 'Não definido'),
         };
+    }
+
+    /**
+     * Retorna label legível da natureza (usa Enum com fallback)
+     */
+    public function getNaturezaLabelAttribute(): string
+    {
+        return NaturezaParceiro::labelFor($this->natureza);
+    }
+
+    /**
+     * Retorna badge class da natureza
+     */
+    public function getNaturezaBadgeClassAttribute(): string
+    {
+        return NaturezaParceiro::badgeClassFor($this->natureza);
     }
 
     public function address()

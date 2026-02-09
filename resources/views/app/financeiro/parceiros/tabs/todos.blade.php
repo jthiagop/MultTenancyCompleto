@@ -6,13 +6,13 @@
         ['key' => 'todos', 'label' => 'Total Ativos', 'value' => '0'],
         ['key' => 'fornecedores', 'label' => 'Fornecedores', 'value' => '0'],
         ['key' => 'clientes', 'label' => 'Clientes', 'value' => '0'],
-        ['key' => 'ambos', 'label' => 'Ambos', 'value' => '0'],
+        ['key' => 'inativos', 'label' => 'Inativos', 'value' => '0'],
     ];
 
     $tableColumns = [
         ['key' => 'checkbox', 'label' => '', 'width' => 'w-10px pe-2', 'orderable' => false],
         ['key' => 'nome', 'label' => 'Nome / Razão Social', 'width' => 'min-w-200px', 'orderable' => true],
-        ['key' => 'tipo', 'label' => 'Tipo', 'width' => 'min-w-80px', 'orderable' => true],
+        ['key' => 'natureza', 'label' => 'Natureza', 'width' => 'min-w-80px', 'orderable' => true],
         ['key' => 'documento', 'label' => 'CNPJ / CPF', 'width' => 'min-w-130px', 'orderable' => false],
         ['key' => 'telefone', 'label' => 'Telefone', 'width' => 'min-w-120px', 'orderable' => false],
         ['key' => 'email', 'label' => 'E-mail', 'width' => 'min-w-150px', 'orderable' => false],
@@ -59,7 +59,11 @@
         </x-slot>
 
         <x-slot:actionsRight>
-            {{-- Reservado para ações em lote --}}
+                                                                   <button class="btn btn-sm btn-primary" id="btn-novo-parceiro" 
+                                                    data-bs-toggle="modal" data-bs-target="#modal_parceiro">
+                                                <i class="bi bi-plus-circle fs-4 me-1"></i>
+                                                Novo Parceiro
+                                            </button>
         </x-slot>
 
         <x-slot:panes>

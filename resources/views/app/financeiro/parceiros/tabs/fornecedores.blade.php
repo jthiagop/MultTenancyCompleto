@@ -62,11 +62,7 @@
         </x-slot>
 
         <x-slot:panes>
-            @foreach ($mappedTabs as $tab)
-                <div class="tab-pane fade {{ $tab['key'] === 'todos' ? 'show active' : '' }}"
-                    id="{{ $tab['paneId'] }}" role="tabpanel">
-                </div>
-            @endforeach
+            {{-- Stats tabs são apenas contadores visuais, sem conteúdo de pane --}}
         </x-slot:panes>
 
         <x-slot:tableContent>

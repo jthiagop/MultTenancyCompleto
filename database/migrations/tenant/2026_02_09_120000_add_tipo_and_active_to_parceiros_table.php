@@ -3,14 +3,20 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
     public function up(): void
     {
         Schema::table('parceiros', function (Blueprint $table) {
+            // Tipo de pessoa: PJ (Pessoa Jurídica), PF (Pessoa Física), ambos
             if (!Schema::hasColumn('parceiros', 'tipo')) {
-                $table->enum('tipo', ['fornecedor', 'cliente', 'ambos'])->default('fornecedor')->after('nome_fantasia');
+                $table->string('tipo', 20)->default('pj')->after('nome_fantasia');
+            }
+            // Natureza: fornecedor, cliente, etc. (string livre, validado via Enum PHP)
+            if (!Schema::hasColumn('parceiros', 'natureza')) {
+                $table->string('natureza', 50)->default('fornecedor')->after('tipo');
             }
             if (!Schema::hasColumn('parceiros', 'cpf')) {
                 $table->string('cpf', 14)->nullable()->after('cnpj');
@@ -23,15 +29,22 @@ return new class extends Migration
             }
         });
 
-        // Classificar automaticamente registros existentes
-        // CNPJ com 14 dígitos = fornecedor (PJ), CPF com 11 = cliente (PF)
-        DB::table('parceiros')->whereNull('tipo')->orWhere('tipo', '')->update(['tipo' => 'fornecedor']);
+        // Classificar registros existentes que tenham CNPJ como PJ / fornecedor
+        DB::table('parceiros')
+            ->whereNull('natureza')
+            ->orWhere('natureza', '')
+            ->update(['natureza' => 'fornecedor']);
+
+        DB::table('parceiros')
+            ->whereNull('tipo')
+            ->orWhere('tipo', '')
+            ->update(['tipo' => 'pj']);
     }
 
     public function down(): void
     {
         Schema::table('parceiros', function (Blueprint $table) {
-            $cols = ['tipo', 'cpf', 'active', 'observacoes'];
+            $cols = ['tipo', 'natureza', 'cpf', 'active', 'observacoes'];
             foreach ($cols as $col) {
                 if (Schema::hasColumn('parceiros', $col)) {
                     $table->dropColumn($col);

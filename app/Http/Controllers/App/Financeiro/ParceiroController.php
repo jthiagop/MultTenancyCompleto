@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\App\Financeiro;
 
+use App\Enums\NaturezaParceiro;
 use App\Http\Controllers\Controller;
 use App\Models\Parceiro;
 use App\Models\Address;
@@ -28,7 +29,10 @@ class ParceiroController extends Controller
             return redirect()->route('dashboard')->with('error', 'Selecione uma empresa.');
         }
 
-        return view('app.financeiro.parceiros.index', compact('activeTab'));
+        // Passar opções de natureza para o modal
+        $naturezaOptions = NaturezaParceiro::options();
+
+        return view('app.financeiro.parceiros.index', compact('activeTab', 'naturezaOptions'));
     }
 
     /**
@@ -41,13 +45,13 @@ class ParceiroController extends Controller
 
         $query = Parceiro::forActiveCompany()->with('address');
 
-        // Filtro por tab
+        // Filtro por tab (natureza)
         switch ($tab) {
             case 'fornecedores':
-                $query->tipo('fornecedor')->ativos();
+                $query->natureza('fornecedor')->ativos();
                 break;
             case 'clientes':
-                $query->tipo('cliente')->ativos();
+                $query->natureza('cliente')->ativos();
                 break;
             case 'inativos':
                 $query->inativos();
@@ -55,6 +59,43 @@ class ParceiroController extends Controller
             default: // todos
                 $query->ativos();
                 break;
+        }
+
+        // Filtro por status (sub-filtro da stats tab)
+        $status = $request->input('status', 'todos');
+        if ($status && $status !== 'todos') {
+            switch ($tab) {
+                case 'todos':
+                    if (in_array($status, ['fornecedor', 'fornecedores'])) {
+                        $query->natureza('fornecedor');
+                    } elseif (in_array($status, ['cliente', 'clientes'])) {
+                        $query->natureza('cliente');
+                    } elseif ($status === 'inativos') {
+                        $query = Parceiro::forActiveCompany()->with('address')->inativos();
+                    }
+                    break;
+                case 'fornecedores':
+                    if ($status === 'com_cnpj') {
+                        $query->whereNotNull('cnpj')->where('cnpj', '!=', '');
+                    } elseif ($status === 'sem_cnpj') {
+                        $query->where(function ($q) { $q->whereNull('cnpj')->orWhere('cnpj', ''); });
+                    }
+                    break;
+                case 'clientes':
+                    if ($status === 'com_cpf') {
+                        $query->whereNotNull('cpf')->where('cpf', '!=', '');
+                    } elseif ($status === 'sem_cpf') {
+                        $query->where(function ($q) { $q->whereNull('cpf')->orWhere('cpf', ''); });
+                    }
+                    break;
+                case 'inativos':
+                    if (in_array($status, ['fornecedor', 'fornecedores'])) {
+                        $query->natureza('fornecedor');
+                    } elseif (in_array($status, ['cliente', 'clientes'])) {
+                        $query->natureza('cliente');
+                    }
+                    break;
+            }
         }
 
         // Busca textual
@@ -77,7 +118,7 @@ class ParceiroController extends Controller
         $orderColumnIndex = (int) $request->input('order.0.column', 0);
         $orderDir = $request->input('order.0.dir', 'asc');
 
-        $sortableColumns = ['nome', 'tipo', 'cnpj', 'email', 'telefone', 'created_at'];
+        $sortableColumns = ['nome', 'natureza', 'cnpj', 'email', 'telefone', 'created_at'];
         $orderColumn = $sortableColumns[$orderColumnIndex] ?? 'nome';
         $query->orderBy($orderColumn, $orderDir);
 
@@ -100,6 +141,9 @@ class ParceiroController extends Controller
                 'nome_fantasia' => $p->nome_fantasia,
                 'tipo' => $p->tipo,
                 'tipo_label' => $p->tipo_label,
+                'natureza' => $p->natureza,
+                'natureza_label' => $p->natureza_label,
+                'natureza_badge_class' => $p->natureza_badge_class,
                 'documento' => $documento,
                 'tipo_documento' => $tipoDoc,
                 'email' => $p->email,
@@ -128,33 +172,32 @@ class ParceiroController extends Controller
         $base = Parceiro::forActiveCompany();
 
         $todos = (clone $base)->ativos()->count();
-        $fornecedores = (clone $base)->ativos()->tipo('fornecedor')->count();
-        $clientes = (clone $base)->ativos()->tipo('cliente')->count();
-        $ambos = (clone $base)->ativos()->where('tipo', 'ambos')->count();
+        $fornecedores = (clone $base)->ativos()->natureza('fornecedor')->count();
+        $clientes = (clone $base)->ativos()->natureza('cliente')->count();
         $inativos = (clone $base)->inativos()->count();
 
         // Stats granulares por aba
         $stats = match ($tab) {
             'fornecedores' => [
                 'todos' => $fornecedores,
-                'com_cnpj' => (clone $base)->ativos()->tipo('fornecedor')->whereNotNull('cnpj')->where('cnpj', '!=', '')->count(),
-                'sem_cnpj' => (clone $base)->ativos()->tipo('fornecedor')->where(function ($q) { $q->whereNull('cnpj')->orWhere('cnpj', ''); })->count(),
+                'com_cnpj' => (clone $base)->ativos()->natureza('fornecedor')->whereNotNull('cnpj')->where('cnpj', '!=', '')->count(),
+                'sem_cnpj' => (clone $base)->ativos()->natureza('fornecedor')->where(function ($q) { $q->whereNull('cnpj')->orWhere('cnpj', ''); })->count(),
             ],
             'clientes' => [
                 'todos' => $clientes,
-                'com_cpf' => (clone $base)->ativos()->tipo('cliente')->whereNotNull('cpf')->where('cpf', '!=', '')->count(),
-                'sem_cpf' => (clone $base)->ativos()->tipo('cliente')->where(function ($q) { $q->whereNull('cpf')->orWhere('cpf', ''); })->count(),
+                'com_cpf' => (clone $base)->ativos()->natureza('cliente')->whereNotNull('cpf')->where('cpf', '!=', '')->count(),
+                'sem_cpf' => (clone $base)->ativos()->natureza('cliente')->where(function ($q) { $q->whereNull('cpf')->orWhere('cpf', ''); })->count(),
             ],
             'inativos' => [
                 'todos' => $inativos,
-                'fornecedores' => (clone $base)->inativos()->tipo('fornecedor')->count(),
-                'clientes' => (clone $base)->inativos()->tipo('cliente')->count(),
+                'fornecedores' => (clone $base)->inativos()->natureza('fornecedor')->count(),
+                'clientes' => (clone $base)->inativos()->natureza('cliente')->count(),
             ],
             default => [ // todos
                 'todos' => $todos,
                 'fornecedores' => $fornecedores,
                 'clientes' => $clientes,
-                'ambos' => $ambos,
+                'inativos' => $inativos,
             ],
         };
 
@@ -170,7 +213,8 @@ class ParceiroController extends Controller
             'nome' => 'nullable|string|max:255',
             'nome_completo' => 'nullable|string|max:255',
             'nome_fantasia' => 'nullable|string|max:255',
-            'tipo' => 'nullable|in:fornecedor,cliente,ambos',
+            'tipo' => 'nullable|in:pj,pf,ambos',
+            'natureza' => 'nullable|string|max:50',
             'cnpj' => 'nullable|string|max:18',
             'cpf' => 'nullable|string|max:14',
             'telefone' => 'nullable|string|max:20',
@@ -220,16 +264,17 @@ class ParceiroController extends Controller
             if ($cnpj) $cnpj = preg_replace('/\D/', '', $cnpj);
             if ($cpf) $cpf = preg_replace('/\D/', '', $cpf);
 
-            // Determinar tipo automaticamente se não informado
-            $tipo = $validated['tipo'] ?? 'fornecedor';
-            if (!$validated['tipo'] && $cpf && !$cnpj) {
-                $tipo = 'cliente';
-            }
+            // Tipo de pessoa: se não informado, deduzir dos documentos
+            $tipo = $validated['tipo'] ?? 'pj';
+
+            // Natureza: se não informada, default = fornecedor
+            $natureza = $validated['natureza'] ?? 'fornecedor';
 
             $parceiro = Parceiro::create([
                 'nome' => $finalNome,
                 'nome_fantasia' => $validated['nome_fantasia'] ?? null,
                 'tipo' => $tipo,
+                'natureza' => $natureza,
                 'cnpj' => $cnpj,
                 'cpf' => $cpf,
                 'telefone' => $validated['telefone'] ?? null,
@@ -249,7 +294,7 @@ class ParceiroController extends Controller
                 'data' => [
                     'id' => $parceiro->id,
                     'nome' => $parceiro->nome,
-                    'type' => $tipo,
+                    'natureza' => $natureza,
                 ],
                 'parceiro' => [
                     'id' => $parceiro->id,
@@ -275,7 +320,8 @@ class ParceiroController extends Controller
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'nome_fantasia' => 'nullable|string|max:255',
-            'tipo' => 'required|in:fornecedor,cliente,ambos',
+            'tipo' => 'required|in:pj,pf,ambos',
+            'natureza' => 'nullable|string|max:50',
             'cnpj' => 'nullable|string|max:18',
             'cpf' => 'nullable|string|max:14',
             'telefone' => 'nullable|string|max:20',

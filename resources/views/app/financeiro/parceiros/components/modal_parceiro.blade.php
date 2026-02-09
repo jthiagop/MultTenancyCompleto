@@ -3,7 +3,7 @@
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title" id="modal_parceiro_title">Novo Parceiro</h3>
+                <h3 class="modal-title" id="modal_parceiro_title">Novo Cadastro</h3>
                 <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal">
                     <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
                 </div>
@@ -15,30 +15,57 @@
                     <div class="scroll-y me-n7 pe-7" data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}" 
                          data-kt-scroll-max-height="auto" data-kt-scroll-offset="300px">
                         
-                        <!--begin::Tipo-->
+                        <!--begin::Natureza + Tipo de Pessoa-->
                         <div class="row mb-7">
-                            <div class="col-md-12">
-                                <label class="required fw-semibold fs-6 mb-2">Tipo</label>
-                                <select class="form-select form-select-solid" name="tipo" id="parceiro_tipo" required>
-                                    <option value="fornecedor">Fornecedor (PJ)</option>
-                                    <option value="cliente">Cliente (PF)</option>
-                                    <option value="ambos">Ambos</option>
-                                </select>
-                            </div>
-                        </div>
-                        <!--end::Tipo-->
+                            <x-tenant-select
+                                name="natureza"
+                                id="parceiro_natureza"
+                                label="Natureza"
+                                :required="true"
+                                class="col-md-6"
+                                :hideSearch="true"
+                                dropdownParent="#modal_parceiro"
+                                control="select2"
+                                value="fornecedor">
+                                @foreach(\App\Enums\NaturezaParceiro::options() as $value => $label)
+                                    <option value="{{ $value }}">{{ $label }}</option>
+                                @endforeach
+                            </x-tenant-select>
 
-                        <!--begin::Nome / Razão Social-->
+                            <x-tenant-select
+                                name="tipo"
+                                id="parceiro_tipo"
+                                label="Tipo de Pessoa"
+                                :required="true"
+                                class="col-md-6"
+                                :hideSearch="true"
+                                dropdownParent="#modal_parceiro"
+                                control="select2"
+                                value="pj">
+                                <option value="pj">Pessoa Jurídica (PJ)</option>
+                                <option value="pf">Pessoa Física (PF)</option>
+                                <option value="ambos">Ambos (PJ e PF)</option>
+                            </x-tenant-select>
+                        </div>
+                        <!--end::Natureza + Tipo de Pessoa-->
+
+                        <!--begin::Nome / Razão Social + Nome Fantasia-->
                         <div class="row mb-7">
-                            <div class="col-md-6">
-                                <label class="required fw-semibold fs-6 mb-2">Nome / Razão Social</label>
-                                <input type="text" class="form-control form-control-solid" name="nome" id="parceiro_nome" 
-                                       placeholder="Nome ou Razão Social" required />
-                            </div>
-                            <div class="col-md-6">
-                                <label class="fw-semibold fs-6 mb-2">Nome Fantasia</label>
-                                <input type="text" class="form-control form-control-solid" name="nome_fantasia" id="parceiro_nome_fantasia" 
-                                       placeholder="Nome Fantasia" />
+                            <x-tenant-input
+                                name="nome"
+                                id="parceiro_nome"
+                                label="Razão Social"
+                                placeholder="Razão Social da empresa"
+                                :required="true"
+                                class="col-md-6" />
+
+                            <div class="col-md-6" id="campo_nome_fantasia">
+                                <x-tenant-input
+                                    name="nome_fantasia"
+                                    id="parceiro_nome_fantasia"
+                                    label="Nome Fantasia"
+                                    placeholder="Nome Fantasia"
+                                    class="w-100" />
                             </div>
                         </div>
                         <!--end::Nome-->
@@ -46,30 +73,42 @@
                         <!--begin::Documentos-->
                         <div class="row mb-7">
                             <div class="col-md-6" id="campo_cnpj">
-                                <label class="fw-semibold fs-6 mb-2">CNPJ</label>
-                                <input type="text" class="form-control form-control-solid" name="cnpj" id="parceiro_cnpj" 
-                                       placeholder="00.000.000/0000-00" data-inputmask="'mask': '99.999.999/9999-99'" />
+                                <x-tenant-input
+                                    name="cnpj"
+                                    id="parceiro_cnpj"
+                                    label="CNPJ"
+                                    placeholder="00.000.000/0000-00"
+                                    class="w-100"
+                                    data-inputmask="'mask': '99.999.999/9999-99'" />
                             </div>
-                            <div class="col-md-6" id="campo_cpf">
-                                <label class="fw-semibold fs-6 mb-2">CPF</label>
-                                <input type="text" class="form-control form-control-solid" name="cpf" id="parceiro_cpf" 
-                                       placeholder="000.000.000-00" data-inputmask="'mask': '999.999.999-99'" />
+                            <div class="col-md-6" id="campo_cpf" style="display: none;">
+                                <x-tenant-input
+                                    name="cpf"
+                                    id="parceiro_cpf"
+                                    label="CPF"
+                                    placeholder="000.000.000-00"
+                                    class="w-100"
+                                    data-inputmask="'mask': '999.999.999-99'" />
                             </div>
                         </div>
                         <!--end::Documentos-->
 
                         <!--begin::Contato-->
                         <div class="row mb-7">
-                            <div class="col-md-6">
-                                <label class="fw-semibold fs-6 mb-2">Telefone</label>
-                                <input type="text" class="form-control form-control-solid" name="telefone" id="parceiro_telefone" 
-                                       placeholder="(00) 00000-0000" />
-                            </div>
-                            <div class="col-md-6">
-                                <label class="fw-semibold fs-6 mb-2">E-mail</label>
-                                <input type="email" class="form-control form-control-solid" name="email" id="parceiro_email" 
-                                       placeholder="email@exemplo.com" />
-                            </div>
+                            <x-tenant-input
+                                name="telefone"
+                                id="parceiro_telefone"
+                                label="Telefone"
+                                placeholder="(00) 00000-0000"
+                                class="col-md-6" />
+
+                            <x-tenant-input
+                                name="email"
+                                id="parceiro_email"
+                                label="E-mail"
+                                type="email"
+                                placeholder="email@exemplo.com"
+                                class="col-md-6" />
                         </div>
                         <!--end::Contato-->
 
@@ -81,47 +120,63 @@
                         </div>
                         <div class="collapse" id="collapse_endereco">
                             <div class="row mb-5">
-                                <div class="col-md-3">
-                                    <label class="fw-semibold fs-6 mb-2">CEP</label>
-                                    <input type="text" class="form-control form-control-solid" name="cep" id="parceiro_cep" 
-                                           placeholder="00000-000" data-inputmask="'mask': '99999-999'" />
-                                </div>
-                                <div class="col-md-7">
-                                    <label class="fw-semibold fs-6 mb-2">Rua / Logradouro</label>
-                                    <input type="text" class="form-control form-control-solid" name="address1" id="parceiro_rua" />
-                                </div>
-                                <div class="col-md-2">
-                                    <label class="fw-semibold fs-6 mb-2">Nº</label>
-                                    <input type="text" class="form-control form-control-solid" name="numero" id="parceiro_numero" />
-                                </div>
+                                <x-tenant-input
+                                    name="cep"
+                                    id="parceiro_cep"
+                                    label="CEP"
+                                    placeholder="00000-000"
+                                    class="col-md-3"
+                                    data-inputmask="'mask': '99999-999'" />
+
+                                <x-tenant-input
+                                    name="address1"
+                                    id="parceiro_rua"
+                                    label="Rua / Logradouro"
+                                    class="col-md-7" />
+
+                                <x-tenant-input
+                                    name="numero"
+                                    id="parceiro_numero"
+                                    label="Nº"
+                                    class="col-md-2" />
                             </div>
                             <div class="row mb-5">
-                                <div class="col-md-4">
-                                    <label class="fw-semibold fs-6 mb-2">Bairro</label>
-                                    <input type="text" class="form-control form-control-solid" name="bairro" id="parceiro_bairro" />
-                                </div>
-                                <div class="col-md-5">
-                                    <label class="fw-semibold fs-6 mb-2">Cidade</label>
-                                    <input type="text" class="form-control form-control-solid" name="city" id="parceiro_cidade" />
-                                </div>
-                                <div class="col-md-3">
-                                    <label class="fw-semibold fs-6 mb-2">UF</label>
-                                    <select class="form-select form-select-solid" name="country" id="parceiro_uf">
-                                        <option value="">Selecione</option>
-                                        @foreach(['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] as $uf)
-                                            <option value="{{ $uf }}">{{ $uf }}</option>
-                                        @endforeach
-                                    </select>
-                                </div>
+                                <x-tenant-input
+                                    name="bairro"
+                                    id="parceiro_bairro"
+                                    label="Bairro"
+                                    class="col-md-4" />
+
+                                <x-tenant-input
+                                    name="city"
+                                    id="parceiro_cidade"
+                                    label="Cidade"
+                                    class="col-md-5" />
+
+                                <x-tenant-select
+                                    name="country"
+                                    id="parceiro_uf"
+                                    label="UF"
+                                    class="col-md-3"
+                                    placeholder="UF"
+                                    :hideSearch="false"
+                                    dropdownParent="#modal_parceiro"
+                                    control="select2">
+                                    @foreach(['AC','AL','AP','AM','BA','CE','DF','ES','GO','MA','MT','MS','MG','PA','PB','PR','PE','PI','RJ','RN','RS','RO','RR','SC','SP','SE','TO'] as $uf)
+                                        <option value="{{ $uf }}">{{ $uf }}</option>
+                                    @endforeach
+                                </x-tenant-select>
                             </div>
                         </div>
                         <!--end::Endereço-->
 
                         <!--begin::Observações-->
                         <div class="row mb-7">
-                            <div class="col-md-12">
-                                <label class="fw-semibold fs-6 mb-2">Observações</label>
-                                <textarea class="form-control form-control-solid" name="observacoes" id="parceiro_observacoes" 
+                            <div class="col-md-12 fv-row">
+                                <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
+                                    <span>Observações</span>
+                                </label>
+                                <textarea class="form-control" name="observacoes" id="parceiro_observacoes" 
                                           rows="3" placeholder="Observações sobre o parceiro..."></textarea>
                             </div>
                         </div>

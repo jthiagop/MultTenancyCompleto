@@ -3,7 +3,7 @@
     $parentId = 'kt_tab_parceiros';
 
     $stats = [
-        ['key' => 'todos', 'label' => 'Total Inativos', 'value' => '0'],
+        ['key' => 'todos', 'label' => 'Total Desativados', 'value' => '0'],
         ['key' => 'fornecedores', 'label' => 'Fornecedores', 'value' => '0'],
         ['key' => 'clientes', 'label' => 'Clientes', 'value' => '0'],
     ];
@@ -11,7 +11,7 @@
     $tableColumns = [
         ['key' => 'checkbox', 'label' => '', 'width' => 'w-10px pe-2', 'orderable' => false],
         ['key' => 'nome', 'label' => 'Nome / Razão Social', 'width' => 'min-w-200px', 'orderable' => true],
-        ['key' => 'tipo', 'label' => 'Tipo', 'width' => 'min-w-80px', 'orderable' => true],
+        ['key' => 'natureza', 'label' => 'Natureza', 'width' => 'min-w-80px', 'orderable' => true],
         ['key' => 'documento', 'label' => 'CNPJ / CPF', 'width' => 'min-w-130px', 'orderable' => false],
         ['key' => 'telefone', 'label' => 'Telefone', 'width' => 'min-w-120px', 'orderable' => false],
         ['key' => 'email', 'label' => 'E-mail', 'width' => 'min-w-150px', 'orderable' => false],
