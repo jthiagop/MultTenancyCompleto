@@ -380,6 +380,19 @@ Route::middleware([
             Route::get('/financeiro/saldos-mensais', [CaixaController::class, 'getSaldosMensais'])->name('financeiro.saldos-mensais');
             Route::post('/financeiro/parceiros', [ParceiroController::class, 'store'])->name('financeiro.fornecedores.store');
 
+            // =====================================================================
+            // PARCEIROS (Fornecedores e Clientes) - CRUD completo
+            // =====================================================================
+            Route::prefix('financeiro/parceiros')->name('parceiros.')->group(function () {
+                Route::get('/data', [ParceiroController::class, 'data'])->name('data');
+                Route::get('/stats', [ParceiroController::class, 'stats'])->name('stats');
+                Route::put('/{parceiro}', [ParceiroController::class, 'update'])->name('update');
+                Route::post('/{parceiro}/toggle-active', [ParceiroController::class, 'toggleActive'])->name('toggle-active');
+                Route::delete('/{parceiro}', [ParceiroController::class, 'destroy'])->name('destroy');
+                Route::post('/store', [ParceiroController::class, 'store'])->name('store');
+                Route::get('/{tab?}', [ParceiroController::class, 'index'])->name('index');
+            });
+
             Route::get('app/financeiro/banco/list', [BancoController::class, 'list'])->name('banco.list');
             Route::get('/banco/chart-data', [BancoController::class, 'getChartData'])->name('banco.chart.data');
             Route::get('/banco/fluxo-chart-data', [BancoController::class, 'getFluxoBancoChartData'])->name('banco.fluxo.chart.data');

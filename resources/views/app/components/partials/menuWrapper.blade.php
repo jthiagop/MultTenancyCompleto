@@ -161,7 +161,7 @@
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
-                                    <span class="menu-title">Contas a Pagar</span>
+                                    <span class="menu-title">Despesas</span>
                                 </a>
                             </div>
                             <div class="menu-item">
@@ -170,7 +170,7 @@
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
-                                    <span class="menu-title">Contas a Receber</span>
+                                    <span class="menu-title">Receitas</span>
                                 </a>
                             </div>
                             <div class="menu-item">
@@ -179,7 +179,16 @@
                                     <span class="menu-bullet">
                                         <span class="bullet bullet-dot"></span>
                                     </span>
-                                    <span class="menu-title">Extrato de Movimentação</span>
+                                    <span class="menu-title">Extrato</span>
+                                </a>
+                            </div>
+                            <div class="menu-item">
+                                <a class="menu-link {{ request()->routeIs('parceiros.*') ? 'active' : '' }}"
+                                    href="{{ route('parceiros.index') }}">
+                                    <span class="menu-bullet">
+                                        <span class="bullet bullet-dot"></span>
+                                    </span>
+                                    <span class="menu-title">Fornecedores e Clientes</span>
                                 </a>
                             </div>
                             <div class="menu-item">

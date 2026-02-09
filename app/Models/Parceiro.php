@@ -3,13 +3,26 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Vinkla\Hashids\Facades\Hashids;
 
 class Parceiro extends Model
 {
+    use SoftDeletes;
+
     protected $table = 'parceiros';
     
-    protected $fillable = ['nome', 'nome_fantasia', 'cnpj', 'telefone', 'email', 'company_id', 'address_id', 'created_by', 'created_by_name'];
+    protected $fillable = [
+        'nome', 'nome_fantasia', 'tipo', 'cnpj', 'cpf', 
+        'telefone', 'email', 'active', 'observacoes',
+        'company_id', 'address_id', 
+        'created_by', 'created_by_name',
+        'updated_by', 'updated_by_name',
+    ];
+
+    protected $casts = [
+        'active' => 'boolean',
+    ];
 
     /**
      * Scope: Filtra a busca para incluir apenas os registros da empresa ativa na sessão.
@@ -25,9 +38,74 @@ class Parceiro extends Model
         return $query->whereRaw('1 = 0');
     }
 
+    /**
+     * Scope: Filtra por tipo (fornecedor, cliente, ambos)
+     */
+    public function scopeTipo($query, string $tipo)
+    {
+        if ($tipo === 'fornecedor') {
+            return $query->whereIn('tipo', ['fornecedor', 'ambos']);
+        }
+        if ($tipo === 'cliente') {
+            return $query->whereIn('tipo', ['cliente', 'ambos']);
+        }
+        return $query;
+    }
+
+    /**
+     * Scope: Apenas ativos
+     */
+    public function scopeAtivos($query)
+    {
+        return $query->where('active', true);
+    }
+
+    /**
+     * Scope: Apenas inativos
+     */
+    public function scopeInativos($query)
+    {
+        return $query->where('active', false);
+    }
+
+    /**
+     * Retorna o documento formatado (CNPJ ou CPF)
+     */
+    public function getDocumentoAttribute(): ?string
+    {
+        if ($this->cnpj && strlen($this->cnpj) > 11) {
+            return preg_replace('/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/', '$1.$2.$3/$4-$5', $this->cnpj);
+        }
+        if ($this->cnpj && strlen($this->cnpj) <= 11) {
+            return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $this->cnpj);
+        }
+        if ($this->cpf) {
+            return preg_replace('/(\d{3})(\d{3})(\d{3})(\d{2})/', '$1.$2.$3-$4', $this->cpf);
+        }
+        return null;
+    }
+
+    /**
+     * Retorna label legível do tipo
+     */
+    public function getTipoLabelAttribute(): string
+    {
+        return match ($this->tipo) {
+            'fornecedor' => 'Fornecedor',
+            'cliente' => 'Cliente',
+            'ambos' => 'Fornecedor / Cliente',
+            default => 'Não definido',
+        };
+    }
+
     public function address()
     {
         return $this->belongsTo(Address::class, 'address_id');
+    }
+
+    public function transacoes()
+    {
+        return $this->hasMany(\App\Models\Financeiro\TransacaoFinanceira::class, 'parceiro_id');
     }
 
     /**
