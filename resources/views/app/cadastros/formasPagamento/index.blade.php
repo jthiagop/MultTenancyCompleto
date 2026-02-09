@@ -124,11 +124,11 @@
 
 </x-tenant-app-layout>
 
-<script src="/assets/js/custom/apps/contacts/edit-contact.js"></script>
+<script src="/tenancy/assets/js/custom/apps/contacts/edit-contact.js"></script>
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/company/add-formaPagamento.js"></script>
-<script src="/assets/js/custom/apps/customers/view/payment-table.js"></script>
+<script src="/tenancy/assets/js/custom/apps/company/add-formaPagamento.js"></script>
+<script src="/tenancy/assets/js/custom/apps/customers/view/payment-table.js"></script>

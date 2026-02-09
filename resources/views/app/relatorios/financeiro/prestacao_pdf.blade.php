@@ -82,7 +82,7 @@
                 @php
                     $logoPath = $company->avatar
                         ? storage_path('app/public/' . $company->avatar)
-                        : public_path('assets/media/png/perfil.svg');
+                        : public_path('tenancy/assets/media/png/perfil.svg');
                 @endphp
                 @if(file_exists($logoPath))
                     <img src="{{ $logoPath }}"
@@ -124,7 +124,7 @@
                 @php
                     $logoPath = $company->avatar
                         ? storage_path('app/public/' . $company->avatar)
-                        : public_path('assets/media/png/perfil.svg');
+                        : public_path('tenancy/assets/media/png/perfil.svg');
                 @endphp
                 @if(file_exists($logoPath))
                     <img src="{{ $logoPath }}"

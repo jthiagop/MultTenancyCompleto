@@ -358,4 +358,4 @@
 </div>
 <!--end::Segmented Tabs Wrapper-->
 
-<script src="/assets/js/custom/apps/contabilidade/lancamento-padrao/list.js"></script>
+<script src="/tenancy/assets/js/custom/apps/contabilidade/lancamento-padrao/list.js"></script>

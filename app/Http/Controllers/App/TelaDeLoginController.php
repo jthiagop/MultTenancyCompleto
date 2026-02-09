@@ -20,9 +20,9 @@ class TelaDeLoginController extends Controller
     {
         // Lista de imagens predefinidas
         $backgroundImages = collect([
-            (object)['path' => 'assets/media/misc/image1.jpg', 'name' => 'Imagem 1'],
-            (object)['path' => 'assets/media/misc/image2.jpg', 'name' => 'Imagem 2'],
-            (object)['path' => 'assets/media/misc/image3.jpg', 'name' => 'Imagem 3'],
+            (object)['path' => 'tenancy/assets/media/misc/image1.jpg', 'name' => 'Imagem 1'],
+            (object)['path' => 'tenancy/assets/media/misc/image2.jpg', 'name' => 'Imagem 2'],
+            (object)['path' => 'tenancy/assets/media/misc/image3.jpg', 'name' => 'Imagem 3'],
         ]);
 
         // Buscar TODAS as imagens ativas para o slider

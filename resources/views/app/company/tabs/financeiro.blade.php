@@ -214,19 +214,19 @@
 															<span class="symbol-label bg-warning text-inverse-warning fw-bold">A</span>
 														</div>
 														<div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip" title="Michael Eberon">
-															<img alt="Pic" src="/assets/media/avatars/300-11.jpg" />
+															<img alt="Pic" src="/tenancy/assets/media/avatars/300-11.jpg" />
 														</div>
 														<div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip" title="Susan Redwood">
 															<span class="symbol-label bg-primary text-inverse-primary fw-bold">S</span>
 														</div>
 														<div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip" title="Melody Macy">
-															<img alt="Pic" src="/assets/media/avatars/300-2.jpg" />
+															<img alt="Pic" src="/tenancy/assets/media/avatars/300-2.jpg" />
 														</div>
 														<div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip" title="Perry Matthew">
 															<span class="symbol-label bg-danger text-inverse-danger fw-bold">P</span>
 														</div>
 														<div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip" title="Barry Walter">
-															<img alt="Pic" src="/assets/media/avatars/300-12.jpg" />
+															<img alt="Pic" src="/tenancy/assets/media/avatars/300-12.jpg" />
 														</div>
 														<a href="#" class="symbol symbol-35px symbol-circle" data-bs-toggle="modal" data-bs-target="#kt_modal_view_users">
 															<span class="symbol-label bg-light text-gray-400 fs-8 fw-bold">+42</span>
@@ -466,7 +466,7 @@
 															<a class="nav-link d-flex justify-content-between flex-column flex-center overflow-hidden active w-80px h-85px py-4" data-bs-toggle="pill" href="#kt_stats_widget_2_tab_1">
 																<!--begin::Icon-->
 																<div class="nav-icon">
-																	<img alt="" src="/assets/media/svg/products-categories/t-shirt.svg" class="" />
+																	<img alt="" src="/tenancy/assets/media/svg/products-categories/t-shirt.svg" class="" />
 																</div>
 																<!--end::Icon-->
 																<!--begin::Subtitle-->
@@ -485,7 +485,7 @@
 															<a class="nav-link d-flex justify-content-between flex-column flex-center overflow-hidden w-80px h-85px py-4" data-bs-toggle="pill" href="#kt_stats_widget_2_tab_2">
 																<!--begin::Icon-->
 																<div class="nav-icon">
-																	<img alt="" src="/assets/media/svg/products-categories/gaming.svg" class="" />
+																	<img alt="" src="/tenancy/assets/media/svg/products-categories/gaming.svg" class="" />
 																</div>
 																<!--end::Icon-->
 																<!--begin::Subtitle-->
@@ -504,7 +504,7 @@
 															<a class="nav-link d-flex justify-content-between flex-column flex-center overflow-hidden w-80px h-85px py-4" data-bs-toggle="pill" href="#kt_stats_widget_2_tab_3">
 																<!--begin::Icon-->
 																<div class="nav-icon">
-																	<img alt="" src="/assets/media/svg/products-categories/watch.svg" class="" />
+																	<img alt="" src="/tenancy/assets/media/svg/products-categories/watch.svg" class="" />
 																</div>
 																<!--end::Icon-->
 																<!--begin::Subtitle-->
@@ -523,7 +523,7 @@
 															<a class="nav-link d-flex justify-content-between flex-column flex-center overflow-hidden w-80px h-85px py-4" data-bs-toggle="pill" href="#kt_stats_widget_2_tab_4">
 																<!--begin::Icon-->
 																<div class="nav-icon">
-																	<img alt="" src="/assets/media/svg/products-categories/gloves.svg" class="nav-icon" />
+																	<img alt="" src="/tenancy/assets/media/svg/products-categories/gloves.svg" class="nav-icon" />
 																</div>
 																<!--end::Icon-->
 																<!--begin::Subtitle-->
@@ -542,7 +542,7 @@
 															<a class="nav-link d-flex justify-content-between flex-column flex-center overflow-hidden w-80px h-85px py-4" data-bs-toggle="pill" href="#kt_stats_widget_2_tab_5">
 																<!--begin::Icon-->
 																<div class="nav-icon">
-																	<img alt="" src="/assets/media/svg/products-categories/shoes.svg" class="nav-icon" />
+																	<img alt="" src="/tenancy/assets/media/svg/products-categories/shoes.svg" class="nav-icon" />
 																</div>
 																<!--end::Icon-->
 																<!--begin::Subtitle-->
@@ -580,7 +580,7 @@
 																	<tbody>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/210.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/210.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">Elephant 1802</a>
@@ -598,7 +598,7 @@
 																		</tr>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/215.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/215.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">Red Laga</a>
@@ -616,7 +616,7 @@
 																		</tr>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/209.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/209.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">RiseUP</a>
@@ -661,7 +661,7 @@
 																	<tbody>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/197.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/197.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">Elephant 1802</a>
@@ -679,7 +679,7 @@
 																		</tr>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/178.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/178.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">Red Laga</a>
@@ -697,7 +697,7 @@
 																		</tr>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/22.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/22.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">RiseUP</a>
@@ -742,7 +742,7 @@
 																	<tbody>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/1.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/1.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">Elephant 1324</a>
@@ -760,7 +760,7 @@
 																		</tr>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/24.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/24.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">Red Laga</a>
@@ -778,7 +778,7 @@
 																		</tr>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/71.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/71.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">RiseUP</a>
@@ -823,7 +823,7 @@
 																	<tbody>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/41.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/41.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">Elephant 2635</a>
@@ -841,7 +841,7 @@
 																		</tr>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/63.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/63.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">Red Laga</a>
@@ -859,7 +859,7 @@
 																		</tr>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/59.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/59.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">RiseUP</a>
@@ -904,7 +904,7 @@
 																	<tbody>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/10.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/10.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">Nike</a>
@@ -922,7 +922,7 @@
 																		</tr>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/96.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/96.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">Adidas</a>
@@ -940,7 +940,7 @@
 																		</tr>
 																		<tr>
 																			<td>
-																				<img src="/assets/media/stock/ecommerce/13.gif" class="w-50px ms-n1" alt="" />
+																				<img src="/tenancy/assets/media/stock/ecommerce/13.gif" class="w-50px ms-n1" alt="" />
 																			</td>
 																			<td class="ps-0">
 																				<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 fw-bold text-hover-primary mb-1 fs-6 text-start pe-0">Puma</a>
@@ -1128,8 +1128,8 @@
 														<!--end::Title-->
 														<!--begin::Illustration-->
 														<div class="py-10 text-center">
-															<img src="/assets/media/svg/illustrations/easy/2.svg" class="theme-light-show w-200px" alt="" />
-															<img src="/assets/media/svg/illustrations/easy/2-dark.svg" class="theme-dark-show w-200px" alt="" />
+															<img src="/tenancy/assets/media/svg/illustrations/easy/2.svg" class="theme-light-show w-200px" alt="" />
+															<img src="/tenancy/assets/media/svg/illustrations/easy/2-dark.svg" class="theme-dark-show w-200px" alt="" />
 														</div>
 														<!--end::Illustration-->
 													</div>
@@ -1242,7 +1242,7 @@
 																<td colspan="2">
 																	<div class="d-flex align-items-center gap-3">
 																		<a href="#" class="symbol symbol-50px bg-secondary bg-opacity-25 rounded">
-																			<img src="" data-kt-src-path="/assets/media/stock/ecommerce/" alt="" data-kt-table-widget-4="template_image" />
+																			<img src="" data-kt-src-path="/tenancy/assets/media/stock/ecommerce/" alt="" data-kt-table-widget-4="template_image" />
 																		</a>
 																		<div class="d-flex flex-column text-muted">
 																			<a href="#" class="text-gray-800 text-hover-primary fw-bold" data-kt-table-widget-4="template_name">Product name</a>
@@ -1557,7 +1557,7 @@
 																<!--begin::Wrapper-->
 																<div class="me-3">
 																	<!--begin::Icon-->
-																	<img src="/assets/media/stock/ecommerce/210.gif" class="w-50px ms-n1 me-1" alt="" />
+																	<img src="/tenancy/assets/media/stock/ecommerce/210.gif" class="w-50px ms-n1 me-1" alt="" />
 																	<!--end::Icon-->
 																	<!--begin::Title-->
 																	<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 text-hover-primary fw-bold">Elephant 1802</a>
@@ -1670,7 +1670,7 @@
 																<!--begin::Wrapper-->
 																<div class="me-3">
 																	<!--begin::Icon-->
-																	<img src="/assets/media/stock/ecommerce/209.gif" class="w-50px ms-n1 me-1" alt="" />
+																	<img src="/tenancy/assets/media/stock/ecommerce/209.gif" class="w-50px ms-n1 me-1" alt="" />
 																	<!--end::Icon-->
 																	<!--begin::Title-->
 																	<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 text-hover-primary fw-bold">RiseUP</a>
@@ -1783,7 +1783,7 @@
 																<!--begin::Wrapper-->
 																<div class="me-3">
 																	<!--begin::Icon-->
-																	<img src="/assets/media/stock/ecommerce/214.gif" class="w-50px ms-n1 me-1" alt="" />
+																	<img src="/tenancy/assets/media/stock/ecommerce/214.gif" class="w-50px ms-n1 me-1" alt="" />
 																	<!--end::Icon-->
 																	<!--begin::Title-->
 																	<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 text-hover-primary fw-bold">Yellow Stone</a>
@@ -1896,7 +1896,7 @@
 																<!--begin::Wrapper-->
 																<div class="me-3">
 																	<!--begin::Icon-->
-																	<img src="/assets/media/stock/ecommerce/211.gif" class="w-50px ms-n1 me-1" alt="" />
+																	<img src="/tenancy/assets/media/stock/ecommerce/211.gif" class="w-50px ms-n1 me-1" alt="" />
 																	<!--end::Icon-->
 																	<!--begin::Title-->
 																	<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 text-hover-primary fw-bold">Elephant 1802</a>
@@ -2009,7 +2009,7 @@
 																<!--begin::Wrapper-->
 																<div class="me-3">
 																	<!--begin::Icon-->
-																	<img src="/assets/media/stock/ecommerce/215.gif" class="w-50px ms-n1 me-1" alt="" />
+																	<img src="/tenancy/assets/media/stock/ecommerce/215.gif" class="w-50px ms-n1 me-1" alt="" />
 																	<!--end::Icon-->
 																	<!--begin::Title-->
 																	<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 text-hover-primary fw-bold">RiseUP</a>
@@ -2122,7 +2122,7 @@
 																<!--begin::Wrapper-->
 																<div class="me-3">
 																	<!--begin::Icon-->
-																	<img src="/assets/media/stock/ecommerce/192.gif" class="w-50px ms-n1 me-1" alt="" />
+																	<img src="/tenancy/assets/media/stock/ecommerce/192.gif" class="w-50px ms-n1 me-1" alt="" />
 																	<!--end::Icon-->
 																	<!--begin::Title-->
 																	<a href="../../demo1/dist/apps/ecommerce/catalog/edit-product.html" class="text-gray-800 text-hover-primary fw-bold">Yellow Stone</a>

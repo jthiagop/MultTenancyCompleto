@@ -16,7 +16,7 @@
     // Mensagem de estado vazio (reutilizável)
     const EMPTY_MESSAGE = `
         <div class="d-flex flex-column align-items-center justify-content-center py-10">
-            <img src="/assets/media/illustrations/traco-fino/chasing-money.svg" class="mw-300px mb-5" alt="Nenhum resultado encontrado" />
+            <img src="/tenancy/assets/media/illustrations/traco-fino/chasing-money.svg" class="mw-300px mb-5" alt="Nenhum resultado encontrado" />
             <div class="fs-3 fw-bold text-gray-900 mb-2">Nenhum resultado encontrado</div>
             <div class="fs-6 text-gray-500">Selecione outros filtros para refazer sua busca</div>
         </div>

@@ -40,11 +40,11 @@
                     <div class="col-lg-8">
                         <!--begin::Image input-->
                         <div class="image-input image-input-outline" data-kt-image-input="true"
-                            style="background-image: url('/assets/media/svg/avatars/blank.svg')">
+                            style="background-image: url('/tenancy/assets/media/svg/avatars/blank.svg')">
                             <!--begin::Preview existing avatar-->
                             <div class="image-input-wrapper w-125px h-125px bgi-position-center"
                                 style="background-size: cover; background-position: center; background-repeat: no-repeat;
-                                   background-image: url('{{ $company->avatar ? route('file', ['path' => $company->avatar]) : '/publicassets/media/avatars/blank.png' }}')">
+                                   background-image: url('{{ $company->avatar ? route('file', ['path' => $company->avatar]) : '/tenancy/assets/media/avatars/blank.png' }}')">
                             </div>
                             <!--end::Preview existing avatar-->
                             <!--begin::Label-->

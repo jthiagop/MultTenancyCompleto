@@ -18,19 +18,19 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 
-<script src="/assets/plugins/custom/formrepeater/formrepeater.bundle.js"></script>
-{{-- <script src="/assets/js/custom/apps/bancos/form-dropzone.js"></script> --}}
+<script src="/tenancy/assets/plugins/custom/formrepeater/formrepeater.bundle.js"></script>
+{{-- <script src="/tenancy/assets/js/custom/apps/bancos/form-dropzone.js"></script> --}}
 
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/bancos/shipping.js"></script>
-<script src="/assets/js/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/tenancy/assets/js/custom/apps/bancos/shipping.js"></script>
+<script src="/tenancy/assets/js/widgets.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
 
 
 <!--end::Custom Javascript-->

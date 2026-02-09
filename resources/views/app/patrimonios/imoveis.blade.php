@@ -179,20 +179,20 @@
 </x-tenant-app-layout>
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
-<script src="/assets/plugins/custom/prismjs/prismjs.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/prismjs/prismjs.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/patrimonio/imovel.js"></script>
-<script src="/assets/js/custom/utilities/modals/new-address-imovel.js"></script>
+<script src="/tenancy/assets/js/custom/apps/patrimonio/imovel.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/new-address-imovel.js"></script>
 
-<script src="/assets/js/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
-<script src="/assets/js/custom/utilities/modals/new-imovel.js"></script>
-<script src="/assets/plugins/custom/jquery.mask/jquery.mask.min.js"></script>
-<script src="/assets/js/toasts.js"></script>
+<script src="/tenancy/assets/js/widgets.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/new-imovel.js"></script>
+<script src="/tenancy/assets/plugins/custom/jquery.mask/jquery.mask.min.js"></script>
+<script src="/tenancy/assets/js/toasts.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->

@@ -43,7 +43,7 @@
 											<!--begin::Lists Widget 19-->
 											<div class="card card-flush h-xl-100">
 												<!--begin::Heading-->
-												<div class="card-header rounded bgi-no-repeat bgi-size-cover bgi-position-y-top bgi-position-x-center align-items-start h-250px" style="background-image:url('assets/media/svg/shapes/top-green.png" data-bs-theme="light">
+												<div class="card-header rounded bgi-no-repeat bgi-size-cover bgi-position-y-top bgi-position-x-center align-items-start h-250px" style="background-image:url('tenancy/assets/media/svg/shapes/top-green.png" data-bs-theme="light">
 													<!--begin::Title-->
 													<h3 class="card-title align-items-start flex-column text-white pt-15">
 														<span class="fw-bold fs-2x mb-3">Meus Tenancy</span>
@@ -913,7 +913,7 @@
 													</div>
 													<!--begin::Wrapper-->
 													<!--begin::Illustration-->
-													<img src="assets/media/illustrations/sigma-1/17-dark.png" class="position-absolute me-3 bottom-0 end-0 h-200px" alt="" />
+													<img src="/tenancy/assets/media/illustrations/sigma-1/17-dark.png" class="position-absolute me-3 bottom-0 end-0 h-200px" alt="" />
 													<!--end::Illustration-->
 												</div>
 												<!--end::Body-->

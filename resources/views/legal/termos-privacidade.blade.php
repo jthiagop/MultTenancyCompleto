@@ -7,13 +7,13 @@
     <meta charset="utf-8" />
     <meta name="description" content="Termos de Uso e Política de Privacidade do Sistema Dominus" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="shortcut icon" href="{{ url('assets/media/app/mini-logo.svg') }}" />
+    <link rel="shortcut icon" href="{{ url('tenancy/assets/media/app/mini-logo.svg') }}" />
     <!--begin::Fonts(mandatory for all pages)-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <!--end::Fonts-->
     <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-    <link href="../assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
-    <link href="../assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/tenancy/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/tenancy/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
     <!--end::Global Stylesheets Bundle-->
     <style>
         .terms-container {
@@ -366,11 +366,11 @@
     <!--end::Root-->
     <!--begin::Javascript-->
     <script>
-        var hostUrl = "assets/";
+        var hostUrl = "/tenancy/assets/";
     </script>
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-    <script src="/assets/plugins/global/plugins.bundle.js"></script>
-    <script src="/assets/js/scripts.bundle.js"></script>
+    <script src="/tenancy/assets/plugins/global/plugins.bundle.js"></script>
+    <script src="/tenancy/assets/js/scripts.bundle.js"></script>
     <!--end::Global Javascript Bundle-->
     <!--end::Javascript-->
 </body>

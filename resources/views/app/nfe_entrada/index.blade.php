@@ -234,4 +234,4 @@
 
 </x-tenant-app-layout>
 
-<script src="/assets/js/custom/apps/nfe-entrada/listing.js"></script>
+<script src="/tenancy/assets/js/custom/apps/nfe-entrada/listing.js"></script>

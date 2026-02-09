@@ -101,7 +101,7 @@
                                                                     </div>
                                                                 @else
                                                                     <img class="rounded-circle" alt="Logo"
-                                                                        src="/assets/media/png/perfil.svg" />
+                                                                        src="/tenancy/assets/media/png/perfil.svg" />
                                                                 @endif
                                                             </div>
                                                             <!--end::Avatar-->

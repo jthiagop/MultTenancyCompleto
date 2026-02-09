@@ -125,7 +125,7 @@
     </x-tenant-app-layout>
 
     <!--begin::Vendors Javascript(used for this page only)-->
-    <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+    <script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
     <!--begin::Custom Javascript(used for this page only)-->
     <!-- Scripts específicos são carregados dentro de cada partial -->
     <!--end::Vendors Javascript-->

@@ -608,23 +608,23 @@
 
 
 <script>
-    var hostUrl = "/assets/";
+    var hostUrl = "/tenancy/assets/";
 </script>
 <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-<script src="/assets/plugins/global/plugins.bundle.js"></script>
-<script src="/assets/js/scripts.bundle.js"></script>
+<script src="/tenancy/assets/plugins/global/plugins.bundle.js"></script>
+<script src="/tenancy/assets/js/scripts.bundle.js"></script>
 <!--end::Global Javascript Bundle-->
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/customers/list/export.js"></script>
-<script src="/assets/js/custom/apps/bancos/bancos.js"></script>
-<script src="/assets/js/custom/apps/customers/add.js"></script>
-<script src="/assets/js/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/tenancy/assets/js/custom/apps/customers/list/export.js"></script>
+<script src="/tenancy/assets/js/custom/apps/bancos/bancos.js"></script>
+<script src="/tenancy/assets/js/custom/apps/customers/add.js"></script>
+<script src="/tenancy/assets/js/widgets.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->

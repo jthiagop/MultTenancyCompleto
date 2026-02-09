@@ -51,7 +51,7 @@
                                 <!--begin::Image-->
                                 <div
                                     class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-                                    <img class="img-fluid w-100 h-100 rounded" src="/assets/media/png/lapide2.png"
+                                    <img class="img-fluid w-100 h-100 rounded" src="/tenancy/assets/media/png/lapide2.png"
                                         alt="image" />
                                 </div>
                                 <!--end::Image-->
@@ -272,19 +272,19 @@
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Michael Eberon">
-                                                <img alt="Pic" src="/assets/media/avatars/300-11.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-11.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Michelle Swanston">
-                                                <img alt="Pic" src="/assets/media/avatars/300-7.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-7.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Francis Mitcham">
-                                                <img alt="Pic" src="/assets/media/avatars/300-20.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-20.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
@@ -297,7 +297,7 @@
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Melody Macy">
-                                                <img alt="Pic" src="/assets/media/avatars/300-2.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-2.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
@@ -309,7 +309,7 @@
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Barry Walter">
-                                                <img alt="Pic" src="/assets/media/avatars/300-12.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-12.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::All users-->
@@ -758,22 +758,22 @@
     <!--end:::Main-->
 </x-tenant-app-layout>
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
-<script src="/assets/js/custom/apps/semiterio/add.js"></script>
-<script src="/assets/js/custom/apps/ecommerce/customers/details/transaction-history.js"></script>
+<script src="/tenancy/assets/js/custom/apps/semiterio/add.js"></script>
+<script src="/tenancy/assets/js/custom/apps/ecommerce/customers/details/transaction-history.js"></script>
 
-<script src="/assets/plugins/custom/formrepeater/formrepeater.bundle.js"></script>
-<script src="/assets/js/custom/apps/cemiterio/save-document.js"></script>
-<script src="/assets/js/custom/apps/ecommerce/reports/customer-orders/customer-orders.js"></script>
+<script src="/tenancy/assets/plugins/custom/formrepeater/formrepeater.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/cemiterio/save-document.js"></script>
+<script src="/tenancy/assets/js/custom/apps/ecommerce/reports/customer-orders/customer-orders.js"></script>
 
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/projects/project/project.js"></script>
-<script src="/assets/js/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
-<script src="/assets/js/custom/utilities/modals/new-target.js"></script>
+<script src="/tenancy/assets/js/custom/apps/projects/project/project.js"></script>
+<script src="/tenancy/assets/js/widgets.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/new-target.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->

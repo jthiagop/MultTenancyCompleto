@@ -51,7 +51,7 @@
                     <div class="d-flex">
                         <!--begin::Avatar-->
                         <div class="symbol symbol-circle symbol-45px">
-                            <img src="{{ url('assets/media/app/mini-logo.svg') }}" alt="" />
+                            <img src="{{ url('tenancy/assets/media/app/mini-logo.svg') }}" alt="" />
                         </div>
                         <!--end::Avatar-->
                         <!--begin::Details-->

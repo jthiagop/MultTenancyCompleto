@@ -55,15 +55,15 @@
                                 data-control="select2" data-placeholder="Selecione um banco">
                                 <option></option> <!-- para placeholder vazio -->
                                 <!-- Exemplo manual: -->
-                                <option value="Banco Bradesco" data-icon="/assets/media/svg/bancos/bradesco.svg">Banco Bradesco</option>
-                                <option value="Banco Caixa" data-icon="/assets/media/svg/bancos/caixa.svg">Banco Caixa </option>
-                                <option value="Banco Nubank" data-icon="/assets/media/svg/bancos/nubank.svg">Banco Nubank </option>
-                                <option value="Banco Itau" data-icon="/assets/media/svg/bancos/itau.svg">Banco Itaú </option>
-                                <option value="Banco do Brasil" data-icon="/assets/media/svg/bancos/brasil.svg">Banco do Brasil</option>
-                                <option value="Banco stone" data-icon="/assets/media/svg/bancos/stone.svg">Banco Stone </option>
-                                <option value="Banco Unicred" data-icon="/assets/media/svg/bancos/unicred.svg">Banco Unicred </option>
-                                <option value="Banco Sicoob" data-icon="/assets/media/svg/bancos/Sicoob.svg">Banco Sicoob</option>
-                                <option value="Banco Inter" data-icon="/assets/media/svg/bancos/inter.svg">Banco Inter </option>
+                                <option value="Banco Bradesco" data-icon="/tenancy/assets/media/svg/bancos/bradesco.svg">Banco Bradesco</option>
+                                <option value="Banco Caixa" data-icon="/tenancy/assets/media/svg/bancos/caixa.svg">Banco Caixa </option>
+                                <option value="Banco Nubank" data-icon="/tenancy/assets/media/svg/bancos/nubank.svg">Banco Nubank </option>
+                                <option value="Banco Itau" data-icon="/tenancy/assets/media/svg/bancos/itau.svg">Banco Itaú </option>
+                                <option value="Banco do Brasil" data-icon="/tenancy/assets/media/svg/bancos/brasil.svg">Banco do Brasil</option>
+                                <option value="Banco stone" data-icon="/tenancy/assets/media/svg/bancos/stone.svg">Banco Stone </option>
+                                <option value="Banco Unicred" data-icon="/tenancy/assets/media/svg/bancos/unicred.svg">Banco Unicred </option>
+                                <option value="Banco Sicoob" data-icon="/tenancy/assets/media/svg/bancos/Sicoob.svg">Banco Sicoob</option>
+                                <option value="Banco Inter" data-icon="/tenancy/assets/media/svg/bancos/inter.svg">Banco Inter </option>
                                 <!-- ... e assim por diante -->
                             </select>
 

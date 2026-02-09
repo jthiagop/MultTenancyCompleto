@@ -11,7 +11,7 @@
     // Mensagem de estado vazio (reutilizável)
     const EMPTY_MESSAGE = `
         <div class="d-flex flex-column align-items-center justify-content-center py-10">
-            <img src="/assets/media/illustrations/traco-fino/chasing-money.svg" class="mw-300px mb-5" alt="Nenhum resultado encontrado" />
+            <img src="/tenancy/assets/media/illustrations/traco-fino/chasing-money.svg" class="mw-300px mb-5" alt="Nenhum resultado encontrado" />
             <div class="fs-3 fw-bold text-gray-900 mb-2">Nenhum resultado encontrado</div>
             <div class="fs-6 text-gray-500">Selecione outros filtros para refazer sua busca</div>
         </div>
@@ -42,16 +42,26 @@
 
     /**
      * Inicializa um pane de DataTable
-     * @param {HTMLElement} paneEl - Elemento raiz do pane (.tenant-datatable-pane)
+     * @param {HTMLElement} paneEl - Elemento raiz do pane (.tenant-datatable-pane ou elemento com data-table-id/data-filter-id)
      */
     function initPane(paneEl) {
+        // Verificar se o elemento tem os atributos necessários
+        const hasTableId = paneEl.dataset.tableId || paneEl.dataset.filterId;
+        const hasStatsUrl = paneEl.dataset.statsUrl;
+        const hasDataUrl = paneEl.dataset.dataUrl;
+        
+        if (!hasTableId || !hasStatsUrl || !hasDataUrl) {
+            console.warn('[DataTable Pane] Elemento não tem atributos necessários:', paneEl);
+            return;
+        }
+        
         // Ler configuração dos data-* attributes
         const config = {
-            paneId: paneEl.dataset.paneId,
-            tableId: paneEl.dataset.tableId,
-            filterId: paneEl.dataset.filterId || paneEl.dataset.tableId, // Fallback para tableId se não fornecido
-            key: paneEl.dataset.key,
-            tipo: paneEl.dataset.tipo,
+            paneId: paneEl.dataset.paneId || paneEl.id || 'pane-' + Math.random().toString(36).substr(2, 9),
+            tableId: paneEl.dataset.tableId || paneEl.dataset.filterId,
+            filterId: paneEl.dataset.filterId || paneEl.dataset.tableId || paneEl.dataset.filterId,
+            key: paneEl.dataset.key || 'default',
+            tipo: paneEl.dataset.tipo || 'all',
             statsUrl: paneEl.dataset.statsUrl,
             dataUrl: paneEl.dataset.dataUrl,
             columns: JSON.parse(paneEl.dataset.columnsJson || '[]'),
@@ -59,6 +69,27 @@
             pageLength: parseInt(paneEl.dataset.pageLength || '50', 10),
             csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
         };
+        
+        console.log(`[DataTable Pane] Inicializando pane:`, {
+            paneId: config.paneId,
+            tableId: config.tableId,
+            filterId: config.filterId,
+            key: config.key,
+            tipo: config.tipo,
+            statsUrl: config.statsUrl,
+            dataUrl: config.dataUrl,
+            element: paneEl
+        });
+        
+        // Se não tiver tableId/filterId, não pode continuar
+        if (!config.tableId && !config.filterId) {
+            console.warn('[DataTable Pane] tableId ou filterId não encontrado:', paneEl);
+            return;
+        }
+        
+        // Usar filterId como fallback para tableId
+        if (!config.tableId) config.tableId = config.filterId;
+        if (!config.filterId) config.filterId = config.tableId;
 
         // Estado interno do pane
         const state = {
@@ -72,7 +103,12 @@
          * Atualiza as estatísticas das tabs
          */
         function updateStats() {
-            if (!config.statsUrl) return;
+            if (!config.statsUrl) {
+                console.warn(`[Pane ${config.paneId}] statsUrl não configurado, pulando updateStats`);
+                return;
+            }
+            
+            console.log(`[Pane ${config.paneId}] Atualizando estatísticas...`);
 
             const params = new URLSearchParams({
                 tipo: config.tipo,
@@ -103,9 +139,19 @@
                 }
             }
 
-            fetch(config.statsUrl + '?' + params)
-                .then(response => response.json())
+            const statsUrlFull = config.statsUrl + '?' + params;
+            console.log(`[Pane ${config.paneId}] Fazendo requisição para: ${statsUrlFull}`);
+            
+            fetch(statsUrlFull)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
                 .then(data => {
+                    console.log(`[Pane ${config.paneId}] Dados recebidos das stats:`, data);
+                    
                     // Determinar chaves de tabs baseado no tipo de pane
                     let tabKeys;
                     
@@ -121,12 +167,20 @@
 
                     // Atualizar os valores nas tabs dentro deste pane apenas
                     tabKeys.forEach(key => {
+                        // Buscar dentro do paneEl (pode estar no segmented-shell dentro dele)
                         const tabElement = paneEl.querySelector(`[data-tab-key="${key}"]`);
                         if (tabElement) {
-                            const valueElement = tabElement.querySelector('.fs-2');
+                            // Tentar encontrar .segmented-tab-count primeiro (novo componente)
+                            let valueElement = tabElement.querySelector('.segmented-tab-count');
+                            // Fallback para .fs-2 (componente antigo)
+                            if (!valueElement) {
+                                valueElement = tabElement.querySelector('.fs-2');
+                            }
+                            
                             if (valueElement) {
                                 const value = data[key] || '0,00';
                                 valueElement.textContent = value;
+                                console.log(`[Pane ${config.paneId}] Atualizado tab ${key}: ${value}`);
                                 
                                 // Se o valor for negativo, aplicar classe text-danger (vermelho)
                                 if (value.startsWith('-')) {
@@ -137,7 +191,11 @@
                                     // Para valores positivos, restaurar a classe original se necessário
                                     // (A classe original já está aplicada pelo Blade, então não precisamos fazer nada)
                                 }
+                            } else {
+                                console.warn(`[Pane ${config.paneId}] Elemento de valor não encontrado para tab ${key}`);
                             }
+                        } else {
+                            console.warn(`[Pane ${config.paneId}] Tab element não encontrado para key: ${key}`);
                         }
                     });
                 })
@@ -246,9 +304,30 @@
             if (skeleton) skeleton.classList.remove('d-none');
             if (tableWrapper) tableWrapper.classList.add('d-none');
 
+            // Verificar se jQuery está disponível
+            if (typeof $ === 'undefined' || typeof jQuery === 'undefined') {
+                console.error(`[Pane ${config.paneId}] jQuery não está disponível! Aguardando...`);
+                setTimeout(function() {
+                    if (typeof $ !== 'undefined') {
+                        initDataTable(status);
+                    } else {
+                        console.error(`[Pane ${config.paneId}] jQuery ainda não está disponível após timeout`);
+                    }
+                }, 500);
+                return;
+            }
+
             // Verificar se DataTable está disponível
             if (!$.fn.DataTable) {
-                console.error('[DataTable] jQuery DataTables não está carregado!');
+                console.error(`[Pane ${config.paneId}] jQuery DataTables não está carregado!`);
+                return;
+            }
+
+            console.log(`[Pane ${config.paneId}] Inicializando DataTable para tabela: #${config.tableId}`);
+            
+            const tableElement = document.getElementById(config.tableId);
+            if (!tableElement) {
+                console.error(`[Pane ${config.paneId}] Tabela #${config.tableId} não encontrada no DOM!`);
                 return;
             }
 
@@ -659,7 +738,8 @@
         const observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-                    if (paneEl.classList.contains('show')) {
+                    if (paneEl.classList.contains('show') || paneEl.classList.contains('active')) {
+                        console.log(`[Pane ${config.paneId}] Pane ficou visível, inicializando...`);
                         updateStats();
                         if (!state.dataTable) {
                             initDataTable();
@@ -672,12 +752,36 @@
         observer.observe(paneEl, { attributes: true });
 
         // Inicializar imediatamente se já estiver ativo
-        if (paneEl.classList.contains('show')) {
-            updateStats();
-            initDataTable();
-            // Garantir visibilidade correta da coluna Saldo
-            toggleSaldoColumn(state.currentStatus);
+        if (paneEl.classList.contains('show') || paneEl.classList.contains('active')) {
+            console.log(`[Pane ${config.paneId}] Pane já está ativo, inicializando imediatamente...`);
+            // Aguardar um pouco para garantir que jQuery está disponível
+            setTimeout(function() {
+                updateStats();
+                initDataTable();
+                // Garantir visibilidade correta da coluna Saldo
+                toggleSaldoColumn(state.currentStatus);
+            }, 100);
+        } else {
+            console.log(`[Pane ${config.paneId}] Pane não está ativo ainda (classes: ${paneEl.className})`);
         }
+        
+        // Também observar mudanças nas tabs internas (segmented-tabs-toolbar)
+        // Quando uma tab é clicada, garantir que os dados sejam carregados
+        const tabButtons = paneEl.querySelectorAll('[data-bs-toggle="tab"]');
+        tabButtons.forEach(function(button) {
+            button.addEventListener('shown.bs.tab', function(event) {
+                // Aguardar um pouco para garantir que a tab foi ativada
+                setTimeout(function() {
+                    updateStats();
+                    if (!state.dataTable) {
+                        initDataTable();
+                    } else {
+                        // Recarregar dados se a tabela já existir
+                        reloadTable();
+                    }
+                }, 100);
+            });
+        });
 
         // Armazenar referência ao state no elemento para debug (opcional)
         paneEl._tenantPaneState = state;
@@ -708,33 +812,95 @@
 
     // Inicializar todos os panes quando o DOM estiver pronto
     function initAllPanes() {
-        const panes = document.querySelectorAll('.tenant-datatable-pane');
-        panes.forEach(function(paneEl) {
+        console.log('[TenantDataTablePane] Buscando panes para inicializar...');
+        
+        // Suportar tanto tenant-datatable-pane quanto elementos com data-table-id/data-filter-id
+        const oldPanes = document.querySelectorAll('.tenant-datatable-pane');
+        console.log(`[TenantDataTablePane] Encontrados ${oldPanes.length} elementos com classe .tenant-datatable-pane`);
+        
+        // Buscar elementos com data-table-id ou data-filter-id (pode estar no div pai ou no segmented-shell)
+        const elementsWithTableId = document.querySelectorAll('[data-table-id]');
+        const elementsWithFilterId = document.querySelectorAll('[data-filter-id]');
+        console.log(`[TenantDataTablePane] Encontrados ${elementsWithTableId.length} elementos com data-table-id`);
+        console.log(`[TenantDataTablePane] Encontrados ${elementsWithFilterId.length} elementos com data-filter-id`);
+        
+        // Combinar todos os seletores
+        const allElements = [...oldPanes, ...elementsWithTableId, ...elementsWithFilterId];
+        
+        // Remover duplicatas e filtrar apenas elementos que têm os atributos necessários
+        const uniquePanes = Array.from(new Set(allElements)).filter(function(el) {
+            // Deve ter data-table-id ou data-filter-id, e data-stats-url e data-data-url
+            const hasRequiredAttrs = (el.dataset.tableId || el.dataset.filterId) && 
+                                     el.dataset.statsUrl && 
+                                     el.dataset.dataUrl;
+            
+            if (!hasRequiredAttrs) {
+                console.warn('[TenantDataTablePane] Elemento sem atributos necessários:', el, {
+                    tableId: el.dataset.tableId,
+                    filterId: el.dataset.filterId,
+                    statsUrl: el.dataset.statsUrl,
+                    dataUrl: el.dataset.dataUrl
+                });
+            }
+            
+            return hasRequiredAttrs;
+        });
+        
+        console.log(`[TenantDataTablePane] Total de ${uniquePanes.length} panes válidos para inicializar`);
+        
+        uniquePanes.forEach(function(paneEl, index) {
             try {
+                console.log(`[TenantDataTablePane] Inicializando pane ${index + 1}/${uniquePanes.length}...`);
                 initPane(paneEl);
             } catch (error) {
-                console.error('Erro ao inicializar pane:', paneEl, error);
+                console.error(`[TenantDataTablePane] Erro ao inicializar pane ${index + 1}:`, paneEl, error);
             }
         });
+    }
+
+    // Função para aguardar dependências e inicializar
+    function waitForDependenciesAndInit() {
+        const maxAttempts = 50; // 5 segundos máximo (50 * 100ms)
+        let attempts = 0;
+        
+        function checkAndInit() {
+            attempts++;
+            
+            const hasJQuery = typeof $ !== 'undefined' || typeof jQuery !== 'undefined';
+            const hasMoment = typeof moment !== 'undefined';
+            const hasDataTables = hasJQuery && (typeof $.fn !== 'undefined' && typeof $.fn.DataTable !== 'undefined');
+            
+            console.log(`[TenantDataTablePane] Tentativa ${attempts}/${maxAttempts} - jQuery: ${hasJQuery}, Moment: ${hasMoment}, DataTables: ${hasDataTables}`);
+            
+            if (hasJQuery && hasMoment && hasDataTables) {
+                console.log('[TenantDataTablePane] Todas as dependências carregadas. Inicializando panes...');
+                initAllPanes();
+            } else if (attempts < maxAttempts) {
+                setTimeout(checkAndInit, 100);
+            } else {
+                console.error('[TenantDataTablePane] Timeout aguardando dependências!', {
+                    jQuery: hasJQuery,
+                    moment: hasMoment,
+                    dataTables: hasDataTables
+                });
+                // Tentar inicializar mesmo assim (pode funcionar se as dependências carregarem depois)
+                initAllPanes();
+            }
+        }
+        
+        checkAndInit();
     }
 
     // Aguardar DOM e dependências
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            // Aguardar jQuery e moment.js
-            if (typeof $ === 'undefined' || typeof moment === 'undefined') {
-                setTimeout(initAllPanes, 100);
-            } else {
-                initAllPanes();
-            }
+            console.log('[TenantDataTablePane] DOM carregado, aguardando dependências...');
+            waitForDependenciesAndInit();
         });
     } else {
         // DOM já está pronto
-        if (typeof $ === 'undefined' || typeof moment === 'undefined') {
-            setTimeout(initAllPanes, 100);
-        } else {
-            initAllPanes();
-        }
+        console.log('[TenantDataTablePane] DOM já pronto, aguardando dependências...');
+        waitForDependenciesAndInit();
     }
 
     // Exportar para uso global se necessário (opcional)

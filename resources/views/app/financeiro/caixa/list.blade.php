@@ -25,7 +25,7 @@
                                 <!--begin::Image-->
                                 <span class="svg-icon svg-icon-5x me-5">
                                     <img width="150" height="150"
-                                        src="/assets/media/png/Cash_Register-transformed.webp" alt="">
+                                        src="/tenancy/assets/media/png/Cash_Register-transformed.webp" alt="">
                                 </span>
                                 <!--end::Image-->
                                 <!--begin::Wrapper-->
@@ -245,19 +245,19 @@
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Michael Eberon">
-                                                <img alt="Pic" src="/assets/media/avatars/300-11.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-11.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Michelle Swanston">
-                                                <img alt="Pic" src="/assets/media/avatars/300-7.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-7.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Francis Mitcham">
-                                                <img alt="Pic" src="/assets/media/avatars/300-20.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-20.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
@@ -270,7 +270,7 @@
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Melody Macy">
-                                                <img alt="Pic" src="/assets/media/avatars/300-2.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-2.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
@@ -282,7 +282,7 @@
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Barry Walter">
-                                                <img alt="Pic" src="/assets/media/avatars/300-12.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-12.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::All users-->
@@ -358,19 +358,19 @@
 
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/caixa/shipping.js"></script>
-<script src="/assets/js/custom/utilities/modals/financeiro/new-caixa.js"></script>
+<script src="/tenancy/assets/js/custom/apps/caixa/shipping.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/financeiro/new-caixa.js"></script>
 
-<script src="/assets/js/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/tenancy/assets/js/widgets.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
 <!--end::Custom Javascript-->
-<script src="/assets/js/custom/apps/user-management/users/list/table.js"></script>
+<script src="/tenancy/assets/js/custom/apps/user-management/users/list/table.js"></script>
 
 <!--end::Javascript-->
 

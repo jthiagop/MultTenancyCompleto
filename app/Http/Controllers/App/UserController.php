@@ -32,13 +32,13 @@ class UserController extends Controller
     {
         $modules = Module::where('is_active', true)->get();
         $moduleIcons = [];
-        $defaultIcon = asset('assets/media/avatars/blank.png');
+        $defaultIcon = asset('tenancy/assets/media/avatars/blank.png');
 
         // Ícones para módulos que existem apenas como permissões (sem registro na tabela modules)
         $fallbackIcons = [
-            'users' => '/assets/media/png/perfil.svg',
-            'notafiscal' => '/assets/media/png/nfe.svg',
-            'company' => '/assets/media/png/building.svg',
+            'users' => '/tenancy/assets/media/png/perfil.svg',
+            'notafiscal' => '/tenancy/assets/media/png/nfe.svg',
+            'company' => '/tenancy/assets/media/png/building.svg',
         ];
 
         // Adicionar fallbacks primeiro

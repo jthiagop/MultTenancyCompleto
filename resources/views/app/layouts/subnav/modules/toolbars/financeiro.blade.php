@@ -10,7 +10,7 @@
 
     <!--begin::Notas Button-->
     <a href="{{ route('nfe_entrada.index') }}" class="btn btn-sm btn-light-primary fw-semibold px-4 rounded-pill" active="{{ Route::is('nfe_entrada.index') }}">
-        <img src="{{ global_asset('assets/media/logos/nfe.svg') }}" class="h-20px" alt="NFe" />
+        <img src="{{ global_asset('tenancy/assets/media/logos/nfe.svg') }}" class="h-20px" alt="NFe" />
         <span class="ms-2 ">Notas Fiscais</span>
     </a>
     <!--end::Notas Button-->

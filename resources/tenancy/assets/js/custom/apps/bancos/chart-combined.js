@@ -119,6 +119,7 @@ var KTAppBancoChartCombined = function () {
         var ano = document.getElementById('chart-year-filter').value;
         var bancoId = document.getElementById('chart-bank-filter').value;
 
+        console.log('Carregando dados do gráfico:', { mes, ano, bancoId });
 
         // Mostrar loading (ApexCharts não tem showLoading, vamos usar uma abordagem diferente)
 

@@ -23,13 +23,13 @@
     <meta property="og:url" content="https://dominusbr.com/" />
     <meta property="og:site_name" content="Dominus | Dominus Sistema Eclesial" />
     <link rel="canonical" href="https://dominusbr.com/login" />
-    <link rel="shortcut icon" href="assets/media/logos/favicon.ico" />
+    <link rel="shortcut icon" href="/tenancy/assets/media/logos/favicon.ico" />
     <!--begin::Fonts(mandatory for all pages)-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <!--end::Fonts-->
     <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-    <link href="../assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
-    <link href="../assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/tenancy/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/tenancy/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
     <!--end::Global Stylesheets Bundle-->
 </head>
 <!--end::Head-->
@@ -63,19 +63,19 @@
         <div class="d-flex flex-column flex-lg-row flex-column-fluid">
             <!--begin::Aside-->
             <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                style="background-image: url('{{ $backgroundImage ? route('file', ['path' => $backgroundImage]) : asset('/assets/media/misc/penha.png') }}');">
+                style="background-image: url('{{ $backgroundImage ? route('file', ['path' => $backgroundImage]) : asset('/tenancy/assets/media/misc/penha.png') }}');">
 
                 <!--begin::Content-->
                 <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100">
                     <!--begin::Logo-->
                     <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20">
-                        <img alt="Logo" src="/assets/media/logos/default.svg" class="h-40px h-lg-50px" />
+                        <img alt="Logo" src="/tenancy/assets/media/logos/default.svg" class="h-40px h-lg-50px" />
                     </a>
                     <!--end::Logo-->
 
                     <!--begin::Image-->
                     <img class="d-none d-lg-block mx-auto w-300px w-lg-75 w-xl-500px mb-10 mb-lg-20"
-                        src="assets/media/misc/auth-screens.png" alt="" />
+                        src="/tenancy/assets/media/misc/auth-screens.png" alt="" />
                     <!--end::Image-->
                     <div class="glass-effect">
                         <!--begin::Title-->
@@ -111,7 +111,7 @@
                 <div class="d-flex flex-center flex-column flex-lg-row-fluid">
                     <!--begin::Logo-->
                     <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-50">
-                        <img alt="Logo" src="assets/media/logos/apple-touch-icon.svg" class="h-100px h-lg-100px" />
+                        <img alt="Logo" src="/tenancy/assets/media/logos/apple-touch-icon.svg" class="h-100px h-lg-100px" />
                     </a>
                     <!--begin::Wrapper-->
                     <div class="w-lg-500px p-10">
@@ -255,11 +255,11 @@
     <!--end::Root-->
     <!--begin::Javascript-->
     <script>
-        var hostUrl = "assets/";
+        var hostUrl = "/tenancy/assets/";
     </script>
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-    <script src="/assets/plugins/global/plugins.bundle.js"></script>
-    <script src="/assets/js/scripts.bundle.js"></script>
+    <script src="/tenancy/assets/plugins/global/plugins.bundle.js"></script>
+    <script src="/tenancy/assets/js/scripts.bundle.js"></script>
     <!--end::Global Javascript Bundle-->
     <!--begin::Custom Javascript(used for this page only)-->
     <!--end::Custom Javascript-->

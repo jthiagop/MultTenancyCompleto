@@ -131,7 +131,7 @@
 
 
     <!--begin::Scripts - Adicionar Conta-->
-    <script src="/assets/js/custom/apps/notafiscal/adicionar-conta.js"></script>
+    <script src="/tenancy/assets/js/custom/apps/notafiscal/adicionar-conta.js"></script>
     <!--end::Scripts - Adicionar Conta-->
 
 </x-tenant-app-layout>

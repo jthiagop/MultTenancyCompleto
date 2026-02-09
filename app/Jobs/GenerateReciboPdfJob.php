@@ -128,7 +128,7 @@ class GenerateReciboPdfJob implements ShouldQueue
     protected function logoToBase64($company): ?string
     {
         if (!$company || !$company->avatar) {
-            $path = public_path('assets/media/png/perfil.svg');
+            $path = public_path('tenancy/assets/media/png/perfil.svg');
         } else {
             $path = storage_path('app/public/' . $company->avatar);
         }

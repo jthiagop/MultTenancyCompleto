@@ -9,7 +9,7 @@
     <meta content="Dominus Sistema Eclesial - Interface V2" name="description"/>
     
     <!-- Favicon -->
-    <link href="{{ asset('assets/media/app/favicon.ico') }}" rel="shortcut icon"/>
+    <link href="{{ asset('tenancy/assets/media/app/favicon.ico') }}" rel="shortcut icon"/>
     
     <!-- Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>

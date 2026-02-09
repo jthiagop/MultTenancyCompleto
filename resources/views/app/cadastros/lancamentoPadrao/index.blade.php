@@ -661,17 +661,17 @@
 
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="assets/js/custom/apps/ecommerce/customers/listing/listing.js"></script>
-<script src="assets/js/custom/apps/cadastros/lancamentoPadrao/add.js"></script>
-<script src="assets/js/custom/apps/cadastros/lancamentoPadrao/edit.js"></script>
-<script src="assets/js/custom/apps/ecommerce/customers/listing/export.js"></script>
-<script src="assets/js/widgets.bundle.js"></script>
-<script src="assets/js/custom/apps/chat/chat.js"></script>
-<script src="assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/tenancy/assets/js/custom/apps/ecommerce/customers/listing/listing.js"></script>
+<script src="/tenancy/assets/js/custom/apps/cadastros/lancamentoPadrao/add.js"></script>
+<script src="/tenancy/assets/js/custom/apps/cadastros/lancamentoPadrao/edit.js"></script>
+<script src="/tenancy/assets/js/custom/apps/ecommerce/customers/listing/export.js"></script>
+<script src="/tenancy/assets/js/widgets.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->

@@ -85,11 +85,11 @@
                                             <!--begin::Image placeholder-->
                                             <style>
                                                 .image-input-placeholder {
-                                                    background-image: url('/assets/media/svg/files/blank-image.svg');
+                                                    background-image: url('/tenancy/assets/media/svg/files/blank-image.svg');
                                                 }
 
                                                 [data-bs-theme="dark"] .image-input-placeholder {
-                                                    background-image: url('/assets/media/svg/files/blank-image-dark.svg');
+                                                    background-image: url('/tenancy/assets/media/svg/files/blank-image-dark.svg');
                                                 }
                                             </style>
                                             <!--end::Image placeholder-->
@@ -497,7 +497,7 @@
                                         $actionNames = $permissionService->getActionNames();
                                         // $moduleIcons já vem do controller com os dados do banco
                                         // Se não existir, usar fallback padrão
-                                        $defaultIcon = asset('assets/media/avatars/blank.png');
+                                        $defaultIcon = asset('tenancy/assets/media/avatars/blank.png');
                                     @endphp
 
                                     <!--begin::Legenda-->
@@ -870,7 +870,7 @@
     </div>
 </x-tenant-app-layout>
 
-<script src="/assets/js/custom/account/settings/signin-methods.js"></script>
+<script src="/tenancy/assets/js/custom/account/settings/signin-methods.js"></script>
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {

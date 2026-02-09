@@ -47,7 +47,7 @@
                                 <!--begin::Item-->
                                 <div class="d-flex flex-stack">
                                     <div class="d-flex">
-                                        <img src="assets/media/svg/brand-logos/google-icon.svg" class="w-30px me-6"
+                                        <img src="/tenancy/assets/media/svg/brand-logos/google-icon.svg" class="w-30px me-6"
                                             alt="" />
                                         <div class="d-flex flex-column">
                                             <a href="#"
@@ -77,7 +77,7 @@
                                 <!--begin::Item-->
                                 <div class="d-flex flex-stack">
                                     <div class="d-flex">
-                                        <img src="assets/media/svg/brand-logos/github.svg" class="w-30px me-6"
+                                        <img src="/tenancy/assets/media/svg/brand-logos/github.svg" class="w-30px me-6"
                                             alt="" />
                                         <div class="d-flex flex-column">
                                             <a href="#"
@@ -108,7 +108,7 @@
                                 <!--begin::Item-->
                                 <div class="d-flex flex-stack">
                                     <div class="d-flex">
-                                        <img src="assets/media/svg/brand-logos/slack-icon.svg" class="w-30px me-6"
+                                        <img src="/tenancy/assets/media/svg/brand-logos/slack-icon.svg" class="w-30px me-6"
                                             alt="" />
                                         <div class="d-flex flex-column">
                                             <a href="#"

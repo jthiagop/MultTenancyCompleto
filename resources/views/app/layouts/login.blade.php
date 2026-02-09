@@ -12,13 +12,13 @@
     <meta property="og:url" content="https://keenthemes.com/keen" />
     <meta property="og:site_name" content="Keenthemes | Keen" />
     <link rel="canonical" href="https://preview.keenthemes.com/keen" />
-    <link rel="shortcut icon" href="/assets/media/logos/favicon.ico" />
+    <link rel="shortcut icon" href="/tenancy/assets/media/logos/favicon.ico" />
     <!--begin::Fonts(mandatory for all pages)-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <!--end::Fonts-->
     <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-    <link href="/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
-    <link href="/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/tenancy/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/tenancy/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
 
     <!--end::Global Stylesheets Bundle-->
 </head>
@@ -28,11 +28,11 @@
 
     <!--begin::Javascript-->
     <script>
-        var hostUrl = "assets/";
+        var hostUrl = "/tenancy/assets/";
     </script>
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-    <script src="/assets/plugins/global/plugins.bundle.js"></script>
-    <script src="/assets/js/scripts.bundle.js"></script>
+    <script src="/tenancy/assets/plugins/global/plugins.bundle.js"></script>
+    <script src="/tenancy/assets/js/scripts.bundle.js"></script>
     <!--end::Global Javascript Bundle-->
     <!--begin::Custom Javascript(used for this page only)-->
     <!--end::Custom Javascript-->

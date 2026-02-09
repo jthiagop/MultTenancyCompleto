@@ -232,7 +232,7 @@
 
                                     <!--begin::Payment method=-->
                                     <td data-filter="mastercard">
-                                        <img src="assets/media/svg/card-logos/mastercard.svg" class="w-35px me-3"
+                                        <img src="/tenancy/assets/media/svg/card-logos/mastercard.svg" class="w-35px me-3"
                                             alt="" />
                                             @foreach ($tenant->domains as $domain)
                                             {{ $domain->domain }} {{ $loop->last ? '' : ',' }}
@@ -648,13 +648,13 @@
 <!--end::Vendors Javascript-->
 
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/customers/list/export.js"></script>
-<script src="/assets/js/custom/apps/customers/list/list.js"></script>
-<script src="/assets/js/custom/apps/customers/add.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/tenancy/assets/js/custom/apps/customers/list/export.js"></script>
+<script src="/tenancy/assets/js/custom/apps/customers/list/list.js"></script>
+<script src="/tenancy/assets/js/custom/apps/customers/add.js"></script>
+<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
 
 <!--begin::Script para Modal de Código de Acesso Mobile-->
 <script>

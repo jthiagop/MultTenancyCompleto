@@ -94,7 +94,7 @@
                                                             <img src="{{ route('file', ['path' => $user->avatar]) }}"
                                                                 alt="{{ $user->name }}" class="w-100">
                                                         @else
-                                                            <img src="/assets/media/avatars/300-6.jpg"
+                                                            <img src="/tenancy/assets/media/avatars/300-6.jpg"
                                                                 alt="{{ $user->name }}" class="w-100">
                                                         @endif
                                                     </div>
@@ -187,17 +187,17 @@
 
     @push('scripts')
         <!--begin::Vendors Javascript(used for this page only)-->
-        <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+        <script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
         <!--end::Vendors Javascript-->
         <!--begin::Custom Javascript(used for this page only)-->
-        <script src="/assets/js/custom/apps/user-management/users/list/table.js"></script>
-        <script src="/assets/js/custom/apps/user-management/users/list/export-users.js"></script>
-        <script src="/assets/js/custom/apps/user-management/users/list/add.js"></script>
-        <script src="/assets/js/widgets.bundle.js"></script>
-        <script src="/assets/js/custom/apps/chat/chat.js"></script>
-        <script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-        <script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-        <script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+        <script src="/tenancy/assets/js/custom/apps/user-management/users/list/table.js"></script>
+        <script src="/tenancy/assets/js/custom/apps/user-management/users/list/export-users.js"></script>
+        <script src="/tenancy/assets/js/custom/apps/user-management/users/list/add.js"></script>
+        <script src="/tenancy/assets/js/widgets.bundle.js"></script>
+        <script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
     @endpush
     <!--end::Custom Javascript-->
     <!--end::Javascript-->

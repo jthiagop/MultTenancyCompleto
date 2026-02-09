@@ -24,8 +24,8 @@
         <!--begin::Mobile logo-->
         <div class="d-flex align-items-center flex-grow-1 flex-lg-grow-0">
             <a href="{{ route('dashboard') }}" class="d-lg-none">
-                <img alt="Logo" src="{{ url('assets/media/app/mini-logo.svg') }}" class="theme-light-show h-30px" />
-                <img alt="Logo" src="{{ url('assets/media/app/mini-logo.svg') }}" class="theme-dark-show h-30px" />
+                <img alt="Logo" src="{{ url('tenancy/assets/media/app/mini-logo.svg') }}" class="theme-light-show h-30px" />
+                <img alt="Logo" src="{{ url('tenancy/assets/media/app/mini-logo.svg') }}" class="theme-dark-show h-30px" />
             </a>
         </div>
         <!--end::Mobile logo-->
@@ -78,12 +78,12 @@
         <div class="app-sidebar-logo px-6" id="kt_app_sidebar_logo">
             <!--begin::Logo image-->
             <a href="{{ route('dashboard') }}">
-                <img alt="Logo" src="/assets/media/app/default-logo-dark.svg"
+                <img alt="Logo" src="/tenancy/assets/media/app/default-logo-dark.svg"
                     class="h-30px app-sidebar-logo-default" />
             </a>
             <!--end::Logo image-->
             <!--begin::Logo Icon-->
-            <img alt="Logo" class="h-30px app-sidebar-logo-minimize" src="/assets/media/app/mini-logo.svg" />
+            <img alt="Logo" class="h-30px app-sidebar-logo-minimize" src="/tenancy/assets/media/app/mini-logo.svg" />
             <!--end::Logo Icon-->
 
             @php

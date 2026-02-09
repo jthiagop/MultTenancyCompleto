@@ -156,7 +156,7 @@ class ReciboController extends Controller
     {
         if (!$company || !$company->avatar) {
             // Caminho para uma imagem padrão caso a empresa não tenha logo
-            $path = public_path('assets/media/png/perfil.svg');
+            $path = public_path('tenancy/assets/media/png/perfil.svg');
         } else {
             $path = storage_path('app/public/' . $company->avatar);
         }

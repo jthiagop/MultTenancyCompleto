@@ -1080,7 +1080,7 @@
 														<div class="d-flex align-items-center mb-5">
 															<!--begin::Icon-->
 															<div class="symbol symbol-30px me-5">
-																<img alt="Icon" src="/assets/media/svg/files/pdf.svg" />
+																<img alt="Icon" src="/tenancy/assets/media/svg/files/pdf.svg" />
 															</div>
 															<!--end::Icon-->
 															<!--begin::Details-->
@@ -1188,7 +1188,7 @@
 														<div class="d-flex align-items-center mb-5">
 															<!--begin::Icon-->
 															<div class="symbol symbol-30px me-5">
-																<img alt="Icon" src="/assets/media/svg/files/doc.svg" />
+																<img alt="Icon" src="/tenancy/assets/media/svg/files/doc.svg" />
 															</div>
 															<!--end::Icon-->
 															<!--begin::Details-->
@@ -1296,7 +1296,7 @@
 														<div class="d-flex align-items-center mb-5">
 															<!--begin::Icon-->
 															<div class="symbol symbol-30px me-5">
-																<img alt="Icon" src="/assets/media/svg/files/css.svg" />
+																<img alt="Icon" src="/tenancy/assets/media/svg/files/css.svg" />
 															</div>
 															<!--end::Icon-->
 															<!--begin::Details-->
@@ -1404,7 +1404,7 @@
 														<div class="d-flex align-items-center">
 															<!--begin::Icon-->
 															<div class="symbol symbol-30px me-5">
-																<img alt="Icon" src="/assets/media/svg/files/ai.svg" />
+																<img alt="Icon" src="/tenancy/assets/media/svg/files/ai.svg" />
 															</div>
 															<!--end::Icon-->
 															<!--begin::Details-->
@@ -1568,7 +1568,7 @@
 														<div class="me-5 position-relative">
 															<!--begin::Image-->
 															<div class="symbol symbol-35px symbol-circle">
-																<img alt="Pic" src="/assets/media/avatars/300-6.jpg" />
+																<img alt="Pic" src="/tenancy/assets/media/avatars/300-6.jpg" />
 															</div>
 															<!--end::Image-->
 														</div>
@@ -1615,7 +1615,7 @@
 														<div class="me-5 position-relative">
 															<!--begin::Image-->
 															<div class="symbol symbol-35px symbol-circle">
-																<img alt="Pic" src="/assets/media/avatars/300-1.jpg" />
+																<img alt="Pic" src="/tenancy/assets/media/avatars/300-1.jpg" />
 															</div>
 															<!--end::Image-->
 														</div>
@@ -1637,7 +1637,7 @@
 														<div class="me-5 position-relative">
 															<!--begin::Image-->
 															<div class="symbol symbol-35px symbol-circle">
-																<img alt="Pic" src="/assets/media/avatars/300-5.jpg" />
+																<img alt="Pic" src="/tenancy/assets/media/avatars/300-5.jpg" />
 															</div>
 															<!--end::Image-->
 														</div>
@@ -1659,7 +1659,7 @@
 														<div class="me-5 position-relative">
 															<!--begin::Image-->
 															<div class="symbol symbol-35px symbol-circle">
-																<img alt="Pic" src="/assets/media/avatars/300-25.jpg" />
+																<img alt="Pic" src="/tenancy/assets/media/avatars/300-25.jpg" />
 															</div>
 															<!--end::Image-->
 														</div>

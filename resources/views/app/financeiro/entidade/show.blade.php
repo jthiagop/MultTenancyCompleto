@@ -65,4 +65,4 @@
 </script>
 
 {{-- Script de Conciliação de Missas --}}
-<script src="/assets/js/custom/apps/financeiro/conciliacao-missas.js"></script>
+<script src="/tenancy/assets/js/custom/apps/financeiro/conciliacao-missas.js"></script>

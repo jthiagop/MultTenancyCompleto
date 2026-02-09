@@ -30,7 +30,7 @@
     @else
         {{-- Ícone de caixa (cofre) --}}
         <span class="symbol-label rounded-circle">
-            <img src="/assets/media/icons/png/porco.png"
+            <img src="/tenancy/assets/media/icons/png/porco.png"
                  alt="Caixa"
                  class="w-100 h-100"
                  style="object-fit: cover;" />

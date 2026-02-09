@@ -68,7 +68,7 @@
             {{-- Empty --}}
             <div class="text-center py-5"
                  :class="{ 'd-none': !(!isLoading && notifications.length === 0) }">
-                <img src="{{ global_asset('assets/media/illustration/search_list.png') }}"
+                <img src="{{ global_asset('tenancy/assets/media/illustration/search_list.png') }}"
                      alt="Sem notificações" class="mb-3" style="max-width: 120px;">
                 <p class="text-muted mb-0">Nenhuma notificação</p>
             </div>
@@ -201,7 +201,7 @@
                 {{-- Empty --}}
                 <div class="d-flex flex-column align-items-center justify-content-center py-10"
                      :class="{ 'd-none': !(!isLoading && notifications.length === 0) }">
-                    <img src="{{ global_asset('assets/media/illustration/search_list.png') }}"
+                    <img src="{{ global_asset('tenancy/assets/media/illustration/search_list.png') }}"
                          alt="Sem notificações" class="mb-4" style="max-width: 160px; opacity: 0.7;">
                     <p class="text-muted mb-0 fs-6" x-text="emptyMessage()"></p>
                 </div>

@@ -147,7 +147,7 @@ var KTFileManagerList = function () {
             ],
             'language': {
                 emptyTable: `<div class="d-flex flex-column flex-center">
-                    <img src="/assets/media/illustrations/sketchy-1/5.png" class="mw-400px" />
+                    <img src="/tenancy/assets/media/illustrations/sketchy-1/5.png" class="mw-400px" />
                     <div class="fs-1 fw-bolder text-dark mb-4">nenhum item encontrado.</div>
                     <div class="fs-6">Comece criando um novo arquivo!!</div>
                 </div>`

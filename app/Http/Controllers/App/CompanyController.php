@@ -81,7 +81,7 @@ class CompanyController extends Controller
     public function show($companyId, Request $request)
     {
         // Caminho para a pasta com os SVGs
-    $svgPath = public_path('assets/media/svg/bancos');
+    $svgPath = public_path('tenancy/assets/media/svg/bancos');
 
     // Filtra todos os arquivos .svg do diretório
     $svgFiles = File::files($svgPath);
@@ -94,7 +94,7 @@ class CompanyController extends Controller
         $listaBancos[] = [
             'slug'   => $filename,
             'label'  => ucfirst($filename), // ou algo custom
-            // Ex: /assets/media/svg/bancos/bradesco.svg
+            // Ex: /tenancy/assets/media/svg/bancos/bradesco.svg
             'icon'   => asset("assets/media/svg/bancos/{$file->getFilename()}"),
         ];
     }

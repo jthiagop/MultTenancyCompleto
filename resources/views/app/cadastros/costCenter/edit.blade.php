@@ -296,4 +296,4 @@
     <!--end::Modal - Select Users-->
 </x-tenant-app-layout>
 
-<script src="/assets/js/custom/utilities/modals/financeiro/new-centro-custo.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/financeiro/new-centro-custo.js"></script>

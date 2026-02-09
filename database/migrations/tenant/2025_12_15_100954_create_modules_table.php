@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('key'); // Ex: 'financeiro'
             $table->string('name'); // Ex: 'Financeiro'
             $table->string('route_name'); // Ex: 'caixa.index'
-            $table->string('icon_path')->nullable(); // Ex: '/assets/media/png/financeiro.svg'
+            $table->string('icon_path')->nullable(); // Ex: '/tenancy/assets/media/png/financeiro.svg'
             $table->string('icon_class')->nullable(); // Ex: 'fa-money-bill'
             $table->string('permission')->nullable(); // Ex: 'financeiro.index'
             $table->text('description')->nullable();

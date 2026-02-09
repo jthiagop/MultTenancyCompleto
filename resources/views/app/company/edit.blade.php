@@ -8,7 +8,7 @@
             <div class="card card-flush mb-9" id="kt_user_profile_panel">
                 <!--begin::Hero nav-->
                 <div class="card-header rounded-top bgi-size-cover h-200px"
-                    style="background-position: 100% 100%; background-image:url('/assets/media/misc/profile-head-bg1.jpg')">
+                    style="background-position: 100% 100%; background-image:url('/tenancy/assets/media/misc/profile-head-bg1.jpg')">
                 </div>
                 <!--end::Hero nav-->
                 <!--begin::Body-->
@@ -18,7 +18,7 @@
                         <!--begin: Pic-->
                         <div class="d-flex flex-stack align-items-end pb-4 mt-n19">
                             <div class="symbol symbol-125px symbol-lg-150px symbol-fixed position-relative mt-n3">
-                                <img src="{{ $company->avatar ? route('file', ['path' => $company->avatar]) : '/assets/media/avatars/apple-touch-icon.svg' }}"
+                                <img src="{{ $company->avatar ? route('file', ['path' => $company->avatar]) : '/tenancy/assets/media/avatars/apple-touch-icon.svg' }}"
                                     alt="image" class="border border-white border-4" style="border-radius: 20px" />
                                 <div
                                     class="position-absolute translate-middle bottom-0 start-100 ms-n1 mb-9 bg-success rounded-circle h-15px w-15px">
@@ -367,7 +367,7 @@
 </x-tenant-app-layout>
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/formrepeater/formrepeater.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/formrepeater/formrepeater.bundle.js"></script>
 <!--end::Vendors Javascript-->
 
 <!--begin::Custom Javascript(used for this page only)-->
@@ -398,7 +398,7 @@
         @endif
     });
 </script>
-<script src="/assets/js/custom/apps/company/horarios-missas.js?v={{ time() }}"></script>
+<script src="/tenancy/assets/js/custom/apps/company/horarios-missas.js?v={{ time() }}"></script>
 <!--end::Custom Javascript-->
 
 <!--begin::Script para datepicker do formulário de edição-->

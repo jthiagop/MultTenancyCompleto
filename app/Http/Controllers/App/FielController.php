@@ -38,7 +38,7 @@ class FielController extends Controller
                             </div>';
                 })
                 ->addColumn('nome_completo', function ($row) {
-                    $avatar = $row->avatar ? route('file', ['path' => $row->avatar]) : '/assets/media/png/perfil.svg';
+                    $avatar = $row->avatar ? route('file', ['path' => $row->avatar]) : '/tenancy/assets/media/png/perfil.svg';
 
                     // Buscar endereço principal
                     $enderecoPrincipal = $row->addresses->where('pivot.tipo', 'principal')->first();

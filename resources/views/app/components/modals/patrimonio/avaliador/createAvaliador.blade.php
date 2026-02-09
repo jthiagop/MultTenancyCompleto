@@ -46,7 +46,7 @@
                                   data-kt-image-input="true">
                                   <!-- Imagem -->
                                   <div class="image-input-wrapper w-150px h-150px rounded-circle"
-                                      style="background-image: url('assets/media/avatars/blank.png');"></div>
+                                      style="background-image: url('tenancy/assets/media/avatars/blank.png');"></div>
                                   <!-- Botão alterar -->
                                   <label
                                       class="btn btn-icon btn-circle btn-active-color-primary w-30px h-30px bg-body shadow position-absolute translate-middle bottom-0 start-100"

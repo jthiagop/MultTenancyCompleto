@@ -22,13 +22,13 @@
     <meta property="og:url" content="https://dominusbr.com/" />
     <meta property="og:site_name" content="Dominus | Dominus Sistema Eclesial" />
     <link rel="canonical" href="@yield('canonical_url', 'https://dominusbr.com')" />
-    <link rel="shortcut icon" href="{{ url('assets/media/app/mini-logo.svg') }}" />
+    <link rel="shortcut icon" href="{{ url('tenancy/assets/media/app/mini-logo.svg') }}" />
     <!--begin::Fonts(mandatory for all pages)-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <!--end::Fonts-->
     <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-    <link href="../assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
-    <link href="../assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/tenancy/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/tenancy/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
     <!--end::Global Stylesheets Bundle-->
     @stack('styles')
 </head>
@@ -63,7 +63,7 @@
         <div class="d-flex flex-column flex-lg-row flex-column-fluid">
             <!--begin::Aside-->
             <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center position-relative"
-                style="background-image: url('{{ isset($backgroundImage) && $backgroundImage ? route('file', ['path' => $backgroundImage]) : url('/assets/media/misc/penha.png') }}');">
+                style="background-image: url('{{ isset($backgroundImage) && $backgroundImage ? route('file', ['path' => $backgroundImage]) : url('/tenancy/assets/media/misc/penha.png') }}');">
 
                 <!--begin::Gradient Overlay - Preto para Transparente na parte inferior (apenas telas >= 992px)-->
                 <div class="d-none d-lg-block position-absolute bottom-0 start-0 end-0"
@@ -75,7 +75,7 @@
                 <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100 position-relative">
                     <!--begin::Logo-->
                     <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20 position-relative">
-                        <img alt="Logo" src="{{ url('assets/media/app/default-logo-dark.svg') }}"
+                        <img alt="Logo" src="{{ url('tenancy/assets/media/app/default-logo-dark.svg') }}"
                             class="h-30px h-lg-30px position-relative"
                             style="z-index: 1; filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 15));" />
                     </a>
@@ -83,7 +83,7 @@
 
                     <!--begin::Image-->
                     <img class="d-none d-lg-block mx-auto w-300px w-lg-75 w-xl-500px mb-10 mb-lg-10"
-                        src="assets/media/misc/auth-screens.png" alt="" />
+                        src="/tenancy/assets/media/misc/auth-screens.png" alt="" />
                     <!--end::Image-->
                     <div class="glass-effect">
                         <!--begin::Aside Content-->
@@ -100,7 +100,7 @@
                 <div class="d-flex flex-center flex-column flex-lg-row-fluid">
                     <!--begin::Logo-->
                     <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-10">
-                        <img alt="Logo" src="{{ url('assets/media/app/mini-logo.svg') }}" class="h-100px h-lg-100px" />
+                        <img alt="Logo" src="{{ url('tenancy/assets/media/app/mini-logo.svg') }}" class="h-100px h-lg-100px" />
                     </a>
                     <!--begin::Wrapper-->
                     <div class="w-lg-500px p-10">
@@ -147,11 +147,11 @@
     <!--end::Root-->
     <!--begin::Javascript-->
     <script>
-        var hostUrl = "assets/";
+        var hostUrl = "/tenancy/assets/";
     </script>
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-    <script src="/assets/plugins/global/plugins.bundle.js"></script>
-    <script src="/assets/js/scripts.bundle.js"></script>
+    <script src="/tenancy/assets/plugins/global/plugins.bundle.js"></script>
+    <script src="/tenancy/assets/js/scripts.bundle.js"></script>
     <!--end::Global Javascript Bundle-->
     <!--begin::Custom Javascript(used for this page only)-->
     @stack('scripts')

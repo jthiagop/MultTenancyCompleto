@@ -10,7 +10,7 @@
                         class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6">
                         <span class="svg-icon svg-icon-5x me-5">
                             <img width="50" height="50"
-                                src="/assets/media/png/Cash_Register-transformed.webp"
+                                src="/tenancy/assets/media/png/Cash_Register-transformed.webp"
                                 alt="Ícone de lançamento de caixa" />
                         </span>
                         <div class="d-flex flex-stack flex-grow-1 flex-wrap flex-md-nowrap">
@@ -31,7 +31,7 @@
                     class="text-decoration-none" aria-label="Acessar lançamentos bancários">
                     <div class="notice d-flex bg-light-primary rounded border-primary border border-dashed p-6">
                         <span class="svg-icon svg-icon-5x me-5">
-                            <img width="50" height="50" src="/assets/media/png/banco3.png"
+                            <img width="50" height="50" src="/tenancy/assets/media/png/banco3.png"
                                 alt="Ícone de lançamentos bancários" />
 
                         </span>

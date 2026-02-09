@@ -40,7 +40,7 @@ class ModuleController extends Controller
                         : '<span class="badge badge-light-secondary">Não</span>';
                 })
                 ->addColumn('actions', function ($module) {
-                    $iconPath = $module->icon_path ? asset('storage/' . $module->icon_path) : asset('assets/media/avatars/blank.png');
+                    $iconPath = $module->icon_path ? asset('storage/' . $module->icon_path) : asset('tenancy/assets/media/avatars/blank.png');
                     return '
                         <button class="btn btn-icon btn-active-light-primary w-30px h-30px me-3" 
                             data-bs-toggle="modal" 

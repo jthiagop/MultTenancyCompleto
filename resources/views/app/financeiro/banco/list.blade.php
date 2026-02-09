@@ -76,31 +76,31 @@
         <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
         <!--begin::Vendors Javascript(used for this page only)-->
-        <script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+        <script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
         <!--end::Vendors Javascript-->
 
-        <script src="/assets/plugins/custom/formrepeater/formrepeater.bundle.js"></script>
+        <script src="/tenancy/assets/plugins/custom/formrepeater/formrepeater.bundle.js"></script>
 
         <!--begin::Custom Javascript(used for this page only)-->
-        <script src="{{ url('/assets/js/custom/apps/subscriptions/list/list.js') }}"></script>
+        <script src="{{ url('/tenancy/assets/js/custom/apps/subscriptions/list/list.js') }}"></script>
 
         <!--end::Custom Javascript chats-->
-        <script src="/assets/js/custom/apps/bancos/shipping.js"></script>
+        <script src="/tenancy/assets/js/custom/apps/bancos/shipping.js"></script>
         <!--end::Custom Javascript chats bancos-->
 
-        <script src="/assets/js/custom/apps/bancos/widgets.bundle.js"></script>
+        <script src="/tenancy/assets/js/custom/apps/bancos/widgets.bundle.js"></script>
 
 
-        <script src="/assets/js/custom/apps/bancos/fluxo-banco-chart.js"></script>
+        <script src="/tenancy/assets/js/custom/apps/bancos/fluxo-banco-chart.js"></script>
         <!--end::Custom Javascript-->
 
-        <script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-        <script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-        <script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
 
-        <script src="/assets/js/custom/utilities/modals/company/prestacaoConta.js"></script>
-        <script src="/assets/js/custom/utilities/modals/boletim-financeiro.js"></script>
-        <script src="/assets/js/custom/utilities/modals/conciliacao-bancaria.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/company/prestacaoConta.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/boletim-financeiro.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/conciliacao-bancaria.js"></script>
 
         <script>
             // Função para excluir transação diretamente do dropdown (sem abrir drawer)

@@ -214,7 +214,7 @@
 </x-tenant-app-layout>
 
     <!--begin::Custom Javascript(used for this page only)-->
-    <script src="/assets/js/custom/apps/permissions/list.js"></script>
-    <script src="/assets/js/custom/apps/permissions/add-permission.js"></script>
-    <script src="/assets/js/custom/apps/permissions/update-permission.js"></script>
+    <script src="/tenancy/assets/js/custom/apps/permissions/list.js"></script>
+    <script src="/tenancy/assets/js/custom/apps/permissions/add-permission.js"></script>
+    <script src="/tenancy/assets/js/custom/apps/permissions/update-permission.js"></script>
     <!--end::Custom Javascript-->

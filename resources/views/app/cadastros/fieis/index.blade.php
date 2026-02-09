@@ -15,7 +15,7 @@
                         <!-- HOMENS -->
                         <div class="col-xl-3">
                             <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end mb-5 mb-xl-10"
-                                style="background-color: #3E97FF;background-image:url('/assets/media/svg/shapes/widget-bg-1.png')">
+                                style="background-color: #3E97FF;background-image:url('/tenancy/assets/media/svg/shapes/widget-bg-1.png')">
                                 <!--begin::Card body-->
                                 <div class="card-body p-6">
                                     <div class="d-flex align-items-center mb-4">
@@ -58,7 +58,7 @@
                         <!-- MULHERES -->
                         <div class="col-xl-3">
                             <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end mb-5 mb-xl-10"
-                                style="background-color: #F1416C;background-image:url('/assets/media/svg/shapes/widget-bg-1.png')">
+                                style="background-color: #F1416C;background-image:url('/tenancy/assets/media/svg/shapes/widget-bg-1.png')">
                                 <!--begin::Card body-->
                                 <div class="card-body p-6">
                                     <div class="d-flex align-items-center mb-4">
@@ -101,7 +101,7 @@
                         <!-- DIZIMISTAS -->
                         <div class="col-xl-3">
                             <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end mb-5 mb-xl-10"
-                                style="background-color: #FFC700;background-image:url('/assets/media/svg/shapes/widget-bg-1.png')">
+                                style="background-color: #FFC700;background-image:url('/tenancy/assets/media/svg/shapes/widget-bg-1.png')">
                                 <!--begin::Card body-->
                                 <div class="card-body p-6">
                                     <div class="d-flex align-items-center mb-4">
@@ -144,7 +144,7 @@
                         <!-- FIEIS (TOTAL) -->
                         <div class="col-xl-3">
                             <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end mb-5 mb-xl-10"
-                                style="background-color: #50CD89;background-image:url('/assets/media/svg/shapes/widget-bg-1.png')">
+                                style="background-color: #50CD89;background-image:url('/tenancy/assets/media/svg/shapes/widget-bg-1.png')">
                                 <!--begin::Card body-->
                                 <div class="card-body p-6">
                                     <div class="d-flex align-items-center mb-4">
@@ -612,7 +612,7 @@
 <!--end::Modal - Relatório de Fiéis-->
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <!-- Moment.js e DateRangePicker -->
 <script src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
@@ -629,8 +629,8 @@
         chartsData: '{{ route('fieis.charts.data') }}'
     };
 </script>
-<script src="/assets/js/custom/apps/customers/list/list-fiel.js"></script>
-<script src="/assets/js/custom/apps/fieis/charts.js"></script>
+<script src="/tenancy/assets/js/custom/apps/customers/list/list-fiel.js"></script>
+<script src="/tenancy/assets/js/custom/apps/fieis/charts.js"></script>
 
 <!--begin::Modal Script-->
 <script>

@@ -62,7 +62,7 @@
                             <div
                                 class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
                                 <img class="img-fluid w-100 h-100 rounded"
-                                    src="{{ $companyShow->avatar ? route('file', ['path' => $companyShow->avatar]) : '/assets/media/avatars/blank.png' }}"
+                                    src="{{ $companyShow->avatar ? route('file', ['path' => $companyShow->avatar]) : '/tenancy/assets/media/avatars/blank.png' }}"
                                     alt="{{ $companyShow->name }}" />
                             </div>
                             <!--end::Image-->
@@ -308,7 +308,7 @@
                                                 <img alt="{{ $user->name }}"
                                                     src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
                                                         ? route('file', ['path' => $user->avatar])
-                                                        : 'assets/media/avatars/blank.png' }}" />
+                                                        : 'tenancy/assets/media/avatars/blank.png' }}" />
                                             </div>
                                         @endforeach
 
@@ -471,11 +471,11 @@
                                     <!--begin::Image placeholder-->
                                     <style>
                                         .image-input-placeholder {
-                                            background-image: url('/assets/media/svg/files/blank-image.svg');
+                                            background-image: url('/tenancy/assets/media/svg/files/blank-image.svg');
                                         }
 
                                         [data-bs-theme="dark"] .image-input-placeholder {
-                                            background-image: url('/assets/media/svg/files/blank-image-dark.svg');
+                                            background-image: url('/tenancy/assets/media/svg/files/blank-image-dark.svg');
                                         }
                                     </style>
                                     <!--end::Image placeholder-->
@@ -485,7 +485,7 @@
                                         data-kt-image-input="true">
                                         <!--begin::Preview existing avatar-->
                                         <div class="image-input-wrapper w-125px h-125px"
-                                            style="background-image: url({{ old('avatar') ?? 'assets/media/avatars/blank.png' }});">
+                                            style="background-image: url({{ old('avatar') ?? 'tenancy/assets/media/avatars/blank.png' }});">
                                         </div>
                                         <!--end::Preview existing avatar-->
 
@@ -1461,29 +1461,29 @@
 
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
 
 {{-- Tab::setting --}}
-<script src="/assets/js/custom/apps/company/settings/settings.js"></script>
-<script src="/assets/js/custom/apps/company/settings/sales.js"></script>
+<script src="/tenancy/assets/js/custom/apps/company/settings/settings.js"></script>
+<script src="/tenancy/assets/js/custom/apps/company/settings/sales.js"></script>
 
-<script src="/assets/js/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
-<script src="/assets/js/custom/utilities/modals/novo-usuario/novo-usuario.js"></script>
-<script src="/assets/js/custom/apps/projects/list/list.js"></script>
-<script src="/assets/js/custom/apps/ecommerce/customers/details/transaction-history.js"></script>
+<script src="/tenancy/assets/js/widgets.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/novo-usuario/novo-usuario.js"></script>
+<script src="/tenancy/assets/js/custom/apps/projects/list/list.js"></script>
+<script src="/tenancy/assets/js/custom/apps/ecommerce/customers/details/transaction-history.js"></script>
 
 <!--end::Custom Javascript-->
 {{-- Modal::Pestacao de Conta --}}
-<script src="/assets/js/custom/utilities/modals/company/prestacaoConta.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/company/prestacaoConta.js"></script>
 {{-- Tab::Usuários --}}
-<script src="/assets/js/custom/apps/company/users.js"></script>
+<script src="/tenancy/assets/js/custom/apps/company/users.js"></script>
 {{-- Tab:: Panorama --}}
-<script src="/assets/js/custom/apps/company/project.js"></script>
+<script src="/tenancy/assets/js/custom/apps/company/project.js"></script>
 
 <script>
     // Alternar visibilidade da senha

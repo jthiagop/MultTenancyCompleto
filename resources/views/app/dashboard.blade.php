@@ -20,10 +20,10 @@
                     <!--begin::Modules Grid-->
                     <style>
                         .module-card-bg {
-                            background-image: url({{ global_asset('assets/media/images/2600x1600/bg-3.png') }});
+                            background-image: url({{ global_asset('tenancy/assets/media/images/2600x1600/bg-3.png') }});
                         }
                         .dark .module-card-bg {
-                            background-image: url({{ global_asset('assets/media/images/2600x1600/bg-3-dark.png') }});
+                            background-image: url({{ global_asset('tenancy/assets/media/images/2600x1600/bg-3-dark.png') }});
                         }
                     </style>
                     
@@ -42,8 +42,11 @@
                                             @if($module->icon_path)
                                                 @php
                                                     // Tratar caminhos de storage vs caminhos públicos
-                                                    if (str_starts_with($module->icon_path, '/assets')) {
+                                                    if (str_starts_with($module->icon_path, '/tenancy/assets')) {
                                                         $iconUrl = $module->icon_path;
+                                                    } elseif (str_starts_with($module->icon_path, '/assets')) {
+                                                        // Legado: corrigir paths antigos sem /tenancy/
+                                                        $iconUrl = '/tenancy' . $module->icon_path;
                                                     } elseif (str_starts_with($module->icon_path, 'modules/icons') || !str_starts_with($module->icon_path, '/')) {
                                                         $iconUrl = route('file', ['path' => $module->icon_path]);
                                                     } else {
@@ -196,8 +199,8 @@
 
 
 
-<script src="/assets/js/custom/apps/dashboard/grafico_doacoes.js"></script>
-<script src="/assets/js/custom/apps/dashboard/missas-chart.js"></script>
+<script src="/tenancy/assets/js/custom/apps/dashboard/grafico_doacoes.js"></script>
+<script src="/tenancy/assets/js/custom/apps/dashboard/missas-chart.js"></script>
 
 
 

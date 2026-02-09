@@ -122,12 +122,12 @@
                                                     <!-- Input de Upload de Imagem -->
                                                     <!--begin::Aside (Left Section with Background Image)-->
                                                     <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                                                        style="background-image: url('{{ asset('/assets/media/misc/penha.png') }}');">
+                                                        style="background-image: url('{{ asset('/tenancy/assets/media/misc/penha.png') }}');">
                                                         <!--begin::Content-->
                                                         <div class="d-flex flex-column flex-center p-7 p-lg-10 w-100">
                                                             <!--begin::Logo-->
                                                             <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20">
-                                                                <img alt="Logo" src="{{ asset('assets/media/logos/default.svg') }}"
+                                                                <img alt="Logo" src="{{ asset('tenancy/assets/media/logos/default.svg') }}"
                                                                     class="h-40px h-lg-50px">
                                                             </a>
                                                             <!--end::Logo-->
@@ -164,7 +164,7 @@
                                                             <!--begin::Logo-->
                                                             <a href="#" class="mb-0 mb-lg-10 disabled">
                                                                 <img alt="Logo"
-                                                                    src="{{ asset('assets/media/logos/apple-touch-icon.svg') }}"
+                                                                    src="{{ asset('tenancy/assets/media/logos/apple-touch-icon.svg') }}"
                                                                     class="h-140px h-lg-150px">
                                                             </a>
                                                             <!--begin::Wrapper-->

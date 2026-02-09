@@ -26,7 +26,7 @@
                     @endif
                 @else
                     <span class="symbol-label overflow-hidden">
-                        <img src="/assets/media/svg/bancos/caixa.svg" 
+                        <img src="/tenancy/assets/media/svg/bancos/caixa.svg" 
                              alt="Caixa"
                              class="w-100 h-100 object-fit-contain" 
                              loading="lazy" 

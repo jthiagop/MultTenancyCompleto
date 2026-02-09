@@ -200,7 +200,7 @@ class Banco extends Model
     public static function getBancoIcons()
     {
         // Caminho para a pasta com os SVGs
-        $svgPath = public_path('assets/media/svg/bancos');
+        $svgPath = public_path('tenancy/assets/media/svg/bancos');
 
         // Verifica se o diretório existe
         if (!File::exists($svgPath)) {

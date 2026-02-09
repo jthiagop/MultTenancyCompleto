@@ -95,7 +95,7 @@ class PrestacaoDeContaController extends Controller
     {
         $path = $company->avatar
             ? storage_path('app/public/'.$company->avatar)
-            : public_path('assets/media/png/perfil.svg');
+            : public_path('tenancy/assets/media/png/perfil.svg');
 
         return 'data:image/'.pathinfo($path, PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($path));
     }

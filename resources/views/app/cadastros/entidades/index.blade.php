@@ -328,11 +328,11 @@
 </x-tenant-app-layout>
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/ecommerce/reports/sales/sales.js"></script>
-<script src="/assets/js/custom/utilities/modals/bidding.js"></script>
+<script src="/tenancy/assets/js/custom/apps/ecommerce/reports/sales/sales.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/bidding.js"></script>
 
 
 <script>

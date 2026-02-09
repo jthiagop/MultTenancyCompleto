@@ -57,7 +57,7 @@
                     <div class="card card-flush mb-9" id="kt_user_profile_panel">
                         <!--begin::Hero nav-->
                         <div class="card-header rounded-top bgi-size-cover h-200px"
-                            style="background-position: 100% 50%; background-image:url('/assets/media/misc/profile-head-bg.png')">
+                            style="background-position: 100% 50%; background-image:url('/tenancy/assets/media/misc/profile-head-bg.png')">
                         </div>
                         <!--end::Hero nav-->
                         <!--begin::Body-->
@@ -69,7 +69,7 @@
                                     <div
                                         class="symbol symbol-125px symbol-lg-150px symbol-fixed position-relative mt-n3">
                                         <img class="me-5" width="75px" height="75px"
-                                            src="/assets/media/png/house3d.png" alt="" />
+                                            src="/tenancy/assets/media/png/house3d.png" alt="" />
                                         <div
                                             class="position-absolute translate-middle bottom-0 start-100 ms-n1 mb-9 bg-success rounded-circle h-15px w-15px">
                                         </div>
@@ -759,7 +759,7 @@
                                     <div class="col-xl-7 mb-xl-10">
                                         <!--begin::Engage widget 11-->
                                         <div class="card card-flush h-xl-100"
-                                            style="background-color: #202B46; background-image:url('/assets/media/svg/shapes/widget-bg-2.png')"
+                                            style="background-color: #202B46; background-image:url('/tenancy/assets/media/svg/shapes/widget-bg-2.png')"
                                             data-bs-theme="light">
                                             <!--begin::Body-->
                                             <div
@@ -815,7 +815,7 @@
                                                 <!--begin::Wrapper-->
                                                 <!--begin::Illustration-->
                                                 <img class="mx-auto h-150px h-lg-200px mb-11"
-                                                    src="/assets/media/svg/illustrations/sigma/illustration-realestate.svg"
+                                                    src="/tenancy/assets/media/svg/illustrations/sigma/illustration-realestate.svg"
                                                     alt="" />
                                                 <!--end::Illustration-->
                                             </div>
@@ -1686,17 +1686,17 @@
 
 </x-tenant-app-layout>
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/file-manager/patrimonioAnexo.js"></script>
-<script src="/assets/js/custom/apps/invoices/create.js"></script>
+<script src="/tenancy/assets/js/custom/apps/file-manager/patrimonioAnexo.js"></script>
+<script src="/tenancy/assets/js/custom/apps/invoices/create.js"></script>
 
-<script src="/assets/js/custom/utilities/modals/patrimonio/ptam/ptam.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/patrimonio/ptam/ptam.js"></script>
 
 
-<script src="/assets/js/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/tenancy/assets/js/widgets.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>

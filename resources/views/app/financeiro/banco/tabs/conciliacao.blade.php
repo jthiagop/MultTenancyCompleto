@@ -107,7 +107,7 @@
                                     </div>
                                 </td>
                                 <td class="fw-bold text-end">Online
-                                    <img src="/assets/media/svg/card-logos/visa.svg" class="w-50px ms-2" />
+                                    <img src="/tenancy/assets/media/svg/card-logos/visa.svg" class="w-50px ms-2" />
                                 </td>
                             </tr>
                             <!--end::Payment method-->
@@ -185,7 +185,7 @@
                                         <div class="symbol symbol-circle symbol-25px overflow-hidden me-3">
                                             <a href="../../demo1/dist/apps/ecommerce/customers/details.html">
                                                 <div class="symbol-label">
-                                                    <img src="/assets/media/avatars/300-23.jpg" alt="Dan Wilson"
+                                                    <img src="/tenancy/assets/media/avatars/300-23.jpg" alt="Dan Wilson"
                                                         class="w-100" />
                                                 </div>
                                             </a>
@@ -277,7 +277,7 @@
                                 <div class="d-flex">
                                     <!--begin::Avatar-->
                                     <div class="symbol symbol-circle symbol-45px">
-                                        <img src="/assets/media/avatars/300-11.jpg" alt="" />
+                                        <img src="/tenancy/assets/media/avatars/300-11.jpg" alt="" />
                                     </div>
                                     <!--end::Avatar-->
                                     <!--begin::Details-->
@@ -390,7 +390,7 @@
                     <div class="col-md-5">
                         <div class="card card-flush py-4 flex-row-fluid overflow-hidden">
                             <div class="position-absolute top-0 end-0 opacity-10 pe-none text-end">
-                                <img src="/assets/media/icons/duotune/ecommerce/ecm006.svg" class="w-175px" />
+                                <img src="/tenancy/assets/media/icons/duotune/ecommerce/ecm006.svg" class="w-175px" />
                             </div>
                             <div class="card-header">
                                 <div class="card-title">

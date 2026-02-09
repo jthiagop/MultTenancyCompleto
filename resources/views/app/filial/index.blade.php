@@ -51,7 +51,7 @@
                                 <!--begin::Image-->
                                 <div
                                     class="d-flex flex-center flex-shrink-0 bg-light rounded w-100px h-100px w-lg-150px h-lg-150px me-7 mb-4">
-                                    <img class="mw-50px mw-lg-75px" src="/assets/media/svg/brand-logos/volicity-9.svg"
+                                    <img class="mw-50px mw-lg-75px" src="/tenancy/assets/media/svg/brand-logos/volicity-9.svg"
                                         alt="image" />
                                 </div>
                                 <!--end::Image-->
@@ -270,19 +270,19 @@
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Michael Eberon">
-                                                <img alt="Pic" src="/assets/media/avatars/300-11.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-11.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Michelle Swanston">
-                                                <img alt="Pic" src="/assets/media/avatars/300-7.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-7.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Francis Mitcham">
-                                                <img alt="Pic" src="/assets/media/avatars/300-20.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-20.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
@@ -295,7 +295,7 @@
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Melody Macy">
-                                                <img alt="Pic" src="/assets/media/avatars/300-2.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-2.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::User-->
@@ -307,7 +307,7 @@
                                             <!--begin::User-->
                                             <div class="symbol symbol-35px symbol-circle" data-bs-toggle="tooltip"
                                                 title="Barry Walter">
-                                                <img alt="Pic" src="/assets/media/avatars/300-12.jpg" />
+                                                <img alt="Pic" src="/tenancy/assets/media/avatars/300-12.jpg" />
                                             </div>
                                             <!--end::User-->
                                             <!--begin::All users-->
@@ -491,7 +491,7 @@
                                         <div class="card-body d-flex flex-center flex-column pt-12 p-9">
                                             <!--begin::Avatar-->
                                             <div class="symbol symbol-65px symbol-circle mb-5">
-                                                <img src="/assets/media//avatars/300-2.jpg" alt="image" />
+                                                <img src="/tenancy/assets/media//avatars/300-2.jpg" alt="image" />
                                                 <div
                                                     class="bg-success position-absolute border border-4 border-body h-15px w-15px rounded-circle translate-middle start-100 top-100 ms-n3 mt-n3">
                                                 </div>
@@ -599,7 +599,7 @@
                                         <div class="card-body d-flex flex-center flex-column pt-12 p-9">
                                             <!--begin::Avatar-->
                                             <div class="symbol symbol-65px symbol-circle mb-5">
-                                                <img src="/assets/media//avatars/300-1.jpg" alt="image" />
+                                                <img src="/tenancy/assets/media//avatars/300-1.jpg" alt="image" />
                                             </div>
                                             <!--end::Avatar-->
                                             <!--begin::Name-->
@@ -650,7 +650,7 @@
                                         <div class="card-body d-flex flex-center flex-column pt-12 p-9">
                                             <!--begin::Avatar-->
                                             <div class="symbol symbol-65px symbol-circle mb-5">
-                                                <img src="/assets/media//avatars/300-14.jpg" alt="image" />
+                                                <img src="/tenancy/assets/media//avatars/300-14.jpg" alt="image" />
                                             </div>
                                             <!--end::Avatar-->
                                             <!--begin::Name-->
@@ -701,7 +701,7 @@
                                         <div class="card-body d-flex flex-center flex-column pt-12 p-9">
                                             <!--begin::Avatar-->
                                             <div class="symbol symbol-65px symbol-circle mb-5">
-                                                <img src="/assets/media//avatars/300-6.jpg" alt="image" />
+                                                <img src="/tenancy/assets/media//avatars/300-6.jpg" alt="image" />
                                             </div>
                                             <!--end::Avatar-->
                                             <!--begin::Name-->
@@ -912,7 +912,7 @@
                                         <div class="card-body d-flex flex-center flex-column pt-12 p-9">
                                             <!--begin::Avatar-->
                                             <div class="symbol symbol-65px symbol-circle mb-5">
-                                                <img src="/assets/media//avatars/300-12.jpg" alt="image" />
+                                                <img src="/tenancy/assets/media//avatars/300-12.jpg" alt="image" />
                                             </div>
                                             <!--end::Avatar-->
                                             <!--begin::Name-->
@@ -1029,7 +1029,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-6.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-6.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1106,7 +1106,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-1.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-1.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1142,7 +1142,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-5.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-5.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1178,7 +1178,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-25.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-25.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1255,7 +1255,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-9.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-9.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1373,7 +1373,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-23.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-23.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1450,7 +1450,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-12.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-12.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1527,7 +1527,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-13.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-13.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1604,7 +1604,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-21.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-21.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                                 <!--begin::Online-->
@@ -1645,7 +1645,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-21.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-21.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                                 <!--begin::Online-->
@@ -1686,7 +1686,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-6.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-6.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1722,7 +1722,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-6.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-6.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1758,7 +1758,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-1.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-1.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1794,7 +1794,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-12.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-12.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1830,7 +1830,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-9.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-9.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1866,7 +1866,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-6.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-6.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -1902,7 +1902,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-25.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-25.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -2020,7 +2020,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-25.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-25.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -2056,7 +2056,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-5.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-5.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -2092,7 +2092,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-6.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-6.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -2128,7 +2128,7 @@
                                                                 <!--begin::Avatar-->
                                                                 <div class="symbol symbol-35px symbol-circle">
                                                                     <img alt="Pic"
-                                                                        src="/assets/media/avatars/300-9.jpg" />
+                                                                        src="/tenancy/assets/media/avatars/300-9.jpg" />
                                                                 </div>
                                                                 <!--end::Avatar-->
                                                             </div>
@@ -2222,7 +2222,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <!--begin::Avatar-->
                                                     <div class="symbol symbol-35px symbol-circle">
-                                                        <img alt="Pic" src="/assets/media/avatars/300-6.jpg" />
+                                                        <img alt="Pic" src="/tenancy/assets/media/avatars/300-6.jpg" />
                                                     </div>
                                                     <!--end::Avatar-->
                                                     <!--begin::Details-->
@@ -2300,7 +2300,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <!--begin::Avatar-->
                                                     <div class="symbol symbol-35px symbol-circle">
-                                                        <img alt="Pic" src="/assets/media/avatars/300-1.jpg" />
+                                                        <img alt="Pic" src="/tenancy/assets/media/avatars/300-1.jpg" />
                                                     </div>
                                                     <!--end::Avatar-->
                                                     <!--begin::Details-->
@@ -2339,7 +2339,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <!--begin::Avatar-->
                                                     <div class="symbol symbol-35px symbol-circle">
-                                                        <img alt="Pic" src="/assets/media/avatars/300-5.jpg" />
+                                                        <img alt="Pic" src="/tenancy/assets/media/avatars/300-5.jpg" />
                                                     </div>
                                                     <!--end::Avatar-->
                                                     <!--begin::Details-->
@@ -2378,7 +2378,7 @@
                                                     <!--begin::Avatar-->
                                                     <div class="symbol symbol-35px symbol-circle">
                                                         <img alt="Pic"
-                                                            src="/assets/media/avatars/300-25.jpg" />
+                                                            src="/tenancy/assets/media/avatars/300-25.jpg" />
                                                     </div>
                                                     <!--end::Avatar-->
                                                     <!--begin::Details-->
@@ -2456,7 +2456,7 @@
                                                 <div class="d-flex align-items-center">
                                                     <!--begin::Avatar-->
                                                     <div class="symbol symbol-35px symbol-circle">
-                                                        <img alt="Pic" src="/assets/media/avatars/300-9.jpg" />
+                                                        <img alt="Pic" src="/tenancy/assets/media/avatars/300-9.jpg" />
                                                     </div>
                                                     <!--end::Avatar-->
                                                     <!--begin::Details-->
@@ -2576,7 +2576,7 @@
                                                     <!--begin::Avatar-->
                                                     <div class="symbol symbol-35px symbol-circle">
                                                         <img alt="Pic"
-                                                            src="/assets/media/avatars/300-23.jpg" />
+                                                            src="/tenancy/assets/media/avatars/300-23.jpg" />
                                                     </div>
                                                     <!--end::Avatar-->
                                                     <!--begin::Details-->
@@ -2655,7 +2655,7 @@
                                                     <!--begin::Avatar-->
                                                     <div class="symbol symbol-35px symbol-circle">
                                                         <img alt="Pic"
-                                                            src="/assets/media/avatars/300-12.jpg" />
+                                                            src="/tenancy/assets/media/avatars/300-12.jpg" />
                                                     </div>
                                                     <!--end::Avatar-->
                                                     <!--begin::Details-->
@@ -2871,7 +2871,7 @@
                                                         <!--begin::Avatar-->
                                                         <div class="symbol symbol-35px symbol-circle me-5">
                                                             <img alt="Pic"
-                                                                src="/assets/media/avatars/300-6.jpg" />
+                                                                src="/tenancy/assets/media/avatars/300-6.jpg" />
                                                         </div>
                                                         <!--end::Avatar-->
                                                         <!--begin::Info-->
@@ -2905,7 +2905,7 @@
                                                         <!--begin::Avatar-->
                                                         <div class="symbol symbol-35px symbol-circle me-5">
                                                             <img alt="Pic"
-                                                                src="/assets/media/avatars/300-1.jpg" />
+                                                                src="/tenancy/assets/media/avatars/300-1.jpg" />
                                                         </div>
                                                         <!--end::Avatar-->
                                                         <!--begin::Info-->
@@ -2922,7 +2922,7 @@
                                                         <!--begin::Avatar-->
                                                         <div class="symbol symbol-35px symbol-circle me-5">
                                                             <img alt="Pic"
-                                                                src="/assets/media/avatars/300-5.jpg" />
+                                                                src="/tenancy/assets/media/avatars/300-5.jpg" />
                                                         </div>
                                                         <!--end::Avatar-->
                                                         <!--begin::Info-->
@@ -2939,7 +2939,7 @@
                                                         <!--begin::Avatar-->
                                                         <div class="symbol symbol-35px symbol-circle me-5">
                                                             <img alt="Pic"
-                                                                src="/assets/media/avatars/300-25.jpg" />
+                                                                src="/tenancy/assets/media/avatars/300-25.jpg" />
                                                         </div>
                                                         <!--end::Avatar-->
                                                         <!--begin::Info-->
@@ -2975,7 +2975,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="/assets/media/avatars/300-6.jpg" />
+                                                                    src="/tenancy/assets/media/avatars/300-6.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -3073,7 +3073,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="/assets/media/avatars/300-1.jpg" />
+                                                                    src="/tenancy/assets/media/avatars/300-1.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -3121,7 +3121,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="/assets/media/avatars/300-5.jpg" />
+                                                                    src="/tenancy/assets/media/avatars/300-5.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -3170,7 +3170,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="/assets/media/avatars/300-25.jpg" />
+                                                                    src="/tenancy/assets/media/avatars/300-25.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -3267,7 +3267,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="/assets/media/avatars/300-9.jpg" />
+                                                                    src="/tenancy/assets/media/avatars/300-9.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -3414,7 +3414,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="/assets/media/avatars/300-23.jpg" />
+                                                                    src="/tenancy/assets/media/avatars/300-23.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -3512,7 +3512,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="/assets/media/avatars/300-12.jpg" />
+                                                                    src="/tenancy/assets/media/avatars/300-12.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -3610,7 +3610,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="/assets/media/avatars/300-13.jpg" />
+                                                                    src="/tenancy/assets/media/avatars/300-13.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -3708,7 +3708,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="/assets/media/avatars/300-21.jpg" />
+                                                                    src="/tenancy/assets/media/avatars/300-21.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -3757,7 +3757,7 @@
                                                             <!--begin::Avatar-->
                                                             <div class="symbol symbol-35px symbol-circle">
                                                                 <img alt="Pic"
-                                                                    src="/assets/media/avatars/300-1.jpg" />
+                                                                    src="/tenancy/assets/media/avatars/300-1.jpg" />
                                                             </div>
                                                             <!--end::Avatar-->
                                                             <!--begin::Details-->
@@ -3808,7 +3808,7 @@
                                                 <!--end::Message-->
                                                 <!--begin::Illustration-->
                                                 <div class="text-center px-5">
-                                                    <img src="/assets/media/illustrations/sketchy-1/1.png"
+                                                    <img src="/tenancy/assets/media/illustrations/sketchy-1/1.png"
                                                         alt="" class="w-100 h-200px h-sm-325px" />
                                                 </div>
                                                 <!--end::Illustration-->
@@ -4090,17 +4090,17 @@
 </x-tenant-app-layout>
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/projects/list/list.js"></script>
-<script src="/assets/js/custom/apps/projects/users/users.js"></script>
-<script src="/assets/js/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
-<script src="/assets/js/custom/utilities/modals/new-target.js"></script>
-<script src="/assets/plugins/global/plugins.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/projects/list/list.js"></script>
+<script src="/tenancy/assets/js/custom/apps/projects/users/users.js"></script>
+<script src="/tenancy/assets/js/widgets.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/new-target.js"></script>
+<script src="/tenancy/assets/plugins/global/plugins.bundle.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->

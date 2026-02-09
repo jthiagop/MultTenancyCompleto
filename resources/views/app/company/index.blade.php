@@ -70,7 +70,7 @@
                                                         <img src="{{ route('file', ['path' => $company->avatar]) }}"
                                                             alt="{{ $company->name }}" class="w-100">
                                                     @else
-                                                        <img src="/assets/media/avatars/300-6.jpg"
+                                                        <img src="/tenancy/assets/media/avatars/300-6.jpg"
                                                             alt="{{ $company->name }}" class="w-100">
                                                     @endif
                                                     <div
@@ -200,7 +200,7 @@
                                                                                 alt="{{ $company->name }}"
                                                                                 class="w-100">
                                                                         @else
-                                                                            <img src="/assets/media/avatars/300-6.jpg"
+                                                                            <img src="/tenancy/assets/media/avatars/300-6.jpg"
                                                                                 alt="{{ $company->name }}"
                                                                                 class="w-100">
                                                                         @endif
@@ -236,7 +236,7 @@
                                                                         <img alt="{{ $user->name }}"
                                                                             src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
                                                                                 ? route('file', ['path' => $user->avatar])
-                                                                                : 'assets/media/avatars/blank.png' }}" />
+                                                                                : 'tenancy/assets/media/avatars/blank.png' }}" />
                                                                     </div>
                                                                 @endforeach
 
@@ -344,11 +344,11 @@
                                 <!--begin::Image input placeholder-->
                                 <style>
                                     .image-input-placeholder {
-                                        background-image: url('/assets/media/svg/files/blank-image.svg');
+                                        background-image: url('/tenancy/assets/media/svg/files/blank-image.svg');
                                     }
 
                                     [data-bs-theme="dark"] .image-input-placeholder {
-                                        background-image: url('/assets/media/svg/files/blank-image-dark.svg');
+                                        background-image: url('/tenancy/assets/media/svg/files/blank-image-dark.svg');
                                     }
                                 </style>
                                 <!--end::Image input placeholder-->
@@ -447,18 +447,18 @@
 </x-tenant-app-layout>
 
 <!--begin::Vendors Javascript(used for this page only)-->
-<script src="/assets/plugins/custom/datatables/datatables.bundle.js"></script>
+<script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/projects/list/list.js"></script>
-<script src="/assets/js/custom/apps/projects/users/users.js"></script>
+<script src="/tenancy/assets/js/custom/apps/projects/list/list.js"></script>
+<script src="/tenancy/assets/js/custom/apps/projects/users/users.js"></script>
 
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/widgets.bundle.js"></script>
-<script src="/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/assets/js/custom/utilities/modals/new-target.js"></script>
-<script src="/assets/js/custom/utilities/modals/users-search.js"></script>
+<script src="/tenancy/assets/js/widgets.bundle.js"></script>
+<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/new-target.js"></script>
+<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
 <!--end::Custom Javascript-->
 <!--end::Javascript-->

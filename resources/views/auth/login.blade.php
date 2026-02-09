@@ -18,13 +18,13 @@
     <meta property="og:url" content="https://dominusbr.com/" />
     <meta property="og:site_name" content="Dominus | Dominus Sistema Eclesial" />
     <link rel="canonical" href="https://dominus.eco.br/login" />
-    <link rel="shortcut icon" href="{{ url('assets/media/app/mini-logo.svg') }}" />
+    <link rel="shortcut icon" href="{{ url('tenancy/assets/media/app/mini-logo.svg') }}" />
     <!--begin::Fonts(mandatory for all pages)-->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700" />
     <!--end::Fonts-->
     <!--begin::Global Stylesheets Bundle(mandatory for all pages)-->
-    <link href="../assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
-    <link href="../assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/tenancy/assets/plugins/global/plugins.bundle.css" rel="stylesheet" type="text/css" />
+    <link href="/tenancy/assets/css/style.bundle.css" rel="stylesheet" type="text/css" />
     <!--end::Global Stylesheets Bundle-->
 </head>
 <!--end::Head-->
@@ -57,17 +57,17 @@
         <div class="d-flex flex-column flex-lg-row flex-column-fluid">
             <!--begin::Aside-->
             <div class="d-flex flex-lg-row-fluid w-lg-50 bgi-size-cover bgi-position-center"
-                style="background-image: url('{{ isset($randomImage) ? route('file', ['path' => $randomImage->imagem_caminho]) : asset('assets/media/misc/auth-bg.png') }}')">
+                style="background-image: url('{{ isset($randomImage) ? route('file', ['path' => $randomImage->imagem_caminho]) : asset('tenancy/assets/media/misc/auth-bg.png') }}')">
                 <!--begin::Content-->
                 <div class="d-flex flex-column flex-center p-6 p-lg-10 w-100">
                     <!--begin::Logo-->
                     <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20">
-                        <img alt="Logo" src="{{ url('assets/media/app/default-logo-dark.svg') }}" class="h-40px h-lg-50px" style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));" />
+                        <img alt="Logo" src="{{ url('tenancy/assets/media/app/default-logo-dark.svg') }}" class="h-40px h-lg-50px" style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));" />
                     </a>
                     <!--end::Logo-->
                     <!--begin::Image-->
                     <img class="d-none d-lg-block mx-auto w-300px w-lg-75 w-xl-500px mb-10 mb-lg-20"
-                        src="assets/media/misc/auth-screens.png" alt="" />
+                        src="/tenancy/assets/media/misc/auth-screens.png" alt="" />
                     <!--end::Image-->
 
                     @if(isset($randomImage) && $randomImage)
@@ -109,7 +109,7 @@
                 <div class="d-flex flex-center flex-column flex-lg-row-fluid">
                         <!--begin::Logo-->
                         <a href="#" class="mb-0 mb-lg-20">
-                            <img alt="Logo" src="{{ url('assets/media/app/mini-logo.svg') }}" class="h-40px h-lg-50px" />
+                            <img alt="Logo" src="{{ url('tenancy/assets/media/app/mini-logo.svg') }}" class="h-40px h-lg-50px" />
                         </a>
                     <!--begin::Wrapper-->
                     <div class="w-lg-500px">
@@ -132,7 +132,7 @@
                                     <!--begin::Google link=-->
                                     <a href="#"
                                         class="btn btn-flex btn-outline btn-text-gray-700 btn-active-color-primary bg-state-light flex-center text-nowrap w-100">
-                                        <img alt="Logo" src="assets/media/svg/brand-logos/google-icon.svg"
+                                        <img alt="Logo" src="/tenancy/assets/media/svg/brand-logos/google-icon.svg"
                                             class="h-15px me-3" />Entrar com Google</a>
                                     <!--end::Google link=-->
                                 </div>
@@ -142,9 +142,9 @@
                                     <!--begin::Google link=-->
                                     <a href="#"
                                         class="btn btn-flex btn-outline btn-text-gray-700 btn-active-color-primary bg-state-light flex-center text-nowrap w-100">
-                                        <img alt="Logo" src="assets/media/svg/brand-logos/apple-black.svg"
+                                        <img alt="Logo" src="/tenancy/assets/media/svg/brand-logos/apple-black.svg"
                                             class="theme-light-show h-15px me-3" />
-                                        <img alt="Logo" src="assets/media/svg/brand-logos/apple-black-dark.svg"
+                                        <img alt="Logo" src="/tenancy/assets/media/svg/brand-logos/apple-black-dark.svg"
                                             class="theme-dark-show h-15px me-3" />Entrar com Apple</a>
                                     <!--end::Google link=-->
                                 </div>
@@ -231,11 +231,11 @@
     <!--end::Root-->
     <!--begin::Javascript-->
     <script>
-        var hostUrl = "assets/";
+        var hostUrl = "/tenancy/assets/";
     </script>
     <!--begin::Global Javascript Bundle(mandatory for all pages)-->
-    <script src="/assets/plugins/global/plugins.bundle.js"></script>
-    <script src="/assets/js/scripts.bundle.js"></script>
+    <script src="/tenancy/assets/plugins/global/plugins.bundle.js"></script>
+    <script src="/tenancy/assets/js/scripts.bundle.js"></script>
     <!--end::Global Javascript Bundle-->
     <!--begin::Custom Javascript(used for this page only)-->
     <!--end::Custom Javascript-->

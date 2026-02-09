@@ -71,17 +71,17 @@ class PatrimonioAnexo extends Model
 
             // Mapeamento de extensões para ícones
             $icons = [
-                'png'  => '/assets/media/svg/files/png.svg',
-                'jpeg' => '/assets/media/svg/files/fil_image.svg',
-                'jpg'  => '/assets/media/svg/files/jpg.svg',
-                'gif'  => '/assets/media/svg/files/gif.svg',
-                'pdf'  => '/assets/media/svg/files/pdf.svg',
-                'doc'  => '/assets/media/svg/files/doc.svg',
-                'docx' => '/assets/media/svg/files/docx.svg',
-                'zip'  => '/assets/media/svg/files/zip.svg',
-                'rar'  => '/assets/media/svg/files/fil_zip.svg',
+                'png'  => '/tenancy/assets/media/svg/files/png.svg',
+                'jpeg' => '/tenancy/assets/media/svg/files/fil_image.svg',
+                'jpg'  => '/tenancy/assets/media/svg/files/jpg.svg',
+                'gif'  => '/tenancy/assets/media/svg/files/gif.svg',
+                'pdf'  => '/tenancy/assets/media/svg/files/pdf.svg',
+                'doc'  => '/tenancy/assets/media/svg/files/doc.svg',
+                'docx' => '/tenancy/assets/media/svg/files/docx.svg',
+                'zip'  => '/tenancy/assets/media/svg/files/zip.svg',
+                'rar'  => '/tenancy/assets/media/svg/files/fil_zip.svg',
                 // Extensão padrão para arquivos desconhecidos
-                'default' => '/assets/media/svg/files/default_file.svg', // Ícone padrão
+                'default' => '/tenancy/assets/media/svg/files/default_file.svg', // Ícone padrão
             ];
 
 

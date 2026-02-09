@@ -94,7 +94,7 @@
 																<img alt="{{ $user->name }}"
                                                                     src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
                                                                         ? route('file', ['path' => $user->avatar])
-                                                                        : 'assets/media/avatars/blank.png' }}" />
+                                                                        : 'tenancy/assets/media/avatars/blank.png' }}" />
 																<div class="bg-success position-absolute border border-4 border-body h-15px w-15px rounded-circle translate-middle start-100 top-100 ms-n3 mt-n3"></div>
 															</div>
 															<!--end::Avatar-->
@@ -195,7 +195,7 @@
 																					<img alt="{{ $user->name }}"
                                                                                         src="{{ $user->avatar && $user->avatar !== 'tenant/blank.png'
                                                                                             ? route('file', ['path' => $user->avatar])
-                                                                                            : 'assets/media/avatars/blank.png' }}" />
+                                                                                            : 'tenancy/assets/media/avatars/blank.png' }}" />
 																				</div>
 																				<!--end::Avatar-->
 																			</div>

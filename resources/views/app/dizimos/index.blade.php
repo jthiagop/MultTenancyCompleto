@@ -17,7 +17,7 @@
                         <!-- Total Geral -->
                         <div class="col-xl-4">
                             <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end mb-5 mb-xl-10"
-                                style="background-color: #50CD89;background-image:url('/assets/media/svg/shapes/widget-bg-1.png')">
+                                style="background-color: #50CD89;background-image:url('/tenancy/assets/media/svg/shapes/widget-bg-1.png')">
                                 <div class="card-body p-6">
                                     <div class="d-flex align-items-center mb-4">
                                         <div class="symbol symbol-60px me-5">
@@ -39,7 +39,7 @@
                         <!-- Total do Mês -->
                         <div class="col-xl-4">
                             <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end mb-5 mb-xl-10"
-                                style="background-color: #3E97FF;background-image:url('/assets/media/svg/shapes/widget-bg-1.png')">
+                                style="background-color: #3E97FF;background-image:url('/tenancy/assets/media/svg/shapes/widget-bg-1.png')">
                                 <div class="card-body p-6">
                                     <div class="d-flex align-items-center mb-4">
                                         <div class="symbol symbol-60px me-5">
@@ -61,7 +61,7 @@
                         <!-- Total de Dizimistas -->
                         <div class="col-xl-4">
                             <div class="card card-flush bgi-no-repeat bgi-size-contain bgi-position-x-end mb-5 mb-xl-10"
-                                style="background-color: #F1416C;background-image:url('/assets/media/svg/shapes/widget-bg-1.png')">
+                                style="background-color: #F1416C;background-image:url('/tenancy/assets/media/svg/shapes/widget-bg-1.png')">
                                 <div class="card-body p-6">
                                     <div class="d-flex align-items-center mb-4">
                                         <div class="symbol symbol-60px me-5">
@@ -155,7 +155,7 @@
     <!--end::Main-->
 
     <!-- Script do modal de dízimo -->
-    <script src="/assets/js/custom/utilities/modals/dizimo.js"></script>
+    <script src="/tenancy/assets/js/custom/utilities/modals/dizimo.js"></script>
     <!--end::Custom Javascript-->
 </x-tenant-app-layout>
 

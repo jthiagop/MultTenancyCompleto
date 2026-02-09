@@ -186,7 +186,7 @@
                     }
 
                     if (!$logoPath || !file_exists($logoPath)) {
-                        $logoPath = public_path('assets/media/png/perfil.svg');
+                        $logoPath = public_path('tenancy/assets/media/png/perfil.svg');
                     }
                 @endphp
                 @if (file_exists($logoPath))

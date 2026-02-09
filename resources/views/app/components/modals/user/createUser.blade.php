@@ -28,7 +28,7 @@
                                     <div class="image-input image-input-outline image-input-placeholder"
                                         data-kt-image-input="true">
                                         <div class="image-input-wrapper w-125px h-125px rounded-circle mx-auto"
-                                            style="background-image: url(/assets/media/avatars/blank.png);"></div>
+                                            style="background-image: url(/tenancy/assets/media/avatars/blank.png);"></div>
                                         <label
                                             class="btn btn-icon btn-circle btn-active-color-primary w-25px h-25px bg-body shadow"
                                             data-kt-image-input-action="change" data-bs-toggle="tooltip"
@@ -198,7 +198,7 @@
                         $actionNames = $permissionService->getActionNames();
                         // $moduleIcons já vem do controller com os dados do banco
                         // Se não existir, usar fallback padrão
-                        $defaultIcon = asset('assets/media/avatars/blank.png');
+                        $defaultIcon = asset('tenancy/assets/media/avatars/blank.png');
                     @endphp
 
                     <!--begin::Accordion-->

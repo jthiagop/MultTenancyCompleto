@@ -43,7 +43,7 @@
                                     <img class="rounded-1" src="{{ route('file', ['path' => $company->avatar]) }}"
                                         alt="{{ $company->name }}" />
                                 @else
-                                    <img class="rounded-1" src="/assets/media/png/building.svg" alt="Ícone de empresa" />
+                                    <img class="rounded-1" src="/tenancy/assets/media/png/building.svg" alt="Ícone de empresa" />
                                 @endif
                             </span>
                             {{ $company->name }}

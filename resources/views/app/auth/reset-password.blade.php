@@ -85,6 +85,6 @@
 @endsection
 
 		<!--begin::Custom Javascript(used for this page only)-->
-		<script src="{{ url('assets/js/custom/authentication/reset-password/reset-password.js') }}"></script>
+		<script src="{{ url('tenancy/assets/js/custom/authentication/reset-password/reset-password.js') }}"></script>
 		<!--end::Custom Javascript-->
 @endpush

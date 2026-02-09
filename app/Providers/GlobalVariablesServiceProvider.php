@@ -29,7 +29,7 @@ class GlobalVariablesServiceProvider extends ServiceProvider
             $currentUser = Auth::user();
             $activeCompany = null;
             $allCompanies = collect(); // Uma coleção vazia
-            $defaultAvatar = 'assets/media/avatars/300-6.jpg';
+            $defaultAvatar = 'tenancy/assets/media/avatars/300-6.jpg';
 
             // 2. Apenas executa a lógica se o usuário estiver logado
             if ($currentUser && Schema::hasTable('companies')) {

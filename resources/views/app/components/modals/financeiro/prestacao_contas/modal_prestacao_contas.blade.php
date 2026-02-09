@@ -221,5 +221,5 @@
 <!--end::Modal - Prestação de Contas-->
 
 @push('scripts')
-    <script src="/assets/js/custom/utilities/modals/prestacao-contas.js"></script>
+    <script src="/tenancy/assets/js/custom/utilities/modals/prestacao-contas.js"></script>
 @endpush

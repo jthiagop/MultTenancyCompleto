@@ -99,7 +99,7 @@
                                     data-kt-image-input="true">
                                     <!--begin::Preview existing avatar-->
                                     <div class="image-input-wrapper w-125px h-125px"
-                                        style="background-image: url(assets/media/avatars/icon.png);"></div>
+                                        style="background-image: url(/tenancy/assets/media/avatars/icon.png);"></div>
                                     <!--end::Preview existing avatar-->
                                     <!--begin::Label-->
                                     <label
@@ -265,7 +265,7 @@
                                         data-kt-image-input="true">
                                         <!--begin::Preview existing avatar-->
                                         <div class="image-input-wrapper w-125px h-125px"
-                                            style="background-image: url({{ asset('assets/media/avatars/blank.png') }});"></div>
+                                            style="background-image: url({{ asset('tenancy/assets/media/avatars/blank.png') }});"></div>
                                         <!--end::Preview existing avatar-->
                                         <!--begin::Label-->
                                         <label
@@ -406,7 +406,7 @@
 </x-tenant-app-layout>
 
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/assets/js/custom/apps/modules/list.js"></script>
-<script src="/assets/js/custom/apps/modules/add-module.js"></script>
-<script src="/assets/js/custom/apps/modules/update-module.js"></script>
+<script src="/tenancy/assets/js/custom/apps/modules/list.js"></script>
+<script src="/tenancy/assets/js/custom/apps/modules/add-module.js"></script>
+<script src="/tenancy/assets/js/custom/apps/modules/update-module.js"></script>
 <!--end::Custom Javascript-->

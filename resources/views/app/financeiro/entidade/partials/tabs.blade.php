@@ -13,7 +13,7 @@
                         @if (isset($entidadesBancos) && $entidadesBancos->isNotEmpty())
                             @foreach ($entidadesBancos as $entidadeBanco)
                                 <option value="{{ $entidadeBanco->id }}"
-                                    data-kt-select2-icon="{{ $entidadeBanco->bank->logo_path ?? asset('assets/media/svg/bancos/default.svg') }}"
+                                    data-kt-select2-icon="{{ $entidadeBanco->bank->logo_path ?? asset('tenancy/assets/media/svg/bancos/default.svg') }}"
                                     data-nome="{{ $entidadeBanco->nome }}" data-origem="Banco"
                                     {{ isset($entidade) && $entidade->id == $entidadeBanco->id ? 'selected' : '' }}>
                                     {{ $entidadeBanco->agencia }} - {{ $entidadeBanco->conta }}
@@ -23,7 +23,7 @@
                         @if (isset($entidadesCaixa) && $entidadesCaixa->isNotEmpty())
                             @foreach ($entidadesCaixa as $entidadeCaixa)
                                 <option value="{{ $entidadeCaixa->id }}"
-                                    data-kt-select2-icon="{{ url('/assets/media/svg/bancos/caixa.svg') }}"
+                                    data-kt-select2-icon="{{ url('/tenancy/assets/media/svg/bancos/caixa.svg') }}"
                                     data-nome="{{ $entidadeCaixa->nome }}" data-origem="Caixa"
                                     {{ isset($entidade) && $entidade->id == $entidadeCaixa->id ? 'selected' : '' }}>
                                     {{ $entidadeCaixa->nome }}
@@ -148,7 +148,7 @@
 <script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css">
 {{-- Toast Script --}}
-<script src="/assets/js/toasts.js"></script>
+<script src="/tenancy/assets/js/toasts.js"></script>
 
 <script>
     // Variável global para armazenar o período selecionado

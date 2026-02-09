@@ -119,5 +119,5 @@
 <!--end::Modal - Conciliação Bancária-->
 
 @push('scripts')
-    <script src="/assets/js/custom/utilities/modals/conciliacao-bancaria.js"></script>
+    <script src="/tenancy/assets/js/custom/utilities/modals/conciliacao-bancaria.js"></script>
 @endpush

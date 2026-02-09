@@ -118,7 +118,7 @@
             <!--end::Timeline-->
         @else
             <div class="text-center py-10">
-                <img src="{{ asset('assets/media/illustrations/sketchy-1/5.png') }}" alt="Sem registros" class="mw-200px mb-5">
+                <img src="{{ asset('tenancy/assets/media/illustrations/sketchy-1/5.png') }}" alt="Sem registros" class="mw-200px mb-5">
                 <p class="text-gray-500 fs-6">Nenhum evento registrado na timeline</p>
             </div>
         @endif

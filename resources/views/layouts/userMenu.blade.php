@@ -126,7 +126,7 @@
                                                 <span
                                                     class="fs-8 rounded bg-light px-3 py-2 position-absolute translate-middle-y top-50 end-0">English
                                                     <img class="w-15px h-15px rounded-1 ms-2"
-                                                        src="assets/media/flags/united-states.svg"
+                                                        src="/tenancy/assets/media/flags/united-states.svg"
                                                         alt="" /></span></span>
                                         </a>
                                         <!--begin::Menu sub-->
@@ -137,7 +137,7 @@
                                                     class="menu-link d-flex px-5 active">
                                                     <span class="symbol symbol-20px me-4">
                                                         <img class="rounded-1"
-                                                            src="assets/media/flags/united-states.svg"
+                                                            src="/tenancy/assets/media/flags/united-states.svg"
                                                             alt="" />
                                                     </span>English</a>
                                             </div>
@@ -147,7 +147,7 @@
                                                 <a href="../../demo1/dist/account/settings.html"
                                                     class="menu-link d-flex px-5">
                                                     <span class="symbol symbol-20px me-4">
-                                                        <img class="rounded-1" src="assets/media/flags/spain.svg"
+                                                        <img class="rounded-1" src="/tenancy/assets/media/flags/spain.svg"
                                                             alt="" />
                                                     </span>Spanish</a>
                                             </div>
@@ -157,7 +157,7 @@
                                                 <a href="../../demo1/dist/account/settings.html"
                                                     class="menu-link d-flex px-5">
                                                     <span class="symbol symbol-20px me-4">
-                                                        <img class="rounded-1" src="assets/media/flags/germany.svg"
+                                                        <img class="rounded-1" src="/tenancy/assets/media/flags/germany.svg"
                                                             alt="" />
                                                     </span>German</a>
                                             </div>
@@ -167,7 +167,7 @@
                                                 <a href="../../demo1/dist/account/settings.html"
                                                     class="menu-link d-flex px-5">
                                                     <span class="symbol symbol-20px me-4">
-                                                        <img class="rounded-1" src="assets/media/flags/japan.svg"
+                                                        <img class="rounded-1" src="/tenancy/assets/media/flags/japan.svg"
                                                             alt="" />
                                                     </span>Japanese</a>
                                             </div>
@@ -177,7 +177,7 @@
                                                 <a href="../../demo1/dist/account/settings.html"
                                                     class="menu-link d-flex px-5">
                                                     <span class="symbol symbol-20px me-4">
-                                                        <img class="rounded-1" src="assets/media/flags/france.svg"
+                                                        <img class="rounded-1" src="/tenancy/assets/media/flags/france.svg"
                                                             alt="" />
                                                     </span>French</a>
                                             </div>

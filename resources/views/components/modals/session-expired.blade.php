@@ -15,7 +15,7 @@
             <div class="modal-body text-center py-10 px-10">
                 <!--begin::Ilustração SVG-->
                 <div class="mb-5">
-                    <img src="/assets/media/auth/23.svg" alt="Sessão Expirada"
+                    <img src="/tenancy/assets/media/auth/23.svg" alt="Sessão Expirada"
                          class="mw-300px mx-auto" style="max-width: 300px; height: auto;">
                 </div>
                 <!--end::Ilustração SVG-->

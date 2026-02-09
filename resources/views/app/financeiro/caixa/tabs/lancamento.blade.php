@@ -92,5 +92,5 @@
         // Definir rota para busca de saldos
         window.saldosCaixaRoute = '{{ route('financeiro.saldos-mensais') }}';
     </script>
-    <script src="/assets/js/custom/apps/financeiro/saldos-caixa.js"></script>
+    <script src="/tenancy/assets/js/custom/apps/financeiro/saldos-caixa.js"></script>
     <!--end::Scripts-->
