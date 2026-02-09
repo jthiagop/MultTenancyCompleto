@@ -1,5 +1,5 @@
 <!--begin::Card-->
-<div class="card mb-xl-10 ">
+<div class="card mb-xl-10 border border-gray-300 border-active active ">
     <div class="card-header">
         <div id="kt_app_toolbar"
             class="app-toolbar py-3 py-lg-6 d-flex justify-content-between align-items-center w-100">

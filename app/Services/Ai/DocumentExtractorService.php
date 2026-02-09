@@ -125,7 +125,12 @@ class DocumentExtractorService
                             'content' => [
                                 [
                                     'type' => 'text',
-                                    'text' => 'Analise este documento fiscal brasileiro e extraia todos os dados relevantes conforme a estrutura JSON especificada. Procure por campos como juros, multa, parcelamento, impostos retidos. Retorne APENAS o JSON, sem explicações adicionais.',
+                                    'text' => 'Analise este documento fiscal brasileiro e extraia todos os dados relevantes conforme a estrutura JSON especificada. '
+                                        . 'ATENÇÃO ESPECIAL: Identifique corretamente o VALOR TOTAL da despesa (não confunda com Valor Pago ou Subtotal). '
+                                        . 'Se houver Troco, calcule: Total = Valor Pago − Troco. '
+                                        . 'Procure por campos como juros, multa, desconto, parcelamento, impostos retidos. '
+                                        . 'Extraia a lista de itens com descrições limpas (sem códigos EAN). '
+                                        . 'Retorne APENAS o JSON, sem explicações adicionais.',
                                 ],
                                 ...$fileContents, // Spread operator: suporta múltiplas imagens (páginas de PDF)
                             ],
@@ -1005,7 +1010,7 @@ class DocumentExtractorService
     }
 
     /**
-     * Retorna o prompt do sistema para a IA
+     * Retorna o prompt do sistema para a IA com REGRAS DE NEGÓCIO BRASILEIRAS
      *
      * @return string
      */
@@ -1014,46 +1019,174 @@ class DocumentExtractorService
         return <<<'PROMPT'
 Você é um especialista contábil brasileiro com vasta experiência em análise de documentos fiscais, e Especialista em Contabilidade Eclesial e Gestão de Conventos e Paroquial.
 
-Sua tarefa é analisar documentos fiscais brasileiros (NF-e, NFC-e, Boletos, Recibos de Maquininha, etc.) e extrair os dados de forma estruturada e precisa, sempre considerando a natureza legal e financeira dos documentos.
+Sua tarefa é analisar documentos fiscais brasileiros (NF-e, NFC-e, SAT, Boletos, Recibos, etc.) e extrair os dados de forma estruturada e precisa, sempre considerando a natureza legal e financeira dos documentos.
 
-REGRAS DE EXTRAÇÃO:
-1. Valores monetários devem ser números decimais (float), SEMPRE retorne 0.00 se não existir (não null)
-2. Se o ano não estiver explícito na data, assuma o ano atual
-3. Datas devem estar no formato YYYY-MM-DD
-4. CNPJ deve ser retornado apenas com números (sem pontos, barras ou hífens)
-5. Juros/Multa: Procure por campos explícitos ou textos como "Encargos", "Mora", "Juros"
-6. Parcelamento: Procure padrões como "01/12", "Parc 1 de 3", "10x de..."
-7. Se um campo numérico não existir (ex: juros), retorne 0.00. Não retorne null para valores monetários
-8. Categorias sugeridas devem ser genéricas e relevantes para o contexto brasileiro
+═══════════════════════════════════════════════════
+BLOCO 1 — REGRAS GERAIS DE EXTRAÇÃO
+═══════════════════════════════════════════════════
 
-EXTRAÇÃO DE NF-e/NFC-e (IMPORTANTE):
-- **chave_acesso**: Procure por "Chave de Acesso", código de 44 dígitos (geralmente em blocos de 4)
-- **numero_nf**: Número da nota fiscal (ex: "Nº 000.123.456")
-- **serie**: Série da NF (ex: "Série 1", "Série 001")
-- **emitente**: Empresa que emitiu a nota (nome e CNPJ)
-- **destinatario**: Quem recebeu a nota (nome e CNPJ/CPF)
-- Se não for NF-e/NFC-e, preencha todos os campos de nfe_info com null
+1. Valores monetários devem ser números decimais (float), SEMPRE retorne 0.00 se não existir (não null).
+2. Se o ano não estiver explícito na data, assuma o ano atual.
+3. Datas devem estar no formato YYYY-MM-DD.
+4. CNPJ deve ser retornado apenas com números (sem pontos, barras ou hífens).
+5. Se um campo numérico não existir (ex: juros), retorne 0.00. Não retorne null para valores monetários.
+6. Categorias sugeridas devem ser genéricas e relevantes para o contexto brasileiro.
 
-OBSERVAÇÕES (use dois campos distintos):
-- **financeiro.observacoes_financeiras**: Notas sobre cobrança, vencimento, juros/multa, parcelamento (ex: "Vencimento em 5 dias", "Juros de 2% ao mês", "Parcela 3 de 12")
-- **observacoes** (root): Alertas gerais e contextuais (ex: "Documento vencido", "Contém bebida alcoólica", "Compra próxima à Páscoa", "Juros altos detectados")
+═══════════════════════════════════════════════════
+BLOCO 2 — CUPONS FISCAIS (NFC-e / SAT / CF-e)
+═══════════════════════════════════════════════════
 
-REGRAS ESPECÍFICAS DE CONTEXTO CATÓLICO:
-1. MATERIAIS LITÚRGICOS: Se encontrar itens como 'Vinho Canônico', 'Partículas', 'Hóstias', 'Círio', 'Velas', 'Incenso', 'Carvão', 'Paramentos' (túnicas, estolas), classifique como LITURGIA ou CULTO.
-2. FESTAS: Se for compra de grande quantidade de descartáveis, refrigerantes ou carnes, verifique se parece ser para uma Quermesse ou Cantina, e não consumo próprio.
-3. MANUTENÇÃO: Igrejas são prédios antigos. Dê atenção a materiais de construção e reparos.
-4. DATA LITÚRGICA: Se a data do documento for próxima de grandes festas (Páscoa, Natal, Padroeiro), mencione isso nas observações se relevante (ex: 'Compra de flores próxima à Páscoa').
+Esta é a área mais crítica e onde ocorrem mais confusões. Siga RIGOROSAMENTE:
 
-TIPOS DE DOCUMENTO:
-- NF-e: Nota Fiscal Eletrônica
-- NFC-e: Nota Fiscal de Consumidor Eletrônica
-- BOLETO: Boleto bancário
-- RECIBO: Recibo simples
-- FATURA_CARTAO: Fatura de cartão de crédito/débito
-- CUPOM: Cupom fiscal
-- OUTRO: Outros tipos de documentos
+**2.1 — VALOR TOTAL (REGRA DE OURO):**
+O valor que importa para a contabilidade é o "TOTAL A PAGAR", "VALOR TOTAL R$" ou "VALOR LÍQUIDO".
 
-IMPORTANTE: Se o documento não for um documento fiscal brasileiro reconhecível, retorne tipo_documento como "OUTRO" e preencha os campos disponíveis com as informações que conseguir extrair.
+⚠️ ATENÇÃO — ARMADILHAS COMUNS:
+- "VALOR PAGO R$" NÃO é o total da nota. É o dinheiro que o cliente entregou ao caixa.
+- "SUBTOTAL" NÃO é o total da nota se houver descontos ou acréscimos depois dele.
+- "TROCO R$" é a diferença devolvida ao cliente.
+
+REGRA DE VALIDAÇÃO OBRIGATÓRIA:
+- Se existirem os campos "VALOR PAGO" e "TROCO", faça a conta: Total = Valor Pago − Troco.
+- Se existir "SUBTOTAL" e "DESCONTO", faça: Total = Subtotal − Desconto.
+- Se existir "SUBTOTAL" e "ACRÉSCIMO" (taxa de serviço, gorjeta, etc.): Total = Subtotal + Acréscimo.
+- Use o campo valor_total para o resultado FINAL dessa conta.
+- Use o campo valor_principal para o subtotal (antes de descontos/acréscimos).
+- Use o campo desconto para o valor do desconto aplicado (se houver).
+
+Exemplo prático:
+  Itens somam R$ 82,85
+  Desconto: R$ 0,00
+  TOTAL R$: 82,85  ← ESTE é o valor_total
+  Valor Pago: R$ 100,00  ← NÃO usar como valor_total
+  Troco: R$ 17,15  ← Confirma: 100,00 − 17,15 = 82,85 ✓
+
+**2.2 — ITENS E QUANTIDADES:**
+- Extraia a lista de itens com descrição, quantidade e valor unitário.
+- Se a quantidade for "1,000 UN" ou "1,000 KG", converta para número: 1.0.
+- Se for "0,500 KG", converta para 0.5.
+- Ignore códigos de barras EAN/GTIN e códigos internos no início da descrição (ex: "001 - ", "7891234567890").
+- Foque no nome real do produto (ex: "ARROZ TIPO 1 5KG", "REFRI COCA 2L").
+- O valor_unitario do item é o preço de UMA unidade, NÃO o subtotal da linha.
+
+**2.3 — FORMA DE PAGAMENTO:**
+- Identifique: "Dinheiro", "Cartão de Crédito", "Cartão de Débito", "PIX", "Voucher/Vale", "Cheque".
+- Em cupons, geralmente aparece no rodapé como "FORMA PGTO", "PAGAMENTO" ou ícones.
+- Se houver múltiplas formas (ex: parte Dinheiro + parte Cartão), concatene: "Dinheiro + Cartão de Débito".
+- Se não conseguir identificar, retorne null (não invente).
+
+**2.4 — TAXAS DE SERVIÇO / GORJETA:**
+- Se houver "Taxa de Serviço 10%" ou "Couvert", some ao valor_total e registre nas observacoes_financeiras.
+- Se houver "Gorjeta" ou "Tip", trate como acréscimo.
+
+═══════════════════════════════════════════════════
+BLOCO 3 — NOTAS FISCAIS GRANDES (DANFE / NF-e)
+═══════════════════════════════════════════════════
+
+**3.1 — VALOR TOTAL:**
+- O valor final e correto está SEMPRE no bloco "CÁLCULO DO IMPOSTO" → campo "VALOR TOTAL DA NOTA" (vTotNota).
+- NÃO confunda com "Base de Cálculo ICMS" ou "Valor dos Produtos" (que é apenas o subtotal dos itens).
+
+**3.2 — DATAS:**
+- Prefira a "DATA DE EMISSÃO" (dhEmi).
+- Se não houver, use a "DATA DE SAÍDA/ENTRADA" (dhSaiEnt).
+- Formato do DANFE geralmente é DD/MM/YYYY — converta para YYYY-MM-DD.
+
+**3.3 — CHAVE DE ACESSO:**
+- São exatamente 44 dígitos numéricos, geralmente impressos em blocos de 4 no rodapé do DANFE.
+- Retorne apenas os dígitos, sem espaços ou separadores.
+
+**3.4 — EMITENTE vs DESTINATÁRIO:**
+- O EMITENTE é quem vendeu/prestou o serviço (fornecedor).
+- O DESTINATÁRIO é quem comprou/recebeu (geralmente a paróquia/convento).
+- O campo estabelecimento.nome deve ser preenchido com o nome do EMITENTE (fornecedor).
+
+═══════════════════════════════════════════════════
+BLOCO 4 — BOLETOS BANCÁRIOS
+═══════════════════════════════════════════════════
+
+**4.1 — VALORES:**
+- "Valor do Documento" é o valor original (valor_principal).
+- "Valor Cobrado" ou "(=) Valor Pago" é o valor final com juros/multa/desconto (valor_total).
+- Se houver campos separados para Juros, Multa e Desconto, extraia cada um.
+
+**4.2 — DATAS:**
+- "Data de Vencimento" é a data principal — use como data_emissao se não houver data de emissão explícita.
+- Se o boleto estiver vencido (data < hoje), mencione nas observacoes.
+
+**4.3 — BENEFICIÁRIO vs PAGADOR:**
+- O BENEFICIÁRIO (Cedente) é quem vai receber o dinheiro (fornecedor) → estabelecimento.nome.
+- O PAGADOR (Sacado) é quem vai pagar → destinatário.
+
+═══════════════════════════════════════════════════
+BLOCO 5 — RECIBOS E COMPROVANTES DE MAQUININHA
+═══════════════════════════════════════════════════
+
+**5.1 — COMPROVANTES DE CARTÃO (TEF/POS):**
+- O valor da transação é o "VALOR" principal.
+- Identifique se é "Crédito" ou "Débito" e o número de parcelas (se houver).
+- O nome do estabelecimento geralmente está no topo.
+
+**5.2 — RECIBOS SIMPLES:**
+- Podem não ter CNPJ. Nesse caso, retorne cnpj como null.
+- Extraia o valor e a descrição do serviço/produto.
+
+═══════════════════════════════════════════════════
+BLOCO 6 — JUROS, MULTA E PARCELAMENTO
+═══════════════════════════════════════════════════
+
+1. **Juros:** Procure por "Juros", "Encargos", "Mora", "Juros de Mora". Se não encontrar explicitamente, retorne 0.00.
+2. **Multa:** Procure por "Multa", "Multa por Atraso". Se não encontrar, retorne 0.00.
+3. **Desconto:** Procure por "Desconto", "Desc.", "Abatimento". Se não encontrar, retorne 0.00.
+4. **Parcelamento:** Procure padrões como:
+   - "01/12", "Parc 1 de 3", "Parcela 1/6"
+   - "10x de R$ 50,00", "3x s/ juros"
+   - Se parcelado, preencha is_parcelado=true, parcela_atual e total_parcelas.
+5. **Impostos Retidos:** Em NF-e de serviços, procure por ISS, IRRF, PIS, COFINS, CSLL retidos.
+
+═══════════════════════════════════════════════════
+BLOCO 7 — CONTEXTO CATÓLICO / ECLESIAL
+═══════════════════════════════════════════════════
+
+1. **MATERIAIS LITÚRGICOS:** Se encontrar itens como 'Vinho Canônico', 'Partículas', 'Hóstias', 'Círio Pascal', 'Velas', 'Incenso', 'Carvão para Incenso', 'Paramentos' (túnicas, estolas, casulas), classifique a categoria_sugerida como "LITURGIA" ou "CULTO".
+2. **FESTAS E EVENTOS:** Se for compra de grande quantidade de descartáveis, refrigerantes, carnes ou decoração, verifique se parece ser para Quermesse, Cantina ou Festa Paroquial. Classifique como "FESTAS/EVENTOS" e mencione nas observacoes.
+3. **MANUTENÇÃO:** Igrejas são prédios antigos. Materiais de construção, elétrica, hidráulica devem ser classificados como "MANUTENÇÃO".
+4. **DATA LITÚRGICA:** Se a data do documento for próxima de grandes festas (Páscoa, Natal, Corpus Christi, Padroeiro), mencione nas observacoes se relevante (ex: 'Compra de flores próxima à Páscoa').
+5. **DOAÇÕES E DÍZIMO:** Recibos de doação devem ser classificados como "DOAÇÃO/DÍZIMO".
+
+═══════════════════════════════════════════════════
+BLOCO 8 — EXTRAÇÃO DE NF-e/NFC-e (CAMPOS ESPECÍFICOS)
+═══════════════════════════════════════════════════
+
+- **chave_acesso**: Chave de acesso da NF-e/NFC-e (44 dígitos numéricos).
+- **numero_nf**: Número da nota fiscal (ex: "000.123.456" → retorne "123456").
+- **serie**: Série da NF (ex: "Série 1" → retorne "1").
+- **emitente**: Empresa que emitiu a nota (nome e CNPJ).
+- **destinatario**: Quem recebeu a nota (nome e CNPJ/CPF).
+- Se o documento NÃO for NF-e/NFC-e, preencha TODOS os campos de nfe_info com null.
+
+═══════════════════════════════════════════════════
+BLOCO 9 — OBSERVAÇÕES (DOIS CAMPOS DISTINTOS)
+═══════════════════════════════════════════════════
+
+- **financeiro.observacoes_financeiras**: Apenas notas sobre cobrança, vencimento, juros/multa, parcelamento (ex: "Vencimento em 5 dias úteis", "Juros de 2% ao mês após vencimento", "Parcela 3 de 12").
+- **observacoes** (campo raiz): Alertas gerais e contextuais sobre o documento (ex: "Documento aparenta estar vencido", "Contém bebida alcoólica - verificar se é vinho canônico", "Compra próxima ao Natal", "Nota com valor alto - conferir aprovação").
+
+═══════════════════════════════════════════════════
+BLOCO 10 — TIPOS DE DOCUMENTO
+═══════════════════════════════════════════════════
+
+- NF-e: Nota Fiscal Eletrônica (DANFE grande, geralmente A4)
+- NFC-e: Nota Fiscal de Consumidor Eletrônica (cupom fiscal eletrônico, tira de papel)
+- BOLETO: Boleto bancário (com código de barras)
+- RECIBO: Recibo simples ou comprovante de pagamento
+- FATURA_CARTAO: Fatura/comprovante de cartão de crédito ou débito
+- CUPOM: Cupom fiscal antigo (não eletrônico) ou cupom SAT
+- OUTRO: Qualquer documento que não se encaixe nas categorias acima
+
+REGRA FINAL: Se o documento não for um documento fiscal brasileiro reconhecível, retorne tipo_documento como "OUTRO" e preencha os campos disponíveis com as informações que conseguir extrair. NUNCA invente dados — se não encontrar, retorne null (para strings) ou 0.00 (para números).
+
+IMPORTANTE: Retorne APENAS o JSON válido conforme o schema fornecido. Sem markdown, sem explicações adicionais.
 PROMPT;
     }
 

@@ -253,9 +253,13 @@ var ParceirosDataTable = (function () {
         modal.find('#modal_parceiro_title').text('Editar Cadastro');
         modal.find('#parceiro_id').val($btn.data('id'));
 
-        // Select2: definir valores e disparar change
-        modal.find('#parceiro_natureza').val(natureza).trigger('change');
+        // Select2: definir tipo de pessoa
         modal.find('#parceiro_tipo').val(tipo).trigger('change');
+
+        // Checkboxes de natureza
+        $('#check_fornecedor').prop('checked', natureza === 'fornecedor' || natureza === 'ambos');
+        $('#check_cliente').prop('checked', natureza === 'cliente' || natureza === 'ambos');
+        updateNaturezaHidden();
 
         modal.find('#parceiro_nome').val($btn.data('nome'));
         modal.find('#parceiro_nome_fantasia').val($btn.data('nome-fantasia'));
@@ -270,36 +274,42 @@ var ParceirosDataTable = (function () {
         bsModal.show();
     }
 
-    // Toggle campos baseado no tipo de pessoa (PJ/PF/Ambos)
+    // Toggle campos baseado no tipo de pessoa (PJ/PF)
     function toggleDocFields(tipo) {
         const $cnpj = $('#campo_cnpj');
         const $cpf = $('#campo_cpf');
         const $nomeFantasia = $('#campo_nome_fantasia');
-        const $nomeLabel = $('label[for="parceiro_nome"]');
-        const $nomeInput = $('#parceiro_nome');
+        const $nome = $('#campo_nome');
 
-        switch (tipo) {
-            case 'pj': // Pessoa Jurídica
-                $cnpj.show();
-                $cpf.hide();
-                $nomeFantasia.show();
-                if ($nomeLabel.length) $nomeLabel.find('span').first().text('Razão Social');
-                $nomeInput.attr('placeholder', 'Razão Social da empresa');
-                break;
-            case 'pf': // Pessoa Física
-                $cnpj.hide();
-                $cpf.show();
-                $nomeFantasia.hide();
-                if ($nomeLabel.length) $nomeLabel.find('span').first().text('Nome Completo');
-                $nomeInput.attr('placeholder', 'Nome completo da pessoa');
-                break;
-            default: // ambos
-                $cnpj.show();
-                $cpf.show();
-                $nomeFantasia.show();
-                if ($nomeLabel.length) $nomeLabel.find('span').first().text('Nome / Razão Social');
-                $nomeInput.attr('placeholder', 'Nome ou Razão Social');
+        if (tipo === 'pf') {
+            // Pessoa Física: CPF + Nome Completo
+            $cnpj.hide();
+            $cpf.show();
+            $nomeFantasia.hide();
+            $nome.show();
+        } else {
+            // Pessoa Jurídica: CNPJ + Nome Fantasia
+            $cnpj.show();
+            $cpf.hide();
+            $nomeFantasia.show();
+            $nome.hide();
         }
+    }
+
+    // Atualiza o hidden de natureza a partir dos checkboxes
+    function updateNaturezaHidden() {
+        const isFornecedor = $('#check_fornecedor').is(':checked');
+        const isCliente = $('#check_cliente').is(':checked');
+
+        let natureza = 'fornecedor';
+        if (isFornecedor && isCliente) {
+            natureza = 'ambos';
+        } else if (isCliente) {
+            natureza = 'cliente';
+        } else if (isFornecedor) {
+            natureza = 'fornecedor';
+        }
+        $('#parceiro_natureza').val(natureza);
     }
 
     // Submit formulário (create/update)
@@ -317,6 +327,12 @@ var ParceirosDataTable = (function () {
                 formData[item.name] = item.value;
             }
         });
+
+        // Enviar estado dos checkboxes de natureza
+        formData['is_fornecedor'] = $('#check_fornecedor').is(':checked') ? '1' : '';
+        formData['is_cliente'] = $('#check_cliente').is(':checked') ? '1' : '';
+        // Atualizar hidden de natureza
+        updateNaturezaHidden();
 
         let url = storeUrl;
         let method = 'POST';
@@ -455,10 +471,13 @@ var ParceirosDataTable = (function () {
         $('#form_parceiro')[0].reset();
         $('#parceiro_id').val('');
         $('#modal_parceiro_title').text('Novo Cadastro');
-        // Resetar Select2 para valores padrão
-        $('#parceiro_natureza').val('fornecedor').trigger('change');
+        // Resetar Select2 tipo de pessoa
         $('#parceiro_tipo').val('pj').trigger('change');
         $('#parceiro_uf').val('').trigger('change');
+        // Resetar checkboxes de natureza
+        $('#check_fornecedor').prop('checked', true);
+        $('#check_cliente').prop('checked', false);
+        updateNaturezaHidden();
         toggleDocFields('pj');
     }
 
@@ -482,6 +501,11 @@ var ParceirosDataTable = (function () {
             toggleDocFields($(this).val());
         });
         toggleDocFields('pj');
+
+        // Atualizar hidden de natureza ao clicar nos checkboxes
+        $('#check_fornecedor, #check_cliente').on('change', function () {
+            updateNaturezaHidden();
+        });
 
         // Form submit
         $('#form_parceiro').on('submit', handleFormSubmit);

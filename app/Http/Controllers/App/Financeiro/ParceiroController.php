@@ -213,8 +213,10 @@ class ParceiroController extends Controller
             'nome' => 'nullable|string|max:255',
             'nome_completo' => 'nullable|string|max:255',
             'nome_fantasia' => 'nullable|string|max:255',
-            'tipo' => 'nullable|in:pj,pf,ambos',
+            'tipo' => 'nullable|in:pj,pf',
             'natureza' => 'nullable|string|max:50',
+            'is_fornecedor' => 'nullable',
+            'is_cliente' => 'nullable',
             'cnpj' => 'nullable|string|max:18',
             'cpf' => 'nullable|string|max:14',
             'telefone' => 'nullable|string|max:20',
@@ -264,11 +266,22 @@ class ParceiroController extends Controller
             if ($cnpj) $cnpj = preg_replace('/\D/', '', $cnpj);
             if ($cpf) $cpf = preg_replace('/\D/', '', $cpf);
 
-            // Tipo de pessoa: se não informado, deduzir dos documentos
+            // Tipo de pessoa: se não informado, default PJ
             $tipo = $validated['tipo'] ?? 'pj';
 
-            // Natureza: se não informada, default = fornecedor
-            $natureza = $validated['natureza'] ?? 'fornecedor';
+            // Natureza: determinar a partir dos checkboxes ou campo direto
+            $isFornecedor = $request->has('is_fornecedor') || $request->input('is_fornecedor');
+            $isCliente = $request->has('is_cliente') || $request->input('is_cliente');
+
+            if ($isFornecedor && $isCliente) {
+                $natureza = 'ambos';
+            } elseif ($isCliente) {
+                $natureza = 'cliente';
+            } elseif ($isFornecedor) {
+                $natureza = 'fornecedor';
+            } else {
+                $natureza = $validated['natureza'] ?? 'fornecedor';
+            }
 
             $parceiro = Parceiro::create([
                 'nome' => $finalNome,
@@ -320,8 +333,10 @@ class ParceiroController extends Controller
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'nome_fantasia' => 'nullable|string|max:255',
-            'tipo' => 'required|in:pj,pf,ambos',
+            'tipo' => 'required|in:pj,pf',
             'natureza' => 'nullable|string|max:50',
+            'is_fornecedor' => 'nullable',
+            'is_cliente' => 'nullable',
             'cnpj' => 'nullable|string|max:18',
             'cpf' => 'nullable|string|max:14',
             'telefone' => 'nullable|string|max:20',
@@ -331,6 +346,21 @@ class ParceiroController extends Controller
 
         if ($validated['cnpj'] ?? null) $validated['cnpj'] = preg_replace('/\D/', '', $validated['cnpj']);
         if ($validated['cpf'] ?? null) $validated['cpf'] = preg_replace('/\D/', '', $validated['cpf']);
+
+        // Determinar natureza a partir dos checkboxes
+        $isFornecedor = $request->has('is_fornecedor') || $request->input('is_fornecedor');
+        $isCliente = $request->has('is_cliente') || $request->input('is_cliente');
+
+        if ($isFornecedor && $isCliente) {
+            $validated['natureza'] = 'ambos';
+        } elseif ($isCliente) {
+            $validated['natureza'] = 'cliente';
+        } elseif ($isFornecedor) {
+            $validated['natureza'] = 'fornecedor';
+        }
+
+        // Remover campos auxiliares dos checkboxes
+        unset($validated['is_fornecedor'], $validated['is_cliente']);
 
         $validated['updated_by'] = Auth::id();
         $validated['updated_by_name'] = Auth::user()->name ?? null;

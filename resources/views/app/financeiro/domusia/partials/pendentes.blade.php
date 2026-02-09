@@ -82,7 +82,6 @@
 <!--end:::Tab pane - Pendentes-->
 
 @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     {{-- Configurações passadas do Laravel para o JavaScript --}}
     @php

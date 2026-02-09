@@ -10,6 +10,7 @@ enum NaturezaParceiro: string
 {
     case FORNECEDOR = 'fornecedor';
     case CLIENTE = 'cliente';
+    case AMBOS = 'ambos';
 
     /**
      * Label humanizado
@@ -19,6 +20,7 @@ enum NaturezaParceiro: string
         return match ($this) {
             self::FORNECEDOR => 'Fornecedor',
             self::CLIENTE => 'Cliente',
+            self::AMBOS => 'Fornecedor / Cliente',
         };
     }
 
@@ -30,6 +32,7 @@ enum NaturezaParceiro: string
         return match ($this) {
             self::FORNECEDOR => 'badge-light-info',
             self::CLIENTE => 'badge-light-success',
+            self::AMBOS => 'badge-light-warning',
         };
     }
 
@@ -41,6 +44,7 @@ enum NaturezaParceiro: string
         return match ($this) {
             self::FORNECEDOR => 'bi-building',
             self::CLIENTE => 'bi-person-check',
+            self::AMBOS => 'bi-people',
         };
     }
 

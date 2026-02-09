@@ -177,7 +177,7 @@
                         <label class="required fs-6 fw-semibold mb-2">Endereço</label>
                         <!--end::Label-->
                         <!--begin::Input-->
-                        <input class="form-control" placeholder="" name="address1" value="101, Collins Street" />
+                        <input class="form-control" placeholder="Digite o endereço" name="address1" />
                         <!--end::Input-->
                     </div>
                     <!--end::Input group-->
@@ -200,7 +200,7 @@
                             <label class="required fs-6 fw-semibold mb-2">Rua</label>
                             <!--end::Label-->
                             <!--begin::Input-->
-                            <input class="form-control" placeholder="" name="city" value="Melbourne" />
+                            <input class="form-control" placeholder="" name="city" />
                             <!--end::Input-->
                         </div>
                         <!--end::Col-->
@@ -246,7 +246,7 @@
                         <!--end::Label-->
                         <!--begin::Input-->
                         <select name="country" aria-label="Select a Country" data-control="select2"
-                            data-placeholder="Select a Country..." data-dropdown-parent="#kt_drawer_fornecedor"
+                            data-placeholder="Selecione o Estado" data-dropdown-parent="#kt_drawer_fornecedor"
                             class="form-select">
                             <option value="">Selecione um estado...</option>
                             <option value="AC">Acre</option>
@@ -278,37 +278,6 @@
                             <option value="TO">Tocantins</option>
                         </select>
                         <!--end::Input-->
-                    </div>
-                    <!--end::Input group-->
-                    <!--begin::Input group-->
-                    <div class="fv-row mb-7">
-                        <!--begin::Wrapper-->
-                        <div class="d-flex flex-stack">
-                            <!--begin::Label-->
-                            <div class="me-5">
-                                <!--begin::Label-->
-                                <label class="fs-6 fw-semibold">Use as a billing adderess?</label>
-                                <!--end::Label-->
-                                <!--begin::Input-->
-                                <div class="fs-7 fw-semibold text-muted">If you need more info, please check budget
-                                    planning</div>
-                                <!--end::Input-->
-                            </div>
-                            <!--end::Label-->
-                            <!--begin::Switch-->
-                            <label class="form-check form-switch form-check-custom form-check-solid">
-                                <!--begin::Input-->
-                                <input class="form-check-input" name="billing" type="checkbox" value="1"
-                                    id="kt_modal_add_customer_billing" checked="checked" />
-                                <!--end::Input-->
-                                <!--begin::Label-->
-                                <span class="form-check-label fw-semibold text-muted"
-                                    for="kt_modal_add_customer_billing">Yes</span>
-                                <!--end::Label-->
-                            </label>
-                            <!--end::Switch-->
-                        </div>
-                        <!--begin::Wrapper-->
                     </div>
                     <!--end::Input group-->
                 </div>

@@ -113,6 +113,28 @@ class TransacaoFinanceiraController extends Controller
 
         // Adiciona mensagem de sucesso
         Flasher::addSuccess('Lançamento criado com sucesso!');
+
+        // Se veio do Domus IA (AJAX), atualizar status do documento e retornar JSON
+        if ($request->ajax() || $request->wantsJson()) {
+            // Atualizar status do DomusDocumento se informado
+            if ($request->filled('domus_documento_id')) {
+                try {
+                    $domusDoc = \App\Models\DomusDocumento::find($request->input('domus_documento_id'));
+                    if ($domusDoc) {
+                        $domusDoc->update(['status' => 'lancado']);
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Erro ao atualizar DomusDocumento: ' . $e->getMessage());
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lançamento criado com sucesso!',
+                'transacao_id' => $caixa->id,
+            ]);
+        }
+
         return redirect()->back()->with('message', 'Lançamento criado com sucesso!');
     }
 

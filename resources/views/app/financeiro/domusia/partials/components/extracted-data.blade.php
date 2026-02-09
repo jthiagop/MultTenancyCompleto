@@ -124,61 +124,9 @@
                 }
             };
 
-            // Funções globais para os botões
-            window.createTransaction = function(index, isReceita) {
-                console.log('Criar transação para item:', index, 'Tipo:', isReceita ? 'Receita' : 'Despesa');
-
-                const extractedData = window.currentDocument?.dados_extraidos;
-                const drawerElement = document.querySelector('#domusia_expense_drawer');
-
-                if (!drawerElement) {
-                    console.error('Elemento do drawer não encontrado no DOM');
-                    return;
-                }
-
-                let drawer = KTDrawer.getInstance(drawerElement);
-
-                if (!drawer) {
-                    console.log('Criando nova instância do drawer...');
-                    drawer = KTDrawer.createInstances(drawerElement);
-
-                    if (!drawer) {
-                        drawer = new KTDrawer(drawerElement);
-                    }
-                }
-
-                if (drawer && typeof drawer.show === 'function') {
-                    drawer.show();
-                } else {
-                    console.warn('Usando fallback para abrir drawer');
-                    drawerElement.classList.add('drawer-on');
-                    document.body.setAttribute('data-kt-drawer-domusia-expense', 'on');
-
-                    let overlay = document.querySelector('[data-kt-drawer-overlay="true"]');
-                    if (!overlay) {
-                        overlay = document.createElement('div');
-                        overlay.className = 'drawer-overlay';
-                        overlay.setAttribute('data-kt-drawer-overlay', 'true');
-                        overlay.setAttribute('data-kt-drawer-name', 'domusia-expense');
-                        document.body.appendChild(overlay);
-                    }
-                    overlay.classList.add('drawer-overlay-on');
-                }
-
-                setTimeout(() => {
-                    if (typeof window.loadDocumentInDrawer === 'function') {
-                        console.log('Carregando documento no drawer:', window.currentDocument);
-                        window.loadDocumentInDrawer(window.currentDocument);
-                    } else {
-                        console.warn('Função loadDocumentInDrawer não encontrada');
-                    }
-                }, 150);
-            };
-
-            // Manter compatibilidade com função antiga
-            window.createExpense = function(index) {
-                window.createTransaction(index, false);
-            };
+            // As funções createTransaction e createExpense agora são definidas
+            // no drawer_domusia_despesa.blade.php via DomusiaDrawer controller.
+            // Aqui mantemos apenas as funções que não migraram.
 
             window.searchEntry = function(index) {
                 console.log('Buscar lançamento para item:', index);

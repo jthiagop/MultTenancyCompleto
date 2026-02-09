@@ -40,10 +40,17 @@ class Parceiro extends Model
     }
 
     /**
-     * Scope: Filtra por natureza (fornecedor, cliente, etc.)
+     * Scope: Filtra por natureza (fornecedor, cliente, ambos)
+     * Quem é 'ambos' aparece tanto em fornecedores quanto em clientes.
      */
     public function scopeNatureza($query, string $natureza)
     {
+        if ($natureza === 'fornecedor') {
+            return $query->whereIn('natureza', ['fornecedor', 'ambos']);
+        }
+        if ($natureza === 'cliente') {
+            return $query->whereIn('natureza', ['cliente', 'ambos']);
+        }
         return $query->where('natureza', $natureza);
     }
 

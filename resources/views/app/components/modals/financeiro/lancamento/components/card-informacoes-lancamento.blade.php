@@ -1,4 +1,4 @@
-<div class="card mb-xl-10 ">
+<div class="card mb-xl-10 border border-gray-300 border-active active ">
     <div class="card-header">
         <h3 class="card-title">Informações do lançamento</h3>
     </div>

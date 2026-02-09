@@ -459,7 +459,25 @@ Route::middleware([
                         ->get();
                 }
 
-                return view('app.financeiro.domusia.index', compact('activeTab', 'integracoes'));
+                // Carregar dados financeiros para o drawer de lançamento
+                $activeCompanyId = session('active_company_id');
+                $entidadesBanco = \App\Models\EntidadeFinanceira::where('company_id', $activeCompanyId)
+                    ->where('tipo', 'banco')->with('bank')->get();
+                $entidadesCaixa = \App\Models\EntidadeFinanceira::where('company_id', $activeCompanyId)
+                    ->where('tipo', 'caixa')->get();
+                $lps = \App\Models\LancamentoPadrao::where('company_id', $activeCompanyId)
+                    ->orderBy('description')->get();
+                $centrosAtivos = \App\Models\Financeiro\CostCenter::where('company_id', $activeCompanyId)
+                    ->where('status', 1)->orderBy('code')->get();
+                $formasPagamento = \App\Models\FormasPagamento::where('ativo', true)->orderBy('nome')->get();
+                $fornecedores = \App\Models\Parceiro::where('company_id', $activeCompanyId)
+                    ->where('active', true)->orderBy('nome')->get();
+
+                return view('app.financeiro.domusia.index', compact(
+                    'activeTab', 'integracoes',
+                    'entidadesBanco', 'entidadesCaixa', 'lps',
+                    'centrosAtivos', 'formasPagamento', 'fornecedores'
+                ));
             })->name('domusia.index');
 
             // Rotas para integração WhatsApp
