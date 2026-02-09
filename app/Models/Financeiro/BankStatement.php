@@ -106,8 +106,10 @@ class BankStatement extends Model
     {
         // ✅ Usa Money::fromOfx para converter valor do OFX (pode ser negativo)
         $money = \App\Support\Money::fromOfx((float) $transaction->amount);
-        $amountValue = $money->toDatabase(); // DECIMAL para precisão
-        $amountCents = $money->toCents(); // Integer em centavos
+        // ✅ CORREÇÃO: Preservar o sinal negativo para débitos (pagamentos)
+        // Débitos (pagamentos) vêm como negativos no OFX e DEVEM ser salvos negativos
+        $amountValue = round($money->getSignedAmount(), 2); // DECIMAL com sinal
+        $amountCents = (int) round($money->getSignedAmount() * 100); // Integer em centavos com sinal
 
         // ✅ Busca o company_id da entidade financeira para garantir consistência
         $entidade = \App\Models\EntidadeFinanceira::find($entidadeId);

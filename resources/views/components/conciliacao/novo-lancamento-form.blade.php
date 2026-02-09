@@ -13,9 +13,11 @@
     @csrf
 
     <!-- Hidden Fields -->
-    <input type="hidden" name="tipo" value="{{ $conciliacao->amount > 0 ? 'entrada' : 'saida' }}"
+    {{-- ✅ CORREÇÃO: amount negativo = pagamento (saída), positivo = recebimento (entrada) --}}
+    <input type="hidden" name="tipo" value="{{ $conciliacao->amount >= 0 ? 'entrada' : 'saida' }}"
         class="tipo-lancamento">
-    <input type="hidden" name="valor" value="{{ $conciliacao->amount }}">
+    {{-- ✅ Valor sempre positivo para o controller (o tipo já define entrada/saída) --}}
+    <input type="hidden" name="valor" value="{{ abs($conciliacao->amount) }}">
     <input type="hidden" name="data_competencia"
         value="{{ \Carbon\Carbon::parse($conciliacao->dtposted)->format('Y-m-d') }}">
     <input type="hidden" name="numero_documento" value="{{ $conciliacao->checknum }}">

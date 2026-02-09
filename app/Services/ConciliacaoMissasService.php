@@ -476,11 +476,14 @@ class ConciliacaoMissasService
             // BankStatement->amount está em DECIMAL, precisa converter para centavos (integer)
             $money = Money::fromDatabase((float) $bankStatement->amount);
             
+            // ✅ CORREÇÃO: Determina tipo baseado no sinal do amount do bank statement
+            $tipo = $bankStatement->amount >= 0 ? 'entrada' : 'saida';
+
             // Cria Movimentacao com campos contábeis do lançamento padrão
             $movimentacao = Movimentacao::create([
                 'entidade_id' => $bankStatement->entidade_financeira_id,
-                'tipo' => 'entrada',
-                'valor' => $money->toDatabase(), // Movimentacao usa DECIMAL
+                'tipo' => $tipo,
+                'valor' => abs($money->toDatabase()), // Movimentacao usa DECIMAL (valor positivo)
                 'descricao' => $bankStatement->memo ?? 'Coleta de missa',
                 'data' => $bankStatement->transaction_datetime ?? $bankStatement->dtposted,
                 'company_id' => $bankStatement->company_id,
@@ -500,8 +503,8 @@ class ConciliacaoMissasService
                 'company_id' => $bankStatement->company_id,
                 'data_competencia' => $bankStatement->transaction_datetime ?? $bankStatement->dtposted,
                 'entidade_id' => $bankStatement->entidade_financeira_id,
-                'tipo' => 'entrada',
-                'valor' => $money->toDatabase(), // TransacaoFinanceira usa DECIMAL
+                'tipo' => $tipo, // ✅ CORREÇÃO: usa tipo determinado pelo sinal do amount
+                'valor' => abs($money->toDatabase()), // TransacaoFinanceira usa DECIMAL (valor positivo)
                 'descricao' => $bankStatement->memo ?? 'Coleta realizada durante missa',
                 'lancamento_padrao_id' => $lancamentoPadrao->id,
                 'movimentacao_id' => $movimentacao->id,

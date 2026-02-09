@@ -1032,9 +1032,9 @@ class ConciliacaoController extends Controller
                     return redirect()->back()->with('error', 'Companhia não encontrada.');
                 }
 
-                // Determina o tipo baseado no valor do bank statement usando Money
-                $moneyStatement = Money::fromOfx((float) $bankStatement->amount);
-                $tipo = $moneyStatement->isNegative() ? 'saida' : 'entrada';
+                // ✅ Determina o tipo baseado no sinal do amount do bank statement
+                // amount negativo = pagamento (saída), positivo = recebimento (entrada)
+                $tipo = $bankStatement->amount < 0 ? 'saida' : 'entrada';
 
                 // Busca o lançamento padrão para obter conta_debito_id e conta_credito_id
                 $lancamentoPadrao = LancamentoPadrao::find($validated['lancamento_padrao_id']);
