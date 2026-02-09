@@ -154,8 +154,6 @@ var KTModalBoletimFinanceiro = function () {
 			// Validate form before submit
 			if (validator) {
 				validator.validate().then(function (status) {
-					console.log('[BoletimFinanceiro] Validação:', status);
-
 					if (status == 'Valid') {
 						submitButton.setAttribute('data-kt-indicator', 'on');
 						submitButton.disabled = true;
@@ -164,7 +162,7 @@ var KTModalBoletimFinanceiro = function () {
 						var dataInicial = form.querySelector('[name="data_inicial"]').value;
 						var dataFinal = form.querySelector('[name="data_final"]').value;
 
-						// ===== GERAÇÃO ASSÍNCRONA COM POLLING (Toast) =====
+						// ===== GERAÇÃO ASSÍNCRONA COM POLLING → NOTIFICAÇÃO =====
 						var loadingToast = null;
 						var pollInterval = null;
 						var pollTimeout = null;
@@ -186,24 +184,23 @@ var KTModalBoletimFinanceiro = function () {
 							return response.json();
 						})
 						.then(function(data) {
-							console.log('[BoletimFinanceiro] Resposta async:', data);
 							
 							if (data.success) {
 								var pdfId = data.pdf_id;
 								
-								// Fechar modal imediatamente - usuário pode continuar navegando
+								// Fechar modal imediatamente — usuário pode continuar navegando
 								modal.hide();
 								form.reset();
 								submitButton.removeAttribute('data-kt-indicator');
 								submitButton.disabled = false;
 								
-								// 2. Mostrar Toast de Loading (não bloqueia navegação)
+								// 2. Toast de loading (feedback imediato enquanto processa)
 								loadingToast = window.AppToast.loading(
 									'Gerando Boletim...', 
-									'Processando seu relatório. Você pode continuar navegando.'
+									'Você será notificado quando estiver pronto.'
 								);
 								
-								// 3. Polling a cada 2 segundos
+								// 3. Polling a cada 3 segundos (fecha toast e ativa notificação)
 								pollInterval = setInterval(function() {
 									fetch('/relatorios/pdf/status/' + pdfId, {
 										headers: {
@@ -213,10 +210,9 @@ var KTModalBoletimFinanceiro = function () {
 									})
 									.then(function(r) { return r.json(); })
 									.then(function(statusData) {
-										console.log('[BoletimFinanceiro] Status:', statusData);
+										console.log('[BoletimFinanceiro] Status:', statusData.status);
 										
 										if (statusData.status === 'completed') {
-											// Limpar polling
 											clearInterval(pollInterval);
 											clearTimeout(pollTimeout);
 											
@@ -225,59 +221,49 @@ var KTModalBoletimFinanceiro = function () {
 												window.AppToast.close(loadingToast);
 											}
 											
-											// Mostrar Toast de sucesso com botão para abrir PDF
-											var successHtml = '<div class="d-flex flex-column">' +
-												'<span>Seu relatório foi gerado com sucesso!</span>' +
-												'<div class="mt-2 pt-2 border-top">' +
-													'<a href="' + statusData.download_url + '" target="_blank" class="btn btn-sm btn-primary w-100">' +
-														'<i class="ki-duotone ki-file-down fs-4 me-1"><span class="path1"></span><span class="path2"></span></i> Abrir PDF' +
-													'</a>' +
-												'</div>' +
-											'</div>';
+											// Atualizar notificações e abrir popup
+											window.dispatchEvent(new CustomEvent('notifications-updated'));
 											
-											window.AppToast.success('Boletim Pronto!', successHtml, { 
-												autohide: false,
-												delay: 30000 
-											});
+											console.log('[BoletimFinanceiro] PDF pronto — notificação ativada');
 										} 
 										else if (statusData.status === 'failed') {
-											// Limpar polling
 											clearInterval(pollInterval);
 											clearTimeout(pollTimeout);
 											
-											// Fechar toast de loading
 											if (loadingToast) {
 												window.AppToast.close(loadingToast);
 											}
 											
-											// Mostrar toast de erro
+											// Erro: toast + atualizar notificações
 											window.AppToast.error(
 												'Erro na Geração', 
 												statusData.error_message || 'Ocorreu um erro ao gerar o PDF. Tente novamente.',
 												{ autohide: false }
 											);
+											
+											window.dispatchEvent(new CustomEvent('notifications-updated'));
 										}
-										// Se status === 'pending' ou 'processing', continua polling
+										// Se 'pending' ou 'processing', continua polling
 									})
 									.catch(function(err) {
 										console.error('[BoletimFinanceiro] Erro no polling:', err);
 									});
-								}, 2000); // Poll a cada 2 segundos
+								}, 3000); // Poll a cada 3s
 								
 								// 4. Timeout de segurança (3 minutos)
 								pollTimeout = setTimeout(function() {
 									clearInterval(pollInterval);
 									
-									// Fechar toast de loading
 									if (loadingToast) {
 										window.AppToast.close(loadingToast);
 									}
 									
-									// Mostrar toast de aviso
+									window.dispatchEvent(new CustomEvent('notifications-updated'));
+									
 									window.AppToast.warning(
-										'Tempo Excedido', 
-										'A geração está demorando mais que o esperado. O relatório continuará sendo processado em segundo plano.',
-										{ autohide: false }
+										'Processando...', 
+										'A geração está demorando. Você receberá uma notificação quando estiver pronto.',
+										{ autohide: true, delay: 8000 }
 									);
 								}, 180000); // 3 minutos
 								
@@ -288,7 +274,6 @@ var KTModalBoletimFinanceiro = function () {
 						.catch(function(error) {
 							console.error('[BoletimFinanceiro] Erro:', error);
 							
-							// Fechar toast de loading se existir
 							if (loadingToast) {
 								window.AppToast.close(loadingToast);
 							}
