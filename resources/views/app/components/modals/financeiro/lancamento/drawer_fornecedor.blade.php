@@ -819,6 +819,125 @@
     })();
 
     document.addEventListener('DOMContentLoaded', function() {
+        // ========== VALIDAÇÃO DE DUPLICIDADE CPF/CNPJ ==========
+        let cnpjDuplicado = false;
+        let cpfDuplicado = false;
+        let checkDocumentoTimeout = null;
+
+        function checkDocumentoDuplicidade(tipo, valor, inputElement) {
+            // Limpa timeout anterior
+            if (checkDocumentoTimeout) {
+                clearTimeout(checkDocumentoTimeout);
+            }
+
+            const valorLimpo = valor.replace(/\D/g, '');
+            
+            // Valida tamanho mínimo
+            if ((tipo === 'cnpj' && valorLimpo.length < 14) || (tipo === 'cpf' && valorLimpo.length < 11)) {
+                // Limpa feedback de erro se existir
+                inputElement.classList.remove('is-invalid');
+                const feedback = inputElement.parentElement.querySelector('.invalid-feedback');
+                if (feedback) feedback.remove();
+                if (tipo === 'cnpj') cnpjDuplicado = false;
+                if (tipo === 'cpf') cpfDuplicado = false;
+                return;
+            }
+
+            // Debounce: aguarda 500ms após o usuário parar de digitar
+            checkDocumentoTimeout = setTimeout(function() {
+                fetch('{{ route("parceiros.check-documento") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({ tipo: tipo, valor: valorLimpo })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Remove feedback anterior
+                    inputElement.classList.remove('is-invalid', 'is-valid');
+                    const existingFeedback = inputElement.parentElement.querySelector('.invalid-feedback');
+                    if (existingFeedback) existingFeedback.remove();
+
+                    if (data.exists) {
+                        // Marca como duplicado
+                        if (tipo === 'cnpj') cnpjDuplicado = true;
+                        if (tipo === 'cpf') cpfDuplicado = true;
+
+                        inputElement.classList.add('is-invalid');
+                        
+                        // Adiciona feedback visual
+                        const feedback = document.createElement('div');
+                        feedback.className = 'invalid-feedback d-block';
+                        feedback.innerHTML = `<i class="bi bi-exclamation-triangle me-1"></i>${data.message} <strong>(${data.parceiro?.nome || 'Parceiro'})</strong>`;
+                        
+                        // Insere após o input ou input-group
+                        const parent = inputElement.closest('.input-group') || inputElement;
+                        parent.parentElement.appendChild(feedback);
+
+                        toastr.warning(data.message + ' Parceiro: ' + (data.parceiro?.nome || ''));
+                    } else {
+                        // Limpa flag de duplicado
+                        if (tipo === 'cnpj') cnpjDuplicado = false;
+                        if (tipo === 'cpf') cpfDuplicado = false;
+                        
+                        inputElement.classList.add('is-valid');
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao verificar documento:', error);
+                });
+            }, 500);
+        }
+
+        // Adiciona listeners nos inputs de CNPJ e CPF
+        const inputCnpjCheck = document.getElementById('cnpj');
+        const inputCpfCheck = document.getElementById('cpf');
+
+        if (inputCnpjCheck) {
+            inputCnpjCheck.addEventListener('blur', function() {
+                if (this.value.trim()) {
+                    checkDocumentoDuplicidade('cnpj', this.value, this);
+                }
+            });
+            inputCnpjCheck.addEventListener('input', function() {
+                // Limpa validação visual ao digitar
+                this.classList.remove('is-invalid', 'is-valid');
+                const feedback = this.parentElement.querySelector('.invalid-feedback');
+                if (feedback) feedback.remove();
+            });
+        }
+
+        if (inputCpfCheck) {
+            inputCpfCheck.addEventListener('blur', function() {
+                if (this.value.trim()) {
+                    checkDocumentoDuplicidade('cpf', this.value, this);
+                }
+            });
+            inputCpfCheck.addEventListener('input', function() {
+                // Limpa validação visual ao digitar
+                this.classList.remove('is-invalid', 'is-valid');
+                const feedback = this.parentElement.querySelector('.invalid-feedback');
+                if (feedback) feedback.remove();
+            });
+        }
+
+        // Bloqueia envio do formulário se houver duplicidade
+        const formFornecedor = document.getElementById('kt_drawer_fornecedor_form');
+        if (formFornecedor) {
+            formFornecedor.addEventListener('submit', function(e) {
+                if (cnpjDuplicado || cpfDuplicado) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    toastr.error('Não é possível salvar: CPF ou CNPJ já cadastrado para outro parceiro.');
+                    return false;
+                }
+            });
+        }
+        // ========== FIM VALIDAÇÃO DE DUPLICIDADE ==========
+
         const btnConsultar = document.getElementById('btn-consultar-cnpj');
         const inputCnpj = document.getElementById('cnpj');
 
@@ -1126,7 +1245,13 @@
                           $('#fornecedor_tipo').val(null).trigger('change');
                           $('select[name="country"]').val(null).trigger('change');
                           // Reset hidden tipo field
-                          $('#parceiro_tipo_hidden').val('fornecedor');
+                          $('#parceiro_tipo_hidden').val('pj');
+                          
+                          // Reset validação de duplicidade
+                          cnpjDuplicado = false;
+                          cpfDuplicado = false;
+                          $('#cnpj, #cpf').removeClass('is-invalid is-valid');
+                          $('#cnpj_container .invalid-feedback, #cpf_container .invalid-feedback').remove();
 
                          // Emit event for other listeners
                          document.dispatchEvent(new CustomEvent('parceiro-created', { 

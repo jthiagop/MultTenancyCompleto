@@ -386,6 +386,7 @@ Route::middleware([
             Route::prefix('financeiro/parceiros')->name('parceiros.')->group(function () {
                 Route::get('/data', [ParceiroController::class, 'data'])->name('data');
                 Route::get('/stats', [ParceiroController::class, 'stats'])->name('stats');
+                Route::post('/check-documento', [ParceiroController::class, 'checkDocumento'])->name('check-documento');
                 Route::put('/{parceiro}', [ParceiroController::class, 'update'])->name('update');
                 Route::post('/{parceiro}/toggle-active', [ParceiroController::class, 'toggleActive'])->name('toggle-active');
                 Route::delete('/{parceiro}', [ParceiroController::class, 'destroy'])->name('destroy');

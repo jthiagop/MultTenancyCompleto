@@ -209,6 +209,18 @@ class ParceiroController extends Controller
      */
     public function store(Request $request)
     {
+        $activeCompanyId = session('active_company_id');
+        
+        // Limpa CNPJ/CPF para validação de unicidade
+        $cnpjClean = $request->cnpj ? preg_replace('/\D/', '', $request->cnpj) : null;
+        $cpfClean = $request->cpf ? preg_replace('/\D/', '', $request->cpf) : null;
+        
+        // Merge os valores limpos para validação
+        $request->merge([
+            'cnpj_clean' => $cnpjClean,
+            'cpf_clean' => $cpfClean,
+        ]);
+        
         $validated = $request->validate([
             'nome' => 'nullable|string|max:255',
             'nome_completo' => 'nullable|string|max:255',
@@ -218,7 +230,29 @@ class ParceiroController extends Controller
             'is_fornecedor' => 'nullable',
             'is_cliente' => 'nullable',
             'cnpj' => 'nullable|string|max:18',
+            'cnpj_clean' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) use ($activeCompanyId) {
+                    if ($value && Parceiro::where('company_id', $activeCompanyId)
+                            ->where('cnpj', $value)
+                            ->exists()) {
+                        $fail('Este CNPJ já está cadastrado para outro parceiro.');
+                    }
+                },
+            ],
             'cpf' => 'nullable|string|max:14',
+            'cpf_clean' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) use ($activeCompanyId) {
+                    if ($value && Parceiro::where('company_id', $activeCompanyId)
+                            ->where('cpf', $value)
+                            ->exists()) {
+                        $fail('Este CPF já está cadastrado para outro parceiro.');
+                    }
+                },
+            ],
             'telefone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'observacoes' => 'nullable|string|max:1000',
@@ -330,6 +364,18 @@ class ParceiroController extends Controller
      */
     public function update(Request $request, Parceiro $parceiro)
     {
+        $activeCompanyId = session('active_company_id');
+        
+        // Limpa CNPJ/CPF para validação de unicidade
+        $cnpjClean = $request->cnpj ? preg_replace('/\D/', '', $request->cnpj) : null;
+        $cpfClean = $request->cpf ? preg_replace('/\D/', '', $request->cpf) : null;
+        
+        // Merge os valores limpos para validação
+        $request->merge([
+            'cnpj_clean' => $cnpjClean,
+            'cpf_clean' => $cpfClean,
+        ]);
+        
         $validated = $request->validate([
             'nome' => 'required|string|max:255',
             'nome_fantasia' => 'nullable|string|max:255',
@@ -338,7 +384,31 @@ class ParceiroController extends Controller
             'is_fornecedor' => 'nullable',
             'is_cliente' => 'nullable',
             'cnpj' => 'nullable|string|max:18',
+            'cnpj_clean' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) use ($activeCompanyId, $parceiro) {
+                    if ($value && Parceiro::where('company_id', $activeCompanyId)
+                            ->where('cnpj', $value)
+                            ->where('id', '!=', $parceiro->id)
+                            ->exists()) {
+                        $fail('Este CNPJ já está cadastrado para outro parceiro.');
+                    }
+                },
+            ],
             'cpf' => 'nullable|string|max:14',
+            'cpf_clean' => [
+                'nullable',
+                'string',
+                function ($attribute, $value, $fail) use ($activeCompanyId, $parceiro) {
+                    if ($value && Parceiro::where('company_id', $activeCompanyId)
+                            ->where('cpf', $value)
+                            ->where('id', '!=', $parceiro->id)
+                            ->exists()) {
+                        $fail('Este CPF já está cadastrado para outro parceiro.');
+                    }
+                },
+            ],
             'telefone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:255',
             'observacoes' => 'nullable|string|max:1000',
@@ -404,5 +474,51 @@ class ParceiroController extends Controller
             'success' => true,
             'message' => 'Parceiro excluído com sucesso!',
         ]);
+    }
+
+    /**
+     * Verifica se CNPJ ou CPF já existe na empresa.
+     */
+    public function checkDocumento(Request $request)
+    {
+        $activeCompanyId = session('active_company_id');
+        $tipo = $request->input('tipo'); // 'cnpj' ou 'cpf'
+        $valor = $request->input('valor');
+        $excludeId = $request->input('exclude_id'); // ID para excluir (em edição)
+
+        if (!$tipo || !$valor) {
+            return response()->json(['exists' => false]);
+        }
+
+        // Remove caracteres não numéricos
+        $valorLimpo = preg_replace('/\D/', '', $valor);
+
+        if (empty($valorLimpo)) {
+            return response()->json(['exists' => false]);
+        }
+
+        $query = Parceiro::where('company_id', $activeCompanyId)
+            ->where($tipo, $valorLimpo);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        $parceiro = $query->first(['id', 'nome', 'nome_fantasia']);
+
+        if ($parceiro) {
+            return response()->json([
+                'exists' => true,
+                'message' => $tipo === 'cnpj' 
+                    ? 'Este CNPJ já está cadastrado.' 
+                    : 'Este CPF já está cadastrado.',
+                'parceiro' => [
+                    'id' => $parceiro->id,
+                    'nome' => $parceiro->nome ?? $parceiro->nome_fantasia,
+                ],
+            ]);
+        }
+
+        return response()->json(['exists' => false]);
     }
 }
