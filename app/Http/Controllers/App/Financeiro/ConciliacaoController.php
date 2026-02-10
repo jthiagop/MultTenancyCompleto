@@ -387,10 +387,17 @@ class ConciliacaoController extends Controller
             // Cria a transação financeira
             $caixa = TransacaoFinanceira::create($validatedData);
 
+            // Atualiza a movimentação com o relacionamento polimórfico
+            // para permitir busca bidirecional (transação → movimentação e movimentação → transação)
+            $movimentacao->origem_id = $caixa->id;
+            $movimentacao->origem_type = TransacaoFinanceira::class;
+            $movimentacao->save();
+
             Log::info('=== TRANSAÇÃO FINANCEIRA CRIADA ===', [
                 'transacao_id' => $caixa->id,
                 'transacao_valor_salvo' => $caixa->valor,
                 'transacao_valor_raw' => $caixa->getAttributes()['valor'],
+                'movimentacao_origem_id' => $movimentacao->origem_id,
             ]);
 
             // Processa lançamentos padrão

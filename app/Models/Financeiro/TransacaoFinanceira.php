@@ -40,7 +40,7 @@ class TransacaoFinanceira extends Model
         'valor_a_pagar',
         'descricao',
         'lancamento_padrao_id',
-        // 'movimentacao_id', // ❌ REMOVIDO: Use $transacao->movimentacao()->create() ao invés
+        'movimentacao_id', // Usado pela conciliação bancária
         'recorrencia_id',
         'cost_center_id',
         'tipo_documento',

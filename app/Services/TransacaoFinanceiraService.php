@@ -312,9 +312,33 @@ class TransacaoFinanceiraService
         $transacao->save();
 
         // Atualiza movimentação associada (se existir)
-        if ($transacao->movimentacao) {
-            $transacao->movimentacao->tipo = $novoTipo;
-            $transacao->movimentacao->save();
+        // Busca por relacionamento polimórfico OU por movimentacao_id (legado/conciliação)
+        $movimentacao = $transacao->movimentacao;
+        
+        // Fallback: busca por movimentacao_id se não encontrou pelo morphOne
+        if (!$movimentacao && $transacao->movimentacao_id) {
+            $movimentacao = \App\Models\Movimentacao::find($transacao->movimentacao_id);
+            
+            // Corrige o relacionamento polimórfico para futuras operações
+            if ($movimentacao) {
+                $movimentacao->origem_id = $transacao->id;
+                $movimentacao->origem_type = TransacaoFinanceira::class;
+            }
+        }
+        
+        if ($movimentacao) {
+            $movimentacao->tipo = $novoTipo;
+            $movimentacao->save();
+            
+            Log::info('[inverterTipoUnico] Movimentação atualizada', [
+                'movimentacao_id' => $movimentacao->id,
+                'novo_tipo' => $novoTipo,
+            ]);
+        } else {
+            Log::warning('[inverterTipoUnico] Movimentação não encontrada para transação', [
+                'transacao_id' => $transacao->id,
+                'movimentacao_id_attr' => $transacao->movimentacao_id ?? 'null',
+            ]);
         }
 
         // Recalcula saldo da entidade financeira
