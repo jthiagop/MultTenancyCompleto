@@ -13,7 +13,7 @@
                         @if (isset($entidadesBancos) && $entidadesBancos->isNotEmpty())
                             @foreach ($entidadesBancos as $entidadeBanco)
                                 <option value="{{ $entidadeBanco->id }}"
-                                    data-kt-select2-icon="{{ $entidadeBanco->bank->logo_path ?? asset('tenancy/assets/media/svg/bancos/default.svg') }}"
+                                    data-kt-select2-icon="{{ $entidadeBanco->bank->logo_url ?? asset('tenancy/assets/media/svg/bancos/default.svg') }}"
                                     data-nome="{{ $entidadeBanco->nome }}" data-origem="Banco"
                                     {{ isset($entidade) && $entidade->id == $entidadeBanco->id ? 'selected' : '' }}>
                                     {{ $entidadeBanco->agencia }} - {{ $entidadeBanco->conta }}

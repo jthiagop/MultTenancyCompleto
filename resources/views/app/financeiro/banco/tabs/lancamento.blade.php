@@ -108,7 +108,7 @@
                                             <option value="" disabled selected>Selecione o Banco</option>
                                             <!-- Placeholder configurado aqui -->
                                             @foreach ($entidadesBanco as $entidade)
-                                                <option value="{{ $entidade->id }}" data-icon="{{ $entidade->bank?->logo_path }}">{{ $entidade->nome }} ({{ ucfirst($entidade->conta) }})</option>
+                                                <option value="{{ $entidade->id }}" data-icon="{{ $entidade->bank?->logo_url }}">{{ $entidade->nome }} ({{ ucfirst($entidade->conta) }})</option>
                                             @endforeach
                                         </select>
                                     </div>

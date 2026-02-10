@@ -10,7 +10,32 @@ class Bank extends Model
     use HasFactory;
 
     protected $table = 'banks';
-    protected $fillable = ['name', 'logo_path'];
+    protected $fillable = ['name', 'logo_path', 'compe_code'];
+
+    /**
+     * Diretório base dos logos de bancos (relativo à raiz pública).
+     */
+    protected const LOGO_BASE_PATH = '/tenancy/assets/media/svg/bancos/';
+
+    /**
+     * Accessor: Retorna a URL completa do logo do banco.
+     * 
+     * Aceita tanto o slug (brasil.svg) quanto o caminho completo legado.
+     */
+    public function getLogoUrlAttribute(): ?string
+    {
+        if (empty($this->logo_path)) {
+            return null;
+        }
+
+        // Se já é um caminho completo (legado ou URL), retorna diretamente
+        if (str_starts_with($this->logo_path, '/') || str_starts_with($this->logo_path, 'http')) {
+            return $this->logo_path;
+        }
+
+        // Caso contrário, é um slug - gera o caminho completo
+        return self::LOGO_BASE_PATH . $this->logo_path;
+    }
 
     /**
      * Um banco (instituição) pode ter muitas contas (entidades financeiras).

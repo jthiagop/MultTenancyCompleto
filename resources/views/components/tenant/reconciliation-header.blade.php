@@ -8,9 +8,9 @@
                     <div class="d-flex">
                         <!--begin::Avatar-->
                         <div class="symbol symbol-45px">
-                            @if ($entidade->bank && $entidade->bank->logo_path)
-                                {{-- Usa o caminho do logo salvo no banco de dados --}}
-                                <img src="{{ $entidade->bank->logo_path }}" alt="{{ $entidade->bank->name }}" />
+                            @if ($entidade->bank && $entidade->bank->logo_url)
+                                {{-- Usa o accessor logo_url para gerar o caminho completo --}}
+                                <img src="{{ $entidade->bank->logo_url }}" alt="{{ $entidade->bank->name }}" />
                             @else
                                 {{-- Fallback: Mostra as iniciais do nome da entidade se não houver logo --}}
                                 <span

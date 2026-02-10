@@ -11,9 +11,9 @@
 <div class="symbol {{ $sizeClass }} me-5">
     @if ($entidade->tipo === 'banco')
         {{-- Exibir logo do banco --}}
-        @if ($entidade->bank && $entidade->bank->logo_path)
-            {{-- Usa o caminho do logo salvo no banco de dados --}}
-            <img src="{{ $entidade->bank->logo_path }}"
+        @if ($entidade->bank && $entidade->bank->logo_url)
+            {{-- Usa o accessor logo_url para gerar o caminho completo --}}
+            <img src="{{ $entidade->bank->logo_url }}"
                 alt="{{ $entidade->bank->name ?? 'Banco' }}"
                 class="p-3" />
         @else

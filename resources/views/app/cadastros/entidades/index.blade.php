@@ -202,7 +202,7 @@
                                         <option></option>
                                         @isset($banks)
                                             @foreach ($banks as $bank)
-                                                <option value="{{ $bank->id }}" data-icon="{{ $bank->logo_path }}">
+                                                <option value="{{ $bank->id }}" data-icon="{{ $bank->logo_url }}">
                                                     {{ $bank->name }}
                                                 </option>
                                             @endforeach

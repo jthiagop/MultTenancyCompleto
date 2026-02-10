@@ -13,8 +13,8 @@
             {{-- Avatar --}}
             <div class="symbol symbol-70px " role="img" aria-label="{{ $entidade->tipo === 'banco' ? 'Logo do banco' : 'Ícone de caixa' }}">
                 @if ($entidade->tipo === 'banco')
-                    @if ($entidade->bank?->logo_path)
-                        <img src="{{ $entidade->bank->logo_path }}"
+                    @if ($entidade->bank?->logo_url)
+                        <img src="{{ $entidade->bank->logo_url }}"
                              alt="{{ $entidade->bank->name }}" 
                              class="p-2 object-fit-contain"
                              loading="lazy"
