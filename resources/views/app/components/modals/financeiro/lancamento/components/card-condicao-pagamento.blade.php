@@ -1,8 +1,7 @@
 <!--begin::Card-->
 <div class="card mb-xl-10 border border-gray-300 border-active active ">
-    <div class="card-header">
-        <div id="kt_app_toolbar"
-            class="app-toolbar py-3 py-lg-6 d-flex justify-content-between align-items-center w-100">
+    <div class="card-header ">
+        <div id="kt_app_toolbar" class="app-toolbar py-lg-6 d-flex justify-content-between align-items-center w-100">
             <!--begin::Coluna Esquerda - Título-->
             <div class="page-title d-flex flex-column justify-content-center flex-wrap">
                 <h3 class="card-title mb-0">Condição de pagamento</h3>
@@ -11,23 +10,7 @@
 
             <!--begin::Coluna Direita - Checkbox-->
             <div class="d-flex align-items-center gap-2 gap-lg-3">
-                <!--begin::Label-->
-                <div class="me-5">
-                    <label class="fs-5 fw-semibold">Existe comprovação fiscal?</label>
-                    <div class="fs-7 fw-semibold text-muted">Documentos que comprovam
-                        transações financeiras</div>
-                </div>
-                <!--end::Label-->
-                <!-- Input Hidden para garantir o envio de "0" quando desmarcado -->
-                <input type="hidden" name="comprovacao_fiscal" value="0">
-                <!--begin::Switch-->
-                <label class="form-check form-switch form-check-custom form-check-solid">
-                    <!-- Checkbox para enviar 1 quando marcado -->
-                    <input class="form-check-input" type="checkbox" name="comprovacao_fiscal"
-                        value="1" id="comprovacao_fiscal_checkbox" />
-                    <span class="form-check-label fw-semibold text-muted">Possui Nota</span>
-                </label>
-                <!--end::Switch-->
+
             </div>
             <!--end::Coluna Direita-->
         </div>

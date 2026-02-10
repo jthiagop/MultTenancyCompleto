@@ -435,17 +435,7 @@ var DMModalNewBanco = function () {
 			var comprovacaoCheckbox = form.querySelector('[name="comprovacao_fiscal"][type="checkbox"]');
 			if (comprovacaoCheckbox) {
 				comprovacaoCheckbox.checked = false;
-				// Esconde a tab de anexos se estava visível
-				$('#tab_anexos_item').hide();
-				// Volta para a tab de histórico
-				$('#kt_tab_pane_1').addClass('show active');
-				$('#kt_tab_pane_2').removeClass('show active');
-				$('a[href="#kt_tab_pane_1"]').addClass('active');
-				$('a[href="#kt_tab_pane_2"]').removeClass('active');
-			}
 
-			// Limpa os selects usando Select2
-			var selectsToClear = [
 				'#lancamento_padraos_id',
 				'#entidade_id',
 				'#cost_center_id',

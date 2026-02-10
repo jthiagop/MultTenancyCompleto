@@ -1,28 +1,5 @@
                                 <script>
-                                    // Controla a exibição da tab de Anexos baseado no checkbox
                                     $(document).ready(function() {
-                                        $('#comprovacao_fiscal_checkbox').on('change', function() {
-                                            var isChecked = $(this).is(':checked');
-                                            var tabAnexosItem = $('#tab_anexos_item');
-
-                                            if (isChecked) {
-                                                // Mostra a tab de Anexos
-                                                tabAnexosItem.show();
-                                            } else {
-                                                // Esconde a tab de Anexos
-                                                tabAnexosItem.hide();
-
-                                                // Se a tab de Anexos estiver ativa, volta para a tab de Histórico
-                                                var tabAnexosLink = tabAnexosItem.find('a');
-                                                if (tabAnexosLink.hasClass('active')) {
-                                                    tabAnexosLink.removeClass('active');
-                                                    $('#kt_tab_pane_2').removeClass('show active');
-                                                    $('#kt_tab_pane_1').addClass('show active');
-                                                    $('a[href="#kt_tab_pane_1"]').addClass('active');
-                                                }
-                                            }
-                                        });
-
                                         // Função auxiliar para converter valor brasileiro (com vírgula) para número
                                         // Agora com removeMaskOnSubmit: false, o Inputmask envia a string exatamente como o usuário vê
                                         // Exemplo: "1.991,44" → envia "1.991,44" (não remove máscara)
