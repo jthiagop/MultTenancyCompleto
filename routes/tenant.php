@@ -647,7 +647,8 @@ Route::middleware([
                 Route::post('car_insurance/{id}/sell', [CarInsuranceController::class, 'sell'])
                     ->name('car_insurance.sell');
 
-                Route::resource('transacoes-financeiras', TransacaoFinanceiraController::class);
+                Route::resource('transacoes-financeiras', TransacaoFinanceiraController::class)
+                    ->parameters(['transacoes-financeiras' => 'transacaoFinanceira']);
                 Route::get('/transacao-financeira/grafico', [TransacaoFinanceiraController::class, 'grafico'])
                     ->name('transacao.grafico');
 
