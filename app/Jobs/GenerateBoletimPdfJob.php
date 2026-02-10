@@ -27,17 +27,17 @@ class GenerateBoletimPdfJob implements ShouldQueue
     public $timeout = 300;
     public $tries = 3;
 
-    protected $mes;
-    protected $ano;
+    protected $dataInicial;
+    protected $dataFinal;
     protected $companyId;
     protected $userId;
     protected $tenantId;
     protected $pdfGenerationId;
 
-    public function __construct($mes, $ano, $companyId, $userId, $tenantId, $pdfGenerationId)
+    public function __construct($dataInicial, $dataFinal, $companyId, $userId, $tenantId, $pdfGenerationId)
     {
-        $this->mes = $mes;
-        $this->ano = $ano;
+        $this->dataInicial = $dataInicial;
+        $this->dataFinal = $dataFinal;
         $this->companyId = $companyId;
         $this->userId = $userId;
         $this->tenantId = $tenantId;
@@ -93,13 +93,13 @@ class GenerateBoletimPdfJob implements ShouldQueue
             Log::info('[GenerateBoletimPdfJob] Iniciando geração', [
                 'company_id' => $this->companyId,
                 'company_name' => $company->name,
-                'mes' => $this->mes,
-                'ano' => $this->ano,
+                'data_inicial' => $this->dataInicial,
+                'data_final' => $this->dataFinal,
             ]);
             
-            // Calcular período
-            $dataInicio = Carbon::create($this->ano, $this->mes, 1)->startOfMonth();
-            $dataFim = Carbon::create($this->ano, $this->mes, 1)->endOfMonth();
+            // Usar as datas reais selecionadas pelo usuário
+            $dataInicio = Carbon::createFromFormat('d/m/Y', $this->dataInicial)->startOfDay();
+            $dataFim = Carbon::createFromFormat('d/m/Y', $this->dataFinal)->endOfDay();
 
             // Buscar transações
             $transacoes = TransacaoFinanceira::where('company_id', $this->companyId)
@@ -203,8 +203,6 @@ class GenerateBoletimPdfJob implements ShouldQueue
                 'cnpjEmpresa' => $company->cnpj,
                 'avatarEmpresa' => $company->avatar,
                 'enderecoEmpresa' => $company->addresses,
-                'mes' => $this->mes,
-                'ano' => $this->ano,
                 'dataInicio' => $dataInicio,
                 'dataFim' => $dataFim,
                 'dataInicial' => $dataInicio->format('d/m/Y'),
@@ -242,7 +240,8 @@ class GenerateBoletimPdfJob implements ShouldQueue
 
             // Salvar PDF no storage CENTRAL (não no tenant)
             // Usar caminho absoluto para evitar que o FilesystemTenancyBootstrapper redirecione
-            $filename = "pdfs/boletins/boletim_{$this->mes}_{$this->ano}_{$this->companyId}_" . time() . ".pdf";
+            $filePrefix = $dataInicio->format('Ymd') . '_' . $dataFim->format('Ymd');
+            $filename = "pdfs/boletins/boletim_{$filePrefix}_{$this->companyId}_" . time() . ".pdf";
             $centralStoragePath = base_path('storage/app/public/' . $filename);
             
             // Garantir que o diretório existe
@@ -255,8 +254,7 @@ class GenerateBoletimPdfJob implements ShouldQueue
             file_put_contents($centralStoragePath, $pdf);
 
             // Gerar nome amigável do arquivo
-            $mesNome = Carbon::create($this->ano, $this->mes, 1)->translatedFormat('F/Y');
-            $friendlyName = "Boletim Financeiro - {$mesNome}";
+            $friendlyName = "Boletim Financeiro - {$dataInicio->format('d/m/Y')} a {$dataFim->format('d/m/Y')}";
 
             // Atualizar status para completed
             if ($pdfGen) {
@@ -275,8 +273,8 @@ class GenerateBoletimPdfJob implements ShouldQueue
                 'file_name' => $friendlyName,
                 'expires_at' => now()->addDays(PdfGeneration::EXPIRATION_DAYS)->toDateTimeString(),
                 'company_id' => $this->companyId,
-                'mes' => $this->mes,
-                'ano' => $this->ano,
+                'data_inicial' => $this->dataInicial,
+                'data_final' => $this->dataFinal,
             ]);
 
             // Notificar usuário que o PDF está pronto
@@ -316,9 +314,9 @@ class GenerateBoletimPdfJob implements ShouldQueue
             // Notificar usuário sobre o erro
             $user = User::find($this->userId);
             if ($user) {
-                $mesNome = Carbon::create($this->ano, $this->mes, 1)->translatedFormat('F/Y');
+                $periodoNome = $dataInicio->format('d/m/Y') . ' a ' . $dataFim->format('d/m/Y');
                 $user->notify(new RelatorioErroNotification(
-                    "Boletim Financeiro - {$mesNome}",
+                    "Boletim Financeiro - {$periodoNome}",
                     $e->getMessage(),
                     $this->companyId
                 ));

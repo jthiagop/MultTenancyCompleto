@@ -140,12 +140,8 @@ class BoletimFinanceiroController extends Controller
     public function gerarPdfAsync(Request $request)
     {
         try {
-            // Extrair mês e ano das datas
             $dataInicial = $request->input('data_inicial');
-            $dataInicialFormatted = Carbon::createFromFormat('d/m/Y', $dataInicial);
-            
-            $mes = $dataInicialFormatted->month;
-            $ano = $dataInicialFormatted->year;
+            $dataFinal = $request->input('data_final');
             $companyId = session('active_company_id');
             $tenantId = tenant('id');
 
@@ -164,17 +160,15 @@ class BoletimFinanceiroController extends Controller
                 'company_id' => $companyId,
                 'status' => 'pending',
                 'parameters' => [
-                    'mes' => $mes,
-                    'ano' => $ano,
                     'data_inicial' => $dataInicial,
-                    'data_final' => $request->input('data_final'),
+                    'data_final' => $dataFinal,
                 ],
             ]);
 
             // Despachar job
             GenerateBoletimPdfJob::dispatch(
-                $mes,
-                $ano,
+                $dataInicial,
+                $dataFinal,
                 $companyId,
                 Auth::id(),
                 $tenantId,
