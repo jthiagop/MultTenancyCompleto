@@ -202,14 +202,42 @@
                                         _token: token
                                     })
                                 })
-                                .then(function(response) {
-                                    return response.json().then(function(data) {
+                                .then(async function(response) {
+                                    // Tratar erro 419 - CSRF Token expirado (antes de tentar parsear JSON)
+                                    if (response.status === 419) {
                                         return {
-                                            ok: response.ok,
-                                            status: response.status,
-                                            data: data
+                                            ok: false,
+                                            status: 419,
+                                            data: null
                                         };
-                                    });
+                                    }
+
+                                    // Se houve erro 500 ou outro erro do servidor, pode não ser JSON
+                                    const contentType = response.headers.get('content-type');
+                                    let data = null;
+                                    
+                                    if (contentType && contentType.includes('application/json')) {
+                                        try {
+                                            data = await response.json();
+                                        } catch (e) {
+                                            console.error('Erro ao parsear JSON:', e);
+                                        }
+                                    }
+
+                                    // Se for sucesso mas não temos JSON, tenta redirecionar diretamente
+                                    if (response.ok && !data) {
+                                        return {
+                                            ok: true,
+                                            status: response.status,
+                                            data: { redirect: "{{ route('dashboard') }}" }
+                                        };
+                                    }
+
+                                    return {
+                                        ok: response.ok,
+                                        status: response.status,
+                                        data: data
+                                    };
                                 })
                                 .then(function(result) {
                                     // Hide loading indication
@@ -224,6 +252,13 @@
                                         setTimeout(function() {
                                             location.reload();
                                         }, 1500);
+                                        return;
+                                    }
+
+                                    // Tratar erro 500 ou outros erros de servidor
+                                    if (result.status >= 500) {
+                                        showAlert('Erro no servidor. Por favor, tente novamente.', 'danger');
+                                        console.error('Erro do servidor:', result.status);
                                         return;
                                     }
 
@@ -287,10 +322,17 @@
                                     submitButton.disabled = false;
 
                                     // Network error or other
-                                    showAlert(
-                                        "Desculpe, ocorreu um erro de conexão. Por favor, verifique sua internet e tente novamente.",
-                                        'danger');
                                     console.error('Erro na requisição:', error);
+                                    
+                                    // Se for erro de rede ou algo impede a requisição
+                                    showAlert(
+                                        "Ocorreu um erro ao processar o login. Por favor, recarregue a página e tente novamente.",
+                                        'warning');
+                                    
+                                    // Após 3 segundos, recarregar automaticamente
+                                    setTimeout(function() {
+                                        location.reload();
+                                    }, 3000);
                                 });
                         } else {
                             // Show error popup. For more info check the plugin's official documentation: https://sweetalert2.github.io/
