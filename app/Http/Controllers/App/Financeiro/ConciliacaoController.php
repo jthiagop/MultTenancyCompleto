@@ -593,25 +593,6 @@ class ConciliacaoController extends Controller
                 $bankStatement = BankStatement::findOrFail($request->bank_statement_id);
                 $transacao = TransacaoFinanceira::findOrFail($request->transacao_financeira_id);
 
-                // Validar origem da transação - apenas transações permitidas podem ser conciliadas
-                $origensPermitidas = ['conciliacao_bancaria', 'conciliacao', 'transferencia', 'automatica'];
-                if ($transacao->origem && !in_array(strtolower($transacao->origem), $origensPermitidas)) {
-                    Log::warning('Tentativa de conciliar transação com origem não permitida', [
-                        'transacao_id' => $transacao->id,
-                        'origem' => $transacao->origem,
-                        'user_id' => Auth::id()
-                    ]);
-                    
-                    if ($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
-                        return response()->json([
-                            'success' => false,
-                            'message' => 'Esta transação não pode ser conciliada. Apenas transações de conciliação bancária podem ser vinculadas.'
-                        ], 403);
-                    }
-                    
-                    return redirect()->back()->with('error', 'Esta transação não pode ser conciliada.');
-                }
-
                 Log::info('Registros encontrados', [
                     'bank_statement' => [
                         'id' => $bankStatement->id,

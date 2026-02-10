@@ -147,8 +147,16 @@
         if (!btn) return;
 
         const conciliacaoId = btn.dataset.conciliacaoId;
-        const viewDiv = document.getElementById(`viewData-${conciliacaoId}`);
-        const editDiv = document.getElementById(`editForm-${conciliacaoId}`);
+        
+        // Tentar por ID (legado) ou por classe + data-attribute
+        let viewDiv = document.getElementById(`viewData-${conciliacaoId}`);
+        let editDiv = document.getElementById(`editForm-${conciliacaoId}`);
+        
+        // Fallback: buscar por classe suggestion-view/suggestion-edit
+        if (!viewDiv || !editDiv) {
+            viewDiv = document.querySelector(`.suggestion-view[data-conciliacao-id="${conciliacaoId}"]`);
+            editDiv = document.querySelector(`.suggestion-edit[data-conciliacao-id="${conciliacaoId}"]`);
+        }
 
         if (!viewDiv || !editDiv) return;
 
@@ -173,8 +181,19 @@
         if (!btn) return;
 
         const conciliacaoId = btn.dataset.conciliacaoId;
+        const row = btn.closest('.row[data-conciliacao-id]');
+        if (!row) return;
 
-        // Identifica qual aba está ativa
+        // ✅ Verificar se é cenário de SUGESTÃO (tem suggestion-view)
+        const suggestionView = row.querySelector(`.suggestion-view[data-conciliacao-id="${conciliacaoId}"]`);
+        
+        if (suggestionView) {
+            // Cenário: conciliar sugestão existente via pivot
+            handleConciliarSugestao(btn, row, conciliacaoId);
+            return;
+        }
+
+        // Cenário: formulário com abas (Novo Lançamento, Transferência, etc.)
         const activeTab = document.querySelector(
             `[data-conciliacao-id="${conciliacaoId}"] [role="tab"].active`
         );
@@ -201,6 +220,131 @@
         } else if (formToSubmit) {
             formToSubmit.reportValidity();
         }
+    }
+
+    // ============================================================
+    // 6.1. CONCILIAR SUGESTÃO EXISTENTE (PIVOT)
+    // ============================================================
+
+    function handleConciliarSugestao(button, row, conciliacaoId) {
+        // Buscar o formulário de edição da sugestão que contém os dados hidden
+        const editForm = row.querySelector(`.edit-suggestion-form[data-conciliacao-id="${conciliacaoId}"]`);
+        
+        if (!editForm) {
+            showNotification('error', 'Formulário de conciliação não encontrado.');
+            return;
+        }
+
+        // Pegar os dados do formulário hidden
+        const bankStatementId = editForm.querySelector('input[name="bank_statement_id"]')?.value;
+        const transacaoId = editForm.querySelector('input[name="transacao_financeira_id"]')?.value;
+        const valorConciliado = editForm.querySelector('input[name="valor_conciliado"]')?.value;
+
+        if (!bankStatementId || !transacaoId) {
+            showNotification('error', 'Dados insuficientes para conciliação.');
+            return;
+        }
+
+        // Confirmação
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Conciliar transação?',
+                text: 'Deseja vincular este lançamento ao extrato bancário?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sim, conciliar',
+                cancelButtonText: 'Cancelar',
+                buttonsStyling: false,
+                customClass: {
+                    confirmButton: 'btn btn-primary me-3',
+                    cancelButton: 'btn btn-secondary'
+                }
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    executarConciliacaoPivot(button, row, bankStatementId, transacaoId, valorConciliado);
+                }
+            });
+        } else {
+            if (confirm('Deseja vincular este lançamento ao extrato bancário?')) {
+                executarConciliacaoPivot(button, row, bankStatementId, transacaoId, valorConciliado);
+            }
+        }
+    }
+
+    function executarConciliacaoPivot(button, row, bankStatementId, transacaoId, valorConciliado) {
+        // Desabilitar botão
+        button.disabled = true;
+        const originalContent = button.innerHTML;
+        button.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status"></span>Conciliando...';
+
+        // Obter CSRF token
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+
+        // Enviar via AJAX para a rota pivot
+        fetch('/conciliacao', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            },
+            body: JSON.stringify({
+                bank_statement_id: bankStatementId,
+                transacao_financeira_id: transacaoId,
+                valor_conciliado: valorConciliado
+            })
+        })
+        .then(response => response.json().then(data => ({ ok: response.ok, status: response.status, data })))
+        .then(({ ok, status, data }) => {
+            if (ok && data.success) {
+                // Remover item com animação
+                row.style.transition = 'opacity 0.3s, transform 0.3s';
+                row.style.opacity = '0';
+                row.style.transform = 'scale(0.95)';
+                
+                setTimeout(() => {
+                    row.remove();
+
+                    // Reinicializa estrelas
+                    if (typeof window.suggestionStarManager !== 'undefined') {
+                        window.suggestionStarManager.reinitialize();
+                    }
+                }, 300);
+
+                // Atualizar contadores
+                if (typeof window.carregarTotalPendentes === 'function') {
+                    window.carregarTotalPendentes();
+                }
+                if (typeof window.carregarInformacoes === 'function') {
+                    window.carregarInformacoes();
+                }
+
+                // Atualiza badges das tabs internas
+                if (data.data && data.data.counts) {
+                    ['all', 'received', 'paid'].forEach(tabKey => {
+                        const tabBadge = document.querySelector(`#conciliacao-tab-${tabKey} .badge`);
+                        if (tabBadge && data.data.counts[tabKey] !== undefined) {
+                            const count = data.data.counts[tabKey];
+                            tabBadge.textContent = count;
+                            tabBadge.style.display = count > 0 ? 'inline-block' : 'none';
+                        }
+                    });
+                }
+
+                showNotification('success', data.message || 'Conciliação realizada com sucesso!');
+            } else {
+                showNotification('error', data.message || 'Erro ao conciliar.');
+            }
+        })
+        .catch(error => {
+            console.error('Erro na conciliação:', error);
+            showNotification('error', 'Erro ao processar conciliação: ' + (error.message || 'Desconhecido'));
+        })
+        .finally(() => {
+            button.disabled = false;
+            button.innerHTML = originalContent;
+        });
     }
 
     // ============================================================
