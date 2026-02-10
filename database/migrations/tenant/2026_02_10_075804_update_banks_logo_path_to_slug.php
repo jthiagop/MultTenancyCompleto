@@ -8,24 +8,33 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Prefixo a ser removido dos caminhos de logo existentes.
+     * Prefixos possíveis a serem removidos dos caminhos de logo existentes.
      */
-    private const LOGO_PREFIX = '/tenancy/assets/media/svg/bancos/';
+    private const LOGO_PREFIXES = [
+        '/tenancy/assets/media/svg/bancos/',
+        '/assets/media/svg/bancos/',
+    ];
 
     /**
      * Run the migrations.
      * 
      * Converte caminhos completos para slugs:
      * /tenancy/assets/media/svg/bancos/brasil.svg -> brasil.svg
+     * /assets/media/svg/bancos/brasil.svg -> brasil.svg
      */
     public function up(): void
     {
-        // Atualiza todos os registros que têm o prefixo completo
+        // Atualiza todos os registros que têm qualquer um dos prefixos
         DB::table('banks')
-            ->where('logo_path', 'LIKE', self::LOGO_PREFIX . '%')
+            ->where(function ($query) {
+                foreach (self::LOGO_PREFIXES as $prefix) {
+                    $query->orWhere('logo_path', 'LIKE', $prefix . '%');
+                }
+            })
             ->get()
             ->each(function ($bank) {
-                $slug = str_replace(self::LOGO_PREFIX, '', $bank->logo_path);
+                // Extrai apenas o nome do arquivo (slug)
+                $slug = basename($bank->logo_path);
                 
                 DB::table('banks')
                     ->where('id', $bank->id)
@@ -49,7 +58,7 @@ return new class extends Migration
             ->each(function ($bank) {
                 DB::table('banks')
                     ->where('id', $bank->id)
-                    ->update(['logo_path' => self::LOGO_PREFIX . $bank->logo_path]);
+                    ->update(['logo_path' => self::LOGO_PREFIXES[0] . $bank->logo_path]);
             });
     }
 };
