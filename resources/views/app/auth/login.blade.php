@@ -218,6 +218,15 @@
                                     // Enable button
                                     submitButton.disabled = false;
 
+                                    // Tratar erro 419 - CSRF Token expirado
+                                    if (result.status === 419) {
+                                        showAlert('Sua sessão expirou. Recarregando a página...', 'warning');
+                                        setTimeout(function() {
+                                            location.reload();
+                                        }, 1500);
+                                        return;
+                                    }
+
                                     if (result.ok && result.data) {
                                         // Clear form
                                         form.querySelector('[name="email"]').value = "";
