@@ -47,8 +47,11 @@
                 @csrf
                 <meta name="csrf-token" content="{{ csrf_token() }}">
                 
-                {{-- Hidden field to store tipo (fornecedor/cliente) --}}
-                <input type="hidden" id="parceiro_tipo_hidden" name="tipo" value="fornecedor">
+                {{-- Hidden field: tipo de pessoa (pf/pj) - atualizado pelo JS baseado no select fornecedor_tipo --}}
+                <input type="hidden" id="parceiro_tipo_hidden" name="tipo" value="pj">
+                
+                {{-- Hidden field: natureza (fornecedor/cliente) - atualizado pelo JS baseado no título do drawer --}}
+                <input type="hidden" id="parceiro_natureza_hidden" name="natureza" value="fornecedor">
 
                 <!--begin::Scroll-->
                 <!--begin::Notice-->
@@ -366,6 +369,17 @@
 
                     // Converte para string para comparação consistente
                     selectedValue = String(selectedValue);
+
+                    // Atualiza o campo hidden 'tipo' baseado na seleção
+                    // 1 = Pessoa Física → pf, 2 = Pessoa Jurídica → pj
+                    var tipoHiddenEl = document.getElementById('parceiro_tipo_hidden');
+                    if (tipoHiddenEl) {
+                        if (selectedValue === '1') {
+                            tipoHiddenEl.value = 'pf';
+                        } else if (selectedValue === '2') {
+                            tipoHiddenEl.value = 'pj';
+                        }
+                    }
 
                     // Usa jQuery se disponível para garantir que os elementos sejam encontrados
                     var $cpfContainer = cpfContainerEl ? (typeof $ !== 'undefined' ? $(cpfContainerEl) : null) :
