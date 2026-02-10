@@ -335,21 +335,6 @@ class TransacaoFinanceiraController extends Controller
             ], 404);
         }
 
-        // Validar origem da transação - apenas transações de conciliação, conciliação bancária ou transferência podem ser excluídas
-        $origensPermitidas = ['conciliacao_bancaria', 'conciliacao', 'transferencia', 'automatica'];
-        if ($transacaoFinanceira->origem && !in_array(strtolower($transacaoFinanceira->origem), $origensPermitidas)) {
-            \Log::warning('Tentativa de excluir transação com origem não permitida', [
-                'transacao_id' => $transacaoFinanceira->id,
-                'origem' => $transacaoFinanceira->origem,
-                'user_id' => Auth::id()
-            ]);
-            
-            return response()->json([
-                'success' => false,
-                'message' => 'Esta transação não pode ser excluída. Apenas transações de conciliação bancária podem ser desfeitas.'
-            ], 403);
-        }
-
         try {
             return \DB::transaction(function () use ($transacaoFinanceira) {
                 // Guardar informações para log
