@@ -17,6 +17,7 @@
     $tipoTransacao = $tipoTransacao ?? $transacao->tipo;
     $labelDefinirPago = $tipoTransacao === 'entrada' ? 'Definir como Recebido' : 'Definir como Pago';
     $labelDefinirAberto = 'Definir como em Aberto';
+    $labelInverterTipo = $tipoTransacao === 'entrada' ? 'Converter para Despesa' : 'Converter para Receita';
 @endphp
 
 <div class="text-end">
@@ -34,14 +35,14 @@
         <!--begin::Menu item-->
         <div class="menu-item px-3">
             <a href="#" onclick="{{ $viewAction }}" class="menu-link px-3">
-                <i class="fa-solid fa-eye me-2"></i>{{ $viewLabel }}
+                {{ $viewLabel }}
             </a>
         </div>
         <!--end::Menu item-->
         <!--begin::Menu item-->
         <div class="menu-item px-3">
             <a href="#" onclick="{{ $editAction }}" class="menu-link px-3">
-                <i class="fa-solid fa-pen-to-square me-2"></i>{{ $editLabel }}
+                {{ $editLabel }}
             </a>
         </div>
         <!--end::Menu item-->
@@ -49,7 +50,7 @@
         <!--begin::Menu item-->
         <div class="menu-item px-3">
             <a href="#" onclick="{{ $informarPagamentoAction }}" class="menu-link px-3">
-                <i class="fa-solid fa-money-bill-wave me-2"></i>{{ $informarPagamentoLabel }}
+                {{ $informarPagamentoLabel }}
             </a>
         </div>
         <!--end::Menu item-->
@@ -58,7 +59,7 @@
         <!--begin::Menu item - Definir como Em Aberto (apenas se está pago/recebido)-->
         <div class="menu-item px-3">
             <a href="#" onclick="definirComoAberto({{ $transacao->id }}); return false;" class="menu-link px-3">
-                <i class="fa-solid fa-rotate-left me-2"></i>{{ $labelDefinirAberto }}
+                {{ $labelDefinirAberto }}
             </a>
         </div>
         <!--end::Menu item-->
@@ -66,15 +67,15 @@
         <!--begin::Menu item - Definir como Pago/Recebido (apenas se NÃO está em_aberto)-->
         <div class="menu-item px-3">
             <a href="#" onclick="definirComoPago({{ $transacao->id }}); return false;" class="menu-link px-3">
-                <i class="fa-solid fa-check-circle me-2"></i>{{ $labelDefinirPago }}
+                {{ $labelDefinirPago }}
             </a>
         </div>
         <!--end::Menu item-->
         @endif
         <!--begin::Menu item - Inverter tipo-->
         <div class="menu-item px-3">
-            <a href="#" onclick="inverterTipoTransacao({{ $transacao->id }}); return false;" class="menu-link px-3 text-warning">
-                <i class="fa-solid fa-arrows-rotate me-2"></i>Inverter tipo (Receita ↔ Despesa)
+            <a href="#" onclick="inverterTipoTransacao({{ $transacao->id }}); return false;" class="menu-link px-3">
+                {{ $labelInverterTipo }}
             </a>
         </div>
         <!--end::Menu item-->
@@ -85,12 +86,12 @@
                 <a href="#" 
                    onclick="openDeleteRecurrenceModal({{ $transacao->id }}); return false;" 
                    class="menu-link px-3 text-danger">
-                    <i class="fa-solid fa-trash-can me-2"></i>{{ $deleteLabel }}
+                    {{ $deleteLabel }}
                 </a>
             @else
                 {{-- Transação normal: usa função de exclusão direta --}}
                 <a href="#" onclick="excluirTransacaoDirecta('{{ route('transacoes-financeiras.destroy', $transacao) }}'); return false;" class="menu-link px-3 text-danger">
-                    <i class="fa-solid fa-trash-can me-2"></i>{{ $deleteLabel }}
+                    {{ $deleteLabel }}
                 </a>
             @endif
         </div>

@@ -7,7 +7,7 @@
     'markAsPaidLabel' => 'Definir como pago',
     'markAsOpenLabel' => 'Definir como em aberto',
     'deleteLabel' => 'Excluir',
-    'reverseTypeLabel' => 'Inverter tipo (Receita ↔ Despesa)',
+    'reverseTypeLabel' => 'Inverter Receita ↔ Despesa)',
     'menuWidth' => 'w-200px',
     'id' => null,
 ])
