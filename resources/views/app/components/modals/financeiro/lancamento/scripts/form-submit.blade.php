@@ -492,10 +492,15 @@
             }
 
             // Garante que comprovacao_fiscal seja enviado como 0 ou 1
-            var comprovacaoFiscal = form.querySelector('[name="comprovacao_fiscal"]');
-            if (comprovacaoFiscal) {
+            var comprovacaoFiscal = form.querySelector('[name="comprovacao_fiscal"]') ||
+                                   form.querySelector('#comprovacao_fiscal_checkbox') ||
+                                   form.querySelector('#comprovacao_fiscal');
+            if (comprovacaoFiscal && comprovacaoFiscal.type === 'checkbox') {
                 formData.delete('comprovacao_fiscal');
                 formData.append('comprovacao_fiscal', comprovacaoFiscal.checked ? '1' : '0');
+            } else if (!formData.has('comprovacao_fiscal')) {
+                // Se não encontrou o checkbox, garante valor default
+                formData.append('comprovacao_fiscal', '0');
             }
 
             // Processa valores das parcelas - envia exatamente como está (formato brasileiro)

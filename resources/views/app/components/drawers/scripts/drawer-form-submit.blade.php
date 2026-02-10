@@ -488,10 +488,16 @@ class DrawerFormManager {
         const booleanFields = ['comprovacao_fiscal', 'agendado', 'pago', 'recebido'];
         booleanFields.forEach(field => {
             const checkbox = this.form.querySelector(`#${field}_checkbox`) || 
+                            this.form.querySelector(`#${field}`) ||
                             this.form.querySelector(`[name="${field}"]`);
             if (checkbox && checkbox.type === 'checkbox') {
                 formData.delete(field);
                 formData.append(field, checkbox.checked ? '1' : '0');
+            } else {
+                // Se não encontrou o checkbox, garante que o campo seja enviado com valor default
+                if (!formData.has(field)) {
+                    formData.append(field, '0');
+                }
             }
         });
         

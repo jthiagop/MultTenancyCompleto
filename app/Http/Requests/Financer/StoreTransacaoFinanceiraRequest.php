@@ -69,7 +69,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'numero_documento' => 'nullable|string',
             'files.*' => 'nullable|file|mimes:jpeg,png,jpg,pdf|max:2048',
             'historico_complementar' => 'nullable|string|max:500',
-            'comprovacao_fiscal' => 'required|boolean', // 0 ou 1
+            'comprovacao_fiscal' => 'nullable|boolean', // 0 ou 1, default false
             'entidade_id' => 'required|exists:entidades_financeiras,id',
             'fornecedor_id' => 'nullable|exists:parceiros,id',
             'banco_id' => 'nullable|exists:cadastro_bancos,id',
