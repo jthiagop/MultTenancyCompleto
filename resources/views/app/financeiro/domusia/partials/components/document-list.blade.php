@@ -133,8 +133,8 @@
                 if (count === 0) {
                      htmlContent = `
                         <div class="text-center py-5 text-muted">
-                            <i class="fa-regular fa-folder-open fs-1 text-muted opacity-50 mb-2"></i>
-                            <div>Nenhum documento encontrado</div>
+                            <i class="fa-solid fa-folder-open fs-1 text-gray-400 mb-3 d-block"></i>
+                            <div class="text-gray-500 fw-semibold">Nenhum documento encontrado</div>
                         </div>`;
                 }
             }

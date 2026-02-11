@@ -390,6 +390,15 @@ class DomusiaController extends Controller
      * @param Request $request
      * @return \Illuminate\Http\JsonResponse
      */
+    /**
+     * Tipos de documento que representam uma transação única (todos os itens
+     * pertencem à mesma compra e devem gerar apenas UM lançamento).
+     */
+    private const SINGLE_TRANSACTION_TYPES = [
+        'NF-e', 'NFC-e', 'CUPOM', 'CUPOM_FISCAL', 'NOTA_FISCAL',
+        'FATURA_CARTAO', 'BOLETO', 'RECIBO', 'COMPROVANTE',
+    ];
+
     public function renderExtractedEntries(Request $request)
     {
         try {
@@ -411,6 +420,7 @@ class DomusiaController extends Controller
             $fornecedor = $extractedData['estabelecimento']['nome'] ?? 'Fornecedor não informado';
             $dataEmissao = $extractedData['financeiro']['data_emissao'] ?? '';
             $formaPagamento = $extractedData['financeiro']['forma_pagamento'] ?? '';
+            $tipoDocumento = $extractedData['tipo_documento'] ?? '';
 
             // Formatar data
             $dataFormatada = '-';
@@ -425,29 +435,75 @@ class DomusiaController extends Controller
 
             // Função auxiliar para determinar se é receita ou despesa
             $isReceita = function($item, $extractedData) {
-                // Por padrão, assumimos que é despesa (saída)
-                // Pode ser customizado baseado na lógica de negócio
                 return false;
             };
 
-            // Renderizar cada item
+            // Determinar se é um documento de transação única (cupom fiscal, NF-e, etc.)
+            // Nesses casos, todos os itens pertencem à mesma compra = 1 lançamento
+            $isSingleTransaction = in_array($tipoDocumento, self::SINGLE_TRANSACTION_TYPES, true);
+
             $html = '';
-            foreach ($extractedData['itens'] as $index => $item) {
-                $isReceitaItem = $isReceita($item, $extractedData);
-                $valorItem = $item['valor_unitario'] ?? $item['valor'] ?? 0;
-                $categoria = $item['categoria_sugerida'] ?? $extractedData['classificacao']['categoria_sugerida'] ?? 'Sem categoria';
+
+            if ($isSingleTransaction) {
+                // ── Transação Única: consolidar todos os itens em UM card ──
+                $valorTotal = floatval($extractedData['financeiro']['valor_total'] ?? 0);
+
+                // Se valor_total não veio, somar os itens
+                if ($valorTotal <= 0) {
+                    foreach ($extractedData['itens'] as $item) {
+                        $qtd = floatval($item['quantidade'] ?? 1);
+                        $vlr = floatval($item['valor_unitario'] ?? $item['valor'] ?? 0);
+                        $valorTotal += $qtd * $vlr;
+                    }
+                }
+
+                $categoria = $extractedData['classificacao']['categoria_sugerida'] ?? 'Sem categoria';
+
+                // Montar um item consolidado para o template
+                $itemConsolidado = [
+                    'descricao' => ($extractedData['classificacao']['descricao_detalhada'] ?? null)
+                        ?: $tipoDocumento . ' - ' . $fornecedor,
+                    'quantidade' => 1,
+                    'valor_unitario' => $valorTotal,
+                    'itens_consolidados' => count($extractedData['itens']),
+                ];
 
                 $html .= View::make('app.financeiro.domusia.partials.components.extracted-entry-item', [
-                    'index' => $index,
-                    'item' => $item,
+                    'index' => 0,
+                    'item' => $itemConsolidado,
                     'extractedData' => $extractedData,
                     'fornecedor' => $fornecedor,
                     'dataFormatada' => $dataFormatada,
                     'formaPagamento' => $formaPagamento,
                     'categoria' => $categoria,
-                    'valorItem' => $valorItem,
-                    'isReceitaItem' => $isReceitaItem,
+                    'valorItem' => $valorTotal,
+                    'isReceitaItem' => false,
+                    'isSingleTransaction' => true,
+                    'totalItens' => count($extractedData['itens']),
+                    'tipoDocumento' => $tipoDocumento,
                 ])->render();
+            } else {
+                // ── Múltiplas transações: um card por item ──
+                foreach ($extractedData['itens'] as $index => $item) {
+                    $isReceitaItem = $isReceita($item, $extractedData);
+                    $valorItem = $item['valor_unitario'] ?? $item['valor'] ?? 0;
+                    $categoria = $item['categoria_sugerida'] ?? $extractedData['classificacao']['categoria_sugerida'] ?? 'Sem categoria';
+
+                    $html .= View::make('app.financeiro.domusia.partials.components.extracted-entry-item', [
+                        'index' => $index,
+                        'item' => $item,
+                        'extractedData' => $extractedData,
+                        'fornecedor' => $fornecedor,
+                        'dataFormatada' => $dataFormatada,
+                        'formaPagamento' => $formaPagamento,
+                        'categoria' => $categoria,
+                        'valorItem' => $valorItem,
+                        'isReceitaItem' => $isReceitaItem,
+                        'isSingleTransaction' => false,
+                        'totalItens' => 0,
+                        'tipoDocumento' => $tipoDocumento,
+                    ])->render();
+                }
             }
 
             return response()->json([

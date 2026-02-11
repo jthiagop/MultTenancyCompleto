@@ -1,337 +1,381 @@
 {{-- Drawer para criar lançamento a partir de documento Domusia --}}
-<div id="domusia_expense_drawer" class="bg-body" data-kt-drawer="true" data-kt-drawer-name="domusia-expense"
-    data-kt-drawer-activate="true" data-kt-drawer-overlay="true" data-kt-drawer-direction="end"
-    data-kt-drawer-width="100%" data-kt-drawer-toggle="#domusia_expense_drawer_toggle"
-    data-kt-drawer-close="#domusia_drawer_close">
+@php
+    $drawerId = 'domusia_expense_drawer';
+    $formId = 'domusia_drawer_form';
+    $cancelId = 'domusia_drawer_cancel';
+    $submitId = 'domusia_drawer_submit';
+    $submitNewId = 'domusia_drawer_submit_new';
+    $closeId = 'domusia_drawer_close';
 
-    <div class="d-flex flex-column h-100">
+    $splitItems = [
+        ['id' => $submitNewId, 'text' => 'Salvar e Novo', 'icon' => 'fa-solid fa-plus'],
+    ];
+@endphp
 
-        <!--begin::Header-->
-        <div class="d-flex align-items-center justify-content-between px-6 py-4 border-bottom bg-white">
-            <div class="d-flex align-items-center gap-3">
-                <span class="bullet bullet-vertical h-30px" id="domusia_drawer_type_indicator"
-                    style="background-color: #f1416c;"></span>
-                <div>
-                    <h3 class="fw-bold mb-0 fs-4" id="domusia_drawer_title">Nova Despesa</h3>
-                    <span class="text-muted fs-7" id="domusia_drawer_subtitle">Preencha os dados do lançamento</span>
-                </div>
+<x-tenant-drawer
+    drawerId="{{ $drawerId }}"
+    title="Nova Despesa"
+    width="100%"
+    toggleButtonId="domusia_expense_drawer_toggle"
+    closeButtonId="{{ $closeId }}"
+    :showCloseButton="true"
+    bodyClass="p-0 overflow-hidden"
+    cardClass="shadow-none rounded-0 w-100">
+
+    {{-- ========== TOOLBAR DO HEADER ========== --}}
+    <x-slot name="toolbar">
+        <div class="d-flex align-items-center gap-2 me-3">
+            <span class="bullet bullet-vertical h-30px" id="domusia_drawer_type_indicator"
+                style="background-color: #f1416c;"></span>
+            <div class="me-3">
+                <span class="fw-bold fs-5" id="domusia_drawer_title">Nova Despesa</span>
+                <span class="text-muted fs-7 d-block" id="domusia_drawer_subtitle">Preencha os dados do lançamento</span>
             </div>
-            <div class="d-flex align-items-center gap-2">
-                {{-- Badge do documento de origem --}}
-                <span class="badge badge-light-primary fs-8" id="domusia_drawer_doc_badge">
-                    <i class="fa-solid fa-file-invoice fs-8 me-1"></i>
-                    <span id="domusia_drawer_doc_type">Documento</span>
-                </span>
-                <button type="button" class="btn btn-sm btn-icon btn-light-danger" id="domusia_drawer_close">
-                    <i class="fa-solid fa-xmark fs-3"></i>
-                </button>
-            </div>
+            <span class="badge badge-light-primary fs-8" id="domusia_drawer_doc_badge">
+                <i class="fa-solid fa-file-invoice fs-8 me-1"></i>
+                <span id="domusia_drawer_doc_type">Documento</span>
+            </span>
         </div>
-        <!--end::Header-->
+    </x-slot>
 
-        <!--begin::Body-->
-        <div class="flex-grow-1 overflow-hidden">
-            <div class="row g-0 h-100">
+    {{-- ========== BODY ========== --}}
+    <x-slot name="body">
+        <div class="row g-0 h-100" style="min-height: calc(100vh - 130px);">
 
-                <!--begin::Col Esquerda - Visualizador de Documento-->
-                <div class="col-xl-5 border-end h-100 position-relative" style="background-color: #525659;">
-                    <div id="domusia_drawer_viewer" class="w-100 h-100 d-flex align-items-center justify-content-center">
-                        {{-- Empty State --}}
-                        <div id="domusia_drawer_empty_state" class="text-center text-white p-5">
-                            <i class="fa-solid fa-file-circle-question fs-3x mb-4 opacity-50"></i>
-                            <p class="fs-6 opacity-75">Nenhum documento carregado</p>
+            <!--begin::Col Esquerda - Visualizador de Documento-->
+            <div class="col-xl-5 border-end h-100 position-relative" style="min-height: 400px;">
+                <div id="drawer_viewer_wrapper" class="domus-document-viewer-wrapper position-relative w-100 h-100">
+
+                    {{-- Container do Viewer --}}
+                    <div class="position-relative" style="height: 100%; overflow: hidden; margin: 0; padding: 0 !important;">
+
+                        {{-- Toolbar Flutuante --}}
+                        <div class="domus-floating-toolbar" style="opacity: 1;">
+                            <button type="button" class="domus-toolbar-btn btn-zoom-out" title="Diminuir Zoom (-)">
+                                <i class="fa-solid fa-minus fs-6"></i>
+                            </button>
+                            <span class="domus-zoom-indicator zoom-indicator">100%</span>
+                            <button type="button" class="domus-toolbar-btn btn-zoom-in" title="Aumentar Zoom (+)">
+                                <i class="fa-solid fa-plus fs-6"></i>
+                            </button>
+                            <button type="button" class="domus-toolbar-btn btn-fit-zoom" title="Ajustar ao Container (0)">
+                                <i class="fa-solid fa-expand fs-6"></i>
+                            </button>
+                            <div class="domus-toolbar-divider"></div>
+                            <button type="button" class="domus-toolbar-btn btn-rotate-left" title="Girar Esquerda">
+                                <i class="fa-solid fa-rotate-left fs-6"></i>
+                            </button>
+                            <button type="button" class="domus-toolbar-btn btn-rotate-right" title="Girar Direita">
+                                <i class="fa-solid fa-rotate-right fs-6"></i>
+                            </button>
                         </div>
-                        {{-- PDF Viewer --}}
-                        <iframe id="domusia_drawer_pdf" class="w-100 h-100 border-0" style="display: none;"></iframe>
-                        {{-- Image Viewer --}}
-                        <img id="domusia_drawer_img" class="mw-100 mh-100 object-fit-contain" style="display: none;" alt="Documento" />
+
+                        {{-- Empty State --}}
+                        <div id="drawer_empty_state" class="domus-empty-state d-flex flex-column align-items-center justify-content-center h-100 text-center p-10"
+                            style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; background: #2d2d2d;">
+                            <i class="fa-solid fa-file-circle-question fs-3x text-gray-500 mb-4"></i>
+                            <p class="text-gray-500 fw-semibold mb-0">Nenhum documento carregado</p>
+                        </div>
+
+                        {{-- Viewer Container --}}
+                        <div id="drawer_viewer_container" class="domus-viewer-container"
+                            style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 2; margin: 0; padding: 0;">
+                            <iframe id="drawer_pdf_viewer" class="w-100 h-100 border-0 domus-viewer-pdf"
+                                style="min-height: 400px; display: none; position: relative;" allowfullscreen></iframe>
+                            <img id="drawer_image_viewer" class="domus-viewer-img"
+                                style="display: none;" draggable="false" alt="Documento" />
+                        </div>
                     </div>
+
                 </div>
-                <!--end::Col Esquerda-->
+            </div>
+            <!--end::Col Esquerda-->
 
-                <!--begin::Col Direita - Formulário-->
-                <div class="col-xl-7 h-100 overflow-y-auto bg-light">
-                    <form id="domusia_drawer_form" method="POST" action="{{ route('transacoes-financeiras.store') }}" enctype="multipart/form-data">
-                        @csrf
+            <!--begin::Col Direita - Formulário-->
+            <div class="col-xl-7 h-100 overflow-y-auto bg-light">
+                <form id="{{ $formId }}" method="POST" action="{{ route('transacoes-financeiras.store') }}" enctype="multipart/form-data">
+                    @csrf
 
-                        {{-- Campos hidden --}}
-                        <input type="hidden" name="tipo" id="domusia_tipo" value="saida">
-                        <input type="hidden" name="origem" id="domusia_origem" value="Banco">
-                        <input type="hidden" name="domus_documento_id" id="domusia_documento_id" value="">
+                    {{-- Campos hidden --}}
+                    <input type="hidden" name="tipo" id="domusia_tipo" value="saida">
+                    <input type="hidden" name="origem" id="domusia_origem" value="Banco">
+                    <input type="hidden" name="domus_documento_id" id="domusia_documento_id" value="">
 
-                        <div class="p-6 pb-0">
+                    <div class="p-6 pb-0">
 
-                            {{-- Card: Informações Identificadas pela IA --}}
-                            <div class="card border border-dashed border-primary mb-5" id="domusia_ai_summary_card">
-                                <div class="card-body p-4">
-                                    <div class="d-flex align-items-center gap-2 mb-3">
-                                        <i class="fa-solid fa-robot text-primary fs-4"></i>
-                                        <span class="fw-bold text-primary fs-6">Dados identificados pela IA</span>
+                        {{-- Card: Informações Identificadas pela IA --}}
+                        <div class="card border border-dashed border-primary mb-5" id="domusia_ai_summary_card">
+                            <div class="card-body p-4">
+                                <div class="d-flex align-items-center gap-2 mb-3">
+                                    <i class="fa-solid fa-robot text-primary fs-4"></i>
+                                    <span class="fw-bold text-primary fs-6">Dados identificados pela IA</span>
+                                </div>
+                                <div class="row g-3" id="domusia_ai_summary">
+                                    <div class="col-6">
+                                        <span class="text-muted fs-8 d-block">Fornecedor</span>
+                                        <span class="fw-semibold fs-7" id="domusia_ai_fornecedor">-</span>
                                     </div>
-                                    <div class="row g-3" id="domusia_ai_summary">
-                                        <div class="col-6">
-                                            <span class="text-muted fs-8 d-block">Fornecedor</span>
-                                            <span class="fw-semibold fs-7" id="domusia_ai_fornecedor">-</span>
-                                        </div>
-                                        <div class="col-3">
-                                            <span class="text-muted fs-8 d-block">Valor Total</span>
-                                            <span class="fw-bold fs-6 text-danger" id="domusia_ai_valor">-</span>
-                                        </div>
-                                        <div class="col-3">
-                                            <span class="text-muted fs-8 d-block">Data Emissão</span>
-                                            <span class="fw-semibold fs-7" id="domusia_ai_data">-</span>
-                                        </div>
-                                        <div class="col-6">
-                                            <span class="text-muted fs-8 d-block">CNPJ</span>
-                                            <span class="fw-semibold fs-7 font-monospace" id="domusia_ai_cnpj">-</span>
-                                        </div>
-                                        <div class="col-3">
-                                            <span class="text-muted fs-8 d-block">Forma Pgto</span>
-                                            <span class="fw-semibold fs-7" id="domusia_ai_pgto">-</span>
-                                        </div>
-                                        <div class="col-3">
-                                            <span class="text-muted fs-8 d-block">Nº Documento</span>
-                                            <span class="fw-semibold fs-7" id="domusia_ai_numdoc">-</span>
-                                        </div>
+                                    <div class="col-3">
+                                        <span class="text-muted fs-8 d-block">Valor Total</span>
+                                        <span class="fw-bold fs-6 text-danger" id="domusia_ai_valor">-</span>
+                                    </div>
+                                    <div class="col-3">
+                                        <span class="text-muted fs-8 d-block">Data Emissão</span>
+                                        <span class="fw-semibold fs-7" id="domusia_ai_data">-</span>
+                                    </div>
+                                    <div class="col-6">
+                                        <span class="text-muted fs-8 d-block">CNPJ</span>
+                                        <span class="fw-semibold fs-7 font-monospace" id="domusia_ai_cnpj">-</span>
+                                    </div>
+                                    <div class="col-3">
+                                        <span class="text-muted fs-8 d-block">Forma Pgto</span>
+                                        <span class="fw-semibold fs-7" id="domusia_ai_pgto">-</span>
+                                    </div>
+                                    <div class="col-3">
+                                        <span class="text-muted fs-8 d-block">Nº Documento</span>
+                                        <span class="fw-semibold fs-7" id="domusia_ai_numdoc">-</span>
                                     </div>
                                 </div>
                             </div>
+                        </div>
 
-                            {{-- Card: Informações do Lançamento --}}
-                            <div class="card border border-gray-300 mb-5">
-                                <div class="card-header min-h-45px">
-                                    <h3 class="card-title fs-6 fw-bold">Informações do Lançamento</h3>
+                        {{-- Card: Informações do Lançamento --}}
+                        <div class="card border border-gray-300 mb-5">
+                            <div class="card-header min-h-45px">
+                                <h3 class="card-title fs-6 fw-bold">Informações do Lançamento</h3>
+                            </div>
+                            <div class="card-body px-6 py-5">
+                                {{-- Linha 1: Fornecedor, Descrição --}}
+                                <div class="row g-4 mb-5">
+                                    <x-tenant-select name="fornecedor_id" id="domusia_fornecedor_id" label="Fornecedor"
+                                        placeholder="Selecione um fornecedor" :minimumResultsForSearch="0"
+                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-6">
+                                        @if (isset($fornecedores))
+                                            @foreach ($fornecedores as $fornecedor)
+                                                <option value="{{ $fornecedor->id }}"
+                                                    data-cnpj="{{ $fornecedor->cnpj }}"
+                                                    data-cpf="{{ $fornecedor->cpf }}">
+                                                    {{ $fornecedor->nome }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </x-tenant-select>
+
+                                    <x-tenant-input name="descricao" id="domusia_descricao" label="Descrição"
+                                        placeholder="Informe a descrição" required class="col-md-6" />
                                 </div>
-                                <div class="card-body px-6 py-5">
-                                    {{-- Linha 1: Fornecedor, Data, Descrição, Valor --}}
-                                    <div class="row g-4 mb-5">
-                                        <x-tenant-select name="fornecedor_id" id="domusia_fornecedor_id" label="Fornecedor"
-                                            placeholder="Selecione um fornecedor" :minimumResultsForSearch="0"
-                                            dropdown-parent="#domusia_expense_drawer" labelSize="fs-7" class="col-md-4">
-                                            @if (isset($fornecedores))
-                                                @foreach ($fornecedores as $fornecedor)
-                                                    <option value="{{ $fornecedor->id }}"
-                                                        data-cnpj="{{ $fornecedor->cnpj }}"
-                                                        data-cpf="{{ $fornecedor->cpf }}">
-                                                        {{ $fornecedor->nome }}
-                                                    </option>
-                                                @endforeach
-                                            @endif
-                                        </x-tenant-select>
 
-                                        <x-tenant-date name="data_competencia" id="domusia_data_competencia"
-                                            label="Data de Competência" placeholder="Informe a data" required
-                                            class="col-md-2" />
+                                {{-- Linha 2: Data, Valor, Entidade Financeira, Categoria --}}
+                                <div class="row g-4 mb-5">
+                                    <x-tenant-date name="data_competencia" id="domusia_data_competencia"
+                                        label="Data Competência" placeholder="Informe a data" required
+                                        class="col-md-3" />
 
-                                        <x-tenant-input name="descricao" id="domusia_descricao" label="Descrição"
-                                            placeholder="Informe a descrição" required class="col-md-4" />
+                                    <x-tenant-currency name="valor" id="domusia_valor" label="Valor"
+                                        placeholder="0,00" tooltip="Valor total do documento" class="col-md-3"
+                                        required />
 
-                                        <x-tenant-currency name="valor" id="domusia_valor" label="Valor"
-                                            placeholder="0,00" tooltip="Valor total do documento" class="col-md-2"
-                                            required />
+                                    <x-tenant-select name="entidade_id" id="domusia_entidade_id"
+                                        label="Entidade Financeira" required :hideSearch="true"
+                                        dropdown-parent="#{{ $drawerId }}" class="col-md-3">
+                                        @if (isset($entidadesBanco) && $entidadesBanco->isNotEmpty())
+                                            @foreach ($entidadesBanco as $entidade)
+                                                <option value="{{ $entidade->id }}"
+                                                    data-nome="{{ $entidade->nome }}" data-origem="Banco">
+                                                    {{ $entidade->agencia }} - {{ $entidade->conta }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                        @if (isset($entidadesCaixa) && $entidadesCaixa->isNotEmpty())
+                                            @foreach ($entidadesCaixa as $entidade)
+                                                <option value="{{ $entidade->id }}"
+                                                    data-nome="{{ $entidade->nome }}" data-origem="Caixa">
+                                                    {{ $entidade->nome }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </x-tenant-select>
+
+                                    <x-tenant-select name="lancamento_padrao_id" id="domusia_lancamento_padrao_id"
+                                        label="Categoria" placeholder="Escolha uma categoria..." required
+                                        :allowClear="true" :minimumResultsForSearch="0"
+                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-3">
+                                        @if (isset($lps))
+                                            @foreach ($lps as $lp)
+                                                <option value="{{ $lp->id }}"
+                                                    data-description="{{ $lp->description }}"
+                                                    data-type="{{ $lp->type }}">
+                                                    {{ $lp->id }} - {{ $lp->description }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </x-tenant-select>
+                                </div>
+
+                                {{-- Linha 3: Centro de Custo, Forma Pgto, Nº Documento, Comprovação --}}
+                                <div class="row g-4">
+                                    <x-tenant-select name="cost_center_id" id="domusia_cost_center_id"
+                                        label="Centro de Custo" :allowClear="true" required
+                                        placeholder="Selecione um centro de custo" :minimumResultsForSearch="0"
+                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-3">
+                                        @if (isset($centrosAtivos))
+                                            @foreach ($centrosAtivos as $centro)
+                                                <option value="{{ $centro->id }}">
+                                                    {{ $centro->code }} - {{ $centro->name }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </x-tenant-select>
+
+                                    <x-tenant-select name="tipo_documento" id="domusia_tipo_documento"
+                                        label="Forma de Pagamento" placeholder="Selecione..." required
+                                        :allowClear="true" :minimumResultsForSearch="0"
+                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-3">
+                                        @if (isset($formasPagamento))
+                                            @foreach ($formasPagamento as $fp)
+                                                <option value="{{ $fp->codigo }}">
+                                                    {{ $fp->id }} - {{ $fp->nome }}
+                                                </option>
+                                            @endforeach
+                                        @endif
+                                    </x-tenant-select>
+
+                                    <x-tenant-input name="numero_documento" id="domusia_numero_documento"
+                                        label="Nº Documento" placeholder="Nº NF / Recibo"
+                                        type="text" class="col-md-3" />
+
+                                    <div class="col-md-3 fv-row d-flex align-items-end pb-2">
+                                        <input type="hidden" name="comprovacao_fiscal" value="0">
+                                        <label class="form-check form-switch form-check-custom form-check-solid">
+                                            <input class="form-check-input" type="checkbox" name="comprovacao_fiscal"
+                                                value="1" id="domusia_comprovacao_fiscal" checked />
+                                            <span class="form-check-label fw-semibold text-muted fs-7">Comprovação Fiscal</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Card: Condição de Pagamento --}}
+                        <div class="card border border-gray-300 mb-5">
+                            <div class="card-header min-h-45px">
+                                <h3 class="card-title fs-6 fw-bold">Condição de Pagamento</h3>
+                            </div>
+                            <div class="card-body px-6 py-5">
+                                <div class="row g-4 mb-4">
+                                    <div class="col-md-3 fv-row">
+                                        <label class="fs-7 fw-semibold mb-2">Parcelamento</label>
+                                        <select class="form-select form-select-sm" name="parcelamento"
+                                            id="domusia_parcelamento">
+                                            <option value="avista" selected>À Vista</option>
+                                            @for ($i = 2; $i <= 24; $i++)
+                                                <option value="{{ $i }}x">{{ $i }}x</option>
+                                            @endfor
+                                        </select>
                                     </div>
 
-                                    {{-- Linha 2: Entidade, Categoria, Centro de Custo --}}
-                                    <div class="row g-4 mb-5">
-                                        <x-tenant-select name="entidade_id" id="domusia_entidade_id"
-                                            label="Entidade Financeira" required :hideSearch="true"
-                                            dropdown-parent="#domusia_expense_drawer" class="col-md-4">
-                                            @if (isset($entidadesBanco) && $entidadesBanco->isNotEmpty())
-                                                @foreach ($entidadesBanco as $entidade)
-                                                    <option value="{{ $entidade->id }}"
-                                                        data-nome="{{ $entidade->nome }}" data-origem="Banco">
-                                                        {{ $entidade->agencia }} - {{ $entidade->conta }}
-                                                    </option>
-                                                @endforeach
-                                            @endif
-                                            @if (isset($entidadesCaixa) && $entidadesCaixa->isNotEmpty())
-                                                @foreach ($entidadesCaixa as $entidade)
-                                                    <option value="{{ $entidade->id }}"
-                                                        data-nome="{{ $entidade->nome }}" data-origem="Caixa">
-                                                        {{ $entidade->nome }}
-                                                    </option>
-                                                @endforeach
-                                            @endif
-                                        </x-tenant-select>
+                                    <x-tenant-date name="vencimento" id="domusia_vencimento" label="Vencimento"
+                                        placeholder="Data de vencimento" class="col-md-3" />
 
-                                        <x-tenant-select name="lancamento_padrao_id" id="domusia_lancamento_padrao_id"
-                                            label="Categoria" placeholder="Escolha uma categoria..." required
-                                            :allowClear="true" :minimumResultsForSearch="0"
-                                            dropdown-parent="#domusia_expense_drawer" labelSize="fs-7" class="col-md-4">
-                                            @if (isset($lps))
-                                                @foreach ($lps as $lp)
-                                                    <option value="{{ $lp->id }}"
-                                                        data-description="{{ $lp->description }}"
-                                                        data-type="{{ $lp->type }}">
-                                                        {{ $lp->id }} - {{ $lp->description }}
-                                                    </option>
-                                                @endforeach
-                                            @endif
-                                        </x-tenant-select>
-
-                                        <x-tenant-select name="cost_center_id" id="domusia_cost_center_id"
-                                            label="Centro de Custo" :allowClear="true" required
-                                            placeholder="Selecione um centro de custo" :minimumResultsForSearch="0"
-                                            dropdown-parent="#domusia_expense_drawer" labelSize="fs-7" class="col-md-4">
-                                            @if (isset($centrosAtivos))
-                                                @foreach ($centrosAtivos as $centro)
-                                                    <option value="{{ $centro->id }}">
-                                                        {{ $centro->code }} - {{ $centro->name }}
-                                                    </option>
-                                                @endforeach
-                                            @endif
-                                        </x-tenant-select>
+                                    <div class="col-md-3 fv-row d-flex align-items-end pb-2" id="domusia_pago_wrapper">
+                                        <div class="form-check form-switch form-check-custom form-check-solid">
+                                            <input class="form-check-input" type="checkbox" name="pago"
+                                                value="1" id="domusia_pago_checkbox" />
+                                            <label class="form-check-label fw-semibold text-muted fs-7"
+                                                for="domusia_pago_checkbox" id="domusia_pago_label">
+                                                Pago
+                                            </label>
+                                        </div>
                                     </div>
 
-                                    {{-- Linha 3: Forma de pagamento, Número documento, Comprovação --}}
-                                    <div class="row g-4">
-                                        <x-tenant-select name="tipo_documento" id="domusia_tipo_documento"
-                                            label="Forma de Pagamento" placeholder="Selecione..." required
-                                            :allowClear="true" :minimumResultsForSearch="0"
-                                            dropdown-parent="#domusia_expense_drawer" labelSize="fs-7" class="col-md-4">
-                                            @if (isset($formasPagamento))
-                                                @foreach ($formasPagamento as $fp)
-                                                    <option value="{{ $fp->codigo }}">
-                                                        {{ $fp->id }} - {{ $fp->nome }}
-                                                    </option>
-                                                @endforeach
-                                            @endif
-                                        </x-tenant-select>
-
-                                        <x-tenant-input name="numero_documento" id="domusia_numero_documento"
-                                            label="Número do Documento" placeholder="Nº NF / Nº Recibo"
-                                            type="text" class="col-md-4" />
-
-                                        <div class="col-md-4 fv-row d-flex align-items-end pb-2">
-                                            <input type="hidden" name="comprovacao_fiscal" value="0">
-                                            <label class="form-check form-switch form-check-custom form-check-solid">
-                                                <input class="form-check-input" type="checkbox" name="comprovacao_fiscal"
-                                                    value="1" id="domusia_comprovacao_fiscal" checked />
-                                                <span class="form-check-label fw-semibold text-muted fs-7">Comprovação Fiscal</span>
+                                    <div class="col-md-3 fv-row d-flex align-items-end pb-2">
+                                        <div class="form-check form-switch form-check-custom form-check-solid">
+                                            <input class="form-check-input" type="checkbox" name="agendado"
+                                                value="1" id="domusia_agendado_checkbox" />
+                                            <label class="form-check-label fw-semibold text-muted fs-7"
+                                                for="domusia_agendado_checkbox">
+                                                Agendado
                                             </label>
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {{-- Card: Condição de Pagamento --}}
-                            <div class="card border border-gray-300 mb-5">
-                                <div class="card-header min-h-45px">
-                                    <h3 class="card-title fs-6 fw-bold">Condição de Pagamento</h3>
-                                </div>
-                                <div class="card-body px-6 py-5">
-                                    <div class="row g-4 mb-4">
-                                        <div class="col-md-3 fv-row">
-                                            <label class="fs-7 fw-semibold mb-2">Parcelamento</label>
-                                            <select class="form-select form-select-sm" name="parcelamento"
-                                                id="domusia_parcelamento">
-                                                <option value="avista" selected>À Vista</option>
-                                                @for ($i = 2; $i <= 24; $i++)
-                                                    <option value="{{ $i }}x">{{ $i }}x</option>
-                                                @endfor
-                                            </select>
-                                        </div>
-
-                                        <x-tenant-date name="vencimento" id="domusia_vencimento" label="Vencimento"
-                                            placeholder="Data de vencimento" class="col-md-3" />
-
-                                        <div class="col-md-3 fv-row d-flex align-items-end pb-2" id="domusia_pago_wrapper">
-                                            <div class="form-check form-switch form-check-custom form-check-solid">
-                                                <input class="form-check-input" type="checkbox" name="pago"
-                                                    value="1" id="domusia_pago_checkbox" />
-                                                <label class="form-check-label fw-semibold text-muted fs-7"
-                                                    for="domusia_pago_checkbox" id="domusia_pago_label">
-                                                    Pago
-                                                </label>
-                                            </div>
-                                        </div>
-
-                                        <div class="col-md-3 fv-row d-flex align-items-end pb-2">
-                                            <div class="form-check form-switch form-check-custom form-check-solid">
-                                                <input class="form-check-input" type="checkbox" name="agendado"
-                                                    value="1" id="domusia_agendado_checkbox" />
-                                                <label class="form-check-label fw-semibold text-muted fs-7"
-                                                    for="domusia_agendado_checkbox">
-                                                    Agendado
-                                                </label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="row g-4" id="domusia_valores_extras">
-                                        <x-tenant-currency name="juros" id="domusia_juros" label="Juros"
-                                            placeholder="0,00" class="col-md-3" />
-                                        <x-tenant-currency name="multa" id="domusia_multa" label="Multa"
-                                            placeholder="0,00" class="col-md-3" />
-                                        <x-tenant-currency name="desconto" id="domusia_desconto" label="Desconto"
-                                            placeholder="0,00" class="col-md-3" />
-                                        <x-tenant-currency name="valor_pago" id="domusia_valor_pago"
-                                            label="Valor Pago" placeholder="0,00" class="col-md-3"
-                                            :readonly="true" />
-                                    </div>
+                                <div class="row g-4" id="domusia_valores_extras">
+                                    <x-tenant-currency name="juros" id="domusia_juros" label="Juros"
+                                        placeholder="0,00" class="col-md-3" />
+                                    <x-tenant-currency name="multa" id="domusia_multa" label="Multa"
+                                        placeholder="0,00" class="col-md-3" />
+                                    <x-tenant-currency name="desconto" id="domusia_desconto" label="Desconto"
+                                        placeholder="0,00" class="col-md-3" />
+                                    <x-tenant-currency name="valor_pago" id="domusia_valor_pago"
+                                        label="Valor Pago" placeholder="0,00" class="col-md-3"
+                                        :readonly="true" />
                                 </div>
                             </div>
-
-                            {{-- Card: Histórico e Observações --}}
-                            <div class="card border border-gray-300 mb-5">
-                                <div class="card-header min-h-45px">
-                                    <h3 class="card-title fs-6 fw-bold">Histórico Complementar</h3>
-                                </div>
-                                <div class="card-body px-6 py-5">
-                                    <textarea class="form-control form-control-sm" name="historico_complementar"
-                                        id="domusia_historico" maxlength="500" rows="3"
-                                        placeholder="Observações adicionais sobre o lançamento..."></textarea>
-                                    <span class="fs-8 text-muted mt-1 d-block">Máximo 500 caracteres</span>
-                                </div>
-                            </div>
-
                         </div>
-                    </form>
-                </div>
-                <!--end::Col Direita-->
 
+                        {{-- Card: Histórico Complementar --}}
+                        <div class="card border border-gray-300 mb-5">
+                            <div class="card-header min-h-45px">
+                                <h3 class="card-title fs-6 fw-bold">Histórico Complementar</h3>
+                            </div>
+                            <div class="card-body px-6 py-5">
+                                <textarea class="form-control form-control-sm" name="historico_complementar"
+                                    id="domusia_historico" maxlength="500" rows="3"
+                                    placeholder="Observações adicionais sobre o lançamento..."></textarea>
+                                <span class="fs-8 text-muted mt-1 d-block">Máximo 500 caracteres</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </form>
             </div>
-        </div>
-        <!--end::Body-->
+            <!--end::Col Direita-->
 
-        <!--begin::Footer-->
-        <div class="d-flex align-items-center justify-content-between px-6 py-4 border-top bg-white">
-            <div>
+        </div>
+    </x-slot>
+
+    {{-- ========== FOOTER ========== --}}
+    <x-slot name="footer">
+        <div class="d-flex justify-content-between align-items-center w-100">
+            {{-- Lado Esquerdo: Status + Cancelar --}}
+            <div class="d-flex align-items-center gap-3">
                 <span class="text-muted fs-8" id="domusia_drawer_status_text">
                     <i class="fa-solid fa-circle-info me-1"></i>
                     Preencha os campos obrigatórios para salvar
                 </span>
+                <x-tenant-button
+                    type="button"
+                    id="{{ $cancelId }}"
+                    variant="light"
+                    size="sm"
+                    icon="fa-solid fa-xmark"
+                    iconPosition="left"
+                >
+                    Cancelar
+                </x-tenant-button>
             </div>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-sm btn-light" id="domusia_drawer_cancel">
-                    <i class="fa-solid fa-xmark me-1"></i> Cancelar
-                </button>
-                <div class="btn-group">
-                    <button type="button" class="btn btn-sm btn-primary" id="domusia_drawer_submit">
-                        <span class="indicator-label">
-                            <i class="fa-solid fa-check me-1"></i> Salvar Lançamento
-                        </span>
-                        <span class="indicator-progress" style="display: none;">
-                            Salvando... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                        </span>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-primary dropdown-toggle dropdown-toggle-split"
-                        data-bs-toggle="dropdown" aria-expanded="false">
-                    </button>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                        <li><a class="dropdown-item fs-7" href="#" id="domusia_drawer_submit_new">
-                            <i class="fa-solid fa-plus me-2"></i> Salvar e Novo</a></li>
-                    </ul>
-                </div>
+
+            {{-- Lado Direito: Salvar (Split Button) --}}
+            <div class="d-flex">
+                <x-tenant-split-button
+                    submitId="{{ $submitId }}"
+                    submitText="Salvar Lançamento"
+                    submitIcon="fa-solid fa-check"
+                    variant="primary"
+                    size="sm"
+                    direction="dropup"
+                    :items="$splitItems"
+                />
             </div>
         </div>
-        <!--end::Footer-->
+    </x-slot>
 
-    </div>
-</div>
+</x-tenant-drawer>
 
 @push('styles')
 <style>
+    /* ======= Estilos específicos do Drawer Domusia ======= */
     #domusia_expense_drawer {
         z-index: 1060;
     }
@@ -342,15 +386,29 @@
     #domusia_expense_drawer .card-header .card-title {
         margin: 0;
     }
-    #domusia_drawer_img {
-        max-width: 95%;
-        max-height: 95%;
-        object-fit: contain;
-        border-radius: 4px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    /* Toolbar sempre visível dentro do drawer */
+    #drawer_viewer_wrapper .domus-floating-toolbar {
+        opacity: 1 !important;
     }
     .drawer-overlay[data-kt-drawer-name="domusia-expense"] {
         z-index: 1059;
+    }
+    /* Body do drawer sem padding e sem scroll (cada coluna gerencia o seu) */
+    #domusia_expense_drawer_body {
+        padding: 0 !important;
+        overflow: hidden !important;
+    }
+    #domusia_expense_drawer_body .scroll-y {
+        overflow: visible !important;
+        height: 100% !important;
+        max-height: none !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    /* Footer alinhamento */
+    #domusia_expense_drawer_footer {
+        text-align: left !important;
+        padding: 12px 20px !important;
     }
 </style>
 @endpush
@@ -377,17 +435,12 @@ document.addEventListener('DOMContentLoaded', function() {
             subtitle: document.getElementById('domusia_drawer_subtitle'),
             typeIndicator: document.getElementById('domusia_drawer_type_indicator'),
             docBadge: document.getElementById('domusia_drawer_doc_badge'),
-            docType: document.getElementById('domusia_drawer_doc_type'),
             submitBtn: document.getElementById('domusia_drawer_submit'),
             submitNewBtn: document.getElementById('domusia_drawer_submit_new'),
             cancelBtn: document.getElementById('domusia_drawer_cancel'),
             closeBtn: document.getElementById('domusia_drawer_close'),
             statusText: document.getElementById('domusia_drawer_status_text'),
-            // Viewer
-            viewer: document.getElementById('domusia_drawer_viewer'),
-            emptyState: document.getElementById('domusia_drawer_empty_state'),
-            pdfViewer: document.getElementById('domusia_drawer_pdf'),
-            imgViewer: document.getElementById('domusia_drawer_img'),
+            docType: document.getElementById('domusia_drawer_doc_type'),
             // AI Summary
             aiCard: document.getElementById('domusia_ai_summary_card'),
             aiFornecedor: document.getElementById('domusia_ai_fornecedor'),
@@ -408,8 +461,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Inicializar
         // --------------------------------------------------------
         init() {
+            if (typeof DomusDocumentViewer !== 'undefined') {
+                this.drawerViewer = new DomusDocumentViewer('drawer_viewer_wrapper');
+            }
             this.bindEvents();
-            console.log('[DomusiaDrawer] Inicializado');
+            console.log('[DomusiaDrawer] Inicializado', this.drawerViewer ? 'com viewer' : 'SEM viewer');
         },
 
         // --------------------------------------------------------
@@ -499,30 +555,11 @@ document.addEventListener('DOMContentLoaded', function() {
         // Carregar documento no viewer do drawer
         // --------------------------------------------------------
         loadViewer(doc) {
-            if (!doc) {
-                if (this.el.emptyState) this.el.emptyState.style.display = 'block';
-                if (this.el.pdfViewer) this.el.pdfViewer.style.display = 'none';
-                if (this.el.imgViewer) this.el.imgViewer.style.display = 'none';
-                return;
-            }
+            if (!doc) return;
 
-            if (this.el.emptyState) this.el.emptyState.style.display = 'none';
-
-            const isPdf = doc.mime_type === 'application/pdf';
-            const fileUrl = doc.file_url;
-
-            if (isPdf) {
-                if (this.el.pdfViewer && fileUrl) {
-                    this.el.pdfViewer.src = fileUrl + '#toolbar=1&navpanes=0&scrollbar=1';
-                    this.el.pdfViewer.style.display = 'block';
-                }
-                if (this.el.imgViewer) this.el.imgViewer.style.display = 'none';
-            } else {
-                if (this.el.imgViewer && fileUrl) {
-                    this.el.imgViewer.src = fileUrl;
-                    this.el.imgViewer.style.display = 'block';
-                }
-                if (this.el.pdfViewer) this.el.pdfViewer.style.display = 'none';
+            // Delegar resolução de URL inteiramente ao DomusDocumentViewer
+            if (this.drawerViewer) {
+                this.drawerViewer.load(doc);
             }
 
             if (this.el.docType) this.el.docType.textContent = doc.tipo_documento || 'Documento';
@@ -555,7 +592,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.el.aiData && data.financeiro?.data_emissao) {
                 const parts = data.financeiro.data_emissao.split('-');
                 if (parts.length === 3) {
-                    this.el.aiData.textContent = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    this.el.aiData.textContent = parts[2] + '/' + parts[1] + '/' + parts[0];
                 } else {
                     this.el.aiData.textContent = data.financeiro.data_emissao;
                 }
@@ -585,7 +622,7 @@ document.addEventListener('DOMContentLoaded', function() {
             if (fin.data_emissao) {
                 const parts = fin.data_emissao.split('-');
                 if (parts.length === 3) {
-                    const formatted = `${parts[2]}/${parts[1]}/${parts[0]}`;
+                    const formatted = parts[2] + '/' + parts[1] + '/' + parts[0];
                     this.setInputValue('domusia_data_competencia', formatted);
                     this.setInputValue('domusia_vencimento', formatted);
                 }
@@ -594,13 +631,23 @@ document.addEventListener('DOMContentLoaded', function() {
             // Descrição
             const descricao = classif.descricao_detalhada ||
                               (item?.descricao ? item.descricao : null) ||
-                              (estab.nome ? `${data.tipo_documento || 'Documento'} - ${estab.nome}` : '');
+                              (estab.nome ? (data.tipo_documento || 'Documento') + ' - ' + estab.nome : '');
             this.setInputValue('domusia_descricao', descricao);
 
-            // Valor - usar valor do item individual OU valor_total do financeiro
-            const valor = item?.valor_unitario
-                ? (item.valor_unitario * (item.quantidade || 1))
-                : (fin.valor_total || 0);
+            // Valor — Para documentos de transação única (NF-e, Cupom, etc.),
+            // usar sempre o valor_total do financeiro.
+            // Para itens individuais, usar valor do item.
+            const singleTxTypes = ['NF-e', 'NFC-e', 'CUPOM', 'CUPOM_FISCAL', 'NOTA_FISCAL', 'FATURA_CARTAO', 'BOLETO', 'RECIBO', 'COMPROVANTE'];
+            const isSingleTx = singleTxTypes.includes(data.tipo_documento);
+
+            let valor;
+            if (isSingleTx) {
+                valor = fin.valor_total || 0;
+            } else {
+                valor = item?.valor_unitario
+                    ? (item.valor_unitario * (item.quantidade || 1))
+                    : (fin.valor_total || 0);
+            }
             if (valor > 0) {
                 this.setInputValue('domusia_valor', this.formatMoney(valor));
             }
@@ -614,12 +661,36 @@ document.addEventListener('DOMContentLoaded', function() {
             if (fin.multa > 0) this.setInputValue('domusia_multa', this.formatMoney(fin.multa));
             if (fin.desconto > 0) this.setInputValue('domusia_desconto', this.formatMoney(fin.desconto));
 
-            // Histórico complementar
-            const obs = [];
-            if (data.observacoes) obs.push(data.observacoes);
-            if (fin.observacoes_financeiras) obs.push(fin.observacoes_financeiras);
-            if (obs.length > 0) {
-                this.setInputValue('domusia_historico', obs.join(' | '));
+            // Histórico complementar — Produtos da nota + observações
+            const historicoParts = [];
+
+            const itens = data.itens || [];
+            if (itens.length > 0) {
+                historicoParts.push('ITENS:');
+                itens.forEach((it, idx) => {
+                    const desc = (it.descricao || 'Item ' + (idx + 1)).trim();
+                    const qtd = it.quantidade || 1;
+                    const vlrUnit = parseFloat(it.valor_unitario || 0);
+                    const subtotal = qtd * vlrUnit;
+
+                    let linha = qtd + 'x ' + desc;
+                    if (vlrUnit > 0) {
+                        linha += ' (R$ ' + vlrUnit.toFixed(2).replace('.', ',');
+                        if (qtd > 1) {
+                            linha += ' = R$ ' + subtotal.toFixed(2).replace('.', ',');
+                        }
+                        linha += ')';
+                    }
+                    historicoParts.push(linha);
+                });
+            }
+
+            if (data.observacoes) historicoParts.push(data.observacoes);
+            if (fin.observacoes_financeiras) historicoParts.push(fin.observacoes_financeiras);
+
+            if (historicoParts.length > 0) {
+                const historicoText = historicoParts.join('\n');
+                this.setInputValue('domusia_historico', historicoText.substring(0, 500));
             }
 
             // Comprovação fiscal
@@ -673,10 +744,10 @@ document.addEventListener('DOMContentLoaded', function() {
             const mapping = {
                 'dinheiro': ['dinheiro', 'especie'],
                 'pix': ['pix'],
-                'cartao de credito': ['credito', 'cartao de credito', 'cartão de crédito'],
-                'cartao de debito': ['debito', 'cartao de debito', 'cartão de débito'],
-                'boleto': ['boleto', 'boleto bancario', 'boleto bancário'],
-                'transferencia': ['transferencia', 'transferência', 'ted', 'doc'],
+                'cartao de credito': ['credito', 'cartao de credito'],
+                'cartao de debito': ['debito', 'cartao de debito'],
+                'boleto': ['boleto', 'boleto bancario'],
+                'transferencia': ['transferencia', 'ted', 'doc'],
                 'cheque': ['cheque'],
             };
 
@@ -811,7 +882,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Marcar entrada como processada
         // --------------------------------------------------------
         markEntryAsProcessed(index) {
-            const card = document.querySelector(`[data-entry-index="${index}"]`);
+            const card = document.querySelector('[data-entry-index="' + index + '"]');
             if (card) {
                 card.classList.add('opacity-50');
                 card.style.pointerEvents = 'none';
@@ -852,9 +923,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 drawerEl.classList.remove('drawer-on');
                 document.body.classList.remove('overflow-hidden');
             }
-
-            if (this.el.pdfViewer) this.el.pdfViewer.src = '';
-            if (this.el.imgViewer) this.el.imgViewer.src = '';
         },
 
         // --------------------------------------------------------
@@ -872,13 +940,15 @@ document.addEventListener('DOMContentLoaded', function() {
         setLoading(loading) {
             const btn = this.el.submitBtn;
             if (!btn) return;
+            const labelEl = btn.querySelector('.indicator-label');
+            const progressEl = btn.querySelector('.indicator-progress');
             if (loading) {
-                btn.querySelector('.indicator-label').style.display = 'none';
-                btn.querySelector('.indicator-progress').style.display = 'inline-block';
+                if (labelEl) labelEl.style.display = 'none';
+                if (progressEl) progressEl.style.display = 'inline-block';
                 btn.disabled = true;
             } else {
-                btn.querySelector('.indicator-label').style.display = 'inline-block';
-                btn.querySelector('.indicator-progress').style.display = 'none';
+                if (labelEl) labelEl.style.display = 'inline-block';
+                if (progressEl) progressEl.style.display = 'none';
                 btn.disabled = false;
             }
         },

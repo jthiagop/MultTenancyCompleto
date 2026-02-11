@@ -33,9 +33,16 @@
 @push('styles')
     @once
     <style>
-        /* Container do Viewer - Simples e Direto */
+        /* ============================================
+         *  DOMUS DOCUMENT VIEWER — Estilos
+         * ============================================ */
+
+        /* Container do Viewer */
         .domus-viewer-container {
-            background-color: #525659;
+            background-color: #2d2d2d;
+            background-image: 
+                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0);
+            background-size: 20px 20px;
             width: 100%;
             height: 100%;
             min-height: 600px;
@@ -43,112 +50,135 @@
             align-items: center;
             justify-content: center;
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             z-index: 2;
             margin: 0;
             padding: 0;
+            overflow: hidden;
         }
 
-        /* Imagem - Centralizada e com zoom customizado */
+        /* ======= IMAGEM — Centralizada via position absolute + transform ======= */
+        /* Técnica bulletproof: não depende de flex, margin ou display */
         .domus-viewer-container img {
-            cursor: grab;
-            user-select: none;
-            transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            transform-origin: center center;
+            position: absolute !important;
+            top: 50% !important;
+            left: 50% !important;
+            transform: translate(-50%, -50%) !important; /* Base: centralização */
             max-width: 100%;
             max-height: 100%;
             width: auto;
             height: auto;
-            display: block;
-            margin: 0 auto;
             object-fit: contain;
-            position: relative;
-        }
-        
-        .domus-viewer-container img.dragging {
-            cursor: grabbing;
-            transition: none; /* Remove transição durante o drag */
+            cursor: grab;
+            user-select: none;
+            -webkit-user-drag: none;
+            transition: transform 0.15s ease-out;
+            transform-origin: center center;
+            display: block;
         }
 
-        /* Toolbar Flutuante (Glassmorphism) - mantida para modo sem card */
+        .domus-viewer-container img.dragging {
+            cursor: grabbing;
+            transition: none;
+        }
+
+        /* Cursor padrão quando zoom = fit (sem pan) */
+        .domus-viewer-container img.cursor-default {
+            cursor: default;
+        }
+
+        /* ======= TOOLBAR FLUTUANTE (Glassmorphism) ======= */
         .domus-floating-toolbar {
             position: absolute;
-            bottom: 20px;
+            bottom: 16px;
             left: 50%;
             transform: translateX(-50%);
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            border-radius: 50px;
+            background: rgba(30, 30, 30, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 6px 14px;
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            gap: 4px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
             z-index: 100;
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
-        
+
+        /* Toolbar aparece quando hover no container pai */
+        .domus-document-viewer-wrapper:hover .domus-floating-toolbar,
         .domus-floating-toolbar:hover {
-            background: rgba(255, 255, 255, 0.25);
+            opacity: 1;
         }
 
         /* Botões da Toolbar Flutuante */
         .domus-toolbar-btn {
             background: transparent;
             border: none;
-            color: white;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+            color: rgba(255, 255, 255, 0.8);
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .domus-toolbar-btn:hover {
-            background: rgba(255, 255, 255, 0.3);
-            transform: scale(1.1);
-        }
-        
-        .domus-zoom-indicator {
-            color: white;
-            font-weight: 600;
-            font-size: 0.9rem;
-            min-width: 50px;
-            text-align: center;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+            transition: all 0.15s ease;
+            font-size: 14px;
         }
 
-        /* Loading Spinner */
+        .domus-toolbar-btn:hover {
+            background: rgba(255, 255, 255, 0.15);
+            color: white;
+        }
+
+        .domus-toolbar-btn:active {
+            transform: scale(0.92);
+        }
+
+        .domus-toolbar-divider {
+            width: 1px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.15);
+            margin: 0 4px;
+        }
+
+        .domus-zoom-indicator {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 12px;
+            min-width: 46px;
+            text-align: center;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.3px;
+        }
+
+        /* ======= LOADING ======= */
         .domus-loading-overlay {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: rgba(82, 86, 89, 0.7);
+            background: rgba(45, 45, 45, 0.85);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 50;
-            backdrop-filter: blur(2px);
+            backdrop-filter: blur(4px);
         }
-        
+
         .domus-spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255,255,255,0.3);
+            width: 36px;
+            height: 36px;
+            border: 3px solid rgba(255, 255, 255, 0.15);
             border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 1s ease-in-out infinite;
+            border-top-color: #3b82f6;
+            animation: domus-spin 0.8s linear infinite;
         }
-        
-        @keyframes spin {
+
+        @keyframes domus-spin {
             to { transform: rotate(360deg); }
         }
 
@@ -156,26 +186,45 @@
         .skeleton {
             background: linear-gradient(
                 90deg,
-                rgba(255, 255, 255, 0.1) 0%,
-                rgba(255, 255, 255, 0.2) 50%,
-                rgba(255, 255, 255, 0.1) 100%
+                rgba(255, 255, 255, 0.06) 0%,
+                rgba(255, 255, 255, 0.12) 50%,
+                rgba(255, 255, 255, 0.06) 100%
             );
             background-size: 200% 100%;
-            animation: shimmer 1.5s ease-in-out infinite;
+            animation: domus-shimmer 1.5s ease-in-out infinite;
             border-radius: 4px;
         }
-        
-        .skeleton-text {
-            margin: 0 auto;
+
+        .skeleton-text { margin: 0 auto; }
+
+        @keyframes domus-shimmer {
+            0%   { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
         }
-        
-        @keyframes shimmer {
-            0% {
-                background-position: -200% 0;
-            }
-            100% {
-                background-position: 200% 0;
-            }
+
+        /* ======= EMPTY STATE ======= */
+        .domus-document-viewer-wrapper .domus-empty-state {
+            background: #f8f9fa;
+            transition: opacity 0.2s ease;
+        }
+
+        /* ======= HEADER DO CARD ======= */
+        .domus-document-viewer-wrapper > .card-header {
+            min-height: 50px;
+            padding: 0 16px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .domus-document-viewer-wrapper > .card-header .card-toolbar {
+            gap: 4px !important;
+            padding: 4px !important;
+            background: transparent !important;
+        }
+
+        /* Botões da toolbar do card — estilo compacto */
+        .domus-document-viewer-wrapper > .card-header .btn-sm.btn-icon {
+            width: 32px;
+            height: 32px;
         }
     </style>
     @endonce
@@ -187,32 +236,39 @@
         $btnClass = $isFloating ? 'domus-toolbar-btn' : 'btn btn-sm btn-icon btn-light-primary';
         $textClass = $isFloating ? 'domus-zoom-indicator' : 'fw-bold text-gray-600 fs-7 px-2 btn-light-primary btn-sm';
         $iconClass = $isFloating ? 'fs-6' : 'fs-7';
+        $divider = $isFloating ? '<div class="domus-toolbar-divider"></div>' : '';
+        $dangerClass = $isFloating ? ' text-danger' : '';
 
-        ob_start();
-        @endphp
-        <!-- Botão Excluir -->
-        <button type="button" class="{{ $btnClass }} btn-delete" data-bs-toggle="tooltip" title="Excluir">
-            <i class="fa-solid fa-trash-can {{ $iconClass }} {{ $isFloating ? 'text-danger' : '' }}"></i>
-        </button>
+        $html = '';
 
-        @if($isFloating) <div class="vr bg-white opacity-25 mx-1 h-50"></div> @endif
+        // Controles Zoom
+        $html .= '<button type="button" class="' . $btnClass . ' btn-zoom-out" data-bs-toggle="tooltip" title="Diminuir Zoom (-)">';
+        $html .= '<i class="fa-solid fa-minus ' . $iconClass . '"></i></button>';
 
-        <!-- Controles Zoom -->
-        <button type="button" class="{{ $btnClass }} btn-zoom-out" data-bs-toggle="tooltip" title="Diminuir Zoom">
-            <i class="fa-solid fa-minus {{ $iconClass }}"></i>
-        </button>
+        $html .= '<span class="' . $textClass . ' zoom-indicator">100%</span>';
 
-        <span class="{{ $textClass }} zoom-indicator">100%</span>
+        $html .= '<button type="button" class="' . $btnClass . ' btn-zoom-in" data-bs-toggle="tooltip" title="Aumentar Zoom (+)">';
+        $html .= '<i class="fa-solid fa-plus ' . $iconClass . '"></i></button>';
 
-        <button type="button" class="{{ $btnClass }} btn-zoom-in" data-bs-toggle="tooltip" title="Aumentar Zoom">
-            <i class="fa-solid fa-plus {{ $iconClass }}"></i>
-        </button>
+        $html .= '<button type="button" class="' . $btnClass . ' btn-fit-zoom" data-bs-toggle="tooltip" title="Ajustar ao Container (0)">';
+        $html .= '<i class="fa-solid fa-expand ' . $iconClass . '"></i></button>';
 
-        <button type="button" class="{{ $btnClass }} btn-reset-zoom" data-bs-toggle="tooltip" title="Resetar">
-            <i class="fa-solid fa-compress {{ $iconClass }}"></i>
-        </button>
-        @php
-        return ob_get_clean();
+        $html .= $divider;
+
+        // Rotação
+        $html .= '<button type="button" class="' . $btnClass . ' btn-rotate-left" data-bs-toggle="tooltip" title="Girar Esquerda">';
+        $html .= '<i class="fa-solid fa-rotate-left ' . $iconClass . '"></i></button>';
+
+        $html .= '<button type="button" class="' . $btnClass . ' btn-rotate-right" data-bs-toggle="tooltip" title="Girar Direita">';
+        $html .= '<i class="fa-solid fa-rotate-right ' . $iconClass . '"></i></button>';
+
+        $html .= $divider;
+
+        // Ações
+        $html .= '<button type="button" class="' . $btnClass . ' btn-delete" data-bs-toggle="tooltip" title="Excluir">';
+        $html .= '<i class="fa-solid fa-trash-can ' . $iconClass . $dangerClass . '"></i></button>';
+
+        return $html;
     };
 @endphp
 
@@ -246,9 +302,10 @@
          @endif
 
          <!-- EMPTY STATE -->
-         <div id="{{ $emptyStateId }}" class="d-flex flex-column align-items-center justify-content-center h-100 text-center p-10 bg-light" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1; margin: 0; padding: 0;">
-            <i class="ki-outline ki-folder-up fs-5x text-gray-300 mb-4 scale-up-hover"></i>
-            <p class="text-gray-500 fw-semibold mb-0">Nenhum documento selecionado</p>
+         <div id="{{ $emptyStateId }}" class="domus-empty-state d-flex flex-column align-items-center justify-content-center h-100 text-center p-10" style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; z-index: 1;">
+            <i class="ki-outline ki-folder-up fs-5x text-gray-300 mb-4"></i>
+            <p class="text-gray-500 fw-semibold mb-1">Nenhum documento selecionado</p>
+            <p class="text-gray-400 fs-7 mb-0">Clique em um documento da lista para visualizá-lo</p>
          </div>
 
          <!-- VIEWER CONTAINER REAIS -->
@@ -267,7 +324,7 @@
 
             <!-- Elementos de Mídia -->
             <iframe id="{{ $pdfViewerId }}" class="w-100 h-100 border-0 domus-viewer-pdf" style="min-height: 580px; display: none; position: relative;" allowfullscreen></iframe>
-            <img id="{{ $imageViewerId }}" class="domus-viewer-img" style="max-width: 100%; max-height: 100%; width: auto; height: auto; display: none; margin: 0 auto; position: relative;" draggable="false" alt="Documento" />
+            <img id="{{ $imageViewerId }}" class="domus-viewer-img" style="display: none;" draggable="false" alt="Documento" />
          </div>
 
     </div>
@@ -277,8 +334,16 @@
     @once
     <script>
         /**
-         * Classe DomusDocumentViewer
-         * Gerencia visualização de documentos de forma isolada e orientada a objetos.
+         * DomusDocumentViewer v2
+         * 
+         * Viewer profissional com:
+         * - Imagem preenche o container automaticamente (object-fit: contain via CSS)
+         * - Zoom 100% = imagem "fit" no container (sem ficar minúscula)
+         * - Scroll-wheel zoom (sem precisar de Ctrl)
+         * - Duplo-clique para zoom in/out
+         * - Rotação 90° esquerda/direita
+         * - Pan (arrastar) quando zoom > 100%
+         * - Atalhos de teclado (+, -, 0, R)
          */
         class DomusDocumentViewer {
             constructor(wrapperId, config = {}) {
@@ -287,13 +352,16 @@
 
                 // Configurações
                 this.config = Object.assign({
-                    zoomStep: 25,
+                    zoomStep: 15,
                     maxZoom: 500,
-                    minZoom: 50
+                    minZoom: 25,
+                    wheelZoomStep: 8,
+                    doubleClickZoom: 200,
                 }, config);
 
                 // Estado
-                this.zoomLevel = 100;
+                this.zoomLevel = 100;    // 100% = fit no container (CSS cuida)
+                this.rotation = 0;       // Graus (0, 90, 180, 270)
                 this.isDragging = false;
                 this.startX = 0;
                 this.startY = 0;
@@ -301,11 +369,10 @@
                 this.translateY = 0;
                 this.currentDoc = null;
 
-                // Elementos UI (Busca dentro do wrapper para isolamento)
+                // Elementos UI
                 this.container = this.wrapper.querySelector('.domus-viewer-container');
                 this.img = this.wrapper.querySelector('.domus-viewer-img');
                 this.pdf = this.wrapper.querySelector('.domus-viewer-pdf');
-                // Buscar empty state por ID que termina em _empty_state ou _empty
                 this.emptyState = this.wrapper.querySelector('[id$="_empty_state"]') ||
                                   this.wrapper.querySelector('[id$="_empty"]') ||
                                   this.wrapper.querySelector('#empty_state') ||
@@ -316,10 +383,12 @@
                 this.zoomIndicator = this.wrapper.querySelector('.zoom-indicator');
                 this.btnZoomIn = this.wrapper.querySelector('.btn-zoom-in');
                 this.btnZoomOut = this.wrapper.querySelector('.btn-zoom-out');
+                this.btnFitZoom = this.wrapper.querySelector('.btn-fit-zoom');
                 this.btnReset = this.wrapper.querySelector('.btn-reset-zoom');
+                this.btnRotateLeft = this.wrapper.querySelector('.btn-rotate-left');
+                this.btnRotateRight = this.wrapper.querySelector('.btn-rotate-right');
                 this.btnDelete = this.wrapper.querySelector('.btn-delete');
 
-                // Inicializar
                 this.initEvents();
             }
 
@@ -327,7 +396,12 @@
                 // Zoom
                 if(this.btnZoomIn) this.btnZoomIn.onclick = () => this.zoomIn();
                 if(this.btnZoomOut) this.btnZoomOut.onclick = () => this.zoomOut();
-                if(this.btnReset) this.btnReset.onclick = () => this.resetZoom();
+                if(this.btnFitZoom) this.btnFitZoom.onclick = () => this.fitToContainer();
+                if(this.btnReset) this.btnReset.onclick = () => this.fitToContainer();
+
+                // Rotação
+                if(this.btnRotateLeft) this.btnRotateLeft.onclick = () => this.rotate(-90);
+                if(this.btnRotateRight) this.btnRotateRight.onclick = () => this.rotate(90);
 
                 // Excluir
                 if(this.btnDelete) {
@@ -338,305 +412,349 @@
                     };
                 }
 
-                // Drag & Drop (Pan) na Imagem
                 if (this.img) {
+                    // Drag / Pan
                     this.img.addEventListener('mousedown', (e) => this.startDrag(e));
                     window.addEventListener('mousemove', (e) => this.drag(e));
                     window.addEventListener('mouseup', () => this.stopDrag());
-                    this.img.addEventListener('wheel', (e) => {
-                        if (e.ctrlKey) {
-                            e.preventDefault();
-                            e.deltaY < 0 ? this.zoomIn() : this.zoomOut();
+
+                    // Scroll-wheel zoom — só quando a imagem está visível e ativa
+                    this.container?.addEventListener('wheel', (e) => {
+                        // Não interceptar scroll se a imagem não está visível
+                        if (!this.img || this.img.style.display === 'none') return;
+                        // Não interceptar se o container não está visível
+                        if (this.container.style.display === 'none') return;
+
+                        e.preventDefault();
+                        const delta = e.deltaY < 0 ? this.config.wheelZoomStep : -this.config.wheelZoomStep;
+                        const newZoom = Math.max(this.config.minZoom, Math.min(this.config.maxZoom, this.zoomLevel + delta));
+                        if (newZoom !== this.zoomLevel) {
+                            this.zoomLevel = newZoom;
+                            this.updateCursor();
+                            this.applyTransform();
+                        }
+                    }, { passive: false });
+
+                    // Duplo-clique: zoom in 200% ou volta ao fit
+                    this.img.addEventListener('dblclick', (e) => {
+                        e.preventDefault();
+                        if (this.zoomLevel > 100) {
+                            this.fitToContainer();
+                        } else {
+                            this.zoomLevel = this.config.doubleClickZoom;
+                            this.translateX = 0;
+                            this.translateY = 0;
+                            this.updateCursor();
+                            this.applyTransform();
                         }
                     });
+
+                    // Touch (pinch-to-zoom básico)
+                    let lastTouchDist = 0;
+                    this.container?.addEventListener('touchstart', (e) => {
+                        if (e.touches.length === 2) {
+                            lastTouchDist = Math.hypot(
+                                e.touches[0].clientX - e.touches[1].clientX,
+                                e.touches[0].clientY - e.touches[1].clientY
+                            );
+                        }
+                    }, { passive: true });
+
+                    this.container?.addEventListener('touchmove', (e) => {
+                        if (e.touches.length === 2) {
+                            e.preventDefault();
+                            const dist = Math.hypot(
+                                e.touches[0].clientX - e.touches[1].clientX,
+                                e.touches[0].clientY - e.touches[1].clientY
+                            );
+                            const delta = (dist - lastTouchDist) * 0.3;
+                            this.zoomLevel = Math.max(this.config.minZoom, Math.min(this.config.maxZoom, this.zoomLevel + delta));
+                            lastTouchDist = dist;
+                            this.updateCursor();
+                            this.applyTransform();
+                        }
+                    }, { passive: false });
                 }
+
+                // Atalhos de teclado (só quando o viewer tem foco, sem Ctrl/Cmd para não interferir com zoom do browser)
+                this.wrapper.setAttribute('tabindex', '0');
+                this.wrapper.style.outline = 'none';
+                this.wrapper.addEventListener('keydown', (e) => {
+                    // Ignorar se Ctrl/Cmd está pressionado (atalhos do browser)
+                    if (e.ctrlKey || e.metaKey) return;
+
+                    switch(e.key) {
+                        case '+': case '=': e.preventDefault(); this.zoomIn(); break;
+                        case '-':           e.preventDefault(); this.zoomOut(); break;
+                        case '0':           e.preventDefault(); this.fitToContainer(); break;
+                        case 'r': case 'R': e.preventDefault(); this.rotate(e.shiftKey ? -90 : 90); break;
+                    }
+                });
             }
 
+            // ============================
+            //  LOAD (Carregar documento)
+            // ============================
             load(doc) {
                 this.currentDoc = doc;
-                // Não resetar zoom aqui - será feito no processamento específico de imagem/PDF
                 this.setLoading(true);
 
-                // Primeiro, garantir que o wrapper está visível
+                // Wrapper visível
                 if(this.wrapper) {
-                    if(this.wrapper.style.display === 'none') {
-                        this.wrapper.style.display = 'block';
-                    }
                     this.wrapper.style.display = 'block';
-                    // Garantir que o wrapper não tenha z-index alto que cause sobreposição
                     this.wrapper.style.zIndex = 'auto';
                     this.wrapper.style.position = 'relative';
                 }
 
-                // Esconder empty state PRIMEIRO
+                // Esconder empty state
                 if(this.emptyState) {
                     this.emptyState.style.setProperty('display', 'none', 'important');
-                    this.emptyState.style.setProperty('visibility', 'hidden', 'important');
-                    this.emptyState.style.setProperty('opacity', '0', 'important');
-                    this.emptyState.classList.add('hidden');
                 }
 
-                // Mostrar container DEPOIS
+                // Mostrar container e aplicar estilos inline via JS
                 if(this.container) {
                     this.container.style.setProperty('display', 'flex', 'important');
                     this.container.style.setProperty('visibility', 'visible', 'important');
                     this.container.style.setProperty('opacity', '1', 'important');
-                    this.container.style.setProperty('position', 'absolute', 'important');
-                    this.container.style.setProperty('top', '0', 'important');
-                    this.container.style.setProperty('left', '0', 'important');
-                    this.container.style.setProperty('right', '0', 'important');
-                    this.container.style.setProperty('bottom', '0', 'important');
-                    this.container.style.setProperty('width', '100%', 'important');
-                    this.container.style.setProperty('height', '100%', 'important');
                     this.container.classList.remove('hidden');
+                    this.applyContainerStyles();
                 }
 
-                // Tipo de arquivo
                 const isPdf = doc.mime_type === 'application/pdf';
                 const isImage = doc.mime_type && doc.mime_type.startsWith('image/');
 
-                // Esconder ambos inicialmente
+                // Esconder ambos
                 if(this.pdf) this.pdf.style.display = 'none';
                 if(this.img) this.img.style.display = 'none';
 
                 let src = doc.file_url;
 
-                // URL Fallback Logic
+                // URL Fallback
                 if (!src || src === 'null' || src === 'undefined') {
                     if (doc.caminho_arquivo) {
-                         src = '{{ route("domusia.file", ":id") }}'.replace(':id', doc.id);
-                         if(src.includes(':id')) {
-                             src = '/storage/' + doc.caminho_arquivo;
-                         }
+                        src = '{{ route("domusia.file", ":id") }}'.replace(':id', doc.id);
+                        if(src.includes(':id')) {
+                            src = '/storage/' + doc.caminho_arquivo;
+                        }
                     }
                 }
 
-                // Base64 Fallback
                 const hasBase64 = doc.base64_content && doc.base64_content.length < 65000;
 
                 if (isPdf) {
-                    this.setLoading(true);
-                    // Para PDF, resetar zoom (não se aplica mas mantém consistência)
-                    this.zoomLevel = 100;
-
-                    if (src) {
-                        // Parâmetros completos da toolbar do PDF
-                        const pdfUrl = src + '#toolbar=1&navpanes=1&scrollbar=1&zoom=page-width';
-
-                        if(this.pdf) {
-                            this.pdf.style.display = 'block';
-                            this.pdf.style.width = '100%';
-                            this.pdf.style.height = '100%';
-                            this.pdf.style.minHeight = '580px';
-                            this.pdf.style.border = 'none';
-                        }
-
-                        this.pdf.src = pdfUrl;
-                        this.pdf.onload = () => {
-                            this.setLoading(false);
-                        };
-                        this.pdf.onerror = (e) => {
-                            this.setLoading(false);
-                            this.showError('Erro ao carregar PDF');
-                        };
-                    } else if (hasBase64) {
-                        const base64Url = `data:application/pdf;base64,${doc.base64_content}#toolbar=1&navpanes=1&scrollbar=1&zoom=page-width`;
-
-                        if(this.pdf) {
-                            this.pdf.style.display = 'block';
-                            this.pdf.style.width = '100%';
-                            this.pdf.style.height = '100%';
-                            this.pdf.style.minHeight = '580px';
-                            this.pdf.style.border = 'none';
-                        }
-
-                        this.pdf.src = base64Url;
-                        this.pdf.onload = () => {
-                            this.setLoading(false);
-                        };
-                        this.pdf.onerror = (e) => {
-                            this.setLoading(false);
-                            this.showError('Erro ao carregar PDF via Base64');
-                        };
-                    } else {
-                        this.showError('PDF não disponível');
-                    }
-
-                    // Safety fallback timeout
-                    setTimeout(() => {
-                        this.setLoading(false);
-                    }, 2000);
-
+                    this.loadPdf(src, hasBase64, doc);
                 } else if (isImage) {
-                    this.setLoading(true);
-
-                    // Mostrar a imagem e configurar
-                    if(this.img) {
-                        this.img.style.display = 'block';
-                        this.img.classList.remove('dragging');
-                        // Resetar transformações e zoom inicial
-                        this.img.style.transform = '';
-                        this.translateX = 0;
-                        this.translateY = 0;
-                        // Resetar zoom para calcular corretamente após imagem carregar
-                        this.zoomLevel = 100;
-                    }
-
-                    this.img.onload = () => {
-                        this.setLoading(false);
-                        // Garantir que a imagem esteja visível após carregar
-                        if(this.img) {
-                            this.img.style.display = 'block';
-                            this.img.style.margin = '0 auto';
-                            this.img.style.maxWidth = '100%';
-                            this.img.style.maxHeight = '100%';
-                            this.img.style.width = 'auto';
-                            this.img.style.height = 'auto';
-                            this.img.style.position = 'relative';
-                            
-                            // Calcular zoom inicial inteligente: fit para caber no container
-                            const container = this.container;
-                            if(container && this.img.naturalWidth && this.img.naturalHeight) {
-                                const containerWidth = container.clientWidth || container.offsetWidth;
-                                const containerHeight = container.clientHeight || container.offsetHeight;
-                                const imgWidth = this.img.naturalWidth;
-                                const imgHeight = this.img.naturalHeight;
-                                
-                                // Calcular escala para preencher melhor o container
-                                // Se a imagem for maior: ajustar para caber (fit)
-                                // Se a imagem for menor: ampliar para ocupar ~85% do container (mantendo proporção)
-                                const scaleX = containerWidth / imgWidth;
-                                const scaleY = containerHeight / imgHeight;
-                                const fitScale = Math.min(scaleX, scaleY); // Escala para caber perfeitamente
-                                
-                                // Se a imagem é menor que o container, ampliar para ocupar 85% do espaço
-                                if (fitScale > 1) {
-                                    // Imagem é menor: ampliar para 85% do container
-                                    this.zoomLevel = Math.floor(fitScale * 100 * 0.85);
-                                } else {
-                                    // Imagem é maior: ajustar para caber (fit)
-                                    this.zoomLevel = Math.floor(fitScale * 100);
-                                }
-                                
-                                // Resetar transformações para centralizar
-                                this.translateX = 0;
-                                this.translateY = 0;
-                                
-                                // Aplicar transformação com centralização
-                                this.applyTransform();
-                                
-                                // Atualizar indicador de zoom
-                                if(this.zoomIndicator) {
-                                    this.zoomIndicator.textContent = `${this.zoomLevel}%`;
-                                }
-                            } else {
-                                // Fallback: usar 100% se não conseguir calcular
-                                this.zoomLevel = 100;
-                                this.translateX = 0;
-                                this.translateY = 0;
-                                this.applyTransform();
-                                
-                                // Garantir que indicador seja atualizado
-                                if(this.zoomIndicator) {
-                                    this.zoomIndicator.textContent = `${this.zoomLevel}%`;
-                                }
-                            }
-                        }
-                    };
-                    
-                    this.img.onerror = (e) => {
-                        if (hasBase64) {
-                            const base64Url = `data:${doc.mime_type};base64,${doc.base64_content}`;
-                            this.img.src = base64Url;
-                        } else {
-                           this.setLoading(false);
-                           this.showError('Erro ao carregar imagem');
-                        }
-                    };
-
-                    if (src) {
-                        this.img.src = src;
-                    } else if (hasBase64) {
-                        const base64Url = `data:${doc.mime_type};base64,${doc.base64_content}`;
-                        this.img.src = base64Url;
-                    } else {
-                        this.setLoading(false);
-                        this.showError('Imagem não disponível');
-                    }
+                    this.loadImage(src, hasBase64, doc);
                 }
             }
 
-            setLoading(isLoading) {
-                if(this.loadingState) this.loadingState.style.display = isLoading ? 'flex' : 'none';
+            loadPdf(src, hasBase64, doc) {
+                this.zoomLevel = 100;
+                this.rotation = 0;
+
+                const setupPdf = (url) => {
+                    if(this.pdf) {
+                        this.pdf.style.display = 'block';
+                        this.pdf.style.width = '100%';
+                        this.pdf.style.height = '100%';
+                        this.pdf.style.minHeight = '580px';
+                        this.pdf.style.border = 'none';
+                        this.pdf.src = url;
+                        this.pdf.onload = () => this.setLoading(false);
+                        this.pdf.onerror = () => { this.setLoading(false); this.showError('Erro ao carregar PDF'); };
+                    }
+                };
+
+                if (src) {
+                    setupPdf(src + '#toolbar=1&navpanes=1&scrollbar=1&zoom=page-width');
+                } else if (hasBase64) {
+                    setupPdf(`data:application/pdf;base64,${doc.base64_content}#toolbar=1&navpanes=1&scrollbar=1&zoom=page-width`);
+                } else {
+                    this.showError('PDF não disponível');
+                }
+
+                setTimeout(() => this.setLoading(false), 2000);
             }
 
+            loadImage(src, hasBase64, doc) {
+                // Resetar estado
+                this.zoomLevel = 100;
+                this.rotation = 0;
+                this.translateX = 0;
+                this.translateY = 0;
+
+                // Aplicar estilos no CONTAINER via JS
+                this.applyContainerStyles();
+
+                if(this.img) {
+                    this.img.style.display = 'block';
+                    this.img.classList.remove('dragging');
+                    // Aplicar estilos inline na IMAGEM via JS
+                    this.applyImageBaseStyles();
+                }
+
+                this.img.onload = () => {
+                    this.setLoading(false);
+                    this.zoomLevel = 100;
+                    this.translateX = 0;
+                    this.translateY = 0;
+                    this.rotation = 0;
+                    this.applyImageBaseStyles();
+                    this.updateCursor();
+                    this.applyTransform();
+                };
+
+                this.img.onerror = () => {
+                    if (hasBase64) {
+                        this.img.src = `data:${doc.mime_type};base64,${doc.base64_content}`;
+                    } else {
+                        this.setLoading(false);
+                        this.showError('Erro ao carregar imagem');
+                    }
+                };
+
+                if (src) {
+                    this.img.src = src;
+                } else if (hasBase64) {
+                    this.img.src = `data:${doc.mime_type};base64,${doc.base64_content}`;
+                } else {
+                    this.setLoading(false);
+                    this.showError('Imagem não disponível');
+                }
+            }
+
+            // ============================
+            //  ZOOM
+            // ============================
             zoomIn() {
                 if (this.zoomLevel < this.config.maxZoom) {
-                    this.zoomLevel += this.config.zoomStep;
+                    this.zoomLevel = Math.min(this.config.maxZoom, this.zoomLevel + this.config.zoomStep);
+                    this.updateCursor();
                     this.applyTransform();
                 }
             }
 
             zoomOut() {
                 if (this.zoomLevel > this.config.minZoom) {
-                    this.zoomLevel -= this.config.zoomStep;
+                    this.zoomLevel = Math.max(this.config.minZoom, this.zoomLevel - this.config.zoomStep);
+                    // Se voltou para 100% ou menos, centralizar
+                    if (this.zoomLevel <= 100) {
+                        this.translateX = 0;
+                        this.translateY = 0;
+                    }
+                    this.updateCursor();
                     this.applyTransform();
                 }
             }
 
+            fitToContainer() {
+                this.zoomLevel = 100;
+                this.translateX = 0;
+                this.translateY = 0;
+                this.updateCursor();
+                this.applyTransform();
+            }
+
+            // Mantém compatibilidade com código antigo
             resetZoom() {
-                // Resetar zoom para o nível inicial inteligente: 100% se couber, fit se for muito grande
-                if(this.img && this.img.style.display !== 'none') {
-                    const container = this.container;
-                    if(container && this.img.naturalWidth && this.img.naturalHeight) {
-                        const containerWidth = container.clientWidth || container.offsetWidth;
-                        const containerHeight = container.clientHeight || container.offsetHeight;
-                        const imgWidth = this.img.naturalWidth;
-                        const imgHeight = this.img.naturalHeight;
-                        
-                        // Calcular escala para preencher melhor o container
-                        // Se a imagem for maior: ajustar para caber (fit)
-                        // Se a imagem for menor: ampliar para ocupar ~85% do container (mantendo proporção)
-                        const scaleX = containerWidth / imgWidth;
-                        const scaleY = containerHeight / imgHeight;
-                        const fitScale = Math.min(scaleX, scaleY); // Escala para caber perfeitamente
-                        
-                        // Se a imagem é menor que o container, ampliar para ocupar 85% do espaço
-                        if (fitScale > 1) {
-                            // Imagem é menor: ampliar para 85% do container
-                            this.zoomLevel = Math.floor(fitScale * 100 * 0.85);
-                        } else {
-                            // Imagem é maior: ajustar para caber (fit)
-                            this.zoomLevel = Math.floor(fitScale * 100);
-                        }
-                    } else {
-                        // Fallback: usar 100% se não conseguir calcular
-                        this.zoomLevel = 100;
-                    }
-                    
-                    this.translateX = 0;
-                    this.translateY = 0;
-                    this.applyTransform();
-                } else {
-                    this.zoomLevel = 100;
-                }
+                this.fitToContainer();
+            }
+
+            // ============================
+            //  ROTAÇÃO
+            // ============================
+            rotate(degrees) {
+                this.rotation = (this.rotation + degrees + 360) % 360;
+                this.translateX = 0;
+                this.translateY = 0;
+                this.applyTransform();
+            }
+
+            // ============================
+            //  TRANSFORM
+            // ============================
+            /**
+             * Aplica estilos inline no container do viewer (background, layout)
+             * Chamado via JS para garantir estilos independente de CSS externo
+             */
+            applyContainerStyles() {
+                if (!this.container) return;
+                const c = this.container.style;
+                c.setProperty('background-color', '#2d2d2d', 'important');
+                c.setProperty('background-image', 'radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0)', 'important');
+                c.setProperty('background-size', '20px 20px', 'important');
+                c.setProperty('overflow', 'hidden', 'important');
+                c.setProperty('position', 'absolute', 'important');
+                c.setProperty('top', '0', 'important');
+                c.setProperty('left', '0', 'important');
+                c.setProperty('right', '0', 'important');
+                c.setProperty('bottom', '0', 'important');
+                c.setProperty('width', '100%', 'important');
+                c.setProperty('height', '100%', 'important');
+            }
+
+            /**
+             * Aplica estilos base na imagem via JS inline + !important
+             * Técnica: position absolute + top:50% + left:50% + translate(-50%,-50%)
+             * Isso centraliza a imagem independente de Tailwind, Bootstrap ou qualquer framework
+             */
+            applyImageBaseStyles() {
+                if (!this.img) return;
+                const s = this.img.style;
+                s.setProperty('position', 'absolute', 'important');
+                s.setProperty('top', '50%', 'important');
+                s.setProperty('left', '50%', 'important');
+                s.setProperty('max-width', '100%', 'important');
+                s.setProperty('max-height', '100%', 'important');
+                s.setProperty('width', 'auto', 'important');
+                s.setProperty('height', 'auto', 'important');
+                s.setProperty('object-fit', 'contain', 'important');
+                s.setProperty('user-select', 'none', 'important');
+                s.setProperty('transform-origin', 'center center', 'important');
+                s.setProperty('display', 'block', 'important');
             }
 
             applyTransform() {
-                if(this.zoomIndicator) this.zoomIndicator.textContent = `${this.zoomLevel}%`;
+                if(this.zoomIndicator) {
+                    this.zoomIndicator.textContent = `${Math.round(this.zoomLevel)}%`;
+                }
 
                 if (this.img && this.img.style.display !== 'none') {
                     const scale = this.zoomLevel / 100;
-                    // Garantir que a imagem permaneça centralizada mesmo com zoom e pan
-                    this.img.style.transform = `scale(${scale}) translate(${this.translateX / scale}px, ${this.translateY / scale}px)`;
-                    this.img.style.transformOrigin = 'center center';
-                    // Garantir margin auto para centralização horizontal
-                    if(!this.img.style.margin || this.img.style.margin === '0px') {
-                        this.img.style.margin = '0 auto';
+
+                    // Base: translate(-50%, -50%) SEMPRE para centralizar via position absolute
+                    let transform = `translate(-50%, -50%) scale(${scale})`;
+
+                    // Rotação
+                    if (this.rotation !== 0) {
+                        transform += ` rotate(${this.rotation}deg)`;
                     }
+
+                    // Pan (translação adicional) — só quando zoom > 100%
+                    if (this.zoomLevel > 100 && (this.translateX !== 0 || this.translateY !== 0)) {
+                        transform += ` translate(${this.translateX / scale}px, ${this.translateY / scale}px)`;
+                    }
+
+                    // Usar setProperty com !important para NADA poder sobrescrever
+                    this.img.style.setProperty('transform', transform, 'important');
+                    this.img.style.setProperty('transform-origin', 'center center', 'important');
                 }
             }
 
+            updateCursor() {
+                if (!this.img) return;
+                if (this.zoomLevel > 100) {
+                    this.img.classList.remove('cursor-default');
+                    this.img.style.cursor = 'grab';
+                } else {
+                    this.img.classList.add('cursor-default');
+                    this.img.style.cursor = 'default';
+                }
+            }
+
+            // ============================
+            //  DRAG / PAN
+            // ============================
             startDrag(e) {
                 if (this.zoomLevel <= 100) return;
                 this.isDragging = true;
@@ -658,12 +776,20 @@
                 if(this.img) this.img.classList.remove('dragging');
             }
 
+            // ============================
+            //  UTILIDADES
+            // ============================
+            setLoading(isLoading) {
+                if(this.loadingState) this.loadingState.style.display = isLoading ? 'flex' : 'none';
+            }
+
             updateNavButtons() {
-                // Botões de navegação removidos - função mantida para compatibilidade
+                // Mantida para compatibilidade
             }
 
             showError(msg) {
                 this.setLoading(false);
+                console.warn('[DomusViewer]', msg);
             }
         }
 
@@ -674,17 +800,11 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Instantiate viewer for this specific component
             const viewer = new DomusDocumentViewer('{{ $wrapperId }}');
 
-            // Expose instance if this is the main viewer
             if ('{{ $wrapperId }}'.includes('documentViewer')) {
                 window.mainDocumentViewer = viewer;
-
-                // Adapter for old global functions (Backward Compatibility)
-                window.loadDocumentFromDatabase = (doc) => {
-                    viewer.load(doc);
-                };
+                window.loadDocumentFromDatabase = (doc) => viewer.load(doc);
                 window.resetZoom = () => viewer.resetZoom();
             }
         });

@@ -70,12 +70,6 @@
 
         </div>
         <!--end::Content-->
-
-        <!--begin::Sidebar-->
-        <div class="card" id="sidebarContainer"
-            style="display: none;">
-        </div>
-        <!--end::Sidebar-->
     </div>
     <!--end::Layout-->
 </div>
@@ -108,14 +102,6 @@
     <script>
         // Configurações do Domusia Pendentes
         window.domusiaPendentesConfig = @json($domusiaConfig);
-
-        // Variáveis globais para compatibilidade com componentes existentes
-        window.currentDocument = null;
-        window.selectedFiles = [];
-        window.documentosCarregados = [];
-        window.currentDocumentIndex = 0;
-        window.zoomLevel = 100;
-        window.documentList = [];
     </script>
 
     {{-- Carregar o módulo JavaScript do Domusia Pendentes (método tradicional) --}}

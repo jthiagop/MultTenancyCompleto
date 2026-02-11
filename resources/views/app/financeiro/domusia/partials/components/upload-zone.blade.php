@@ -1,17 +1,9 @@
 <!--begin::Área de Upload-->
 <div class="document-upload-area" id="documentUploadArea">
     <div class="upload-zone" id="uploadZone">
-        <div id="drop-area"
-            class="border border-dashed border-primary rounded p-5 bg-light">
-            <div class="row align-items-center">
-                <div class="col-auto text-center">
-                    <i class="fa-solid fa-cloud-arrow-up fs-1 text-primary"></i>
-                </div>
-                <div class="col">
-                    <span class="text-primary fw-bold">Clique aqui ou arraste arquivos para
-                        importar</span>
-                </div>
-            </div>
+        <div id="drop-area" class="d-flex align-items-center gap-3">
+            <i class="fa-solid fa-cloud-arrow-up fs-1 text-primary"></i>
+            <span class="text-primary fw-bold">Clique aqui ou arraste arquivos para importar</span>
         </div>
         <input type="file" id="documentFileInput" accept=".pdf,.png,.jpg,.jpeg,.webp" multiple
             style="display: none;" />

@@ -1,13 +1,27 @@
 <!--begin::Filtro de Documentos-->
-    <label class="form-label fw-semibold">Filtrar por tipo de documento</label>
-    <select class="form-select form-select-solid" id="documentTypeFilter">
+@php
+    $tiposDocumento = [
+        'NF-e'          => 'NF-e',
+        'NFC-e'         => 'NFC-e',
+        'CUPOM'         => 'Cupom Fiscal',
+        'BOLETO'        => 'Boleto',
+        'RECIBO'        => 'Recibo',
+        'FATURA_CARTAO' => 'Fatura de Cartão',
+        'COMPROVANTE'   => 'Comprovante',
+        'OUTRO'         => 'Outro',
+    ];
+@endphp
+<div class="w-100">
+    <label class="form-label fw-semibold fs-7 text-gray-600">
+        <i class="fa-solid fa-filter fs-8 me-1"></i> Filtrar por tipo
+    </label>
+    <select class="form-select form-select-sm form-select-solid" id="documentTypeFilter">
         <option value="">Todos os tipos</option>
-        <option value="NF-e">NF-e</option>
-        <option value="NFC-e">NFC-e</option>
-        <option value="BOLETO">Boleto</option>
-        <option value="RECIBO">Recibo</option>
-        <option value="OUTRO">Outro</option>
+        @foreach($tiposDocumento as $valor => $label)
+            <option value="{{ $valor }}">{{ $label }}</option>
+        @endforeach
     </select>
+</div>
 <!--end::Filtro de Documentos-->
 
 @push('scripts')
@@ -19,26 +33,27 @@
 
         documentTypeFilter.addEventListener('change', function() {
             const selectedType = this.value;
+            const instance = window.domusiaPendentesInstance;
 
-            // Filtrar documentos carregados
-            if (typeof window.documentosCarregados !== 'undefined') {
-                let filtered = window.documentosCarregados;
+            // Buscar documentos da instância ou do fallback global
+            const allDocs = instance?.documentosCarregados
+                || window.documentosCarregados
+                || [];
 
-                if (selectedType) {
-                    filtered = window.documentosCarregados.filter(doc => {
-                        return doc.tipo_documento === selectedType;
-                    });
-                }
+            let filtered = allDocs;
 
-                // Renderizar documentos filtrados
-                if (typeof window.renderPendingDocuments === 'function') {
-                    window.renderPendingDocuments(filtered);
-                }
+            if (selectedType) {
+                filtered = allDocs.filter(doc => doc.tipo_documento === selectedType);
+            }
 
-                // Atualizar miniaturas
-                if (typeof window.renderThumbnails === 'function') {
-                    window.renderThumbnails(filtered);
-                }
+            // Renderizar documentos filtrados
+            if (typeof window.renderPendingDocuments === 'function') {
+                window.renderPendingDocuments(filtered);
+            }
+
+            // Atualizar miniaturas
+            if (typeof window.renderThumbnails === 'function') {
+                window.renderThumbnails(filtered);
             }
         });
     });
