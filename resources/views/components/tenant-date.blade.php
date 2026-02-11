@@ -44,7 +44,9 @@
 
 @push('scripts')
 <script>
-    // Inicializar flatpickr para campos de data. For more info, please visit the official plugin site: https://flatpickr.js.org/
+    // Inicializar flatpickr para campos de data (SEM Inputmask para evitar conflitos)
+    // O Inputmask com alias 'datetime' causa bugs ao auto-corrigir datas inválidas (ex: 30/02 → 03/02/0266)
+    // O Flatpickr sozinho com allowInput já faz validação + máscara corretamente.
     document.addEventListener('DOMContentLoaded', function() {
         // Função para verificar se o locale pt está registrado
         function isLocaleRegistered() {
@@ -54,37 +56,23 @@
 
         // Função para inicializar os datepickers
         function initDatepickers() {
-        var dateInputs = document.querySelectorAll('[name="{{ $name }}"]');
+            var dateInputs = document.querySelectorAll('[name="{{ $name }}"]');
 
-        dateInputs.forEach(function(dateInput) {
-            // Verificar se já foi inicializado
-            if (dateInput._flatpickr) {
-                return;
-            }
+            dateInputs.forEach(function(dateInput) {
+                // Verificar se já foi inicializado
+                if (dateInput._flatpickr) {
+                    return;
+                }
 
-                // Aplicar máscara de input com Inputmask (sempre, independente do flatpickr)
-                if (typeof Inputmask !== 'undefined' && !dateInput._inputmask) {
-                    // Data atual formatada para placeholder
-                    var today = new Date();
-                    var day = String(today.getDate()).padStart(2, '0');
-                    var month = String(today.getMonth() + 1).padStart(2, '0');
-                    var year = today.getFullYear();
-                    var todayFormatted = day + '/' + month + '/' + year;
-
-                    Inputmask({
-                        alias: 'datetime',
-                        inputFormat: 'dd/mm/yyyy',
-                        placeholder: todayFormatted,
-                        clearMaskOnLostFocus: false,
-                        showMaskOnHover: true,
-                        showMaskOnFocus: true,
-                        rightAlign: false
-                    }).mask(dateInput);
+                // Remover Inputmask existente para evitar conflito
+                if (dateInput.inputmask) {
+                    dateInput.inputmask.remove();
                 }
 
                 // Verificar se flatpickr está disponível
                 if (typeof flatpickr === 'undefined') {
-                    // Fallback: apenas máscara + validação manual se flatpickr não estiver disponível
+                    // Fallback: máscara simples (99/99/9999) + validação manual se flatpickr não estiver disponível
+                    applySimpleMask(dateInput);
                     addDateValidation(dateInput);
                     return;
                 }
@@ -107,14 +95,26 @@
             });
         }
 
+        // Função para aplicar máscara simples (somente quando flatpickr NÃO está disponível)
+        function applySimpleMask(dateInput) {
+            if (typeof Inputmask !== 'undefined' && !dateInput._inputmask) {
+                Inputmask("99/99/9999", {
+                    placeholder: "dd/mm/aaaa",
+                    clearIncomplete: true,
+                    showMaskOnHover: false,
+                    rightAlign: false
+                }).mask(dateInput);
+            }
+        }
+
         // Função para inicializar um único datepicker
         function initSingleDatepicker(dateInput, useLocale = true) {
             try {
                 var config = {
                     enableTime: false,
-                    dateFormat: "d/m/Y", // Formato brasileiro para o valor real (backend espera este formato)
-                    allowInput: true, // Permite digitação manual
-                    clickOpens: true, // Abre o calendário ao clicar
+                    dateFormat: "d/m/Y", // Formato brasileiro (backend espera este formato)
+                    allowInput: true,     // Permite digitação manual
+                    clickOpens: true,     // Abre o calendário ao clicar
                     parseDate: function(datestr, format) {
                         // Parse para formato brasileiro dd/mm/yyyy quando digitado manualmente
                         if (format === "d/m/Y") {
@@ -123,12 +123,25 @@
                                 var day = parseInt(parts[0], 10);
                                 var month = parseInt(parts[1], 10) - 1;
                                 var year = parseInt(parts[2], 10);
-                                if (!isNaN(day) && !isNaN(month) && !isNaN(year)) {
-                                    return new Date(year, month, day);
+                                if (!isNaN(day) && !isNaN(month) && !isNaN(year) && year > 1900 && year < 2100) {
+                                    var date = new Date(year, month, day);
+                                    // Validar que a data é realmente válida (rejeita 30/02, 31/04, etc.)
+                                    if (date.getFullYear() === year && date.getMonth() === month && date.getDate() === day) {
+                                        return date;
+                                    }
                                 }
                             }
                         }
                         return null;
+                    },
+                    onClose: function(selectedDates, dateStr, instance) {
+                        // Ao fechar, se a data digitada for inválida, limpa ou corrige
+                        if (dateStr && selectedDates.length === 0) {
+                            // Data inválida digitada manualmente — sinalizar
+                            instance.input.classList.add('is-invalid');
+                        } else {
+                            instance.input.classList.remove('is-invalid');
+                        }
                     }
                 };
 
