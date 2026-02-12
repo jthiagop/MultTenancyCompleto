@@ -263,6 +263,43 @@ class EntidadeFinanceiraController extends Controller
         }
     }
 
+    /**
+     * Renomeia uma entidade financeira via AJAX.
+     */
+    public function renomear(Request $request, string $id)
+    {
+        try {
+            $validated = $request->validate([
+                'nome' => 'required|string|max:150',
+            ]);
+
+            $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+
+            $entidade->nome = $validated['nome'];
+            $entidade->updated_by = Auth::id();
+            $entidade->updated_by_name = Auth::user()->name;
+            $entidade->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Nome atualizado com sucesso!',
+                'nome' => $entidade->nome,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro de validação',
+                'errors' => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao renomear entidade: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao renomear entidade.',
+            ], 500);
+        }
+    }
+
     public function destroy(string $id)
     {
         try {
@@ -603,6 +640,12 @@ class EntidadeFinanceiraController extends Controller
             $matchingService = new \App\Services\ConciliacaoMatchingService();
             foreach ($bankStatements as $lancamento) {
                 $lancamento->possiveisTransacoes = $matchingService->buscarPossiveisTransacoes($lancamento, $id, 5);
+
+                // 🏦 Detectar movimentações internas (Rende Fácil, poupança automática, etc.)
+                $lancamento->movimentacao_interna = \App\Services\MovimentacaoInternaDetector::detectar(
+                    $lancamento->memo ?? '',
+                    $lancamento->amount
+                );
             }
 
             // ✅ Dados auxiliares com cache (melhora performance)

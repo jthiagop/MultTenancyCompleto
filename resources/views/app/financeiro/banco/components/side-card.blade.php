@@ -92,6 +92,39 @@
     @endif
 </div>
 
+{{-- Modal para renomear entidade --}}
+<div class="modal fade" id="modal_renomear_entidade" tabindex="-1" aria-labelledby="modal_renomear_label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered ">
+        <div class="modal-content">
+            <div class="modal-header py-4">
+                <h5 class="modal-title fs-6" id="modal_renomear_label">
+                   Renomear Entidade
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="renomear_entidade_id">
+                <div class="mb-0">
+                    <label for="renomear_entidade_nome" class="form-label fw-semibold fs-7">Nome</label>
+                    <input type="text"
+                           class="form-control form-control-sm"
+                           id="renomear_entidade_nome"
+                           maxlength="150"
+                           placeholder="Digite o novo nome"
+                           autocomplete="off">
+                    <div class="invalid-feedback" id="renomear_nome_error"></div>
+                </div>
+            </div>
+            <div class="modal-footer py-3">
+                <button type="button" class="btn btn-sm btn-light" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-sm btn-primary" id="btn_salvar_renomear">
+                    <i class="bi bi-check2 me-1"></i>Salvar
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
 @once
 <script>
@@ -107,18 +140,113 @@
         var carouselElement = document.getElementById('{{ $carouselId }}');
         if (carouselElement) {
             carouselElement.addEventListener('slid.bs.carousel', function () {
-                // Destrói tooltips antigos
-                tooltipList.forEach(function(tooltip) {
-                    tooltip.dispose();
-                });
-
-                // Recria tooltips para o novo conteúdo
+                tooltipList.forEach(function(tooltip) { tooltip.dispose(); });
                 tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
                 tooltipList = Array.from(tooltipTriggerList).map(function (tooltipTriggerEl) {
                     return new bootstrap.Tooltip(tooltipTriggerEl);
                 });
             });
         }
+
+        // === Renomear Entidade ===
+        const modal = document.getElementById('modal_renomear_entidade');
+        const bsModal = new bootstrap.Modal(modal);
+        const inputId = document.getElementById('renomear_entidade_id');
+        const inputNome = document.getElementById('renomear_entidade_nome');
+        const inputError = document.getElementById('renomear_nome_error');
+        const btnSalvar = document.getElementById('btn_salvar_renomear');
+
+        // Abrir modal ao clicar no lápis (capture phase para pegar antes do link)
+        document.addEventListener('click', function(e) {
+            const btn = e.target.closest('.btn-rename-entidade');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            // Destrói tooltip antes de abrir o modal
+            const tooltipInstance = bootstrap.Tooltip.getInstance(btn);
+            if (tooltipInstance) tooltipInstance.hide();
+
+            inputId.value = btn.dataset.entidadeId;
+            inputNome.value = btn.dataset.entidadeNome;
+            inputNome.classList.remove('is-invalid');
+            inputError.textContent = '';
+            bsModal.show();
+
+            // Focus no input após animação do modal
+            modal.addEventListener('shown.bs.modal', function handler() {
+                inputNome.focus();
+                inputNome.select();
+                modal.removeEventListener('shown.bs.modal', handler);
+            });
+        }, true); // true = capture phase, intercepta ANTES do <a> receber o click
+
+        // Salvar ao pressionar Enter
+        inputNome.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                btnSalvar.click();
+            }
+        });
+
+        // Salvar nome
+        btnSalvar.addEventListener('click', async function() {
+            const id = inputId.value;
+            const nome = inputNome.value.trim();
+
+            if (!nome) {
+                inputNome.classList.add('is-invalid');
+                inputError.textContent = 'O nome é obrigatório.';
+                return;
+            }
+
+            btnSalvar.disabled = true;
+            btnSalvar.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Salvando...';
+
+            try {
+                const response = await fetch(`{{ route('entidades.renomear', ['id' => '__ID__']) }}`.replace('__ID__', id), {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ nome }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // Atualiza o nome no card (pode haver múltiplos spans com data-entidade-nome)
+                    document.querySelectorAll(`[data-entidade-nome="${id}"]`).forEach(el => {
+                        if (el.tagName === 'SPAN') el.textContent = data.nome;
+                    });
+
+                    // Atualiza o data attribute do botão lápis
+                    document.querySelectorAll(`.btn-rename-entidade[data-entidade-id="${id}"]`).forEach(btn => {
+                        btn.dataset.entidadeNome = data.nome;
+                    });
+
+                    bsModal.hide();
+
+                    if (typeof toastr !== 'undefined') {
+                        toastr.success('Nome atualizado com sucesso!');
+                    }
+                } else {
+                    inputNome.classList.add('is-invalid');
+                    inputError.textContent = data.message || 'Erro ao salvar.';
+                }
+            } catch (err) {
+                inputNome.classList.add('is-invalid');
+                inputError.textContent = 'Erro de conexão. Tente novamente.';
+                if (typeof toastr !== 'undefined') {
+                    toastr.error('Erro de conexão. Tente novamente.');
+                }
+            } finally {
+                btnSalvar.disabled = false;
+                btnSalvar.innerHTML = '<i class="bi bi-check2 me-1"></i>Salvar';
+            }
+        });
     });
 </script>
 @endonce

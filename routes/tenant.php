@@ -642,6 +642,9 @@ Route::middleware([
                 Route::get('entidades/{id}/historico', [EntidadeFinanceiraController::class, 'historico'])
                     ->name('entidades.historico');
 
+                Route::patch('entidades/{id}/renomear', [EntidadeFinanceiraController::class, 'renomear'])
+                    ->name('entidades.renomear');
+
                 Route::resource('car_insurance', CarInsuranceController::class);
 
                 Route::post('car_insurance/{id}/sell', [CarInsuranceController::class, 'sell'])

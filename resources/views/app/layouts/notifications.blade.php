@@ -396,7 +396,6 @@ function notificationsDropdown() {
             if (this._initialized) return;
             this._initialized = true;
 
-            console.log('[Notif:Dropdown] init() chamado');
 
             this.$nextTick(() => {
                 this.moveDrawerToBody();
@@ -413,22 +412,17 @@ function notificationsDropdown() {
             const drawer = document.getElementById('kt_notifications_drawer');
             if (drawer && drawer.parentElement !== document.body) {
                 document.body.appendChild(drawer);
-                console.log('[Notif:Dropdown] Drawer movido para body (sem initTree)');
             }
         },
 
         async loadNotifications() {
             if (this.isLoading) return;
             this.isLoading = true;
-            console.log('[Notif:Dropdown] loadNotifications() chamado');
             try {
                 const data = await this.apiFetch('/notifications');
-                console.log('[Notif:Dropdown] Resposta:', JSON.stringify(data).substring(0, 200));
                 this.notifications = data.notifications || [];
                 this.unreadCount = data.unread_count || 0;
-                console.log(`[Notif:Dropdown] ${this.notifications.length} notificações, ${this.unreadCount} não lidas`);
             } catch (e) {
-                console.error('[Notif:Dropdown] Erro ao carregar notificações:', e);
                 this.notifications = [];
             } finally {
                 this.isLoading = false;
@@ -455,11 +449,9 @@ function notificationsDropdown() {
         // Chamado pelo evento 'notifications-updated' (ex: boletim-financeiro.js)
         // Força reload das notificações e abre o popup
         async checkNewNotifications() {
-            console.log('[Notif:Dropdown] checkNewNotifications — evento recebido');
             try {
                 await this.loadNotifications();
                 this.openDropdown();
-                console.log('[Notif:Dropdown] Popup aberto via checkNewNotifications');
             } catch (e) {
                 console.error('[Notif:Dropdown] Erro em checkNewNotifications:', e);
             }
@@ -533,12 +525,9 @@ function notificationsDrawer() {
         open() {
             // Guard contra open() duplicado (Alpine.initTree criava instância dupla)
             if (this._opening) {
-                console.log('[Notif:Drawer] open() ignorado — já em execução');
                 return;
             }
             this._opening = true;
-            console.log('[Notif:Drawer] open() chamado');
-
             this.notifications = [];
             this.pagination.current_page = 0;
             this.hasMore = true;
@@ -554,7 +543,6 @@ function notificationsDrawer() {
                     this._drawerInstance = KTDrawer.getInstance(el);
                     if (this._drawerInstance) {
                         this._drawerInstance.show();
-                        console.log('[Notif:Drawer] KTDrawer.show() OK');
                     } else {
                         console.warn('[Notif:Drawer] KTDrawer.getInstance() retornou null');
                     }
@@ -565,7 +553,6 @@ function notificationsDrawer() {
         },
 
         async loadPage(page) {
-            console.log(`[Notif:Drawer] loadPage(${page}) — filter=${this.activeFilter}`);
 
             if (page === 1) {
                 this.isLoading = true;
@@ -576,12 +563,9 @@ function notificationsDrawer() {
 
             try {
                 const url = `/notifications/all?filter=${this.activeFilter}&page=${page}`;
-                console.log(`[Notif:Drawer] Fetching: ${url}`);
                 const data = await this.apiFetch(url);
-                console.log('[Notif:Drawer] Resposta da API:', JSON.stringify(data).substring(0, 300));
 
                 const items = data.notifications || [];
-                console.log(`[Notif:Drawer] ${items.length} items recebidos`);
 
                 if (page === 1) {
                     this.notifications = items;
@@ -593,15 +577,12 @@ function notificationsDrawer() {
                 this.pagination = data.pagination || { current_page: page, last_page: 1, total: items.length, has_more: false };
                 this.hasMore = this.pagination.has_more || false;
 
-                console.log(`[Notif:Drawer] Estado final — isLoading=${this.isLoading}, isLoadingMore=${this.isLoadingMore}, hasMore=${this.hasMore}, total=${this.notifications.length}`);
             } catch (e) {
-                console.error('[Notif:Drawer] Erro ao carregar notificações:', e);
                 if (page === 1) this.notifications = [];
                 this.hasMore = false;
             } finally {
                 this.isLoading = false;
                 this.isLoadingMore = false;
-                console.log(`[Notif:Drawer] Finally — isLoading=${this.isLoading}, isLoadingMore=${this.isLoadingMore}`);
             }
         },
 
