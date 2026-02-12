@@ -1111,6 +1111,18 @@ class ConciliacaoController extends Controller
                     'updated_at' => now(),
                 ]);
 
+                // Atualiza saldos: movimentação interna (apenas reclassificação de saldo)
+                // Não cria movimentação extra na conta destino - é só mudança de "gaveta" no mesmo banco
+                if ($tipo === 'saida') {
+                    // Dinheiro saiu da origem → entra no destino
+                    $entidadeOrigem->decrement('saldo_atual', $valor);
+                    $entidadeDestino->increment('saldo_atual', $valor);
+                } else {
+                    // Dinheiro entrou na origem ← saiu do destino
+                    $entidadeOrigem->increment('saldo_atual', $valor);
+                    $entidadeDestino->decrement('saldo_atual', $valor);
+                }
+
                 Log::info('Conciliação de transferência realizada com sucesso', [
                     'bank_statement_id' => $bankStatement->id,
                     'entidade_origem_id' => $entidadeOrigem->id,
