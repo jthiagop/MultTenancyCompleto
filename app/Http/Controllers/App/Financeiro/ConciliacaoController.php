@@ -835,14 +835,56 @@ class ConciliacaoController extends Controller
 
     /**
      * Processa os anexos enviados.
+     *
+     * Suporta dois formatos:
+     *  1) Formulário complexo: anexos[index][arquivo], anexos[index][link], etc.
+     *  2) Formulário simples (conciliação): campo "anexo" (singular) com um único arquivo.
      */
     private function processarAnexos(Request $request, TransacaoFinanceira $caixa)
     {
-        // Verifica se há anexos no formato anexos[index][arquivo] ou anexos[index][link]
-        if (!$request->has('anexos') || !is_array($request->input('anexos'))) {
-            return;
+        // ─── Formato 1: anexos[index][arquivo] (formulário completo) ───
+        if ($request->has('anexos') && is_array($request->input('anexos'))) {
+            $this->processarAnexosComplexos($request, $caixa);
         }
 
+        // ─── Formato 2: campo "anexo" simples (formulário de conciliação) ───
+        if ($request->hasFile('anexo')) {
+            $file = $request->file('anexo');
+
+            if ($file->isValid()) {
+                $nomeOriginal = $file->getClientOriginalName();
+                $anexoName = time() . '_' . $nomeOriginal;
+                $anexoPath = $file->storeAs('anexos', $anexoName, 'public');
+
+                ModulosAnexo::create([
+                    'anexavel_id'      => $caixa->id,
+                    'anexavel_type'    => TransacaoFinanceira::class,
+                    'forma_anexo'      => 'arquivo',
+                    'nome_arquivo'     => $nomeOriginal,
+                    'caminho_arquivo'  => $anexoPath,
+                    'tipo_arquivo'     => $file->getMimeType() ?? '',
+                    'extensao_arquivo' => $file->getClientOriginalExtension(),
+                    'mime_type'        => $file->getMimeType() ?? '',
+                    'tamanho_arquivo'  => $file->getSize(),
+                    'tipo_anexo'       => 'comprovante',
+                    'descricao'        => 'Anexo da conciliação bancária',
+                    'status'           => 'ativo',
+                    'data_upload'      => now(),
+                    'created_by'       => Auth::id(),
+                    'created_by_name'  => Auth::user()->name,
+                ]);
+            }
+        }
+
+        // Atualiza automaticamente o campo comprovacao_fiscal
+        $caixa->updateComprovacaoFiscal();
+    }
+
+    /**
+     * Processa anexos no formato complexo: anexos[index][arquivo/link].
+     */
+    private function processarAnexosComplexos(Request $request, TransacaoFinanceira $caixa)
+    {
         $anexos = $request->input('anexos');
         $allFiles = $request->allFiles();
 
@@ -909,9 +951,6 @@ class ConciliacaoController extends Controller
                 }
             }
         }
-
-        // Atualiza automaticamente o campo comprovacao_fiscal
-        $caixa->updateComprovacaoFiscal();
     }
 
     /**
