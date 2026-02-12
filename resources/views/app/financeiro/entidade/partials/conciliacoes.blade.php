@@ -74,9 +74,340 @@ $tabs = [
 
 </div>
 
+{{-- Drawer de Transferência (renderizado síncrono, fora do AJAX) --}}
+@if(isset($entidade))
+    <x-conciliacao.drawer-transferencia
+        :lps="$lps"
+        :centrosAtivos="$centrosAtivos"
+        :entidade="$entidade" />
+@endif
+
 @push('scripts')
     {{-- Carregar o handler de formulários UMA VEZ só --}}
     <script src="{{ url('/app/financeiro/entidade/conciliacoes-form-handler.js') }}"></script>
+
+    {{-- TransferenciaDrawer: Gerencia o drawer de transferência entre contas --}}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const DRAWER_ID = 'conciliacao_transferencia_drawer';
+            const FORM_ID = 'conciliacao_transferencia_form';
+            const CLOSE_ID = DRAWER_ID + '_close';
+            const SUBMIT_ID = DRAWER_ID + '_submit';
+            const ENTIDADE_ORIGEM_ID = {{ $entidade->id }};
+
+            const TransferenciaDrawer = {
+                drawerInstance: null,
+                currentConciliacaoId: null,
+                contasCarregadas: [], // Cache das contas para seleção automática
+
+                init() {
+                    this.bindEvents();
+                    this.loadContasDestino();
+                },
+
+                getDrawerInstance() {
+                    const el = document.getElementById(DRAWER_ID);
+                    if (!el) return null;
+
+                    if (!this.drawerInstance) {
+                        if (typeof KTDrawer !== 'undefined') {
+                            this.drawerInstance = KTDrawer.getInstance(el);
+                            if (!this.drawerInstance) {
+                                KTDrawer.createInstances();
+                                this.drawerInstance = KTDrawer.getInstance(el);
+                            }
+                            if (!this.drawerInstance) {
+                                try { this.drawerInstance = new KTDrawer(el); } catch(e) {}
+                            }
+                        }
+                    }
+                    return this.drawerInstance;
+                },
+
+                bindEvents() {
+                    // Botões de abrir (event delegation para funcionar com conteúdo AJAX)
+                    document.addEventListener('click', (e) => {
+                        const btn = e.target.closest('.btn-open-transferencia');
+                        if (!btn) return;
+
+                        this.currentConciliacaoId = btn.dataset.conciliacaoId;
+                        this.fillFromButton(btn);
+                        this.show();
+                    });
+
+                    // Cancelar
+                    const cancelBtn = document.getElementById(CLOSE_ID + '_cancel');
+                    if (cancelBtn) {
+                        cancelBtn.addEventListener('click', () => this.close());
+                    }
+
+                    // Submeter
+                    const submitBtn = document.getElementById(SUBMIT_ID);
+                    if (submitBtn) {
+                        submitBtn.addEventListener('click', () => this.submit());
+                    }
+                },
+
+                fillFromButton(btn) {
+                    const valor = parseFloat(btn.dataset.valor || 0);
+                    const data = btn.dataset.data || '';
+                    const memo = btn.dataset.memo || '';
+                    const checknum = btn.dataset.checknum || '';
+
+                    // Dados de movimentação interna (se detectada)
+                    const movInternaDestino = btn.dataset.movInternaDestino || '';
+                    const movInternaAccountType = btn.dataset.movInternaAccountType || '';
+                    const movInternaBanco = btn.dataset.movInternaBanco || '';
+
+                    document.getElementById('transf_bank_statement_id').value = this.currentConciliacaoId;
+                    document.getElementById('transf_checknum').value = checknum;
+                    document.getElementById('transf_valor').value = valor;
+                    document.getElementById('transf_data').value = data;
+
+                    const dataFormatada = data
+                        ? new Date(data + 'T12:00:00').toLocaleDateString('pt-BR')
+                        : '-';
+                    document.getElementById('transf_info_data').textContent = dataFormatada;
+                    document.getElementById('transf_info_memo').textContent = memo || '-';
+                    document.getElementById('transf_info_valor').textContent =
+                        'R$ ' + valor.toLocaleString('pt-BR', { minimumFractionDigits: 2 });
+
+                    const descEl = document.getElementById('transf_descricao');
+                    if (descEl) {
+                        // Se for movimentação interna, usar descrição mais clara
+                        if (movInternaDestino) {
+                            descEl.value = movInternaDestino + ': ' + memo;
+                        } else {
+                            descEl.value = memo ? 'Transferência: ' + memo : '';
+                        }
+                    }
+
+                    // Pré-selecionar conta destino se for movimentação interna
+                    if (movInternaAccountType && this.contasCarregadas.length > 0) {
+                        this.preSelectContaDestino(movInternaAccountType, movInternaBanco);
+                    }
+                },
+
+                /**
+                 * Pré-seleciona a conta destino baseada no tipo de conta e banco
+                 */
+                preSelectContaDestino(accountType, bancoCode) {
+                    const select = document.getElementById('transf_entidade_destino_id');
+                    if (!select || !this.contasCarregadas.length) return;
+
+                    // Prioridade 1: Mesmo banco + mesmo account_type
+                    let contaSugerida = null;
+                    if (bancoCode && accountType) {
+                        contaSugerida = this.contasCarregadas.find(c => 
+                            c.banco_code === bancoCode && c.account_type === accountType
+                        );
+                    }
+
+                    // Prioridade 2: Qualquer banco + mesmo account_type
+                    if (!contaSugerida && accountType) {
+                        contaSugerida = this.contasCarregadas.find(c => c.account_type === accountType);
+                    }
+
+                    // Prioridade 3: Mesmo banco + tipos de aplicação
+                    if (!contaSugerida && bancoCode) {
+                        contaSugerida = this.contasCarregadas.find(c => 
+                            c.banco_code === bancoCode && 
+                            ['aplicacao', 'poupanca', 'renda_fixa'].includes(c.account_type)
+                        );
+                    }
+
+                    if (contaSugerida) {
+                        select.value = contaSugerida.id;
+                        // Atualizar Select2 se disponível
+                        if (typeof $ !== 'undefined' && $(select).data('select2')) {
+                            $(select).val(contaSugerida.id).trigger('change');
+                        }
+                    }
+                },
+
+                async loadContasDestino() {
+                    try {
+                        const response = await fetch(
+                            '{{ route("conciliacao.contas-disponiveis") }}?entidade_origem_id=' + ENTIDADE_ORIGEM_ID,
+                            {
+                                headers: {
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                                    'Accept': 'application/json'
+                                }
+                            }
+                        );
+                        const result = await response.json();
+
+                        if (result.success && result.contas) {
+                            // Armazenar no cache para pré-seleção automática
+                            this.contasCarregadas = result.contas;
+
+                            const select = document.getElementById('transf_entidade_destino_id');
+                            if (!select) return;
+
+                            const firstOption = select.querySelector('option:first-child');
+                            select.innerHTML = '';
+                            if (firstOption) select.appendChild(firstOption);
+
+                            result.contas.forEach(conta => {
+                                const opt = document.createElement('option');
+                                opt.value = conta.id;
+                                opt.textContent = conta.nome + (conta.account_type_label ? ' (' + conta.account_type_label + ')' : '');
+                                // Armazenar dados extras para seleção automática
+                                opt.dataset.accountType = conta.account_type || '';
+                                opt.dataset.bancoCode = conta.banco_code || '';
+                                select.appendChild(opt);
+                            });
+
+                            if (typeof $ !== 'undefined' && $(select).data('select2')) {
+                                $(select).trigger('change');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Erro ao carregar contas de destino:', error);
+                    }
+                },
+
+                async submit() {
+                    const form = document.getElementById(FORM_ID);
+                    if (!form) return;
+
+                    const destino = document.getElementById('transf_entidade_destino_id');
+
+                    if (!destino?.value) {
+                        Swal.fire('Atenção', 'Selecione a conta de destino.', 'warning');
+                        return;
+                    }
+
+                    const submitBtn = document.getElementById(SUBMIT_ID);
+                    if (submitBtn) {
+                        submitBtn.disabled = true;
+                        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Processando...';
+                    }
+
+                    try {
+                        const formData = new FormData(form);
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const result = await response.json();
+
+                        if (result.success || response.ok) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Transferência realizada!',
+                                text: result.message || 'A transferência foi registrada com sucesso.',
+                                timer: 2500,
+                                showConfirmButton: false
+                            });
+                            this.close();
+                            this.resetForm();
+
+                            const row = document.querySelector('[data-conciliacao-id="' + this.currentConciliacaoId + '"]');
+                            if (row) {
+                                row.style.transition = 'opacity 0.4s ease';
+                                row.style.opacity = '0';
+                                setTimeout(() => row.remove(), 400);
+                            }
+                        } else {
+                            throw new Error(result.message || 'Erro ao processar transferência');
+                        }
+                    } catch (error) {
+                        Swal.fire('Erro', error.message || 'Erro ao processar a transferência.', 'error');
+                    } finally {
+                        if (submitBtn) {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<i class="fa-solid fa-arrow-right-arrow-left me-1"></i> Transferir';
+                        }
+                    }
+                },
+
+                show() {
+                    const instance = this.getDrawerInstance();
+                    if (instance) {
+                        instance.show();
+                    } else {
+                        const el = document.getElementById(DRAWER_ID);
+                        if (el) {
+                            el.classList.add('drawer-on');
+                            document.body.classList.add('drawer-on');
+                            let overlay = document.querySelector('.drawer-overlay');
+                            if (!overlay) {
+                                overlay = document.createElement('div');
+                                overlay.className = 'drawer-overlay';
+                                overlay.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.4);z-index:109;';
+                                overlay.addEventListener('click', () => this.close());
+                                document.body.appendChild(overlay);
+                            }
+                        }
+                    }
+
+                    // Inicializar Select2 dentro do drawer (após abrir)
+                    this.initSelect2();
+                },
+
+                /**
+                 * Inicializa o Select2 da conta destino dentro do drawer
+                 */
+                initSelect2() {
+                    const select = document.getElementById('transf_entidade_destino_id');
+                    if (!select) return;
+
+                    // Inicializar Select2 se não estiver inicializado
+                    if (typeof $ !== 'undefined' && typeof $.fn.select2 !== 'undefined') {
+                        if (!$(select).data('select2')) {
+                            $(select).select2({
+                                dropdownParent: $('#' + DRAWER_ID),
+                                placeholder: 'Selecione a conta de destino',
+                                allowClear: true,
+                                width: '100%'
+                            });
+                        }
+                    }
+                },
+
+                close() {
+                    const instance = this.getDrawerInstance();
+                    if (instance) {
+                        instance.hide();
+                    } else {
+                        const el = document.getElementById(DRAWER_ID);
+                        if (el) el.classList.remove('drawer-on');
+                        document.body.classList.remove('drawer-on');
+                        const overlay = document.querySelector('.drawer-overlay');
+                        if (overlay) overlay.remove();
+                    }
+                },
+
+                resetForm() {
+                    const form = document.getElementById(FORM_ID);
+                    if (form) form.reset();
+
+                    // Limpar Select2 da conta destino
+                    const selectDestino = document.getElementById('transf_entidade_destino_id');
+                    if (selectDestino && typeof $ !== 'undefined' && $(selectDestino).data('select2')) {
+                        $(selectDestino).val('').trigger('change');
+                    }
+
+                    const infoData = document.getElementById('transf_info_data');
+                    const infoMemo = document.getElementById('transf_info_memo');
+                    const infoValor = document.getElementById('transf_info_valor');
+                    if (infoData) infoData.textContent = '-';
+                    if (infoMemo) infoMemo.textContent = '-';
+                    if (infoValor) infoValor.textContent = 'R$ 0,00';
+                }
+            };
+
+            TransferenciaDrawer.init();
+            window.TransferenciaDrawer = TransferenciaDrawer;
+        });
+    </script>
 
     <script>
         /**

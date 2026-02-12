@@ -97,6 +97,17 @@
         }
     @endphp
     
+    @php
+        // Determinar o tipo da transação com base no amount do OFX
+        $tipoTransacao = $conciliacao->amount >= 0 ? 'entrada' : 'saida';
+
+        // Filtrar LPs compatíveis (mesmo tipo ou "ambos") e ordenar por descrição
+        $lpsFiltered = $lps
+            ->filter(fn($lp) => $lp->type === $tipoTransacao || $lp->type === 'ambos')
+            ->sortBy('description')
+            ->values();
+    @endphp
+
     <x-tenant-select name="lancamento_padrao_id" id="lancamento_padrao_id_{{ $conciliacao->id }}"
         label="Lançamento Padrão" placeholder="Selecione o Lançamento Padrão" required class="col-md-7 mb-3"
         :showSuggestionStar="$temSugestao"
@@ -110,10 +121,10 @@
                 </span>
             </div>
         @endif
-        @foreach ($lps as $lp)
+        @foreach ($lpsFiltered as $idx => $lp)
             <option value="{{ $lp->id }}" data-type="{{ $lp->type }}"
                 {{ $sugestao && isset($sugestao['lancamento_padrao_id']) && $sugestao['lancamento_padrao_id'] == $lp->id ? 'selected' : '' }}>
-                {{ $lp->description }}
+                {{ $idx + 1 }}. {{ $lp->description }}
             </option>
         @endforeach
     </x-tenant-select>

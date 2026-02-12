@@ -228,70 +228,70 @@
                         </div>
                     </div>
 
-                    <!-- Formulários Tabulados -->
+                    <!-- Formulário de Novo Lançamento -->
                     <div class="col-lg-7 col-xxl-6 mb-5 mb-xl-10">
-                        <div class="card  h-xl-100">
-                            <div class="">
-                                <!-- Abas -->
-                                <ul class="nav nav-tabs " data-conciliacao-id="{{ $conciliacao->id }}"
-                                    role="tablist">
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link active" data-bs-toggle="tab"
-                                            data-bs-target="#novo-lancamento-{{ $conciliacao->id }}-pane"
-                                            type="button" role="tab" aria-selected="true">
-                                            Novo lançamento
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" data-bs-toggle="tab"
-                                            data-bs-target="#transferencia-{{ $conciliacao->id }}-pane"
-                                            type="button" role="tab" aria-selected="false">
-                                            Transferência
-                                        </button>
-                                    </li>
-                                    <li class="nav-item" role="presentation">
-                                        <button class="nav-link" data-bs-toggle="tab"
-                                            data-bs-target="#buscar-criar-{{ $conciliacao->id }}-pane"
-                                            type="button" role="tab" aria-selected="false">
-                                            Buscar/Criar vários
-                                        </button>
-                                    </li>
-                                </ul>
-
-                                <!-- Conteúdo das Abas -->
-                                <div class="tab-content py-4 px-5 border">
-                                    <!-- Novo Lançamento -->
-                                    <div class="tab-pane fade show active"
-                                        id="novo-lancamento-{{ $conciliacao->id }}-pane" role="tabpanel">
-                                        <div
-                                            class="alert alert-dismissible bg-light-primary border border-primary border-dashed d-flex flex-column flex-sm-row p-5 mb-10">
-                                            <div class="d-flex flex-column">
-                                                <span class="fs-6 fw-bold">Lançamento não encontrado automaticamente:</span> 
-                                                <span class="fs-6">Crie um novo ao alimentar o formulário e clicando no botão conciliar.</span>
-                                            </div>
-                                            <button type="button" class="btn-close position-absolute position-sm-relative m-2 m-sm-0 top-0 end-0 ms-sm-auto"
-                                                data-bs-dismiss="alert"></button>
-                                        </div>
-
-                                        <x-conciliacao.novo-lancamento-form :conciliacao="$conciliacao"
-                                            :transacaoSugerida="$transacaoSugerida"
-                                            :centrosAtivos="$centrosAtivos" :lps="$lps"
-                                            :formasPagamento="$formasPagamento" :entidade="$entidade" />
-                                    </div>
-
-                                    <!-- Transferência -->
-                                    <div class="tab-pane fade"
-                                        id="transferencia-{{ $conciliacao->id }}-pane" role="tabpanel">
-                                        <p class="text-muted">Formulário para transferência...</p>
-                                    </div>
-
-                                    <!-- Buscar/Criar Vários -->
-                                    <div class="tab-pane fade" id="buscar-criar-{{ $conciliacao->id }}-pane"
-                                        role="tabpanel">
-                                        <p class="text-muted">Formulário para buscar/criar múltiplos lançamentos...</p>
-                                    </div>
+                        <div class="card shadow-sm h-xl-100 border border-gray-500 border-active active">
+                            <!--begin::Header com botões de ação-->
+                            <div class="card-header">
+                                <div class="d-flex align-items-center gap-3 w-100 py-2">
+                                    <span class="btn btn-sm btn-primary fw-bold pe-none">
+                                        <i class="fa-solid fa-plus fs-7 me-1"></i> Novo lançamento
+                                    </span>
+                                    <button type="button"
+                                        class="btn btn-sm btn-light-primary fw-bold btn-open-transferencia"
+                                        data-conciliacao-id="{{ $conciliacao->id }}"
+                                        data-entidade-id="{{ $entidade->id }}"
+                                        data-valor="{{ abs($conciliacao->amount) }}"
+                                        data-data="{{ \Carbon\Carbon::parse($conciliacao->dtposted)->format('Y-m-d') }}"
+                                        data-memo="{{ $conciliacao->memo }}"
+                                        data-checknum="{{ $conciliacao->checknum ?? '' }}">
+                                        <i class="fa-solid fa-arrow-right-arrow-left fs-7 me-1"></i> Nova transferência
+                                    </button>
                                 </div>
                             </div>
+                            <!--end::Header-->
+
+                            <!--begin::Body - Formulário direto-->
+                            <div class="card-body py-4 px-5">
+                                {{-- Alerta de Movimentação Interna Detectada --}}
+                                @if ($conciliacao->movimentacao_interna ?? false)
+                                    @php $movInt = $conciliacao->movimentacao_interna; @endphp
+                                    <div class="alert bg-light-{{ $movInt['cor'] }} border border-{{ $movInt['cor'] }} border-dashed d-flex align-items-center p-4 mb-5">
+                                        <i class="fa-solid fa-building-columns fs-2 text-{{ $movInt['cor'] }} me-3"></i>
+                                        <div class="flex-grow-1">
+                                            <span class="fw-bold text-gray-800 d-block mb-1">
+                                                🏦 Movimentação interna detectada
+                                            </span>
+                                            <span class="text-gray-600 fs-7">
+                                                {{ $movInt['acao_label'] }}
+                                                — Esta movimentação parece ser uma 
+                                                <strong>{{ $movInt['tipo'] === 'aplicacao' ? 'aplicação automática' : 'resgate' }}</strong>
+                                                para <strong>{{ $movInt['destino'] }}</strong>.
+                                            </span>
+                                        </div>
+                                        <button type="button"
+                                            class="btn btn-sm btn-{{ $movInt['cor'] }} fw-bold btn-open-transferencia ms-3"
+                                            data-conciliacao-id="{{ $conciliacao->id }}"
+                                            data-entidade-id="{{ $entidade->id }}"
+                                            data-valor="{{ abs($conciliacao->amount) }}"
+                                            data-data="{{ \Carbon\Carbon::parse($conciliacao->dtposted)->format('Y-m-d') }}"
+                                            data-memo="{{ $conciliacao->memo }}"
+                                            data-checknum="{{ $conciliacao->checknum ?? '' }}"
+                                            data-mov-interna-destino="{{ $movInt['destino'] }}"
+                                            data-mov-interna-account-type="{{ $movInt['account_type'] ?? '' }}"
+                                            data-mov-interna-banco="{{ $movInt['banco'] ?? '' }}">
+                                            <i class="fa-solid fa-arrow-right-arrow-left fs-7 me-1"></i>
+                                            Registrar como Transferência
+                                        </button>
+                                    </div>
+                                @endif
+
+                                <x-conciliacao.novo-lancamento-form :conciliacao="$conciliacao"
+                                    :transacaoSugerida="$transacaoSugerida"
+                                    :centrosAtivos="$centrosAtivos" :lps="$lps"
+                                    :formasPagamento="$formasPagamento" :entidade="$entidade" />
+                            </div>
+                            <!--end::Body-->
                         </div>
                     </div>
                 @endif

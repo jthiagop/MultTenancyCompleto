@@ -939,6 +939,7 @@ class ConciliacaoController extends Controller
             }
 
             $contas = $query->orderBy('nome', 'asc')
+                ->with('bank:id,compe_code,name') // Eager load banco para performance
                 ->get()
                 ->map(function ($conta) {
                     $accountTypeLabels = [
@@ -956,6 +957,8 @@ class ConciliacaoController extends Controller
                         'account_type' => $conta->account_type,
                         'account_type_label' => $conta->account_type ? ($accountTypeLabels[$conta->account_type] ?? ucfirst($conta->account_type)) : null,
                         'saldo_atual' => $conta->saldo_atual,
+                        'banco_code' => $conta->bank?->compe_code, // Código do banco para matching de mov. interna
+                        'banco_nome' => $conta->bank?->name,
                     ];
                 });
 
@@ -987,19 +990,21 @@ class ConciliacaoController extends Controller
 
     /**
      * Processa a transferência entre contas bancárias
+     * 
+     * Simplificado: não exige LP nem centro de custo para movimentações internas
      */
     public function transferir(Request $request)
     {
         return DB::transaction(function () use ($request) {
             try {
-                // Validação dos dados
+                // Validação dos dados (LP e centro de custo são opcionais)
                 $validated = $request->validate([
                     'bank_statement_id' => 'required|exists:bank_statements,id',
                     'entidade_origem_id' => 'required|exists:entidades_financeiras,id',
                     'entidade_destino_id' => 'required|exists:entidades_financeiras,id|different:entidade_origem_id',
                     'valor' => 'required|numeric|min:0.01',
                     'data_transferencia' => 'required|date',
-                    'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
+                    'lancamento_padrao_id' => 'nullable|exists:lancamento_padraos,id',
                     'cost_center_id' => 'nullable|exists:cost_centers,id',
                     'descricao' => 'nullable|string|max:500',
                     'checknum' => 'nullable|string|max:100',
@@ -1024,21 +1029,31 @@ class ConciliacaoController extends Controller
                 // amount negativo = pagamento (saída), positivo = recebimento (entrada)
                 $tipo = $bankStatement->amount < 0 ? 'saida' : 'entrada';
 
-                // Busca o lançamento padrão para obter conta_debito_id e conta_credito_id
-                $lancamentoPadrao = LancamentoPadrao::find($validated['lancamento_padrao_id']);
+                // Busca o lançamento padrão se fornecido
+                $lancamentoPadrao = isset($validated['lancamento_padrao_id']) 
+                    ? LancamentoPadrao::find($validated['lancamento_padrao_id'])
+                    : null;
 
                 // Prepara os dados para criar a transação (apenas da conta de origem - conciliação)
                 // Converte valor para DECIMAL usando Money
                 $moneyValor = Money::fromDatabase($valor);
+
+                // Transferência já foi realizada, então a situação é PAGO (saída) ou RECEBIDO (entrada)
+                $situacao = $tipo === 'saida' 
+                    ? \App\Enums\SituacaoTransacao::PAGO 
+                    : \App\Enums\SituacaoTransacao::RECEBIDO;
                 
                 $validatedData = [
                     'company_id' => $companyId,
                     'data_competencia' => $validated['data_transferencia'],
+                    'data_vencimento' => $validated['data_transferencia'], // Mesma data
+                    'data_pagamento' => $validated['data_transferencia'],  // Já foi pago/recebido
                     'entidade_id' => $entidadeOrigem->id,
                     'tipo' => $tipo,
                     'valor' => $moneyValor->toDatabase(), // TransacaoFinanceira usa DECIMAL
+                    'situacao' => $situacao, // Pago ou Recebido (transferência já realizada)
                     'descricao' => $validated['descricao'] ?? 'Transferência para ' . $entidadeDestino->nome,
-                    'lancamento_padrao_id' => $validated['lancamento_padrao_id'],
+                    'lancamento_padrao_id' => $validated['lancamento_padrao_id'] ?? null,
                     'cost_center_id' => $validated['cost_center_id'] ?? null,
                     'origem' => 'transferencia',
                     'historico_complementar' => 'Transferência automática entre contas bancárias - Conta destino: ' . $entidadeDestino->nome,
@@ -1104,11 +1119,17 @@ class ConciliacaoController extends Controller
                     'transacao_id' => $transacao->id,
                 ]);
 
-                return redirect()->back()->with('success', 'Transferência conciliada com sucesso!');
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Transferência conciliada com sucesso!',
+                    'transacao_id' => $transacao->id,
+                ]);
             } catch (\Illuminate\Validation\ValidationException $e) {
-                return redirect()->back()
-                    ->withErrors($e->errors())
-                    ->withInput();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro de validação',
+                    'errors' => $e->errors(),
+                ], 422);
             } catch (\Exception $e) {
                 Log::error('Erro ao processar conciliação de transferência', [
                     'error' => $e->getMessage(),
@@ -1116,9 +1137,10 @@ class ConciliacaoController extends Controller
                     'request' => $request->all(),
                 ]);
 
-                return redirect()->back()
-                    ->with('error', 'Erro ao processar conciliação. Tente novamente.')
-                    ->withInput();
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao processar conciliação: ' . $e->getMessage(),
+                ], 500);
             }
         });
     }

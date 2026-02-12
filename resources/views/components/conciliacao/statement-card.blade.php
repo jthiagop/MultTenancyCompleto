@@ -1,7 +1,7 @@
 <!--begin::Col-->
 <div class="col-lg-4 col-xxl-5 mb-5 mb-xl-10">
     <!--begin::Statement Card widget 8-->
-    <div class="card card-bordered h-lg-100">
+    <div class="card card-bordered h-lg-100 border border-gray-500 border-active active">
         <div class="card card-bordered flex-row-fluid overflow-hidden border border-hover-primary">
             <!-- Card Header: Data + Valor -->
             <div class="card-header rounded d-flex align-items-center justify-content-between">
@@ -47,6 +47,18 @@
                             </span>
                         @endif
                     </p>
+
+                    {{-- Badge de Movimentação Interna Detectada --}}
+                    @if ($conciliacao->movimentacao_interna ?? false)
+                        @php $movInt = $conciliacao->movimentacao_interna; @endphp
+                        <div class="mb-3">
+                            <span class="badge badge-light-{{ $movInt['cor'] }} fs-8 px-3 py-2">
+                                <i class="fa-solid fa-building-columns fs-9 me-1"></i>
+                                <i class="fa-solid {{ $movInt['icone'] }} fs-9 me-1"></i>
+                                {{ $movInt['acao_label'] }}
+                            </span>
+                        </div>
+                    @endif
                 </div>
                 
                 <div>
