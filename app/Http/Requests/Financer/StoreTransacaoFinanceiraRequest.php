@@ -131,7 +131,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'multa' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
             'desconto' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
             'valor_a_pagar' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
-            'situacao' => 'nullable|in:em_aberto,desconsiderado,atrasado,pago_parcial,pago,previsto',
+            'situacao' => 'nullable|in:em_aberto,desconsiderado,atrasado,pago_parcial,pago,recebido,previsto,parcelado',
             'agendado' => 'nullable|boolean',
 
             // Validações de campos de pagamento (para lançamentos fracionados)

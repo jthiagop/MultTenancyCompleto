@@ -2922,23 +2922,8 @@ class BancoController extends Controller
     {
         // 1) Localiza a movimentação associada via relacionamento polimórfico
         $movimentacao = $transacao->movimentacao;
-        
-        if (!$movimentacao) {
-            throw new \Exception('Movimentação não encontrada para esta transação');
-        }
 
-        // 2) Localiza a entidade financeira associada
-        $entidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
-
-        // 3) Ajusta o saldo da entidade financeira
-        if ($movimentacao->tipo === 'entrada') {
-            $entidade->saldo_atual -= $movimentacao->valor;
-        } else {
-            $entidade->saldo_atual += $movimentacao->valor;
-        }
-        $entidade->save();
-
-        // 4) Excluir anexos associados (se houver)
+        // 2) Excluir anexos associados (se houver)
         $anexos = ModulosAnexo::where('anexavel_id', $transacao->id)
             ->where('anexavel_type', TransacaoFinanceira::class)
             ->get();
@@ -2950,17 +2935,19 @@ class BancoController extends Controller
             $anexo->delete();
         }
 
-        // 5) Remove from pivot table if it's part of a recurrence
+        // 3) Remove from pivot table if it's part of a recurrence
         if ($transacao->recorrencia_id) {
             \DB::table('recorrencia_transacoes')
                 ->where('transacao_id', $transacao->id)
                 ->delete();
         }
 
-        // 6) Exclui a movimentação associada
-        $movimentacao->delete();
+        // 4) Exclui a movimentação associada (Observer reverte saldo automaticamente)
+        if ($movimentacao) {
+            $movimentacao->delete();
+        }
 
-        // 7) Exclui a transação financeira
+        // 5) Exclui a transação financeira
         $transacao->delete();
 
         // 8) Return success response
@@ -2987,32 +2974,21 @@ class BancoController extends Controller
         
         $deletedCount = 0;
         foreach ($transacoes as $trans) {
-            // Delete each transaction following same logic
-            // 🔗 Usa o relacionamento polimórfico ao invés de movimentacao_id
+            // Delete attachments
+            $anexos = ModulosAnexo::where('anexavel_id', $trans->id)
+                ->where('anexavel_type', TransacaoFinanceira::class)
+                ->get();
+                
+            foreach ($anexos as $anexo) {
+                if (Storage::disk('public')->exists($anexo->caminho_arquivo)) {
+                    Storage::disk('public')->delete($anexo->caminho_arquivo);
+                }
+                $anexo->delete();
+            }
+            
+            // Exclui movimentação (Observer reverte saldo automaticamente)
             $movimentacao = $trans->movimentacao;
             if ($movimentacao) {
-                $entidade = EntidadeFinanceira::find($movimentacao->entidade_id);
-                if ($entidade) {
-                    if ($movimentacao->tipo === 'entrada') {
-                        $entidade->saldo_atual -= $movimentacao->valor;
-                    } else {
-                        $entidade->saldo_atual += $movimentacao->valor;
-                    }
-                    $entidade->save();
-                }
-                
-                // Delete attachments
-                $anexos = ModulosAnexo::where('anexavel_id', $trans->id)
-                    ->where('anexavel_type', TransacaoFinanceira::class)
-                    ->get();
-                    
-                foreach ($anexos as $anexo) {
-                    if (Storage::disk('public')->exists($anexo->caminho_arquivo)) {
-                        Storage::disk('public')->delete($anexo->caminho_arquivo);
-                    }
-                    $anexo->delete();
-                }
-                
                 $movimentacao->delete();
             }
             

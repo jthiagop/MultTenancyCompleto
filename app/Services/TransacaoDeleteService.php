@@ -221,53 +221,20 @@ class TransacaoDeleteService
 
     /**
      * Reverter o saldo da entidade financeira
+     * 
+     * @deprecated Saldo agora é gerenciado pelo MovimentacaoObserver.
+     * A reversão acontece automaticamente quando cleanupMovimentacoes() deleta
+     * as movimentações (o Observer::deleted() faz o decrement/increment).
+     * Este método era a causa de dupla/tripla contagem.
      */
     private function revertBalance(TransacaoFinanceira $transacao): void
     {
-        // Usar entidade_id ao invés de entidade_financeira_id
-        $entidadeId = $transacao->entidade_id ?? $transacao->entidade_financeira_id;
-        
-        if (!$entidadeId) {
-            return;
-        }
-
-        $entidade = EntidadeFinanceira::find($entidadeId);
-        if (!$entidade) {
-            return;
-        }
-
-        // Lógica de reversão do saldo baseada no tipo de transação
-        // Usar saldo_atual ao invés de saldo
-        $saldoAnterior = $entidade->saldo_atual ?? $entidade->saldo;
-        
-        if ($transacao->tipo === 'entrada') {
-            // Se era entrada, subtrair do saldo atual
-            if (isset($entidade->saldo_atual)) {
-                $entidade->saldo_atual -= $transacao->valor;
-            } else {
-                $entidade->saldo -= $transacao->valor;
-            }
-        } elseif ($transacao->tipo === 'saida') {
-            // Se era saída, somar ao saldo atual
-            if (isset($entidade->saldo_atual)) {
-                $entidade->saldo_atual += $transacao->valor;
-            } else {
-                $entidade->saldo += $transacao->valor;
-            }
-        }
-
-        $entidade->save();
-
-        $novoSaldo = $entidade->saldo_atual ?? $entidade->saldo;
-
-        Log::info('Saldo da entidade revertido', [
-            'entidade_id' => $entidade->id,
+        // NÃO FAZ NADA — saldo revertido automaticamente pelo MovimentacaoObserver
+        // quando cleanupMovimentacoes() deleta as movimentações.
+        Log::info('[TransacaoDeleteService::revertBalance] Método deprecated — Observer gerencia saldo', [
             'transacao_id' => $transacao->id,
-            'tipo_transacao' => $transacao->tipo,
-            'valor_revertido' => $transacao->valor,
-            'saldo_anterior' => $saldoAnterior,
-            'novo_saldo' => $novoSaldo,
-            'tenant_id' => tenancy()->tenant->id ?? null
+            'tipo' => $transacao->tipo,
+            'valor' => $transacao->valor,
         ]);
     }
 

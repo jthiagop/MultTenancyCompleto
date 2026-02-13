@@ -1016,42 +1016,34 @@ class CaixaController extends Controller
 
     /**
      * Reverte o saldo da entidade para antes da atualização.
-     *
-     * @param \App\Models\Movimentacao $movimentacao
-     * @return void
+     * 
+     * @deprecated Saldo agora é gerenciado pelo MovimentacaoObserver.
+     * Este método NÃO deve mais ser chamado, pois causaria dupla contagem.
      */
     private function reverterSaldoEntidade($movimentacao)
     {
-        $entidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
-
-        if ($movimentacao->tipo === 'entrada') {
-            $entidade->saldo_atual -= $movimentacao->valor;
-        } else {
-            $entidade->saldo_atual += $movimentacao->valor;
-        }
-
-        $entidade->save();
+        // NÃO FAZ NADA — saldo revertido automaticamente pelo MovimentacaoObserver
+        // ao deletar ou atualizar a movimentação.
+        Log::info('[reverterSaldoEntidade] Método deprecated — Observer gerencia saldo', [
+            'movimentacao_id' => $movimentacao->id ?? null,
+        ]);
     }
 
     /**
      * Aplica o novo saldo na entidade financeira.
      *
-     * @param int $entidadeId
-     * @param string $tipo
-     * @param float $valor
-     * @return void
+     * @deprecated Saldo agora é gerenciado pelo MovimentacaoObserver.
+     * Este método NÃO deve mais ser chamado, pois causaria dupla contagem.
      */
     private function aplicarSaldoEntidade($entidadeId, $tipo, $valor)
     {
-        $entidade = EntidadeFinanceira::findOrFail($entidadeId);
-
-        if ($tipo === 'entrada') {
-            $entidade->saldo_atual += $valor;
-        } else {
-            $entidade->saldo_atual -= $valor;
-        }
-
-        $entidade->save();
+        // NÃO FAZ NADA — saldo aplicado automaticamente pelo MovimentacaoObserver
+        // ao criar ou atualizar a movimentação.
+        Log::info('[aplicarSaldoEntidade] Método deprecated — Observer gerencia saldo', [
+            'entidade_id' => $entidadeId,
+            'tipo' => $tipo,
+            'valor' => $valor,
+        ]);
     }
 
     /**
@@ -1063,24 +1055,13 @@ class CaixaController extends Controller
             // 1) Localiza a transação financeira pelo ID
             $transacao = TransacaoFinanceira::findOrFail($id);
 
-            // 2) Localiza a movimentação associada
-            $movimentacao = Movimentacao::findOrFail($transacao->movimentacao_id);
-
-            // 3) Localiza a entidade financeira associada
-            $entidade = EntidadeFinanceira::findOrFail($movimentacao->entidade_id);
-
-            // 4) Ajusta o saldo da entidade financeira
-            // Obs.: aqui deve subtrair ou somar usando $movimentacao->valor (não $entidade->valor)
-            if ($movimentacao->tipo === 'entrada') {
-                // Se a movimentação era uma entrada, subtrai o valor do saldo atual
-                $entidade->saldo_atual -= $transacao->valor;
-            } else {
-                // Se a movimentação era uma saída, adiciona o valor ao saldo atual
-                $entidade->saldo_atual += $transacao->valor;
+            // 2) Localiza a movimentação associada (polimórfico OU legado)
+            $movimentacao = $transacao->movimentacao;
+            if (!$movimentacao && $transacao->movimentacao_id) {
+                $movimentacao = Movimentacao::find($transacao->movimentacao_id);
             }
-            $entidade->save();
 
-            // 5) Excluir anexos associados (se houver)
+            // 3) Excluir anexos associados (se houver)
             $anexos = ModulosAnexo::where('anexavel_id', $transacao->id)
                 ->where('anexavel_type', TransacaoFinanceira::class)
                 ->get();
@@ -1094,10 +1075,12 @@ class CaixaController extends Controller
                 $anexo->delete();
             }
 
-            // 6) Exclui a movimentação associada
-            $movimentacao->delete();
+            // 4) Exclui a movimentação associada (Observer reverte saldo automaticamente)
+            if ($movimentacao) {
+                $movimentacao->delete();
+            }
 
-            // 7) Exclui a transação financeira
+            // 5) Exclui a transação financeira
             $transacao->delete();
 
             // 8) Mensagem de sucesso e redirecionamento

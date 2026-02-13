@@ -929,21 +929,9 @@ class TransacaoFinanceiraService
             // Cria transação para a parcela
             $transacaoParcela = TransacaoFinanceira::create($dadosParcela);
             
-            // Cria movimentação para a parcela
-            $transacaoParcela->movimentacao()->create([
-                'entidade_id' => $entidadeIdParcela,
-                'tipo' => $data['tipo'],
-                'valor' => $dadosParcela['valor'],
-                'data' => $data['data_competencia'],
-                'descricao' => $dadosParcela['descricao'],
-                'company_id' => $data['company_id'],
-                'created_by' => $data['created_by'],
-                'created_by_name' => $data['created_by_name'],
-                'updated_by' => $data['updated_by'],
-                'updated_by_name' => $data['updated_by_name'],
-                'lancamento_padrao_id' => $dadosParcela['lancamento_padrao_id'],
-                'data_competencia' => $data['data_competencia'],
-            ]);
+            // NÃO cria movimentação — parcelas nascem como em_aberto e não devem impactar saldo.
+            // A movimentação será criada quando o usuário marcar a parcela como pago/recebido
+            // via registrarBaixa(), que chamará movimentacao()->create() e o Observer cuidará do saldo.
             
             // Guarda referência da primeira parcela
             if ($index === 0) {

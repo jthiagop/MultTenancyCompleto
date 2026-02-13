@@ -1109,12 +1109,32 @@ class ConciliacaoController extends Controller
                     $validatedData['conta_credito_id'] = $lancamentoPadrao->conta_credito_id ?? null;
                 }
 
-                // Cria movimentação financeira
+                // Cria movimentação financeira na ORIGEM
                 $movimentacao = $this->movimentacao($validatedData);
                 $validatedData['movimentacao_id'] = $movimentacao->id;
 
-                // Cria a transação financeira (apenas uma - da conta de origem)
+                // Cria a transação financeira (da conta de origem)
                 $transacao = TransacaoFinanceira::create($validatedData);
+
+                // ✅ Cria movimentação financeira no DESTINO (tipo invertido)
+                // Se saiu da origem (saída), entra no destino (entrada) e vice-versa
+                $tipoDestino = $tipo === 'saida' ? 'entrada' : 'saida';
+                $situacaoDestino = $tipoDestino === 'saida'
+                    ? \App\Enums\SituacaoTransacao::PAGO
+                    : \App\Enums\SituacaoTransacao::RECEBIDO;
+
+                $dadosDestino = $validatedData;
+                $dadosDestino['entidade_id'] = $entidadeDestino->id;
+                $dadosDestino['tipo'] = $tipoDestino;
+                $dadosDestino['situacao'] = $situacaoDestino;
+                $dadosDestino['descricao'] = $validated['descricao'] ?? 'Transferência de ' . $entidadeOrigem->nome;
+                $dadosDestino['historico_complementar'] = 'Transferência automática entre contas bancárias - Conta origem: ' . $entidadeOrigem->nome;
+
+                $movimentacaoDestino = $this->movimentacao($dadosDestino);
+                $dadosDestino['movimentacao_id'] = $movimentacaoDestino->id;
+
+                // Cria a transação financeira no destino
+                $transacaoDestino = TransacaoFinanceira::create($dadosDestino);
 
                 // Processa lançamentos padrão
                 $this->processarLancamentoPadrao($validatedData);

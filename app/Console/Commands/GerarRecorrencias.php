@@ -87,14 +87,6 @@ class GerarRecorrencias extends Command
                             continue;
                         }
 
-                        $movimentacaoOriginal = $transacaoOriginal->movimentacao;
-                        if (!$movimentacaoOriginal) {
-                            $this->error("  Recorrência #{$recorrenciaId}: Movimentação original não encontrada.");
-                            DB::rollBack();
-                            $totalErros++;
-                            continue;
-                        }
-
                         // Verifica se já completou todas as ocorrências
                         $ocorrenciasGeradas = DB::table('recorrencia_transacoes')
                             ->where('recorrencia_id', $recorrenciaId)
@@ -129,34 +121,19 @@ class GerarRecorrencias extends Command
                             continue;
                         }
 
-                        // Cria nova movimentação
-                        $novaMovimentacao = Movimentacao::create([
-                            'entidade_id' => $movimentacaoOriginal->entidade_id,
-                            'tipo' => $movimentacaoOriginal->tipo,
-                            'valor' => $movimentacaoOriginal->valor,
-                            'data' => $dataGeracao->format('Y-m-d'),
-                            'descricao' => $movimentacaoOriginal->descricao,
-                            'company_id' => $recorrencia->company_id,
-                            'created_by' => $movimentacaoOriginal->created_by,
-                            'created_by_name' => $movimentacaoOriginal->created_by_name ?? 'Sistema',
-                            'updated_by' => $movimentacaoOriginal->updated_by,
-                            'updated_by_name' => $movimentacaoOriginal->updated_by_name ?? 'Sistema',
-                            'lancamento_padrao_id' => $movimentacaoOriginal->lancamento_padrao_id,
-                            'conta_debito_id' => $movimentacaoOriginal->conta_debito_id,
-                            'conta_credito_id' => $movimentacaoOriginal->conta_credito_id,
-                            'data_competencia' => $dataGeracao->format('Y-m-d'),
-                        ]);
-
-                        // Cria nova transação financeira
+                        // Cria nova transação financeira (nasce como em_aberto — previsão futura)
+                        // A movimentação (impacto no saldo) só será criada quando o usuário
+                        // marcar como pago/recebido via registrarBaixa()
                         $novaTransacao = TransacaoFinanceira::create([
                             'company_id' => $transacaoOriginal->company_id,
                             'data_competencia' => $dataGeracao->format('Y-m-d'),
+                            'data_vencimento' => $dataGeracao->format('Y-m-d'),
                             'entidade_id' => $transacaoOriginal->entidade_id,
                             'tipo' => $transacaoOriginal->tipo,
                             'valor' => $transacaoOriginal->valor,
                             'descricao' => $transacaoOriginal->descricao,
-                            'movimentacao_id' => $novaMovimentacao->id,
-                            'recorrencia_id' => $recorrenciaId, // Vincula a configuração de recorrência
+                            'situacao' => 'em_aberto', // Recorrência nasce como em_aberto
+                            'recorrencia_id' => $recorrenciaId,
                             'centro' => $transacaoOriginal->centro,
                             'tipo_documento' => $transacaoOriginal->tipo_documento,
                             'numero_documento' => $transacaoOriginal->numero_documento,
@@ -165,18 +142,21 @@ class GerarRecorrencias extends Command
                             'comprovacao_fiscal' => $transacaoOriginal->comprovacao_fiscal,
                             'lancamento_padrao_id' => $transacaoOriginal->lancamento_padrao_id,
                             'cost_center_id' => $transacaoOriginal->cost_center_id,
+                            'valor_pago' => 0,
+                            'juros' => 0,
+                            'multa' => 0,
+                            'desconto' => 0,
                             'created_by' => $transacaoOriginal->created_by,
                             'created_by_name' => $transacaoOriginal->created_by_name ?? 'Sistema',
                             'updated_by' => $transacaoOriginal->updated_by,
                             'updated_by_name' => $transacaoOriginal->updated_by_name ?? 'Sistema',
                         ]);
 
-                        // Registra na tabela pivot
+                        // Registra na tabela pivot (sem movimentacao_id — será preenchido na baixa)
                         $numeroOcorrencia = $ocorrenciasGeradas + 1;
                         DB::table('recorrencia_transacoes')->insert([
                             'recorrencia_id' => $recorrenciaId,
                             'transacao_financeira_id' => $novaTransacao->id,
-                            'movimentacao_id' => $novaMovimentacao->id,
                             'data_geracao' => $dataGeracao->format('Y-m-d'),
                             'numero_ocorrencia' => $numeroOcorrencia,
                             'created_at' => now(),
