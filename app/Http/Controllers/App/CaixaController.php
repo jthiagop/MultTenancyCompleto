@@ -1327,7 +1327,8 @@ class CaixaController extends Controller
                 'modulos_anexos',
                 'createdBy',
                 'updatedBy',
-                'recibo.address' // Carregar recibo com endereço
+                'recibo.address', // Carregar recibo com endereço
+                'parceiro.address', // Carregar parceiro com endereço para recibo
             ])
             ->where('company_id', $companyId)
             ->findOrFail($id);
@@ -1363,6 +1364,23 @@ class CaixaController extends Controller
                     'complemento' => $transacao->recibo->address->complemento,
                     'cidade' => $transacao->recibo->address->cidade,
                     'uf' => $transacao->recibo->address->uf,
+                ] : null
+            ] : null,
+            'parceiro' => $transacao->parceiro ? [
+                'id' => $transacao->parceiro->id,
+                'nome' => $transacao->parceiro->nome,
+                'nome_fantasia' => $transacao->parceiro->nome_fantasia,
+                'cpf_cnpj' => $transacao->parceiro->documento,
+                'telefone' => $transacao->parceiro->telefone,
+                'email' => $transacao->parceiro->email,
+                'address' => $transacao->parceiro->address ? [
+                    'cep' => $transacao->parceiro->address->cep,
+                    'rua' => $transacao->parceiro->address->rua,
+                    'numero' => $transacao->parceiro->address->numero,
+                    'bairro' => $transacao->parceiro->address->bairro,
+                    'complemento' => $transacao->parceiro->address->complemento,
+                    'cidade' => $transacao->parceiro->address->cidade,
+                    'uf' => $transacao->parceiro->address->uf,
                 ] : null
             ] : null,
             'anexos' => $transacao->modulos_anexos->map(function($anexo) {

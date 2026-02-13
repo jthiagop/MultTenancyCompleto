@@ -14,13 +14,7 @@ class Recibo extends Model
         'tipo_transacao',
         'cpf_cnpj',
         'nome',
-
         'referente',
-        'data_emissao',
-        'numero_recibo',
-        'endereco',
-        'cidade',
-        'estado',
     ];
 
     public function transacao()
