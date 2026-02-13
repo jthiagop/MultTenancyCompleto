@@ -424,9 +424,17 @@ class CaixaController extends Controller
         // Processa agendado (checkbox)
         $validatedData['agendado'] = $request->has('agendado') && $request->input('agendado') ? true : false;
         
-        // Situação será calculada automaticamente pelo modelo, mas se fornecida manualmente, mantém
+        // Situação: verifica checkboxes pago/recebido
         if (!isset($validatedData['situacao']) || !$validatedData['situacao']) {
-            $validatedData['situacao'] = 'em_aberto'; // Será recalculado pelo modelo se necessário
+            $tipo = $validatedData['tipo'] ?? 'saida';
+            
+            if ($tipo === 'entrada' && $request->has('recebido') && $request->input('recebido') && $request->input('recebido') !== '0') {
+                $validatedData['situacao'] = 'recebido';
+            } elseif ($tipo === 'saida' && $request->has('pago') && $request->input('pago') && $request->input('pago') !== '0') {
+                $validatedData['situacao'] = 'pago';
+            } else {
+                $validatedData['situacao'] = 'em_aberto';
+            }
         }
 
         // Adiciona informações padrão
