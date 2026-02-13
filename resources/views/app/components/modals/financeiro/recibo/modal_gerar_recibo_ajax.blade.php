@@ -4,175 +4,122 @@
 
 <div class="modal fade" id="{{ $modalId }}" tabindex="-1" aria-hidden="true">
     <!--begin::Modal dialog-->
-    <div class="modal-dialog modal-dialog-centered mw-850px">
+    <div class="modal-dialog modal-dialog-centered mw-750px">
         <!--begin::Modal content-->
         <div class="modal-content rounded">
             <!--begin::Modal header-->
-            <div class="modal-header pb-0 border-0 justify-content-end">
-                Gerar recibo para transação #<span id="recibo_transacao_id_display" class="fw-bold"></span>
-                <!--begin::Close-->
-                <div class="btn btn-sm btn-icon btn-active-color-primary" data-bs-dismiss="modal">
-                    <span class="svg-icon svg-icon-1">
-                        <i class="fa-solid fa-xmark fs-2"></i>
-                    </span>
+            <div class="modal-header border-0 pb-0">
+                <div>
+                    <h5 class="modal-title fw-bold" id="recibo_modal_title">Gerar Recibo</h5>
+                    <div class="text-muted fs-7">
+                        Transação <span class="badge badge-light-primary">#<span id="recibo_transacao_id_display"></span></span>
+                        <span class="badge ms-2" id="recibo_numero_badge" style="display: none;"></span>
+                    </div>
                 </div>
-                <!--end::Close-->
+                <button type="button" class="btn btn-icon btn-sm btn-active-light-primary" data-bs-dismiss="modal" aria-label="Fechar">
+                    <i class="fa-solid fa-xmark fs-4"></i>
+                </button>
             </div>
-            <!--begin::Modal body-->
-            <div class="modal-body scroll-y px-10 px-lg-15 pt-0 pb-15">
-                <!--begin::Heading-->
-                <div class="mb-13 text-center">
-                    <h1 class="mb-3" id="recibo_modal_title">Gerar Recibo</h1>
-                    <div class="text-gray-400 fw-semibold fs-5">
-                        Preencha os dados abaixo para emitir o recibo referente à transação.
-                    </div>
-                </div>
-                <!--end::Heading-->
+            <!--end::Modal header-->
 
-                <!--begin::Alert parceiro auto-preenchido-->
-                <div id="recibo_parceiro_alert" class="alert alert-info d-flex align-items-center p-5 mb-8" style="display: none;">
-                    <i class="fa-solid fa-circle-info fs-2hx text-info me-4"></i>
-                    <div class="d-flex flex-column">
-                        <span class="fw-bold">Dados preenchidos automaticamente</span>
-                        <span class="fs-7">Os campos foram preenchidos com os dados do parceiro <strong id="recibo_parceiro_nome_alert"></strong>. Você pode editar antes de emitir.</span>
-                    </div>
-                </div>
-                <!--end::Alert-->
+            <form id="form_gerar_recibo_ajax" method="POST" action="#">
+                @csrf
+                <input type="hidden" name="redirect_to_print" value="true">
+                <input type="hidden" name="tipo_transacao" id="recibo_tipo_transacao">
+                <input type="hidden" name="transacao_id" id="recibo_transacao_id">
+                <input type="hidden" name="data_emissao" id="recibo_data_emissao">
+                <input type="hidden" name="valor" id="recibo_valor">
 
-                <!--begin:Form-->
-                <form id="form_gerar_recibo_ajax" method="POST" action="#">
-                    @csrf
-                    <input type="hidden" name="redirect_to_print" value="true">
-                    <input type="hidden" name="tipo_transacao" id="recibo_tipo_transacao">
-                    <input type="hidden" name="transacao_id" id="recibo_transacao_id">
+                <!--begin::Modal body-->
+                <div class="modal-body scroll-y px-10 px-lg-15 pt-5 pb-10">
 
-                    <!--begin::Input group - Cabeçalho-->
-                    <div class="d-flex flex-column align-items-start flex-xxl-row">
-                        <!--begin::Data-->
-                        <div class="d-flex align-items-center flex-equal fw-row me-4 order-2">
-                            <div class="fs-6 fw-bold text-gray-700 text-nowrap">Data:</div>
-                            <div class="position-relative d-flex align-items-center w-150px">
-                                <input class="form-control form-control-transparent fw-bold pe-5"
-                                    placeholder="Select date" readonly name="data_emissao" id="recibo_data_emissao" />
-                            </div>
+                    <!--begin::Resumo da transação-->
+                    <div class="d-flex flex-wrap align-items-center bg-light-primary rounded p-4 mb-8">
+                        <div class="d-flex align-items-center me-6 mb-2 mb-md-0">
+                            <span id="recibo_tipo_icon" class="svg-icon svg-icon-2 me-2"></span>
+                            <span class="fw-bold text-gray-700" id="recibo_tipo_display">—</span>
                         </div>
-                        <!--end::Data-->
-
-                        <!--begin::Número-->
-                        <div class="d-flex flex-center flex-equal fw-row text-nowrap order-1 order-xxl-2 me-4">
-                            <span class="fw-bold readonly text-gray-800">Número #</span>
-                            <input type="text" class="form-control form-control-solid" id="recibo_numero_display"
-                                value="Novo" readonly />
+                        <div class="d-flex align-items-center me-6 mb-2 mb-md-0">
+                            <i class="fa-solid fa-calendar-day text-gray-500 me-2"></i>
+                            <span class="text-gray-700" id="recibo_data_display">—</span>
                         </div>
-                        <!--end::Número-->
-
-                        <!--begin::Valor-->
-                        <div class="d-flex align-items-center justify-content-end flex-equal order-3 fw-row">
-                            <div class="fs-6 fw-bold text-gray-700 text-nowrap">Valor: R$</div>
-                            <div class="position-relative d-flex align-items-center w-150px">
-                                <input class="form-control form-control-transparent fw-bold pe-5"
-                                    name="valor" id="recibo_valor" readonly />
-                            </div>
+                        <div class="d-flex align-items-center me-6 mb-2 mb-md-0">
+                            <i class="fa-solid fa-brazilian-real-sign text-gray-500 me-2"></i>
+                            <span class="fw-bold fs-5 text-primary" id="recibo_valor_display">R$ 0,00</span>
                         </div>
-                        <!--end::Valor-->
+                        <div class="d-flex align-items-center flex-grow-1 text-truncate">
+                            <i class="fa-solid fa-file-lines text-gray-500 me-2"></i>
+                            <span class="text-gray-600 text-truncate" id="recibo_descricao_display" title="">—</span>
+                        </div>
                     </div>
+                    <!--end::Resumo da transação-->
 
-                    <div class="separator separator-dashed my-10"></div>
+                    <!--begin::Alert parceiro auto-preenchido-->
+                    <div id="recibo_parceiro_alert" class="alert alert-info d-flex align-items-center p-4 mb-6" style="display: none;">
+                        <i class="fa-solid fa-magic-wand-sparkles fs-3 me-3"></i>
+                        <div class="d-flex flex-column">
+                            <span class="fw-semibold">Dados do parceiro preenchidos</span>
+                            <span class="fs-7 text-gray-600">Preenchido com dados de <strong id="recibo_parceiro_nome_alert"></strong>. Revise antes de emitir.</span>
+                        </div>
+                    </div>
+                    <!--end::Alert-->
+
+                    <p class="text-muted fs-7 mb-6">Campos com <span class="text-danger">*</span> são obrigatórios.</p>
 
                     <!--begin::Dados do destinatário-->
-                    <div class="row g-9 mb-8">
-                        <div class="col-md-8 fv-row">
-                            <label class="required fs-6 fw-semibold mb-2">Nome</label>
-                            <input type="text" class="form-control form-control-solid"
-                                placeholder="Nome da Empresa ou da Pessoa" name="nome" id="recibo_nome" />
-                        </div>
-                        <div class="col-md-4 fv-row">
-                            <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
-                                <span>CPF/CNPJ</span>
-                            </label>
-                            <input type="text" class="form-control form-control-solid"
-                                placeholder="CPF ou CNPJ" name="cpf_cnpj" id="recibo_cpf_cnpj" />
-                        </div>
-                    </div>
+                    <div class="row g-5 mb-6">
+                        <x-tenant-input
+                            name="nome"
+                            id="recibo_nome"
+                            label="Nome"
+                            placeholder="Nome da empresa ou pessoa"
+                            :required="true"
+                            class="col-md-8" />
 
-                    <!-- Endereço -->
-                    <div class="row g-9 mb-8">
-                        <div class="col-md-3 fv-row">
-                            <label class="fs-6 fw-semibold mb-2">CEP</label>
-                            <input class="form-control form-control-solid" placeholder="00000-000" id="recibo_cep" name="cep" />
-                        </div>
-                        <div class="col-md-7 fv-row">
-                            <label class="fs-6 fw-semibold mb-2">Rua</label>
-                            <input class="form-control form-control-solid" placeholder="Logradouro" id="recibo_logradouro" name="logradouro" />
-                        </div>
-                        <div class="col-md-2 fv-row">
-                            <label class="fs-6 fw-semibold mb-2">Número</label>
-                            <input class="form-control form-control-solid" placeholder="Nº" id="recibo_numero" name="numero" />
-                        </div>
+                        <x-tenant-input
+                            name="cpf_cnpj"
+                            id="recibo_cpf_cnpj"
+                            label="CPF/CNPJ"
+                            placeholder="000.000.000-00"
+                            class="col-md-4" />
                     </div>
+                    <!--end::Dados do destinatário-->
 
-                    <div class="row g-9 mb-8">
-                        <div class="col-md-4 fv-row">
-                            <label class="fs-6 fw-semibold mb-2">Bairro</label>
-                            <input type="text" class="form-control form-control-solid" placeholder="Bairro" id="recibo_bairro" name="bairro" />
-                        </div>
-                        <div class="col-md-4 fv-row">
-                            <label class="fs-6 fw-semibold mb-2">Cidade</label>
-                            <input type="text" class="form-control form-control-solid" placeholder="Cidade" id="recibo_localidade" name="localidade" />
-                        </div>
-                        <div class="col-md-4 fv-row">
-                            <label class="fs-6 fw-semibold mb-2">Estado</label>
-                            <select id="recibo_uf" name="uf" class="form-select form-select-solid" data-control="select2" data-dropdown-parent="#{{ $modalId }}" data-placeholder="UF">
-                                <option value=""></option>
-                                <option value="AC">Acre</option>
-                                <option value="AL">Alagoas</option>
-                                <option value="AP">Amapá</option>
-                                <option value="AM">Amazonas</option>
-                                <option value="BA">Bahia</option>
-                                <option value="CE">Ceará</option>
-                                <option value="DF">Distrito Federal</option>
-                                <option value="ES">Espírito Santo</option>
-                                <option value="GO">Goiás</option>
-                                <option value="MA">Maranhão</option>
-                                <option value="MT">Mato Grosso</option>
-                                <option value="MS">Mato Grosso do Sul</option>
-                                <option value="MG">Minas Gerais</option>
-                                <option value="PA">Pará</option>
-                                <option value="PB">Paraíba</option>
-                                <option value="PR">Paraná</option>
-                                <option value="PE">Pernambuco</option>
-                                <option value="PI">Piauí</option>
-                                <option value="RJ">Rio de Janeiro</option>
-                                <option value="RN">Rio Grande do Norte</option>
-                                <option value="RS">Rio Grande do Sul</option>
-                                <option value="RO">Rondônia</option>
-                                <option value="RR">Roraima</option>
-                                <option value="SC">Santa Catarina</option>
-                                <option value="SP">São Paulo</option>
-                                <option value="SE">Sergipe</option>
-                                <option value="TO">Tocantins</option>
-                            </select>
-                        </div>
-                    </div>
+                    <!--begin::Endereço (componente reutilizável)-->
+                    <x-tenant-endereco
+                        prefix="recibo_"
+                        dropdownParent="#{{ $modalId }}" />
+                    <!--end::Endereço-->
 
-                    <!-- Referente -->
-                    <div class="d-flex flex-column mb-8 fv-row">
-                        <label class="fs-6 fw-semibold mb-2">Referente</label>
-                        <textarea class="form-control form-control-solid" rows="4" name="referente" id="recibo_referente" placeholder="Descreva o serviço prestado ou referência do pagamento"></textarea>
-                    </div>
+                    <!--begin::Referente-->
+                    <x-tenant-textarea
+                        name="referente"
+                        id="recibo_referente"
+                        label="Referente"
+                        placeholder="Descrição do serviço prestado ou referência do pagamento"
+                        :rows="3"
+                        class="mb-4" />
+                    <!--end::Referente-->
 
-                    <!-- Actions -->
-                    <div class="modal-footer text-center">
-                        <button type="reset" data-bs-dismiss="modal" class="btn btn-light me-3">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">
-                            <span class="indicator-label">Emitir Recibo</span>
-                            <span class="indicator-progress">Aguarde... <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                        </button>
-                    </div>
-                </form>
-                <!--end:Form-->
-            </div>
-            <!--end::Modal body-->
+                </div>
+                <!--end::Modal body-->
+
+                <!--begin::Modal footer-->
+                <div class="modal-footer border-top pt-5">
+                    <button type="button" data-bs-dismiss="modal" class="btn btn-sm btn-light me-3">
+                        <i class="fa-solid fa-times me-1"></i> Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-sm btn-primary" id="recibo_submit_btn">
+                        <span class="indicator-label">
+                            <i class="fa-solid fa-file-signature me-2"></i> Emitir Recibo
+                        </span>
+                        <span class="indicator-progress">
+                            Gerando... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                        </span>
+                    </button>
+                </div>
+                <!--end::Modal footer-->
+            </form>
         </div>
         <!--end::Modal content-->
     </div>
@@ -194,156 +141,156 @@
         const ids = {
             form: 'form_gerar_recibo_ajax',
             tipo: 'recibo_tipo_transacao',
+            tipoDisplay: 'recibo_tipo_display',
+            tipoIcon: 'recibo_tipo_icon',
             transacaoId: 'recibo_transacao_id',
             idDisplay: 'recibo_transacao_id_display',
             data: 'recibo_data_emissao',
+            dataDisplay: 'recibo_data_display',
             valor: 'recibo_valor',
+            valorDisplay: 'recibo_valor_display',
+            descricaoDisplay: 'recibo_descricao_display',
+            numeroBadge: 'recibo_numero_badge',
             nome: 'recibo_nome',
             cpf: 'recibo_cpf_cnpj',
             referente: 'recibo_referente',
-            cep: 'recibo_cep',
-            logradouro: 'recibo_logradouro',
-            numero: 'recibo_numero',
-            bairro: 'recibo_bairro',
-            localidade: 'recibo_localidade',
-            uf: 'recibo_uf',
             title: 'recibo_modal_title',
             alertParceiro: 'recibo_parceiro_alert',
             alertParceiroNome: 'recibo_parceiro_nome_alert',
-            numeroDisplay: 'recibo_numero_display',
         };
 
-        // --- Dados básicos (sempre preenchidos) ---
-        document.getElementById(ids.idDisplay).textContent = '#' + transacao.id;
+        // Prefixo do componente de endereço
+        const enderecoPrefix = 'recibo_';
+
+        // --- Limpar erros anteriores ---
+        const form = document.getElementById(ids.form);
+        form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+        form.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+
+        // --- Dados básicos ---
+        document.getElementById(ids.idDisplay).textContent = transacao.id;
         document.getElementById(ids.transacaoId).value = transacao.id;
-        document.getElementById(ids.tipo).value = transacao.tipo === 'entrada' ? 'Recebimento' : 'Pagamento';
+
+        // Tipo (Recebimento/Pagamento)
+        const isEntrada = transacao.tipo === 'entrada';
+        document.getElementById(ids.tipo).value = isEntrada ? 'Recebimento' : 'Pagamento';
+        document.getElementById(ids.tipoDisplay).textContent = isEntrada ? 'Recebimento' : 'Pagamento';
+        document.getElementById(ids.tipoIcon).innerHTML = isEntrada
+            ? '<i class="fa-solid fa-arrow-down text-success"></i>'
+            : '<i class="fa-solid fa-arrow-up text-danger"></i>';
+
+        // Data
         document.getElementById(ids.data).value = transacao.data_competencia_formatada || '';
-        document.getElementById(ids.valor).value = parseFloat(transacao.valor).toLocaleString('pt-BR', {
+        document.getElementById(ids.dataDisplay).textContent = transacao.data_competencia_formatada || '—';
+
+        // Valor
+        const valorFormatado = parseFloat(transacao.valor).toLocaleString('pt-BR', {
             minimumFractionDigits: 2,
             maximumFractionDigits: 2
         });
+        document.getElementById(ids.valor).value = valorFormatado;
+        document.getElementById(ids.valorDisplay).textContent = 'R$ ' + valorFormatado;
+
+        // Descrição
+        const descEl = document.getElementById(ids.descricaoDisplay);
+        descEl.textContent = transacao.descricao || '—';
+        descEl.title = transacao.descricao || '';
 
         // Atualizar action do form
-        const form = document.getElementById(ids.form);
         form.action = '/relatorios/recibos/gerar/' + transacao.id;
 
         // --- Construir "Referente" automaticamente a partir da transação ---
         let referenteAuto = transacao.descricao || '';
         if (transacao.historico_complementar) {
-            referenteAuto += (referenteAuto ? ' \u2014 ' : '') + transacao.historico_complementar;
+            referenteAuto += (referenteAuto ? ' — ' : '') + transacao.historico_complementar;
         }
 
         // Esconder alerta de parceiro por padrão
         document.getElementById(ids.alertParceiro).style.display = 'none';
+
+        // Badge de número do recibo
+        const badgeEl = document.getElementById(ids.numeroBadge);
+
+        // Campo para receber foco
+        let campoFoco = ids.nome;
 
         if (isEditMode && transacao.recibo) {
             // =============================================
             // MODO EDIÇÃO — preencher do recibo existente
             // =============================================
             document.getElementById(ids.title).textContent = 'Editar Recibo';
-            document.getElementById(ids.numeroDisplay).value = transacao.recibo.id;
+            badgeEl.textContent = 'Recibo #' + transacao.recibo.id;
+            badgeEl.className = 'badge badge-light-success ms-2';
+            badgeEl.style.display = 'inline';
 
             document.getElementById(ids.nome).value = transacao.recibo.nome || '';
             document.getElementById(ids.cpf).value = transacao.recibo.cpf_cnpj || '';
             document.getElementById(ids.referente).value = transacao.recibo.referente || '';
 
             if (transacao.recibo.address) {
-                _preencherEndereco(ids, transacao.recibo.address);
+                preencherEndereco(enderecoPrefix, transacao.recibo.address);
             } else {
-                _limparEndereco(ids);
+                limparEndereco(enderecoPrefix);
             }
+
+            campoFoco = ids.referente;
 
         } else if (transacao.parceiro) {
             // =============================================
             // MODO CRIAÇÃO COM PARCEIRO — auto-preencher
             // =============================================
             document.getElementById(ids.title).textContent = 'Gerar Recibo';
-            document.getElementById(ids.numeroDisplay).value = 'Novo';
+            badgeEl.textContent = 'Novo';
+            badgeEl.className = 'badge badge-light-warning ms-2';
+            badgeEl.style.display = 'inline';
 
             // Preencher do parceiro
             document.getElementById(ids.nome).value = transacao.parceiro.nome || '';
             document.getElementById(ids.cpf).value = transacao.parceiro.cpf_cnpj || '';
             document.getElementById(ids.referente).value = referenteAuto;
 
-            // Preencher endereço do parceiro
+            // Preencher endereço do parceiro (usando helper global do componente)
             if (transacao.parceiro.address) {
-                _preencherEndereco(ids, transacao.parceiro.address);
+                preencherEndereco(enderecoPrefix, transacao.parceiro.address);
             } else {
-                _limparEndereco(ids);
+                limparEndereco(enderecoPrefix);
             }
 
             // Mostrar alerta informativo
             document.getElementById(ids.alertParceiro).style.display = 'flex';
             document.getElementById(ids.alertParceiroNome).textContent = transacao.parceiro.nome;
 
+            campoFoco = ids.referente; // Foco no referente pois dados já vieram
+
         } else {
             // =============================================
             // MODO CRIAÇÃO SEM PARCEIRO — campos vazios
             // =============================================
             document.getElementById(ids.title).textContent = 'Gerar Recibo';
-            document.getElementById(ids.numeroDisplay).value = 'Novo';
+            badgeEl.textContent = 'Novo';
+            badgeEl.className = 'badge badge-light-warning ms-2';
+            badgeEl.style.display = 'inline';
 
             document.getElementById(ids.nome).value = '';
             document.getElementById(ids.cpf).value = '';
             document.getElementById(ids.referente).value = referenteAuto;
 
-            _limparEndereco(ids);
+            limparEndereco(enderecoPrefix);
+
+            campoFoco = ids.nome; // Foco no nome pois precisa preencher
         }
 
-        // Abrir modal
-        const modal = new bootstrap.Modal(document.getElementById('kt_modal_gerar_recibo_ajax'));
+        // Abrir modal e definir foco
+        const modalEl = document.getElementById('kt_modal_gerar_recibo_ajax');
+        const modal = new bootstrap.Modal(modalEl);
+
+        modalEl.addEventListener('shown.bs.modal', function handler() {
+            document.getElementById(campoFoco).focus();
+            modalEl.removeEventListener('shown.bs.modal', handler);
+        });
+
         modal.show();
     }
-
-    /**
-     * Preenche os campos de endereço a partir de um objeto address
-     */
-    function _preencherEndereco(ids, address) {
-        document.getElementById(ids.cep).value = address.cep || '';
-        document.getElementById(ids.logradouro).value = address.rua || '';
-        document.getElementById(ids.numero).value = address.numero || '';
-        document.getElementById(ids.bairro).value = address.bairro || '';
-        document.getElementById(ids.localidade).value = address.cidade || '';
-        $('#' + ids.uf).val(address.uf || '').trigger('change');
-    }
-
-    /**
-     * Limpa todos os campos de endereço
-     */
-    function _limparEndereco(ids) {
-        document.getElementById(ids.cep).value = '';
-        document.getElementById(ids.logradouro).value = '';
-        document.getElementById(ids.numero).value = '';
-        document.getElementById(ids.bairro).value = '';
-        document.getElementById(ids.localidade).value = '';
-        $('#' + ids.uf).val('').trigger('change');
-    }
-
-    // ==========================================
-    // Script de busca de CEP via ViaCEP
-    // ==========================================
-    $(document).ready(function() {
-        $('#recibo_cep').on('blur', function() {
-            var cep = $(this).val().replace(/\D/g, '');
-            if (cep !== "") {
-                if (/^[0-9]{8}$/.test(cep)) {
-                    $('#recibo_logradouro').val('...');
-                    $.getJSON("https://viacep.com.br/ws/" + cep + "/json/?callback=?", function(dados) {
-                        if (!("erro" in dados)) {
-                            $('#recibo_logradouro').val(dados.logradouro);
-                            $('#recibo_bairro').val(dados.bairro);
-                            $('#recibo_localidade').val(dados.localidade);
-                            $('#recibo_uf').val(dados.uf).trigger('change');
-                        } else {
-                            Swal.fire({text: 'CEP não encontrado.', icon: 'warning', buttonsStyling: false, confirmButtonText: 'Ok', customClass: {confirmButton: 'btn btn-primary'}});
-                        }
-                    });
-                } else {
-                    Swal.fire({text: 'CEP inválido.', icon: 'warning', buttonsStyling: false, confirmButtonText: 'Ok', customClass: {confirmButton: 'btn btn-primary'}});
-                }
-            }
-        });
-    });
 
     // ==========================================
     // Submit AJAX do formulário
@@ -352,83 +299,87 @@
         e.preventDefault();
 
         const form = this;
-        const submitBtn = form.querySelector('button[type="submit"]');
+        const submitBtn = document.getElementById('recibo_submit_btn');
         const formData = new FormData(form);
 
         // Limpar erros anteriores
         form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-        form.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+        form.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
 
         // Mostrar loading
         submitBtn.setAttribute('data-kt-indicator', 'on');
         submitBtn.disabled = true;
 
         fetch(form.action, {
-            method: 'POST',
-            body: formData,
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.json().then(data => Promise.reject(data));
-            }
-            return response.json();
-        })
-        .then(data => {
-            if (data.success && data.pdf_url) {
-                window.open(data.pdf_url, '_blank');
-
-                // Fechar modal
-                const modalEl = document.getElementById('kt_modal_gerar_recibo_ajax');
-                const modal = bootstrap.Modal.getInstance(modalEl);
-                if (modal) modal.hide();
-
-                form.reset();
-
-                Swal.fire({
-                    text: data.message || 'Recibo gerado com sucesso!',
-                    icon: 'success',
-                    buttonsStyling: false,
-                    confirmButtonText: 'Ok',
-                    customClass: { confirmButton: 'btn btn-primary' }
-                });
-            }
-        })
-        .catch(error => {
-            if (error.errors) {
-                Object.keys(error.errors).forEach(fieldName => {
-                    const field = form.querySelector('[name="' + fieldName + '"]');
-                    if (field) {
-                        field.classList.add('is-invalid');
-                        const errorDiv = document.createElement('div');
-                        errorDiv.className = 'invalid-feedback';
-                        errorDiv.textContent = error.errors[fieldName][0];
-                        field.parentNode.appendChild(errorDiv);
-                    }
-                });
-
-                const firstError = form.querySelector('.is-invalid');
-                if (firstError) {
-                    firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    firstError.focus();
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
                 }
-            } else {
-                Swal.fire({
-                    text: error.message || 'Erro ao gerar recibo. Tente novamente.',
-                    icon: 'error',
-                    buttonsStyling: false,
-                    confirmButtonText: 'Ok',
-                    customClass: { confirmButton: 'btn btn-primary' }
-                });
-            }
-        })
-        .finally(() => {
-            submitBtn.removeAttribute('data-kt-indicator');
-            submitBtn.disabled = false;
-        });
+            })
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().then(data => Promise.reject(data));
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.pdf_url) {
+                    // Fechar modal
+                    const modalEl = document.getElementById('kt_modal_gerar_recibo_ajax');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+
+                    form.reset();
+
+                    // Toast de sucesso + abrir PDF
+                    Swal.fire({
+                        title: 'Recibo gerado!',
+                        text: 'Abrindo PDF em nova aba...',
+                        icon: 'success',
+                        timer: 2000,
+                        timerProgressBar: true,
+                        showConfirmButton: false,
+                        didOpen: () => {
+                            window.open(data.pdf_url, '_blank');
+                        }
+                    });
+                }
+            })
+            .catch(error => {
+                if (error.errors) {
+                    // Exibir erros nos campos usando invalid-feedback existentes
+                    Object.keys(error.errors).forEach(fieldName => {
+                        const field = form.querySelector('[name="' + fieldName + '"]');
+                        if (field) {
+                            field.classList.add('is-invalid');
+                            const feedback = field.closest('.fv-row')?.querySelector('.invalid-feedback');
+                            if (feedback) {
+                                feedback.textContent = error.errors[fieldName][0];
+                            }
+                        }
+                    });
+
+                    const firstError = form.querySelector('.is-invalid');
+                    if (firstError) {
+                        firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        firstError.focus();
+                    }
+                } else {
+                    Swal.fire({
+                        text: error.message || 'Erro ao gerar recibo. Tente novamente.',
+                        icon: 'error',
+                        buttonsStyling: false,
+                        confirmButtonText: 'Ok',
+                        customClass: { confirmButton: 'btn btn-primary' }
+                    });
+                }
+            })
+            .finally(() => {
+                submitBtn.removeAttribute('data-kt-indicator');
+                submitBtn.disabled = false;
+            });
     });
 
     // ==========================================
