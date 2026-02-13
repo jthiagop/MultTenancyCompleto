@@ -193,50 +193,7 @@ class BankStatement extends Model
                 'status_conciliacao' => $this->status_conciliacao
             ]);
 
-            // ✅ ATUALIZAR SALDO DA ENTIDADE (IMPORTANTE!)
-            // CRÍTICO: $valorConciliado JÁ VEM EM DECIMAL do controller (ex: 1991.44)
-            \Log::info('🔄 Iniciando atualização de saldo', [
-                'entidade_id' => $this->entidade_financeira_id,
-                'valor_conciliado_decimal' => $valorConciliado,
-                'bank_statement_amount' => $this->amount,
-                'bank_statement_amount_cents' => $this->amount_cents,
-                'tipo_transacao' => $transacao->tipo ?? 'desconhecido'
-            ]);
-            
-            $entidade = EntidadeFinanceira::find($this->entidade_financeira_id);
-            if ($entidade) {
-                $saldoAntes = $entidade->saldo_atual;
-                
-                // IMPORTANTE: $valorConciliado já está em DECIMAL (float) do controller
-                // DECIMAL: Usar bcmath para precisão financeira (NUNCA usar operadores aritméticos!)
-                $valorEmReais = (string) abs((float) $valorConciliado); // Já está em reais, apenas garante positivo
-                
-                // Calcula incremento com base no tipo de transação usando bcmath
-                $valorParaAdicionar = ($transacao->tipo === 'entrada') 
-                    ? $valorEmReais                  // Positivo para entrada
-                    : bcmul($valorEmReais, '-1', 2); // Negativo para saída (bcmath)
-                
-                // Atualiza saldo usando bcmath (DECIMAL precisão)
-                // CRÍTICO: Converte saldo_atual para string antes de usar bcadd
-                $saldoAtualStr = (string) $entidade->saldo_atual;
-                $entidade->saldo_atual = bcadd($saldoAtualStr, $valorParaAdicionar, 2);
-                $entidade->save();
-                
-                \Log::info('✅ Saldo da entidade atualizado após conciliação', [
-                    'entidade_id' => $entidade->id,
-                    'saldo_antes' => $saldoAntes,
-                    'saldo_depois' => $entidade->saldo_atual,
-                    'tipo_transacao' => $transacao->tipo,
-                    'valor_conciliado_decimal' => $valorConciliado,
-                    'valor_em_reais' => $valorEmReais,
-                    'valor_adicionado' => $valorParaAdicionar,
-                    'calculo' => "{$saldoAntes} + ({$valorParaAdicionar}) = {$entidade->saldo_atual}"
-                ]);
-            } else {
-                \Log::error('❌ Entidade não encontrada ao atualizar saldo', [
-                    'entidade_id' => $this->entidade_financeira_id
-                ]);
-            }
+            // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
 
             // ✅ Salva diretamente na tabela pivot o valor conciliado e o status
             $this->transacoes()->attach($transacao->id, [

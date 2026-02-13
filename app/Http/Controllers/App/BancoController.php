@@ -2711,24 +2711,7 @@ class BancoController extends Controller
             }
         }
         
-        // ✅ ATUALIZA O SALDO_ATUAL DAS ENTIDADES AFETADAS
-        if (!empty($entidadesParaRecalcular)) {
-            $entidadesUnicas = array_unique($entidadesParaRecalcular);
-            foreach ($entidadesUnicas as $entidadeId) {
-                $entidade = EntidadeFinanceira::find($entidadeId);
-                if ($entidade) {
-                    $saldoAnterior = $entidade->saldo_atual;
-                    $entidade->recalcularSaldo();
-                    
-                    Log::info('Saldo recalculado após atualização de transação', [
-                        'entidade_id' => $entidadeId,
-                        'transacao_id' => $transacao->id,
-                        'saldo_anterior' => $saldoAnterior,
-                        'saldo_novo' => $entidade->saldo_atual,
-                    ]);
-                }
-            }
-        }
+        // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
         
         // Resposta de sucesso
         if ($request->expectsJson() || $request->ajax()) {

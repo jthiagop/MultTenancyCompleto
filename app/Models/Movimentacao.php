@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Observers\MovimentacaoObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -9,6 +11,13 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Movimentação financeira — representa o impacto real no saldo.
+ *
+ * O saldo_atual da EntidadeFinanceira é atualizado automaticamente
+ * pelo MovimentacaoObserver (increment/decrement atômico O(1)).
+ */
+#[ObservedBy(MovimentacaoObserver::class)]
 class Movimentacao extends Model
 {
     use HasFactory;
@@ -82,34 +91,8 @@ class Movimentacao extends Model
         );
     }
 
-    public static function boot()
-    {
-        parent::boot();
-
-        // ❌ DESABILITADO: Atualização automática de saldo removida
-        // Agora o usuário controla manualmente quando atualizar o saldo via "Definir como pago"
-        // 
-        // static::created(function ($movimentacao) {
-        //     $entidade = EntidadeFinanceira::find($movimentacao->entidade_id);
-        //     if ($movimentacao->tipo === 'entrada') {
-        //         $entidade->saldo_atual += $movimentacao->valor;
-        //     } else {
-        //         $entidade->saldo_atual -= $movimentacao->valor;
-        //     }
-        //     $entidade->save();
-        // });
-
-        // // Reverte saldo ao excluir uma movimentação
-        // static::deleting(function ($movimentacao) {
-        //     $entidade = EntidadeFinanceira::find($movimentacao->entidade_id);
-        //     if ($movimentacao->tipo === 'entrada') {
-        //         $entidade->saldo_atual -= $movimentacao->valor;
-        //     } else {
-        //         $entidade->saldo_atual += $movimentacao->valor;
-        //     }
-        //     $entidade->save();
-        // });
-    }
+    // Observer MovimentacaoObserver gerencia o saldo automaticamente
+    // via increment/decrement atômico O(1) — veja app/Observers/MovimentacaoObserver.php
 
     public function calcularSaldoAtual()
     {

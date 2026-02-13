@@ -436,9 +436,19 @@ class CaixaController extends Controller
         $validatedData['updated_by'] = Auth::id();
         $validatedData['updated_by_name'] = Auth::user()->name;
 
-        // 1) Criar movimentação no Caixa
-        $movimentacao = $this->movimentacao($validatedData);
-        $validatedData['movimentacao_id'] = $movimentacao->id;
+        // ✅ REGRA DE NEGÓCIO: Só cria movimentação se for efetivada (pago/recebido)
+        // Transações em_aberto são previsões e NÃO impactam saldo
+        $situacao = $validatedData['situacao'] ?? 'em_aberto';
+        $situacoesEfetivadas = ['pago', 'recebido'];
+        $movimentacao = null;
+        $entidadesParaRecalcular = [];
+
+        if (in_array($situacao, $situacoesEfetivadas)) {
+            // 1) Criar movimentação no Caixa (só se efetivada)
+            $movimentacao = $this->movimentacao($validatedData);
+            $validatedData['movimentacao_id'] = $movimentacao->id;
+            $entidadesParaRecalcular[] = $validatedData['entidade_id'];
+        }
 
         // 2) Criar lançamento no Caixa
         $caixa = TransacaoFinanceira::create($validatedData);
@@ -458,9 +468,12 @@ class CaixaController extends Controller
                 $validatedData['entidade_id'] = $validatedData['entidade_banco_id'];
             }
 
-            // Criar movimentação no Banco
-            $movimentacaoBanco = $this->movimentacao($validatedData);
-            $validatedData['movimentacao_id'] = $movimentacaoBanco->id;
+            if (in_array($situacao, $situacoesEfetivadas)) {
+                // Criar movimentação no Banco (só se efetivada)
+                $movimentacaoBanco = $this->movimentacao($validatedData);
+                $validatedData['movimentacao_id'] = $movimentacaoBanco->id;
+                $entidadesParaRecalcular[] = $validatedData['entidade_id'];
+            }
 
             // Criar lançamento no Banco
             $banco = TransacaoFinanceira::create($validatedData);
@@ -471,6 +484,8 @@ class CaixaController extends Controller
 
         // Processar anexos do caixa
         $this->processarAnexos($request, $caixa);
+
+        // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
 
         // Mensagem de sucesso
         Flasher::addSuccess('Lançamento criado com sucesso!');
@@ -949,24 +964,7 @@ class CaixaController extends Controller
             }
         }
         
-        // ✅ ATUALIZA O SALDO_ATUAL DAS ENTIDADES AFETADAS
-        if (!empty($entidadesParaRecalcular)) {
-            $entidadesUnicas = array_unique($entidadesParaRecalcular);
-            foreach ($entidadesUnicas as $entidadeId) {
-                $entidade = EntidadeFinanceira::find($entidadeId);
-                if ($entidade) {
-                    $saldoAnterior = $entidade->saldo_atual;
-                    $entidade->recalcularSaldo();
-                    
-                    Log::info('Saldo recalculado após atualização de transação (Caixa)', [
-                        'entidade_id' => $entidadeId,
-                        'transacao_id' => $transacao->id,
-                        'saldo_anterior' => $saldoAnterior,
-                        'saldo_novo' => $entidade->saldo_atual,
-                    ]);
-                }
-            }
-        }
+        // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
         
         // Resposta de sucesso
         if ($request->expectsJson() || $request->ajax()) {

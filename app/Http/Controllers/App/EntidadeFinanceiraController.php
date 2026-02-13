@@ -157,8 +157,7 @@ class EntidadeFinanceiraController extends Controller
             'descricao' => $request->descricao,
         ]);
 
-        // Atualiza o saldo atual da entidade
-        $entidade->atualizarSaldo();
+        // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
 
         return redirect()->route('entidades.index')->with('success', 'Movimentação adicionada com sucesso!');
     }

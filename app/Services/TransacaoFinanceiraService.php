@@ -164,17 +164,7 @@ class TransacaoFinanceiraService
                 ];
 
                 $transacao->movimentacao()->create($dadosMovimentacao);
-                
-                // 4. Recalcula e sincroniza o saldo da entidade financeira (cache)
-                $entidade = \App\Models\EntidadeFinanceira::find($transacao->entidade_id);
-                if ($entidade) {
-                    $entidade->recalcularSaldo();
-                    
-                    Log::info('[registrarBaixa] Saldo da entidade recalculado', [
-                        'entidade_id' => $transacao->entidade_id,
-                        'saldo_atual' => $entidade->saldo_atual,
-                    ]);
-                }
+                // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
             }
 
             Log::info('[registrarBaixa] Transação baixada com sucesso', [
@@ -229,17 +219,7 @@ class TransacaoFinanceiraService
             $transacao->updated_by = Auth::id();
             $transacao->updated_by_name = Auth::user()->name ?? 'Sistema';
             $transacao->save();
-
-            // 3. Recalcula e sincroniza o saldo da entidade financeira (cache)
-            $entidade = \App\Models\EntidadeFinanceira::find($entidadeId);
-            if ($entidade) {
-                $entidade->recalcularSaldo();
-                
-                Log::info('[reverterBaixa] Saldo da entidade recalculado', [
-                    'entidade_id' => $entidadeId,
-                    'saldo_atual' => $entidade->saldo_atual,
-                ]);
-            }
+            // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
 
             Log::info('[reverterBaixa] Transação reaberta com sucesso', [
                 'transacao_id' => $transacao->id,
@@ -340,12 +320,7 @@ class TransacaoFinanceiraService
                 'movimentacao_id_attr' => $transacao->movimentacao_id ?? 'null',
             ]);
         }
-
-        // Recalcula saldo da entidade financeira
-        $entidade = \App\Models\EntidadeFinanceira::find($transacao->entidade_id);
-        if ($entidade) {
-            $entidade->recalcularSaldo();
-        }
+        // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
     }
 
     /**
@@ -590,9 +565,7 @@ class TransacaoFinanceiraService
             }
 
             $transacao->save();
-            
-            // ✅ ATUALIZA SALDO DA ENTIDADE quando recebido/pago está marcado
-            $this->atualizarSaldoEntidade($transacao, $data);
+            // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
         }
         // Pagamento parcial será tratado por método específico do controller
     }
@@ -617,36 +590,15 @@ class TransacaoFinanceiraService
             }
             
             $saldoAntes = $entidade->saldo_atual;
+            $entidade->recalcularSaldo();
             
-            // ✅ IMPORTANTE: O valor da transação está em DECIMAL (ex: 1991.44)
-            // Não precisa converter, já está em reais
-            $valorEmReais = (string) abs((float) $transacao->valor);
-            
-            // Calcula incremento com base no tipo de transação usando bcmath
-            if ($transacao->tipo === 'entrada') {
-                // Entrada (recebido) → soma ao saldo
-                $valorParaAdicionar = $valorEmReais;
-            } else {
-                // Saída (pago) → subtrai do saldo
-                $valorParaAdicionar = bcmul($valorEmReais, '-1', 2);
-            }
-            
-            // Atualiza saldo usando bcmath (DECIMAL precisão)
-            $saldoAtualStr = (string) $entidade->saldo_atual;
-            $entidade->saldo_atual = bcadd($saldoAtualStr, $valorParaAdicionar, 2);
-            $entidade->save();
-            
-            Log::info('✅ Saldo da entidade atualizado após marcar como recebido/pago', [
+            Log::info('✅ Saldo recalculado após marcar como recebido/pago', [
                 'entidade_id' => $entidade->id,
                 'transacao_id' => $transacao->id,
                 'tipo_transacao' => $transacao->tipo,
                 'situacao' => $transacao->situacao->value,
-                'valor_transacao_centavos' => $transacao->valor,
-                'valor_em_reais' => $valorEmReais,
-                'valor_adicionado' => $valorParaAdicionar,
                 'saldo_antes' => $saldoAntes,
                 'saldo_depois' => $entidade->saldo_atual,
-                'calculo' => "{$saldoAntes} + ({$valorParaAdicionar}) = {$entidade->saldo_atual}"
             ]);
         } catch (\Exception $e) {
             Log::error('❌ Erro ao atualizar saldo da entidade', [
@@ -655,7 +607,6 @@ class TransacaoFinanceiraService
                 'erro' => $e->getMessage(),
                 'trace' => $e->getTraceAsString()
             ]);
-            // Não relança a exceção para não interromper o fluxo
         }
     }
 

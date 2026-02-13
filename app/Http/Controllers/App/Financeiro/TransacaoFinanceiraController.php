@@ -70,23 +70,32 @@ class TransacaoFinanceiraController extends Controller
         $validatedData['updated_by'] = Auth::id();
         $validatedData['updated_by_name'] = Auth::user()->name;
 
-        // Cria o lançamento na tabela 'movimentacoes'
-        $movimentacao = Movimentacao::create([
-            'entidade_id' => $validatedData['entidade_id'],
-            'tipo' => $validatedData['tipo'],
-            'valor' => $validatedData['valor'],
-            'data' => $validatedData['data_competencia'],
-            'descricao' => $validatedData['descricao'],
-            'company_id' => $validatedData['company_id'],
-            'created_by' => $validatedData['created_by'],
-            'created_by_name' => $validatedData['created_by_name'],
-            'updated_by' => $validatedData['updated_by'],
-            'updated_by_name' => $validatedData['updated_by_name'],
-        ]);
+        // ✅ REGRA DE NEGÓCIO: Só cria movimentação se for efetivada (pago/recebido)
+        // Transações em_aberto são previsões e NÃO impactam saldo
+        $situacao = $validatedData['situacao'] ?? 'em_aberto';
+        $situacoesEfetivadas = ['pago', 'recebido'];
+        $movimentacao = null;
+
+        if (in_array($situacao, $situacoesEfetivadas)) {
+            $movimentacao = Movimentacao::create([
+                'entidade_id' => $validatedData['entidade_id'],
+                'tipo' => $validatedData['tipo'],
+                'valor' => $validatedData['valor'],
+                'data' => $validatedData['data_competencia'],
+                'descricao' => $validatedData['descricao'],
+                'company_id' => $validatedData['company_id'],
+                'created_by' => $validatedData['created_by'],
+                'created_by_name' => $validatedData['created_by_name'],
+                'updated_by' => $validatedData['updated_by'],
+                'updated_by_name' => $validatedData['updated_by_name'],
+            ]);
+            $validatedData['movimentacao_id'] = $movimentacao->id;
+        }
 
         // Cria o registro no caixa
-        $validatedData['movimentacao_id'] = $movimentacao->id;
         $caixa = TransacaoFinanceira::create($validatedData);
+
+        // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
 
         // Verifica e processa lançamentos padrão
         $this->processarLancamentoPadrao($validatedData);
@@ -395,14 +404,16 @@ class TransacaoFinanceiraController extends Controller
 
                 // 4. Deletar a transação financeira
                 $transacaoFinanceira->delete();
+                // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
 
                 \Log::info('Transação excluída com sucesso', [
                     'transacao_id' => $transacaoId,
                     'movimentacao_id' => $movimentacaoId,
                     'entidade_id' => $entidadeId,
-                    'valor' => (float) $valor, // Valor já está em DECIMAL
+                    'valor' => (float) $valor,
                     'tipo' => $tipo,
                     'origem' => $origem,
+                    'saldo_recalculado' => $entidade ? $entidade->saldo_atual : null,
                     'user_id' => Auth::id(),
                     'user_name' => Auth::user()->name
                 ]);
