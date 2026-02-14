@@ -125,15 +125,22 @@ class TransacaoFinanceiraController extends Controller
 
         // Se veio do Domus IA (AJAX), atualizar status do documento e retornar JSON
         if ($request->ajax() || $request->wantsJson()) {
-            // Atualizar status do DomusDocumento se informado
+            // Atualizar status do DomusDocumento e criar anexo automático
+            $domusDocumentoId = null;
             if ($request->filled('domus_documento_id')) {
                 try {
                     $domusDoc = \App\Models\DomusDocumento::find($request->input('domus_documento_id'));
                     if ($domusDoc) {
-                        $domusDoc->update(['status' => 'lancado']);
+                        $domusDocumentoId = $domusDoc->id;
+                        
+                        // Atualizar status para lançado
+                        $domusDoc->update(['status' => \App\Enums\StatusDomusDocumento::LANCADO]);
+                        
+                        // Criar anexo automático a partir do documento do Domus IA
+                        $this->anexarDocumentoDomus($domusDoc, $caixa);
                     }
                 } catch (\Exception $e) {
-                    Log::warning('Erro ao atualizar DomusDocumento: ' . $e->getMessage());
+                    Log::warning('Erro ao processar DomusDocumento: ' . $e->getMessage());
                 }
             }
 
@@ -141,6 +148,7 @@ class TransacaoFinanceiraController extends Controller
                 'success' => true,
                 'message' => 'Lançamento criado com sucesso!',
                 'transacao_id' => $caixa->id,
+                'domus_documento_id' => $domusDocumentoId,
             ]);
         }
 
@@ -297,6 +305,75 @@ class TransacaoFinanceiraController extends Controller
         }
     }
 
+    /**
+     * Anexa automaticamente o documento do Domus IA à transação financeira.
+     * 
+     * @param \App\Models\DomusDocumento $domusDoc
+     * @param TransacaoFinanceira $transacao
+     * @return void
+     */
+    private function anexarDocumentoDomus(\App\Models\DomusDocumento $domusDoc, TransacaoFinanceira $transacao): void
+    {
+        try {
+            // Verificar se o documento tem um arquivo válido
+            if (empty($domusDoc->caminho_arquivo)) {
+                Log::warning('DomusDocumento sem caminho de arquivo', ['id' => $domusDoc->id]);
+                return;
+            }
+
+            // Determinar tipo de anexo baseado no tipo do documento
+            $tipoAnexo = match($domusDoc->tipo_documento) {
+                'NF-e', 'NFC-e', 'NOTA_FISCAL' => 'nota_fiscal',
+                'CUPOM', 'CUPOM_FISCAL' => 'cupom_fiscal',
+                'BOLETO' => 'boleto',
+                'RECIBO' => 'recibo',
+                'FATURA_CARTAO' => 'fatura',
+                'COMPROVANTE' => 'comprovante',
+                default => 'documento'
+            };
+
+            // Descrição automática
+            $descricao = 'Documento importado via Domus IA';
+            if ($domusDoc->estabelecimento_nome) {
+                $descricao .= ' - ' . $domusDoc->estabelecimento_nome;
+            }
+            if ($domusDoc->tipo_documento) {
+                $descricao = $domusDoc->tipo_documento . ' - ' . $descricao;
+            }
+
+            // Criar o anexo vinculado à transação
+            ModulosAnexo::create([
+                'anexavel_id'      => $transacao->id,
+                'anexavel_type'    => TransacaoFinanceira::class,
+                'forma_anexo'      => 'arquivo',
+                'nome_arquivo'     => $domusDoc->nome_arquivo,
+                'caminho_arquivo'  => $domusDoc->caminho_arquivo,
+                'tipo_arquivo'     => $domusDoc->tipo_arquivo ?? '',
+                'extensao_arquivo' => pathinfo($domusDoc->nome_arquivo, PATHINFO_EXTENSION),
+                'mime_type'        => $domusDoc->mime_type ?? '',
+                'tamanho_arquivo'  => $domusDoc->tamanho_arquivo ?? 0,
+                'tipo_anexo'       => $tipoAnexo,
+                'descricao'        => $descricao,
+                'status'           => 'ativo',
+                'data_upload'      => now(),
+                'created_by'       => Auth::id(),
+                'created_by_name'  => Auth::user()->name ?? 'Sistema',
+            ]);
+
+            Log::info('Anexo criado automaticamente a partir do DomusDocumento', [
+                'domus_documento_id' => $domusDoc->id,
+                'transacao_id' => $transacao->id,
+                'arquivo' => $domusDoc->nome_arquivo,
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao anexar documento Domus à transação: ' . $e->getMessage(), [
+                'domus_documento_id' => $domusDoc->id,
+                'transacao_id' => $transacao->id,
+                'trace' => $e->getTraceAsString(),
+            ]);
+        }
+    }
 
 
     /**

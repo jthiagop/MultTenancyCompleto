@@ -62,20 +62,52 @@
                                             }
                                         }
 
-                                        // Controla a exibição do checkbox "Agendado" baseado no estado do checkbox "Pago"
+                                        // Controla a exibição do checkbox "Agendado" (esconde quando Pago ou Recebido marcado)
                                         function toggleCheckboxAgendado() {
                                             var pagoCheckbox = $('#pago_checkbox');
+                                            var recebidoCheckbox = $('#recebido_checkbox');
                                             var agendadoWrapper = $('#checkbox-agendado-wrapper');
 
-                                            if (pagoCheckbox.is(':checked')) {
-                                                // Oculta o checkbox Agendado quando Pago está marcado
+                                            // Esconde Agendado se Pago OU Recebido estiver marcado
+                                            if (pagoCheckbox.is(':checked') || recebidoCheckbox.is(':checked')) {
                                                 agendadoWrapper.hide();
-                                                // Desmarca o checkbox Agendado se estiver marcado
                                                 $('#agendado_checkbox').prop('checked', false);
                                             } else {
-                                                // Mostra o checkbox Agendado quando Pago não está marcado
                                                 agendadoWrapper.show();
                                             }
+                                        }
+
+                                        // Controla a exibição dos wrappers de checkboxes baseado no tipo de transação
+                                        function toggleCheckboxesByTipo() {
+                                            var tipoSelect = $('#tipo');
+                                            var tipo = tipoSelect.val(); // 'entrada' ou 'saida'
+
+                                            var wrapperEntrada = $('#checkboxes-entrada-wrapper');
+                                            var wrapperSaida = $('#checkboxes-saida-wrapper');
+
+                                            if (tipo === 'entrada') {
+                                                // Receita: Mostra apenas Recebido
+                                                wrapperEntrada.removeClass('d-none');
+                                                wrapperSaida.addClass('d-none').removeClass('d-flex');
+
+                                                // Desmarca checkboxes de Saída
+                                                $('#pago_checkbox').prop('checked', false);
+                                                $('#agendado_checkbox').prop('checked', false);
+                                            } else if (tipo === 'saida') {
+                                                // Despesa: Mostra Pago e Agendado
+                                                wrapperEntrada.addClass('d-none');
+                                                wrapperSaida.removeClass('d-none').addClass('d-flex');
+
+                                                // Desmarca checkbox de Entrada
+                                                $('#recebido_checkbox').prop('checked', false);
+                                            } else {
+                                                // Default: mostrar saída
+                                                wrapperEntrada.addClass('d-none');
+                                                wrapperSaida.removeClass('d-none').addClass('d-flex');
+                                            }
+
+                                            // Atualiza visibilidade do checkbox inner baseado no parcelamento
+                                            toggleCheckboxPago();
                                         }
 
                                         // Controla a exibição do accordion "Informações do Pagamento"
@@ -953,8 +985,24 @@
                                             toggleCheckboxPago();
                                         });
 
+                                        // Evento para select de tipo (entrada/saida) - atualiza checkboxes visíveis
+                                        $('#tipo').on('change', function() {
+                                            toggleCheckboxesByTipo();
+                                        });
+
+                                        // Evento para Select2 do tipo
+                                        $('#tipo').on('change.select2', function() {
+                                            toggleCheckboxesByTipo();
+                                        });
+
                                         // Evento para checkbox "Pago" - oculta/mostra o checkbox "Agendado" e controla accordion
                                         $(document).on('change', '#pago_checkbox', function() {
+                                            toggleCheckboxAgendado();
+                                            toggleAccordionInformacoesPagamento();
+                                        });
+
+                                        // Evento para checkbox "Recebido" - oculta/mostra o checkbox "Agendado" e controla accordion
+                                        $(document).on('change', '#recebido_checkbox', function() {
                                             toggleCheckboxAgendado();
                                             toggleAccordionInformacoesPagamento();
                                         });
@@ -1044,6 +1092,7 @@
                                         // Verifica estado inicial do parcelamento quando o modal abrir
                                         $('#Dm_modal_financeiro').on('shown.bs.modal', function() {
                                             setTimeout(function() {
+                                                toggleCheckboxesByTipo();
                                                 toggleCheckboxPago();
                                                 toggleCheckboxAgendado();
                                                 toggleAccordionInformacoesPagamento();

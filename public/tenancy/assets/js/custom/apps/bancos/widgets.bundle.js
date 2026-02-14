@@ -383,8 +383,8 @@ var KTCardWidget12 = function () {
                 strokeDashArray: 4,
                 padding: {
                     top: 0,
-                    right: -20,
-                    bottom: -20,
+                    right: 0,
+                    bottom: 0,
                     left: -20
                 },
                 yaxis: {
@@ -421,6 +421,29 @@ var KTCardWidget12 = function () {
 
                 initChart(chart);
             });
+        },
+
+        // 🟢 Atualiza os dados do gráfico dinamicamente (via AJAX)
+        update: function (entradas, saidas, categorias) {
+            if (!chart.self || !chart.rendered) {
+                return;
+            }
+
+            var options = {
+                xaxis: {
+                    categories: categorias || ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez']
+                }
+            };
+
+            chart.self.updateOptions(options, false, false);
+
+            chart.self.updateSeries([{
+                name: 'Entradas',
+                data: entradas
+            }, {
+                name: 'Saídas',
+                data: saidas
+            }]);
         }
     }
 }();

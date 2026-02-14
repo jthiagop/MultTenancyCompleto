@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatusDomusDocumento;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -44,6 +45,29 @@ class DomusDocumento extends Model
         'tamanho_arquivo' => 'integer',
     ];
 
+    /**
+     * Accessor que converte status para Enum com proteção contra valores inválidos.
+     * Se o banco tiver status vazio/nulo, retorna PENDENTE.
+     */
+    public function getStatusAttribute($value): StatusDomusDocumento
+    {
+        if (empty($value)) {
+            return StatusDomusDocumento::PENDENTE;
+        }
+
+        return StatusDomusDocumento::tryFrom($value) ?? StatusDomusDocumento::PENDENTE;
+    }
+
+    /**
+     * Mutator que aceita tanto Enum quanto string ao setar status.
+     */
+    public function setStatusAttribute($value): void
+    {
+        $this->attributes['status'] = $value instanceof StatusDomusDocumento
+            ? $value->value
+            : ($value ?: StatusDomusDocumento::PENDENTE->value);
+    }
+
     // Relacionamentos
     public function user()
     {
@@ -58,12 +82,25 @@ class DomusDocumento extends Model
     // Scopes
     public function scopePendentes($query)
     {
-        return $query->where('status', 'pendente');
+        return $query->where('status', StatusDomusDocumento::PENDENTE);
     }
 
     public function scopeProcessados($query)
     {
-        return $query->where('status', 'processado');
+        return $query->where('status', StatusDomusDocumento::PROCESSADO);
+    }
+
+    public function scopeLancados($query)
+    {
+        return $query->where('status', StatusDomusDocumento::LANCADO);
+    }
+
+    /**
+     * Documentos disponíveis para lançamento (exclui finalizados)
+     */
+    public function scopeDisponiveis($query)
+    {
+        return $query->whereNotIn('status', StatusDomusDocumento::valoresFinalizados());
     }
 
     public function scopePorTipo($query, $tipo)

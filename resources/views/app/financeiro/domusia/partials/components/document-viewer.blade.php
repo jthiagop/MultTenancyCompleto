@@ -37,6 +37,16 @@
          *  DOMUS DOCUMENT VIEWER — Estilos
          * ============================================ */
 
+        /* Wrapper Principal - Card com overflow controlado */
+        .domus-document-viewer-wrapper.card {
+            overflow: hidden !important;
+        }
+
+        .domus-document-viewer-wrapper.card > .card-body {
+            overflow: hidden !important;
+            position: relative !important;
+        }
+
         /* Container do Viewer */
         .domus-viewer-container {
             background-color: #2d2d2d;
@@ -51,7 +61,7 @@
             justify-content: center;
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 2;
+            z-index: 1;
             margin: 0;
             padding: 0;
             overflow: hidden;
@@ -103,7 +113,7 @@
             align-items: center;
             gap: 4px;
             box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
-            z-index: 100;
+            z-index: 10;
             opacity: 0;
             transition: opacity 0.3s ease;
         }
@@ -165,7 +175,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 50;
+            z-index: 5;
             backdrop-filter: blur(4px);
         }
 
@@ -273,7 +283,7 @@
 @endphp
 
 <!-- Wrapper Principal -->
-<div id="{{ $wrapperId }}" class="domus-document-viewer-wrapper {{ $showCard ? 'card card-bordered shadow-sm mb-5' : 'position-relative w-100 h-100' }}" style="position: relative; z-index: auto; overflow: visible;">
+<div id="{{ $wrapperId }}" class="domus-document-viewer-wrapper {{ $showCard ? 'card card-bordered shadow-sm mb-5' : 'position-relative w-100 h-100' }}" style="overflow: hidden;">
 
     @if($showCard)
         <!-- HEADER (Modo Card) -->
@@ -292,7 +302,7 @@
 
     <!-- BODY (Container do Viewer) -->
     <div class="{{ $showCard ? 'card-body p-0' : '' }} position-relative"
-         style="height: {{ $viewerHeight }}; max-height: {{ $viewerMaxHeight }}; overflow: hidden; position: relative; z-index: auto; min-height: 600px; margin: 0; padding: 0 !important;">
+         style="height: {{ $viewerHeight }}; max-height: {{ $viewerMaxHeight }}; overflow: hidden; position: relative; min-height: 600px;">
 
          <!-- TOOLBAR FLUTUANTE (Modo Sem Card) -->
          @if(!$showCard && $showControls)
@@ -309,7 +319,7 @@
          </div>
 
          <!-- VIEWER CONTAINER REAIS -->
-         <div id="{{ $viewerContainerId }}" class="domus-viewer-container" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 2; margin: 0; padding: 0;">
+         <div id="{{ $viewerContainerId }}" class="domus-viewer-container" style="display: none; position: absolute; top: 0; left: 0; right: 0; bottom: 0; width: 100%; height: 100%; z-index: 1; margin: 0; padding: 0;">
 
             <!-- Loading Overlay -->
             <div id="{{ $loadingStateId }}" class="domus-loading-overlay" style="display: none;">

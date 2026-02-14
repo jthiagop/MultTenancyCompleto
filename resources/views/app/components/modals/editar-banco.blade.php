@@ -170,8 +170,10 @@
                                 @foreach ($lps as $lp)
                                     <option value="{{ $lp->id }}" data-type="{{ $lp->type }}"
                                         data-description="{{ $lp->description }}"
+                                        data-tipo-label="{{ $lp->type === 'entrada' ? 'Receita' : 'Despesa' }}"
+                                        data-tipo-color="{{ $lp->type === 'entrada' ? 'success' : 'danger' }}"
                                         {{ $banco->lancamento_padrao_id == $lp->id ? 'selected' : '' }}>
-                                        {{ $lp->description }}
+                                        {{ $lp->id }} - {{ $lp->description }}
                                     </option>
                                 @endforeach
                             </select>

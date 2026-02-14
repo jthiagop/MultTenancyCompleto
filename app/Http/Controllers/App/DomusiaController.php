@@ -103,7 +103,7 @@ class DomusiaController extends Controller
 
             // Preparar dados extraídos para salvar
             $dadosExtraidos = $extractedData ? json_encode($extractedData) : null;
-            $status = $extractedData ? 'processado' : 'pendente';
+            $status = $extractedData ? \App\Enums\StatusDomusDocumento::PROCESSADO : \App\Enums\StatusDomusDocumento::PENDENTE;
 
             // Extrair campos principais se houver dados extraídos
             $estabelecimentoNome = $extractedData['estabelecimento']['nome'] ?? null;
@@ -165,7 +165,7 @@ class DomusiaController extends Controller
                         'nome_arquivo' => $request->filename ?? 'documento_erro_' . time(),
                         'tipo_arquivo' => $this->documentViewerService->getExtensionFromMimeType($request->mime_type),
                         'mime_type' => $request->mime_type,
-                        'status' => 'erro',
+                        'status' => \App\Enums\StatusDomusDocumento::ERRO,
                         'erro_processamento' => $e->getMessage(),
                         'company_id' => session('active_company_id') ?? Auth::user()->company_id ?? null,
                         'user_id' => Auth::id(),

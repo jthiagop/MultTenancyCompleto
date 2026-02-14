@@ -8,15 +8,11 @@
         <!--begin::Modal content-->
         <div class="modal-content rounded">
             <!--begin::Modal header-->
-            <div class="modal-header border-0 pb-0">
-                <div>
-                    <h5 class="modal-title fw-bold" id="recibo_modal_title">Gerar Recibo</h5>
-                    <div class="text-muted fs-7">
-                        Transação <span class="badge badge-light-primary">#<span id="recibo_transacao_id_display"></span></span>
-                        <span class="badge ms-2" id="recibo_numero_badge" style="display: none;"></span>
-                    </div>
-                </div>
-                <button type="button" class="btn btn-icon btn-sm btn-active-light-primary" data-bs-dismiss="modal" aria-label="Fechar">
+            <div class="modal-header d-flex align-items-center border-0 pb-5">
+                <h5 class="modal-title fw-bold mb-0 me-3" id="recibo_modal_title">Gerar Recibo</h5>
+                <span class="badge badge-light-primary me-2">#<span id="recibo_transacao_id_display"></span></span>
+                <span class="badge" id="recibo_numero_badge" style="display: none;"></span>
+                <button type="button" class="btn btn-icon btn-sm btn-active-light-primary ms-auto" data-bs-dismiss="modal" aria-label="Fechar">
                     <i class="fa-solid fa-xmark fs-4"></i>
                 </button>
             </div>
@@ -67,7 +63,7 @@
                     <p class="text-muted fs-7 mb-6">Campos com <span class="text-danger">*</span> são obrigatórios.</p>
 
                     <!--begin::Dados do destinatário-->
-                    <div class="row g-5 mb-6">
+                    <div class="row g-5 mb-3">
                         <x-tenant-input
                             name="nome"
                             id="recibo_nome"
@@ -83,6 +79,9 @@
                             placeholder="000.000.000-00"
                             class="col-md-4" />
                     </div>
+                    <!--begin::Feedback de documento existente-->
+                    <div id="recibo_doc_feedback" class="mb-6" style="display: none;"></div>
+                    <!--end::Feedback-->
                     <!--end::Dados do destinatário-->
 
                     <!--begin::Endereço (componente reutilizável)-->
@@ -104,21 +103,11 @@
                 </div>
                 <!--end::Modal body-->
 
-                <!--begin::Modal footer-->
-                <div class="modal-footer border-top pt-5">
-                    <button type="button" data-bs-dismiss="modal" class="btn btn-sm btn-light me-3">
-                        <i class="fa-solid fa-times me-1"></i> Cancelar
-                    </button>
-                    <button type="submit" class="btn btn-sm btn-primary" id="recibo_submit_btn">
-                        <span class="indicator-label">
-                            <i class="fa-solid fa-file-signature me-2"></i> Emitir Recibo
-                        </span>
-                        <span class="indicator-progress">
-                            Gerando... <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                        </span>
-                    </button>
-                </div>
-                <!--end::Modal footer-->
+                <x-tenant-modal-footer
+                    submitText="Emitir Recibo"
+                    submitIcon="fa-solid fa-file-signature"
+                    submitId="recibo_submit_btn"
+                    loadingText="Gerando..." />
             </form>
         </div>
         <!--end::Modal content-->
@@ -166,6 +155,12 @@
         const form = document.getElementById(ids.form);
         form.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
         form.querySelectorAll('.invalid-feedback').forEach(el => el.textContent = '');
+
+        // Limpar feedback de documento
+        const docFeedback = document.getElementById('recibo_doc_feedback');
+        docFeedback.style.display = 'none';
+        docFeedback.innerHTML = '';
+        window._reciboDocExiste = false;
 
         // --- Dados básicos ---
         document.getElementById(ids.idDisplay).textContent = transacao.id;
@@ -403,5 +398,80 @@
         }
 
         e.target.value = value;
+
+        // Limpar feedback ao digitar
+        const $feedback = document.getElementById('recibo_doc_feedback');
+        $feedback.style.display = 'none';
+        $feedback.innerHTML = '';
+        document.getElementById('recibo_cpf_cnpj').classList.remove('is-invalid', 'is-valid');
+        window._reciboDocExiste = false;
+    });
+
+    // ==========================================
+    // Verificação de CPF/CNPJ existente (blur)
+    // ==========================================
+    window._reciboDocExiste = false;
+
+    document.getElementById('recibo_cpf_cnpj').addEventListener('blur', function() {
+        const valor = this.value;
+        const valorLimpo = valor.replace(/\D/g, '');
+        const $input = this;
+        const $feedback = document.getElementById('recibo_doc_feedback');
+
+        // Limpar estado anterior
+        $feedback.style.display = 'none';
+        $feedback.innerHTML = '';
+        $input.classList.remove('is-invalid', 'is-valid');
+        window._reciboDocExiste = false;
+
+        // Verificar se tem tamanho suficiente (CPF=11, CNPJ=14)
+        if (valorLimpo.length < 11) return;
+
+        const tipo = valorLimpo.length <= 11 ? 'cpf' : 'cnpj';
+        const tipoLabel = tipo === 'cnpj' ? 'CNPJ' : 'CPF';
+
+        fetch('{{ route("parceiros.check-documento", [], false) }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ tipo: tipo, valor: valorLimpo })
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.exists && data.parceiro) {
+                window._reciboDocExiste = true;
+
+                // Usar nome ou nome_fantasia (o que estiver disponível)
+                const nomeExibir = data.parceiro.nome || data.parceiro.nome_fantasia || '';
+
+                // Auto-preencher nome do parceiro encontrado
+                document.getElementById('recibo_nome').value = nomeExibir;
+
+                // Auto-preencher endereço se disponível
+                if (data.parceiro.address) {
+                    preencherEndereco('recibo_', data.parceiro.address);
+                }
+
+                // Feedback informativo
+                $feedback.innerHTML =
+                    '<div class="d-flex align-items-center bg-light-info rounded p-3">' +
+                        '<i class="fa-solid fa-user-check  fs-4 me-3"></i>' +
+                        '<div>' +
+                            '<span class="fw-semibold text-gray-800">Parceiro encontrado</span>' +
+                            '<span class="d-block fs-7 text-gray-600">Dados preenchidos de: <strong>' + nomeExibir + '</strong></span>' +
+                        '</div>' +
+                    '</div>';
+                $feedback.style.display = 'block';
+                $input.classList.add('is-valid');
+
+                // Focar no referente já que os dados foram preenchidos
+                document.getElementById('recibo_referente').focus();
+            }
+        })
+        .catch(() => {});
     });
 </script>

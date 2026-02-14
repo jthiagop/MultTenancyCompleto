@@ -86,6 +86,11 @@ class EntidadeFinanceiraService
             // Calcula variação percentual
             $entidade->variacao_percentual = $this->calcularVariacaoPercentual($entidade);
             
+            // Calcula variação absoluta em R$
+            $saldoAtual = $entidade->saldo_atual ?? 0;
+            $saldoAnterior = $this->getSaldoAnterior($entidade);
+            $entidade->variacao_valor = $saldoAtual - $saldoAnterior;
+
             // Determina se a variação é positiva ou negativa
             $entidade->variacao_positiva = $entidade->variacao_percentual >= 0;
             

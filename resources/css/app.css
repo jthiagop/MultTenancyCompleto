@@ -99,6 +99,11 @@
   }
 }
 
+/* Override global do font-size do Metronic (que usa 13px !important) */
+html, body {
+  font-size: 12px !important;
+}
+
 /* Metronic Card Backgrounds */
 .channel-stats-bg {
     background-image: url('/metronic/assets/media/images/2600x1600/bg-3.png');

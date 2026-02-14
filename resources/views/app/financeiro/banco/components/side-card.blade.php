@@ -22,7 +22,7 @@
         : collect($todasEntidades);
 @endphp
 
-<div class="col-12 col-sm-12 col-md-5">
+<div class="col-12 col-sm-12 col-md-4">
     @if($todasEntidades->isEmpty())
         {{-- Estado vazio --}}
         <div class="card card-flush h-xl-100">
@@ -35,32 +35,13 @@
         </div>
     @else
         <div id="{{ $carouselId }}"
-             class="card card-flush carousel carousel-custom carousel-stretch slide h-xl-100"
+             class="carousel carousel-custom slide h-xl-100 border-start border-2 border-primary ps-6 ms-6 d-flex flex-column justify-content-center"
              data-bs-ride="carousel"
              data-bs-interval="9000"
              role="region"
              aria-label="Carrossel de entidades financeiras">
 
-            <div class="card-body py-3 position-relative">
-                {{-- Controls --}}
-                @if ($todasEntidades->count() > 1)
-                    <button class="carousel-control-prev entity-carousel-control"
-                            type="button"
-                            data-bs-target="#{{ $carouselId }}"
-                            data-bs-slide="prev"
-                            aria-label="Slide anterior">
-                        <i class="bi bi-chevron-compact-left fs-1 me-12" aria-hidden="true"></i>
-                    </button>
-
-                    <button class="carousel-control-next entity-carousel-control"
-                            type="button"
-                            data-bs-target="#{{ $carouselId }}"
-                            data-bs-slide="next"
-                            aria-label="Próximo slide">
-                        <i class="bi bi-chevron-compact-right fs-1 ms-12" aria-hidden="true"></i>
-                    </button>
-                @endif
-
+            <div class="position-relative">
                 <div class="carousel-inner" role="listbox" aria-label="Lista de entidades financeiras">
                     @foreach ($todasEntidades as $key => $entidade)
                         @include('app.financeiro.banco.components.side-card-item', [
@@ -80,7 +61,7 @@
                     @foreach ($todasEntidades as $key => $entidade)
                         <li data-bs-target="#{{ $carouselId }}"
                             data-bs-slide-to="{{ $key }}"
-                            class="bullet bullet-dot bg-success me-5 {{ $key === 0 ? 'active' : '' }}"
+                            class="bullet bullet-dot bg-gray-400 me-5 {{ $key === 0 ? 'active' : '' }}"
                             role="tab"
                             aria-label="Ir para slide {{ $key + 1 }}"
                             @if($key === 0) aria-selected="true" @endif>

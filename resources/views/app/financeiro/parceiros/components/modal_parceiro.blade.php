@@ -46,6 +46,7 @@
                                         <i class="bi bi-search"></i> Consultar
                                     </button>
                                 </div>
+                                <div id="cnpj_check_feedback" class="mt-2" style="display: none;"></div>
                             </div>
                             <!--end::Col-->
 
@@ -54,6 +55,7 @@
                                 <label class="fs-6 fw-semibold mb-2">CPF</label>
                                 <input type="text" class="form-control" name="cpf" id="cpf"
                                     placeholder="000.000.000-00" />
+                                <div id="cpf_check_feedback" class="mt-2" style="display: none;"></div>
                             </div>
                             <!--end::Col-->
                         </div>
@@ -187,15 +189,9 @@
                     </div>
                 </div>
 
-                <div class="modal-footer flex-center">
-                    <button type="button" class="btn btn-light me-3" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary" id="btn_salvar_parceiro">
-                        <span class="indicator-label">Salvar</span>
-                        <span class="indicator-progress">Aguarde...
-                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                        </span>
-                    </button>
-                </div>
+                <x-tenant-modal-footer
+                    submitText="Salvar"
+                    submitId="btn_salvar_parceiro" />
             </form>
         </div>
     </div>

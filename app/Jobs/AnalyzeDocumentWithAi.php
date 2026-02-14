@@ -95,14 +95,14 @@ class AnalyzeDocumentWithAi implements ShouldQueue
                     'data_emissao' => $financeiro['data_emissao'] ?? null,
                     'valor_total' => $financeiro['valor_total'] ?? null,
                     'forma_pagamento' => $financeiro['forma_pagamento'] ?? null,
-                    'status' => 'processado',
+                    'status' => \App\Enums\StatusDomusDocumento::PROCESSADO,
                     'processado_em' => now(),
                 ]);
 
                 Log::info("Registro em domus_documentos atualizado com dados da IA", [
                     'documento_id' => $documento->id,
                     'nome_arquivo' => $nomeArquivo,
-                    'status' => 'processado',
+                    'status' => \App\Enums\StatusDomusDocumento::PROCESSADO->value,
                 ]);
 
                 // 7. Gerar mensagem natural usando IA (Cérebro Duplo - Parte 2)

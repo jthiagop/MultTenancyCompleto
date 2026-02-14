@@ -187,6 +187,64 @@
                 options.templateResult = formatOptionWithIcon;
             }
 
+            // Adiciona template personalizado para o select de lancamento_padraos_id (badge de tipo)
+            if (selectId === 'lancamento_padraos_id') {
+                var formatLancamentoPadrao = function(item) {
+                    if (!item.id) {
+                        return item.text;
+                    }
+
+                    var $option = $(item.element);
+                    var tipoLabel = $option.data('tipo-label');
+                    var tipoColor = $option.data('tipo-color');
+                    var id = item.id;
+                    var description = $option.data('description') || item.text.split(' - ').slice(1).join(' - ');
+
+                    if (!tipoLabel) {
+                        return item.text;
+                    }
+
+                    var $result = $(
+                        '<span class="d-flex align-items-center justify-content-between w-100">' +
+                            '<span>' +
+                                '<span class="fw-bold text-gray-700 me-1">' + id + '</span>' +
+                                '<span class="text-gray-600">- ' + description + '</span>' +
+                            '</span>' +
+                            '<span class="badge badge-light-' + tipoColor + ' fs-9 ms-2">' + tipoLabel + '</span>' +
+                        '</span>'
+                    );
+                    return $result;
+                };
+
+                var formatLancamentoPadraoSelection = function(item) {
+                    if (!item.id) {
+                        return item.text;
+                    }
+
+                    var $option = $(item.element);
+                    var tipoLabel = $option.data('tipo-label');
+                    var tipoColor = $option.data('tipo-color');
+                    var id = item.id;
+                    var description = $option.data('description') || item.text.split(' - ').slice(1).join(' - ');
+
+                    if (!tipoLabel) {
+                        return item.text;
+                    }
+
+                    var $result = $(
+                        '<span class="d-flex align-items-center">' +
+                            '<span class="fw-bold text-gray-700 me-1">' + id + '</span>' +
+                            '<span class="text-gray-600 me-2">- ' + description + '</span>' +
+                            '<span class="badge badge-light-' + tipoColor + ' fs-9">' + tipoLabel + '</span>' +
+                        '</span>'
+                    );
+                    return $result;
+                };
+
+                options.templateResult = formatLancamentoPadrao;
+                options.templateSelection = formatLancamentoPadraoSelection;
+            }
+
             // Inicializa usando jQuery Select2 diretamente
             try {
                 $select.select2(options);
@@ -1583,17 +1641,25 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
         // Garante que elementos necessários estejam visíveis/ocultos conforme o estado atual
         var tipo = $('#tipo').val() || $('#tipo_financeiro').val();
         
-        console.log('📋 [Drawer-Init] Tipo detectado:', tipo);
+        console.log('📋 [Drawer-Init] #tipo.val():', $('#tipo').val());
+        console.log('📋 [Drawer-Init] #tipo_financeiro.val():', $('#tipo_financeiro').val());
+        console.log('📋 [Drawer-Init] Tipo detectado (final):', tipo);
         
         // Se há um tipo definido, configura a visibilidade dos checkboxes
         if (tipo) {
             console.log('✅ [Drawer-Init] Aplicando lógica de checkbox para tipo:', tipo);
+            console.log('✅ [Drawer-Init] window.toggleCheckboxesByTipo existe?', typeof window.toggleCheckboxesByTipo);
             
             if (typeof window.toggleCheckboxesByTipo === 'function') {
-                console.log('🎯 [Drawer-Init] Chamando toggleCheckboxesByTipo...');
+                console.log('🎯 [Drawer-Init] Chamando toggleCheckboxesByTipo com tipo:', tipo);
                 window.toggleCheckboxesByTipo(tipo);
             } else {
-                console.warn('⚠️ [Drawer-Init] toggleCheckboxesByTipo não está disponível');
+                console.warn('⚠️ [Drawer-Init] toggleCheckboxesByTipo não está disponível - verificando se scripts foram carregados');
+                console.log('⚠️ [Drawer-Init] Scripts no window:', {
+                    toggleCheckboxesByTipo: typeof window.toggleCheckboxesByTipo,
+                    toggleCheckboxPago: typeof window.toggleCheckboxPago,
+                    toggleCheckboxAgendado: typeof window.toggleCheckboxAgendado
+                });
             }
             
             // Pequeno delay para garantir que o DOM foi atualizado
@@ -1608,7 +1674,8 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
         } else {
             // Se não há tipo definido, oculta todos os checkboxes (estado inicial)
             console.log('❌ [Drawer-Init] Nenhum tipo definido - ocultando checkboxes');
-            $('#checkboxes-entrada-wrapper, #checkboxes-saida-wrapper').hide();
+            $('#checkboxes-entrada-wrapper').addClass('d-none');
+            $('#checkboxes-saida-wrapper').addClass('d-none').removeClass('d-flex');
             $('#checkbox-pago-wrapper, #checkbox-recebido-wrapper').hide();
         }
         

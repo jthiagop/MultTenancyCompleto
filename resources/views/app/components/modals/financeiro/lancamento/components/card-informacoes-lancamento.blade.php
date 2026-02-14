@@ -66,7 +66,9 @@
                 showSuggestionStar="true">
                 @foreach ($lps as $lp)
                     <option value="{{ $lp->id }}" data-description="{{ $lp->description }}"
-                        data-type="{{ $lp->type }}">{{ $lp->id }} -
+                        data-type="{{ $lp->type }}"
+                        data-tipo-label="{{ $lp->type === 'entrada' ? 'Receita' : 'Despesa' }}"
+                        data-tipo-color="{{ $lp->type === 'entrada' ? 'success' : 'danger' }}">{{ $lp->id }} -
                         {{ $lp->description }}</option>
                 @endforeach
             </x-tenant-select>

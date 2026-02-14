@@ -6,7 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Models\Address;
 use App\Models\Financeiro\Recibo;
 use App\Models\Financeiro\TransacaoFinanceira;
+use App\Models\Parceiro;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Spatie\Browsershot\Browsershot;
 use App\Helpers\BrowsershotHelper;
 use Validator;
@@ -107,6 +110,18 @@ class ReciboController extends Controller
         // Verifica se a transação existe
         $transacao = TransacaoFinanceira::findOrFail($transacaoId);
 
+        // Bloquear recibo duplicado para a mesma transação
+        $reciboExistente = Recibo::where('transacao_id', $transacao->id)->first();
+        if ($reciboExistente) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Já existe um recibo para esta transação.',
+                ], 409);
+            }
+            return redirect()->back()->with('error', 'Já existe um recibo para esta transação.');
+        }
+
         // Criar ou atualizar o endereço (sem transacao_id)
         $address = Address::updateOrCreate(
             [
@@ -123,12 +138,18 @@ class ReciboController extends Controller
         // Criar o recibo vinculado à transação e ao endereço
         $recibo = Recibo::create([
             'transacao_id' => $transacao->id,
-            'address_id' => $address->id, // ✅ Agora o recibo guarda o ID do endereço
+            'address_id' => $address->id,
             'nome' => $request->nome,
             'cpf_cnpj' => $request->cpf_cnpj,
-            'valor' => $transacao->valor, // Pega o valor da transação
+            'valor' => $transacao->valor,
             'referente' => $request->referente,
         ]);
+
+        // =============================================
+        // Criar ou vincular Parceiro automaticamente
+        // Entrada = Cliente | Saída = Fornecedor
+        // =============================================
+        $this->vincularOuCriarParceiro($transacao, $request, $address);
 
         // Se for requisição AJAX, retornar JSON de sucesso com URL do PDF
         if ($request->ajax() || $request->wantsJson()) {
@@ -146,6 +167,93 @@ class ReciboController extends Controller
         }
 
         return redirect()->back()->with('message', 'Recibo criado com sucesso!');
+    }
+
+    /**
+     * Vincula um parceiro existente ou cria um novo a partir dos dados do recibo.
+     *
+     * Regra de negócio:
+     * - Entrada (receita) → parceiro é Cliente
+     * - Saída (despesa)   → parceiro é Fornecedor
+     *
+     * Se a transação já tem parceiro vinculado, apenas atualiza o endereço (se vazio).
+     * Se não tem parceiro, busca por CPF/CNPJ. Se encontrar, vincula. Se não, cria novo.
+     */
+    protected function vincularOuCriarParceiro(TransacaoFinanceira $transacao, Request $request, Address $address): void
+    {
+        $activeCompanyId = session('active_company_id');
+        $cpfCnpjLimpo = preg_replace('/\D/', '', $request->cpf_cnpj);
+
+        if (empty($cpfCnpjLimpo)) {
+            return; // Sem documento, não há como buscar/criar parceiro
+        }
+
+        // Determinar natureza: entrada = cliente, saída = fornecedor
+        $natureza = $transacao->tipo === 'entrada' ? 'cliente' : 'fornecedor';
+
+        // Determinar tipo de documento e pessoa
+        $isCpf = strlen($cpfCnpjLimpo) <= 11;
+        $tipoPessoa = $isCpf ? 'pf' : 'pj';
+        $campoDoc = $isCpf ? 'cpf' : 'cnpj';
+
+        // Se a transação já tem parceiro, apenas atualizar endereço se estiver vazio
+        if ($transacao->parceiro_id) {
+            $parceiroExistente = Parceiro::find($transacao->parceiro_id);
+            if ($parceiroExistente && !$parceiroExistente->address_id && $address->id) {
+                $parceiroExistente->update(['address_id' => $address->id]);
+            }
+            // Atualizar natureza para 'ambos' se necessário
+            if ($parceiroExistente && $parceiroExistente->natureza !== $natureza && $parceiroExistente->natureza !== 'ambos') {
+                $parceiroExistente->update(['natureza' => 'ambos']);
+            }
+            return;
+        }
+
+        // Buscar parceiro existente pelo documento na mesma empresa
+        $parceiro = Parceiro::where('company_id', $activeCompanyId)
+            ->where($campoDoc, $cpfCnpjLimpo)
+            ->first();
+
+        if ($parceiro) {
+            // Parceiro encontrado — vincular à transação
+            $transacao->update(['parceiro_id' => $parceiro->id]);
+
+            // Atualizar endereço do parceiro se não tiver
+            if (!$parceiro->address_id && $address->id) {
+                $parceiro->update(['address_id' => $address->id]);
+            }
+
+            // Atualizar natureza para 'ambos' se necessário
+            if ($parceiro->natureza !== $natureza && $parceiro->natureza !== 'ambos') {
+                $parceiro->update(['natureza' => 'ambos']);
+            }
+        } else {
+            // Parceiro não existe — criar novo
+            try {
+                DB::beginTransaction();
+
+                $parceiro = Parceiro::create([
+                    'nome' => $request->nome,
+                    'tipo' => $tipoPessoa,
+                    'natureza' => $natureza,
+                    $campoDoc => $cpfCnpjLimpo,
+                    'company_id' => $activeCompanyId,
+                    'address_id' => $address->id,
+                    'active' => true,
+                    'created_by' => Auth::id(),
+                    'created_by_name' => Auth::user()->name ?? null,
+                ]);
+
+                // Vincular o novo parceiro à transação
+                $transacao->update(['parceiro_id' => $parceiro->id]);
+
+                DB::commit();
+            } catch (\Exception $e) {
+                DB::rollBack();
+                // Log do erro mas não impede a geração do recibo
+                \Log::warning('Falha ao criar parceiro automaticamente via recibo: ' . $e->getMessage());
+            }
+        }
     }
 
     /**

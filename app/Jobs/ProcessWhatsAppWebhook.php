@@ -576,7 +576,7 @@ class ProcessWhatsAppWebhook implements ShouldQueue
                         'mime_type' => $mimeType,
                         'tamanho_arquivo' => $fileSize,
                         'base64_content' => $base64Content, // Pode ser null para arquivos grandes
-                        'status' => 'pendente', // Status inicial: pendente (será processado pela IA)
+                        'status' => \App\Enums\StatusDomusDocumento::PENDENTE,
                         'company_id' => $companyId,
                         'user_id' => $userId,
                         'user_name' => $userName,

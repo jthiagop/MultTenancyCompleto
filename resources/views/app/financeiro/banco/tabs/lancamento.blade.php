@@ -198,8 +198,11 @@
                                             id="lancamento_padrao_banco">
                                             <option value=""></option>
                                             @foreach ($lps as $lp)
-                                                <option value="{{old($lp->id, 'tipo_documento')  }}" data-type="{{ old($lp->type) }}">
-                                                    {{ $lp->description }}
+                                                <option value="{{ $lp->id }}" data-type="{{ $lp->type }}"
+                                                    data-description="{{ $lp->description }}"
+                                                    data-tipo-label="{{ $lp->type === 'entrada' ? 'Receita' : 'Despesa' }}"
+                                                    data-tipo-color="{{ $lp->type === 'entrada' ? 'success' : 'danger' }}">
+                                                    {{ $lp->id }} - {{ $lp->description }}
                                                 </option>
                                             @endforeach
                                         </select>

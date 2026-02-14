@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\StatusDomusDocumento;
 use App\Models\DomusDocumento;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -59,6 +60,9 @@ class DocumentViewerService
         // Aplicar filtros
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
+        } else {
+            // Por padrão, excluir documentos finalizados (lançados/arquivados)
+            $query->whereNotIn('status', StatusDomusDocumento::valoresFinalizados());
         }
 
         if (isset($filters['tipo_documento'])) {

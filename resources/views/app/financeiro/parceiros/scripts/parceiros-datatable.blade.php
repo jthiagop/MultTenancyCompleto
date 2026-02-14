@@ -8,6 +8,8 @@ var ParceirosDataTable = (function () {
     const baseUrl = '{{ url("/financeiro/parceiros") }}';
     const activeTab = '{{ $activeTab }}';
 
+    const checkDocUrl = '{{ route("parceiros.check-documento", [], false) }}';
+
     let dataTable = null;
     let tableId = null;
     let currentStatus = 'todos';
@@ -479,6 +481,104 @@ var ParceirosDataTable = (function () {
         $('#check_cliente').prop('checked', false);
         updateNaturezaHidden();
         toggleDocFields('pj');
+        // Limpar feedbacks de documento
+        limparCheckDocumento();
+    }
+
+    // ==========================================
+    // Verificação de CPF/CNPJ duplicado
+    // ==========================================
+    let checkDocTimeout = null;
+    let _parceiroDocExiste = false;
+
+    function verificarDocumento(tipo, valor) {
+        const feedbackId = tipo + '_check_feedback';
+        const $feedback = $('#' + feedbackId);
+        const $input = $('#' + tipo);
+
+        // Limpar feedback anterior
+        $feedback.hide().html('');
+        $input.removeClass('is-invalid is-valid');
+        _parceiroDocExiste = false;
+
+        // Limpar só dígitos
+        const valorLimpo = valor.replace(/\D/g, '');
+        const tamanhoEsperado = tipo === 'cnpj' ? 14 : 11;
+
+        if (valorLimpo.length < tamanhoEsperado) return;
+
+        const excludeId = $('#parceiro_id').val() || null;
+
+        $.ajax({
+            url: checkDocUrl,
+            type: 'POST',
+            data: {
+                tipo: tipo,
+                valor: valorLimpo,
+                exclude_id: excludeId,
+            },
+            headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+            success: function (res) {
+                if (res.exists) {
+                    _parceiroDocExiste = true;
+                    const tipoLabel = tipo === 'cnpj' ? 'CNPJ' : 'CPF';
+                    const p = res.parceiro;
+                    const nomeExibir = p.nome || p.nome_fantasia || '';
+
+                    // Auto-preencher campos com dados do parceiro existente
+                    if (p.nome) $('#parceiro_nome').val(p.nome);
+                    if (p.nome_fantasia) $('#parceiro_nome_fantasia').val(p.nome_fantasia);
+                    if (p.telefone) $('#parceiro_telefone').val(p.telefone);
+                    if (p.email) $('#parceiro_email').val(p.email);
+                    if (p.observacoes) $('#parceiro_observacoes').val(p.observacoes);
+
+                    // Auto-preencher natureza (checkboxes)
+                    if (p.natureza) {
+                        $('#check_fornecedor').prop('checked', p.natureza === 'fornecedor' || p.natureza === 'ambos');
+                        $('#check_cliente').prop('checked', p.natureza === 'cliente' || p.natureza === 'ambos');
+                        updateNaturezaHidden();
+                    }
+
+                    // Auto-preencher endereço
+                    if (p.address) {
+                        // Expandir seção de endereço se estiver colapsada
+                        const $collapse = $('#collapse_endereco');
+                        if (!$collapse.hasClass('show')) {
+                            $collapse.collapse('show');
+                        }
+                        if (p.address.cep) $('#parceiro_cep').val(p.address.cep);
+                        if (p.address.rua) $('#parceiro_rua').val(p.address.rua);
+                        if (p.address.numero) $('#parceiro_numero').val(p.address.numero);
+                        if (p.address.bairro) $('#parceiro_bairro').val(p.address.bairro);
+                        if (p.address.cidade) $('#parceiro_cidade').val(p.address.cidade);
+                        if (p.address.uf) {
+                            $('#parceiro_uf').val(p.address.uf).trigger('change');
+                        }
+                    }
+
+                    // Guardar ID para não duplicar na gravação
+                    $('#parceiro_id').val(p.id);
+                    $('#modal_parceiro_title').text('Editar Cadastro');
+
+                    $feedback.html(
+                        '<div class="d-flex align-items-center text-info">' +
+                            '<i class="fa-solid fa-user-check me-2 text-info"></i>' +
+                            '<span class="fs-7">Parceiro encontrado: <strong>' + escapeHtml(nomeExibir) + '</strong>. Dados carregados para edição.</span>' +
+                        '</div>'
+                    ).show();
+                    $input.addClass('is-valid');
+                } else {
+                    $input.addClass('is-valid');
+                    setTimeout(function() { $input.removeClass('is-valid'); }, 2000);
+                }
+            }
+        });
+    }
+
+    function limparCheckDocumento() {
+        $('#cnpj_check_feedback, #cpf_check_feedback').hide().html('');
+        $('#cnpj, #cpf').removeClass('is-invalid is-valid');
+        _parceiroDocExiste = false;
     }
 
     // Escape helpers
@@ -509,6 +609,21 @@ var ParceirosDataTable = (function () {
 
         // Form submit
         $('#form_parceiro').on('submit', handleFormSubmit);
+
+        // Verificação de CPF/CNPJ duplicado ao sair do campo
+        $('#cnpj').on('blur', function () {
+            const val = $(this).val();
+            if (val && val.replace(/\D/g, '').length >= 14) {
+                verificarDocumento('cnpj', val);
+            }
+        });
+
+        $('#cpf').on('blur', function () {
+            const val = $(this).val();
+            if (val && val.replace(/\D/g, '').length >= 11) {
+                verificarDocumento('cpf', val);
+            }
+        });
 
         // Reset ao fechar modal
         $('#modal_parceiro').on('hidden.bs.modal', function () {

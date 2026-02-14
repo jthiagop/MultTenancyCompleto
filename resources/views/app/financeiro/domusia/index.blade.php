@@ -45,6 +45,12 @@
     {{--begin::Drawer - Lançamento de Despesa Domusia--}}
     @include('app.components.modals.financeiro.drawer_domusia_despesa')
 
+    {{--begin::Drawer - Cadastro de Parceiro (Fornecedor/Cliente)--}}
+    @include('app.components.modals.financeiro.lancamento.drawer_fornecedor')
+
+    {{--begin::Modal - Cadastro de Parceiro--}}
+    @include('app.financeiro.parceiros.components.modal_parceiro')
+
     @push('scripts')
     <script>
         // Inicializar KTDrawer se disponível

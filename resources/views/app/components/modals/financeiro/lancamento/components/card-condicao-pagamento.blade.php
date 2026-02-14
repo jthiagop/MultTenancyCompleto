@@ -91,7 +91,7 @@
             <div class="col-md-6 d-flex align-items-end gap-5 pb-2">
 
                 <!--begin::Wrapper Checkboxes Entrada (Receita) - Apenas Recebido-->
-                <div id="checkboxes-entrada-wrapper" style="display: none;">
+                <div id="checkboxes-entrada-wrapper" class="d-none">
                     <!--begin::Checkbox Recebido (só aparece se parcelamento for À vista ou 1x)-->
                     <div id="checkbox-recebido-wrapper" style="display: none;">
                         <x-tenant-checkbox name="recebido" id="recebido_checkbox" label="Recebido"
@@ -104,26 +104,26 @@
                 </div>
                 <!--end::Wrapper Checkboxes Entrada-->
 
-                <!--begin::Wrapper Checkboxes Saída (Despesa) - Pago e Agendado-->
-                <div id="checkboxes-saida-wrapper" style="display: none;">
+                <!--begin::Wrapper Checkboxes Saída (Despesa) - Apenas Pago-->
+                <div id="checkboxes-saida-wrapper" class="d-none">
                     <!--begin::Checkbox Pago (só aparece se parcelamento for À vista ou 1x)-->
                     <div id="checkbox-pago-wrapper" style="display: none;">
                         <x-tenant-checkbox name="pago" id="pago_checkbox" label="Pago"
                             tooltipTitle="Marcar como pago" />
                     </div>
                     <!--end::Checkbox Pago-->
-
-                    <!--begin::Checkbox Agendado-->
-                    <div id="checkbox-agendado-wrapper">
-                        <x-tenant-checkbox name="agendado" id="agendado_checkbox" label="Agendado"
-                            tooltipTitle="O pagamento será agendado para a data do campo Vencimento, mas não será marcado como pago automaticamente. Ele será marcado como pago apenas quando você fizer isso manualmente."
-                            dynamicTooltipField="vencimento"
-                            dynamicTooltipPrefix="O pagamento será agendado para a data do campo Vencimento ("
-                            dynamicTooltipSuffix="), mas não será marcado como pago automaticamente. Ele será marcado como pago apenas quando você fizer isso manualmente." />
-                    </div>
-                    <!--end::Checkbox Agendado-->
                 </div>
                 <!--end::Wrapper Checkboxes Saída-->
+
+                <!--begin::Checkbox Agendado (sempre visível, esconde quando Pago ou Recebido marcado)-->
+                <div id="checkbox-agendado-wrapper">
+                    <x-tenant-checkbox name="agendado" id="agendado_checkbox" label="Agendado"
+                        tooltipTitle="O pagamento será agendado para a data do campo Vencimento, mas não será marcado como pago automaticamente. Ele será marcado como pago apenas quando você fizer isso manualmente."
+                        dynamicTooltipField="vencimento"
+                        dynamicTooltipPrefix="O pagamento será agendado para a data do campo Vencimento ("
+                        dynamicTooltipSuffix="), mas não será marcado como pago automaticamente. Ele será marcado como pago apenas quando você fizer isso manualmente." />
+                </div>
+                <!--end::Checkbox Agendado-->
 
             </div>
             <!--end::Col-->

@@ -108,8 +108,8 @@
             if (tipo === 'entrada') {
                 // Receita: Mostra apenas Recebido
                 console.log('[toggleCheckboxesByTipo] Mostrando checkboxes de ENTRADA');
-                wrapperEntrada.show();
-                wrapperSaida.hide();
+                wrapperEntrada.removeClass('d-none');
+                wrapperSaida.addClass('d-none').removeClass('d-flex');
 
                 // Desmarca checkboxes de Saída
                 $('#pago_checkbox').prop('checked', false);
@@ -117,8 +117,8 @@
             } else if (tipo === 'saida') {
                 // Despesa: Mostra Pago e Agendado
                 console.log('[toggleCheckboxesByTipo] Mostrando checkboxes de SAÍDA');
-                wrapperEntrada.hide();
-                wrapperSaida.show();
+                wrapperEntrada.addClass('d-none');
+                wrapperSaida.removeClass('d-none').addClass('d-flex');
 
                 // Desmarca checkbox de Entrada
                 if (typeof $ !== 'undefined') {
@@ -130,26 +130,25 @@
             } else {
                 console.log('[toggleCheckboxesByTipo] Tipo não definido, mostrando SAÍDA por padrão');
                 // Default: mostrar saída
-                wrapperEntrada.hide();
-                wrapperSaida.show();
+                wrapperEntrada.addClass('d-none');
+                wrapperSaida.removeClass('d-none').addClass('d-flex');
             }
 
             // Atualiza visibilidade do checkbox inner baseado no parcelamento
             toggleCheckboxPago();
         }
 
-        // Controla a exibição do checkbox "Agendado" baseado no estado do checkbox "Pago"
+        // Controla a exibição do checkbox "Agendado" (esconde quando Pago ou Recebido marcado)
         function toggleCheckboxAgendado() {
             var pagoCheckbox = $('#pago_checkbox');
+            var recebidoCheckbox = $('#recebido_checkbox');
             var agendadoWrapper = $('#checkbox-agendado-wrapper');
 
-            if (pagoCheckbox.is(':checked')) {
-                // Oculta o checkbox Agendado quando Pago está marcado
+            // Esconde Agendado se Pago OU Recebido estiver marcado
+            if (pagoCheckbox.is(':checked') || recebidoCheckbox.is(':checked')) {
                 agendadoWrapper.hide();
-                // Desmarca o checkbox Agendado se estiver marcado
                 $('#agendado_checkbox').prop('checked', false);
             } else {
-                // Mostra o checkbox Agendado quando Pago não está marcado
                 agendadoWrapper.show();
             }
         }
@@ -1065,15 +1064,17 @@
             toggleAccordionInformacoesPagamento();
         });
 
-        // Evento para checkbox "Recebido" - controla accordion de informações de recebimento
+        // Evento para checkbox "Recebido" - controla accordion e Agendado
         if (typeof $ !== 'undefined') {
             $(document).on('change', '#recebido_checkbox', function() {
+                toggleCheckboxAgendado();
                 toggleAccordionInformacoesPagamento();
             });
         } else {
             var recebidoCheckbox = document.getElementById('recebido_checkbox');
             if (recebidoCheckbox) {
                 recebidoCheckbox.addEventListener('change', function() {
+                    toggleCheckboxAgendado();
                     toggleAccordionInformacoesPagamento();
                 });
             }

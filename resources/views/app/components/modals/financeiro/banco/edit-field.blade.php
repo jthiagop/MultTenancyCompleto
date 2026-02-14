@@ -37,7 +37,9 @@
                                 @foreach ($lps as $lp)
                                     @if($lp->type === $banco->tipo)
                                         <option value="{{ $lp->id }}" data-description="{{ $lp->description }}"
-                                            data-type="{{ $lp->type }}">{{ $lp->id }} - {{ $lp->description }}</option>
+                                            data-type="{{ $lp->type }}"
+                                            data-tipo-label="{{ $lp->type === 'entrada' ? 'Receita' : 'Despesa' }}"
+                                            data-tipo-color="{{ $lp->type === 'entrada' ? 'success' : 'danger' }}">{{ $lp->id }} - {{ $lp->description }}</option>
                                     @endif
                                 @endforeach
                             @endif

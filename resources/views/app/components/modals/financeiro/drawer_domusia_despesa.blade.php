@@ -43,7 +43,7 @@
         <div class="row g-0 h-100" style="min-height: calc(100vh - 130px);">
 
             <!--begin::Col Esquerda - Visualizador de Documento-->
-            <div class="col-xl-5 border-end h-100 position-relative" style="min-height: 400px;">
+            <div class="col-xl-4 border-end h-100 position-relative" style="min-height: 400px;">
                 <div id="drawer_viewer_wrapper" class="domus-document-viewer-wrapper position-relative w-100 h-100">
 
                     {{-- Container do Viewer --}}
@@ -92,7 +92,7 @@
             <!--end::Col Esquerda-->
 
             <!--begin::Col Direita - Formulário-->
-            <div class="col-xl-7 h-100 overflow-y-auto bg-light">
+            <div class="col-xl-8 h-100 overflow-y-auto bg-light">
                 <form id="{{ $formId }}" method="POST" action="{{ route('transacoes-financeiras.store') }}" enctype="multipart/form-data">
                     @csrf
 
@@ -145,16 +145,17 @@
                                 <h3 class="card-title fs-6 fw-bold">Informações do Lançamento</h3>
                             </div>
                             <div class="card-body px-6 py-5">
-                                {{-- Linha 1: Fornecedor, Descrição --}}
+                                {{-- Linha 1: Fornecedor/Cliente, Descrição --}}
                                 <div class="row g-4 mb-5">
                                     <x-tenant-select name="fornecedor_id" id="domusia_fornecedor_id" label="Fornecedor"
                                         placeholder="Selecione um fornecedor" :minimumResultsForSearch="0"
-                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-6">
+                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-5">
                                         @if (isset($fornecedores))
                                             @foreach ($fornecedores as $fornecedor)
                                                 <option value="{{ $fornecedor->id }}"
                                                     data-cnpj="{{ $fornecedor->cnpj }}"
-                                                    data-cpf="{{ $fornecedor->cpf }}">
+                                                    data-cpf="{{ $fornecedor->cpf }}"
+                                                    data-natureza="{{ $fornecedor->natureza }}">
                                                     {{ $fornecedor->nome }}
                                                 </option>
                                             @endforeach
@@ -162,7 +163,11 @@
                                     </x-tenant-select>
 
                                     <x-tenant-input name="descricao" id="domusia_descricao" label="Descrição"
-                                        placeholder="Informe a descrição" required class="col-md-6" />
+                                        placeholder="Informe a descrição" required class="col-md-4" />
+
+                                    <x-tenant-currency name="valor" id="domusia_valor" label="Valor"
+                                        placeholder="0,00" tooltip="Valor total do documento" class="col-md-3"
+                                        required />
                                 </div>
 
                                 {{-- Linha 2: Data, Valor, Entidade Financeira, Categoria --}}
@@ -170,10 +175,6 @@
                                     <x-tenant-date name="data_competencia" id="domusia_data_competencia"
                                         label="Data Competência" placeholder="Informe a data" required
                                         class="col-md-3" />
-
-                                    <x-tenant-currency name="valor" id="domusia_valor" label="Valor"
-                                        placeholder="0,00" tooltip="Valor total do documento" class="col-md-3"
-                                        required />
 
                                     <x-tenant-select name="entidade_id" id="domusia_entidade_id"
                                         label="Entidade Financeira" required :hideSearch="true"
@@ -199,7 +200,8 @@
                                     <x-tenant-select name="lancamento_padrao_id" id="domusia_lancamento_padrao_id"
                                         label="Categoria" placeholder="Escolha uma categoria..." required
                                         :allowClear="true" :minimumResultsForSearch="0"
-                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-3">
+                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-6"
+                                        :showSuggestionStar="true">
                                         @if (isset($lps))
                                             @foreach ($lps as $lp)
                                                 <option value="{{ $lp->id }}"
@@ -217,7 +219,8 @@
                                     <x-tenant-select name="cost_center_id" id="domusia_cost_center_id"
                                         label="Centro de Custo" :allowClear="true" required
                                         placeholder="Selecione um centro de custo" :minimumResultsForSearch="0"
-                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-3">
+                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-3"
+                                        :showSuggestionStar="true">
                                         @if (isset($centrosAtivos))
                                             @foreach ($centrosAtivos as $centro)
                                                 <option value="{{ $centro->id }}">
@@ -230,7 +233,8 @@
                                     <x-tenant-select name="tipo_documento" id="domusia_tipo_documento"
                                         label="Forma de Pagamento" placeholder="Selecione..." required
                                         :allowClear="true" :minimumResultsForSearch="0"
-                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-3">
+                                        dropdown-parent="#{{ $drawerId }}" labelSize="fs-7" class="col-md-5"
+                                        :showSuggestionStar="true">
                                         @if (isset($formasPagamento))
                                             @foreach ($formasPagamento as $fp)
                                                 <option value="{{ $fp->codigo }}">
@@ -244,88 +248,22 @@
                                         label="Nº Documento" placeholder="Nº NF / Recibo"
                                         type="text" class="col-md-3" />
 
-                                    <div class="col-md-3 fv-row d-flex align-items-end pb-2">
-                                        <input type="hidden" name="comprovacao_fiscal" value="0">
-                                        <label class="form-check form-switch form-check-custom form-check-solid">
-                                            <input class="form-check-input" type="checkbox" name="comprovacao_fiscal"
-                                                value="1" id="domusia_comprovacao_fiscal" checked />
-                                            <span class="form-check-label fw-semibold text-muted fs-7">Comprovação Fiscal</span>
-                                        </label>
-                                    </div>
                                 </div>
                             </div>
                         </div>
 
                         {{-- Card: Condição de Pagamento --}}
-                        <div class="card border border-gray-300 mb-5">
-                            <div class="card-header min-h-45px">
-                                <h3 class="card-title fs-6 fw-bold">Condição de Pagamento</h3>
-                            </div>
-                            <div class="card-body px-6 py-5">
-                                <div class="row g-4 mb-4">
-                                    <div class="col-md-3 fv-row">
-                                        <label class="fs-7 fw-semibold mb-2">Parcelamento</label>
-                                        <select class="form-select form-select-sm" name="parcelamento"
-                                            id="domusia_parcelamento">
-                                            <option value="avista" selected>À Vista</option>
-                                            @for ($i = 2; $i <= 24; $i++)
-                                                <option value="{{ $i }}x">{{ $i }}x</option>
-                                            @endfor
-                                        </select>
-                                    </div>
-
-                                    <x-tenant-date name="vencimento" id="domusia_vencimento" label="Vencimento"
-                                        placeholder="Data de vencimento" class="col-md-3" />
-
-                                    <div class="col-md-3 fv-row d-flex align-items-end pb-2" id="domusia_pago_wrapper">
-                                        <div class="form-check form-switch form-check-custom form-check-solid">
-                                            <input class="form-check-input" type="checkbox" name="pago"
-                                                value="1" id="domusia_pago_checkbox" />
-                                            <label class="form-check-label fw-semibold text-muted fs-7"
-                                                for="domusia_pago_checkbox" id="domusia_pago_label">
-                                                Pago
-                                            </label>
-                                        </div>
-                                    </div>
-
-                                    <div class="col-md-3 fv-row d-flex align-items-end pb-2">
-                                        <div class="form-check form-switch form-check-custom form-check-solid">
-                                            <input class="form-check-input" type="checkbox" name="agendado"
-                                                value="1" id="domusia_agendado_checkbox" />
-                                            <label class="form-check-label fw-semibold text-muted fs-7"
-                                                for="domusia_agendado_checkbox">
-                                                Agendado
-                                            </label>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div class="row g-4" id="domusia_valores_extras">
-                                    <x-tenant-currency name="juros" id="domusia_juros" label="Juros"
-                                        placeholder="0,00" class="col-md-3" />
-                                    <x-tenant-currency name="multa" id="domusia_multa" label="Multa"
-                                        placeholder="0,00" class="col-md-3" />
-                                    <x-tenant-currency name="desconto" id="domusia_desconto" label="Desconto"
-                                        placeholder="0,00" class="col-md-3" />
-                                    <x-tenant-currency name="valor_pago" id="domusia_valor_pago"
-                                        label="Valor Pago" placeholder="0,00" class="col-md-3"
-                                        :readonly="true" />
-                                </div>
-                            </div>
-                        </div>
+                        @include('app.components.modals.financeiro.lancamento.components.card-condicao-pagamento-simple', [
+                            'idPrefix' => 'domusia_',
+                            'maxParcelas' => 24,
+                            'showValoresExtras' => true,
+                            'dropdownParent' => '#' . $drawerId,
+                        ])
 
                         {{-- Card: Histórico Complementar --}}
-                        <div class="card border border-gray-300 mb-5">
-                            <div class="card-header min-h-45px">
-                                <h3 class="card-title fs-6 fw-bold">Histórico Complementar</h3>
-                            </div>
-                            <div class="card-body px-6 py-5">
-                                <textarea class="form-control form-control-sm" name="historico_complementar"
-                                    id="domusia_historico" maxlength="500" rows="3"
-                                    placeholder="Observações adicionais sobre o lançamento..."></textarea>
-                                <span class="fs-8 text-muted mt-1 d-block">Máximo 500 caracteres</span>
-                            </div>
-                        </div>
+                        @include('app.components.modals.financeiro.lancamento.components.card-historico-complementar', [
+                            'idPrefix' => 'domusia_',
+                        ])
 
                     </div>
                 </form>
@@ -492,6 +430,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (this.el.pagoCheckbox) {
                 this.el.pagoCheckbox.addEventListener('change', () => {
+                    this.toggleValoresExtras();
                     this.updateValorPago();
                 });
             }
@@ -544,11 +483,193 @@ document.addEventListener('DOMContentLoaded', function() {
         // Configurar tipo (despesa/receita)
         // --------------------------------------------------------
         setupType(isReceita) {
-            if (this.el.tipo) this.el.tipo.value = isReceita ? 'entrada' : 'saida';
+            const tipo = isReceita ? 'entrada' : 'saida';
+            if (this.el.tipo) this.el.tipo.value = tipo;
             if (this.el.title) this.el.title.textContent = isReceita ? 'Nova Receita' : 'Nova Despesa';
             if (this.el.typeIndicator) this.el.typeIndicator.style.backgroundColor = isReceita ? '#50cd89' : '#f1416c';
             if (this.el.pagoLabel) this.el.pagoLabel.textContent = isReceita ? 'Recebido' : 'Pago';
             if (this.el.pagoCheckbox) this.el.pagoCheckbox.name = isReceita ? 'recebido' : 'pago';
+
+            // Filtrar categorias pelo tipo (entrada/saida)
+            this.filterCategoriasByTipo(tipo);
+
+            // Filtrar e configurar select de parceiros (fornecedor/cliente)
+            this.setupParceiroSelect(isReceita);
+        },
+
+        // --------------------------------------------------------
+        // Configurar select de parceiros (fornecedor/cliente)
+        // --------------------------------------------------------
+        setupParceiroSelect(isReceita) {
+            const select = document.getElementById('domusia_fornecedor_id');
+            if (!select) return;
+
+            const $select = $(select);
+            const self = this;
+
+            // Definir label e placeholder baseado no tipo
+            const naturezaFiltro = isReceita ? 'cliente' : 'fornecedor';
+            const label = isReceita ? 'Cliente' : 'Fornecedor';
+            const placeholder = isReceita ? 'Selecione um cliente' : 'Selecione um fornecedor';
+            const addButtonText = isReceita ? 'Adicionar Cliente' : 'Adicionar Fornecedor';
+
+            // Armazenar para uso posterior
+            this.currentNaturezaFiltro = naturezaFiltro;
+            this.currentAddButtonText = addButtonText;
+
+            // Atualizar label
+            const labelEl = document.querySelector('label[for="domusia_fornecedor_id"]');
+            if (labelEl) {
+                labelEl.textContent = label;
+            }
+
+            // Resetar seleção atual
+            $select.val(null).trigger('change.select2');
+
+            // Reinicializar Select2 com matcher para filtrar por natureza
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+
+            $select.select2({
+                dropdownParent: $('#{{ $drawerId }}'),
+                placeholder: placeholder,
+                allowClear: true,
+                minimumResultsForSearch: 0,
+                width: '100%',
+                theme: 'bootstrap5',
+                matcher: function(params, data) {
+                    if (!data.element) return null;
+
+                    const natureza = $(data.element).data('natureza');
+
+                    // Filtrar: mostrar apenas se natureza corresponde ou é 'ambos'
+                    if (natureza && natureza !== self.currentNaturezaFiltro && natureza !== 'ambos') {
+                        return null;
+                    }
+
+                    // Se não há termo de busca, retorna o item
+                    if ($.trim(params.term) === '') {
+                        return data;
+                    }
+
+                    // Busca padrão no texto
+                    if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) > -1) {
+                        return data;
+                    }
+
+                    return null;
+                }
+            });
+
+            // Adicionar botão de cadastro no dropdown
+            $select.off('select2:open.domusia').on('select2:open.domusia', function() {
+                setTimeout(function() {
+                    const $dropdown = $('.select2-container--open');
+                    const $results = $dropdown.find('.select2-results');
+
+                    if ($results.length === 0) return;
+
+                    // Remove botão anterior se existir
+                    $results.find('.select2-add-parceiro-footer').remove();
+
+                    // Adiciona footer com botão
+                    const $footer = $('<div class="select2-add-parceiro-footer border-top p-2 text-center"></div>');
+                    const $button = $('<button type="button" class="btn btn-sm btn-light-primary w-100"><i class="fas fa-plus me-1"></i>' + self.currentAddButtonText + '</button>');
+                    $footer.append($button);
+                    $results.append($footer);
+
+                    // Evento de clique no botão
+                    $button.on('click', function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+
+                        // Fecha o Select2
+                        $select.select2('close');
+
+                        // Define qual select deve ser atualizado ao salvar
+                        window.__drawerTargetSelect = '#domusia_fornecedor_id';
+
+                        // Define o tipo no hidden field do drawer de fornecedor
+                        const parceiroTipo = self.currentNaturezaFiltro;
+                        $('#parceiro_natureza_hidden').val(parceiroTipo);
+
+                        // Atualiza título do drawer
+                        const drawerTitle = self.isReceita ? 'Novo Cliente' : 'Novo Fornecedor';
+                        $('#fornecedor_drawer_title').text(drawerTitle);
+
+                        console.log('[DomusiaDrawer] Abrindo drawer para:', parceiroTipo);
+
+                        // Abre o drawer de fornecedor
+                        const drawerEl = document.getElementById('kt_drawer_fornecedor');
+                        if (drawerEl) {
+                            let drawer = KTDrawer.getInstance(drawerEl);
+                            if (!drawer) drawer = new KTDrawer(drawerEl);
+                            if (drawer && typeof drawer.show === 'function') {
+                                drawer.show();
+                            }
+                        }
+                    });
+                }, 50);
+            });
+
+            console.log('[DomusiaDrawer] Parceiros filtrados para natureza:', naturezaFiltro);
+        },
+
+        // --------------------------------------------------------
+        // Filtrar opções de categoria pelo tipo
+        // --------------------------------------------------------
+        filterCategoriasByTipo(tipo) {
+            const select = document.getElementById('domusia_lancamento_padrao_id');
+            if (!select) return;
+
+            const $select = $(select);
+
+            // Armazenar o tipo atual para uso no matcher
+            this.currentTipoFilter = tipo;
+
+            // Resetar seleção atual
+            $select.val(null).trigger('change.select2');
+
+            // Reinicializar Select2 com matcher customizado
+            if ($select.hasClass('select2-hidden-accessible')) {
+                $select.select2('destroy');
+            }
+
+            const self = this;
+            $select.select2({
+                dropdownParent: $('#{{ $drawerId }}'),
+                placeholder: 'Escolha uma categoria...',
+                allowClear: true,
+                minimumResultsForSearch: 0,
+                width: '100%',
+                theme: 'bootstrap5',
+                matcher: function(params, data) {
+                    // Se não há termo de busca, apenas filtrar pelo tipo
+                    if (!data.element) return null;
+
+                    const optionType = $(data.element).data('type');
+
+                    // Não exibir opções que não correspondem ao tipo
+                    if (optionType && optionType !== self.currentTipoFilter) {
+                        return null;
+                    }
+
+                    // Se não há termo de busca, retorna o item
+                    if ($.trim(params.term) === '') {
+                        return data;
+                    }
+
+                    // Busca padrão no texto
+                    if (data.text.toLowerCase().indexOf(params.term.toLowerCase()) > -1) {
+                        return data;
+                    }
+
+                    return null;
+                }
+            });
+
+            console.log('[DomusiaDrawer] Categorias filtradas para tipo:', tipo);
         },
 
         // --------------------------------------------------------
@@ -710,6 +831,13 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             this.updateValorPago();
+
+            // Buscar sugestões do histórico após um pequeno delay (para garantir que os selects foram atualizados)
+            setTimeout(() => {
+                if (window.DomusiaDrawerSuggestion) {
+                    window.DomusiaDrawerSuggestion.fetchSuggestion();
+                }
+            }, 500);
         },
 
         // --------------------------------------------------------
@@ -720,17 +848,25 @@ document.addEventListener('DOMContentLoaded', function() {
             const select = document.getElementById('domusia_fornecedor_id');
             if (!select) return;
 
+            const naturezaFiltro = this.currentNaturezaFiltro || (this.isReceita ? 'cliente' : 'fornecedor');
             const options = select.querySelectorAll('option');
+
             for (const opt of options) {
+                // Verificar se o parceiro corresponde à natureza filtrada
+                const natureza = opt.dataset.natureza;
+                if (natureza && natureza !== naturezaFiltro && natureza !== 'ambos') {
+                    continue; // Pular parceiros que não correspondem ao filtro
+                }
+
                 const optCnpj = (opt.dataset.cnpj || '').replace(/\D/g, '');
                 const optCpf = (opt.dataset.cpf || '').replace(/\D/g, '');
                 if ((optCnpj && optCnpj === cleanCnpj) || (optCpf && optCpf === cleanCnpj)) {
                     $(select).val(opt.value).trigger('change');
-                    console.log('[DomusiaDrawer] Fornecedor matched por CNPJ:', opt.textContent.trim());
+                    console.log('[DomusiaDrawer] Parceiro matched por CNPJ/CPF:', opt.textContent.trim());
                     return;
                 }
             }
-            console.log('[DomusiaDrawer] Nenhum fornecedor encontrado para CNPJ:', cnpj);
+            console.log('[DomusiaDrawer] Nenhum parceiro encontrado para CNPJ/CPF:', cnpj);
         },
 
         matchFormaPagamento(formaPgto) {
@@ -775,10 +911,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
             const search = categoriaSugerida.toLowerCase().trim();
             const options = select.querySelectorAll('option');
+            const tipoAtual = this.currentTipoFilter || (this.isReceita ? 'entrada' : 'saida');
             let bestMatch = null;
             let bestScore = 0;
 
             for (const opt of options) {
+                // Ignorar opções que não são do tipo atual
+                const optType = opt.dataset.type;
+                if (optType && optType !== tipoAtual) continue;
+
                 const optText = opt.textContent.toLowerCase().trim();
                 const optDesc = (opt.dataset.description || '').toLowerCase();
 
@@ -803,9 +944,34 @@ document.addEventListener('DOMContentLoaded', function() {
         },
 
         // --------------------------------------------------------
+        // Mostrar/Esconder valores extras (juros, multa, desconto)
+        // --------------------------------------------------------
+        toggleValoresExtras() {
+            const valoresExtras = document.getElementById('domusia_valores_extras');
+            const isPago = this.el.pagoCheckbox?.checked;
+            
+            if (valoresExtras) {
+                if (isPago) {
+                    $(valoresExtras).slideDown(200);
+                    this.updateValorPago();
+                } else {
+                    $(valoresExtras).slideUp(200);
+                    // Limpar valores quando desmarca pago
+                    this.setInputValue('domusia_juros', '');
+                    this.setInputValue('domusia_multa', '');
+                    this.setInputValue('domusia_desconto', '');
+                    this.setInputValue('domusia_valor_pago', '');
+                }
+            }
+        },
+
+        // --------------------------------------------------------
         // Calcular valor_pago
         // --------------------------------------------------------
         updateValorPago() {
+            // Só calcula se pago estiver marcado
+            if (!this.el.pagoCheckbox?.checked) return;
+            
             const toNum = (s) => parseFloat((s || '0').replace(/\./g, '').replace(',', '.')) || 0;
             const valor = toNum(document.getElementById('domusia_valor')?.value);
             const juros = toNum(document.getElementById('domusia_juros')?.value);
@@ -820,6 +986,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // --------------------------------------------------------
         async submit(openNew = false) {
             if (this.isSubmitting) return;
+
+            // Limpar erros anteriores
+            this.clearAllErrors();
+
+            // Validação frontend antes de enviar
+            if (!this.validateForm()) {
+                return;
+            }
+
             this.isSubmitting = true;
             this.setLoading(true);
 
@@ -852,8 +1027,15 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
 
                 if (response.ok && (result.success !== false)) {
-                    this.showToast('success', 'Lançamento criado com sucesso!');
+                    this.showSuccessNotification('Lançamento criado com sucesso!');
                     this.markEntryAsProcessed(this.currentEntryIndex);
+                    
+                    // Remover documento da lista de pendentes
+                    // Fallback: se o backend não retornar domus_documento_id, usar o do hidden input
+                    const docIdToRemove = result.domus_documento_id 
+                        || document.getElementById('domusia_documento_id')?.value 
+                        || window.currentDocument?.id;
+                    this.removeDocumentFromList(docIdToRemove);
 
                     if (openNew) {
                         this.resetForm();
@@ -863,19 +1045,178 @@ document.addEventListener('DOMContentLoaded', function() {
                 } else {
                     const errors = result.errors;
                     if (errors) {
-                        const messages = Object.values(errors).flat().join('<br>');
-                        this.showToast('error', 'Erro de validação', messages);
+                        this.showFieldErrors(errors);
                     } else {
-                        this.showToast('error', result.message || 'Erro ao criar lançamento');
+                        this.showGeneralError(result.message || 'Erro ao criar lançamento');
                     }
                 }
             } catch (error) {
                 console.error('[DomusiaDrawer] Erro no submit:', error);
-                this.showToast('error', 'Erro ao processar', error.message);
+                this.showGeneralError('Erro ao processar: ' + error.message);
             } finally {
                 this.isSubmitting = false;
                 this.setLoading(false);
             }
+        },
+
+        // --------------------------------------------------------
+        // Validação do formulário
+        // --------------------------------------------------------
+        validateForm() {
+            let isValid = true;
+            const requiredFields = [
+                { id: 'domusia_descricao', name: 'descricao', label: 'Descrição' },
+                { id: 'domusia_valor', name: 'valor', label: 'Valor' },
+                { id: 'domusia_data_competencia', name: 'data_competencia', label: 'Data Competência' },
+                { id: 'domusia_entidade_id', name: 'entidade_id', label: 'Entidade Financeira', isSelect: true },
+                { id: 'domusia_lancamento_padrao_id', name: 'lancamento_padrao_id', label: 'Categoria', isSelect: true },
+                { id: 'domusia_cost_center_id', name: 'cost_center_id', label: 'Centro de Custo', isSelect: true },
+                { id: 'domusia_tipo_documento', name: 'tipo_documento', label: 'Forma de Pagamento', isSelect: true },
+            ];
+
+            requiredFields.forEach(field => {
+                const el = document.getElementById(field.id);
+                if (!el) return;
+
+                let value = field.isSelect ? $(el).val() : el.value.trim();
+
+                if (!value || value === '') {
+                    this.showFieldError(field.id, field.label + ' é obrigatório');
+                    isValid = false;
+                }
+            });
+
+            return isValid;
+        },
+
+        // --------------------------------------------------------
+        // Exibir erro em um campo específico
+        // --------------------------------------------------------
+        showFieldError(fieldId, message) {
+            const el = document.getElementById(fieldId);
+            if (!el) return;
+
+            // Encontrar o container fv-row pai
+            const container = el.closest('.fv-row') || el.closest('.col-md-3') || el.closest('.col-md-4') || el.closest('.col-md-5') || el.closest('.col-md-6') || el.parentElement;
+
+            // Adicionar classe de erro no input/select
+            el.classList.add('is-invalid');
+
+            // Para Select2, adicionar classe no container do Select2
+            const select2Container = container.querySelector('.select2-container');
+            if (select2Container) {
+                select2Container.classList.add('is-invalid');
+                select2Container.style.border = '1px solid #f1416c';
+                select2Container.style.borderRadius = '0.475rem';
+            }
+
+            // Remover mensagem de erro anterior se existir
+            const existingError = container.querySelector('.fv-plugins-message-container');
+            if (existingError) existingError.remove();
+
+            // Criar e adicionar mensagem de erro
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'fv-plugins-message-container fv-plugins-message-container--enabled invalid-feedback';
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = '<div class="fv-help-block"><span role="alert">' + message + '</span></div>';
+            container.appendChild(errorDiv);
+        },
+
+        // --------------------------------------------------------
+        // Exibir erros retornados pelo backend
+        // --------------------------------------------------------
+        showFieldErrors(errors) {
+            // Mapeamento de nomes de campos do backend para IDs do formulário
+            const fieldMapping = {
+                'descricao': 'domusia_descricao',
+                'valor': 'domusia_valor',
+                'data_competencia': 'domusia_data_competencia',
+                'entidade_id': 'domusia_entidade_id',
+                'lancamento_padrao_id': 'domusia_lancamento_padrao_id',
+                'cost_center_id': 'domusia_cost_center_id',
+                'tipo_documento': 'domusia_tipo_documento',
+                'fornecedor_id': 'domusia_fornecedor_id',
+                'numero_documento': 'domusia_numero_documento',
+                'vencimento': 'domusia_vencimento',
+                'historico_complementar': 'domusia_historico',
+            };
+
+            Object.entries(errors).forEach(([field, messages]) => {
+                const fieldId = fieldMapping[field] || 'domusia_' + field;
+                const message = Array.isArray(messages) ? messages[0] : messages;
+                this.showFieldError(fieldId, message);
+            });
+
+            // Scroll para o primeiro erro
+            const firstError = document.querySelector('.is-invalid');
+            if (firstError) {
+                firstError.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        },
+
+        // --------------------------------------------------------
+        // Limpar todos os erros
+        // --------------------------------------------------------
+        clearAllErrors() {
+            // Remover classe is-invalid de todos os inputs/selects
+            this.el.form.querySelectorAll('.is-invalid').forEach(el => {
+                el.classList.remove('is-invalid');
+            });
+
+            // Remover estilos de erro dos Select2
+            this.el.form.querySelectorAll('.select2-container').forEach(el => {
+                el.classList.remove('is-invalid');
+                el.style.border = '';
+            });
+
+            // Remover todas as mensagens de erro
+            this.el.form.querySelectorAll('.fv-plugins-message-container').forEach(el => {
+                el.remove();
+            });
+
+            // Limpar erro geral
+            if (this.el.statusText) {
+                this.el.statusText.innerHTML = '<i class="fa-solid fa-circle-info me-1"></i>Preencha os campos obrigatórios para salvar';
+                this.el.statusText.classList.remove('text-danger');
+                this.el.statusText.classList.add('text-muted');
+            }
+        },
+
+        // --------------------------------------------------------
+        // Exibir erro geral
+        // --------------------------------------------------------
+        showGeneralError(message) {
+            if (this.el.statusText) {
+                this.el.statusText.innerHTML = '<i class="fa-solid fa-triangle-exclamation me-1"></i>' + message;
+                this.el.statusText.classList.remove('text-muted');
+                this.el.statusText.classList.add('text-danger');
+            }
+        },
+
+        // --------------------------------------------------------
+        // Exibir notificação de sucesso (toast simples)
+        // --------------------------------------------------------
+        showSuccessNotification(message) {
+            // Criar toast de sucesso
+            const toast = document.createElement('div');
+            toast.className = 'position-fixed top-0 end-0 p-3';
+            toast.style.zIndex = '9999';
+            toast.innerHTML = `
+                <div class="toast show align-items-center text-white bg-success border-0" role="alert">
+                    <div class="d-flex">
+                        <div class="toast-body">
+                            <i class="fa-solid fa-check-circle me-2"></i>${message}
+                        </div>
+                        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(toast);
+
+            // Remover após 3 segundos
+            setTimeout(() => {
+                toast.remove();
+            }, 3000);
         },
 
         // --------------------------------------------------------
@@ -891,6 +1232,87 @@ document.addEventListener('DOMContentLoaded', function() {
                 badge.innerHTML = '<span class="badge badge-success fs-8"><i class="fa-solid fa-check me-1"></i>Lançado</span>';
                 card.style.position = 'relative';
                 card.appendChild(badge);
+            }
+        },
+
+        // --------------------------------------------------------
+        // Remover documento da lista de pendentes
+        // --------------------------------------------------------
+        removeDocumentFromList(documentoId) {
+            if (!documentoId) return;
+
+            // Buscar o item na lista (suporta data-document-id e data-id)
+            const listItem = document.querySelector(`.pending-document-item[data-document-id="${documentoId}"]`)
+                          || document.querySelector(`.pending-document-item[data-id="${documentoId}"]`);
+            
+            if (listItem) {
+                // Animação de fade out antes de remover
+                listItem.style.transition = 'all 0.3s ease-out';
+                listItem.style.opacity = '0';
+                listItem.style.transform = 'translateX(-20px)';
+                
+                setTimeout(() => {
+                    listItem.remove();
+                    
+                    // Atualizar contador de documentos pendentes
+                    this.updatePendingCount();
+                    
+                    // Se não houver mais documentos, mostrar empty state
+                    this.checkEmptyState();
+                    
+                    console.log('[DomusiaDrawer] Documento removido da lista:', documentoId);
+                }, 300);
+            }
+
+            // Sincronizar arrays internos do DomusiaPendentes
+            if (window.domusiaPendentesInstance) {
+                const idNum = parseInt(documentoId);
+                window.domusiaPendentesInstance.documentosCarregados = 
+                    window.domusiaPendentesInstance.documentosCarregados.filter(d => d.id !== idNum);
+                window.domusiaPendentesInstance.documentList = 
+                    window.domusiaPendentesInstance.documentList.filter(d => d.id !== idNum);
+            }
+
+            // Limpar o documento atual se for o mesmo
+            if (window.currentDocument && window.currentDocument.id == documentoId) {
+                window.currentDocument = null;
+            }
+        },
+
+        // --------------------------------------------------------
+        // Atualizar contador de documentos pendentes
+        // --------------------------------------------------------
+        updatePendingCount() {
+            const pendingItems = document.querySelectorAll('.pending-document-item');
+            const count = pendingItems.length;
+            
+            // Atualizar badge principal (pendentes.blade.php)
+            const countBadge = document.getElementById('documentosCountBadge');
+            if (countBadge) {
+                countBadge.textContent = count + ' restantes';
+            }
+
+            // Atualizar via DomusiaPendentes (se disponível)
+            if (window.domusiaPendentesInstance && typeof window.domusiaPendentesInstance.updateCountBadge === 'function') {
+                window.domusiaPendentesInstance.updateCountBadge(count);
+            }
+        },
+
+        // --------------------------------------------------------
+        // Verificar e mostrar empty state se não houver documentos
+        // --------------------------------------------------------
+        checkEmptyState() {
+            const pendingItems = document.querySelectorAll('.pending-document-item');
+            const pendingList = document.getElementById('pendingDocumentsList');
+            
+            if (pendingItems.length === 0 && pendingList) {
+                pendingList.innerHTML = `
+                    <div class="text-center py-10 text-muted">
+                        <i class="fa-solid fa-check-circle fs-3x text-success mb-4 d-block"></i>
+                        <div class="fw-bold text-gray-700 fs-5 mb-2">Tudo em dia!</div>
+                        <div class="text-gray-500">Não há documentos pendentes de lançamento.</div>
+                    </div>
+                `;
             }
         },
 
@@ -932,6 +1354,14 @@ document.addEventListener('DOMContentLoaded', function() {
             if (this.el.form) this.el.form.reset();
             $('#domusia_fornecedor_id, #domusia_entidade_id, #domusia_lancamento_padrao_id, #domusia_cost_center_id, #domusia_tipo_documento')
                 .val(null).trigger('change');
+
+            // Limpar erros de validação
+            this.clearAllErrors();
+
+            // Limpar sugestões
+            if (window.DomusiaDrawerSuggestion) {
+                window.DomusiaDrawerSuggestion.clear();
+            }
         },
 
         // --------------------------------------------------------
@@ -979,27 +1409,185 @@ document.addEventListener('DOMContentLoaded', function() {
             if (clean.length === 11) return clean.replace(/^(\d{3})(\d{3})(\d{3})(\d{2})$/, '$1.$2.$3-$4');
             return cnpj;
         },
-
-        showToast(icon, title, html) {
-            if (typeof Swal !== 'undefined') {
-                Swal.fire({
-                    icon: icon,
-                    title: title,
-                    html: html || '',
-                    toast: icon === 'success',
-                    position: icon === 'success' ? 'top-end' : 'center',
-                    showConfirmButton: icon !== 'success',
-                    timer: icon === 'success' ? 3000 : undefined,
-                });
-            } else {
-                alert(title);
-            }
-        },
     };
 
     // Inicializar
     DomusiaDrawer.init();
     window.DomusiaDrawer = DomusiaDrawer;
+
+    // ========================================================
+    // Sistema de Sugestão baseado em Histórico
+    // ========================================================
+    const DomusiaDrawerSuggestion = {
+        debounceTimer: null,
+        lastSuggestion: null,
+
+        init() {
+            this.bindEvents();
+            console.log('[DomusiaDrawerSuggestion] Sistema de sugestão inicializado');
+        },
+
+        bindEvents() {
+            const self = this;
+
+            // Trigger: mudança no parceiro
+            const parceiroSelect = document.getElementById('domusia_fornecedor_id');
+            if (parceiroSelect) {
+                $(parceiroSelect).on('change', function() {
+                    self.fetchSuggestion();
+                });
+            }
+
+            // Trigger: digitação na descrição (com debounce)
+            const descricaoInput = document.getElementById('domusia_descricao');
+            if (descricaoInput) {
+                descricaoInput.addEventListener('input', function() {
+                    clearTimeout(self.debounceTimer);
+                    self.debounceTimer = setTimeout(() => {
+                        self.fetchSuggestion();
+                    }, 1000);
+                });
+            }
+        },
+
+        async fetchSuggestion() {
+            const parceiroId = $('#domusia_fornecedor_id').val();
+            const descricao = document.getElementById('domusia_descricao')?.value || '';
+            const valor = document.getElementById('domusia_valor')?.value || '';
+
+            // Precisa ter pelo menos parceiro ou descrição
+            if (!parceiroId && descricao.length < 3) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`{{ route('banco.sugestao') }}?` + new URLSearchParams({
+                    parceiro_id: parceiroId || '',
+                    descricao: descricao,
+                    valor: valor
+                }), {
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                });
+
+                if (!response.ok) return;
+
+                const sugestao = await response.json();
+                this.applySuggestion(sugestao);
+            } catch (error) {
+                console.error('[DomusiaDrawerSuggestion] Erro ao buscar sugestão:', error);
+            }
+        },
+
+        applySuggestion(sugestao) {
+            if (!sugestao || sugestao.confianca < 50) {
+                console.log('[DomusiaDrawerSuggestion] Sugestão ignorada (confiança < 50%):', sugestao?.confianca);
+                return;
+            }
+
+            console.log('[DomusiaDrawerSuggestion] Aplicando sugestão:', sugestao);
+            this.lastSuggestion = sugestao;
+
+            const origemTexto = this.getOrigemTexto(sugestao.origem_sugestao);
+
+            // Aplicar categoria (lancamento_padrao_id)
+            if (sugestao.lancamento_padrao_id) {
+                const $catSelect = $('#domusia_lancamento_padrao_id');
+                const currentVal = $catSelect.val();
+                const tipoAtual = DomusiaDrawer.currentTipoFilter || (DomusiaDrawer.isReceita ? 'entrada' : 'saida');
+
+                // Verificar se a categoria sugerida é compatível com o tipo atual
+                const $option = $catSelect.find(`option[value="${sugestao.lancamento_padrao_id}"]`);
+                const optionType = $option.data('type');
+
+                if ($option.length && optionType === tipoAtual) {
+                    // Só preenche se estiver vazio
+                    if (!currentVal) {
+                        $catSelect.val(sugestao.lancamento_padrao_id).trigger('change');
+                    }
+
+                    // Registrar estrela
+                    if (typeof suggestionStarManager !== 'undefined') {
+                        suggestionStarManager.addStar(
+                            'domusia_lancamento_padrao_id',
+                            sugestao.lancamento_padrao_id.toString(),
+                            `<strong>Sugestão da IA</strong><br>${origemTexto}<br>Confiança: ${sugestao.confianca}%`
+                        );
+                    }
+                }
+            }
+
+            // Aplicar centro de custo (cost_center_id)
+            if (sugestao.cost_center_id) {
+                const $ccSelect = $('#domusia_cost_center_id');
+                const currentVal = $ccSelect.val();
+
+                // Só preenche se estiver vazio
+                if (!currentVal) {
+                    $ccSelect.val(sugestao.cost_center_id).trigger('change');
+                }
+
+                // Registrar estrela
+                if (typeof suggestionStarManager !== 'undefined') {
+                    suggestionStarManager.addStar(
+                        'domusia_cost_center_id',
+                        sugestao.cost_center_id.toString(),
+                        `<strong>Sugestão da IA</strong><br>${origemTexto}<br>Confiança: ${sugestao.confianca}%`
+                    );
+                }
+            }
+
+            // Aplicar tipo de documento / forma de pagamento
+            if (sugestao.tipo_documento) {
+                const $tipoSelect = $('#domusia_tipo_documento');
+                const currentVal = $tipoSelect.val();
+
+                // Só preenche se estiver vazio
+                if (!currentVal) {
+                    $tipoSelect.val(sugestao.tipo_documento).trigger('change');
+                }
+
+                // Registrar estrela
+                if (typeof suggestionStarManager !== 'undefined') {
+                    suggestionStarManager.addStar(
+                        'domusia_tipo_documento',
+                        sugestao.tipo_documento.toString(),
+                        `<strong>Sugestão da IA</strong><br>${origemTexto}<br>Confiança: ${sugestao.confianca}%`
+                    );
+                }
+            }
+
+            // Aplicar descrição sugerida (apenas se campo estiver vazio)
+            if (sugestao.descricao) {
+                const descInput = document.getElementById('domusia_descricao');
+                if (descInput && !descInput.value.trim()) {
+                    descInput.value = sugestao.descricao;
+                }
+            }
+        },
+
+        getOrigemTexto(origem) {
+            const origens = {
+                'regra': 'Baseado em regra configurada',
+                'historico_parceiro': 'Baseado no histórico do parceiro',
+                'historico_texto': 'Baseado em lançamentos similares',
+                'padrao': 'Baseado em padrões do sistema'
+            };
+            return origens[origem] || 'Baseado no histórico';
+        },
+
+        // Limpar sugestões (chamado no reset do form)
+        clear() {
+            this.lastSuggestion = null;
+        }
+    };
+
+    DomusiaDrawerSuggestion.init();
+    window.DomusiaDrawerSuggestion = DomusiaDrawerSuggestion;
+
+
 
     // ========================================================
     // Substituir a função createTransaction global
@@ -1014,6 +1602,31 @@ document.addEventListener('DOMContentLoaded', function() {
     window.createExpense = function(index) {
         window.createTransaction(index, false);
     };
+
+    // ========================================================
+    // Listener para quando um parceiro é criado no drawer
+    // ========================================================
+    document.addEventListener('parceiro-created', function(e) {
+        const detail = e.detail;
+        if (!detail || !detail.id) return;
+
+        // Verificar se o select alvo é o nosso
+        if (window.__drawerTargetSelect !== '#domusia_fornecedor_id') return;
+
+        console.log('[DomusiaDrawer] Parceiro criado:', detail);
+
+        // Atualizar o select com os atributos corretos
+        const $select = $('#domusia_fornecedor_id');
+        if ($select.length) {
+            // A opção já foi adicionada pelo drawer_fornecedor, apenas precisamos
+            // adicionar os data attributes se necessário
+            const $option = $select.find(`option[value="${detail.id}"]`);
+            if ($option.length && detail.type) {
+                // Definir natureza baseada no tipo do parceiro
+                $option.attr('data-natureza', detail.type);
+            }
+        }
+    });
 });
 </script>
 @endpush

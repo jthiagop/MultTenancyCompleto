@@ -71,7 +71,8 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'historico_complementar' => 'nullable|string|max:500',
             'comprovacao_fiscal' => 'nullable|boolean', // 0 ou 1, default false
             'entidade_id' => 'required|exists:entidades_financeiras,id',
-            'fornecedor_id' => 'nullable|exists:parceiros,id',
+            'fornecedor_id' => 'nullable|exists:parceiros,id', // Alias - mapeado para parceiro_id no prepareForValidation
+            'parceiro_id' => 'nullable|exists:parceiros,id',
             'banco_id' => 'nullable|exists:cadastro_bancos,id',
             'entidade_banco_id' => [
                 'nullable',
@@ -132,6 +133,8 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'desconto' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
             'valor_a_pagar' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
             'situacao' => 'nullable|in:em_aberto,desconsiderado,atrasado,pago_parcial,pago,recebido,previsto,parcelado',
+            'pago' => 'nullable|boolean',
+            'recebido' => 'nullable|boolean',
             'agendado' => 'nullable|boolean',
 
             // Validações de campos de pagamento (para lançamentos fracionados)
@@ -355,6 +358,54 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                     // Se falhar, mantém o valor original
                 }
             }
+        }
+
+        // ✅ Mapeia fornecedor_id → parceiro_id (nome usado pelo formulário vs nome da coluna no banco)
+        if ($this->has('fornecedor_id') && !$this->has('parceiro_id')) {
+            $this->merge(['parceiro_id' => $this->input('fornecedor_id')]);
+        }
+
+        // ✅ Calcula situação baseada nos checkboxes pago/recebido
+        // O checkbox envia 'pago=1' ou 'recebido=1', mas o controller espera 'situacao'
+        if (!$this->has('situacao') || empty($this->input('situacao'))) {
+            $tipo = $this->input('tipo');
+            $isPago = $this->input('pago') === '1' || $this->input('pago') === 1 || $this->input('pago') === true;
+            $isRecebido = $this->input('recebido') === '1' || $this->input('recebido') === 1 || $this->input('recebido') === true;
+
+            if ($tipo === 'saida' && $isPago) {
+                $this->merge(['situacao' => 'pago']);
+            } elseif ($tipo === 'entrada' && $isRecebido) {
+                $this->merge(['situacao' => 'recebido']);
+            } else {
+                $this->merge(['situacao' => 'em_aberto']);
+            }
+
+            // ✅ Se marcou como pago/recebido, preencher data_pagamento e valor_pago se ausentes
+            if ($isPago || $isRecebido) {
+                // data_pagamento: fallback para data_competencia ou hoje
+                if (!$this->filled('data_pagamento')) {
+                    $dataFallback = $this->input('data_competencia') ?? now()->format('Y-m-d');
+                    $this->merge(['data_pagamento' => $dataFallback]);
+                }
+                
+                // valor_pago: fallback para valor + juros + multa - desconto
+                if (!$this->filled('valor_pago')) {
+                    $valor = (float) ($this->input('valor') ?? 0);
+                    $juros = (float) ($this->input('juros') ?? 0);
+                    $multa = (float) ($this->input('multa') ?? 0);
+                    $desconto = (float) ($this->input('desconto') ?? 0);
+                    $this->merge(['valor_pago' => max(0, $valor + $juros + $multa - $desconto)]);
+                }
+            }
+
+            Log::info('[StoreTransacaoFinanceiraRequest] Situação calculada', [
+                'tipo' => $tipo,
+                'pago' => $this->input('pago'),
+                'recebido' => $this->input('recebido'),
+                'situacao_calculada' => $this->input('situacao'),
+                'data_pagamento' => $this->input('data_pagamento'),
+                'valor_pago' => $this->input('valor_pago'),
+            ]);
         }
 
         // Processa data_pagamento se vier no formato brasileiro

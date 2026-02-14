@@ -504,9 +504,11 @@ class ParceiroController extends Controller
             $query->where('id', '!=', $excludeId);
         }
 
-        $parceiro = $query->first(['id', 'nome', 'nome_fantasia']);
+        $parceiro = $query->with('address')->first();
 
         if ($parceiro) {
+            $address = $parceiro->address;
+
             return response()->json([
                 'exists' => true,
                 'message' => $tipo === 'cnpj' 
@@ -514,7 +516,25 @@ class ParceiroController extends Controller
                     : 'Este CPF já está cadastrado.',
                 'parceiro' => [
                     'id' => $parceiro->id,
-                    'nome' => $parceiro->nome ?? $parceiro->nome_fantasia,
+                    'nome' => $parceiro->nome,
+                    'nome_fantasia' => $parceiro->nome_fantasia,
+                    'tipo' => $parceiro->tipo,
+                    'natureza' => $parceiro->natureza,
+                    'cnpj' => $parceiro->cnpj,
+                    'cpf' => $parceiro->cpf,
+                    'telefone' => $parceiro->telefone,
+                    'email' => $parceiro->email,
+                    'observacoes' => $parceiro->observacoes,
+                    'cpf_cnpj' => $parceiro->cpf ?? $parceiro->cnpj,
+                    'address' => $address ? [
+                        'cep' => $address->cep,
+                        'rua' => $address->rua,
+                        'numero' => $address->numero,
+                        'complemento' => $address->complemento,
+                        'bairro' => $address->bairro,
+                        'cidade' => $address->cidade,
+                        'uf' => $address->uf,
+                    ] : null,
                 ],
             ]);
         }

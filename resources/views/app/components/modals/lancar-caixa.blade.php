@@ -174,8 +174,11 @@
                                             id="lancamento_padrao_caixa">
                                             <option value=""></option>
                                             @foreach ($lps as $lp)
-                                                <option value="{{ $lp->id }}" data-description="{{ $lp->description }}">
-                                                    {{ $lp->description }}
+                                                <option value="{{ $lp->id }}" data-type="{{ $lp->type }}"
+                                                    data-description="{{ $lp->description }}"
+                                                    data-tipo-label="{{ $lp->type === 'entrada' ? 'Receita' : 'Despesa' }}"
+                                                    data-tipo-color="{{ $lp->type === 'entrada' ? 'success' : 'danger' }}">
+                                                    {{ $lp->id }} - {{ $lp->description }}
                                                 </option>
                                             @endforeach
                                         </select>

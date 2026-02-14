@@ -434,24 +434,54 @@
     });
     
     // Controla a exibição dos wrappers de checkboxes baseado no tipo de transação
-    function toggleCheckboxesByTipo() {
-        var tipo = $('#tipo').val(); // 'entrada' ou 'saida'
+    function toggleCheckboxesByTipo(tipoParam) {
+        console.log('🔄 [toggleCheckboxesByTipo] Chamada iniciada');
+        console.log('🔄 [toggleCheckboxesByTipo] tipoParam recebido:', tipoParam);
+        console.log('🔄 [toggleCheckboxesByTipo] $("#tipo").val():', $('#tipo').val());
+        
+        var tipo = tipoParam || $('#tipo').val(); // 'entrada' ou 'saida'
+        console.log('🔄 [toggleCheckboxesByTipo] tipo antes da normalização:', tipo);
+        
+        // Normaliza: aceita 'receita'/'despesa' também
+        if (tipo === 'receita') tipo = 'entrada';
+        if (tipo === 'despesa') tipo = 'saida';
+        
+        console.log('🔄 [toggleCheckboxesByTipo] tipo após normalização:', tipo);
         
         var wrapperEntrada = $('#checkboxes-entrada-wrapper');
         var wrapperSaida = $('#checkboxes-saida-wrapper');
+        
+        console.log('🔄 [toggleCheckboxesByTipo] wrapperEntrada existe:', wrapperEntrada.length > 0);
+        console.log('🔄 [toggleCheckboxesByTipo] wrapperSaida existe:', wrapperSaida.length > 0);
                
         if (tipo === 'entrada') {
             // Receita: Mostra apenas Recebido
-            wrapperEntrada.show();
-            wrapperSaida.hide();
+            console.log('✅ [toggleCheckboxesByTipo] ENTRADA detectada - mostrando wrapperEntrada, ocultando wrapperSaida');
+            console.log('   - wrapperEntrada classes ANTES:', wrapperEntrada.attr('class'));
+            console.log('   - wrapperSaida classes ANTES:', wrapperSaida.attr('class'));
+            
+            // Usa classes Bootstrap para toggle (evita conflito com d-flex !important)
+            wrapperEntrada.removeClass('d-none');
+            wrapperSaida.addClass('d-none').removeClass('d-flex');
+            
+            console.log('   - wrapperEntrada classes DEPOIS:', wrapperEntrada.attr('class'));
+            console.log('   - wrapperSaida classes DEPOIS:', wrapperSaida.attr('class'));
             
             // Desmarca checkboxes de Saída
             $('#pago_checkbox').prop('checked', false);
             $('#agendado_checkbox').prop('checked', false);
         } else if (tipo === 'saida') {
             // Despesa: Mostra Pago e Agendado
-            wrapperEntrada.hide();
-            wrapperSaida.show();
+            console.log('✅ [toggleCheckboxesByTipo] SAÍDA detectada - mostrando wrapperSaida, ocultando wrapperEntrada');
+            console.log('   - wrapperEntrada classes ANTES:', wrapperEntrada.attr('class'));
+            console.log('   - wrapperSaida classes ANTES:', wrapperSaida.attr('class'));
+            
+            // Usa classes Bootstrap para toggle (evita conflito com d-flex !important)
+            wrapperEntrada.addClass('d-none');
+            wrapperSaida.removeClass('d-none').addClass('d-flex');
+            
+            console.log('   - wrapperEntrada classes DEPOIS:', wrapperEntrada.attr('class'));
+            console.log('   - wrapperSaida classes DEPOIS:', wrapperSaida.attr('class'));
             
             // Desmarca checkbox de Entrada
             if (typeof $ !== 'undefined') {
@@ -462,9 +492,14 @@
             }
         } else {
             // Default: mostrar saída
-            wrapperEntrada.hide();
-            wrapperSaida.show();
+            console.log('⚠️ [toggleCheckboxesByTipo] TIPO NÃO RECONHECIDO - default para saída');
+            wrapperEntrada.addClass('d-none');
+            wrapperSaida.removeClass('d-none').addClass('d-flex');
         }
+        
+        console.log('🔄 [toggleCheckboxesByTipo] Estado final:');
+        console.log('   - wrapperEntrada classes:', wrapperEntrada.attr('class'));
+        console.log('   - wrapperSaida classes:', wrapperSaida.attr('class'));
         
         // Atualiza visibilidade dos checkboxes internos baseado no parcelamento
         toggleCheckboxPago();
@@ -503,54 +538,18 @@
         }
     }
     
-    // Controla exibição do checkbox Agendado
+    // Controla exibição do checkbox Agendado (esconde quando Pago ou Recebido marcado)
     function toggleCheckboxAgendado() {
         var pagoCheckbox = $('#pago_checkbox');
+        var recebidoCheckbox = $('#recebido_checkbox');
         var agendadoWrapper = $('#checkbox-agendado-wrapper');
-        var parcelamento = $('#parcelamento').val();
-        var accordionInformacoesPagamento = $('#kt_accordion_informacoes_pagamento');
-        var accordionPrevisaoPagamento = $('#kt_accordion_previsao_pagamento');
         
-        // Verifica se descrição e valor estão preenchidos
-        var descricao = $('#descricao').val() || '';
-        var valorStr = $('#valor2').val() || '0';
-        var valorNumerico = parseValorBrasileiro(valorStr);
-        var descricaoPreenchida = descricao.trim().length > 0;
-        var valorPreenchido = valorNumerico > 0;
-        
-        if (pagoCheckbox.is(':checked')) {
+        // Esconde Agendado se Pago OU Recebido estiver marcado
+        if (pagoCheckbox.is(':checked') || recebidoCheckbox.is(':checked')) {
             agendadoWrapper.hide();
             $('#agendado_checkbox').prop('checked', false);
-            
-            // Só mostra accordion se descrição e valor estiverem preenchidos
-            if (descricaoPreenchida && valorPreenchido) {
-                accordionInformacoesPagamento.show();
-                
-                // Oculta previsão se for 1x ou À Vista
-                if (parcelamento === '1x' || parcelamento === 'avista') {
-                    accordionPrevisaoPagamento.hide();
-                }
-            } else {
-                // Exibe toast de aviso se faltar dados
-                if (!descricaoPreenchida || !valorPreenchido) {
-                    var mensagem = 'Preencha ';
-                    var campos = [];
-                    if (!descricaoPreenchida) campos.push('a descrição');
-                    if (!valorPreenchido) campos.push('o valor');
-                    mensagem += campos.join(' e ') + ' para visualizar as informações de pagamento.';
-                    toastr.warning(mensagem, 'Atenção');
-                }
-            }
         } else {
             agendadoWrapper.show();
-            
-            // Oculta accordion de informações quando desmarca Pago
-            accordionInformacoesPagamento.hide();
-            
-            // Mostra previsão se for 1x
-            if (parcelamento === '1x') {
-                accordionPrevisaoPagamento.show();
-            }
         }
     }
     
@@ -620,8 +619,11 @@
         toggleCheckboxAgendado();
     });
     
-    // Evento para checkbox "Recebido" - controla accordion de informações
+    // Evento para checkbox "Recebido" - controla accordion de informações e Agendado
     $('#recebido_checkbox').on('change', function() {
+        // Controla visibilidade do Agendado
+        toggleCheckboxAgendado();
+        
         // A mesma lógica do Pago, mas para receitas
         var recebidoCheckbox = $(this);
         var accordionInformacoesPagamento = $('#kt_accordion_informacoes_pagamento');
@@ -652,15 +654,20 @@
     
     // Evento para mudança de tipo (entrada/saida) - controla checkboxes visíveis
     $('#tipo').on('change', function() {
+        console.log('🔔 [DrawerPagamentoParcelas] Evento change disparado no #tipo');
+        console.log('🔔 [DrawerPagamentoParcelas] Novo valor:', $(this).val());
         toggleCheckboxesByTipo();
     });
     
     // MutationObserver para detectar quando o tipo é definido (é um input hidden)
     var tipoInput = document.getElementById('tipo');
     if (tipoInput) {
+        console.log('👁️ [DrawerPagamentoParcelas] MutationObserver configurado para #tipo');
         var observer = new MutationObserver(function(mutations) {
             mutations.forEach(function(mutation) {
+                console.log('👁️ [DrawerPagamentoParcelas] MutationObserver detectou mudança:', mutation.type, mutation.attributeName);
                 if (mutation.type === 'attributes' && mutation.attributeName === 'value') {
+                    console.log('👁️ [DrawerPagamentoParcelas] Valor do atributo value mudou - chamando toggleCheckboxesByTipo');
                     toggleCheckboxesByTipo();
                 }
             });
@@ -669,8 +676,11 @@
         
         // Também escuta evento 'input' como fallback
         $(tipoInput).on('input change', function() {
+            console.log('🔔 [DrawerPagamentoParcelas] Evento input/change no tipoInput:', $(this).val());
             toggleCheckboxesByTipo();
         });
+    } else {
+        console.warn('⚠️ [DrawerPagamentoParcelas] #tipo não encontrado no DOM');
     }
     
     // Inicializa checkboxes quando drawer abrir
@@ -1040,6 +1050,16 @@
     
     // Chama toggleCheckboxPago ao carregar a página para definir estado inicial
     toggleCheckboxPago();
+
+    // 🟢 Exporta funções para window (necessário para drawer-init.blade.php)
+    window.toggleCheckboxesByTipo = toggleCheckboxesByTipo;
+    window.toggleCheckboxPago = toggleCheckboxPago;
+    window.toggleCheckboxAgendado = toggleCheckboxAgendado;
+    console.log('✅ [DrawerPagamentoParcelas] Funções exportadas para window:', {
+        toggleCheckboxesByTipo: typeof window.toggleCheckboxesByTipo,
+        toggleCheckboxPago: typeof window.toggleCheckboxPago,
+        toggleCheckboxAgendado: typeof window.toggleCheckboxAgendado
+    });
     });
     }
 

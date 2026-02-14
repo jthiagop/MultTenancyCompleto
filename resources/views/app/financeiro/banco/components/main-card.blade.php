@@ -227,28 +227,31 @@
                         <!--begin::Header-->
                         <div class="d-flex align-items-center justify-content-between mb-2">
                             <h3 class="fw-bold text-gray-800 fs-6 mb-0">Fluxo de Receitas e Despesas - {{ $anoSelecionado }}</h3>
-                            <!--begin::Custom Legend-->
-                            <div class="d-flex align-items-center gap-4" id="kt_card_widget_12_legend">
-                                <div class="d-flex align-items-center">
-                                    <i class="fa-regular fa-circle-up text-success fs-4 me-2"></i>
-                                    <span class="text-gray-700 fs-6 fw-semibold">Entradas</span>
-                                </div>
-                                <div class="d-flex align-items-center">
-                                    <i class="fa-regular fa-circle-down text-danger fs-4 me-2"></i>
-                                    <span class="text-gray-700 fs-6 fw-semibold">Saídas</span>
-                                </div>
-                            </div>
-                            <!--end::Custom Legend-->
+                            <!--begin::Daterange Picker-->
+                            <x-tenant-daterange-button id="fluxo_periodo" defaultRange="year" variant="light" opens="left" />
+                            <!--end::Daterange Picker-->
                         </div>
                         <!--end::Header-->
                         <!--begin::Chart-->
                         <div id="kt_card_widget_12_chart"
                              class="min-h-auto"
-                             style="height: 125px"
+                             style="height: 160px"
                              data-entradas="{{ json_encode($dadosFluxoCaixaAnual['entradas'] ?? []) }}"
                              data-saidas="{{ json_encode($dadosFluxoCaixaAnual['saidas'] ?? []) }}">
                         </div>
                         <!--end::Chart-->
+                        <!--begin::Legend-->
+                        <div class="d-flex align-items-center justify-content-center gap-5 mt-2" id="kt_card_widget_12_legend">
+                            <div class="d-flex align-items-center">
+                                <i class="fa-regular fa-circle-up text-success fs-7 me-1"></i>
+                                <span class="text-gray-600 fs-8 fw-semibold">Entradas</span>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                <i class="fa-regular fa-circle-down text-danger fs-7 me-1"></i>
+                                <span class="text-gray-600 fs-8 fw-semibold">Saídas</span>
+                            </div>
+                        </div>
+                        <!--end::Legend-->
                     </div>
                     <!--end::Wrapper-->
                     @include('app.financeiro.banco.components.side-card')
@@ -259,6 +262,61 @@
         </div>
 </div>
 </div>
+
+<!--begin::Script - Atualizar gráfico ao mudar período-->
+@push('scripts')
+<script>
+document.addEventListener('daterangeChanged', function(e) {
+    if (e.detail.id !== 'fluxo_periodo') return;
+
+    var startDate = e.detail.start.format('YYYY-MM-DD');
+    var endDate = e.detail.end.format('YYYY-MM-DD');
+
+    // Atualizar título do gráfico
+    var titleEl = document.querySelector('#kt_card_widget_12_chart').closest('.flex-grow-1').querySelector('h3');
+    if (titleEl) {
+        var startLabel = e.detail.start.format('DD/MM/YYYY');
+        var endLabel = e.detail.end.format('DD/MM/YYYY');
+
+        // Verificar se é ano inteiro (ex: 01/01/2025 - 31/12/2025)
+        if (e.detail.start.month() === 0 && e.detail.start.date() === 1 &&
+            e.detail.end.month() === 11 && e.detail.end.date() === 31 &&
+            e.detail.start.year() === e.detail.end.year()) {
+            titleEl.textContent = 'Fluxo de Receitas e Despesas - ' + e.detail.start.year();
+        } else {
+            titleEl.textContent = 'Fluxo de Receitas e Despesas - ' + startLabel + ' a ' + endLabel;
+        }
+    }
+
+    // Buscar dados do backend
+    var url = (typeof bancoFluxoChartDataUrl !== 'undefined' ? bancoFluxoChartDataUrl : '/banco/fluxo-chart-data');
+    var params = new URLSearchParams({
+        start_date: startDate,
+        end_date: endDate,
+        group_by: 'auto'
+    });
+
+    fetch(url + '?' + params.toString(), {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Accept': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        }
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data && data.entradas && data.saidas && data.categorias) {
+            KTCardWidget12.update(data.entradas, data.saidas, data.categorias);
+        }
+    })
+    .catch(function(error) {
+        console.error('Erro ao atualizar gráfico de fluxo:', error);
+    });
+});
+</script>
+@endpush
+<!--end::Script-->
 
 <!--begin::Modal - Conciliação Bancária (Importar OFX)-->
 @include('app.financeiro.banco.components.modal')

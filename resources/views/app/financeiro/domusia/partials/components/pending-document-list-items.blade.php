@@ -25,7 +25,7 @@
         }
         $tituloTruncado = Str::limit($tituloFormatado, 35);
         
-        $statusClass = $doc->status === 'processado' ? 'success' : 'warning';
+        $statusClass = $doc->status === \App\Enums\StatusDomusDocumento::PROCESSADO ? 'success' : 'warning';
     @endphp
 
     <div class="pending-document-item" 
@@ -66,7 +66,7 @@
                                 @if($doc->tipo_documento) <div class='mb-1'><strong>Tipo:</strong> {{ $doc->tipo_documento }}</div> @endif
                                 @if($doc->estabelecimento_nome) <div class='mb-1'><strong>Fornecedor:</strong> {{ $doc->estabelecimento_nome }}</div> @endif
                                 @if($doc->valor_total) <div class='mb-1'><strong>Valor:</strong> R$ {{ number_format((float)$doc->valor_total, 2, ',', '.') }}</div> @endif
-                                <div class='mb-1'><strong>Status:</strong> <span class='badge badge-light-{{ $statusClass }}'>{{ $doc->status ?? 'pendente' }}</span></div>
+                                <div class='mb-1'><strong>Status:</strong> <span class='badge badge-light-{{ $statusClass }}'>{{ $doc->status?->label() ?? 'Pendente' }}</span></div>
                                 <div class='mb-1'><strong>Enviado por:</strong> {{ $userName }}</div>
                                 <div><strong>Data:</strong> {{ $dataFormatada }}</div>
                             </div>
