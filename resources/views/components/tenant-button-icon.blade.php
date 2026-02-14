@@ -1,5 +1,7 @@
 @props([
     'icon' => null,
+    'iconImg' => null, // Caminho para imagem SVG/PNG como ícone
+    'iconSize' => '18px', // Tamanho da imagem do ícone
     'text' => '',
     'class' => '',
     'type' => 'button',
@@ -51,7 +53,9 @@
 
 @if($href)
     <a {{ $attributes }}>
-        @if($icon)
+        @if($iconImg)
+            <img src="{{ $iconImg }}" alt="" class="me-1" style="width: {{ $iconSize }}; height: {{ $iconSize }}; vertical-align: middle;">
+        @elseif($icon)
             <i class="{{ $icon }} fs-3"></i>
         @endif
         @if($text)
@@ -61,7 +65,9 @@
     </a>
 @else
     <button {{ $attributes }}>
-        @if($icon)
+        @if($iconImg)
+            <img src="{{ $iconImg }}" alt="" class="me-1" style="width: {{ $iconSize }}; height: {{ $iconSize }}; vertical-align: middle;">
+        @elseif($icon)
             <i class="{{ $icon }} fs-3"></i>
         @endif
         @if($text)

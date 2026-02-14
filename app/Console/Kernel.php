@@ -17,20 +17,18 @@ class Kernel extends ConsoleKernel
         \App\Console\Commands\SeedFormasPagamento::class,
         \App\Console\Commands\CleanExpiredWhatsappCodes::class,
         \App\Console\Commands\CleanExpiredPdfGenerations::class,
+        \App\Console\Commands\CleanExpiredNotifications::class,
     ];
 
     /**
      * Define o agendamento dos comandos do aplicativo.
+     * 
+     * NOTA: No Laravel 11+, schedules são definidos em routes/console.php
+     * Este método está vazio para evitar duplicação.
      */
     protected function schedule(Schedule $schedule)
     {
-        $schedule->command('contas:atualizar-status')->daily();
-
-        // Limpar códigos de vinculação WhatsApp expirados a cada hora
-        $schedule->command('whatsapp:clean-expired-codes')->hourly();
-
-        // Limpar PDFs gerados expirados (após 5 dias) - roda diariamente às 3h
-        $schedule->command('pdf:clean-expired')->dailyAt('03:00');
+        // Schedules movidos para routes/console.php
     }
 
     /**

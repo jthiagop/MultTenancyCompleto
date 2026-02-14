@@ -5,6 +5,7 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\NotificationResource;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
 class NotificationController extends Controller
@@ -26,17 +27,36 @@ class NotificationController extends Controller
     }
 
     /**
+     * Filtra notificações cujo expires_at já passou.
+     * Notificações expiradas são removidas da listagem.
+     */
+    private function excludeExpiredNotifications($query)
+    {
+        $now = Carbon::now()->toISOString();
+        
+        return $query->where(function ($q) use ($now) {
+            // Inclui notificações sem expires_at OU com expires_at no futuro
+            $q->whereNull('data->expires_at')
+              ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.expires_at')) >= ?", [$now]);
+        });
+    }
+
+    /**
      * Retorna a contagem de não lidas filtrada por empresa.
+     * Exclui notificações expiradas da contagem.
      */
     private function getUnreadCount(?int $companyId): int
     {
         $query = Auth::user()->unreadNotifications();
-        return $this->applyCompanyFilter($query, $companyId)->count();
+        $query = $this->applyCompanyFilter($query, $companyId);
+        $query = $this->excludeExpiredNotifications($query);
+        return $query->count();
     }
 
     /**
      * Retorna as notificações do usuário logado.
      * Usa NotificationResource para transformação padronizada.
+     * Exclui notificações expiradas.
      */
     public function index(Request $request)
     {
@@ -44,6 +64,7 @@ class NotificationController extends Controller
         $companyId = session('active_company_id');
 
         $query = $this->applyCompanyFilter($user->notifications(), $companyId);
+        $query = $this->excludeExpiredNotifications($query);
         $notifications = $query->latest()->take(20)->get();
 
         return response()->json([
@@ -144,6 +165,7 @@ class NotificationController extends Controller
     /**
      * Retorna todas as notificações paginadas (JSON para o drawer).
      * Suporta filtro por status: all, unread, read.
+     * Exclui notificações expiradas.
      */
     public function all(Request $request)
     {
@@ -160,6 +182,7 @@ class NotificationController extends Controller
         };
 
         $query = $this->applyCompanyFilter($query, $companyId);
+        $query = $this->excludeExpiredNotifications($query);
         $paginated = $query->latest()->paginate(15, ['*'], 'page', $page);
 
         return response()->json([
@@ -177,11 +200,13 @@ class NotificationController extends Controller
 
     /**
      * Exibe a página completa de notificações.
+     * Exclui notificações expiradas.
      */
     public function page(Request $request)
     {
         $companyId = session('active_company_id');
         $query = $this->applyCompanyFilter(Auth::user()->notifications(), $companyId);
+        $query = $this->excludeExpiredNotifications($query);
         $notifications = $query->latest()->paginate(20);
 
         return view('app.notifications.index', compact('notifications'));

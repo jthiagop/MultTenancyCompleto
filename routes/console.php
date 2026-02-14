@@ -20,3 +20,21 @@ Schedule::command('recorrencias:gerar')->daily();
 Schedule::command('whatsapp:clean-old-messages --days=30')
     ->daily()
     ->withoutOverlapping(); // Evita rodar duas vezes se o anterior travar;
+
+// Atualizar status de contas diariamente
+Schedule::command('contas:atualizar-status')
+    ->daily();
+
+// Limpar códigos de vinculação WhatsApp expirados a cada hora
+Schedule::command('whatsapp:clean-expired-codes')
+    ->hourly();
+
+// Limpar PDFs expirados diariamente (remove arquivos físicos e registros após 5 dias)
+Schedule::command('pdf:clean-expired --days=5')
+    ->daily()
+    ->withoutOverlapping();
+
+// Limpar notificações expiradas diariamente (remove registros do banco de dados)
+Schedule::command('notifications:clean-expired')
+    ->daily()
+    ->withoutOverlapping();
