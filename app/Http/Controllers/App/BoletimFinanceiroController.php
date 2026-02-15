@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
+use App\Enums\SituacaoTransacao;
 use App\Models\EntidadeFinanceira;
 use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\LancamentoPadrao;
@@ -19,93 +20,139 @@ use Illuminate\Support\Facades\Log;
 class BoletimFinanceiroController extends Controller
 {
     /**
+     * Situacoes que devem ser ignoradas no boletim.
+     */
+    private const SITUACOES_EXCLUIDAS = [
+        SituacaoTransacao::DESCONSIDERADO,
+        SituacaoTransacao::PARCELADO,
+    ];
+
+    /**
+     * Retorna a query-base filtrada por empresa ativa, excluindo
+     * transacoes desconsideradas, parceladas e agendadas.
+     */
+    private function baseQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return TransacaoFinanceira::forActiveCompany()
+            ->whereNotIn('situacao', self::SITUACOES_EXCLUIDAS)
+            ->where('agendado', false);
+    }
+
+    /**
      * Gera PDF do Boletim Financeiro
      */
     public function gerarPdf(Request $request)
     {
-        // 1) Filtros
+        // 1) Filtros — validar formato de data
         $dataInicial = $request->input('data_inicial');
         $dataFinal   = $request->input('data_final');
-        
-        // Converter datas do formato brasileiro para Y-m-d
-        $dataInicialFormatted = Carbon::createFromFormat('d/m/Y', $dataInicial);
-        $dataFinalFormatted = Carbon::createFromFormat('d/m/Y', $dataFinal);
 
-        // 2) PRESTAÇÃO DE CONTAS - Lançamentos Agrupados por Código
-        $lancamentosEntradas = TransacaoFinanceira::with('lancamentoPadrao')
-            ->where('company_id', session('active_company_id'))
+        try {
+            $dataInicialFormatted = Carbon::createFromFormat('d/m/Y', $dataInicial)->startOfDay();
+            $dataFinalFormatted   = Carbon::createFromFormat('d/m/Y', $dataFinal)->endOfDay();
+        } catch (\Exception $e) {
+            abort(422, 'Formato de data invalido. Use dd/mm/aaaa.');
+        }
+
+        // 2) Buscar todas as transacoes do periodo em uma unica query
+        $transacoes = $this->baseQuery()
             ->whereBetween('data_competencia', [$dataInicialFormatted, $dataFinalFormatted])
-            ->where('tipo', 'entrada') // Entrada
-            ->get()
+            ->with('lancamentoPadrao')
+            ->get();
+
+        // Agrupar por lancamento padrao
+        $lancamentosEntradas = $transacoes->where('tipo', 'entrada')
             ->groupBy('lancamento_padrao_id')
             ->map(function ($group) {
-                $lancamento = $group->first()->lancamentoPadrao;
+                $lp = $group->first()->lancamentoPadrao;
                 return [
-                    'codigo' => $lancamento?->id ?? '-',
-                    'descricao' => $lancamento?->description ?? 'Sem descrição',
-                    'valor' => $group->sum('valor')
+                    'codigo'    => $lp?->id ?? '-',
+                    'descricao' => $lp?->description ?? 'Sem descricao',
+                    'valor'     => $group->sum('valor'),
                 ];
             })
             ->sortBy('codigo')
             ->values();
 
-        $lancamentosSaidas = TransacaoFinanceira::with('lancamentoPadrao')
-            ->where('company_id', session('active_company_id'))
-            ->whereBetween('data_competencia', [$dataInicialFormatted, $dataFinalFormatted])
-            ->where('tipo', 'saida') // Saída
-            ->get()
+        $lancamentosSaidas = $transacoes->where('tipo', 'saida')
             ->groupBy('lancamento_padrao_id')
             ->map(function ($group) {
-                $lancamento = $group->first()->lancamentoPadrao;
+                $lp = $group->first()->lancamentoPadrao;
                 return [
-                    'codigo' => $lancamento?->id ?? '-',
-                    'descricao' => $lancamento?->description ?? 'Sem descrição',
-                    'valor' => $group->sum('valor')
+                    'codigo'    => $lp?->id ?? '-',
+                    'descricao' => $lp?->description ?? 'Sem descricao',
+                    'valor'     => $group->sum('valor'),
                 ];
             })
             ->sortBy('codigo')
             ->values();
 
         $totalEntradas = $lancamentosEntradas->sum('valor');
-        $totalSaidas = $lancamentosSaidas->sum('valor');
+        $totalSaidas   = $lancamentosSaidas->sum('valor');
 
         // 3) RESULTADO DAS CONTAS DE MOVIMENTO FINANCEIRO
-        $entidades = EntidadeFinanceira::where('company_id', session('active_company_id'))->get();
-        
-        $contasMovimento = $entidades->map(function ($entidade) use ($dataInicialFormatted, $dataFinalFormatted) {
-            // Buscar movimentações do período
-            $entradas = TransacaoFinanceira::where('entidade_id', $entidade->id)
-                ->whereBetween('data_competencia', [$dataInicialFormatted, $dataFinalFormatted])
-                ->where('tipo', 'entrada')
-                ->sum('valor');
-            
-            $saidas = TransacaoFinanceira::where('entidade_id', $entidade->id)
-                ->whereBetween('data_competencia', [$dataInicialFormatted, $dataFinalFormatted])
-                ->where('tipo', 'saida')
-                ->sum('valor');
-            
-            // Calcular saldo anterior
-            $saldoAnterior = $entidade->saldo_atual - ($entradas - $saidas);
-            
+        //    Uma unica query agrupada substitui o N+1
+        $entidades = EntidadeFinanceira::forActiveCompany()->get();
+        $entidadeIds = $entidades->pluck('id');
+
+        // Movimentacoes ANTES do periodo (para saldo anterior)
+        $movAntes = TransacaoFinanceira::forActiveCompany()
+            ->whereNotIn('situacao', self::SITUACOES_EXCLUIDAS)
+            ->where('agendado', false)
+            ->whereIn('entidade_id', $entidadeIds)
+            ->where('data_competencia', '<', $dataInicialFormatted)
+            ->groupBy('entidade_id', 'tipo')
+            ->select('entidade_id', 'tipo', DB::raw('SUM(valor) as total'))
+            ->get()
+            ->groupBy('entidade_id');
+
+        // Movimentacoes NO periodo (usar colecao ja carregada)
+        $movPeriodo = $transacoes->groupBy('entidade_id');
+
+        $contasMovimento = $entidades->map(function ($entidade) use ($movAntes, $movPeriodo) {
+            $saldoInicial = $entidade->saldo_inicial ?? 0;
+
+            // Saldo anterior = saldo_inicial + entradas_antes - saidas_antes
+            $antes = $movAntes->get($entidade->id, collect());
+            $entradasAntes = $antes->where('tipo', 'entrada')->sum('total');
+            $saidasAntes   = $antes->where('tipo', 'saida')->sum('total');
+            $saldoAnterior = $saldoInicial + $entradasAntes - $saidasAntes;
+
+            // Entradas/saidas no periodo
+            $periodo         = $movPeriodo->get($entidade->id, collect());
+            $entradasPeriodo = $periodo->where('tipo', 'entrada')->sum('valor');
+            $saidasPeriodo   = $periodo->where('tipo', 'saida')->sum('valor');
+            $saldoAtual      = $saldoAnterior + $entradasPeriodo - $saidasPeriodo;
+
             return [
-                'conta' => $entidade->nome,
+                'conta'          => $entidade->nome,
                 'saldo_anterior' => $saldoAnterior,
-                'entrada' => $entradas,
-                'saida' => $saidas,
-                'saldo_atual' => $entidade->saldo_atual
+                'entrada'        => $entradasPeriodo,
+                'saida'          => $saidasPeriodo,
+                'saldo_atual'    => $saldoAtual,
             ];
         });
 
         // 4) TOTAIS GERAIS
         $saldoAnteriorTotal = $contasMovimento->sum('saldo_anterior');
-        $saldoAtualTotal = $contasMovimento->sum('saldo_atual');
-        $deficit = $totalEntradas - $totalSaidas;
+        $saldoAtualTotal    = $contasMovimento->sum('saldo_atual');
+        $deficit             = $totalEntradas - $totalSaidas;
 
-        // 5) Buscar company
-        $company = Auth::user()->companies()->first();
+        // 5) Buscar company da sessao ativa
+        $company = Auth::user()
+            ->companies()
+            ->with('addresses')
+            ->where('companies.id', session('active_company_id'))
+            ->first();
 
         // 6) HTML da view
         $html = view('app.relatorios.financeiro.boletim_pdf', [
+            'empresaRelatorio'    => $company,
+            'nomeEmpresa'         => $company->name,
+            'razaoSocial'         => $company->razao_social,
+            'cnpjEmpresa'         => $company->cnpj,
+            'avatarEmpresa'       => $company->avatar,
+            'enderecoEmpresa'     => $company->addresses,
             'lancamentosEntradas' => $lancamentosEntradas,
             'lancamentosSaidas'   => $lancamentosSaidas,
             'totalEntradas'       => $totalEntradas,
@@ -116,7 +163,6 @@ class BoletimFinanceiroController extends Controller
             'deficit'             => $deficit,
             'dataInicial'         => $dataInicial,
             'dataFinal'           => $dataFinal,
-            'company'             => $company,
         ])->render();
 
         // 7) PDF
@@ -124,7 +170,7 @@ class BoletimFinanceiroController extends Controller
             Browsershot::html($html)
                 ->format('A4')
                 ->showBackground()
-                ->margins(8, 8, 8, 8)
+                ->margins(8, 8, 15, 8)
                 ->waitUntilNetworkIdle()
         )->pdf();
 

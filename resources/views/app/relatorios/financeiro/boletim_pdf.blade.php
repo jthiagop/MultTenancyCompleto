@@ -16,7 +16,7 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 8mm 8mm 10mm 8mm;
+            margin: 8mm 8mm 18mm 8mm;
         }
 
         body {
@@ -141,25 +141,40 @@
             margin: 20px 0;
         }
 
-        /* Rodapé */
-        @page {
-            @bottom-left {
-                content: "Gerado em: {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}";
-                font-size: 0.65rem;
-                color: #6c757d;
-            }
+        /* Rodapé fixo */
+        .footer-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 4px 8mm;
+            border-top: 1px solid #dee2e6;
+            font-size: 0.6rem;
+            color: #6c757d;
+            display: flex;
+            justify-content: space-between;
+            background: #fff;
+        }
 
-            @bottom-center {
-                content: "Sistema Dominus - www.dominus.eco.br";
-                font-size: 0.65rem;
-                color: #6c757d;
-            }
+        /* Resultado badge */
+        .resultado-badge {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
 
-            @bottom-right {
-                content: "Página " counter(page) " de " counter(pages);
-                font-size: 0.65rem;
-                color: #6c757d;
-            }
+        .resultado-deficit {
+            background-color: #fde8ea;
+            color: #dc3545;
+            border: 1px solid #f5c6cb;
+        }
+
+        .resultado-superavit {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
         }
     </style>
 </head>
@@ -196,10 +211,10 @@
 
             {{-- Texto centralizado --}}
             <div class="header-text">
-                <h4 style="margin: 0; padding: 0;">{{ strtoupper($nomeEmpresa ?? ($empresaRelatorio->name ?? '')) }}
-                </h4>
+                <h4 style="margin: 0; padding: 0;">{{ strtoupper($nomeEmpresa ?? ($empresaRelatorio->name ?? '')) }}</h4>
                 <h5 style="margin: 5px 0; padding: 0; font-weight: normal;">
-                    {{ strtoupper($razaoSocial ?? ($empresaRelatorio->razao_social ?? '')) }}</h5>
+                    {{ strtoupper($razaoSocial ?? ($empresaRelatorio->razao_social ?? '')) }}
+                </h5>
                 <small>CNPJ: {{ $cnpjEmpresa ?? ($empresaRelatorio->cnpj ?? '') }}</small>
                 <div style="font-size: 0.75rem; color: #333;">
                     @php
@@ -230,12 +245,10 @@
                             Fone: {{ $empresaRelatorio->phone }}
                         @endif
                         @if ($empresaRelatorio->website ?? null)
-                            {{ $empresaRelatorio->phone ?? null ? ' - ' : '' }}Site:
-                            {{ $empresaRelatorio->website }}
+                            {{ $empresaRelatorio->phone ?? null ? ' - ' : '' }}Site: {{ $empresaRelatorio->website }}
                         @endif
                         @if ($empresaRelatorio->email ?? null)
-                            {{ ($empresaRelatorio->phone ?? null) || ($empresaRelatorio->website ?? null) ? ' - ' : '' }}E-mail:
-                            {{ $empresaRelatorio->email }}
+                            {{ ($empresaRelatorio->phone ?? null) || ($empresaRelatorio->website ?? null) ? ' - ' : '' }}E-mail: {{ $empresaRelatorio->email }}
                         @endif
                     </small>
                 @endif
@@ -251,19 +264,22 @@
     </div>
 
     {{-- Período --}}
-    <p class="fw-bold mb-3 text-center">PERÍODO: {{ $dataInicial }} a {{ $dataFinal }}</p>
+    <p class="fw-bold mb-3 text-center" style="font-size: 0.85rem;">
+        BOLETIM FINANCEIRO &mdash; PERÍODO: {{ $dataInicial }} a {{ $dataFinal }}
+    </p>
 
-    {{-- 1. PRESTAÇÃO DE CONTAS --}}
-    <div class="subtitle" style="margin-top: 10px; font-weight: bold; border-top: 1px solid #dee2e6; padding-top: 5px;">
-        BOLETIM FINANCEIRO</div>
+    {{-- Filtros aplicados --}}
+    <p class="text-muted text-center mb-3" style="font-size: 0.65rem;">
+        <em>Excluídas: transações desconsideradas, parceladas e agendadas</em>
+    </p>
 
-
+    {{-- 1. ENTRADAS x SAÍDAS --}}
     <div class="row">
         {{-- Coluna ENTRADAS --}}
         <div class="col-6">
             <table class="table table-sm table-bordered">
                 <thead>
-                    <tr class="text-center ">
+                    <tr class="text-center">
                         <th class="col-entrada text-white" colspan="3">ENTRADAS</th>
                     </tr>
                     <tr>
@@ -330,6 +346,23 @@
         </div>
     </div>
 
+    {{-- Resultado do período (déficit/superávit) --}}
+    <div class="text-center my-3">
+        @if ($deficit < 0)
+            <span class="resultado-badge resultado-deficit">
+                (&minus;) DÉFICIT R$ {{ number_format(abs($deficit), 2, ',', '.') }}
+            </span>
+        @elseif ($deficit > 0)
+            <span class="resultado-badge resultado-superavit">
+                (+) SUPERÁVIT R$ {{ number_format($deficit, 2, ',', '.') }}
+            </span>
+        @else
+            <span class="resultado-badge" style="background: #e9ecef; color: #495057; border: 1px solid #dee2e6;">
+                RESULTADO EQUILIBRADO &mdash; R$ 0,00
+            </span>
+        @endif
+    </div>
+
     {{-- 2. RESULTADO DAS CONTAS DE MOVIMENTO FINANCEIRO --}}
     <h5 class="text-center fw-bold mb-3 mt-4">RESULTADO DAS CONTAS DE MOVIMENTO FINANCEIRO</h5>
 
@@ -350,7 +383,7 @@
                     <td class="text-end">{{ number_format($conta['saldo_anterior'], 2, ',', '.') }}</td>
                     <td class="text-end">{{ number_format($conta['entrada'], 2, ',', '.') }}</td>
                     <td class="text-end">{{ number_format($conta['saida'], 2, ',', '.') }}</td>
-                    <td class="text-end">{{ number_format($conta['saldo_atual'], 2, ',', '.') }}</td>
+                    <td class="text-end fw-semibold">{{ number_format($conta['saldo_atual'], 2, ',', '.') }}</td>
                 </tr>
             @empty
                 <tr>
@@ -358,6 +391,17 @@
                 </tr>
             @endforelse
         </tbody>
+        @if(count($contasMovimento) > 0)
+        <tfoot class="table-light fw-bold">
+            <tr>
+                <td class="text-end">TOTAL</td>
+                <td class="text-end">{{ number_format($saldoAnteriorTotal, 2, ',', '.') }}</td>
+                <td class="text-end">{{ number_format($totalEntradas, 2, ',', '.') }}</td>
+                <td class="text-end">{{ number_format($totalSaidas, 2, ',', '.') }}</td>
+                <td class="text-end">{{ number_format($saldoAtualTotal, 2, ',', '.') }}</td>
+            </tr>
+        </tfoot>
+        @endif
     </table>
 
     {{-- 3. RESUMO GERAL --}}
@@ -391,20 +435,18 @@
         <tbody>
             <tr class="text-center">
                 <td>{{ number_format($saldoAnteriorTotal, 2, ',', '.') }}</td>
-                <td>{{ number_format($totalEntradas, 2, ',', '.') }}</td>
-                <td>{{ number_format($totalSaidas, 2, ',', '.') }}</td>
-                <td>{{ number_format($saldoAtualTotal, 2, ',', '.') }}</td>
+                <td class="text-success fw-semibold">{{ number_format($totalEntradas, 2, ',', '.') }}</td>
+                <td class="text-danger fw-semibold">{{ number_format($totalSaidas, 2, ',', '.') }}</td>
+                <td class="fw-bold">{{ number_format($saldoAtualTotal, 2, ',', '.') }}</td>
             </tr>
         </tbody>
     </table>
 
-    @if ($deficit < 0)
-        <h4 class="text-center text-danger fw-bold mt-3">(-) DÉFICIT {{ number_format(abs($deficit), 2, ',', '.') }}
-        </h4>
-    @else
-        <h4 class="text-center text-success fw-bold mt-3">(+) SUPERÁVIT {{ number_format($deficit, 2, ',', '.') }}</h4>
-    @endif
-
+    {{-- Rodapé fixo --}}
+    <div class="footer-container">
+        <span>Gerado em: {{ \Carbon\Carbon::now()->format('d/m/Y H:i:s') }}</span>
+        <span>Sistema Dominus &mdash; www.dominus.eco.br</span>
+    </div>
 
     {{-- JavaScript para gráficos --}}
     <script>
@@ -417,19 +459,30 @@
                 datasets: [{
                     data: [{{ $totalEntradas }}, {{ $totalSaidas }}],
                     backgroundColor: ['#28a745', '#dc3545'],
+                    borderRadius: 4,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return 'R$ ' + ctx.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                            }
+                        }
                     }
                 },
                 scales: {
                     y: {
-                        beginAtZero: true
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(v) {
+                                return 'R$ ' + v.toLocaleString('pt-BR');
+                            }
+                        }
                     }
                 }
             }
@@ -437,26 +490,44 @@
 
         // Gráfico 2: Evolução do Saldo
         const ctxEvolucao = document.getElementById('chartEvolucao').getContext('2d');
+        const saldoAnterior = {{ $saldoAnteriorTotal }};
+        const saldoAtual = {{ $saldoAtualTotal }};
+        const minVal = Math.min(saldoAnterior, saldoAtual, 0);
+
         new Chart(ctxEvolucao, {
             type: 'bar',
             data: {
                 labels: ['Saldo anterior', 'Saldo atual'],
                 datasets: [{
-                    data: [{{ $saldoAnteriorTotal }}, {{ $saldoAtualTotal }}],
-                    backgroundColor: ['#17a2b8', '#007bff'],
+                    data: [saldoAnterior, saldoAtual],
+                    backgroundColor: [
+                        saldoAnterior >= 0 ? '#17a2b8' : '#ffc107',
+                        saldoAtual >= 0 ? '#007bff' : '#dc3545'
+                    ],
+                    borderRadius: 4,
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        display: false
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(ctx) {
+                                return 'R$ ' + ctx.raw.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+                            }
+                        }
                     }
                 },
                 scales: {
                     y: {
-                        beginAtZero: true
+                        suggestedMin: minVal < 0 ? minVal * 1.1 : 0,
+                        ticks: {
+                            callback: function(v) {
+                                return 'R$ ' + v.toLocaleString('pt-BR');
+                            }
+                        }
                     }
                 }
             }

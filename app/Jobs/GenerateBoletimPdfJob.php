@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use Spatie\Browsershot\Browsershot;
 use App\Helpers\BrowsershotHelper;
+use App\Enums\SituacaoTransacao;
 use App\Models\Financeiro\TransacaoFinanceira;
 use App\Models\PdfGeneration;
 use App\Models\EntidadeFinanceira;
@@ -101,8 +102,10 @@ class GenerateBoletimPdfJob implements ShouldQueue
             $dataInicio = Carbon::createFromFormat('d/m/Y', $this->dataInicial)->startOfDay();
             $dataFim = Carbon::createFromFormat('d/m/Y', $this->dataFinal)->endOfDay();
 
-            // Buscar transações
+            // Buscar transações — excluir desconsideradas, parceladas e agendadas
             $transacoes = TransacaoFinanceira::where('company_id', $this->companyId)
+                ->whereNotIn('situacao', [SituacaoTransacao::DESCONSIDERADO, SituacaoTransacao::PARCELADO])
+                ->where('agendado', false)
                 ->whereBetween('data_competencia', [$dataInicio, $dataFim])
                 ->with(['lancamentoPadrao', 'entidadeFinanceira', 'costCenter'])
                 ->get();
@@ -147,11 +150,17 @@ class GenerateBoletimPdfJob implements ShouldQueue
 
                 // Entradas e Saídas ANTES do período (para o saldo anterior)
                 $entradasAntes = TransacaoFinanceira::where('entidade_id', $entidade->id)
+                    ->where('company_id', $this->companyId)
+                    ->whereNotIn('situacao', [SituacaoTransacao::DESCONSIDERADO, SituacaoTransacao::PARCELADO])
+                    ->where('agendado', false)
                     ->where('tipo', 'entrada')
                     ->where('data_competencia', '<', $dataInicio)
                     ->sum('valor');
 
                 $saidasAntes = TransacaoFinanceira::where('entidade_id', $entidade->id)
+                    ->where('company_id', $this->companyId)
+                    ->whereNotIn('situacao', [SituacaoTransacao::DESCONSIDERADO, SituacaoTransacao::PARCELADO])
+                    ->where('agendado', false)
                     ->where('tipo', 'saida')
                     ->where('data_competencia', '<', $dataInicio)
                     ->sum('valor');
