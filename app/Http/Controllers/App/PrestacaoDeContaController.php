@@ -5,14 +5,14 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Models\Financeiro\CostCenter;
 use App\Models\Financeiro\TransacaoFinanceira;
+use App\Models\PdfGeneration;
+use App\Jobs\GeneratePrestacaoContasPdfJob;
 use App\Services\PrestacaoContasService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\Request;
 use PDF;
 use Spatie\Browsershot\Browsershot;
 use App\Helpers\BrowsershotHelper;
-use App\Jobs\GeneratePrestacaoContasPdfJob;
-use App\Models\PdfGeneration;
 
 class PrestacaoDeContaController extends Controller
 {
@@ -138,28 +138,37 @@ class PrestacaoDeContaController extends Controller
         ]);
     }
 
+
+    protected function logoToBase64($company): ?string
+    {
+        $path = $company->avatar
+            ? storage_path('app/public/'.$company->avatar)
+            : public_path('tenancy/assets/media/png/perfil.svg');
+
+        return 'data:image/'.pathinfo($path, PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($path));
+    }
+
+
     /**
-     * Gerar PDF de prestação de contas de forma assíncrona (Job)
+     * Gerar PDF de Prestação de Contas assincronamente via Job/Queue
      */
     public function gerarPdfAsync(Request $request)
     {
         try {
             $user = Auth::user();
-            $company = $user->companies()->first();
-            $tenantId = tenant('id');
+            $companyId = session('active_company_id');
+            $tenantId = tenant('id') ?? null;
 
-            // Validação básica
-            $dataInicial = $request->input('data_inicial');
-            $dataFinal = $request->input('data_final');
-
-            if (!$dataInicial || !$dataFinal) {
+            if (!$companyId) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'As datas inicial e final são obrigatórias.',
-                ], 422);
+                    'message' => 'Empresa ativa não encontrada',
+                ], 400);
             }
 
-            // Coletar parâmetros
+            // Capturar todos os filtros
+            $dataInicial = $request->input('data_inicial');
+            $dataFinal = $request->input('data_final');
             $entidadeId = $request->input('entidade_id');
             $modelo = $request->input('modelo', 'horizontal');
             $tipoData = $request->input('tipo_data', 'competencia');
@@ -169,7 +178,7 @@ class PrestacaoDeContaController extends Controller
             $comprovacaoFiscal = $request->boolean('comprovacao_fiscal');
             $tipoValor = $request->input('tipo_valor', 'previsto');
 
-            // Converter string separada por vírgula em array
+            // Converter string separada por vírgula em array (quando vem via FormData)
             if (is_string($situacoes)) {
                 $situacoes = array_filter(explode(',', $situacoes));
             }
@@ -177,11 +186,11 @@ class PrestacaoDeContaController extends Controller
                 $categorias = array_filter(explode(',', $categorias));
             }
 
-            // Criar registro de geração
+            // Criar registro de geração de PDF
             $pdfGen = PdfGeneration::create([
+                'type' => 'prestacao_contas',
                 'user_id' => $user->id,
-                'company_id' => $company->id,
-                'report_type' => 'prestacao_contas',
+                'company_id' => $companyId,
                 'status' => 'pending',
                 'parameters' => json_encode([
                     'data_inicial' => $dataInicial,
@@ -201,6 +210,10 @@ class PrestacaoDeContaController extends Controller
             GeneratePrestacaoContasPdfJob::dispatch(
                 $dataInicial,
                 $dataFinal,
+                $companyId,
+                $user->id,
+                $tenantId,
+                $pdfGen->id,
                 $entidadeId,
                 $modelo,
                 $tipoData,
@@ -208,40 +221,26 @@ class PrestacaoDeContaController extends Controller
                 $categorias,
                 $parceiroId,
                 $comprovacaoFiscal,
-                $tipoValor,
-                $company->id,
-                $user->id,
-                $tenantId,
-                $pdfGen->id
+                $tipoValor
             );
 
             return response()->json([
                 'success' => true,
-                'message' => 'Relatório está sendo gerado em segundo plano. Você receberá uma notificação quando estiver pronto.',
+                'message' => 'PDF sendo gerado em segundo plano...',
                 'pdf_id' => $pdfGen->id,
+                'status_url' => route('pdf.status', ['id' => $pdfGen->id]),
             ]);
 
         } catch (\Exception $e) {
-            \Log::error('[PrestacaoDeContaController] Erro ao iniciar geração assíncrona', [
-                'error' => $e->getMessage(),
-            ]);
+            \Log::error('[PrestacaoContasAsync] Erro: ' . $e->getMessage());
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao iniciar geração do relatório: ' . $e->getMessage(),
+                'message' => 'Erro ao iniciar geração do PDF: ' . $e->getMessage(),
             ], 500);
         }
     }
 
-
-    protected function logoToBase64($company): ?string
-    {
-        $path = $company->avatar
-            ? storage_path('app/public/'.$company->avatar)
-            : public_path('tenancy/assets/media/png/perfil.svg');
-
-        return 'data:image/'.pathinfo($path, PATHINFO_EXTENSION).';base64,'.base64_encode(file_get_contents($path));
-    }
 
     public function print(Request $request, $id)
     {

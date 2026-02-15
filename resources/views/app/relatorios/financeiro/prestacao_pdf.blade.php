@@ -7,89 +7,19 @@
     {{-- Bootstrap 5 – CDN (Browsershot carrega normalmente) --}}
     <link rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
-        integrity="sha384-TwkQ…"
         crossorigin="anonymous">
+
+    {{-- Chart.js para gráficos --}}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     {{-- CSS próprio pensado para impressão --}}
     <style>
-        @page { size: A4 landscape; margin: 8mm 8mm 15mm 8mm; }
-        body   { font-size: .72rem; }
+        @page { size: A4 landscape; margin: 8mm 8mm 18mm 8mm; }
+        body   { font-size: .77rem; }
         .logo  { height: 60px; }
         .page-break { page-break-after: always; }
-        /* zebra na tabela */
-        table tbody tr:nth-child(odd) { background: #f8f9fa; }
 
-        /* Titulo do relatorio */
-        .report-title {
-            background: linear-gradient(135deg, #4a90d9 0%, #667eea 100%);
-            color: #fff;
-            padding: 10px 15px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .report-title h3 { margin: 0; font-size: 1.1rem; font-weight: 700; }
-        .report-title .periodo { font-size: .85rem; opacity: .95; }
-
-        /* Filtros aplicados */
-        .filtros-box {
-            border: 1px solid #dee2e6;
-            border-left: 4px solid #4a90d9;
-            border-radius: 0 6px 6px 0;
-            padding: 10px 15px;
-            margin-bottom: 15px;
-            background-color: #f8f9fa;
-        }
-        .filtros-box .filtro-item { display: inline-block; margin-right: 20px; font-size: .72rem; }
-        .filtros-box .filtro-label { font-weight: 600; color: #495057; }
-
-        /* Tabelas melhoradas */
-        table { page-break-inside: auto; }
-        tr { page-break-inside: avoid; page-break-after: auto; }
-        thead { display: table-header-group; }
-        tfoot { display: table-footer-group; }
-        .table> thead> tr> th { font-size: .7rem; padding: 6px 5px; white-space: nowrap; background-color: #495057; color: #fff; border: none; }
-        .table> tbody> tr> td { font-size: .68rem; padding: 4px 5px; vertical-align: middle; }
-
-        /* Destaque de valores */
-        .text-entrada { color: #198754; font-weight: 600; }
-        .text-saida { color: #dc3545; font-weight: 600; }
-        .saldo-positivo { color: #198754; font-weight: 700; }
-        .saldo-negativo { color: #dc3545; font-weight: 700; }
-
-        /* Badge de origem/categoria */
-        .origem-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #667eea 0%, #4a90d9 100%);
-            color: #fff;
-            border-radius: 5px;
-            padding: 6px 14px;
-            font-size: .78rem;
-            font-weight: 600;
-            margin-bottom: 10px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
-        }
-
-        /* Resumo final */
-        .resumo-container { display: flex; gap: 15px; margin-top: 20px; margin-bottom: 15px; }
-        .resumo-box { flex: 1; border-radius: 8px; padding: 15px 20px; text-align: center; }
-        .resumo-box.entradas { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 1px solid #28a745; }
-        .resumo-box.saidas { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); border: 1px solid #dc3545; }
-        .resumo-box.saldo { background: linear-gradient(135deg, #cce5ff 0%, #b8daff 100%); border: 1px solid #007bff; }
-        .resumo-box .label { font-size: .7rem; color: #495057; margin-bottom: 5px; text-transform: uppercase; }
-        .resumo-box .value { font-size: 1.1rem; font-weight: 700; }
-        .resumo-box.entradas .value { color: #155724; }
-        .resumo-box.saidas .value { color: #721c24; }
-        .resumo-box.saldo .value { color: #004085; }
-        .subtotal-row { background-color: #e9ecef !important; }
-        .subtotal-row td { font-weight: 600 !important; }
-        .chart-container { margin-top: 20px; padding: 15px; border: 1px solid #dee2e6; border-radius: 8px; background: #fff; }
-        .chart-title { font-size: .85rem; font-weight: 600; color: #495057; margin-bottom: 10px; text-align: center; }
-        .footer-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 5px 20px; font-size: .6rem; color: #999; border-top: 1px solid #ccc; background: #fff; }
-
-        /* Estilo do cabeçalho similar à imagem */
+        /* Cabeçalho */
         .header-container {
             border-top: 1px solid #000;
             border-bottom: 1px solid #000;
@@ -110,8 +40,6 @@
         .header-logo img {
             max-width: 100px;
             max-height: 100px;
-            width: auto;
-            height: auto;
         }
         .header-text {
             display: table-cell;
@@ -125,32 +53,114 @@
             margin: 0;
             font-size: 1rem;
             line-height: 1.3;
-            letter-spacing: 0.5px;
         }
         .header-text .subtitle {
             font-weight: bold;
             text-transform: uppercase;
             font-size: 0.85rem;
             margin-top: 3px;
-            line-height: 1.2;
         }
         .header-text small {
             display: block;
-            font-size: 0.7rem;
+            font-size: 0.65rem;
             line-height: 1.5;
             margin-top: 3px;
+        }
+
+        /* Tabelas */
+        table { page-break-inside: auto; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+
+        /* zebra na tabela */
+        table tbody tr:nth-child(odd) { background: #f8f9fa; }
+
+        /* Cores das colunas */
+        .header-entrada {
+            background-color: #28a745 !important;
+            color: white !important;
+            font-weight: bold;
+        }
+        .header-saida {
+            background-color: #eb1228 !important;
+            color: white !important;
+            font-weight: bold;
+        }
+        .total-entrada {
+            background-color: #28a745 !important;
+            color: white;
+            font-weight: bold;
+        }
+        .total-saida {
+            background-color: #eb1228 !important;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Gráficos */
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin: 20px 0;
+        }
+
+        /* Resultado badge */
+        .resultado-badge {
+            display: inline-block;
+            padding: 6px 18px;
+            border-radius: 6px;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+        .resultado-deficit {
+            background-color: #fde8ea;
+            color: #dc3545;
+            border: 1px solid #f5c6cb;
+        }
+        .resultado-superavit {
+            background-color: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        /* Rodapé fixo */
+        .footer-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 4px 8mm;
+            border-top: 1px solid #dee2e6;
+            font-size: 0.6rem;
+            color: #6c757d;
+            display: flex;
+            justify-content: space-between;
+            background: #fff;
+        }
+
+        /* Filtros badge */
+        .filter-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            background-color: #e9ecef;
+            color: #495057;
+            margin-right: 4px;
+            margin-bottom: 4px;
         }
     </style>
 </head>
 
 <body>
-    {{-- Cabecalho padrao --}}
+    {{-- Cabeçalho padronizado --}}
     <div class="header-container">
         <div class="header-content">
             {{-- Logo esquerdo --}}
             <div class="header-logo">
                 @php
-                    $avatar = $company->avatar ?? null;
+                    $avatar = $avatarEmpresa ?? ($empresaRelatorio->avatar ?? ($company->avatar ?? null));
                     $logoPath = null;
 
                     if ($avatar) {
@@ -168,51 +178,54 @@
                         $logoPath = public_path('tenancy/assets/media/png/perfil.svg');
                     }
                 @endphp
-                @if (file_exists($logoPath))
+                @if(file_exists($logoPath))
                     <img src="{{ $logoPath }}" alt="Logo">
                 @endif
             </div>
 
             {{-- Texto centralizado --}}
             <div class="header-text">
-                <h4 style="margin: 0; padding: 0;">{{ strtoupper($company->name ?? '') }}</h4>
+                <h4 style="margin: 0; padding: 0;">{{ strtoupper($nomeEmpresa ?? ($empresaRelatorio->name ?? ($company->name ?? ''))) }}</h4>
                 <h5 style="margin: 5px 0; padding: 0; font-weight: normal;">
-                    {{ strtoupper($company->razao_social ?? '') }}
+                    {{ strtoupper($razaoSocial ?? ($empresaRelatorio->razao_social ?? ($company->razao_social ?? ''))) }}
                 </h5>
-                <small>CNPJ: {{ $company->cnpj ?? '' }}</small>
+                <small>CNPJ: {{ $cnpjEmpresa ?? ($empresaRelatorio->cnpj ?? ($company->cnpj ?? '')) }}</small>
                 <div style="font-size: 0.75rem; color: #333;">
                     @php
-                        $addr = $company->addresses ?? null;
+                        $addr = $enderecoEmpresa ?? ($empresaRelatorio->addresses ?? ($company->addresses ?? null));
                     @endphp
-                    @if ($addr)
+                    @if($addr)
                         {{ $addr->rua ?? '' }}
-                        @if ($addr->numero ?? '')
+                        @if($addr->numero ?? '')
                             , {{ $addr->numero }}
                         @endif
-                        @if ($addr->bairro ?? '')
+                        @if($addr->bairro ?? '')
                             - {{ $addr->bairro }}
                         @endif
-                        @if ($addr->cidade ?? '')
+                        @if($addr->cidade ?? '')
                             / {{ $addr->cidade }}
                         @endif
-                        @if ($addr->uf ?? '')
+                        @if($addr->uf ?? '')
                             - {{ $addr->uf }}
                         @endif
-                        @if ($addr->cep ?? '')
+                        @if($addr->cep ?? '')
                             - CEP: {{ $addr->cep }}
                         @endif
                     @endif
                 </div>
-                @if (($company->phone ?? null) || ($company->website ?? null) || ($company->email ?? null))
+                @php
+                    $emp = $empresaRelatorio ?? $company ?? null;
+                @endphp
+                @if($emp && (($emp->phone ?? null) || ($emp->website ?? null) || ($emp->email ?? null)))
                     <small>
-                        @if ($company->phone ?? null)
-                            Fone: {{ $company->phone }}
+                        @if($emp->phone ?? null)
+                            Fone: {{ $emp->phone }}
                         @endif
-                        @if ($company->website ?? null)
-                            {{ $company->phone ?? null ? ' - ' : '' }}Site: {{ $company->website }}
+                        @if($emp->website ?? null)
+                            {{ $emp->phone ?? null ? ' - ' : '' }}Site: {{ $emp->website }}
                         @endif
-                        @if ($company->email ?? null)
-                            {{ ($company->phone ?? null) || ($company->website ?? null) ? ' - ' : '' }}E-mail: {{ $company->email }}
+                        @if($emp->email ?? null)
+                            {{ ($emp->phone ?? null) || ($emp->website ?? null) ? ' - ' : '' }}E-mail: {{ $emp->email }}
                         @endif
                     </small>
                 @endif
@@ -220,97 +233,101 @@
 
             {{-- Logo direito --}}
             <div class="header-logo">
-                @if (file_exists($logoPath))
+                @if(file_exists($logoPath))
                     <img src="{{ $logoPath }}" alt="Logo">
                 @endif
             </div>
         </div>
     </div>
 
-    {{-- Filtros --}}
-    <div class="report-title">
-        <h3>Prestação de Contas</h3>
-        <span class="periodo">Período: {{ $dataInicial }} a {{ $dataFinal }}</span>
-    </div>
+    {{-- Título e Período --}}
+    <p class="fw-bold mb-2 text-center" style="font-size: 0.85rem;">
+        PRESTAÇÃO DE CONTAS &mdash; PERÍODO: {{ $dataInicial }} a {{ $dataFinal }}
+    </p>
 
-    <div class="filtros-box">
+    {{-- Filtros aplicados --}}
+    <div class="text-center mb-3">
         @isset($parceiroNome)
-            <span class="filtro-item">
-                <span class="filtro-label">Parceiro:</span> {{ $parceiroNome }}
-            </span>
+            <span class="filter-badge"><strong>Parceiro:</strong> {{ $parceiroNome }}</span>
         @endisset
         @if(!empty($comprovacaoFiscal))
-            <span class="filtro-item">
-                <span class="filtro-label">Filtro:</span> Somente com comprovação fiscal
-            </span>
+            <span class="filter-badge"><strong>Filtro:</strong> Somente com comprovação fiscal</span>
         @endif
         @if(($tipoValor ?? 'previsto') === 'pago')
-            <span class="filtro-item">
-                <span class="filtro-label">Valores:</span> Efetivos (Pagos)
-            </span>
+            <span class="filter-badge"><strong>Valores:</strong> Efetivos (Pagos)</span>
         @else
-            <span class="filtro-item">
-                <span class="filtro-label">Valores:</span> Previstos
-            </span>
+            <span class="filter-badge"><strong>Valores:</strong> Previstos</span>
         @endif
-        @if (empty($parceiroNome) && empty($comprovacaoFiscal))
-            <span class="filtro-item text-muted">Nenhum filtro adicional aplicado</span>
-        @endif
+        <span class="filter-badge text-muted">
+            <em>Excluídas: desconsideradas, parceladas e agendadas</em>
+        </span>
     </div>
 
     {{-- Loop dos grupos --}}
     @foreach ($dados as $idx => $grupo)
-        <div class="origem-badge">{{ $grupo['origem'] }}</div>
+        <div class="mb-3">
+            <h6 class="text-primary fw-bold mb-1" style="font-size: 0.85rem; border-bottom: 2px solid #0d6efd; padding-bottom: 4px;">
+                <i class="bi bi-folder2-open"></i> {{ $grupo['origem'] }}
+            </h6>
 
-        <table class="table table-sm table-bordered table-striped align-middle mb-3">
-            <thead>
-                <tr class="text-center">
-                    <th style="width: 80px;">Data</th>
-                    <th style="width: 130px;">Entidade</th>
-                    <th style="width: 150px;">Parceiro</th>
-                    <th>Descrição</th>
-                    <th style="width: 100px;" class="text-end">Entrada (R$)</th>
-                    <th style="width: 100px;" class="text-end">Saída (R$)</th>
-                    <th style="width: 100px;" class="text-end">Saldo</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php
-                    $saldo = 0;
-                    $campoValor = ($tipoValor ?? 'previsto') === 'pago' ? 'valor_pago' : 'valor';
-                @endphp
-                @foreach ($grupo['items'] as $mov)
-                    @php
-                        $valorMov = $mov->{$campoValor} ?? $mov->valor;
-                        $entrada  = $mov->tipo === 'entrada' ? $valorMov : 0;
-                        $saida    = $mov->tipo === 'saida'   ? $valorMov : 0;
-                        $saldo   += $entrada - $saida;
-                    @endphp
-                    <tr>
-                        <td class="text-center">{{ $mov->data_competencia }}</td>
-                        <td>{{ $mov->entidadeFinanceira->name ?? '-' }}</td>
-                        <td>{{ $mov->parceiro->nome ?? '-' }}</td>
-                        <td>
-                            {{ $mov->descricao }}
-                            @if ($mov->lancamentoPadrao)
-                                <br><small class="text-muted">{{ $mov->lancamentoPadrao->description }}</small>
-                            @endif
-                        </td>
-                        <td class="text-end {{ $entrada ? 'text-entrada' : '' }}">{{ $entrada ? number_format($entrada, 2, ',', '.') : '-' }}</td>
-                        <td class="text-end {{ $saida ? 'text-saida' : '' }}">{{ $saida ? number_format($saida, 2, ',', '.') : '-' }}</td>
-                        <td class="text-end {{ $saldo >= 0 ? 'saldo-positivo' : 'saldo-negativo' }}">{{ number_format($saldo, 2, ',', '.') }}</td>
+            <table class="table table-sm table-bordered align-middle mb-2">
+                <thead class="table-light">
+                    <tr class="text-center" style="font-size: 0.7rem;">
+                        <th style="width: 8%">Data</th>
+                        <th style="width: 14%">Entidade</th>
+                        <th style="width: 14%">Parceiro</th>
+                        <th style="width: 28%">Descrição</th>
+                        <th style="width: 12%" class="text-end header-entrada">Entrada (R$)</th>
+                        <th style="width: 12%" class="text-end header-saida">Saída (R$)</th>
+                        <th style="width: 12%" class="text-end">Saldo (R$)</th>
                     </tr>
-                @endforeach
-            </tbody>
-            <tfoot>
-                <tr class="subtotal-row">
-                    <td colspan="4" class="text-end"><strong>Subtotal {{ $grupo['origem'] }}</strong></td>
-                    <td class="text-end text-entrada">{{ number_format($grupo['totEntrada'], 2, ',', '.') }}</td>
-                    <td class="text-end text-saida">{{ number_format($grupo['totSaida'],   2, ',', '.') }}</td>
-                    <td class="text-end {{ $saldo >= 0 ? 'saldo-positivo' : 'saldo-negativo' }}">{{ number_format($saldo, 2, ',', '.') }}</td>
-                </tr>
-            </tfoot>
-        </table>
+                </thead>
+                <tbody>
+                    @php
+                        $saldo = 0;
+                        $campoValor = ($tipoValor ?? 'previsto') === 'pago' ? 'valor_pago' : 'valor';
+                    @endphp
+                    @foreach ($grupo['items'] as $mov)
+                        @php
+                            $valorMov = $mov->{$campoValor} ?? $mov->valor;
+                            $entrada  = $mov->tipo === 'entrada' ? $valorMov : 0;
+                            $saida    = $mov->tipo === 'saida'   ? $valorMov : 0;
+                            $saldo   += $entrada - $saida;
+                        @endphp
+                        <tr style="font-size: 0.7rem;">
+                            <td class="text-center text-nowrap">{{ \Carbon\Carbon::parse($mov->data_competencia)->format('d/m/Y') }}</td>
+                            <td>{{ $mov->entidadeFinanceira->name ?? '-' }}</td>
+                            <td>{{ $mov->parceiro->nome ?? '-' }}</td>
+                            <td>
+                                {{ $mov->descricao }}
+                                @if($mov->lancamentoPadrao?->description)
+                                    <br><small class="text-muted">{{ $mov->lancamentoPadrao->description }}</small>
+                                @endif
+                            </td>
+                            <td class="text-end {{ $entrada ? 'text-success fw-semibold' : '' }}">
+                                {{ $entrada ? number_format($entrada, 2, ',', '.') : '' }}
+                            </td>
+                            <td class="text-end {{ $saida ? 'text-danger fw-semibold' : '' }}">
+                                {{ $saida ? number_format($saida, 2, ',', '.') : '' }}
+                            </td>
+                            <td class="text-end fw-semibold {{ $saldo >= 0 ? 'text-success' : 'text-danger' }}">
+                                {{ number_format($saldo, 2, ',', '.') }}
+                            </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+                <tfoot>
+                    <tr class="fw-bold" style="font-size: 0.75rem;">
+                        <td colspan="4" class="text-end">Subtotal</td>
+                        <td class="text-end total-entrada">{{ number_format($grupo['totEntrada'], 2, ',', '.') }}</td>
+                        <td class="text-end total-saida">{{ number_format($grupo['totSaida'], 2, ',', '.') }}</td>
+                        <td class="text-end {{ $saldo >= 0 ? 'text-success' : 'text-danger' }}">
+                            {{ number_format($saldo, 2, ',', '.') }}
+                        </td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
 
         {{-- Page-break opcional se muitos registros --}}
         @if(!$loop->last)
@@ -320,75 +337,127 @@
 
     {{-- Totais finais --}}
     @php
-        $saldoFinal = $totalEntradas - $totalSaidas;
+        $resultado = $totalEntradas - $totalSaidas;
     @endphp
-    <div class="resumo-container">
-        <div class="resumo-box entradas">
-            <div class="label">Total de Entradas</div>
-            <div class="value">R$ {{ number_format($totalEntradas, 2, ',', '.') }}</div>
-        </div>
-        <div class="resumo-box saidas">
-            <div class="label">Total de Saídas</div>
-            <div class="value">R$ {{ number_format($totalSaidas, 2, ',', '.') }}</div>
-        </div>
-        <div class="resumo-box saldo">
-            <div class="label">Saldo Final</div>
-            <div class="value">R$ {{ number_format($saldoFinal, 2, ',', '.') }}</div>
+    <div class="mt-3 p-3 border border-dark-subtle rounded" style="background-color: #f8f9fa;">
+        <h5 class="mb-3 text-center fw-bold">Resumo Geral</h5>
+        <div class="row">
+            <div class="col-4 text-center">
+                <div class="p-2 rounded" style="background-color: #d4edda;">
+                    <small class="d-block text-muted">Total de Entradas</small>
+                    <strong class="text-success" style="font-size: 1.1rem;">R$ {{ number_format($totalEntradas, 2, ',', '.') }}</strong>
+                </div>
+            </div>
+            <div class="col-4 text-center">
+                <div class="p-2 rounded" style="background-color: #fde8ea;">
+                    <small class="d-block text-muted">Total de Saídas</small>
+                    <strong class="text-danger" style="font-size: 1.1rem;">R$ {{ number_format($totalSaidas, 2, ',', '.') }}</strong>
+                </div>
+            </div>
+            <div class="col-4 text-center">
+                <div class="p-2 rounded resultado-badge {{ $resultado >= 0 ? 'resultado-superavit' : 'resultado-deficit' }}" style="padding: 8px;">
+                    <small class="d-block" style="opacity: 0.8;">{{ $resultado >= 0 ? 'Superávit' : 'Déficit' }}</small>
+                    <strong style="font-size: 1.1rem;">R$ {{ number_format(abs($resultado), 2, ',', '.') }}</strong>
+                </div>
+            </div>
         </div>
     </div>
 
-    {{-- Gráfico (Chart.js) – Browsershot renderiza sem problemas --}}
-    @if (count($dados) > 0)
-        <div class="chart-container">
-            <div class="chart-title">Comparativo de Entradas x Saídas por Categoria</div>
-            <canvas id="chart" height="140"></canvas>
+    {{-- Gráfico (Chart.js) --}}
+    @if(count($dados) > 0)
+        <div class="page-break"></div>
+        <div class="mt-3">
+            <h6 class="text-center fw-bold mb-2">Entradas x Saídas por Origem</h6>
+            <canvas id="chart" height="200"></canvas>
         </div>
 
-        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
         <script>
-            const ctx      = document.getElementById('chart').getContext('2d');
-            const labels   = @json(array_column($dados, 'origem'));
-            const entradas = @json(array_column($dados, 'totEntrada'));
-            const saidas   = @json(array_column($dados, 'totSaida'));
+            var ctx = document.getElementById('chart').getContext('2d');
+            var labels = @json(array_column($dados, 'origem'));
+            var entradas = @json(array_column($dados, 'totEntrada'));
+            var saidas = @json(array_column($dados, 'totSaida'));
 
             new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels,
+                    labels: labels,
                     datasets: [
                         {
                             label: 'Entradas',
                             data: entradas,
-                            backgroundColor: 'rgba(25, 135, 84, 0.8)',
-                            borderColor: 'rgba(25, 135, 84, 1)',
-                            borderWidth: 1,
-                            borderRadius: 4
+                            backgroundColor: 'rgba(40, 167, 69, 0.8)',
+                            borderColor: 'rgba(40, 167, 69, 1)',
+                            borderWidth: 1
                         },
                         {
                             label: 'Saídas',
                             data: saidas,
-                            backgroundColor: 'rgba(220, 53, 69, 0.8)',
-                            borderColor: 'rgba(220, 53, 69, 1)',
-                            borderWidth: 1,
-                            borderRadius: 4
+                            backgroundColor: 'rgba(235, 18, 40, 0.8)',
+                            borderColor: 'rgba(235, 18, 40, 1)',
+                            borderWidth: 1
                         }
                     ]
                 },
                 options: {
                     responsive: true,
                     plugins: {
-                        legend: {
-                            position: 'bottom',
-                            labels: { usePointStyle: true, padding: 15 }
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    var value = context.parsed.y || 0;
+                                    return context.dataset.label + ': R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+                                }
+                            }
                         }
                     },
                     scales: {
                         y: {
                             beginAtZero: true,
-                            title: { display: true, text: 'Valores (R$)' },
+                            title: { display: true, text: 'R$' },
                             ticks: {
                                 callback: function(value) {
-                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                    return 'R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 0});
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+
+        {{-- Gráfico Pizza - Distribuição geral --}}
+        <div class="mt-4">
+            <h6 class="text-center fw-bold mb-2">Distribuição Geral</h6>
+            <div class="d-flex justify-content-center">
+                <canvas id="chartPie" width="300" height="300" style="max-width: 300px;"></canvas>
+            </div>
+        </div>
+
+        <script>
+            var ctxPie = document.getElementById('chartPie').getContext('2d');
+            new Chart(ctxPie, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Entradas', 'Saídas'],
+                    datasets: [{
+                        data: [{{ $totalEntradas }}, {{ $totalSaidas }}],
+                        backgroundColor: ['rgba(40, 167, 69, 0.8)', 'rgba(235, 18, 40, 0.8)'],
+                        borderColor: ['rgba(40, 167, 69, 1)', 'rgba(235, 18, 40, 1)'],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    plugins: {
+                        legend: { position: 'bottom' },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    var value = context.parsed || 0;
+                                    var total = context.dataset.data.reduce(function(a, b) { return a + b; }, 0);
+                                    var pct = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
+                                    return context.label + ': R$ ' + value.toLocaleString('pt-BR', {minimumFractionDigits: 2}) + ' (' + pct + '%)';
                                 }
                             }
                         }
@@ -398,9 +467,10 @@
         </script>
     @endif
 
-    {{-- Footer --}}
+    {{-- Rodapé fixo --}}
     <div class="footer-container">
-        <span>Relatório gerado em {{ now()->format('d/m/Y H:i:s') }} | Sistema Dominus</span>
+        <span>Prestação de Contas &mdash; Gerado em {{ now()->format('d/m/Y H:i') }}</span>
+        <span>{{ $nomeEmpresa ?? ($empresaRelatorio->name ?? ($company->name ?? '')) }}</span>
     </div>
 </body>
 </html>

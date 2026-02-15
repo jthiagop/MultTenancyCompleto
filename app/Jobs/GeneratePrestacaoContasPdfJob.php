@@ -8,6 +8,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\View;
 use Spatie\Browsershot\Browsershot;
 use App\Helpers\BrowsershotHelper;
 use App\Enums\SituacaoTransacao;
@@ -28,6 +29,10 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
 
     protected $dataInicial;
     protected $dataFinal;
+    protected $companyId;
+    protected $userId;
+    protected $tenantId;
+    protected $pdfGenerationId;
     protected $entidadeId;
     protected $modelo;
     protected $tipoData;
@@ -36,41 +41,37 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
     protected $parceiroId;
     protected $comprovacaoFiscal;
     protected $tipoValor;
-    protected $companyId;
-    protected $userId;
-    protected $tenantId;
-    protected $pdfGenerationId;
 
     public function __construct(
         $dataInicial,
         $dataFinal,
-        $entidadeId,
-        $modelo,
-        $tipoData,
-        $situacoes,
-        $categorias,
-        $parceiroId,
-        $comprovacaoFiscal,
-        $tipoValor,
         $companyId,
         $userId,
         $tenantId,
-        $pdfGenerationId
+        $pdfGenerationId,
+        $entidadeId = null,
+        $modelo = 'horizontal',
+        $tipoData = 'competencia',
+        $situacoes = [],
+        $categorias = [],
+        $parceiroId = null,
+        $comprovacaoFiscal = false,
+        $tipoValor = 'previsto'
     ) {
         $this->dataInicial = $dataInicial;
         $this->dataFinal = $dataFinal;
-        $this->entidadeId = $entidadeId;
-        $this->modelo = $modelo;
-        $this->tipoData = $tipoData;
-        $this->situacoes = $situacoes;
-        $this->categorias = $categorias;
-        $this->parceiroId = $parceiroId;
-        $this->comprovacaoFiscal = $comprovacaoFiscal;
-        $this->tipoValor = $tipoValor;
         $this->companyId = $companyId;
         $this->userId = $userId;
         $this->tenantId = $tenantId;
         $this->pdfGenerationId = $pdfGenerationId;
+        $this->entidadeId = $entidadeId;
+        $this->modelo = $modelo;
+        $this->tipoData = $tipoData;
+        $this->situacoes = $situacoes ?? [];
+        $this->categorias = $categorias ?? [];
+        $this->parceiroId = $parceiroId;
+        $this->comprovacaoFiscal = $comprovacaoFiscal;
+        $this->tipoValor = $tipoValor;
     }
 
     public function handle()
@@ -106,9 +107,8 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
                 throw new \Exception("Company não encontrada com ID: {$this->companyId}");
             }
 
-            // Parse datas
-            $dataInicio = Carbon::createFromFormat('Y-m-d', $this->dataInicial)->startOfDay();
-            $dataFim = Carbon::createFromFormat('Y-m-d', $this->dataFinal)->endOfDay();
+            $dataInicio = Carbon::createFromFormat('d/m/Y', $this->dataInicial)->startOfDay();
+            $dataFim = Carbon::createFromFormat('d/m/Y', $this->dataFinal)->endOfDay();
 
             // Coluna de data a filtrar
             $colunaData = $this->tipoData === 'pagamento' ? 'data_pagamento' : 'data_competencia';
@@ -124,8 +124,8 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
                 ->where('company_id', $this->companyId)
                 ->whereNotIn('situacao', $situacoesExcluidas)
                 ->where('agendado', false)
-                ->whereDate($colunaData, '>=', $dataInicio)
-                ->whereDate($colunaData, '<=', $dataFim)
+                ->when($dataInicio, fn($q) => $q->whereDate($colunaData, '>=', $dataInicio))
+                ->when($dataFim, fn($q) => $q->whereDate($colunaData, '<=', $dataFim))
                 ->when($this->entidadeId, fn($q) => $q->where('entidade_id', $this->entidadeId))
                 ->when(!empty($this->situacoes), fn($q) => $q->whereIn('situacao', $this->situacoes))
                 ->when(!empty($this->categorias), fn($q) => $q->whereIn('lancamento_padrao_id', $this->categorias))
@@ -150,7 +150,7 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
                 $dados[] = compact('origem', 'items', 'totEntrada', 'totSaida');
             }
 
-            // Dados do filtro para exibir no cabeçalho do PDF
+            // Dados dos filtros para exibir no cabeçalho do PDF
             $entidadeNome = $this->entidadeId
                 ? optional(EntidadeFinanceira::find($this->entidadeId))->nome
                 : null;
@@ -159,10 +159,19 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
                 ? optional(\App\Models\Parceiro::find($this->parceiroId))->nome
                 : null;
 
-            // HTML da view - respeita o modelo escolhido (horizontal/vertical)
-            $isLandscape = $this->modelo === 'horizontal';
+            Log::info('[GeneratePrestacaoContasPdfJob] Dados processados', [
+                'total_grupos' => count($dados),
+                'total_entradas' => $totEntradaAll,
+                'total_saidas' => $totSaidaAll,
+            ]);
 
             $viewData = [
+                'empresaRelatorio' => $company,
+                'nomeEmpresa' => $company->name,
+                'razaoSocial' => $company->razao_social,
+                'cnpjEmpresa' => $company->cnpj,
+                'avatarEmpresa' => $company->avatar,
+                'enderecoEmpresa' => $company->addresses,
                 'dados' => $dados,
                 'dataInicial' => $dataInicio->format('d/m/Y'),
                 'dataFinal' => $dataFim->format('d/m/Y'),
@@ -173,25 +182,19 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
                 'tipoValor' => $this->tipoValor,
                 'parceiroNome' => $parceiroNome,
                 'comprovacaoFiscal' => $this->comprovacaoFiscal,
-                'tipoData' => $this->tipoData,
-                'situacoes' => $this->situacoes,
             ];
 
-            Log::info('[GeneratePrestacaoContasPdfJob] Dados coletados', [
-                'total_grupos' => count($dados),
-                'total_entradas' => $totEntradaAll,
-                'total_saidas' => $totSaidaAll,
-            ]);
+            $html = View::make('app.relatorios.financeiro.prestacao_pdf', $viewData)->render();
 
-            $html = \Illuminate\Support\Facades\View::make('app.relatorios.financeiro.prestacao_pdf', $viewData)->render();
+            // Gerar PDF - respeita o modelo escolhido
+            $isLandscape = $this->modelo === 'horizontal';
 
-            // Gerar PDF
             $pdf = BrowsershotHelper::configureChromePath(
                 Browsershot::html($html)
                     ->format('A4')
                     ->landscape($isLandscape)
                     ->showBackground()
-                    ->margins(8, 8, 8, 8)
+                    ->margins(8, 8, 15, 8)
                     ->waitUntilNetworkIdle()
             )->pdf();
 
@@ -200,6 +203,7 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
             $filename = "pdfs/prestacao-contas/prestacao_{$filePrefix}_{$this->companyId}_" . time() . ".pdf";
             $centralStoragePath = base_path('storage/app/public/' . $filename);
 
+            // Garantir que o diretório existe
             $directory = dirname($centralStoragePath);
             if (!is_dir($directory)) {
                 mkdir($directory, 0755, true);
@@ -207,8 +211,10 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
 
             file_put_contents($centralStoragePath, $pdf);
 
+            // Gerar nome amigável do arquivo
             $friendlyName = "Prestação de Contas - {$dataInicio->format('d/m/Y')} a {$dataFim->format('d/m/Y')}";
 
+            // Atualizar status para completed
             if ($pdfGen) {
                 $pdfGen->update([
                     'status' => 'completed',
@@ -224,7 +230,7 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
                 'filename' => $filename,
             ]);
 
-            // Notificar usuário
+            // Notificar usuário que o PDF está pronto
             $user = User::find($this->userId);
             if ($user && $pdfGen) {
                 $pdfGen->refresh();
@@ -256,6 +262,7 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
                 'trace' => $e->getTraceAsString(),
             ]);
 
+            // Notificar usuário sobre o erro
             $user = User::find($this->userId);
             if ($user && isset($dataInicio, $dataFim)) {
                 $periodoNome = $dataInicio->format('d/m/Y') . ' a ' . $dataFim->format('d/m/Y');
@@ -266,7 +273,7 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
                 ));
             }
 
-            throw $e;
+            throw $e; // Re-throw para retry
         }
     }
 }
