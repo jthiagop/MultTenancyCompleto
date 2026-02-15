@@ -201,6 +201,30 @@ class CostCenterController extends Controller
             ->select('id', 'name')
             ->get();
 
+        // Busca categorias financeiras com lançamentos (para filtro de prestação de contas)
+        $categorias = \App\Models\LancamentoPadrao::forActiveCompany()
+            ->select('id', 'description', 'category')
+            ->orderBy('category')
+            ->orderBy('description')
+            ->get()
+            ->map(fn($lp) => [
+                'id'          => $lp->id,
+                'description' => $lp->description,
+                'category'    => $lp->category,
+                'label'       => $lp->getCategoryEmoji() . ' ' . $lp->description,
+            ]);
+
+        // Busca parceiros ativos (para filtro de prestação de contas)
+        $parceiros = \App\Models\Parceiro::forActiveCompany()
+            ->where('active', true)
+            ->select('id', 'nome', 'nome_fantasia')
+            ->orderBy('nome')
+            ->get()
+            ->map(fn($p) => [
+                'id'   => $p->id,
+                'label' => $p->nome_fantasia ? $p->nome . ' (' . $p->nome_fantasia . ')' : $p->nome,
+            ]);
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -208,7 +232,9 @@ class CostCenterController extends Controller
                     'id' => $company->id,
                     'name' => $company->name ?? 'N/A'
                 ],
-                'cost_centers' => $costCenters
+                'cost_centers' => $costCenters,
+                'categorias'   => $categorias,
+                'parceiros'    => $parceiros,
             ]
         ]);
     }

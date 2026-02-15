@@ -137,6 +137,127 @@
                     <div class="separator separator-dashed my-8"></div>
                     <!--end::Separator-->
 
+                    <!--begin::Filtros de Dados Section-->
+                    <div class="mb-8">
+                        <h5 class="text-gray-700 fw-bold mb-5">
+                            <i class="bi bi-funnel me-1"></i> Filtros de Dados
+                        </h5>
+
+                        <!--begin::Tipo de Data-->
+                        <div class="row g-9 mb-6">
+                            <div class="col-md-12 fv-row">
+                                <label class="fs-6 fw-semibold mb-2">Filtrar por</label>
+                                <div class="d-flex gap-5">
+                                    <label class="form-check form-check-custom">
+                                        <input class="form-check-input" type="radio" name="tipo_data"
+                                            value="competencia" id="tipo_data_competencia" checked />
+                                        <span class="form-check-label fw-semibold">
+                                            Data de Competência
+                                        </span>
+                                    </label>
+                                    <label class="form-check form-check-custom">
+                                        <input class="form-check-input" type="radio" name="tipo_data"
+                                            value="pagamento" id="tipo_data_pagamento" />
+                                        <span class="form-check-label fw-semibold">
+                                            Data de Pagamento
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <!--end::Tipo de Data-->
+
+                        <!--begin::Situação-->
+                        <div class="row g-9 mb-6">
+                            <div class="col-md-12 fv-row">
+                                <label class="fs-6 fw-semibold mb-2">Situação</label>
+                                <select class="form-select" data-control="select2" data-hide-search="true"
+                                    data-placeholder="Todas as situações" data-allow-clear="true"
+                                    name="situacoes[]" id="situacoes" multiple="multiple">
+                                    <option value="pago">Pago</option>
+                                    <option value="recebido">Recebido</option>
+                                    <option value="em_aberto">Em Aberto</option>
+                                    <option value="pago_parcial">Pago Parcial</option>
+                                    <option value="atrasado">Atrasado</option>
+                                </select>
+                                <div class="form-text text-muted">Deixe vazio para incluir todas</div>
+                            </div>
+                        </div>
+                        <!--end::Situação-->
+
+                        <!--begin::Categoria-->
+                        <div class="row g-9 mb-6">
+                            <div class="col-md-12 fv-row">
+                                <label class="fs-6 fw-semibold mb-2">Categoria Financeira</label>
+                                <select class="form-select" data-control="select2"
+                                    data-placeholder="Todas as categorias" data-allow-clear="true"
+                                    name="categorias[]" id="categorias" multiple="multiple">
+                                    <option value="">Carregando...</option>
+                                </select>
+                                <div class="form-text text-muted">Deixe vazio para incluir todas</div>
+                            </div>
+                        </div>
+                        <!--end::Categoria-->
+
+                        <!--begin::Parceiro-->
+                        <div class="row g-9 mb-6">
+                            <div class="col-md-12 fv-row">
+                                <label class="fs-6 fw-semibold mb-2">Parceiro / Fornecedor</label>
+                                <select class="form-select" data-control="select2"
+                                    data-placeholder="Todos os parceiros" data-allow-clear="true"
+                                    name="parceiro_id" id="parceiro_id">
+                                    <option value="">Carregando...</option>
+                                </select>
+                                <div class="form-text text-muted">Deixe vazio para incluir todos</div>
+                            </div>
+                        </div>
+                        <!--end::Parceiro-->
+
+                        <!--begin::Opções adicionais-->
+                        <div class="row g-9 mb-2">
+                            <!--begin::Comprovação Fiscal-->
+                            <div class="col-md-6 fv-row">
+                                <label class="fs-6 fw-semibold mb-2">Comprovação Fiscal</label>
+                                <div class="form-check form-check-custom mt-2">
+                                    <input class="form-check-input" type="checkbox"
+                                        name="comprovacao_fiscal" id="comprovacao_fiscal" value="1" />
+                                    <label class="form-check-label fw-semibold" for="comprovacao_fiscal">
+                                        Somente com comprovação fiscal
+                                    </label>
+                                </div>
+                            </div>
+                            <!--end::Comprovação Fiscal-->
+
+                            <!--begin::Tipo de Valor-->
+                            <div class="col-md-6 fv-row">
+                                <label class="fs-6 fw-semibold mb-2">Exibir valores</label>
+                                <div class="d-flex gap-5 mt-2">
+                                    <label class="form-check form-check-custom">
+                                        <input class="form-check-input" type="radio" name="tipo_valor"
+                                            value="previsto" id="tipo_valor_previsto" checked />
+                                        <span class="form-check-label fw-semibold">
+                                            Previstos
+                                        </span>
+                                    </label>
+                                    <label class="form-check form-check-custom">
+                                        <input class="form-check-input" type="radio" name="tipo_valor"
+                                            value="pago" id="tipo_valor_pago" />
+                                        <span class="form-check-label fw-semibold">
+                                            Efetivos (Pagos)
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                            <!--end::Tipo de Valor-->
+                        </div>
+                        <!--end::Opções adicionais-->
+                    </div>
+                    <!--end::Filtros de Dados Section-->
+
+                    <!--begin::Separator-->
+                    <div class="separator separator-dashed my-8"></div>
+                    <!--end::Separator-->
+
                     <!--begin::Financial Accounts Section-->
                     <div class="card-body">
                         <!--begin::Section Title-->

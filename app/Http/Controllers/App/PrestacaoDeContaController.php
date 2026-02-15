@@ -41,21 +41,44 @@ class PrestacaoDeContaController extends Controller
         $costCenter  = $request->input('cost_center_id');
         $entidadeId  = $request->input('entidade_id');
         $modelo      = $request->input('modelo', 'horizontal');
+        $tipoData    = $request->input('tipo_data', 'competencia'); // competencia ou pagamento
+        $situacoes   = $request->input('situacoes', []);            // array de situacoes
+        $categorias  = $request->input('categorias', []);           // array de lancamento_padrao_id
+        $parceiroId        = $request->input('parceiro_id');              // filtro por parceiro
+        $comprovacaoFiscal = $request->boolean('comprovacao_fiscal');     // somente com comprovacao fiscal
+        $tipoValor         = $request->input('tipo_valor', 'previsto');  // previsto ou pago
 
-        // 2) Query otimizada - com seguranca tenant + exclusao de situacoes irrelevantes
+        // Converter string separada por virgula em array (quando vem via query string)
+        if (is_string($situacoes)) {
+            $situacoes = array_filter(explode(',', $situacoes));
+        }
+        if (is_string($categorias)) {
+            $categorias = array_filter(explode(',', $categorias));
+        }
+
+        // 2) Coluna de data a filtrar
+        $colunaData = $tipoData === 'pagamento' ? 'data_pagamento' : 'data_competencia';
+
+        // 3) Situacoes a excluir (sempre exclui parcelado + desconsiderado)
+        $situacoesExcluidas = [
+            \App\Enums\SituacaoTransacao::DESCONSIDERADO->value,
+            \App\Enums\SituacaoTransacao::PARCELADO->value,
+        ];
+
+        // 4) Query otimizada - com seguranca tenant
         $query = TransacaoFinanceira::with(['entidadeFinanceira', 'lancamentoPadrao', 'parceiro'])
             ->forActiveCompany()
-            ->whereNotIn('situacao', [
-                \App\Enums\SituacaoTransacao::DESCONSIDERADO->value,
-                \App\Enums\SituacaoTransacao::PREVISTO->value,
-                \App\Enums\SituacaoTransacao::PARCELADO->value,
-            ])
+            ->whereNotIn('situacao', $situacoesExcluidas)
             ->where('agendado', false)
-            ->when($dataInicial, fn($q) => $q->whereDate('data_competencia', '>=', $dataInicial))
-            ->when($dataFinal,   fn($q) => $q->whereDate('data_competencia', '<=', $dataFinal))
+            ->when($dataInicial, fn($q) => $q->whereDate($colunaData, '>=', $dataInicial))
+            ->when($dataFinal,   fn($q) => $q->whereDate($colunaData, '<=', $dataFinal))
             ->when($costCenter,  fn($q) => $q->where('cost_center_id', $costCenter))
             ->when($entidadeId,  fn($q) => $q->where('entidade_id', $entidadeId))
-            ->orderBy('data_competencia');
+            ->when(!empty($situacoes),  fn($q) => $q->whereIn('situacao', $situacoes))
+            ->when(!empty($categorias), fn($q) => $q->whereIn('lancamento_padrao_id', $categorias))
+            ->when($parceiroId,        fn($q) => $q->where('parceiro_id', $parceiroId))
+            ->when($comprovacaoFiscal, fn($q) => $q->where('comprovacao_fiscal', true))
+            ->orderBy($colunaData);
 
         $transacoes = $query->get()
             ->groupBy('origem');
@@ -63,10 +86,11 @@ class PrestacaoDeContaController extends Controller
         // 3) Totais por origem + totais gerais
         $dados         = [];
         $totEntradaAll = $totSaidaAll = 0;
+        $campoValor    = $tipoValor === 'pago' ? 'valor_pago' : 'valor';
 
         foreach ($transacoes as $origem => $items) {
-            $totEntrada  = $items->where('tipo', 'entrada')->sum('valor');
-            $totSaida    = $items->where('tipo', 'saida')->sum('valor');
+            $totEntrada  = $items->where('tipo', 'entrada')->sum($campoValor);
+            $totSaida    = $items->where('tipo', 'saida')->sum($campoValor);
 
             $totEntradaAll += $totEntrada;
             $totSaidaAll   += $totSaida;
@@ -82,15 +106,22 @@ class PrestacaoDeContaController extends Controller
         // 5) HTML da view - respeita o modelo escolhido (horizontal/vertical)
         $isLandscape = $modelo === 'horizontal';
 
+        $parceiroNome = $parceiroId
+            ? optional(\App\Models\Parceiro::find($parceiroId))->nome
+            : null;
+
         $html = view('app.relatorios.financeiro.prestacao_pdf', [
-            'dados'           => $dados,
-            'dataInicial'     => $dataInicial?->format('d/m/Y'),
-            'dataFinal'       => $dataFinal?->format('d/m/Y'),
-            'costCenter'      => optional(CostCenter::find($costCenter))->descricao,
-            'entidadeNome'    => $entidadeNome,
-            'totalEntradas'   => $totEntradaAll,
-            'totalSaidas'     => $totSaidaAll,
-            'company'         => Auth::user()->companies()->first(),
+            'dados'              => $dados,
+            'dataInicial'        => $dataInicial?->format('d/m/Y'),
+            'dataFinal'          => $dataFinal?->format('d/m/Y'),
+            'costCenter'         => optional(CostCenter::find($costCenter))->descricao,
+            'entidadeNome'       => $entidadeNome,
+            'totalEntradas'      => $totEntradaAll,
+            'totalSaidas'        => $totSaidaAll,
+            'company'            => Auth::user()->companies()->first(),
+            'tipoValor'          => $tipoValor,
+            'parceiroNome'       => $parceiroNome,
+            'comprovacaoFiscal'  => $comprovacaoFiscal,
         ])->render();
 
         // 6) PDF - respeita o modelo escolhido (horizontal/vertical)

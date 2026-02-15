@@ -17,26 +17,44 @@ class PrestacaoContasService
             $filtros['entidade_id'] ?? null,
         ];
 
+        $tipoData   = $filtros['tipo_data'] ?? 'competencia';
+        $situacoes  = $filtros['situacoes'] ?? [];
+        $categorias = $filtros['categorias'] ?? [];
+        $parceiroId        = $filtros['parceiro_id'] ?? null;
+        $comprovacaoFiscal = $filtros['comprovacao_fiscal'] ?? false;
+        $tipoValor         = $filtros['tipo_valor'] ?? 'previsto';
+
+        // Coluna de data a filtrar
+        $colunaData = $tipoData === 'pagamento' ? 'data_pagamento' : 'data_competencia';
+
+        // Situacoes sempre excluidas
+        $situacoesExcluidas = [
+            \App\Enums\SituacaoTransacao::DESCONSIDERADO->value,
+            \App\Enums\SituacaoTransacao::PARCELADO->value,
+        ];
+
         $query = TransacaoFinanceira::with(['entidadeFinanceira', 'lancamentoPadrao', 'parceiro'])
             ->forActiveCompany()
-            ->whereNotIn('situacao', [
-                \App\Enums\SituacaoTransacao::DESCONSIDERADO->value,
-                \App\Enums\SituacaoTransacao::PREVISTO->value,
-                \App\Enums\SituacaoTransacao::PARCELADO->value,
-            ])
+            ->whereNotIn('situacao', $situacoesExcluidas)
             ->where('agendado', false)
-            ->when($dataInicial, fn($q) => $q->whereDate('data_competencia', '>=', $dataInicial))
-            ->when($dataFinal,   fn($q) => $q->whereDate('data_competencia', '<=', $dataFinal))
+            ->when($dataInicial, fn($q) => $q->whereDate($colunaData, '>=', $dataInicial))
+            ->when($dataFinal,   fn($q) => $q->whereDate($colunaData, '<=', $dataFinal))
             ->when($costCenter,  fn($q) => $q->where('cost_center_id', $costCenter))
             ->when($entidadeId,  fn($q) => $q->where('entidade_id', $entidadeId))
-            ->orderBy('data_competencia');
+            ->when(!empty($situacoes),  fn($q) => $q->whereIn('situacao', $situacoes))
+            ->when(!empty($categorias), fn($q) => $q->whereIn('lancamento_padrao_id', $categorias))
+            ->when($parceiroId,        fn($q) => $q->where('parceiro_id', $parceiroId))
+            ->when($comprovacaoFiscal, fn($q) => $q->where('comprovacao_fiscal', true))
+            ->orderBy($colunaData);
 
         $colecao = $query->get();
 
+        $campoValor = $tipoValor === 'pago' ? 'valor_pago' : 'valor';
+
         // Agrupa pela origem (Banco, Caixa…)
-        $grupos = $colecao->groupBy('origem')->map(function (Collection $items, string $origem) {
-            $entrada = $items->where('tipo', 'entrada')->sum('valor');
-            $saida   = $items->where('tipo', 'saida')->sum('valor');
+        $grupos = $colecao->groupBy('origem')->map(function (Collection $items, string $origem) use ($campoValor) {
+            $entrada = $items->where('tipo', 'entrada')->sum($campoValor);
+            $saida   = $items->where('tipo', 'saida')->sum($campoValor);
 
             return [
                 'origem'          => $origem,

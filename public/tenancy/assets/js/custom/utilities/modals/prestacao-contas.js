@@ -25,6 +25,31 @@ var KTModalPrestacaoContas = function () {
 					if (companyNameInput && modalData.company) {
 						companyNameInput.value = modalData.company.name;
 					}
+
+					// Populate categorias select
+					var categoriasSelect = document.getElementById('categorias');
+					if (categoriasSelect && modalData.categorias) {
+						$(categoriasSelect).empty();
+						modalData.categorias.forEach(function(cat) {
+							$(categoriasSelect).append(
+								$('<option></option>').val(cat.id).text(cat.label)
+							);
+						});
+						$(categoriasSelect).trigger('change');
+					}
+
+					// Populate parceiros select
+					var parceirosSelect = document.getElementById('parceiro_id');
+					if (parceirosSelect && modalData.parceiros) {
+						$(parceirosSelect).empty();
+						$(parceirosSelect).append('<option value="">Todos os parceiros</option>');
+						modalData.parceiros.forEach(function(p) {
+							$(parceirosSelect).append(
+								$('<option></option>').val(p.id).text(p.label)
+							);
+						});
+						$(parceirosSelect).trigger('change');
+					}
 				} else {
 					console.error('Failed to load modal data:', response.message);
 					Swal.fire({
@@ -420,6 +445,42 @@ var KTModalPrestacaoContas = function () {
 							if (contaIdVal) {
 								params.set('entidade_id', contaIdVal);
 							}
+						}
+
+						// Tipo de data (competencia/pagamento)
+						var tipoDataRadio = form.querySelector('[name="tipo_data"]:checked');
+						if (tipoDataRadio) {
+							params.set('tipo_data', tipoDataRadio.value);
+						}
+
+						// Situações (multi-select)
+						var situacoesVal = $(form.querySelector('[name="situacoes[]"]')).val();
+						if (situacoesVal && situacoesVal.length > 0) {
+							params.set('situacoes', situacoesVal.join(','));
+						}
+
+						// Categorias financeiras (multi-select)
+						var categoriasVal = $(form.querySelector('[name="categorias[]"]')).val();
+						if (categoriasVal && categoriasVal.length > 0) {
+							params.set('categorias', categoriasVal.join(','));
+						}
+
+						// Parceiro / Fornecedor
+						var parceiroVal = $(form.querySelector('[name="parceiro_id"]')).val();
+						if (parceiroVal) {
+							params.set('parceiro_id', parceiroVal);
+						}
+
+						// Comprovação fiscal (checkbox)
+						var comprovacaoFiscal = document.getElementById('comprovacao_fiscal');
+						if (comprovacaoFiscal && comprovacaoFiscal.checked) {
+							params.set('comprovacao_fiscal', '1');
+						}
+
+						// Tipo de valor (previsto/pago)
+						var tipoValorRadio = form.querySelector('[name="tipo_valor"]:checked');
+						if (tipoValorRadio) {
+							params.set('tipo_valor', tipoValorRadio.value);
 						}
 
 						// Abrir PDF em nova aba

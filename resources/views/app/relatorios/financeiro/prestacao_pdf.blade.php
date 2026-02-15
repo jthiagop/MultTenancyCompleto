@@ -138,8 +138,17 @@
     {{-- Filtros --}}
     <p class="fw-bold mb-1">Período: {{ $dataInicial }} a {{ $dataFinal }}</p>
     @isset($costCenter)
-        <p class="mb-2"><strong>Centro de custo:</strong> {{ $costCenter }}</p>
+        <p class="mb-1"><strong>Centro de custo:</strong> {{ $costCenter }}</p>
     @endisset
+    @isset($parceiroNome)
+        <p class="mb-1"><strong>Parceiro:</strong> {{ $parceiroNome }}</p>
+    @endisset
+    @if(!empty($comprovacaoFiscal))
+        <p class="mb-1"><strong>Filtro:</strong> Somente com comprovação fiscal</p>
+    @endif
+    @if(($tipoValor ?? 'previsto') === 'pago')
+        <p class="mb-1"><strong>Valores:</strong> Efetivos (Pagos)</p>
+    @endif
 
     {{-- Loop dos grupos --}}
     @foreach ($dados as $idx => $grupo)
@@ -150,6 +159,7 @@
                 <tr class="text-center">
                     <th>Data</th>
                     <th>Entidade</th>
+                    <th>Parceiro</th>
                     <th>Descrição</th>
                     <th class="text-end">Entrada (R$)</th>
                     <th class="text-end">Saída (R$)</th>
@@ -157,16 +167,21 @@
                 </tr>
             </thead>
             <tbody>
-                @php $saldo = 0; @endphp
+                @php
+                    $saldo = 0;
+                    $campoValor = ($tipoValor ?? 'previsto') === 'pago' ? 'valor_pago' : 'valor';
+                @endphp
                 @foreach ($grupo['items'] as $mov)
                     @php
-                        $entrada = $mov->tipo === 'entrada' ? $mov->valor : 0;
-                        $saida   = $mov->tipo === 'saida'   ? $mov->valor : 0;
-                        $saldo  += $entrada - $saida;
+                        $valorMov = $mov->{$campoValor} ?? $mov->valor;
+                        $entrada  = $mov->tipo === 'entrada' ? $valorMov : 0;
+                        $saida    = $mov->tipo === 'saida'   ? $valorMov : 0;
+                        $saldo   += $entrada - $saida;
                     @endphp
                     <tr>
                         <td class="text-center">{{ $mov->data_competencia }}</td>
                         <td>{{ $mov->entidadeFinanceira->name }}</td>
+                        <td>{{ $mov->parceiro->nome ?? '-' }}</td>
                         <td>
                             {{ $mov->descricao }}<br>
                             <small class="text-muted">{{ $mov->lancamentoPadrao->description }}</small>
@@ -179,7 +194,7 @@
             </tbody>
             <tfoot class="table-light">
                 <tr class="fw-semibold">
-                    <td colspan="3" class="text-end">Subtotal</td>
+                    <td colspan="4" class="text-end">Subtotal</td>
                     <td class="text-end">{{ number_format($grupo['totEntrada'], 2, ',', '.') }}</td>
                     <td class="text-end">{{ number_format($grupo['totSaida'],   2, ',', '.') }}</td>
                     <td class="text-end">{{ number_format($saldo,             2, ',', '.') }}</td>
