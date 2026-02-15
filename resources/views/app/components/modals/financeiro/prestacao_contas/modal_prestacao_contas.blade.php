@@ -26,89 +26,38 @@
                 <div class="modal-body py-10 px-lg-17">
                     <!--begin::Input group-->
                     <div class="row g-9 mb-8">
-                        <!--begin::Col-->
-                        <div class="col-md-4 fv-row">
-                            <label class="required fs-6 fw-semibold mb-2">Visão</label>
-                            <select class="form-select" data-control="select2" data-hide-search="true"
-                                data-placeholder="Selecione a visão" name="visao" id="visao">
-                                <option value="1" selected>Convento</option>
-                                <option value="2">Centro de Custo</option>
-                            </select>
-                        </div>
-                        <!--end::Col-->
-                        <!--begin::Col-->
+                        <!--begin::Col - Período Inicial-->
                         <div class="col-md-4 fv-row">
                             <label class="required fs-6 fw-semibold mb-2">Período Inicial</label>
                             <!--begin::Input-->
                             <div class="position-relative d-flex align-items-center">
-                                <!--begin::Icon-->
-                                <!--begin::Svg Icon | path: icons/duotune/general/gen014.svg-->
                                 <span class="svg-icon svg-icon-2 position-absolute mx-4">
-                                    <i class="fa-solid fa-calendar-days"></i>
+                                    <i class="fa-solid fa-calendar-days fs-3"></i>
                                 </span>
-                                <!--end::Svg Icon-->
-                                <!--end::Icon-->
-                                <!--begin::Datepicker-->
                                 <input class="form-control ps-12" placeholder="Selecione uma data"
                                     name="data_inicial" id="data_inicial" />
-                                <!--end::Datepicker-->
                             </div>
                             <!--end::Input-->
                         </div>
                         <!--end::Col-->
-                        <!--begin::Col-->
+                        <!--begin::Col - Período Final-->
                         <div class="col-md-4 fv-row">
                             <label class="required fs-6 fw-semibold mb-2">Período Final</label>
                             <!--begin::Input-->
                             <div class="position-relative d-flex align-items-center">
-                                <!--begin::Icon-->
-                                <!--begin::Svg Icon | path: icons/duotune/general/gen014.svg-->
                                 <span class="svg-icon svg-icon-2 position-absolute mx-4">
-                                    <i class="fa-solid fa-calendar-days"></i>
+                                    <i class="fa-solid fa-calendar-days fs-3"></i>
                                 </span>
-                                <!--end::Svg Icon-->
-                                <!--end::Icon-->
-                                <!--begin::Datepicker-->
                                 <input class="form-control ps-12" placeholder="Selecione uma data"
                                     name="data_final" id="data_final" />
-                                <!--end::Datepicker-->
                             </div>
                             <!--end::Input-->
                         </div>
                         <!--end::Col-->
-                    </div>
-                    <!--end::Input group-->
-
-                    <!--begin::Visão Details Row-->
-                    <div class="row g-9 mb-8" id="visao_details_row">
-                        <!--begin::Left Column - Organismo/Centro de Custo-->
-                        <div class="col-md-6 fv-row">
-                            <!--begin::Convento Display (shown when visao = 1)-->
-                            <div id="convento_display">
-                                <label class="fs-6 fw-semibold mb-2">Organismo</label>
-                                <input type="text" class="form-control" id="company_name_input"
-                                    readonly />
-                            </div>
-                            <!--end::Convento Display-->
-
-                            <!--begin::Centro de Custo Select (shown when visao = 2)-->
-                            <div id="centro_custo_display" style="display: none;">
-                                <label class="required fs-6 fw-semibold mb-2">Centro de Custo</label>
-                                <select class="form-select" data-control="select2"
-                                    data-hide-search="true" data-placeholder="Selecione o centro de custo"
-                                    name="cost_center_id" id="cost_center_id">
-                                    <option value="">Carregando...</option>
-                                </select>
-                            </div>
-                            <!--end::Centro de Custo Select-->
-                        </div>
-                        <!--end::Left Column-->
-
-                        <!--begin::Right Column - Modelo-->
-                        <div class="col-md-6 fv-row">
+                        <!--begin::Col - Modelo-->
+                        <div class="col-md-4 fv-row">
                             <label class="required fs-6 fw-semibold mb-2">Modelo</label>
-                            <div class="d-flex gap-5">
-                                <!--begin::Radio Horizontal-->
+                            <div class="d-flex gap-5 mt-3">
                                 <label class="form-check form-check-custom">
                                     <input class="form-check-input" type="radio" name="modelo" value="horizontal"
                                         id="modelo_horizontal" />
@@ -116,9 +65,6 @@
                                         Horizontal
                                     </span>
                                 </label>
-                                <!--end::Radio Horizontal-->
-
-                                <!--begin::Radio Vertical-->
                                 <label class="form-check form-check-custom">
                                     <input class="form-check-input" type="radio" name="modelo" value="vertical"
                                         id="modelo_vertical" />
@@ -126,12 +72,11 @@
                                         Vertical
                                     </span>
                                 </label>
-                                <!--end::Radio Vertical-->
                             </div>
                         </div>
-                        <!--end::Right Column-->
+                        <!--end::Col-->
                     </div>
-                    <!--end::Visão Details Row-->
+                    <!--end::Input group-->
 
                     <!--begin::Separator-->
                     <div class="separator separator-dashed my-8"></div>

@@ -10,10 +10,9 @@ class PrestacaoContasService
 {
     public function coletar(array $filtros): array
     {
-        [$dataInicial, $dataFinal, $costCenter, $entidadeId] = [
+        [$dataInicial, $dataFinal, $entidadeId] = [
             $filtros['data_inicial'] ?? null,
             $filtros['data_final']   ?? null,
-            $filtros['cost_center_id'] ?? null,
             $filtros['entidade_id'] ?? null,
         ];
 
@@ -39,7 +38,6 @@ class PrestacaoContasService
             ->where('agendado', false)
             ->when($dataInicial, fn($q) => $q->whereDate($colunaData, '>=', $dataInicial))
             ->when($dataFinal,   fn($q) => $q->whereDate($colunaData, '<=', $dataFinal))
-            ->when($costCenter,  fn($q) => $q->where('cost_center_id', $costCenter))
             ->when($entidadeId,  fn($q) => $q->where('entidade_id', $entidadeId))
             ->when(!empty($situacoes),  fn($q) => $q->whereIn('situacao', $situacoes))
             ->when(!empty($categorias), fn($q) => $q->whereIn('lancamento_padrao_id', $categorias))
@@ -70,7 +68,6 @@ class PrestacaoContasService
             'totalGeralSaida'   => $grupos->sum('total_saida'),
             'dataInicial'       => $dataInicial,
             'dataFinal'         => $dataFinal,
-            'costCenter'        => $costCenter,
         ];
     }
 }

@@ -38,7 +38,6 @@ class PrestacaoDeContaController extends Controller
         // 1) Filtros
         $dataInicial = $request->date('data_inicial');
         $dataFinal   = $request->date('data_final');
-        $costCenter  = $request->input('cost_center_id');
         $entidadeId  = $request->input('entidade_id');
         $modelo      = $request->input('modelo', 'horizontal');
         $tipoData    = $request->input('tipo_data', 'competencia'); // competencia ou pagamento
@@ -72,7 +71,6 @@ class PrestacaoDeContaController extends Controller
             ->where('agendado', false)
             ->when($dataInicial, fn($q) => $q->whereDate($colunaData, '>=', $dataInicial))
             ->when($dataFinal,   fn($q) => $q->whereDate($colunaData, '<=', $dataFinal))
-            ->when($costCenter,  fn($q) => $q->where('cost_center_id', $costCenter))
             ->when($entidadeId,  fn($q) => $q->where('entidade_id', $entidadeId))
             ->when(!empty($situacoes),  fn($q) => $q->whereIn('situacao', $situacoes))
             ->when(!empty($categorias), fn($q) => $q->whereIn('lancamento_padrao_id', $categorias))
@@ -114,7 +112,6 @@ class PrestacaoDeContaController extends Controller
             'dados'              => $dados,
             'dataInicial'        => $dataInicial?->format('d/m/Y'),
             'dataFinal'          => $dataFinal?->format('d/m/Y'),
-            'costCenter'         => optional(CostCenter::find($costCenter))->descricao,
             'entidadeNome'       => $entidadeNome,
             'totalEntradas'      => $totEntradaAll,
             'totalSaidas'        => $totSaidaAll,

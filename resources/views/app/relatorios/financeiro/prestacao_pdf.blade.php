@@ -137,9 +137,6 @@
 
     {{-- Filtros --}}
     <p class="fw-bold mb-1">Período: {{ $dataInicial }} a {{ $dataFinal }}</p>
-    @isset($costCenter)
-        <p class="mb-1"><strong>Centro de custo:</strong> {{ $costCenter }}</p>
-    @endisset
     @isset($parceiroNome)
         <p class="mb-1"><strong>Parceiro:</strong> {{ $parceiroNome }}</p>
     @endisset
