@@ -376,7 +376,7 @@ var KTModalPrestacaoContas = function () {
 						}
 
 						// Abrir PDF em nova aba
-						var pdfUrl = '/prestacao-de-contas/pdf?' + params.toString();
+						var pdfUrl = '/relatorios/prestacao-de-contas/pdf?' + params.toString();
 						window.open(pdfUrl, '_blank');
 
 						// Restaurar botão e fechar modal

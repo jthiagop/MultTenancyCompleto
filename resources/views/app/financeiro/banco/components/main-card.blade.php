@@ -37,8 +37,8 @@
                         <!--begin::Actions-->
                         <div class="d-flex align-items-center gap-2">
                             <!--begin::Novo Lançamento Drawer Button-->
-                            <x-tenant-dropdown-button icon="bi bi-plus-circle" text="Novo Lançamento" 
-                                variant="primary" size="sm" heading="O que deseja criar?">
+                            <x-tenant-dropdown-button icon="bi bi-plus-circle" text="Novo Lançamento" variant="primary"
+                                size="sm" heading="O que deseja criar?">
                                 <x-tenant-dropdown-item icon="fa-regular fa-circle-up" iconClass="text-success"
                                     onclick="abrirDrawerLancamento('receita', 'Banco'); return false;"
                                     ariaLabel="Adicionar nova receita">
@@ -63,50 +63,9 @@
                                 href="{{ route('domusia.index') }}" variant="light-info" size="sm" />
                             <!--end::Domus Ia-->
 
-
-                            <!--begin::Relatórios Financeiros Button-->
-                            <div>
-                                <button type="button" class="btn btn-sm btn-light" data-kt-menu-trigger="click"
-                                    data-kt-menu-placement="bottom-start">
-                                    <i class="fa-regular fa-file-lines fs-4"></i>
-                                    Relatórios Financeiros
-                                    <i class="fa-solid fa-chevron-down fs-7 ms-2"></i>
-                                </button>
-                                <!--end::Toggle-->
-
-                                <!--begin::Menu Dropdown-->
-                                <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px py-3"
-                                    data-kt-menu="true">
-                                    <!--begin::Menu item-->
-                                    <div class="menu-item px-3">
-                                        <a href="#" id="kt_subnav_boletim_financeiro_btn" data-bs-toggle="modal"
-                                            data-bs-target="#modal_boletim_financeiro" class="menu-link px-3">
-                                            Boletim Financeiro
-                                        </a>
-                                    </div>
-                                    <!--end::Menu item-->
-
-                                    <!--begin::Menu item-->
-                                    <div class="menu-item px-3">
-                                        <a href="#" id="kt_subnav_prestacao_contas_btn" data-bs-toggle="modal"
-                                            data-bs-target="#modal_prestacao_contas" class="menu-link px-3">
-                                            Prestação de Contas
-                                        </a>
-                                    </div>
-                                    <!--end::Menu item-->
-
-                                    <!--begin::Menu item-->
-                                    <div class="menu-item px-3">
-                                        <a href="#" data-bs-toggle="modal"
-                                            data-bs-target="#modal_conciliacao_bancaria" class="menu-link px-3">
-                                            Conciliação Bancária
-                                        </a>
-                                    </div>
-                                    <!--end::Menu item-->
-                                </div>
-                                <!--end::Menu Dropdown-->
-                            </div>
-                            <!--end::Relatórios Financeiros Button-->
+                            <!--begin::Menu Relatórios-->
+                            <x-tenant-relatorios-menu />
+                            <!--end::Menu Relatórios-->
 
                             <!--begin::More Options Button-->
                             <div>
