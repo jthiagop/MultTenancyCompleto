@@ -114,47 +114,54 @@
 
                         <!--begin::Situação-->
                         <div class="row g-9 mb-6">
-                            <div class="col-md-12 fv-row">
-                                <label class="fs-6 fw-semibold mb-2">Situação</label>
-                                <select class="form-select" data-control="select2" data-hide-search="true"
-                                    data-placeholder="Todas as situações" data-allow-clear="true"
-                                    name="situacoes[]" id="situacoes" multiple="multiple">
-                                    <option value="pago">Pago</option>
-                                    <option value="recebido">Recebido</option>
-                                    <option value="em_aberto">Em Aberto</option>
-                                    <option value="pago_parcial">Pago Parcial</option>
-                                    <option value="atrasado">Atrasado</option>
-                                </select>
-                                <div class="form-text text-muted">Deixe vazio para incluir todas</div>
-                            </div>
+                            <x-tenant-select
+                                name="situacoes[]"
+                                id="situacoes"
+                                label="Situação"
+                                placeholder="Todas as situações"
+                                class="col-md-12"
+                                :hideSearch="true"
+                                :allowClear="true"
+                                dropdownParent="#modal_prestacao_contas"
+                                multiple>
+                                <option value="pago">Pago</option>
+                                <option value="recebido">Recebido</option>
+                                <option value="em_aberto">Em Aberto</option>
+                                <option value="pago_parcial">Pago Parcial</option>
+                                <option value="atrasado">Atrasado</option>
+                            </x-tenant-select>
+                            <div class="form-text text-muted mt-1">Deixe vazio para incluir todas</div>
                         </div>
                         <!--end::Situação-->
 
                         <!--begin::Categoria-->
                         <div class="row g-9 mb-6">
-                            <div class="col-md-12 fv-row">
-                                <label class="fs-6 fw-semibold mb-2">Categoria Financeira</label>
-                                <select class="form-select" data-control="select2"
-                                    data-placeholder="Todas as categorias" data-allow-clear="true"
-                                    name="categorias[]" id="categorias" multiple="multiple">
-                                    <option value="">Carregando...</option>
-                                </select>
-                                <div class="form-text text-muted">Deixe vazio para incluir todas</div>
-                            </div>
+                            <x-tenant-select
+                                name="categorias[]"
+                                id="categorias"
+                                label="Categoria Financeira"
+                                placeholder="Todas as categorias"
+                                class="col-md-12"
+                                :allowClear="true"
+                                dropdownParent="#modal_prestacao_contas"
+                                multiple>
+                            </x-tenant-select>
+                            <div class="form-text text-muted mt-1">Deixe vazio para incluir todas</div>
                         </div>
                         <!--end::Categoria-->
 
                         <!--begin::Parceiro-->
                         <div class="row g-9 mb-6">
-                            <div class="col-md-12 fv-row">
-                                <label class="fs-6 fw-semibold mb-2">Parceiro / Fornecedor</label>
-                                <select class="form-select" data-control="select2"
-                                    data-placeholder="Todos os parceiros" data-allow-clear="true"
-                                    name="parceiro_id" id="parceiro_id">
-                                    <option value="">Carregando...</option>
-                                </select>
-                                <div class="form-text text-muted">Deixe vazio para incluir todos</div>
-                            </div>
+                            <x-tenant-select
+                                name="parceiro_id"
+                                id="parceiro_id"
+                                label="Parceiro / Fornecedor"
+                                placeholder="Todos os parceiros"
+                                class="col-md-12"
+                                :allowClear="true"
+                                dropdownParent="#modal_prestacao_contas">
+                            </x-tenant-select>
+                            <div class="form-text text-muted mt-1">Deixe vazio para incluir todos</div>
                         </div>
                         <!--end::Parceiro-->
 
@@ -250,11 +257,16 @@
 
 
                                 <!--begin::Banco/Caixa select field-->
-                                <div class="col-md-9">
-                                    <select class="form-select" data-control="select2"
-                                        data-placeholder="Selecione..." name="conta_id" id="conta_id" disabled>
-                                        <option value="">Carregando...</option>
-                                    </select>
+                                <div class="col-md-9 fv-row">
+                                    <x-tenant-select
+                                        name="conta_id"
+                                        id="conta_id"
+                                        placeholder="Selecione..."
+                                        class=""
+                                        :allowClear="true"
+                                        dropdownParent="#modal_prestacao_contas"
+                                        disabled>
+                                    </x-tenant-select>
                                 </div>
                                 <!--end::Banco/Caixa select field-->
                             </div>
