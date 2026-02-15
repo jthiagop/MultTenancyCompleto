@@ -6,6 +6,7 @@ use App\Http\Controllers\App\Contabilidade\AccountMappingController;
 use App\Http\Controllers\App\Contabilidade\ChartOfAccountController;
 use App\Http\Controllers\App\PrestacaoDeContaController;
 use App\Http\Controllers\App\BoletimFinanceiroController;
+use App\Http\Controllers\App\ExtratoController;
 use App\Http\Controllers\App\AnexoController;
 use App\Http\Controllers\App\Anexos\ModulosAnexosController;
 use App\Http\Controllers\App\BancoController;
@@ -579,6 +580,13 @@ Route::middleware([
 
                 Route::post('/boletim-financeiro/pdf-async', [BoletimFinanceiroController::class, 'gerarPdfAsync'])
                     ->name('relatorios.boletim.financeiro.gerar.async');
+
+                // Extrato Financeiro
+                Route::get('/extrato/pdf', [ExtratoController::class, 'gerarPdf'])
+                    ->name('relatorios.extrato.gerar');
+
+                Route::post('/extrato/pdf-async', [ExtratoController::class, 'gerarPdfAsync'])
+                    ->name('relatorios.extrato.gerar.async');
 
                 // Rota compartilhada para verificar status de PDF
                 Route::get('/pdf/status/{id}', [ConciliacaoController::class, 'checkPdfStatus'])

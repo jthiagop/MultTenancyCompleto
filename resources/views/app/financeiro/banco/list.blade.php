@@ -37,6 +37,10 @@
     </div>
 
 
+    <!--begin::Modal - Extrato Financeiro-->
+    @include('app.components.modals.financeiro.extrato.modal_extrato')
+    <!--end::Modal - Extrato Financeiro-->
+
     <!--begin::Modal - Boletim Financeiro-->
     @include('app.components.modals.financeiro.boletim.modal_boletim_financeiro')
     <!--end::Modal - Boletim Financeiro-->
@@ -101,6 +105,7 @@
         <script src="/tenancy/assets/js/custom/utilities/modals/company/prestacaoConta.js"></script>
         <script src="/tenancy/assets/js/custom/utilities/modals/boletim-financeiro.js"></script>
         <script src="/tenancy/assets/js/custom/utilities/modals/conciliacao-bancaria.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/extrato.js"></script>
 
         <script>
             // Função para excluir transação diretamente do dropdown (sem abrir drawer)

@@ -7,10 +7,8 @@
 <!--begin::Menu Relatórios-->
 <div>
     <!--begin::Toggle-->
-    <button type="button" class="btn btn-{{ $size }} btn-{{ $variant }} rotate"
-        data-kt-menu-trigger="click"
-        data-kt-menu-placement="{{ $placement }}"
-        data-kt-menu-offset="10px, 10px">
+    <button type="button" class="btn btn-{{ $size }} btn-{{ $variant }} rotate" data-kt-menu-trigger="click"
+        data-kt-menu-placement="{{ $placement }}" data-kt-menu-offset="10px, 10px">
         <i class="fa-regular fa-file-lines fs-5 me-2"></i>
         Relatórios
         <span class="svg-icon fs-3 rotate-180 ms-3 me-0">
@@ -32,6 +30,14 @@
         <div class="separator mb-3 opacity-75"></div>
         <!--end::Menu separator-->
 
+        <!--begin::Menu item - Extrato Financeiro-->
+        <div class="menu-item px-3">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#modal_extrato" class="menu-link px-3">
+                Extrato
+            </a>
+        </div>
+        <!--end::Menu item-->
+
         <!--begin::Menu item - Boletim Financeiro-->
         <div class="menu-item px-3">
             <a href="#" data-bs-toggle="modal" data-bs-target="#modal_boletim_financeiro" class="menu-link px-3">
@@ -50,7 +56,8 @@
 
         <!--begin::Menu item - Conciliação Bancária-->
         <div class="menu-item px-3">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#modal_conciliacao_bancaria" class="menu-link px-3">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#modal_conciliacao_bancaria"
+                class="menu-link px-3">
                 Conciliação Bancária
             </a>
         </div>
