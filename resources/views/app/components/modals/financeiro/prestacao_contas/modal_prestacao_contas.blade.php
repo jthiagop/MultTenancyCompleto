@@ -206,8 +206,10 @@
                     <!--end::Button-->
                     <!--begin::Button-->
                     <button type="submit" id="kt_modal_prestacao_contas_submit" class="btn btn-primary">
-                        <span class="indicator-label">Enviar</span>
-                        <span class="indicator-progress">Aguarde...
+                        <span class="indicator-label">
+                            <i class="fa-regular fa-file-pdf me-1"></i> Gerar PDF
+                        </span>
+                        <span class="indicator-progress">Gerando PDF...
                             <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
                     </button>
                     <!--end::Button-->

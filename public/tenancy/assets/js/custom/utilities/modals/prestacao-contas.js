@@ -377,29 +377,61 @@ var KTModalPrestacaoContas = function () {
 						// Disable button to avoid multiple click
 						submitButton.disabled = true;
 
+						// Montar URL com query params para abrir PDF em nova aba
+						var params = new URLSearchParams();
+
+						// Data inicial (converter dd/mm/yyyy → yyyy-mm-dd)
+						var dataInicialStr = form.querySelector('[name="data_inicial"]').value;
+						if (dataInicialStr) {
+							var parts = dataInicialStr.split('/');
+							if (parts.length === 3) {
+								params.set('data_inicial', parts[2] + '-' + parts[1] + '-' + parts[0]);
+							}
+						}
+
+						// Data final (converter dd/mm/yyyy → yyyy-mm-dd)
+						var dataFinalStr = form.querySelector('[name="data_final"]').value;
+						if (dataFinalStr) {
+							var parts = dataFinalStr.split('/');
+							if (parts.length === 3) {
+								params.set('data_final', parts[2] + '-' + parts[1] + '-' + parts[0]);
+							}
+						}
+
+						// Centro de custo (só quando visão = 2)
+						var visaoVal = $(form.querySelector('[name="visao"]')).val();
+						if (visaoVal === '2') {
+							var costCenterId = $(form.querySelector('[name="cost_center_id"]')).val();
+							if (costCenterId) {
+								params.set('cost_center_id', costCenterId);
+							}
+						}
+
+						// Modelo (horizontal/vertical)
+						var modeloRadio = form.querySelector('[name="modelo"]:checked');
+						if (modeloRadio) {
+							params.set('modelo', modeloRadio.value);
+						}
+
+						// Entidade financeira (caixa/banco) — só se filtro ativo
+						var filtrarContas = document.getElementById('filtrar_contas');
+						if (filtrarContas && filtrarContas.checked) {
+							var contaIdVal = $(form.querySelector('[name="conta_id"]')).val();
+							if (contaIdVal) {
+								params.set('entidade_id', contaIdVal);
+							}
+						}
+
+						// Abrir PDF em nova aba
+						var pdfUrl = '/prestacao-de-contas/pdf?' + params.toString();
+						window.open(pdfUrl, '_blank');
+
+						// Restaurar botão e fechar modal
 						setTimeout(function() {
 							submitButton.removeAttribute('data-kt-indicator');
-
-							// Enable button
 							submitButton.disabled = false;
-
-							// Show success message. For more info check the plugin's official documentation: https://sweetalert2.github.io/
-							Swal.fire({
-								text: "Formulário enviado com sucesso!",
-								icon: "success",
-								buttonsStyling: false,
-								confirmButtonText: "Ok, entendi!",
-								customClass: {
-									confirmButton: "btn btn-primary"
-								}
-							}).then(function (result) {
-								if (result.isConfirmed) {
-									modal.hide();
-								}
-							});
-
-							//form.submit(); // Submit form
-						}, 2000);
+							modal.hide();
+						}, 1000);
 					} else {
 						// Show error message.
 						Swal.fire({

@@ -39,16 +39,26 @@ class PrestacaoDeContaController extends Controller
         $dataInicial = $request->date('data_inicial');
         $dataFinal   = $request->date('data_final');
         $costCenter  = $request->input('cost_center_id');
+        $entidadeId  = $request->input('entidade_id');
+        $modelo      = $request->input('modelo', 'horizontal');
 
-        // 2) Query otimizada
-        $query = TransacaoFinanceira::with(['entidadeFinanceira', 'lancamentoPadrao'])
+        // 2) Query otimizada - com seguranca tenant + exclusao de situacoes irrelevantes
+        $query = TransacaoFinanceira::with(['entidadeFinanceira', 'lancamentoPadrao', 'parceiro'])
+            ->forActiveCompany()
+            ->whereNotIn('situacao', [
+                \App\Enums\SituacaoTransacao::DESCONSIDERADO->value,
+                \App\Enums\SituacaoTransacao::PREVISTO->value,
+                \App\Enums\SituacaoTransacao::PARCELADO->value,
+            ])
+            ->where('agendado', false)
             ->when($dataInicial, fn($q) => $q->whereDate('data_competencia', '>=', $dataInicial))
             ->when($dataFinal,   fn($q) => $q->whereDate('data_competencia', '<=', $dataFinal))
             ->when($costCenter,  fn($q) => $q->where('cost_center_id', $costCenter))
+            ->when($entidadeId,  fn($q) => $q->where('entidade_id', $entidadeId))
             ->orderBy('data_competencia');
 
         $transacoes = $query->get()
-            ->groupBy('origem');               // “Banco”, “Caixa” …
+            ->groupBy('origem');
 
         // 3) Totais por origem + totais gerais
         $dados         = [];
@@ -64,22 +74,30 @@ class PrestacaoDeContaController extends Controller
             $dados[] = compact('origem', 'items', 'totEntrada', 'totSaida');
         }
 
-        // 4) HTML da view
+        // 4) Dados do filtro para exibir no cabecalho do PDF
+        $entidadeNome = $entidadeId
+            ? optional(\App\Models\EntidadeFinanceira::find($entidadeId))->nome
+            : null;
+
+        // 5) HTML da view - respeita o modelo escolhido (horizontal/vertical)
+        $isLandscape = $modelo === 'horizontal';
+
         $html = view('app.relatorios.financeiro.prestacao_pdf', [
             'dados'           => $dados,
             'dataInicial'     => $dataInicial?->format('d/m/Y'),
             'dataFinal'       => $dataFinal?->format('d/m/Y'),
             'costCenter'      => optional(CostCenter::find($costCenter))->descricao,
+            'entidadeNome'    => $entidadeNome,
             'totalEntradas'   => $totEntradaAll,
             'totalSaidas'     => $totSaidaAll,
-            'company'         => Auth::user()->companies()->first(),   // ajuste conforme seu tenant
+            'company'         => Auth::user()->companies()->first(),
         ])->render();
 
-        // 5) PDF
+        // 6) PDF - respeita o modelo escolhido (horizontal/vertical)
         $pdf = BrowsershotHelper::configureChromePath(
             Browsershot::html($html)
                 ->format('A4')
-                ->landscape()
+                ->landscape($isLandscape)
                 ->showBackground()
                 ->margins(8, 8, 8, 8)
         )->pdf();
