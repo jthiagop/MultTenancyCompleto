@@ -33,11 +33,11 @@
                             <div class="col-md-12 fv-row">
                                 <label class="required fs-6 fw-semibold mb-2">Tipo de Conta</label>
                                 <div class="d-flex gap-5">
-                                    <label class="form-check form-check-custom form-check-solid">
+                                    <label class="form-check form-check-custom ">
                                         <input class="form-check-input" type="radio" name="tipo_conta" value="banco" checked />
                                         <span class="form-check-label fw-semibold text-gray-700">Banco</span>
                                     </label>
-                                    <label class="form-check form-check-custom form-check-solid">
+                                    <label class="form-check form-check-custom ">
                                         <input class="form-check-input" type="radio" name="tipo_conta" value="caixa" />
                                         <span class="form-check-label fw-semibold text-gray-700">Caixa</span>
                                     </label>
@@ -50,7 +50,7 @@
                         <div class="row g-9 mb-8">
                             <div class="col-md-12 fv-row">
                                 <label class="required fs-6 fw-semibold mb-2">Conta Financeira</label>
-                                <select name="entidade_id" id="extrato_entidade_id" class="form-select form-select-solid"
+                                <select name="entidade_id" id="extrato_entidade_id" class="form-select"
                                     data-control="select2" data-placeholder="Selecione a conta"
                                     data-dropdown-parent="#modal_extrato">
                                     <option value="">Selecione a conta</option>

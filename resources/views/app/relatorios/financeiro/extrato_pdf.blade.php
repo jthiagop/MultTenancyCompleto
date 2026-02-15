@@ -190,32 +190,86 @@
     {{-- ============ CABECALHO ============ --}}
     <div class="header-container">
         <div class="header-content">
-            @if ($avatarEmpresa)
-                <div class="header-logo">
-                    <img src="{{ $avatarEmpresa }}" alt="Logo" class="logo">
-                </div>
-            @endif
+            {{-- Logo esquerdo --}}
+            <div class="header-logo">
+                @php
+                    $avatar = $avatarEmpresa ?? ($empresaRelatorio->avatar ?? null);
+                    $logoPath = null;
 
+                    if ($avatar) {
+                        $paths = [storage_path('app/public/' . $avatar), storage_path($avatar)];
+
+                        foreach ($paths as $path) {
+                            if (file_exists($path)) {
+                                $logoPath = $path;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!$logoPath || !file_exists($logoPath)) {
+                        $logoPath = public_path('tenancy/assets/media/png/perfil.svg');
+                    }
+                @endphp
+                @if (file_exists($logoPath))
+                    <img src="{{ $logoPath }}" alt="Logo">
+                @endif
+            </div>
+
+            {{-- Texto centralizado --}}
             <div class="header-text">
-                <h4>{{ $nomeEmpresa }}</h4>
-                @if ($razaoSocial)
-                    <div class="subtitle">{{ $razaoSocial }}</div>
-                @endif
-                @if ($cnpjEmpresa)
-                    <small>CNPJ: {{ $cnpjEmpresa }}</small>
-                @endif
-                @if ($enderecoEmpresa)
+                <h4 style="margin: 0; padding: 0;">{{ strtoupper($nomeEmpresa ?? ($empresaRelatorio->name ?? '')) }}</h4>
+                <h5 style="margin: 5px 0; padding: 0; font-weight: normal;">
+                    {{ strtoupper($razaoSocial ?? ($empresaRelatorio->razao_social ?? '')) }}
+                </h5>
+                <small>CNPJ: {{ $cnpjEmpresa ?? ($empresaRelatorio->cnpj ?? '') }}</small>
+                <div style="font-size: 0.75rem; color: #333;">
+                    @php
+                        $addr = $enderecoEmpresa ?? ($empresaRelatorio->addresses ?? null);
+                    @endphp
+                    @if ($addr)
+                        {{ $addr->rua ?? '' }}
+                        @if ($addr->numero ?? '')
+                            , {{ $addr->numero }}
+                        @endif
+                        @if ($addr->bairro ?? '')
+                            - {{ $addr->bairro }}
+                        @endif
+                        @if ($addr->cidade ?? '')
+                            / {{ $addr->cidade }}
+                        @endif
+                        @if ($addr->uf ?? '')
+                            - {{ $addr->uf }}
+                        @endif
+                        @if ($addr->cep ?? '')
+                            - CEP: {{ $addr->cep }}
+                        @endif
+                    @endif
+                </div>
+                @if (($empresaRelatorio->phone ?? null) || ($empresaRelatorio->website ?? null) || ($empresaRelatorio->email ?? null))
                     <small>
-                        {{ $enderecoEmpresa->rua ?? '' }}
-                        @if($enderecoEmpresa->numero), {{ $enderecoEmpresa->numero }}@endif
-                        @if($enderecoEmpresa->bairro) - {{ $enderecoEmpresa->bairro }}@endif
-                        @if($enderecoEmpresa->cidade) - {{ $enderecoEmpresa->cidade }}@endif
-                        @if($enderecoEmpresa->estado)/{{ $enderecoEmpresa->estado }}@endif
+                        @if ($empresaRelatorio->phone ?? null)
+                            Fone: {{ $empresaRelatorio->phone }}
+                        @endif
+                        @if ($empresaRelatorio->website ?? null)
+                            {{ $empresaRelatorio->phone ?? null ? ' - ' : '' }}Site: {{ $empresaRelatorio->website }}
+                        @endif
+                        @if ($empresaRelatorio->email ?? null)
+                            {{ ($empresaRelatorio->phone ?? null) || ($empresaRelatorio->website ?? null) ? ' - ' : '' }}E-mail: {{ $empresaRelatorio->email }}
+                        @endif
                     </small>
+                @endif
+            </div>
+
+            {{-- Logo direito --}}
+            <div class="header-logo">
+                @if (file_exists($logoPath))
+                    <img src="{{ $logoPath }}" alt="Logo">
                 @endif
             </div>
         </div>
     </div>
+
 
     {{-- ============ TITULO DO RELATORIO ============ --}}
     <div class="text-center mb-3">

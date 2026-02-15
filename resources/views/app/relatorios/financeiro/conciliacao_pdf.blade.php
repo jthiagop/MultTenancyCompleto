@@ -123,51 +123,75 @@
 </head>
 
 <body>
-    {{-- Cabeçalho estilo imagem --}}
+    {{-- Cabecalho padrao --}}
     <div class="header-container">
         <div class="header-content">
             {{-- Logo esquerdo --}}
             <div class="header-logo">
                 @php
-                    $logoPath = $company->avatar
-                        ? storage_path('app/public/' . $company->avatar)
-                        : public_path('tenancy/assets/media/png/perfil.svg');
+                    $avatar = $company->avatar ?? null;
+                    $logoPath = null;
+
+                    if ($avatar) {
+                        $paths = [storage_path('app/public/' . $avatar), storage_path($avatar)];
+
+                        foreach ($paths as $path) {
+                            if (file_exists($path)) {
+                                $logoPath = $path;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (!$logoPath || !file_exists($logoPath)) {
+                        $logoPath = public_path('tenancy/assets/media/png/perfil.svg');
+                    }
                 @endphp
-                @if(file_exists($logoPath))
-                    <img src="{{ $logoPath }}"
-                         alt="Logo"
-                         style="width: 100%; height: auto; max-height: 100px;">
+                @if (file_exists($logoPath))
+                    <img src="{{ $logoPath }}" alt="Logo">
                 @endif
             </div>
 
             {{-- Texto centralizado --}}
             <div class="header-text">
-                <h4>{{ strtoupper($company->name) }}</h4>
-                <h4>{{ strtoupper($company->razao_social) }}</h4>
-
+                <h4 style="margin: 0; padding: 0;">{{ strtoupper($company->name ?? '') }}</h4>
+                <h5 style="margin: 5px 0; padding: 0; font-weight: normal;">
+                    {{ strtoupper($company->razao_social ?? '') }}
+                </h5>
                 <small>CNPJ: {{ $company->cnpj ?? '' }}</small>
-                <small>
-                    @if ($company->addresses->rua ?? '')
-                        {{ $company->addresses->rua }}
-                        @if ($company->addresses->numero ?? '')
-                            , {{ $company->addresses->numero }}
+                <div style="font-size: 0.75rem; color: #333;">
+                    @php
+                        $addr = $company->addresses ?? null;
+                    @endphp
+                    @if ($addr)
+                        {{ $addr->rua ?? '' }}
+                        @if ($addr->numero ?? '')
+                            , {{ $addr->numero }}
                         @endif
-                        @if ($company->addresses->bairro ?? '')
-                            - {{ $company->addresses->bairro }}
+                        @if ($addr->bairro ?? '')
+                            - {{ $addr->bairro }}
                         @endif
-                        / {{ $company->addresses->cidade ?? '' }}-{{ $company->addresses->uf ?? '' }}
+                        @if ($addr->cidade ?? '')
+                            / {{ $addr->cidade }}
+                        @endif
+                        @if ($addr->uf ?? '')
+                            - {{ $addr->uf }}
+                        @endif
+                        @if ($addr->cep ?? '')
+                            - CEP: {{ $addr->cep }}
+                        @endif
                     @endif
-                </small>
-                @if ($company->phone || $company->website || $company->email)
+                </div>
+                @if (($company->phone ?? null) || ($company->website ?? null) || ($company->email ?? null))
                     <small>
-                        @if ($company->phone)
+                        @if ($company->phone ?? null)
                             Fone: {{ $company->phone }}
                         @endif
-                        @if ($company->website)
-                            {{ $company->phone ? ' - ' : '' }}Site: {{ $company->website }}
+                        @if ($company->website ?? null)
+                            {{ $company->phone ?? null ? ' - ' : '' }}Site: {{ $company->website }}
                         @endif
-                        @if ($company->email)
-                            {{ $company->phone || $company->website ? ' - ' : '' }}E-mail: {{ $company->email }}
+                        @if ($company->email ?? null)
+                            {{ ($company->phone ?? null) || ($company->website ?? null) ? ' - ' : '' }}E-mail: {{ $company->email }}
                         @endif
                     </small>
                 @endif
@@ -175,15 +199,8 @@
 
             {{-- Logo direito --}}
             <div class="header-logo">
-                @php
-                    $logoPath = $company->avatar
-                        ? storage_path('app/public/' . $company->avatar)
-                        : public_path('tenancy/assets/media/png/perfil.svg');
-                @endphp
-                @if(file_exists($logoPath))
-                    <img src="{{ $logoPath }}"
-                         alt="Logo"
-                         style="width: 100%; height: auto; max-height: 100px;">
+                @if (file_exists($logoPath))
+                    <img src="{{ $logoPath }}" alt="Logo">
                 @endif
             </div>
         </div>
