@@ -12,12 +12,82 @@
 
     {{-- CSS próprio pensado para impressão --}}
     <style>
-        @page { size: A4 landscape; margin: 8mm 8mm 10mm 8mm; }
-        body   { font-size: .77rem; }
+        @page { size: A4 landscape; margin: 8mm 8mm 15mm 8mm; }
+        body   { font-size: .72rem; }
         .logo  { height: 60px; }
         .page-break { page-break-after: always; }
         /* zebra na tabela */
         table tbody tr:nth-child(odd) { background: #f8f9fa; }
+
+        /* Titulo do relatorio */
+        .report-title {
+            background: linear-gradient(135deg, #4a90d9 0%, #667eea 100%);
+            color: #fff;
+            padding: 10px 15px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .report-title h3 { margin: 0; font-size: 1.1rem; font-weight: 700; }
+        .report-title .periodo { font-size: .85rem; opacity: .95; }
+
+        /* Filtros aplicados */
+        .filtros-box {
+            border: 1px solid #dee2e6;
+            border-left: 4px solid #4a90d9;
+            border-radius: 0 6px 6px 0;
+            padding: 10px 15px;
+            margin-bottom: 15px;
+            background-color: #f8f9fa;
+        }
+        .filtros-box .filtro-item { display: inline-block; margin-right: 20px; font-size: .72rem; }
+        .filtros-box .filtro-label { font-weight: 600; color: #495057; }
+
+        /* Tabelas melhoradas */
+        table { page-break-inside: auto; }
+        tr { page-break-inside: avoid; page-break-after: auto; }
+        thead { display: table-header-group; }
+        tfoot { display: table-footer-group; }
+        .table> thead> tr> th { font-size: .7rem; padding: 6px 5px; white-space: nowrap; background-color: #495057; color: #fff; border: none; }
+        .table> tbody> tr> td { font-size: .68rem; padding: 4px 5px; vertical-align: middle; }
+
+        /* Destaque de valores */
+        .text-entrada { color: #198754; font-weight: 600; }
+        .text-saida { color: #dc3545; font-weight: 600; }
+        .saldo-positivo { color: #198754; font-weight: 700; }
+        .saldo-negativo { color: #dc3545; font-weight: 700; }
+
+        /* Badge de origem/categoria */
+        .origem-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #4a90d9 100%);
+            color: #fff;
+            border-radius: 5px;
+            padding: 6px 14px;
+            font-size: .78rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, .1);
+        }
+
+        /* Resumo final */
+        .resumo-container { display: flex; gap: 15px; margin-top: 20px; margin-bottom: 15px; }
+        .resumo-box { flex: 1; border-radius: 8px; padding: 15px 20px; text-align: center; }
+        .resumo-box.entradas { background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%); border: 1px solid #28a745; }
+        .resumo-box.saidas { background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%); border: 1px solid #dc3545; }
+        .resumo-box.saldo { background: linear-gradient(135deg, #cce5ff 0%, #b8daff 100%); border: 1px solid #007bff; }
+        .resumo-box .label { font-size: .7rem; color: #495057; margin-bottom: 5px; text-transform: uppercase; }
+        .resumo-box .value { font-size: 1.1rem; font-weight: 700; }
+        .resumo-box.entradas .value { color: #155724; }
+        .resumo-box.saidas .value { color: #721c24; }
+        .resumo-box.saldo .value { color: #004085; }
+        .subtotal-row { background-color: #e9ecef !important; }
+        .subtotal-row td { font-weight: 600 !important; }
+        .chart-container { margin-top: 20px; padding: 15px; border: 1px solid #dee2e6; border-radius: 8px; background: #fff; }
+        .chart-title { font-size: .85rem; font-weight: 600; color: #495057; margin-bottom: 10px; text-align: center; }
+        .footer-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 5px 20px; font-size: .6rem; color: #999; border-top: 1px solid #ccc; background: #fff; }
 
         /* Estilo do cabeçalho similar à imagem */
         .header-container {
@@ -158,31 +228,50 @@
     </div>
 
     {{-- Filtros --}}
-    <p class="fw-bold mb-1">Período: {{ $dataInicial }} a {{ $dataFinal }}</p>
-    @isset($parceiroNome)
-        <p class="mb-1"><strong>Parceiro:</strong> {{ $parceiroNome }}</p>
-    @endisset
-    @if(!empty($comprovacaoFiscal))
-        <p class="mb-1"><strong>Filtro:</strong> Somente com comprovação fiscal</p>
-    @endif
-    @if(($tipoValor ?? 'previsto') === 'pago')
-        <p class="mb-1"><strong>Valores:</strong> Efetivos (Pagos)</p>
-    @endif
+    <div class="report-title">
+        <h3>Prestação de Contas</h3>
+        <span class="periodo">Período: {{ $dataInicial }} a {{ $dataFinal }}</span>
+    </div>
+
+    <div class="filtros-box">
+        @isset($parceiroNome)
+            <span class="filtro-item">
+                <span class="filtro-label">Parceiro:</span> {{ $parceiroNome }}
+            </span>
+        @endisset
+        @if(!empty($comprovacaoFiscal))
+            <span class="filtro-item">
+                <span class="filtro-label">Filtro:</span> Somente com comprovação fiscal
+            </span>
+        @endif
+        @if(($tipoValor ?? 'previsto') === 'pago')
+            <span class="filtro-item">
+                <span class="filtro-label">Valores:</span> Efetivos (Pagos)
+            </span>
+        @else
+            <span class="filtro-item">
+                <span class="filtro-label">Valores:</span> Previstos
+            </span>
+        @endif
+        @if (empty($parceiroNome) && empty($comprovacaoFiscal))
+            <span class="filtro-item text-muted">Nenhum filtro adicional aplicado</span>
+        @endif
+    </div>
 
     {{-- Loop dos grupos --}}
     @foreach ($dados as $idx => $grupo)
-        <h5 class="text-primary">{{ $grupo['origem'] }}</h5>
+        <div class="origem-badge">{{ $grupo['origem'] }}</div>
 
-        <table class="table table-sm table-bordered align-middle">
-            <thead class="table-light">
+        <table class="table table-sm table-bordered table-striped align-middle mb-3">
+            <thead>
                 <tr class="text-center">
-                    <th>Data</th>
-                    <th>Entidade</th>
-                    <th>Parceiro</th>
+                    <th style="width: 80px;">Data</th>
+                    <th style="width: 130px;">Entidade</th>
+                    <th style="width: 150px;">Parceiro</th>
                     <th>Descrição</th>
-                    <th class="text-end">Entrada (R$)</th>
-                    <th class="text-end">Saída (R$)</th>
-                    <th class="text-end">Saldo</th>
+                    <th style="width: 100px;" class="text-end">Entrada (R$)</th>
+                    <th style="width: 100px;" class="text-end">Saída (R$)</th>
+                    <th style="width: 100px;" class="text-end">Saldo</th>
                 </tr>
             </thead>
             <tbody>
@@ -199,24 +288,26 @@
                     @endphp
                     <tr>
                         <td class="text-center">{{ $mov->data_competencia }}</td>
-                        <td>{{ $mov->entidadeFinanceira->name }}</td>
+                        <td>{{ $mov->entidadeFinanceira->name ?? '-' }}</td>
                         <td>{{ $mov->parceiro->nome ?? '-' }}</td>
                         <td>
-                            {{ $mov->descricao }}<br>
-                            <small class="text-muted">{{ $mov->lancamentoPadrao->description }}</small>
+                            {{ $mov->descricao }}
+                            @if ($mov->lancamentoPadrao)
+                                <br><small class="text-muted">{{ $mov->lancamentoPadrao->description }}</small>
+                            @endif
                         </td>
-                        <td class="text-end">{{ $entrada ? number_format($entrada, 2, ',', '.') : '' }}</td>
-                        <td class="text-end">{{ $saida   ? number_format($saida,   2, ',', '.') : '' }}</td>
-                        <td class="text-end">{{ number_format($saldo, 2, ',', '.') }}</td>
+                        <td class="text-end {{ $entrada ? 'text-entrada' : '' }}">{{ $entrada ? number_format($entrada, 2, ',', '.') : '-' }}</td>
+                        <td class="text-end {{ $saida ? 'text-saida' : '' }}">{{ $saida ? number_format($saida, 2, ',', '.') : '-' }}</td>
+                        <td class="text-end {{ $saldo >= 0 ? 'saldo-positivo' : 'saldo-negativo' }}">{{ number_format($saldo, 2, ',', '.') }}</td>
                     </tr>
                 @endforeach
             </tbody>
-            <tfoot class="table-light">
-                <tr class="fw-semibold">
-                    <td colspan="4" class="text-end">Subtotal</td>
-                    <td class="text-end">{{ number_format($grupo['totEntrada'], 2, ',', '.') }}</td>
-                    <td class="text-end">{{ number_format($grupo['totSaida'],   2, ',', '.') }}</td>
-                    <td class="text-end">{{ number_format($saldo,             2, ',', '.') }}</td>
+            <tfoot>
+                <tr class="subtotal-row">
+                    <td colspan="4" class="text-end"><strong>Subtotal {{ $grupo['origem'] }}</strong></td>
+                    <td class="text-end text-entrada">{{ number_format($grupo['totEntrada'], 2, ',', '.') }}</td>
+                    <td class="text-end text-saida">{{ number_format($grupo['totSaida'],   2, ',', '.') }}</td>
+                    <td class="text-end {{ $saldo >= 0 ? 'saldo-positivo' : 'saldo-negativo' }}">{{ number_format($saldo, 2, ',', '.') }}</td>
                 </tr>
             </tfoot>
         </table>
@@ -228,40 +319,88 @@
     @endforeach
 
     {{-- Totais finais --}}
-    <div class="mt-2 p-2 border border-dark-subtle rounded">
-        <h5 class="mb-1">Totais gerais</h5>
-        <div class="row">
-            <div class="col-6"><strong>Total de Entradas:</strong></div>
-            <div class="col-6 text-end">R$ {{ number_format($totalEntradas, 2, ',', '.') }}</div>
-            <div class="col-6"><strong>Total de Saídas:</strong></div>
-            <div class="col-6 text-end">R$ {{ number_format($totalSaidas,   2, ',', '.') }}</div>
+    @php
+        $saldoFinal = $totalEntradas - $totalSaidas;
+    @endphp
+    <div class="resumo-container">
+        <div class="resumo-box entradas">
+            <div class="label">Total de Entradas</div>
+            <div class="value">R$ {{ number_format($totalEntradas, 2, ',', '.') }}</div>
+        </div>
+        <div class="resumo-box saidas">
+            <div class="label">Total de Saídas</div>
+            <div class="value">R$ {{ number_format($totalSaidas, 2, ',', '.') }}</div>
+        </div>
+        <div class="resumo-box saldo">
+            <div class="label">Saldo Final</div>
+            <div class="value">R$ {{ number_format($saldoFinal, 2, ',', '.') }}</div>
         </div>
     </div>
 
     {{-- Gráfico (Chart.js) – Browsershot renderiza sem problemas --}}
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <canvas id="chart" class="mt-3" height="160"></canvas>
+    @if (count($dados) > 0)
+        <div class="chart-container">
+            <div class="chart-title">Comparativo de Entradas x Saídas por Categoria</div>
+            <canvas id="chart" height="140"></canvas>
+        </div>
 
-    <script>
-        const ctx      = document.getElementById('chart').getContext('2d');
-        const labels   = @json(array_column($dados, 'origem'));
-        const entradas = @json(array_column($dados, 'totEntrada'));
-        const saidas   = @json(array_column($dados, 'totSaida'));
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+        <script>
+            const ctx      = document.getElementById('chart').getContext('2d');
+            const labels   = @json(array_column($dados, 'origem'));
+            const entradas = @json(array_column($dados, 'totEntrada'));
+            const saidas   = @json(array_column($dados, 'totSaida'));
 
-        new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels,
-                datasets: [
-                    { label: 'Entradas', data: entradas, backgroundColor: 'rgba(25,135,84,.7)' },
-                    { label: 'Saídas',   data: saidas,   backgroundColor: 'rgba(220,53,69,.7)' }
-                ]
-            },
-            options: {
-                plugins: { legend: { position: 'bottom' }},
-                scales:  { y: { beginAtZero: true, title: { text: 'R$' }}}
-            }
-        });
-    </script>
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [
+                        {
+                            label: 'Entradas',
+                            data: entradas,
+                            backgroundColor: 'rgba(25, 135, 84, 0.8)',
+                            borderColor: 'rgba(25, 135, 84, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        },
+                        {
+                            label: 'Saídas',
+                            data: saidas,
+                            backgroundColor: 'rgba(220, 53, 69, 0.8)',
+                            borderColor: 'rgba(220, 53, 69, 1)',
+                            borderWidth: 1,
+                            borderRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { usePointStyle: true, padding: 15 }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: { display: true, text: 'Valores (R$)' },
+                            ticks: {
+                                callback: function(value) {
+                                    return 'R$ ' + value.toLocaleString('pt-BR');
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        </script>
+    @endif
+
+    {{-- Footer --}}
+    <div class="footer-container">
+        <span>Relatório gerado em {{ now()->format('d/m/Y H:i:s') }} | Sistema Dominus</span>
+    </div>
 </body>
 </html>

@@ -9,6 +9,8 @@ var KTModalPrestacaoContas = function () {
 	var modal;
 	var modalEl;
 	var modalData = null; // Store loaded data
+	var pollingInterval = null;
+	var currentPdfId = null;
 
 	// Load modal data via AJAX
 	var loadModalData = function() {
@@ -189,6 +191,123 @@ var KTModalPrestacaoContas = function () {
             });
         });
 	}
+
+	// Check PDF generation status
+	var checkPdfStatus = function(pdfId) {
+		$.ajax({
+			url: '/relatorios/pdf/status/' + pdfId,
+			method: 'GET',
+			dataType: 'json',
+			success: function(response) {
+				if (response.status === 'completed') {
+					stopPolling();
+					submitButton.removeAttribute('data-kt-indicator');
+					submitButton.disabled = false;
+					Swal.fire({
+						title: 'PDF Pronto!',
+						text: 'Seu relatório foi gerado com sucesso.',
+						icon: 'success',
+						showCancelButton: true,
+						confirmButtonText: '<i class="fas fa-download me-1"></i> Baixar PDF',
+						cancelButtonText: 'Fechar',
+						buttonsStyling: false,
+						customClass: { confirmButton: 'btn btn-primary', cancelButton: 'btn btn-light ms-2' }
+					}).then(function(result) {
+						if (result.isConfirmed && response.download_url) {
+							window.open(response.download_url, '_blank');
+						}
+						modal.hide();
+					});
+				} else if (response.status === 'failed') {
+					stopPolling();
+					submitButton.removeAttribute('data-kt-indicator');
+					submitButton.disabled = false;
+					Swal.fire({
+						title: 'Erro na Geração',
+						text: response.error_message || 'Ocorreu um erro ao gerar o PDF. Tente novamente.',
+						icon: 'error',
+						buttonsStyling: false,
+						confirmButtonText: 'Ok',
+						customClass: { confirmButton: 'btn btn-primary' }
+					});
+				}
+			},
+			error: function(xhr, status, error) {
+				console.error('Erro ao verificar status do PDF:', error);
+			}
+		});
+	};
+
+	// Start polling for PDF status
+	var startPolling = function(pdfId) {
+		currentPdfId = pdfId;
+		pollingInterval = setInterval(function() {
+			checkPdfStatus(pdfId);
+		}, 2000);
+	};
+
+	// Stop polling
+	var stopPolling = function() {
+		if (pollingInterval) {
+			clearInterval(pollingInterval);
+			pollingInterval = null;
+		}
+		currentPdfId = null;
+	};
+
+	// Generate PDF asynchronously
+	var generatePdfAsync = function(params) {
+		var formData = {};
+		for (var pair of params.entries()) {
+			formData[pair[0]] = pair[1];
+		}
+
+		$.ajax({
+			url: '/relatorios/prestacao-de-contas/pdf-async',
+			method: 'POST',
+			data: formData,
+			headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+			dataType: 'json',
+			success: function(response) {
+				if (response.success) {
+					startPolling(response.pdf_id);
+					Swal.fire({
+						title: 'Gerando Relatório',
+						html: '<p>O PDF está sendo gerado em segundo plano.</p><p class="text-muted small">Você receberá uma notificação quando estiver pronto.</p>',
+						icon: 'info',
+						showConfirmButton: false,
+						allowOutsideClick: false,
+						didOpen: function() { Swal.showLoading(); }
+					});
+				} else {
+					submitButton.removeAttribute('data-kt-indicator');
+					submitButton.disabled = false;
+					Swal.fire({
+						text: response.message || 'Erro ao iniciar geração do relatório.',
+						icon: 'error',
+						buttonsStyling: false,
+						confirmButtonText: 'Ok',
+						customClass: { confirmButton: 'btn btn-primary' }
+					});
+				}
+			},
+			error: function(xhr) {
+				submitButton.removeAttribute('data-kt-indicator');
+				submitButton.disabled = false;
+				var errorMessage = 'Erro ao processar a solicitação.';
+				if (xhr.responseJSON && xhr.responseJSON.message) {
+					errorMessage = xhr.responseJSON.message;
+				}
+				Swal.fire({
+					text: errorMessage,
+					icon: 'error',
+					buttonsStyling: false,
+					confirmButtonText: 'Ok',
+					customClass: { confirmButton: 'btn btn-primary' }
+				});
+			}
+		});
+	};
 
 	// Handle form validation and submittion
 	var handleForm = function() {
@@ -375,16 +494,8 @@ var KTModalPrestacaoContas = function () {
 							params.set('tipo_valor', tipoValorRadio.value);
 						}
 
-						// Abrir PDF em nova aba
-						var pdfUrl = '/relatorios/prestacao-de-contas/pdf?' + params.toString();
-						window.open(pdfUrl, '_blank');
-
-						// Restaurar botão e fechar modal
-						setTimeout(function() {
-							submitButton.removeAttribute('data-kt-indicator');
-							submitButton.disabled = false;
-							modal.hide();
-						}, 1000);
+						// Gerar PDF de forma assíncrona
+						generatePdfAsync(params);
 					} else {
 						// Show error message.
 						Swal.fire({
@@ -455,6 +566,11 @@ var KTModalPrestacaoContas = function () {
 
 			initForm();
 			handleForm();
+
+			// Para o polling quando o modal for fechado
+			modalEl.addEventListener('hidden.bs.modal', function() {
+				stopPolling();
+			});
 		}
 	};
 }();

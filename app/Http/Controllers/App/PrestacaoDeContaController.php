@@ -11,6 +11,8 @@ use Illuminate\Http\Request;
 use PDF;
 use Spatie\Browsershot\Browsershot;
 use App\Helpers\BrowsershotHelper;
+use App\Jobs\GeneratePrestacaoContasPdfJob;
+use App\Models\PdfGeneration;
 
 class PrestacaoDeContaController extends Controller
 {
@@ -134,6 +136,101 @@ class PrestacaoDeContaController extends Controller
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename=prestacao-de-contas.pdf',
         ]);
+    }
+
+    /**
+     * Gerar PDF de prestação de contas de forma assíncrona (Job)
+     */
+    public function gerarPdfAsync(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            $company = $user->companies()->first();
+            $tenantId = tenant('id');
+
+            // Validação básica
+            $dataInicial = $request->input('data_inicial');
+            $dataFinal = $request->input('data_final');
+
+            if (!$dataInicial || !$dataFinal) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'As datas inicial e final são obrigatórias.',
+                ], 422);
+            }
+
+            // Coletar parâmetros
+            $entidadeId = $request->input('entidade_id');
+            $modelo = $request->input('modelo', 'horizontal');
+            $tipoData = $request->input('tipo_data', 'competencia');
+            $situacoes = $request->input('situacoes', []);
+            $categorias = $request->input('categorias', []);
+            $parceiroId = $request->input('parceiro_id');
+            $comprovacaoFiscal = $request->boolean('comprovacao_fiscal');
+            $tipoValor = $request->input('tipo_valor', 'previsto');
+
+            // Converter string separada por vírgula em array
+            if (is_string($situacoes)) {
+                $situacoes = array_filter(explode(',', $situacoes));
+            }
+            if (is_string($categorias)) {
+                $categorias = array_filter(explode(',', $categorias));
+            }
+
+            // Criar registro de geração
+            $pdfGen = PdfGeneration::create([
+                'user_id' => $user->id,
+                'company_id' => $company->id,
+                'report_type' => 'prestacao_contas',
+                'status' => 'pending',
+                'parameters' => json_encode([
+                    'data_inicial' => $dataInicial,
+                    'data_final' => $dataFinal,
+                    'entidade_id' => $entidadeId,
+                    'modelo' => $modelo,
+                    'tipo_data' => $tipoData,
+                    'situacoes' => $situacoes,
+                    'categorias' => $categorias,
+                    'parceiro_id' => $parceiroId,
+                    'comprovacao_fiscal' => $comprovacaoFiscal,
+                    'tipo_valor' => $tipoValor,
+                ]),
+            ]);
+
+            // Despachar Job
+            GeneratePrestacaoContasPdfJob::dispatch(
+                $dataInicial,
+                $dataFinal,
+                $entidadeId,
+                $modelo,
+                $tipoData,
+                $situacoes,
+                $categorias,
+                $parceiroId,
+                $comprovacaoFiscal,
+                $tipoValor,
+                $company->id,
+                $user->id,
+                $tenantId,
+                $pdfGen->id
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Relatório está sendo gerado em segundo plano. Você receberá uma notificação quando estiver pronto.',
+                'pdf_id' => $pdfGen->id,
+            ]);
+
+        } catch (\Exception $e) {
+            \Log::error('[PrestacaoDeContaController] Erro ao iniciar geração assíncrona', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao iniciar geração do relatório: ' . $e->getMessage(),
+            ], 500);
+        }
     }
 
 

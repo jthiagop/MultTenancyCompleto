@@ -568,6 +568,9 @@ Route::middleware([
                 Route::get('/prestacao-de-contas/pdf', [PrestacaoDeContaController::class, 'gerarPdf'])
                     ->name('relatorios.prestacao.de.contas.gerar');
 
+                Route::post('/prestacao-de-contas/pdf-async', [PrestacaoDeContaController::class, 'gerarPdfAsync'])
+                    ->name('relatorios.prestacao.de.contas.gerar.async');
+
                 Route::get('/conciliacao-bancaria/pdf', [ConciliacaoController::class, 'gerarPdf'])
                     ->name('relatorios.conciliacao.bancaria.gerar');
 
