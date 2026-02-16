@@ -145,6 +145,11 @@ class BankStatement extends Model
         );
 
         // Retorna o registro se foi criado, null se já existia
+        // ✅ Fix: Atualiza company_id de registros existentes que possuem NULL
+        if (!$bankStatement->wasRecentlyCreated && empty($bankStatement->company_id) && $companyId) {
+            $bankStatement->update(['company_id' => $companyId]);
+        }
+
         return $bankStatement->wasRecentlyCreated ? $bankStatement : null;
     }
 
@@ -164,6 +169,13 @@ class BankStatement extends Model
         ]);
 
         try {
+            // ✅ Lock pessimista para evitar race condition em conciliações simultâneas
+            $locked = self::where('id', $this->id)->lockForUpdate()->first();
+
+            if ($locked->reconciled || $locked->status_conciliacao === 'ok') {
+                throw new \RuntimeException('Este lançamento já foi conciliado por outro usuário.');
+            }
+
             // ✅ Marca o registro como conciliado
             $this->reconciled = true;
 
