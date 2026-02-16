@@ -257,8 +257,8 @@ class ConciliacaoController extends Controller
             // ✅ Saldos serão recalculados dinamicamente
             // Nenhuma modificação direta necessária
             
-            \Log::info('Atualizando movimentação - saldos serão recalculados', [
-                'movimentacao_id' => $transacao->movimentacao_id,
+            \Log::debug('Atualizando movimentação - saldos serão recalculados', [
+                'movimentacao_id' => $movimentacao->id,
                 'entidade_anterior' => $movimentacao->entidade_id,
                 'entidade_nova' => $validatedData['entidade_id']
             ]);
@@ -303,7 +303,8 @@ class ConciliacaoController extends Controller
 
     public function conciliarTransacao($transactionId)
     {
-        $transacao = BankStatement::find($transactionId);
+        $companyId = session('active_company_id');
+        $transacao = BankStatement::where('company_id', $companyId)->find($transactionId);
 
         if ($transacao) {
             $transacao->update(['reconciled' => true]);
@@ -332,10 +333,9 @@ class ConciliacaoController extends Controller
             // Processa os dados validados
             $validatedData = $request->validated();
 
-            Log::info('=== INÍCIO CONCILIAÇÃO ===', [
-                'valor_recebido_request' => $request->input('valor'),
-                'valor_validado' => $validatedData['valor'],
+            Log::debug('Conciliação iniciada', [
                 'tipo' => $validatedData['tipo'],
+                'user_id' => Auth::id(),
             ]);
 
             // Verifica se "descricao2" foi enviado e atribui a "descricao"
@@ -348,7 +348,7 @@ class ConciliacaoController extends Controller
             // **Garante que o valor sempre seja positivo**
             $validatedData['valor'] = abs($validatedData['valor']);
 
-            Log::info('=== APÓS PROCESSAMENTO ===', [
+            Log::debug('Dados processados', [
                 'valor_final' => $validatedData['valor'],
                 'situacao' => $validatedData['situacao'],
             ]);
@@ -379,9 +379,8 @@ class ConciliacaoController extends Controller
             $movimentacao = $this->movimentacao($validatedData);
             $validatedData['movimentacao_id'] = $movimentacao->id;
 
-            Log::info('=== MOVIMENTAÇÃO CRIADA ===', [
+            Log::debug('Movimentação criada', [
                 'movimentacao_id' => $movimentacao->id,
-                'movimentacao_valor' => $movimentacao->valor,
             ]);
 
             // Cria a transação financeira
@@ -393,10 +392,8 @@ class ConciliacaoController extends Controller
             $movimentacao->origem_type = TransacaoFinanceira::class;
             $movimentacao->save();
 
-            Log::info('=== TRANSAÇÃO FINANCEIRA CRIADA ===', [
+            Log::debug('Transação financeira criada', [
                 'transacao_id' => $caixa->id,
-                'transacao_valor_salvo' => $caixa->valor,
-                'transacao_valor_raw' => $caixa->getAttributes()['valor'],
                 'movimentacao_origem_id' => $movimentacao->origem_id,
             ]);
 
@@ -406,17 +403,15 @@ class ConciliacaoController extends Controller
             // Processa anexos, se existirem
             $this->processarAnexos($request, $caixa);
 
-            // Recupera os registros necessários
-            $bankStatement = BankStatement::find($request->input('bank_statement_id'));
+            // Recupera os registros necessários (com filtro de company_id para segurança multi-tenant)
+            $bankStatement = BankStatement::where('company_id', $companyId)->find($request->input('bank_statement_id'));
             // Usar a transação que acabamos de criar, não buscar por transacao_id
             $transacao = $caixa; // $caixa é a TransacaoFinanceira que acabamos de criar
 
-            Log::info('Tentativa de buscar registros no método conciliar', [
+            Log::debug('Busca de registros para conciliação', [
                 'bank_statement_id' => $request->input('bank_statement_id'),
                 'transacao_criada_id' => $caixa->id,
                 'bank_statement_found' => $bankStatement ? 'sim' : 'não',
-                'transacao_found' => $transacao ? 'sim' : 'não',
-                'request_all' => $request->all()
             ]);
 
             if (!$bankStatement) {
@@ -437,60 +432,34 @@ class ConciliacaoController extends Controller
                 // ✅ VALOR JÁ ESTÁ EM DECIMAL (vindo do request validado)
                 $valorConciliado = (float) $validatedData['valor'];
                 
-                Log::info('✅ Valor conciliado (já em DECIMAL do request validado)', [
-                    'valor_validado_decimal' => $valorConciliado,
-                    'transacao_valor_decimal' => $transacao->valor
+                Log::debug('Valor conciliado definido', [
+                    'valor_conciliado' => $valorConciliado,
                 ]);
             } else {
                 // Fallback: usa valor da transação (que já está em DECIMAL)
                 $valorConciliado = (float) $transacao->valor;
                 
-                Log::info('⚠️ Valor não encontrado no validatedData, usando valor da transação', [
-                    'transacao_valor_decimal' => $transacao->valor,
-                    'valor_conciliado_decimal' => $valorConciliado
+                Log::debug('Valor conciliado via fallback (transação)', [
+                    'valor_conciliado' => $valorConciliado,
                 ]);
             }
 
-            Log::info('=== CÁLCULO DE VALOR CONCILIADO ===', [
-                'valor_request_raw' => $request->valor ?? 'null',
-                'valor_validated_decimal' => $validatedData['valor'] ?? 'null',
-                'transacao_valor_decimal' => $transacao->valor,
-                'valor_conciliado_decimal' => $valorConciliado,
+            Log::debug('Cálculo de valor conciliado', [
+                'valor_conciliado' => $valorConciliado,
                 'bank_statement_amount' => $bankStatement->amount,
-                'bank_statement_amount_cents' => $bankStatement->amount_cents,
             ]);
 
-            // **Lógica para definir o status**
-            // Compara valorConciliado (DECIMAL) com amount (DECIMAL) do BankStatement
-            $bankStatementAmount = abs((float) $bankStatement->amount);
-            
-            if (abs($valorConciliado - $bankStatementAmount) < 0.01) {
-                $status = 'ok'; // Conciliação perfeita (diferença < 1 centavo)
-            } elseif ($valorConciliado < $bankStatementAmount) {
-                $status = 'parcial'; // Conciliação parcial (falta valor)
-            } elseif ($valorConciliado > $bankStatementAmount) {
-                $status = 'divergente'; // Conciliação com excesso
-            } else {
-                $status = 'pendente'; // Algo inesperado, pendente de verificação
-            }
-
+            // ✅ A lógica de status é centralizada em BankStatement::conciliarCom()
             // **Chama o método conciliarCom() que atualiza saldo e cria pivot**
             $bankStatement->conciliarCom($transacao, $valorConciliado);
 
-            Log::info('=== CONCILIAÇÃO FINALIZADA ===', [
+            Log::info('Conciliação finalizada', [
                 'bank_statement_id' => $bankStatement->id,
-                'bank_statement_amount' => $bankStatement->amount,
-                'bank_statement_amount_cents' => $bankStatement->amount_cents,
                 'transacao_id' => $transacao->id,
-                'transacao_valor' => $transacao->valor,
-                'transacao_origem' => $transacao->origem ?? 'conciliacao_bancaria',
                 'valor_conciliado' => $valorConciliado,
-                'status_conciliacao' => $bankStatement->status_conciliacao,
-                'movimentacao_id' => $movimentacao->id,
-                'movimentacao_valor' => $movimentacao->valor,
+                'status' => $bankStatement->status_conciliacao,
                 'entidade_id' => $validatedData['entidade_id'],
                 'user_id' => Auth::id(),
-                'user_name' => Auth::user()->name
             ]);
 
             // 🤖 APRENDIZADO AUTOMÁTICO - Sistema aprende com a ação do usuário
@@ -516,6 +485,7 @@ class ConciliacaoController extends Controller
                 $baseQuery = BankStatement::where('company_id', $companyId)
                     ->where('entidade_financeira_id', $entidadeId)
                     ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                    ->whereDoesntHave('transacoes')
                     ->where(function ($q) {
                         $q->where('conciliado_com_missa', false)
                           ->orWhereNull('conciliado_com_missa');
@@ -533,13 +503,9 @@ class ConciliacaoController extends Controller
                 $saldoAtual = $entidade ? $entidade->saldo_atual : 0;
                 $valorPendente = (clone $baseQuery)->sum('amount');
                 
-                Log::info('Contadores e informações financeiras atualizadas após conciliação', [
+                Log::debug('Contadores atualizados após conciliação', [
                     'counts' => $counts,
-                    'saldo_atual' => $saldoAtual,
-                    'valor_pendente' => abs($valorPendente),
                     'entidade_id' => $entidadeId,
-                    'user_id' => Auth::id(),
-                    'user_name' => Auth::user()->name,
                 ]);
                 
                 return response()->json([
@@ -567,11 +533,9 @@ class ConciliacaoController extends Controller
     public function pivot(Request $request)
     {
         // Log da requisição recebida
-        Log::info('Iniciando processo de conciliação', [
+        Log::debug('Iniciando conciliação pivot', [
             'user_id' => Auth::id(),
-            'request_data' => $request->all(),
-            'ip' => $request->ip(),
-            'user_agent' => $request->userAgent()
+            'bank_statement_id' => $request->input('bank_statement_id'),
         ]);
 
         return DB::transaction(function () use ($request) {
@@ -583,30 +547,19 @@ class ConciliacaoController extends Controller
                     'valor_conciliado' => 'nullable|numeric|min:0'
                 ]);
 
-                Log::info('Validação dos dados de entrada passou', [
+                Log::debug('Validação pivot ok', [
                     'bank_statement_id' => $request->bank_statement_id,
                     'transacao_financeira_id' => $request->transacao_financeira_id,
-                    'valor_conciliado' => $request->valor_conciliado
                 ]);
 
-                // ✅ Busca os registros corretamente
-                $bankStatement = BankStatement::findOrFail($request->bank_statement_id);
+                // ✅ Busca os registros corretamente (com filtro de company_id para segurança multi-tenant)
+                $companyId = session('active_company_id');
+                $bankStatement = BankStatement::where('company_id', $companyId)->findOrFail($request->bank_statement_id);
                 $transacao = TransacaoFinanceira::findOrFail($request->transacao_financeira_id);
 
-                Log::info('Registros encontrados', [
-                    'bank_statement' => [
-                        'id' => $bankStatement->id,
-                        'amount' => $bankStatement->amount,
-                        'dtposted' => $bankStatement->dtposted,
-                        'memo' => $bankStatement->memo,
-                        'reconciled' => $bankStatement->reconciled
-                    ],
-                    'transacao' => [
-                        'id' => $transacao->id,
-                        'valor' => $transacao->valor,
-                        'data_competencia' => $transacao->data_competencia,
-                        'descricao' => $transacao->descricao
-                    ]
+                Log::debug('Registros encontrados para pivot', [
+                    'bank_statement_id' => $bankStatement->id,
+                    'transacao_id' => $transacao->id,
                 ]);
 
                 // ✅ Define o valor conciliado
@@ -628,13 +581,9 @@ class ConciliacaoController extends Controller
                 // valor_conciliado no pivot é DECIMAL, não INTEGER
                 $valorConciliado = $money->toDatabase();
 
-                Log::info('=== CÁLCULO DE VALOR CONCILIADO (PIVOT) ===', [
-                    'valor_request_original' => $valorRequest,
-                    'valor_normalizado_reais' => $money->getAmount(),
-                    'valor_conciliado_decimal' => $valorConciliado,
-                    'valor_original_transacao' => $transacao->valor,
-                    'valor_bank_statement' => $bankStatement->amount,
-                    'bank_statement_amount_cents' => $bankStatement->amount_cents
+                Log::debug('Cálculo de valor conciliado (pivot)', [
+                    'valor_conciliado' => $valorConciliado,
+                    'bank_statement_amount' => $bankStatement->amount,
                 ]);
 
                 // Verificar se já existe conciliação
@@ -652,20 +601,43 @@ class ConciliacaoController extends Controller
                 // ✅ Chama o método diretamente no modelo
                 $bankStatement->conciliarCom($transacao, $valorConciliado);
 
-                Log::info('Conciliação realizada com sucesso (método pivot)', [
+                Log::info('Conciliação pivot realizada', [
                     'bank_statement_id' => $bankStatement->id,
-                    'bank_statement_amount' => $bankStatement->amount,
                     'transacao_id' => $transacao->id,
-                    'transacao_valor' => $transacao->valor,
-                    'transacao_origem' => $transacao->origem,
                     'valor_conciliado' => $valorConciliado,
-                    'status_conciliacao' => $bankStatement->status_conciliacao,
+                    'status' => $bankStatement->status_conciliacao,
                     'user_id' => Auth::id(),
-                    'user_name' => Auth::user()->name
                 ]);
 
                 // Retornar JSON se for requisição AJAX
                 if ($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
+                    // ✅ Busca dados atualizados para retornar (consistente com conciliar())
+                    $entidadeId = $bankStatement->entidade_financeira_id;
+                    
+                    // Contadores por tipo (com filtros consistentes)
+                    $baseQuery = BankStatement::where('company_id', $companyId)
+                        ->where('entidade_financeira_id', $entidadeId)
+                        ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                        ->whereDoesntHave('transacoes')
+                        ->where(function ($q) {
+                            $q->where('conciliado_com_missa', false)
+                              ->orWhereNull('conciliado_com_missa');
+                        });
+                    
+                    $counts = [
+                        'all' => (clone $baseQuery)->count(),
+                        'received' => (clone $baseQuery)->where('amount_cents', '>', 0)->count(),
+                        'paid' => (clone $baseQuery)->where('amount_cents', '<', 0)->count(),
+                    ];
+
+                    $totalPendentes = $counts['all'];
+                    
+                    // 🔄 REFRESH da entidade para pegar o saldo_atual ATUALIZADO
+                    $entidade = \App\Models\EntidadeFinanceira::find($entidadeId);
+                    $entidade?->refresh();
+                    $saldoAtual = $entidade ? $entidade->saldo_atual : 0;
+                    $valorPendente = (clone $baseQuery)->sum('amount');
+
                     return response()->json([
                         'success' => true,
                         'message' => 'Conciliação realizada com sucesso!',
@@ -673,6 +645,13 @@ class ConciliacaoController extends Controller
                             'transacao_id' => $transacao->id,
                             'bank_statement_id' => $bankStatement->id,
                             'status' => $bankStatement->status_conciliacao,
+                            'total_pendentes' => $totalPendentes,
+                            'counts' => $counts,
+                            'informacoesAdicionais' => [
+                                'saldo_atual' => $saldoAtual,
+                                'valor_pendente_conciliacao' => abs($valorPendente),
+                                'data_ultima_atualizacao' => now(),
+                            ]
                         ]
                     ]);
                 }
@@ -743,7 +722,8 @@ class ConciliacaoController extends Controller
             'bank_statement_id' => 'required|exists:bank_statements,id',
         ]);
 
-        $bankStatement = BankStatement::findOrFail($request->bank_statement_id);
+        $companyId = session('active_company_id');
+        $bankStatement = BankStatement::where('company_id', $companyId)->findOrFail($request->bank_statement_id);
 
         // Marcar como ignorado
         $bankStatement->update([
@@ -756,8 +736,9 @@ class ConciliacaoController extends Controller
 
     public function ignorar($id)
     {
-        // Encontra o lançamento bancário pelo ID
-        $bankStatement = BankStatement::findOrFail($id);
+        // Encontra o lançamento bancário pelo ID (com filtro de company_id para segurança multi-tenant)
+        $companyId = session('active_company_id');
+        $bankStatement = BankStatement::where('company_id', $companyId)->findOrFail($id);
 
         // Atualiza o status para "ignorado"
         $bankStatement->update(['status_conciliacao' => 'ignorado']);
@@ -771,8 +752,7 @@ class ConciliacaoController extends Controller
      */
     private function movimentacao(array $validatedData)
     {
-        Log::info('=== CRIANDO MOVIMENTAÇÃO ===', [
-            'valor_recebido' => $validatedData['valor'],
+        Log::debug('Criando movimentação', [
             'tipo' => $validatedData['tipo'],
         ]);
 
@@ -794,10 +774,8 @@ class ConciliacaoController extends Controller
             'data_competencia' => $validatedData['data_competencia'] ?? null,
         ]);
 
-        Log::info('=== MOVIMENTAÇÃO SALVA NO BANCO ===', [
+        Log::debug('Movimentação salva', [
             'movimentacao_id' => $movimentacao->id,
-            'valor_salvo' => $movimentacao->valor,
-            'valor_raw' => $movimentacao->getAttributes()['valor'],
         ]);
 
         // Retorna o objeto Movimentacao recém-criado, de onde poderemos pegar o ID
@@ -963,9 +941,8 @@ class ConciliacaoController extends Controller
             $companyId = session('active_company_id'); // Recupera a empresa do usuário logado
 
             // Log para debug
-            Log::info('Buscando contas disponíveis', [
+            Log::debug('Buscando contas disponíveis', [
                 'entidade_origem_id' => $entidadeOrigemId,
-                'company_id' => $companyId
             ]);
 
             // Busca todas as entidades financeiras da mesma empresa, exceto a de origem
@@ -1002,9 +979,8 @@ class ConciliacaoController extends Controller
                 });
 
             // Log para debug
-            Log::info('Contas encontradas', [
+            Log::debug('Contas encontradas', [
                 'total' => $contas->count(),
-                'contas' => $contas->pluck('nome')->toArray()
             ]);
 
             return response()->json([
@@ -1049,20 +1025,20 @@ class ConciliacaoController extends Controller
                     'checknum' => 'nullable|string|max:100',
                 ]);
 
-                $bankStatement = BankStatement::findOrFail($validated['bank_statement_id']);
+                // Filtro de company_id para segurança multi-tenant
+                $companyId = session('active_company_id');
+
+                if (!$companyId) {
+                    return redirect()->back()->with('error', 'Companhia não encontrada.');
+                }
+
+                $bankStatement = BankStatement::where('company_id', $companyId)->findOrFail($validated['bank_statement_id']);
                 $entidadeOrigem = EntidadeFinanceira::findOrFail($validated['entidade_origem_id']);
                 $entidadeDestino = EntidadeFinanceira::findOrFail($validated['entidade_destino_id']);
 
                 // Usa Money para converter formato brasileiro → decimal
                 $money = Money::fromHumanInput((string) $validated['valor']);
                 $valor = $money->toDatabase();
-
-                // Recupera a empresa do usuário logado
-                $companyId = session('active_company_id');
-
-                if (!$companyId) {
-                    return redirect()->back()->with('error', 'Companhia não encontrada.');
-                }
 
                 // ✅ Determina o tipo baseado no sinal do amount do bank statement
                 // amount negativo = pagamento (saída), positivo = recebimento (entrada)
@@ -1172,12 +1148,12 @@ class ConciliacaoController extends Controller
 
                 // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
 
-                Log::info('Conciliação de transferência realizada com sucesso', [
+                Log::info('Transferência conciliada', [
                     'bank_statement_id' => $bankStatement->id,
                     'entidade_origem_id' => $entidadeOrigem->id,
                     'entidade_destino_id' => $entidadeDestino->id,
-                    'valor' => $valor,
                     'transacao_id' => $transacao->id,
+                    'user_id' => Auth::id(),
                 ]);
 
                 return response()->json([
@@ -1514,14 +1490,11 @@ class ConciliacaoController extends Controller
                     'status_conciliacao' => 'conciliado'
                 ]);
 
-                Log::info('Missa conciliada com sucesso', [
+                Log::info('Missa conciliada', [
                     'bank_statement_id' => $bankStatement->id,
                     'transacao_id' => $transacaoFinanceira->id,
                     'horario_missa_id' => $horarioMissa->id,
-                    'valor' => $bankStatement->amount,
-                    'transacao_origem' => $transacaoFinanceira->origem ?? 'N/A',
                     'user_id' => Auth::id(),
-                    'user_name' => Auth::user()->name
                 ]);
 
                 return response()->json([
@@ -1627,11 +1600,9 @@ class ConciliacaoController extends Controller
                 'created_by_name'      => Auth::user()->name,
             ]);
 
-            \Log::info('🤖 Nova regra de conciliação aprendida automaticamente', [
-                'company_id' => session('active_company_id'),
+            \Log::debug('Nova regra de conciliação aprendida', [
                 'termo_busca' => $termoBusca,
                 'lancamento_padrao_id' => $request->lancamento_padrao_id,
-                'user' => Auth::user()->name,
             ]);
         }
     }
