@@ -18,7 +18,7 @@
     // Colunas padrão para Contas a Receber/Pagar
     $tableColumns = [
         ['key' => 'checkbox', 'label' => '', 'width' => 'w-10px pe-2', 'orderable' => false],
-        ['key' => 'vencimento', 'label' => 'Vencimento', 'width' => 'min-w-70px', 'orderable' => true],
+        ['key' => 'vencimento', 'label' => 'Vencimento', 'width' => 'w-100px', 'orderable' => true],
         ['key' => 'descricao', 'label' => 'Descrição', 'width' => 'min-w-175px', 'orderable' => false],
         ['key' => 'total', 'label' => 'Total (R$)', 'width' => 'min-w-50px', 'orderable' => true],
         ['key' => 'a_pagar', 'label' => 'A pagar (R$)', 'width' => 'min-w-50px', 'orderable' => true],
@@ -118,12 +118,21 @@
             <div id="table-wrapper-{{ $tableIdFinal }}" class="d-none mt-4">
                 <!--begin::Table-->
                 <table class="table align-middle table-striped table-row-dashed fs-6 gy-5 mt-7"
-                    id="{{ $tableIdFinal }}">
+                    id="{{ $tableIdFinal }}" style="width: 100%">
                     <thead>
                         <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-4">
                             @foreach ($tableColumns as $column)
+                                @php
+                                    $inlineWidth = '';
+                                    if (!empty($column['width'])) {
+                                        preg_match('/(?:min-)?w-(\d+)px/', $column['width'], $wMatch);
+                                        if (!empty($wMatch[1])) {
+                                            $inlineWidth = 'width: ' . $wMatch[1] . 'px; max-width: ' . $wMatch[1] . 'px;';
+                                        }
+                                    }
+                                @endphp
                                 @if ($column['key'] === 'checkbox')
-                                    <th class="{{ $column['width'] ?? 'text-end min-w-50px pe-6' }}">
+                                    <th class="{{ $column['width'] ?? 'text-end min-w-50px pe-6' }}" @if($inlineWidth) style="{{ $inlineWidth }}" @endif>
                                         <div class="form-check form-check-sm form-check-custom form-check-solid">
                                             <input class="form-check-input" type="checkbox"
                                                 data-kt-check="true"
@@ -132,10 +141,10 @@
                                         </div>
                                     </th>
                                 @elseif($column['key'] === 'acoes')
-                                    <th class="{{ $column['width'] ?? 'text-center min-w-50px' }}">
+                                    <th class="{{ $column['width'] ?? 'text-center min-w-50px' }}" @if($inlineWidth) style="{{ $inlineWidth }}" @endif>
                                         {{ $column['label'] }}</th>
                                 @else
-                                    <th class="{{ $column['width'] ?? '' }}">{{ $column['label'] }}</th>
+                                    <th class="{{ $column['width'] ?? '' }}" @if($inlineWidth) style="{{ $inlineWidth }}" @endif>{{ $column['label'] }}</th>
                                 @endif
                             @endforeach
                         </tr>
