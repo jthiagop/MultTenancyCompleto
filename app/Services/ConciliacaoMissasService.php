@@ -24,8 +24,10 @@ class ConciliacaoMissasService
      */
     public function processarTransacoes($companyId, $bankStatements = null)
     {
-        try {
-            DB::beginTransaction();
+        // Usa DB::transaction() (closure-based) que cria savepoints automaticamente
+        // quando já existe uma transação ativa (ex: chamado dentro de OfxService).
+        // Quando chamado diretamente (ex: ConciliacaoController), cria transação nova.
+        return DB::transaction(function () use ($companyId, $bankStatements) {
 
             // Se não foram passadas transações específicas, busca todas as não conciliadas
             if ($bankStatements === null) {
@@ -116,24 +118,13 @@ class ConciliacaoMissasService
 
             $estatisticas['missas_envolvidas'] = count($missasEnvolvidas);
 
-            DB::commit();
-
             Log::info('Conciliação de missas processada', [
                 'company_id' => $companyId,
                 'estatisticas' => $estatisticas
             ]);
 
             return $estatisticas;
-
-        } catch (\Exception $e) {
-            DB::rollBack();
-            Log::error('Erro ao processar conciliação de missas', [
-                'company_id' => $companyId,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            throw $e;
-        }
+        });
     }
 
     /**
