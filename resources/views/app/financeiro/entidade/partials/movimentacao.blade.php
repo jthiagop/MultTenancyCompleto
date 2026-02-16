@@ -107,8 +107,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        // Calcula saldo inicial (assumindo que vem do saldo_inicial da entidade)
-        let saldoAtual = parseFloat(data.entidade.saldo_inicial || 0);
+        // Calcula saldo inicial (vem do accessor saldo_inicial_real via JSON appends)
+        let saldoAtual = parseFloat(data.entidade.saldo_inicial_real || 0);
 
         // Converte transacoesPorDia para array e ordena as datas (mais antiga primeiro para cálculo de saldo)
         const diasArray = Object.keys(transacoesPorDia).sort((a, b) => {

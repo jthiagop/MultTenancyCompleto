@@ -292,7 +292,7 @@
                                     <td>{{ $entidade->nome }}</td>
                                     <!-- Saldo Inicial -->
                                     <td class="text-end pe-0">R$
-                                        {{ number_format($entidade->saldo_inicial, 2, ',', '.') }}
+                                        {{ number_format($entidade->saldo_inicial_real, 2, ',', '.') }}
                                     </td>
                                     <!-- Saldo Inicial -->
                                     <td class="text-end pe-0">

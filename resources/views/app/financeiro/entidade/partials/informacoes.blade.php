@@ -168,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('info-nome').textContent = entidade.nome || '-';
         document.getElementById('info-agencia').textContent = entidade.agencia || '-';
         document.getElementById('info-conta').textContent = entidade.conta || '-';
-        document.getElementById('info-saldo-inicial').textContent = formatarMoeda(entidade.saldo_inicial || 0);
+        document.getElementById('info-saldo-inicial').textContent = formatarMoeda(entidade.saldo_inicial_real || 0);
         document.getElementById('info-saldo-atual').textContent = formatarMoeda(entidade.saldo_atual || 0);
 
         // Tipo

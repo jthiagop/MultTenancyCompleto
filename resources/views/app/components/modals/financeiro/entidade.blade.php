@@ -31,7 +31,7 @@
                                 <button class="accordion-button fs-4 fw-semibold" type="button"
                                     data-bs-toggle="collapse" data-bs-target="#kt_accordion_1_body_1"
                                     aria-expanded="true" aria-controls="kt_accordion_1_body_1">
-                                    <i class="fa-regular fa-circle-check fs-3 text-success me-3 me-3"></i>
+                                    <i class="fa-regular fa-circle-check fs-3 text-success me-3"></i>
 
                                     Escolha um tipo de Entidade Financeira
                                 </button>
@@ -65,7 +65,7 @@
 
                                                 <!--begin::Price-->
                                                 <div class="ms-5">
-                                                    <span class="fs-1 fw-bold text-dark me-1 text-white">
+                                                    <span class="fs-1 fw-bold">
                                                         <i class="fa-solid fa-building-columns"></i>
                                                     </span>
                                                 </div>
@@ -122,7 +122,7 @@
                         <!--begin::Item 2-->
                         <div class="accordion-item mb-4">
                             <h2 class="accordion-header " id="kt_accordion_1_header_2">
-                                <button class="accordion-button fs-4 fw-semibold collapsed p " type="button" disabled
+                                <button class="accordion-button fs-4 fw-semibold collapsed" type="button" disabled
                                     data-bs-toggle="collapse" data-bs-target="#kt_accordion_1_body_2"
                                     aria-expanded="false" aria-controls="kt_accordion_1_body_2">
                                     <i class="fa-regular fa-circle-check fs-3 me-3" id="icon-accordion-2"></i>
@@ -153,26 +153,18 @@
                                                 O sistema criará automaticamente o nome baseado nos dados bancários
                                             </div>
                                         </div>
-                                        <div class="col-6 fv-row">
-                                            <label class="fs-5 fw-semibold mb-2 required">Banco</label>
-                                            <select id="banco-select" name="bank_id" class="form-select"
-                                                data-control="select2"
-                                                data-dropdown-parent="#kt_modal_entidade_financeira"
-                                                data-placeholder="Selecione um banco">
-                                                <option></option>
-                                                @isset($banks)
-                                                    @foreach ($banks as $bank)
-                                                        <option value="{{ $bank->id }}"
-                                                            data-icon="{{ $bank->logo_url }}">
-                                                            {{ $bank->name }}
-                                                        </option>
-                                                    @endforeach
-                                                @endisset
-                                            </select>
-                                            @error('bank_id')
-                                                <div class="text-danger mt-2">{{ $message }}</div>
-                                            @enderror
-                                        </div>
+                                        <x-tenant-select name="bank_id" id="banco-select" label="Banco" required
+                                            placeholder="Selecione um banco" :minimumResultsForSearch="0"
+                                            dropdown-parent="#kt_modal_entidade_financeira" labelSize="fs-5" class="col-6">
+                                            @isset($banks)
+                                                @foreach ($banks as $bank)
+                                                    <option value="{{ $bank->id }}"
+                                                        data-kt-select2-icon="{{ $bank->logo_url ?? asset('tenancy/assets/media/svg/bancos/default.svg') }}">
+                                                        {{ $bank->name }}
+                                                    </option>
+                                                @endforeach
+                                            @endisset
+                                        </x-tenant-select>
                                     </div>
 
                                     <!-- Agência, Conta e Natureza da Conta -->
@@ -259,12 +251,11 @@
                                             <label class="fs-5 fw-semibold mb-2 required">Saldo do dia Anterior</label>
                                             <!--end::Label-->
                                             <div class="position-relative d-flex align-items-center">
-                                                <!--end::Icon-->
                                                 <!--begin::Input group-->
                                                 <div class="input-group mb-5">
                                                     <span class="input-group-text" id="basic-addon1">R$</span>
                                                     <input type="text" class="form-control"
-                                                        placeholder="Ex: 1.000,00" aria-label="Username"
+                                                        placeholder="Ex: 1.000,00" aria-label="Saldo do dia anterior"
                                                         id="saldo_atual_input" name="saldo_atual"
                                                         aria-describedby="basic-addon1" />
                                                 </div>
@@ -315,12 +306,6 @@
                                         @enderror
                                     </div>
                                     <!--end::Descrição-->
-
-                                    <!--begin::Conta Contábil-->
-                                    <div class="d-flex flex-column mb-5 fv-row">
-
-                                    </div>
-                                    <!--end::Conta Contábil-->
                                 </div>
                                 <!--begin::Footer-->
                                 <div class="border-top d-flex px-6 py-3">
@@ -575,9 +560,6 @@
                     field.disabled = true;
                     field.required = false;
                     field.value = '';
-                    
-                    // Limpar atributo name para não ser enviado no form (opcional, mas mais seguro)
-                    field.setAttribute('data-original-name', field.name);
                     
                     // Se é Select2, limpar também
                     if (field.classList.contains('form-select') && typeof $ !== 'undefined' && $.fn.select2) {
@@ -1152,16 +1134,19 @@
             const $bancoSelect = $('#banco-select');
             const $contaContabilSelect = $('#conta_contabil_id');
 
-            // Inicializar Select2 do banco se ainda não foi inicializado
-            if (!$bancoSelect.hasClass('select2-hidden-accessible')) {
-                $bancoSelect.select2({
-                    dropdownParent: $(this.modal),
-                    placeholder: 'Selecione um banco',
-                    allowClear: true,
-                    templateResult: this.formatBankOption,
-                    templateSelection: this.formatBankOption
-                });
+            // Destruir instância existente do Select2 do banco para reinicializar com templates
+            if ($bancoSelect.hasClass('select2-hidden-accessible')) {
+                $bancoSelect.select2('destroy');
             }
+            
+            // Inicializar Select2 do banco com templates para exibir ícones
+            $bancoSelect.select2({
+                dropdownParent: $(this.modal),
+                placeholder: 'Selecione um banco',
+                allowClear: true,
+                templateResult: this.formatBankOption,
+                templateSelection: this.formatBankOption
+            });
 
             // Inicializar Select2 da conta contábil se ainda não foi inicializado
             if (!$contaContabilSelect.hasClass('select2-hidden-accessible')) {
@@ -1204,12 +1189,12 @@
         formatBankOption(state) {
             if (!state.id) return state.text;
 
-            const iconUrl = $(state.element).attr('data-icon');
+            const iconUrl = $(state.element).attr('data-kt-select2-icon');
             if (!iconUrl) return state.text;
 
             return $(`
                 <span class="d-flex align-items-center">
-                    <img src="${iconUrl}" class="me-2" style="width:24px; height:24px;" />
+                    <img src="${iconUrl}" class="rounded h-20px me-2" alt="icon" />
                     <span>${state.text}</span>
                 </span>
             `);
