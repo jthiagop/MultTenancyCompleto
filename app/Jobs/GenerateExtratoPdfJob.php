@@ -86,7 +86,7 @@ class GenerateExtratoPdfJob implements ShouldQueue
             $dataInicio = Carbon::createFromFormat('d/m/Y', $this->dataInicial)->startOfDay();
             $dataFim = Carbon::createFromFormat('d/m/Y', $this->dataFinal)->endOfDay();
 
-            $saldoInicial = $entidade->saldo_inicial ?? 0;
+            // Opção A: saldo_inicial = 0, movimentações são a fonte de verdade
 
             // Saldo anterior ao período
             $entradasAntes = TransacaoFinanceira::where('entidade_id', $this->entidadeId)
@@ -105,7 +105,7 @@ class GenerateExtratoPdfJob implements ShouldQueue
                 ->where('data_competencia', '<', $dataInicio)
                 ->sum('valor');
 
-            $saldoAnterior = $saldoInicial + $entradasAntes - $saidasAntes;
+            $saldoAnterior = $entradasAntes - $saidasAntes;
 
             // Transações do período
             $transacoes = TransacaoFinanceira::where('entidade_id', $this->entidadeId)

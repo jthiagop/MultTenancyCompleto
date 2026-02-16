@@ -49,8 +49,8 @@ class EntidadeFinanceiraService
             $dataComparacao = Carbon::now()->subMonth();
         }
 
-        // Saldo inicial
-        $saldoInicial = $entidade->saldo_inicial ?? 0;
+        // Opção A: saldo_inicial = 0 na tabela, a movimentação de saldo_inicial
+        // já é contabilizada via transações financeiras efetivadas
 
         // Soma todas as entradas até a data de comparação
         $entradas = $entidade->transacoesFinanceiras()
@@ -66,7 +66,7 @@ class EntidadeFinanceiraService
             ->whereNull('deleted_at')
             ->sum('valor');
 
-        return $saldoInicial + $entradas - $saidas;
+        return $entradas - $saidas;
     }
 
     /**

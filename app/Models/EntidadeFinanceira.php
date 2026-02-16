@@ -17,6 +17,12 @@ class EntidadeFinanceira extends Model
 
     protected $table = 'entidades_financeiras';
 
+    /**
+     * Accessors incluídos automaticamente no JSON/array.
+     * saldo_inicial_real: valor real vindo da movimentação (categoria='saldo_inicial')
+     */
+    protected $appends = ['saldo_inicial_real'];
+
     protected $fillable = [
         'nome',
         'tipo',
@@ -39,6 +45,23 @@ class EntidadeFinanceira extends Model
         return abs($this->amount + $outraTransacao->amount) <= $tolerancia;
     }
 
+
+    /**
+     * Accessor: retorna o valor real do saldo inicial a partir da movimentação.
+     * Uso em views: {{ $entidade->saldo_inicial_real }}
+     */
+    public function getSaldoInicialRealAttribute(): float
+    {
+        $mov = $this->movimentacoes()
+            ->where('categoria', 'saldo_inicial')
+            ->first();
+
+        if (!$mov) {
+            return 0;
+        }
+
+        return $mov->tipo === 'entrada' ? (float) $mov->valor : -((float) $mov->valor);
+    }
 
     // Relacionamento com movimentações
     public function movimentacoes()
@@ -67,35 +90,37 @@ class EntidadeFinanceira extends Model
         // Soma todas as entradas e subtrai todas as saídas
         $totalMovimentacoes = $this->movimentacoes()->where('tipo', 'entrada')->sum('valor') - $this->movimentacoes()->where('tipo', 'saida')->sum('valor');
 
-        // O saldo atual é o saldo inicial (que não muda) mais o total de movimentações
-        $this->saldo_atual = $this->saldo_inicial + $totalMovimentacoes;
-        $this->save(); // Salva o novo saldo no banco
+        // Opção A: saldo_inicial = 0, movimentações são a fonte única de verdade
+        $this->saldo_atual = $totalMovimentacoes;
+        $this->save();
     }
 
     /**
      * ✅ Calcula o saldo dinamicamente baseado em MOVIMENTAÇÕES
      * 
-     * Fórmula: saldo_inicial + (Σ entrada) - (Σ saida)
+     * Fórmula: (Σ entrada) - (Σ saida)
      * 
-     * REGRA DE NEGÓCIO:
+     * REGRA DE NEGÓCIO (Opção A):
+     * - saldo_inicial = 0 na tabela (não participa do cálculo)
+     * - O saldo inicial é representado por uma movimentação com categoria='saldo_inicial'
      * - Movimentações SÓ existem para transações EFETIVADAS (pago/recebido)
-     * - A tabela movimentacoes é a fonte de verdade para o saldo
+     * - A tabela movimentacoes é a fonte ÚNICA de verdade para o saldo
      * - Transações em_aberto são previsões e NÃO têm movimentação
      * 
      * @return float
      */
     public function calculateBalance()
     {
-        // ✅ FONTE DE VERDADE: Tabela movimentacoes
-        // Movimentações só existem para transações efetivadas (pago/recebido)
-        // Portanto, não precisa filtrar por situação - se existe movimentação, impacta o saldo
+        // ✅ FONTE ÚNICA DE VERDADE: Tabela movimentacoes
+        // Inclui a movimentação de saldo_inicial (categoria='saldo_inicial')
+        // Portanto, não precisa somar saldo_inicial da entidade
         $saldoMovimentacoes = DB::table('movimentacoes')
             ->where('entidade_id', $this->id)
             ->whereNull('deleted_at')
             ->selectRaw("SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE -valor END) as saldo")
             ->value('saldo') ?? 0;
 
-        return $this->saldo_inicial + $saldoMovimentacoes;
+        return $saldoMovimentacoes;
     }
 
     /**

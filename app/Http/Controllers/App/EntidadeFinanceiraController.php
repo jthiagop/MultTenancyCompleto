@@ -118,21 +118,53 @@ class EntidadeFinanceiraController extends Controller
         $validatedData['updated_by_name'] = Auth::user()->name;
 
         try {
+            // Guarda o valor real do saldo para a movimentação
+            $valorSaldoInicial = $validatedData['saldo_inicial'];
+
+            // Opção A: saldo_inicial = 0 na tabela, movimentação é a fonte de verdade
+            $validatedData['saldo_inicial'] = 0;
+            $validatedData['saldo_atual'] = 0;
+
             $entidade = EntidadeFinanceira::create($validatedData);
 
-            // Lógica para criar a primeira movimentação... (seu código aqui está ótimo)
-            Movimentacao::create([
-                'entidade_id'   => $entidade->id,
-                'tipo'          => 'entrada',
-                'valor'         => $validatedData['saldo_inicial'],
-                'descricao'     => 'Saldo inicial da entidade financeira',
-                'company_id'    => $validatedData['company_id'],
-            ]);
+            // Cria a movimentação de saldo inicial (fonte única de verdade)
+            if ($valorSaldoInicial != 0) {
+                Movimentacao::create([
+                    'entidade_id'   => $entidade->id,
+                    'tipo'          => $valorSaldoInicial >= 0 ? 'entrada' : 'saida',
+                    'valor'         => abs($valorSaldoInicial),
+                    'descricao'     => 'Saldo inicial da entidade financeira',
+                    'data'          => now()->toDateString(),
+                    'categoria'     => 'saldo_inicial',
+                    'status'        => 'concluida',
+                    'company_id'    => $validatedData['company_id'],
+                    'created_by'    => Auth::id(),
+                    'created_by_name' => Auth::user()->name,
+                ]);
+            }
+
+            // Resposta AJAX (modal) ou redirect tradicional
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'A entidade financeira foi criada com sucesso!',
+                    'entidade' => $entidade->fresh(),
+                ]);
+            }
 
             flash()->success('A entidade financeira foi criada com sucesso!');
             return redirect()->route('entidades.index');
         } catch (\Exception $e) {
             \Log::error('Erro ao criar entidade: ' . $e->getMessage());
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Ocorreu um erro ao criar a entidade.',
+                    'error'   => $e->getMessage(),
+                ], 500);
+            }
+
             Flasher::addError('Ocorreu um erro ao criar a entidade.');
             return redirect()->back()->withInput();
         }
