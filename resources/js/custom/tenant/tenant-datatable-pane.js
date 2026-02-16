@@ -70,7 +70,8 @@
             dataTable: null,
             currentStart: moment().startOf('month'),
             currentEnd: moment().endOf('month'),
-            currentStatus: new URLSearchParams(window.location.search).get('status') || 'total'
+            currentStatus: new URLSearchParams(window.location.search).get('status') || 'total',
+            saldoAnterior: 0 // Saldo anterior ao período (usado no running balance do extrato)
         };
 
         /**
@@ -163,6 +164,23 @@
                             console.warn(`[Pane ${config.paneId}] Tab element não encontrado para key: ${key}`);
                         }
                     });
+
+                    // Atualizar badge de saldo anterior (apenas extrato)
+                    if (config.key === 'extrato' && data.saldo_anterior !== undefined) {
+                        const badge = paneEl.querySelector(`#saldo-anterior-badge-${config.tableId}`);
+                        const valorEl = paneEl.querySelector(`#saldo-anterior-valor-${config.tableId}`);
+                        if (badge && valorEl) {
+                            valorEl.textContent = 'R$ ' + data.saldo_anterior;
+                            badge.classList.remove('d-none');
+
+                            // Cor do valor: verde se positivo, vermelho se negativo
+                            const raw = data.saldo_anterior_raw || 0;
+                            valorEl.classList.remove('text-success', 'text-danger', 'text-primary');
+                            valorEl.classList.add(raw >= 0 ? 'text-success' : 'text-danger');
+                        }
+                        // Guardar valor raw para running balance
+                        state.saldoAnterior = data.saldo_anterior_raw || 0;
+                    }
                 })
                 .catch(error => {
                     console.error(`[Pane ${config.paneId}] Erro ao atualizar estatísticas:`, error);
@@ -261,10 +279,19 @@
             const useKeyMapping = config.key === 'secretary'; // Módulos que usam keys nomeadas no backend
             
             const dtColumns = config.columns.map((col, index) => {
-                return {
+                const colDef = {
                     data: useKeyMapping ? (col.key || index) : index,
                     orderable: col.orderable !== false
                 };
+                // Aplicar largura definida no Blade (ex: 'w-100px', 'min-w-175px')
+                if (col.width) {
+                    // Extrair valor numérico de classes como 'w-100px' ou 'min-w-100px'
+                    const match = col.width.match(/(?:min-)?w-(\d+px)/);
+                    if (match) {
+                        colDef.width = match[1];
+                    }
+                }
+                return colDef;
             });
 
             // Reset visibility states (show skeleton, hide table)
@@ -284,6 +311,7 @@
                 processing: true,
                 serverSide: true,
                 info: false,
+                autoWidth: false,
                 ajax: {
                     url: config.dataUrl,
                     data: function(d) {
@@ -361,6 +389,11 @@
             state.dataTable.on('draw', function() {
                 // Atualizar visibilidade da coluna Saldo após cada draw
                 toggleSaldoColumn(state.currentStatus);
+
+                // Calcular running balance na coluna Saldo (apenas extrato, tab total)
+                if (config.key === 'extrato' && state.currentStatus === 'total') {
+                    calculateRunningBalance();
+                }
 
                 // Inicializar menus do Metronic (escopo ao pane)
                 if (typeof KTMenu !== 'undefined') {
@@ -485,6 +518,85 @@
                 if (cells[saldoColumnIndex]) {
                     cells[saldoColumnIndex].style.display = shouldShow ? '' : 'none';
                 }
+            });
+        }
+
+        /**
+         * Calcula o saldo acumulado (running balance) na coluna Saldo do Extrato.
+         * Parte do saldo_anterior e acumula entrada (+) e saída (-) linha a linha.
+         */
+        function calculateRunningBalance() {
+            if (config.key !== 'extrato') return;
+
+            const table = paneEl.querySelector(`#${config.tableId}`);
+            if (!table) return;
+
+            // Descobrir índices das colunas Valor e Saldo
+            const headers = table.querySelectorAll('thead th');
+            let valorColumnIndex = -1;
+            let saldoColumnIndex = -1;
+
+            headers.forEach((th, index) => {
+                const text = th.textContent.trim();
+                if (text.includes('Valor')) valorColumnIndex = index;
+                if (text.includes('Saldo')) saldoColumnIndex = index;
+            });
+
+            if (valorColumnIndex === -1 || saldoColumnIndex === -1) return;
+
+            const rows = table.querySelectorAll('tbody tr');
+            if (!rows.length) return;
+
+            let saldoAcumulado = state.saldoAnterior || 0;
+
+            rows.forEach(row => {
+                const cells = row.querySelectorAll('td');
+                if (!cells[valorColumnIndex] || !cells[saldoColumnIndex]) return;
+
+                // Extrair valor numérico da célula (formato: "R$ 1.234,56" ou "-R$ 500,00")
+                const valorText = cells[valorColumnIndex].textContent.trim();
+                const valorNumerico = parseValorBR(valorText);
+
+                // Verificar se é entrada ou saída pela cor/classe ou pelo sinal
+                // Se o texto tem classe text-danger ou começa com "-", é saída
+                const isNegativo = valorText.startsWith('-') || 
+                                   cells[valorColumnIndex].querySelector('.text-danger') !== null;
+                
+                if (isNegativo) {
+                    saldoAcumulado -= Math.abs(valorNumerico);
+                } else {
+                    saldoAcumulado += Math.abs(valorNumerico);
+                }
+
+                // Atualizar a célula de saldo
+                const saldoFormatado = formatarMoedaBR(saldoAcumulado);
+                cells[saldoColumnIndex].textContent = saldoFormatado;
+
+                // Cor: verde se positivo, vermelho se negativo
+                cells[saldoColumnIndex].classList.remove('text-success', 'text-danger');
+                cells[saldoColumnIndex].classList.add(saldoAcumulado >= 0 ? 'text-success' : 'text-danger');
+                cells[saldoColumnIndex].classList.add('fw-bold');
+            });
+        }
+
+        /**
+         * Converte valor no formato brasileiro (R$ 1.234,56) para número
+         */
+        function parseValorBR(texto) {
+            if (!texto) return 0;
+            // Remove "R$", espaços, e pontos de milhar, troca vírgula por ponto
+            const limpo = texto.replace(/R\$\s?/g, '').replace(/\./g, '').replace(',', '.').trim();
+            const valor = parseFloat(limpo);
+            return isNaN(valor) ? 0 : valor;
+        }
+
+        /**
+         * Formata número para moeda brasileira (R$ 1.234,56)
+         */
+        function formatarMoedaBR(valor) {
+            return 'R$ ' + valor.toLocaleString('pt-BR', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
             });
         }
 

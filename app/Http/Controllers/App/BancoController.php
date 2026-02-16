@@ -802,11 +802,13 @@ class BancoController extends Controller
             }
 
             $response = [
-                'receitas_aberto' => number_format((float) $stats['receitas_aberto'], 2, ',', '.'), // Valores já estão em DECIMAL
+                'receitas_aberto' => number_format((float) $stats['receitas_aberto'], 2, ',', '.'),
                 'receitas_realizadas' => number_format((float) $stats['receitas_realizadas'], 2, ',', '.'),
                 'despesas_aberto' => number_format((float) $stats['despesas_aberto'], 2, ',', '.'),
                 'despesas_realizadas' => number_format((float) $stats['despesas_realizadas'], 2, ',', '.'),
-                'total' => number_format((float) $stats['total'], 2, ',', '.')
+                'total' => number_format((float) $stats['total'], 2, ',', '.'),
+                'saldo_anterior' => number_format((float) ($stats['saldo_anterior'] ?? 0), 2, ',', '.'),
+                'saldo_anterior_raw' => (float) ($stats['saldo_anterior'] ?? 0),
             ];
         } else {
             // Total do período: todas as transações com data_vencimento OU data_competencia dentro do período
@@ -3677,6 +3679,28 @@ class BancoController extends Controller
             ->sum('valor');
         
         $total = $totalReceitas - $totalDespesas;
+
+        // Saldo anterior ao período:
+        // Soma de todas as transações efetivadas (pago/recebido) ANTES do início do período
+        $queryAnterior = TransacaoFinanceira::whereHas('entidadeFinanceira', function ($q) {
+                $q->whereIn('tipo', ['banco', 'caixa']);
+            })
+            ->where('company_id', $companyId)
+            ->where('data_competencia', '<', $start)
+            ->whereNotIn('situacao', [\App\Enums\SituacaoTransacao::DESCONSIDERADO, \App\Enums\SituacaoTransacao::PARCELADO])
+            ->where('agendado', false);
+
+        if ($entidadeId) {
+            if (is_array($entidadeId)) {
+                $queryAnterior->whereIn('entidade_id', $entidadeId);
+            } else {
+                $queryAnterior->where('entidade_id', $entidadeId);
+            }
+        }
+
+        $entradasAntes = (clone $queryAnterior)->where('tipo', 'entrada')->sum('valor');
+        $saidasAntes = (clone $queryAnterior)->where('tipo', 'saida')->sum('valor');
+        $saldoAnterior = $entradasAntes - $saidasAntes;
         
         return [
             'receitas_aberto' => $receitasAberto,
@@ -3684,6 +3708,7 @@ class BancoController extends Controller
             'despesas_aberto' => $despesasAberto,
             'despesas_realizadas' => $despesasRealizadas,
             'total' => $total,
+            'saldo_anterior' => $saldoAnterior,
         ];
     }
 
