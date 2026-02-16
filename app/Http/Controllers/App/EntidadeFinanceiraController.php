@@ -343,8 +343,9 @@ class EntidadeFinanceiraController extends Controller
         // Recebe: ?tab=all (padrão), ?tab=received (amount_cents > 0), ?tab=paid (amount_cents < 0)
         $tab = $request->input('tab', 'all');
 
-        // Base query para conciliações pendentes
-        $query = BankStatement::where('entidade_financeira_id', $id)
+        // Base query para conciliações pendentes (com filtro de company_id para segurança multi-tenant)
+        $query = BankStatement::where('company_id', $activeCompanyId)
+            ->where('entidade_financeira_id', $id)
             ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
             ->whereDoesntHave('transacoes')
             ->where(function ($q) {
@@ -362,60 +363,31 @@ class EntidadeFinanceiraController extends Controller
         }
         // Se $tab === 'all', não aplica filtro (retorna todas)
 
-        // Calcula contadores ANTES de paginar
+        // Calcula contadores ANTES de paginar (reutiliza base query com company_id)
+        $countsBaseQuery = BankStatement::where('company_id', $activeCompanyId)
+            ->where('entidade_financeira_id', $id)
+            ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+            ->whereDoesntHave('transacoes')
+            ->where(function ($q) {
+                $q->where('conciliado_com_missa', false)
+                  ->orWhereNull('conciliado_com_missa');
+            });
+
         $counts = [
-            'all'      => BankStatement::where('entidade_financeira_id', $id)
-                ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
-                ->whereDoesntHave('transacoes')
-                ->where(function ($q) {
-                    $q->where('conciliado_com_missa', false)
-                      ->orWhereNull('conciliado_com_missa');
-                })
-                ->count(),
-            'received' => BankStatement::where('entidade_financeira_id', $id)
-                ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
-                ->whereDoesntHave('transacoes')
-                ->where(function ($q) {
-                    $q->where('conciliado_com_missa', false)
-                      ->orWhereNull('conciliado_com_missa');
-                })
-                ->where('amount_cents', '>', 0)
-                ->count(),
-            'paid'     => BankStatement::where('entidade_financeira_id', $id)
-                ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
-                ->whereDoesntHave('transacoes')
-                ->where(function ($q) {
-                    $q->where('conciliado_com_missa', false)
-                      ->orWhereNull('conciliado_com_missa');
-                })
-                ->where('amount_cents', '<', 0)
-                ->count(),
+            'all'      => (clone $countsBaseQuery)->count(),
+            'received' => (clone $countsBaseQuery)->where('amount_cents', '>', 0)->count(),
+            'paid'     => (clone $countsBaseQuery)->where('amount_cents', '<', 0)->count(),
         ];
 
         // 3. Busca os lançamentos DO EXTRATO pendentes para esta entidade, FILTRADOS POR TAB
         //    + mantém query string para paginação
         $bankStatements = $query->orderBy('dtposted', 'desc')->paginate(20)->withQueryString();
 
-        // 4. Para cada lançamento do extrato, busca possíveis correspondências.
+        // 4. Para cada lançamento do extrato, busca possíveis correspondências com score inteligente.
+        //    Usa o ConciliacaoMatchingService para consistência com conciliacoesTab()
+        $matchingService = new \App\Services\ConciliacaoMatchingService();
         foreach ($bankStatements as $lancamento) {
-            $valorAbs = abs($lancamento->amount);
-            $tipo = $lancamento->amount < 0 ? 'saida' : 'entrada';
-            $dataInicio = Carbon::parse($lancamento->dtposted)->startOfDay()->subMonths(2);
-            $dataFim = Carbon::parse($lancamento->dtposted)->endOfDay()->addMonths(2);
-            $numeroDocumento = $lancamento->checknum;
-
-            // CORREÇÃO: A busca por transações agora também usa o scope.
-            $possiveis = TransacaoFinanceira::forActiveCompany()
-                ->where('entidade_id', $id)
-                ->where('tipo', $tipo)
-                ->where('valor', $valorAbs)
-                ->whereBetween('data_competencia', [$dataInicio, $dataFim])
-                ->when($numeroDocumento, function ($query) use ($numeroDocumento) {
-                    $query->where('numero_documento', $numeroDocumento);
-                })
-                ->get();
-
-            $lancamento->possiveisTransacoes = $possiveis;
+            $lancamento->possiveisTransacoes = $matchingService->buscarPossiveisTransacoes($lancamento, $id, 5);
         }
 
         // 5. CORREÇÃO: Carrega dados auxiliares usando os scopes.
@@ -502,10 +474,15 @@ class EntidadeFinanceiraController extends Controller
             ->findOrFail($id);
 
         // 3. Busca os lançamentos do extrato pendentes para esta entidade.
-        //    Esta consulta já está correta, pois filtra pelo 'entidade_financeira_id'.
-        $bankStatements = BankStatement::where('entidade_financeira_id', $id)
+        //    Filtro de company_id para segurança multi-tenant.
+        $bankStatements = BankStatement::where('company_id', $activeCompanyId)
+            ->where('entidade_financeira_id', $id)
             ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
             ->whereDoesntHave('transacoes')
+            ->where(function ($q) {
+                $q->where('conciliado_com_missa', false)
+                  ->orWhereNull('conciliado_com_missa');
+            })
             ->when($dataInicio, function ($query) use ($dataInicio) {
                 $query->whereDate('dtposted', '>=', Carbon::parse($dataInicio)->startOfDay());
             })
@@ -537,13 +514,15 @@ class EntidadeFinanceiraController extends Controller
         $dataUltimaAtualizacao = $entidade->updated_at;
 
         // Data do último lançamento importado (dtposted mais recente ou imported_at mais recente)
-        $ultimoLancamentoImportado = BankStatement::where('entidade_financeira_id', $id)
+        $ultimoLancamentoImportado = BankStatement::where('company_id', $activeCompanyId)
+            ->where('entidade_financeira_id', $id)
             ->orderBy('dtposted', 'desc')
             ->first();
         $dataUltimoLancamento = $ultimoLancamentoImportado ? $ultimoLancamentoImportado->dtposted : null;
 
         // Valor pendente de conciliação (soma dos amounts dos bank statements pendentes)
-        $valorPendenteConciliacao = BankStatement::where('entidade_financeira_id', $id)
+        $valorPendenteConciliacao = BankStatement::where('company_id', $activeCompanyId)
+            ->where('entidade_financeira_id', $id)
             ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
             ->whereDoesntHave('transacoes')
             ->sum('amount');
@@ -657,6 +636,7 @@ class EntidadeFinanceiraController extends Controller
             $baseQuery = BankStatement::where('company_id', $activeCompanyId)
                 ->where('entidade_financeira_id', $id)
                 ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
+                ->whereDoesntHave('transacoes') // ✅ Consistente com a query de dados
                 ->where(function ($q) {
                     $q->where('conciliado_com_missa', false)
                       ->orWhereNull('conciliado_com_missa');
@@ -943,7 +923,11 @@ class EntidadeFinanceiraController extends Controller
         $query = BankStatement::where('company_id', $activeCompanyId)
             ->where('entidade_financeira_id', $id)
             ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
-            ->whereDoesntHave('transacoes');
+            ->whereDoesntHave('transacoes')
+            ->where(function ($q) {
+                $q->where('conciliado_com_missa', false)
+                  ->orWhereNull('conciliado_com_missa');
+            });
 
         // Aplicar filtro de amount_cents baseado na tab
         $tab = request()->query('tab', 'all');
