@@ -107,8 +107,9 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
                 throw new \Exception("Company não encontrada com ID: {$this->companyId}");
             }
 
-            $dataInicio = Carbon::createFromFormat('d/m/Y', $this->dataInicial)->startOfDay();
-            $dataFim = Carbon::createFromFormat('d/m/Y', $this->dataFinal)->endOfDay();
+            // Parse das datas — aceita tanto d/m/Y quanto Y-m-d
+            $dataInicio = $this->parseFlexibleDate($this->dataInicial)->startOfDay();
+            $dataFim = $this->parseFlexibleDate($this->dataFinal)->endOfDay();
 
             // Coluna de data a filtrar
             $colunaData = $this->tipoData === 'pagamento' ? 'data_pagamento' : 'data_competencia';
@@ -275,5 +276,24 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
 
             throw $e; // Re-throw para retry
         }
+    }
+
+    /**
+     * Parse data flexível — aceita d/m/Y ou Y-m-d
+     */
+    protected function parseFlexibleDate(string $dateStr): Carbon
+    {
+        // Tenta d/m/Y primeiro (formato do Flatpickr)
+        if (preg_match('#^\d{2}/\d{2}/\d{4}$#', $dateStr)) {
+            return Carbon::createFromFormat('d/m/Y', $dateStr);
+        }
+
+        // Tenta Y-m-d (formato ISO)
+        if (preg_match('#^\d{4}-\d{2}-\d{2}$#', $dateStr)) {
+            return Carbon::createFromFormat('Y-m-d', $dateStr);
+        }
+
+        // Fallback — Carbon::parse genérico
+        return Carbon::parse($dateStr);
     }
 }

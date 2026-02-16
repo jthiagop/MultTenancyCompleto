@@ -223,6 +223,7 @@ Route::middleware([
         // Módulo Financeiro
         Route::prefix('financeiro')->name('financeiro.')->group(function () {
             Route::get('/', [FinanceiroController::class, 'index'])->name('index');
+            Route::get('/agendar-relatorio', fn () => view('app.financeiro.agendar.index'))->name('agendar-relatorio');
         });
         // ====================================================================
 

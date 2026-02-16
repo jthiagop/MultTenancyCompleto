@@ -73,7 +73,10 @@
         <!--begin::Menu item - Agendar-->
         <div class="menu-item px-3">
             <div class="menu-content px-3 py-3">
-                <a class="btn btn-light-primary btn-sm px-4" href="#">
+                <a class="btn btn-light-primary btn-sm px-4" href="{{ route('financeiro.agendar-relatorio') }}">
+                    <span class="svg-icon fs-3 rotate-180 ms-3 me-0">
+                        <i class="fa-regular fa-clock fs-"></i>
+                    </span>
                     Agendar Relatórios
                 </a>
             </div>
