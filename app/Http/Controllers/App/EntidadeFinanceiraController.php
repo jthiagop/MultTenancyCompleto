@@ -1068,15 +1068,19 @@ class EntidadeFinanceiraController extends Controller
                 $entidade = EntidadeFinanceira::findOrFail($entidadeId);
                 $saldoAnterior = $entidade->saldo_atual;
 
-                // 1. REVERTER O CACHE (saldo_atual) - ATOMICAMENTE
-                if ($tipo === 'entrada') {
-                    $entidade->saldo_atual -= $valor;
-                } else {
-                    $entidade->saldo_atual += $valor;
+                // 1. Deletar a movimentação relacionada (via instância Eloquent)
+                // O MovimentacaoObserver::deleted() reverte o saldo_atual automaticamente
+                if ($movimentacaoId) {
+                    $movimentacao = Movimentacao::find($movimentacaoId);
+                    if ($movimentacao) {
+                        $movimentacao->delete(); // Dispara MovimentacaoObserver::deleted() → reverte saldo
+                    }
                 }
-                $entidade->save();
 
-                \Log::info('Saldo revertido', [
+                // Recarrega a entidade para obter saldo atualizado pelo Observer
+                $entidade->refresh();
+
+                \Log::info('Saldo revertido via Observer', [
                     'entidade_id' => $entidadeId,
                     'tipo' => $tipo,
                     'valor' => $valor,
@@ -1084,18 +1088,13 @@ class EntidadeFinanceiraController extends Controller
                     'saldo_novo' => $entidade->saldo_atual
                 ]);
 
-                // 2. Deletar a movimentação relacionada
-                if ($movimentacaoId) {
-                    Movimentacao::where('id', $movimentacaoId)->delete();
-                }
-
-                // 3. Remover o vínculo na tabela pivot
+                // 2. Remover o vínculo na tabela pivot
                 $bankStatement->transacoes()->detach($transacao->id);
 
-                // 4. Deletar a transação financeira
+                // 3. Deletar a transação financeira
                 $transacao->delete();
 
-                // 5. Atualizar o status do bank statement
+                // 4. Atualizar o status do bank statement
                 $bankStatement->update([
                     'reconciled' => false,
                     'status_conciliacao' => 'pendente'
