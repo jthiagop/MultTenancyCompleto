@@ -51,7 +51,6 @@
         const hasDataUrl = paneEl.dataset.dataUrl;
         
         if (!hasTableId || !hasStatsUrl || !hasDataUrl) {
-            console.warn('[DataTable Pane] Elemento não tem atributos necessários:', paneEl);
             return;
         }
         
@@ -70,20 +69,8 @@
             csrfToken: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content')
         };
         
-        console.log(`[DataTable Pane] Inicializando pane:`, {
-            paneId: config.paneId,
-            tableId: config.tableId,
-            filterId: config.filterId,
-            key: config.key,
-            tipo: config.tipo,
-            statsUrl: config.statsUrl,
-            dataUrl: config.dataUrl,
-            element: paneEl
-        });
-        
         // Se não tiver tableId/filterId, não pode continuar
         if (!config.tableId && !config.filterId) {
-            console.warn('[DataTable Pane] tableId ou filterId não encontrado:', paneEl);
             return;
         }
         
@@ -104,11 +91,8 @@
          */
         function updateStats() {
             if (!config.statsUrl) {
-                console.warn(`[Pane ${config.paneId}] statsUrl não configurado, pulando updateStats`);
                 return;
             }
-            
-            console.log(`[Pane ${config.paneId}] Atualizando estatísticas...`);
 
             const params = new URLSearchParams({
                 tipo: config.tipo,
@@ -140,7 +124,6 @@
             }
 
             const statsUrlFull = config.statsUrl + '?' + params;
-            console.log(`[Pane ${config.paneId}] Fazendo requisição para: ${statsUrlFull}`);
             
             fetch(statsUrlFull)
                 .then(response => {
@@ -150,8 +133,6 @@
                     return response.json();
                 })
                 .then(data => {
-                    console.log(`[Pane ${config.paneId}] Dados recebidos das stats:`, data);
-                    
                     // Determinar chaves de tabs baseado no tipo de pane
                     let tabKeys;
                     
@@ -180,7 +161,6 @@
                             if (valueElement) {
                                 const value = data[key] || '0,00';
                                 valueElement.textContent = value;
-                                console.log(`[Pane ${config.paneId}] Atualizado tab ${key}: ${value}`);
                                 
                                 // Se o valor for negativo, aplicar classe text-danger (vermelho)
                                 if (value.startsWith('-')) {
@@ -191,16 +171,11 @@
                                     // Para valores positivos, restaurar a classe original se necessário
                                     // (A classe original já está aplicada pelo Blade, então não precisamos fazer nada)
                                 }
-                            } else {
-                                console.warn(`[Pane ${config.paneId}] Elemento de valor não encontrado para tab ${key}`);
                             }
-                        } else {
-                            console.warn(`[Pane ${config.paneId}] Tab element não encontrado para key: ${key}`);
                         }
                     });
                 })
                 .catch(error => {
-                    console.error(`[Pane ${config.paneId}] Erro ao atualizar estatísticas:`, error);
                 });
         }
 
@@ -266,7 +241,6 @@
             } else if (typeof flasher !== 'undefined' && typeof flasher[type] === 'function') {
                 flasher[type](message);
             } else {
-                console.warn(`[Pane ${config.paneId}] Flasher não disponível. Mensagem:`, type + ':', message);
                 alert(message);
             }
         }
@@ -306,12 +280,9 @@
 
             // Verificar se jQuery está disponível
             if (typeof $ === 'undefined' || typeof jQuery === 'undefined') {
-                console.error(`[Pane ${config.paneId}] jQuery não está disponível! Aguardando...`);
                 setTimeout(function() {
                     if (typeof $ !== 'undefined') {
                         initDataTable(status);
-                    } else {
-                        console.error(`[Pane ${config.paneId}] jQuery ainda não está disponível após timeout`);
                     }
                 }, 500);
                 return;
@@ -319,15 +290,11 @@
 
             // Verificar se DataTable está disponível
             if (!$.fn.DataTable) {
-                console.error(`[Pane ${config.paneId}] jQuery DataTables não está carregado!`);
                 return;
             }
 
-            console.log(`[Pane ${config.paneId}] Inicializando DataTable para tabela: #${config.tableId}`);
-            
             const tableElement = document.getElementById(config.tableId);
             if (!tableElement) {
-                console.error(`[Pane ${config.paneId}] Tabela #${config.tableId} não encontrada no DOM!`);
                 return;
             }
 
@@ -343,14 +310,6 @@
                         d.start_date = state.currentStart.format('YYYY-MM-DD');
                         d.end_date = state.currentEnd.format('YYYY-MM-DD');
                         
-                        // Debug: log do status sendo enviado
-                        console.log('[DataTable AJAX] Enviando dados:', {
-                            tipo: d.tipo,
-                            status: d.status,
-                            start_date: d.start_date,
-                            end_date: d.end_date
-                        });
-
                         // Detectar se é extrato
                         if (config.key === 'extrato') {
                             d.is_extrato = 'true';
@@ -408,7 +367,6 @@
                         try {
                             KTMenu.createInstances();
                         } catch (e) {
-                            console.warn(`[Pane ${config.paneId}] Erro ao inicializar menu:`, e);
                         }
                     });
                 }
@@ -424,7 +382,6 @@
                         try {
                             new bootstrap.Tooltip(el);
                         } catch (e) {
-                            console.warn(`[Pane ${config.paneId}] Erro ao inicializar tooltip:`, e);
                         }
                     });
                 }
@@ -536,21 +493,11 @@
                           config.filterId === eventTableId ||
                           config.tableId === eventTableId;
             
-            console.log(`[Pane ${config.paneId}] Evento periodChanged recebido:`, {
-                eventTableId: eventTableId,
-                configFilterId: config.filterId,
-                configTableId: config.tableId,
-                matches: matches
-            });
-            
             if (matches) {
-                console.log(`[Pane ${config.paneId}] Período alterado:`, event.detail);
                 state.currentStart = event.detail.start;
                 state.currentEnd = event.detail.end;
                 updateStats();
                 reloadTable();
-            } else {
-                console.log(`[Pane ${config.paneId}] Evento periodChanged ignorado (tableId não corresponde)`);
             }
         });
 
@@ -564,7 +511,6 @@
                           config.tableId === eventTableId;
             
             if (matches) {
-                console.log(`[Pane ${config.paneId}] Busca acionada:`, event.detail);
                 reloadTable();
             }
         });
@@ -667,7 +613,6 @@
                     break;
 
                 default:
-                    console.warn(`[Pane ${config.paneId}] Ação desconhecida:`, action);
                     return;
             }
 
@@ -690,7 +635,6 @@
                 }
             })
             .catch(error => {
-                console.error(`[Pane ${config.paneId}] Erro:`, error);
                 showFlasherMessage('error', 'Erro ao processar a solicitação.');
             });
         });
@@ -729,7 +673,6 @@
                 }
             })
             .catch(error => {
-                console.error(`[Pane ${config.paneId}] Erro:`, error);
                 showFlasherMessage('error', 'Erro ao processar a solicitação.');
             });
         });
@@ -739,7 +682,6 @@
             mutations.forEach(function(mutation) {
                 if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
                     if (paneEl.classList.contains('show') || paneEl.classList.contains('active')) {
-                        console.log(`[Pane ${config.paneId}] Pane ficou visível, inicializando...`);
                         updateStats();
                         if (!state.dataTable) {
                             initDataTable();
@@ -753,7 +695,6 @@
 
         // Inicializar imediatamente se já estiver ativo
         if (paneEl.classList.contains('show') || paneEl.classList.contains('active')) {
-            console.log(`[Pane ${config.paneId}] Pane já está ativo, inicializando imediatamente...`);
             // Aguardar um pouco para garantir que jQuery está disponível
             setTimeout(function() {
                 updateStats();
@@ -762,7 +703,6 @@
                 toggleSaldoColumn(state.currentStatus);
             }, 100);
         } else {
-            console.log(`[Pane ${config.paneId}] Pane não está ativo ainda (classes: ${paneEl.className})`);
         }
         
         // Também observar mudanças nas tabs internas (segmented-tabs-toolbar)
@@ -793,8 +733,6 @@
         // Isso garante que STATS e TABELA atualizem juntas
         if (window.DominusEvents) {
             DominusEvents.on('transaction.created', function(data) {
-                console.log(`[Pane ${config.paneId}] Transação criada/atualizada, recarregando stats e tabela...`, data);
-                
                 // 1. Atualizar estatísticas das tabs
                 updateStats();
                 
@@ -803,26 +741,18 @@
                     state.dataTable.ajax.reload(null, false); // false = manter na página atual
                 }
             });
-            
-            console.log(`[Pane ${config.paneId}] Event listener 'transaction.created' registrado com sucesso.`);
         } else {
-            console.warn(`[Pane ${config.paneId}] DominusEvents não disponível, auto-update desabilitado.`);
         }
     }
 
     // Inicializar todos os panes quando o DOM estiver pronto
     function initAllPanes() {
-        console.log('[TenantDataTablePane] Buscando panes para inicializar...');
-        
         // Suportar tanto tenant-datatable-pane quanto elementos com data-table-id/data-filter-id
         const oldPanes = document.querySelectorAll('.tenant-datatable-pane');
-        console.log(`[TenantDataTablePane] Encontrados ${oldPanes.length} elementos com classe .tenant-datatable-pane`);
         
         // Buscar elementos com data-table-id ou data-filter-id (pode estar no div pai ou no segmented-shell)
         const elementsWithTableId = document.querySelectorAll('[data-table-id]');
         const elementsWithFilterId = document.querySelectorAll('[data-filter-id]');
-        console.log(`[TenantDataTablePane] Encontrados ${elementsWithTableId.length} elementos com data-table-id`);
-        console.log(`[TenantDataTablePane] Encontrados ${elementsWithFilterId.length} elementos com data-filter-id`);
         
         // Combinar todos os seletores
         const allElements = [...oldPanes, ...elementsWithTableId, ...elementsWithFilterId];
@@ -834,26 +764,13 @@
                                      el.dataset.statsUrl && 
                                      el.dataset.dataUrl;
             
-            if (!hasRequiredAttrs) {
-                console.warn('[TenantDataTablePane] Elemento sem atributos necessários:', el, {
-                    tableId: el.dataset.tableId,
-                    filterId: el.dataset.filterId,
-                    statsUrl: el.dataset.statsUrl,
-                    dataUrl: el.dataset.dataUrl
-                });
-            }
-            
             return hasRequiredAttrs;
         });
         
-        console.log(`[TenantDataTablePane] Total de ${uniquePanes.length} panes válidos para inicializar`);
-        
         uniquePanes.forEach(function(paneEl, index) {
             try {
-                console.log(`[TenantDataTablePane] Inicializando pane ${index + 1}/${uniquePanes.length}...`);
                 initPane(paneEl);
             } catch (error) {
-                console.error(`[TenantDataTablePane] Erro ao inicializar pane ${index + 1}:`, paneEl, error);
             }
         });
     }
@@ -870,19 +787,11 @@
             const hasMoment = typeof moment !== 'undefined';
             const hasDataTables = hasJQuery && (typeof $.fn !== 'undefined' && typeof $.fn.DataTable !== 'undefined');
             
-            console.log(`[TenantDataTablePane] Tentativa ${attempts}/${maxAttempts} - jQuery: ${hasJQuery}, Moment: ${hasMoment}, DataTables: ${hasDataTables}`);
-            
             if (hasJQuery && hasMoment && hasDataTables) {
-                console.log('[TenantDataTablePane] Todas as dependências carregadas. Inicializando panes...');
                 initAllPanes();
             } else if (attempts < maxAttempts) {
                 setTimeout(checkAndInit, 100);
             } else {
-                console.error('[TenantDataTablePane] Timeout aguardando dependências!', {
-                    jQuery: hasJQuery,
-                    moment: hasMoment,
-                    dataTables: hasDataTables
-                });
                 // Tentar inicializar mesmo assim (pode funcionar se as dependências carregarem depois)
                 initAllPanes();
             }
@@ -894,12 +803,10 @@
     // Aguardar DOM e dependências
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('[TenantDataTablePane] DOM carregado, aguardando dependências...');
             waitForDependenciesAndInit();
         });
     } else {
         // DOM já está pronto
-        console.log('[TenantDataTablePane] DOM já pronto, aguardando dependências...');
         waitForDependenciesAndInit();
     }
 

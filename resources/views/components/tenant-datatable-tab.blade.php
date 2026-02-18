@@ -63,8 +63,6 @@
 
 <!--begin::Card Filters-->
 <div class="card mb-3">
-    {{-- Filtros acima das tabs --}}
-    @if($showAccountFilter || $showMoreFilters)
     <div class="card-body">
         <x-tenant-datatable-filters
             :tableId="$tableId"
@@ -75,7 +73,6 @@
             :moreFilters="$moreFilters"
         />
     </div>
-    @endif
 </div>
 <!--end::Card Filters-->
 <div class="card mb-5 mb-xl-10">

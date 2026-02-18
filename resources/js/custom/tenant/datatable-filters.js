@@ -9,19 +9,16 @@ window.TenantFiltersRegistry = {};
  */
 window.initTenantFilters = function(tableId) {
     if (window.TenantFiltersRegistry[tableId]) {
-        console.log('[TenantFilters] Já inicializado para:', tableId);
         return; // Evita re-inicializar
     }
 
     const wrapper = document.getElementById(`filters-wrapper-${tableId}`);
     if (!wrapper) {
-        console.warn('[TenantFilters] Wrapper não encontrado:', `filters-wrapper-${tableId}`);
         return;
     }
 
     // Verifica se moment está disponível
     if (typeof moment === 'undefined') {
-        console.error('[TenantFilters] Moment.js não está disponível');
         return;
     }
 
@@ -36,13 +33,6 @@ window.initTenantFilters = function(tableId) {
     const prevBtn = document.getElementById(`prev-period-btn-${tableId}`);
     const nextBtn = document.getElementById(`next-period-btn-${tableId}`);
     const periodSelector = document.getElementById(`period-selector-${tableId}`);
-    
-    console.log('[TenantFilters] Inicializando para:', tableId, {
-        prevBtn: !!prevBtn,
-        nextBtn: !!nextBtn,
-        periodSelector: !!periodSelector,
-        labelDisplay: !!labelDisplay
-    });
     
     // --- Lógica de Período ---
     const updateDisplay = () => {
@@ -68,7 +58,6 @@ window.initTenantFilters = function(tableId) {
         prevBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('[TenantFilters] Botão anterior clicado', tableId);
             
             // Calcula a duração do período atual para manter
             const duracao = currentEnd.diff(currentStart, 'days');
@@ -86,15 +75,12 @@ window.initTenantFilters = function(tableId) {
             triggerChange();
             if(pickerInitialized) updatePickerDates();
         });
-    } else {
-        console.warn('[TenantFilters] Botão anterior não encontrado:', `prev-period-btn-${tableId}`);
     }
 
     if (nextBtn) {
         nextBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            console.log('[TenantFilters] Botão próximo clicado', tableId);
             
             // Calcula a duração do período atual para manter
             const duracao = currentEnd.diff(currentStart, 'days');
@@ -112,15 +98,12 @@ window.initTenantFilters = function(tableId) {
             triggerChange();
             if(pickerInitialized) updatePickerDates();
         });
-    } else {
-        console.warn('[TenantFilters] Botão próximo não encontrado:', `next-period-btn-${tableId}`);
     }
 
     // --- Lazy Loading do Daterangepicker ---
     const initPicker = () => {
         if (pickerInitialized) return;
         if (typeof $ === 'undefined' || !$.fn.daterangepicker) {
-            console.warn('[TenantFilters] Daterangepicker não disponível');
             return;
         }
         
@@ -204,9 +187,11 @@ window.initTenantFilters = function(tableId) {
         searchButton.style.cursor = 'pointer';
     }
 
-    // Listener para filtros Select2 e Custom
-    $(wrapper).on('change', 'select', function() {
-        triggerSearch();
+    // Listener delegado para filtros (Vanilla JS, sem jQuery)
+    wrapper.addEventListener('change', (e) => {
+        if (e.target && e.target.matches('select')) {
+            triggerSearch();
+        }
     });
 
     // --- Limpar Filtros ---
@@ -225,11 +210,17 @@ window.initTenantFilters = function(tableId) {
 
             // Reseta selects (incluindo Select2)
             wrapper.querySelectorAll('select').forEach(sel => {
-                sel.value = "";
-                if ($(sel).hasClass('select2-hidden-accessible')) {
-                    $(sel).trigger('change.select2');
+                // Multi-select: desmarcar todas as opções
+                if (sel.multiple) {
+                    Array.from(sel.options).forEach(opt => opt.selected = false);
                 } else {
-                    sel.dispatchEvent(new Event('change'));
+                    sel.value = "";
+                }
+                // Atualizar Select2 se inicializado, senão evento nativo
+                if (sel.classList.contains('select2-hidden-accessible') && typeof $ !== 'undefined') {
+                    $(sel).val(null).trigger('change.select2');
+                } else {
+                    sel.dispatchEvent(new Event('change', { bubbles: true }));
                 }
             });
 

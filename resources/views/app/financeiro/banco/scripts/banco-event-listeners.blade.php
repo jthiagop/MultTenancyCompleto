@@ -23,8 +23,6 @@ document.addEventListener('DOMContentLoaded', function() {
      * Atualiza todos os componentes quando uma transação é criada
      */
     DominusEvents.on('transaction.created', async (data) => {
-        console.log('[BancoListeners] Transação criada, atualizando componentes...', data);
-
         // 1. Atualiza DataTable
         reloadAllDataTables();
 
@@ -74,7 +72,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Verificar se jQuery e DataTables estão disponíveis
         if (typeof $ === 'undefined' || typeof jQuery === 'undefined') {
-            console.warn('[BancoListeners] jQuery não está disponível, pulando reload de tabelas');
             return;
         }
 
@@ -85,9 +82,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (tableEl && $.fn.DataTable.isDataTable('#' + tableId)) {
                     try {
                         $('#' + tableId).DataTable().ajax.reload(null, false);
-                        console.log('[BancoListeners] Tabela ' + tableId + ' recarregada');
                     } catch (e) {
-                        console.warn('[BancoListeners] Erro ao recarregar ' + tableId + ':', e);
+                        // erro silencioso
                     }
                 }
             });
@@ -97,13 +93,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 const visibleTables = $.fn.DataTable.tables({ visible: true, api: true });
                 if (visibleTables.length > 0) {
                     visibleTables.ajax.reload(null, false);
-                    console.log('[BancoListeners] Todas as tabelas visíveis recarregadas');
                 }
             } catch (e) {
-                console.warn('[BancoListeners] Fallback de reload falhou:', e);
+                // erro silencioso
             }
-        } else {
-            console.warn('[BancoListeners] DataTables não está disponível');
         }
     }
 
@@ -112,8 +105,6 @@ document.addEventListener('DOMContentLoaded', function() {
      */
     async function refreshSummaryTabs() {
         try {
-            console.log('[BancoListeners] Buscando dados de summary...');
-
             // Detecta qual tab está ativa
             const activeTab = getActiveTab();
 
@@ -126,12 +117,10 @@ document.addEventListener('DOMContentLoaded', function() {
             }));
 
             if (!response.ok) {
-                console.warn('[BancoListeners] Erro ao buscar summary:', response.status);
                 return;
             }
 
             const data = await response.json();
-            console.log('[BancoListeners] Dados recebidos:', data);
 
             // Atualiza valores nas tabs
             if (data.tabs && Array.isArray(data.tabs)) {
@@ -159,9 +148,6 @@ document.addEventListener('DOMContentLoaded', function() {
                             tabEl.textContent = tab.value;
                             tabEl.style.opacity = 1;
                         }, 150);
-                        console.log('[BancoListeners] Tab ' + tab.key + ' atualizada para: ' + tab.value);
-                    } else {
-                        console.warn('[BancoListeners] Elemento não encontrado para tab:', tab.key);
                     }
                 });
             }
@@ -171,10 +157,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 updateSideCard(data.sideCard);
             }
 
-            console.log('[BancoListeners] Summary tabs atualizadas com sucesso');
-
         } catch (error) {
-            console.error('[BancoListeners] Erro ao atualizar summary:', error);
+            // erro silencioso
         }
     }
 
@@ -211,7 +195,6 @@ document.addEventListener('DOMContentLoaded', function() {
         // Se tiver função global de refresh
         if (typeof window.refreshFluxoBancoChart === 'function') {
             window.refreshFluxoBancoChart();
-            console.log('[BancoListeners] Gráfico de fluxo atualizado');
         }
     }
 
@@ -275,7 +258,6 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 
-    console.log('[BancoListeners] Listeners registrados com sucesso');
     }
 
     // Inicia a função

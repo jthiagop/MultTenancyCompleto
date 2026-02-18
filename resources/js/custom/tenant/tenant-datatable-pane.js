@@ -117,8 +117,6 @@
             fetch(config.statsUrl + '?' + params)
                 .then(response => response.json())
                 .then(data => {
-                    console.log(`[Pane ${config.paneId}] Stats recebidas:`, data);
-                    
                     // Determinar chaves de tabs baseado no tipo de pane
                     let tabKeys;
                     
@@ -148,7 +146,6 @@
                             if (valueElement) {
                                 const value = data[key] || '0';
                                 valueElement.textContent = value;
-                                console.log(`[Pane ${config.paneId}] Tab ${key} atualizada: ${value}`);
                                 
                                 // Se o valor for negativo, aplicar classe text-danger (vermelho)
                                 const valueStr = String(value);
@@ -157,11 +154,7 @@
                                     valueElement.classList.remove('text-primary', 'text-success', 'text-warning', 'text-info', 'text-secondary');
                                     valueElement.classList.add('text-danger');
                                 }
-                            } else {
-                                console.warn(`[Pane ${config.paneId}] Elemento de valor não encontrado para tab ${key}`);
                             }
-                        } else {
-                            console.warn(`[Pane ${config.paneId}] Tab element não encontrado para key: ${key}`);
                         }
                     });
 
@@ -183,7 +176,6 @@
                     }
                 })
                 .catch(error => {
-                    console.error(`[Pane ${config.paneId}] Erro ao atualizar estatísticas:`, error);
                 });
         }
 
@@ -249,7 +241,6 @@
             } else if (typeof flasher !== 'undefined' && typeof flasher[type] === 'function') {
                 flasher[type](message);
             } else {
-                console.warn(`[Pane ${config.paneId}] Flasher não disponível. Mensagem:`, type + ':', message);
                 alert(message);
             }
         }
@@ -266,7 +257,6 @@
             
             // Verificar se já existe uma DataTable inicializada por outro script
             if ($.fn.DataTable.isDataTable(`#${config.tableId}`)) {
-                console.log(`[Pane ${config.paneId}] DataTable já existe, destruindo antes de reinicializar...`);
                 $(`#${config.tableId}`).DataTable().destroy();
             }
 
@@ -303,7 +293,6 @@
 
             // Verificar se DataTable está disponível
             if (!$.fn.DataTable) {
-                console.error('[DataTable] jQuery DataTables não está carregado!');
                 return;
             }
 
@@ -326,12 +315,9 @@
                                         d.filter = JSON.stringify(filter);
                                     }
                                 } catch (e) {
-                                    console.warn('[Secretary] Erro ao parsear filterJson:', e);
                                 }
                             }
                             
-                            // Debug
-                            console.log('[DataTable AJAX] Enviando dados (secretary):', d);
                         } else {
                             // Lógica original para outros módulos
                             d.tipo = config.tipo;
@@ -402,7 +388,6 @@
                         try {
                             KTMenu.createInstances();
                         } catch (e) {
-                            console.warn(`[Pane ${config.paneId}] Erro ao inicializar menu:`, e);
                         }
                     });
                 }
@@ -418,7 +403,6 @@
                         try {
                             new bootstrap.Tooltip(el);
                         } catch (e) {
-                            console.warn(`[Pane ${config.paneId}] Erro ao inicializar tooltip:`, e);
                         }
                     });
                 }
@@ -609,21 +593,11 @@
                           config.filterId === eventTableId ||
                           config.tableId === eventTableId;
             
-            console.log(`[Pane ${config.paneId}] Evento periodChanged recebido:`, {
-                eventTableId: eventTableId,
-                configFilterId: config.filterId,
-                configTableId: config.tableId,
-                matches: matches
-            });
-            
             if (matches) {
-                console.log(`[Pane ${config.paneId}] Período alterado:`, event.detail);
                 state.currentStart = event.detail.start;
                 state.currentEnd = event.detail.end;
                 updateStats();
                 reloadTable();
-            } else {
-                console.log(`[Pane ${config.paneId}] Evento periodChanged ignorado (tableId não corresponde)`);
             }
         });
 
@@ -637,7 +611,6 @@
                           config.tableId === eventTableId;
             
             if (matches) {
-                console.log(`[Pane ${config.paneId}] Busca acionada:`, event.detail);
                 reloadTable();
             }
         });
@@ -747,7 +720,6 @@
                     break;
 
                 default:
-                    console.warn(`[Pane ${config.paneId}] Ação desconhecida:`, action);
                     return;
             }
 
@@ -770,7 +742,6 @@
                 }
             })
             .catch(error => {
-                console.error(`[Pane ${config.paneId}] Erro:`, error);
                 showFlasherMessage('error', 'Erro ao processar a solicitação.');
             });
         });
@@ -809,7 +780,6 @@
                 }
             })
             .catch(error => {
-                console.error(`[Pane ${config.paneId}] Erro:`, error);
                 showFlasherMessage('error', 'Erro ao processar a solicitação.');
             });
         });
@@ -843,7 +813,6 @@
             const segmentedTabs = paneEl.querySelectorAll('[data-bs-toggle="tab"]');
             segmentedTabs.forEach(link => {
                 link.addEventListener('shown.bs.tab', function(e) {
-                    console.log(`[Pane ${config.paneId}] Tab da secretaria mudou`);
                     // Recarregar DataTable ao trocar de tab
                     if (state.dataTable) {
                         state.dataTable.ajax.reload();
@@ -864,8 +833,6 @@
         // Isso garante que STATS e TABELA atualizem juntas
         if (window.DominusEvents) {
             DominusEvents.on('transaction.created', function(data) {
-                console.log(`[Pane ${config.paneId}] Transação criada/atualizada, recarregando stats e tabela...`, data);
-                
                 // 1. Atualizar estatísticas das tabs
                 updateStats();
                 
@@ -874,10 +841,6 @@
                     state.dataTable.ajax.reload(null, false); // false = manter na página atual
                 }
             });
-            
-            console.log(`[Pane ${config.paneId}] Event listener 'transaction.created' registrado com sucesso.`);
-        } else {
-            console.warn(`[Pane ${config.paneId}] DominusEvents não disponível, auto-update desabilitado.`);
         }
     }
 
@@ -909,7 +872,6 @@
             try {
                 initPane(paneEl);
             } catch (error) {
-                console.error(`[TenantDataTablePane] Erro ao inicializar pane ${index + 1}:`, paneEl, error);
             }
         });
     }
@@ -931,11 +893,6 @@
             } else if (attempts < maxAttempts) {
                 setTimeout(checkAndInit, 100);
             } else {
-                console.error('[TenantDataTablePane] Timeout aguardando dependências!', {
-                    jQuery: hasJQuery,
-                    moment: hasMoment,
-                    dataTables: hasDataTables
-                });
                 // Tentar inicializar mesmo assim
                 initAllPanes();
             }
