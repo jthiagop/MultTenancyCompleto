@@ -19,29 +19,26 @@
         <!-- Skeleton Loading para extração -->
         <div id="extractedEntriesSkeleton" style="display: none;">
             @for($i = 0; $i < 3; $i++)
-            <div class="card mb-4 border border-dashed border-gray-300">
-                <div class="card-body p-0">
-                    <div class="d-flex align-items-stretch">
-                        <div class="w-4px bg-gray-300 rounded-start"></div>
-                        <div class="p-4 ps-6 d-flex align-items-center">
-                            <div class="skeleton-pulse rounded w-20px h-20px"></div>
+            <div class="card mb-3 border border-dashed border-gray-300">
+                <div class="card-body px-0 py-0">
+                    <div class="d-flex align-items-center">
+                        <div class="ps-5 pe-3 py-3">
+                            <div class="skeleton-pulse rounded w-40px h-20px"></div>
                         </div>
-                        <div class="flex-grow-1 p-4 d-flex flex-column gap-3">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <div class="skeleton-pulse rounded w-200px h-20px mb-2"></div>
-                                    <div class="skeleton-pulse rounded w-120px h-15px"></div>
-                                </div>
-                                <div class="skeleton-pulse rounded w-100px h-30px"></div>
+                        <div class="flex-grow-1 py-3 px-3 d-flex flex-column gap-1">
+                            <div class="d-flex gap-2">
+                                <div class="skeleton-pulse rounded w-180px h-18px"></div>
+                                <div class="skeleton-pulse rounded w-60px h-16px"></div>
                             </div>
-                            <div class="d-flex gap-3">
-                                <div class="skeleton-pulse rounded w-80px h-20px"></div>
-                                <div class="skeleton-pulse rounded w-80px h-20px"></div>
+                            <div class="d-flex gap-2">
+                                <div class="skeleton-pulse rounded w-80px h-14px"></div>
+                                <div class="skeleton-pulse rounded w-60px h-14px"></div>
+                                <div class="skeleton-pulse rounded w-70px h-14px"></div>
                             </div>
                         </div>
-                        <div class="p-4 d-flex align-items-center gap-2">
-                            <div class="skeleton-pulse rounded w-90px h-30px"></div>
-                            <div class="skeleton-pulse rounded w-30px h-30px"></div>
+                        <div class="d-flex align-items-center gap-2 pe-4 py-3">
+                            <div class="skeleton-pulse rounded w-100px h-30px"></div>
+                            <div class="skeleton-pulse rounded w-110px h-30px"></div>
                         </div>
                     </div>
                 </div>
@@ -65,33 +62,35 @@
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.05);
         }
 
-        .extracted-entry-card .card-header {
-            background-color: #F5F8FA;
-            /* Gray light background */
-            min-height: 50px;
+        /* Toggle switch de tipo (entrada/saída) */
+        .entry-type-toggle {
+            width: 2.5rem !important;
+            height: 1.25rem !important;
+            cursor: pointer;
+        }
+        .entry-type-toggle:checked {
+            background-color: #50cd89 !important;
+            border-color: #50cd89 !important;
+        }
+        .entry-type-toggle:not(:checked) {
+            background-color: #f1416c !important;
+            border-color: #f1416c !important;
         }
 
-        .extracted-entry-card .card-title {
-            color: #181C32;
-            /* text-gray-900 */
-            font-weight: 700 !important;
-            /* fw-bold */
-            font-size: 1.15rem;
+        /* Truncar textos longos */
+        .entry-ai-description {
+            max-width: 500px;
+        }
+        .entry-fornecedor-name {
+            max-width: 280px;
         }
 
-        .btn-xs {
-            padding: 0.3rem 0.65rem !important;
-            font-size: 0.8rem !important;
-            border-radius: 0.3rem !important;
-            line-height: 1.2 !important;
-        }
-
-        .valor-positivo {
-            color: #50cd89 !important;
-        }
-
-        .valor-negativo {
-            color: #f1416c !important;
+        /* Transição suave ao trocar tipo */
+        .entry-type-indicator,
+        .entry-value-badge,
+        .entry-type-label,
+        .entry-create-btn {
+            transition: all 0.25s ease;
         }
 
         /* Skeleton shimmer para extracted entries */
@@ -111,7 +110,10 @@
 @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Exibir lançamentos extraídos - Usando Blade renderizado no servidor
+
+            /**
+             * Exibe lançamentos extraídos renderizados pelo servidor
+             */
             window.displayExtractedEntries = async function(extractedData) {
                 const card = document.getElementById('extractedEntriesCard');
                 const list = document.getElementById('extractedEntriesList');
@@ -125,7 +127,6 @@
                 // Mostrar skeleton enquanto carrega
                 if (skeleton) {
                     skeleton.style.display = 'block';
-                    // Esconder entries anteriores (se houver)
                     Array.from(list.children).forEach(child => {
                         if (child.id !== 'extractedEntriesSkeleton') child.style.display = 'none';
                     });
@@ -139,28 +140,20 @@
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
                         },
-                        body: JSON.stringify({
-                            extracted_data: extractedData
-                        })
+                        body: JSON.stringify({ extracted_data: extractedData })
                     });
 
                     const result = await response.json();
 
                     if (result.success) {
-                        // Esconder skeleton
                         if (skeleton) skeleton.style.display = 'none';
                         list.innerHTML = result.html;
-
-                        // Update count badge
-                        const itemCount = list.querySelectorAll('.extracted-entry-card').length;
-                        if (countBadge) {
-                            countBadge.textContent = `${itemCount} ${itemCount === 1 ? 'item' : 'itens'}`;
-                        }
+                        updateEntriesCount();
+                        initTypeToggles();
                     } else {
                         throw new Error(result.message || 'Erro ao renderizar itens');
                     }
                 } catch (error) {
-                    console.error('Erro ao renderizar itens extraídos:', error);
                     if (skeleton) skeleton.style.display = 'none';
                     list.innerHTML = `
                         <div class="text-center py-6">
@@ -169,36 +162,89 @@
                             <p class="text-gray-500 fs-6">${error.message}</p>
                         </div>
                     `;
-                    if (countBadge) {
-                        countBadge.textContent = '0 itens';
-                    }
+                    if (countBadge) countBadge.textContent = '0 itens';
                 }
             };
 
-            // As funções createTransaction e createExpense agora são definidas
-            // no drawer_domusia_despesa.blade.php via DomusiaDrawer controller.
-            // Aqui mantemos apenas as funções que não migraram.
+            /**
+             * Atualiza o badge de contagem de itens
+             */
+            function updateEntriesCount() {
+                const list = document.getElementById('extractedEntriesList');
+                const countBadge = document.getElementById('extractedEntriesCount');
+                if (!list || !countBadge) return;
 
-            window.searchEntry = function(index) {
-                console.log('Buscar lançamento para item:', index);
-                // Implementar lógica de busca
-            };
+                const itemCount = list.querySelectorAll('.extracted-entry-card').length;
+                countBadge.textContent = `${itemCount} ${itemCount === 1 ? 'item' : 'itens'}`;
+            }
 
-            window.removeEntry = function(index) {
-                console.log('Remover item:', index);
-                const entryRow = document.querySelector(`[data-entry-index="${index}"]`);
-                if (entryRow) {
-                    entryRow.remove();
+            /**
+             * Inicializa os toggles de tipo (entrada/saída) nos cards
+             * Quando o usuário alterna, atualiza visualmente:
+             * - Barra lateral (verde/vermelha)
+             * - Badge de valor (+/-)
+             * - Label do toggle (Entrada/Saída)
+             * - Botão de criação (Receita/Despesa)
+             * - data-entry-tipo no card
+             */
+            function initTypeToggles() {
+                document.querySelectorAll('.entry-type-toggle').forEach(toggle => {
+                    toggle.addEventListener('change', function() {
+                        const card = this.closest('.extracted-entry-card');
+                        if (!card) return;
 
-                    // Update count badge
-                    const list = document.getElementById('extractedEntriesList');
-                    const countBadge = document.getElementById('extractedEntriesCount');
-                    if (list && countBadge) {
-                        const itemCount = list.querySelectorAll('.extracted-entry-card').length;
-                        countBadge.textContent = `${itemCount} ${itemCount === 1 ? 'item' : 'itens'}`;
-                    }
-                }
-            };
+                        const isEntrada = this.checked;
+                        const tipo = isEntrada ? 'entrada' : 'saida';
+
+                        // Atualiza data attribute
+                        card.dataset.entryTipo = tipo;
+
+                        // Barra lateral
+                        const indicator = card.querySelector('.entry-type-indicator');
+                        if (indicator) {
+                            indicator.classList.remove('bg-success', 'bg-danger');
+                            indicator.classList.add(isEntrada ? 'bg-success' : 'bg-danger');
+                        }
+
+                        // Label do toggle
+                        const label = card.querySelector('.entry-type-label');
+                        if (label) {
+                            label.textContent = isEntrada ? 'Entrada' : 'Saída';
+                            label.classList.remove('text-success', 'text-danger');
+                            label.classList.add(isEntrada ? 'text-success' : 'text-danger');
+                        }
+
+                        // Tooltip do toggle
+                        this.closest('[data-bs-toggle="tooltip"]')?.setAttribute(
+                            'title', 
+                            isEntrada ? 'Alternar: Receita → Despesa' : 'Alternar: Despesa → Receita'
+                        );
+
+                        // Badge de valor
+                        const valueBadge = card.querySelector('.entry-value-badge');
+                        if (valueBadge) {
+                            valueBadge.classList.remove('badge-light-success', 'badge-light-danger');
+                            valueBadge.classList.add(isEntrada ? 'badge-light-success' : 'badge-light-danger');
+                        }
+                        const valueSign = card.querySelector('.entry-value-sign');
+                        if (valueSign) {
+                            valueSign.textContent = isEntrada ? '+' : '-';
+                        }
+
+                        // Botão de criação
+                        const createBtn = card.querySelector('.entry-create-btn');
+                        if (createBtn) {
+                            createBtn.classList.remove('btn-success', 'btn-danger');
+                            createBtn.classList.add(isEntrada ? 'btn-success' : 'btn-danger');
+                            createBtn.setAttribute('title', isEntrada ? 'Criar Receita' : 'Criar Despesa');
+                        }
+                        const createLabel = card.querySelector('.entry-create-label');
+                        if (createLabel) {
+                            createLabel.textContent = isEntrada ? 'Criar Receita' : 'Criar Despesa';
+                        }
+                    });
+                });
+            }
         });
     </script>
 @endpush
