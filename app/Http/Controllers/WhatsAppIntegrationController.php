@@ -450,7 +450,7 @@ class WhatsAppIntegrationController extends Controller
 
                 // Verificar se este número já está vinculado a outro usuário/tenant
                 $existingBinding = WhatsappAuthRequest::where('wa_id', $from)
-                    ->where('status', 'active')
+                    ->whereNotNull('wa_id')
                     ->where('id', '!=', $authRequest->id)
                     ->first();
 
