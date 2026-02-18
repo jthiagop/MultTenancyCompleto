@@ -3,7 +3,6 @@
     (function() {
         function initPagamentoParcelasRecorrencia() {
             if (typeof $ === 'undefined') {
-                console.warn('[PagamentoParcelasRecorrencia] jQuery não está disponível. Aguardando...');
                 setTimeout(initPagamentoParcelasRecorrencia, 100);
                 return;
             }
@@ -101,13 +100,8 @@
             var wrapperEntrada = $('#checkboxes-entrada-wrapper');
             var wrapperSaida = $('#checkboxes-saida-wrapper');
 
-            console.log('[toggleCheckboxesByTipo] Tipo:', tipo);
-            console.log('[toggleCheckboxesByTipo] Wrapper Entrada existe:', wrapperEntrada.length > 0);
-            console.log('[toggleCheckboxesByTipo] Wrapper Saida existe:', wrapperSaida.length > 0);
-
             if (tipo === 'entrada') {
                 // Receita: Mostra apenas Recebido
-                console.log('[toggleCheckboxesByTipo] Mostrando checkboxes de ENTRADA');
                 wrapperEntrada.removeClass('d-none');
                 wrapperSaida.addClass('d-none').removeClass('d-flex');
 
@@ -116,7 +110,6 @@
                 $('#agendado_checkbox').prop('checked', false);
             } else if (tipo === 'saida') {
                 // Despesa: Mostra Pago e Agendado
-                console.log('[toggleCheckboxesByTipo] Mostrando checkboxes de SAÍDA');
                 wrapperEntrada.addClass('d-none');
                 wrapperSaida.removeClass('d-none').addClass('d-flex');
 
@@ -128,7 +121,6 @@
                     if (recebidoCheckbox) recebidoCheckbox.checked = false;
                 }
             } else {
-                console.log('[toggleCheckboxesByTipo] Tipo não definido, mostrando SAÍDA por padrão');
                 // Default: mostrar saída
                 wrapperEntrada.addClass('d-none');
                 wrapperSaida.removeClass('d-none').addClass('d-flex');
@@ -447,13 +439,8 @@
             var accordionPrevisao = $('#kt_accordion_previsao_pagamento');
             var accordionParcelas = $('#kt_accordion_parcelas');
 
-            console.log('[toggleCheckboxPago] Parcelamento:', parcelamento);
-            console.log('[toggleCheckboxPago] Pago wrapper existe:', checkboxPagoWrapper.length > 0);
-            console.log('[toggleCheckboxPago] Recebido wrapper existe:', checkboxRecebidoWrapper.length > 0);
-
             if (parcelamento === 'avista' || parcelamento === '1x') {
                 // Mostra o checkbox apropriado (Pago para saída, Recebido para entrada)
-                console.log('[toggleCheckboxPago] Mostrando checkboxes (avista/1x)');
                 checkboxPagoWrapper.show();
                 checkboxRecebidoWrapper.show();
                 // Atualiza a visibilidade do Agendado quando o Pago aparece
@@ -462,7 +449,6 @@
                 toggleAccordionInformacoesPagamento();
             } else {
                 // Oculta ambos os checkboxes quando tem mais de 1x parcelas
-                console.log('[toggleCheckboxPago] Ocultando checkboxes (parcelado)');
                 checkboxPagoWrapper.hide();
                 checkboxRecebidoWrapper.hide();
                 // Desmarca os checkboxes se estiverem marcados
@@ -527,7 +513,6 @@
         // Função para inicializar máscaras de moeda nos campos do modal
         function inicializarMascarasMoeda() {
             if (typeof Inputmask === 'undefined') {
-                console.warn('Inputmask não está disponível');
                 return;
             }
 
@@ -554,7 +539,7 @@
                         }).mask(campo[0]);
                         campo.attr('data-mask-initialized', '1');
                     } catch (error) {
-                        console.error('Erro ao inicializar máscara para ' + seletor + ':', error);
+                        // Erro silencioso na inicialização da máscara
                     }
                 }
             });
@@ -811,7 +796,7 @@
                         }
                         $select.attr('data-kt-initialized', '1');
                     } catch (error) {
-                        console.error('Erro ao inicializar Select2:', error);
+                        // Erro silencioso na inicialização do Select2
                     }
                 });
 

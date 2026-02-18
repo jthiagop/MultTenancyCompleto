@@ -148,8 +148,7 @@
      data-kt-drawer-toggle="#kt_notifications_drawer_toggle"
      data-kt-drawer-close="#kt_notifications_drawer_close"
      x-data="notificationsDrawer()"
-     @open-notifications-drawer.window="open()"
-     x-effect="console.log('[Notif:Drawer] x-effect — isLoading=' + isLoading + ', isLoadingMore=' + isLoadingMore + ', hasMore=' + hasMore + ', count=' + notifications.length)">
+     @open-notifications-drawer.window="open()">
 
     <div class="card w-100 rounded-0">
         {{-- Header --}}
@@ -543,8 +542,6 @@ function notificationsDrawer() {
                     this._drawerInstance = KTDrawer.getInstance(el);
                     if (this._drawerInstance) {
                         this._drawerInstance.show();
-                    } else {
-                        console.warn('[Notif:Drawer] KTDrawer.getInstance() retornou null');
                     }
                 }
                 // Liberar guard após 500ms

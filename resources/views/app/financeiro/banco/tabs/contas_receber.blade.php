@@ -21,7 +21,7 @@
         ['key' => 'vencimento', 'label' => 'Vencimento', 'width' => 'w-100px', 'orderable' => true],
         ['key' => 'descricao', 'label' => 'Descrição', 'width' => 'min-w-175px', 'orderable' => false],
         ['key' => 'total', 'label' => 'Total (R$)', 'width' => 'min-w-50px', 'orderable' => true],
-        ['key' => 'a_pagar', 'label' => 'A pagar (R$)', 'width' => 'min-w-50px', 'orderable' => true],
+        ['key' => 'a_pagar', 'label' => 'A receber (R$)', 'width' => 'min-w-50px', 'orderable' => true],
         ['key' => 'situacao', 'label' => 'Situação', 'width' => 'min-w-70px', 'orderable' => false],
         ['key' => 'origem', 'label' => 'Origem', 'width' => 'min-w-70px', 'orderable' => false],
         ['key' => 'acoes', 'label' => 'Ações', 'width' => 'text-end min-w-50px', 'orderable' => false],

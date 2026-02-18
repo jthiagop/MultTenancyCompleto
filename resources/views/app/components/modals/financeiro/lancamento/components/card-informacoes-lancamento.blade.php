@@ -14,6 +14,7 @@
                 @if (isset($fornecedores))
                     @foreach ($fornecedores as $fornecedor)
                         <option value="{{ $fornecedor->id }}"
+                            data-natureza="{{ $fornecedor->natureza }}"
                             {{ old('fornecedor_id') == $fornecedor->id ? 'selected' : '' }}>
                             {{ $fornecedor->nome }}
                         </option>

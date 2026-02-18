@@ -210,8 +210,6 @@ var KTModalBoletimFinanceiro = function () {
 									})
 									.then(function(r) { return r.json(); })
 									.then(function(statusData) {
-										console.log('[BoletimFinanceiro] Status:', statusData.status);
-										
 										if (statusData.status === 'completed') {
 											clearInterval(pollInterval);
 											clearTimeout(pollTimeout);
@@ -223,8 +221,6 @@ var KTModalBoletimFinanceiro = function () {
 											
 											// Atualizar notificações e abrir popup
 											window.dispatchEvent(new CustomEvent('notifications-updated'));
-											
-											console.log('[BoletimFinanceiro] PDF pronto — notificação ativada');
 										} 
 										else if (statusData.status === 'failed') {
 											clearInterval(pollInterval);
@@ -246,7 +242,7 @@ var KTModalBoletimFinanceiro = function () {
 										// Se 'pending' ou 'processing', continua polling
 									})
 									.catch(function(err) {
-										console.error('[BoletimFinanceiro] Erro no polling:', err);
+										// Silently handle polling errors
 									});
 								}, 3000); // Poll a cada 3s
 								
@@ -272,8 +268,6 @@ var KTModalBoletimFinanceiro = function () {
 							}
 						})
 						.catch(function(error) {
-							console.error('[BoletimFinanceiro] Erro:', error);
-							
 							if (loadingToast) {
 								window.AppToast.close(loadingToast);
 							}
@@ -331,7 +325,6 @@ var KTModalBoletimFinanceiro = function () {
 		init: function () {
 			// Evitar dupla inicialização
 			if (initialized) {
-				console.log('[BoletimFinanceiro] Já inicializado, ignorando...');
 				return;
 			}
 			
@@ -352,7 +345,6 @@ var KTModalBoletimFinanceiro = function () {
 			handleForm();
 			
 			initialized = true;
-			console.log('[BoletimFinanceiro] Inicializado com sucesso');
 		}
 	};
 }();

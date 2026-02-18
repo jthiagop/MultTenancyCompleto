@@ -14,7 +14,7 @@
     $idPrefix = $idPrefix ?? '';
     $fieldName = $fieldName ?? 'historico_complementar';
     $maxLength = $maxLength ?? 500;
-    $rows = $rows ?? 3;
+    $rows = $rows ?? 7;
     $placeholder = $placeholder ?? 'Observações adicionais sobre o lançamento...';
     $cardClass = $cardClass ?? '';
     $title = $title ?? 'Histórico Complementar';

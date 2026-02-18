@@ -29,19 +29,34 @@
     <!--begin::Card-->
     <div class="card {{ $cardClass }}">
         <!--begin::Header-->
-        <div class="card-header  {{ $headerClass }}" id="{{ $headerId }}">
-            <h3 class="card-title fw-bold text-gray-800">{{ $title }}</h3>
-            <div class="card-toolbar">
-                @isset($toolbar)
-                    {{ $toolbar }}
-                @endisset
-                @if($showCloseButton)
-                    <button type="button" class="btn btn-sm btn-icon btn-active-color-primary"
-                        id="{{ $closeButtonId }}">
-                        <i class="bi bi-x fs-2"></i>
-                    </button>
-                @endif
-            </div>
+        <div class="card-header {{ $headerClass }}" id="{{ $headerId }}">
+            @isset($header)
+                {{-- Header totalmente customizado --}}
+                <div class="d-flex align-items-center justify-content-between w-100">
+                    <div class="d-flex align-items-center flex-grow-1 overflow-hidden">
+                        {{ $header }}
+                    </div>
+                    @if($showCloseButton)
+                        <button type="button" class="btn btn-sm btn-icon btn-active-color-primary ms-2 flex-shrink-0"
+                            id="{{ $closeButtonId }}">
+                            <i class="bi bi-x fs-2"></i>
+                        </button>
+                    @endif
+                </div>
+            @else
+                <h3 class="card-title fw-bold text-gray-800">{{ $title }}</h3>
+                <div class="card-toolbar">
+                    @isset($toolbar)
+                        {{ $toolbar }}
+                    @endisset
+                    @if($showCloseButton)
+                        <button type="button" class="btn btn-sm btn-icon btn-active-color-primary"
+                            id="{{ $closeButtonId }}">
+                            <i class="bi bi-x fs-2"></i>
+                        </button>
+                    @endif
+                </div>
+            @endisset
         </div>
         <!--end::Header-->
 

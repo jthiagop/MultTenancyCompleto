@@ -38,7 +38,6 @@ var KTModalExtrato = function () {
 				$(select).trigger('change');
 			},
 			error: function(xhr, status, error) {
-				console.error('[Extrato] Erro ao carregar contas:', error);
 				$(select).empty().append('<option value="">Erro ao carregar</option>').trigger('change');
 			}
 		});
@@ -238,8 +237,6 @@ var KTModalExtrato = function () {
 									})
 									.then(function(r) { return r.json(); })
 									.then(function(statusData) {
-										console.log('[Extrato] Status:', statusData.status);
-
 										if (statusData.status === 'completed') {
 											clearInterval(pollInterval);
 											clearTimeout(pollTimeout);
@@ -249,7 +246,6 @@ var KTModalExtrato = function () {
 											}
 
 											window.dispatchEvent(new CustomEvent('notifications-updated'));
-											console.log('[Extrato] PDF pronto — notificação ativada');
 										}
 										else if (statusData.status === 'failed') {
 											clearInterval(pollInterval);
@@ -269,7 +265,6 @@ var KTModalExtrato = function () {
 										}
 									})
 									.catch(function(err) {
-										console.error('[Extrato] Erro no polling:', err);
 									});
 								}, 3000);
 
@@ -295,8 +290,6 @@ var KTModalExtrato = function () {
 							}
 						})
 						.catch(function(error) {
-							console.error('[Extrato] Erro:', error);
-
 							if (loadingToast) {
 								window.AppToast.close(loadingToast);
 							}
@@ -352,7 +345,6 @@ var KTModalExtrato = function () {
 	return {
 		init: function () {
 			if (initialized) {
-				console.log('[Extrato] Já inicializado, ignorando...');
 				return;
 			}
 
@@ -368,7 +360,6 @@ var KTModalExtrato = function () {
 			handleForm();
 
 			initialized = true;
-			console.log('[Extrato] Inicializado com sucesso');
 		}
 	};
 }();
