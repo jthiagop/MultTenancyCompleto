@@ -13,7 +13,7 @@ class DocumentExtractorService
 {
     private const OPENAI_API_URL = 'https://api.openai.com/v1/chat/completions';
     private const MODEL = 'gpt-4o-2024-08-06'; // Snapshot com suporte garantido a Structured Outputs
-    private const MAX_TOKENS = 2000;
+    private const MAX_TOKENS = 3000;
 
     // Limites de tamanho de arquivo (em bytes)
     private const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB - limite seguro para produção
@@ -125,12 +125,12 @@ class DocumentExtractorService
                             'content' => [
                                 [
                                     'type' => 'text',
-                                    'text' => 'Analise este documento fiscal brasileiro e extraia todos os dados relevantes conforme a estrutura JSON especificada. '
-                                        . 'ATENÇÃO ESPECIAL: Identifique corretamente o VALOR TOTAL da despesa (não confunda com Valor Pago ou Subtotal). '
-                                        . 'Se houver Troco, calcule: Total = Valor Pago − Troco. '
-                                        . 'Procure por campos como juros, multa, desconto, parcelamento, impostos retidos. '
-                                        . 'Extraia a lista de itens com descrições limpas (sem códigos EAN). '
-                                        . 'Retorne APENAS o JSON, sem explicações adicionais.',
+                                    'text' => 'Analise este documento fiscal brasileiro e extraia todos os dados conforme o schema JSON. '
+                                        . 'ATENÇÃO: (1) valor_total = valor FINAL a pagar (se houver Troco, calcule: Pago − Troco). '
+                                        . '(2) Preencha data_vencimento para boletos/faturas. '
+                                        . '(3) Se a lista de formas de pagamento foi fornecida, preencha forma_pagamento_id com o ID correspondente. '
+                                        . '(4) Se a lista de lançamentos padrão foi fornecida, preencha lancamento_padrao_id com o ID mais adequado. '
+                                        . '(5) Para cada item, calcule valor_total_item = quantidade × valor_unitario.',
                                 ],
                                 ...$fileContents, // Spread operator: suporta múltiplas imagens (páginas de PDF)
                             ],
@@ -796,7 +796,7 @@ class DocumentExtractorService
             'properties' => [
                 'tipo_documento' => [
                     'type' => 'string',
-                    'enum' => ['NF-e', 'NFC-e', 'BOLETO', 'RECIBO', 'FATURA_CARTAO', 'CUPOM', 'OUTRO'],
+                    'enum' => ['NF-e', 'NFC-e', 'BOLETO', 'RECIBO', 'FATURA_CARTAO', 'COMPROVANTE', 'CUPOM', 'OUTRO'],
                     'description' => 'Tipo do documento fiscal',
                 ],
                 'estabelecimento' => [
@@ -804,11 +804,11 @@ class DocumentExtractorService
                     'properties' => [
                         'nome' => [
                             'type' => ['string', 'null'],
-                            'description' => 'Nome do estabelecimento',
+                            'description' => 'Nome do estabelecimento/fornecedor (EMITENTE)',
                         ],
                         'cnpj' => [
                             'type' => ['string', 'null'],
-                            'description' => 'CNPJ apenas com números',
+                            'description' => 'CNPJ apenas com números (14 dígitos, sem formatação)',
                         ],
                     ],
                     'required' => ['nome', 'cnpj'],
@@ -819,11 +819,11 @@ class DocumentExtractorService
                     'properties' => [
                         'chave_acesso' => [
                             'type' => ['string', 'null'],
-                            'description' => 'Chave de acesso da NF-e/NFC-e (44 dígitos)',
+                            'description' => 'Chave de acesso da NF-e/NFC-e (44 dígitos numéricos, sem espaços)',
                         ],
                         'numero_nf' => [
                             'type' => ['string', 'null'],
-                            'description' => 'Número da nota fiscal',
+                            'description' => 'Número da nota fiscal (apenas dígitos, sem zeros à esquerda)',
                         ],
                         'serie' => [
                             'type' => ['string', 'null'],
@@ -834,11 +834,11 @@ class DocumentExtractorService
                             'properties' => [
                                 'nome' => [
                                     'type' => ['string', 'null'],
-                                    'description' => 'Nome do emitente',
+                                    'description' => 'Nome/Razão Social do emitente',
                                 ],
                                 'cnpj' => [
                                     'type' => ['string', 'null'],
-                                    'description' => 'CNPJ do emitente',
+                                    'description' => 'CNPJ do emitente (apenas dígitos)',
                                 ],
                             ],
                             'required' => ['nome', 'cnpj'],
@@ -853,7 +853,7 @@ class DocumentExtractorService
                                 ],
                                 'cnpj_cpf' => [
                                     'type' => ['string', 'null'],
-                                    'description' => 'CNPJ ou CPF do destinatário',
+                                    'description' => 'CNPJ ou CPF do destinatário (apenas dígitos)',
                                 ],
                             ],
                             'required' => ['nome', 'cnpj_cpf'],
@@ -870,48 +870,58 @@ class DocumentExtractorService
                             'type' => ['string', 'null'],
                             'description' => 'Data de emissão no formato YYYY-MM-DD',
                         ],
+                        'data_vencimento' => [
+                            'type' => ['string', 'null'],
+                            'description' => 'Data de vencimento no formato YYYY-MM-DD (boletos, faturas). Null se não aplicável.',
+                        ],
                         'valor_total' => [
                             'type' => 'number',
-                            'description' => 'Valor total do documento',
+                            'description' => 'Valor FINAL a pagar (após juros, multa, desconto). REGRA: Valor Pago − Troco, ou Subtotal ± ajustes.',
                         ],
                         'valor_principal' => [
                             'type' => 'number',
-                            'description' => 'Valor principal sem encargos',
+                            'description' => 'Valor original/subtotal ANTES de juros, multa e desconto',
                         ],
                         'forma_pagamento' => [
                             'type' => ['string', 'null'],
-                            'description' => 'Forma de pagamento utilizada',
+                            'description' => 'Nome descritivo da forma de pagamento (ex: "PIX", "Cartão de Crédito", "Dinheiro")',
+                        ],
+                        'forma_pagamento_id' => [
+                            'type' => ['integer', 'null'],
+                            'description' => 'ID da forma de pagamento correspondente na lista fornecida. Null se não encontrar correspondência.',
                         ],
                         'numero_documento' => [
                             'type' => ['string', 'null'],
-                            'description' => 'Número do documento',
+                            'description' => 'Número do documento (boleto, NF, recibo)',
                         ],
                         'juros' => [
                             'type' => 'number',
-                            'description' => 'Valor de juros',
+                            'description' => 'Valor de juros/mora/encargos. 0.00 se não houver.',
                         ],
                         'multa' => [
                             'type' => 'number',
-                            'description' => 'Valor de multa',
+                            'description' => 'Valor de multa por atraso. 0.00 se não houver.',
                         ],
                         'desconto' => [
                             'type' => 'number',
-                            'description' => 'Valor de desconto',
+                            'description' => 'Valor de desconto/abatimento. 0.00 se não houver.',
                         ],
                         'impostos_retidos' => [
                             'type' => 'number',
-                            'description' => 'Valor de impostos retidos',
+                            'description' => 'Total de impostos retidos (ISS, IRRF, PIS, COFINS, CSLL). 0.00 se não houver.',
                         ],
                         'observacoes_financeiras' => [
                             'type' => ['string', 'null'],
-                            'description' => 'Observações específicas sobre cobrança, vencimento, juros, multa ou parcelamento',
+                            'description' => 'Notas sobre cobrança, vencimento, juros/multa, parcelamento',
                         ],
                     ],
                     'required' => [
                         'data_emissao',
+                        'data_vencimento',
                         'valor_total',
                         'valor_principal',
                         'forma_pagamento',
+                        'forma_pagamento_id',
                         'numero_documento',
                         'juros',
                         'multa',
@@ -930,15 +940,15 @@ class DocumentExtractorService
                         ],
                         'parcela_atual' => [
                             'type' => 'integer',
-                            'description' => 'Número da parcela atual',
+                            'description' => 'Número da parcela atual (1 se não parcelado)',
                         ],
                         'total_parcelas' => [
                             'type' => 'integer',
-                            'description' => 'Total de parcelas',
+                            'description' => 'Total de parcelas (1 se não parcelado)',
                         ],
                         'frequencia' => [
                             'type' => 'string',
-                            'description' => 'Frequência do parcelamento',
+                            'description' => 'Frequência: MENSAL, SEMANAL, QUINZENAL, ANUAL ou UNICA',
                         ],
                     ],
                     'required' => ['is_parcelado', 'parcela_atual', 'total_parcelas', 'frequencia'],
@@ -949,23 +959,27 @@ class DocumentExtractorService
                     'properties' => [
                         'descricao_detalhada' => [
                             'type' => ['string', 'null'],
-                            'description' => 'Descrição detalhada do item ou serviço',
+                            'description' => 'Descrição detalhada do item ou serviço principal',
                         ],
                         'categoria_sugerida' => [
                             'type' => ['string', 'null'],
-                            'description' => 'Categoria sugerida para classificação',
+                            'description' => 'Categoria sugerida para classificação contábil',
+                        ],
+                        'lancamento_padrao_id' => [
+                            'type' => ['integer', 'null'],
+                            'description' => 'ID do lançamento padrão correspondente na lista fornecida. Null se não encontrar correspondência.',
                         ],
                         'codigo_referencia' => [
                             'type' => ['string', 'null'],
                             'description' => 'Código de referência do documento',
                         ],
                     ],
-                    'required' => ['descricao_detalhada', 'categoria_sugerida', 'codigo_referencia'],
+                    'required' => ['descricao_detalhada', 'categoria_sugerida', 'lancamento_padrao_id', 'codigo_referencia'],
                     'additionalProperties' => false,
                 ],
                 'observacoes' => [
                     'type' => ['string', 'null'],
-                    'description' => 'Observações gerais sobre o documento',
+                    'description' => 'Alertas gerais e contextuais sobre o documento',
                 ],
                 'itens' => [
                     'type' => 'array',
@@ -974,7 +988,7 @@ class DocumentExtractorService
                         'properties' => [
                             'descricao' => [
                                 'type' => ['string', 'null'],
-                                'description' => 'Descrição do item',
+                                'description' => 'Descrição limpa do item (sem códigos EAN/GTIN)',
                             ],
                             'quantidade' => [
                                 'type' => 'number',
@@ -982,17 +996,21 @@ class DocumentExtractorService
                             ],
                             'valor_unitario' => [
                                 'type' => 'number',
-                                'description' => 'Valor unitário do item',
+                                'description' => 'Preço de UMA unidade (não o subtotal da linha)',
+                            ],
+                            'valor_total_item' => [
+                                'type' => 'number',
+                                'description' => 'Valor total do item (quantidade × valor_unitario)',
                             ],
                             'categoria_sugerida' => [
                                 'type' => ['string', 'null'],
                                 'description' => 'Categoria sugerida para o item',
                             ],
                         ],
-                        'required' => ['descricao', 'quantidade', 'valor_unitario', 'categoria_sugerida'],
+                        'required' => ['descricao', 'quantidade', 'valor_unitario', 'valor_total_item', 'categoria_sugerida'],
                         'additionalProperties' => false,
                     ],
-                    'description' => 'Lista de itens do documento',
+                    'description' => 'Lista de itens/produtos do documento',
                 ],
             ],
             'required' => [
@@ -1011,183 +1029,205 @@ class DocumentExtractorService
 
     /**
      * Retorna o prompt do sistema para a IA com REGRAS DE NEGÓCIO BRASILEIRAS
+     * Dinâmico: injeta formas de pagamento e lançamentos padrão do banco
      *
      * @return string
      */
     private function getSystemPrompt(): string
     {
-        return <<<'PROMPT'
-Você é um especialista contábil brasileiro com vasta experiência em análise de documentos fiscais, e Especialista em Contabilidade Eclesial e Gestão de Conventos e Paroquial.
+        $basePrompt = <<<'PROMPT'
+Você é um especialista contábil brasileiro, com experiência em Contabilidade Eclesial e Gestão de Paróquias e Conventos.
 
-Sua tarefa é analisar documentos fiscais brasileiros (NF-e, NFC-e, SAT, Boletos, Recibos, etc.) e extrair os dados de forma estruturada e precisa, sempre considerando a natureza legal e financeira dos documentos.
-
-═══════════════════════════════════════════════════
-BLOCO 1 — REGRAS GERAIS DE EXTRAÇÃO
-═══════════════════════════════════════════════════
-
-1. Valores monetários devem ser números decimais (float), SEMPRE retorne 0.00 se não existir (não null).
-2. Se o ano não estiver explícito na data, assuma o ano atual.
-3. Datas devem estar no formato YYYY-MM-DD.
-4. CNPJ deve ser retornado apenas com números (sem pontos, barras ou hífens).
-5. Se um campo numérico não existir (ex: juros), retorne 0.00. Não retorne null para valores monetários.
-6. Categorias sugeridas devem ser genéricas e relevantes para o contexto brasileiro.
+Sua tarefa é extrair dados estruturados de documentos fiscais brasileiros com máxima precisão.
 
 ═══════════════════════════════════════════════════
-BLOCO 2 — CUPONS FISCAIS (NFC-e / SAT / CF-e)
+1. REGRAS GERAIS
 ═══════════════════════════════════════════════════
 
-Esta é a área mais crítica e onde ocorrem mais confusões. Siga RIGOROSAMENTE:
-
-**2.1 — VALOR TOTAL (REGRA DE OURO):**
-O valor que importa para a contabilidade é o "TOTAL A PAGAR", "VALOR TOTAL R$" ou "VALOR LÍQUIDO".
-
-⚠️ ATENÇÃO — ARMADILHAS COMUNS:
-- "VALOR PAGO R$" NÃO é o total da nota. É o dinheiro que o cliente entregou ao caixa.
-- "SUBTOTAL" NÃO é o total da nota se houver descontos ou acréscimos depois dele.
-- "TROCO R$" é a diferença devolvida ao cliente.
-
-REGRA DE VALIDAÇÃO OBRIGATÓRIA:
-- Se existirem os campos "VALOR PAGO" e "TROCO", faça a conta: Total = Valor Pago − Troco.
-- Se existir "SUBTOTAL" e "DESCONTO", faça: Total = Subtotal − Desconto.
-- Se existir "SUBTOTAL" e "ACRÉSCIMO" (taxa de serviço, gorjeta, etc.): Total = Subtotal + Acréscimo.
-- Use o campo valor_total para o resultado FINAL dessa conta.
-- Use o campo valor_principal para o subtotal (antes de descontos/acréscimos).
-- Use o campo desconto para o valor do desconto aplicado (se houver).
-
-Exemplo prático:
-  Itens somam R$ 82,85
-  Desconto: R$ 0,00
-  TOTAL R$: 82,85  ← ESTE é o valor_total
-  Valor Pago: R$ 100,00  ← NÃO usar como valor_total
-  Troco: R$ 17,15  ← Confirma: 100,00 − 17,15 = 82,85 ✓
-
-**2.2 — ITENS E QUANTIDADES:**
-- Extraia a lista de itens com descrição, quantidade e valor unitário.
-- Se a quantidade for "1,000 UN" ou "1,000 KG", converta para número: 1.0.
-- Se for "0,500 KG", converta para 0.5.
-- Ignore códigos de barras EAN/GTIN e códigos internos no início da descrição (ex: "001 - ", "7891234567890").
-- Foque no nome real do produto (ex: "ARROZ TIPO 1 5KG", "REFRI COCA 2L").
-- O valor_unitario do item é o preço de UMA unidade, NÃO o subtotal da linha.
-
-**2.3 — FORMA DE PAGAMENTO:**
-- Identifique: "Dinheiro", "Cartão de Crédito", "Cartão de Débito", "PIX", "Voucher/Vale", "Cheque".
-- Em cupons, geralmente aparece no rodapé como "FORMA PGTO", "PAGAMENTO" ou ícones.
-- Se houver múltiplas formas (ex: parte Dinheiro + parte Cartão), concatene: "Dinheiro + Cartão de Débito".
-- Se não conseguir identificar, retorne null (não invente).
-
-**2.4 — TAXAS DE SERVIÇO / GORJETA:**
-- Se houver "Taxa de Serviço 10%" ou "Couvert", some ao valor_total e registre nas observacoes_financeiras.
-- Se houver "Gorjeta" ou "Tip", trate como acréscimo.
+- Datas no formato YYYY-MM-DD. Se o ano for omitido, assuma o ano atual.
+- CNPJ/CPF: apenas dígitos, sem formatação.
+- NUNCA invente dados — se não encontrar, retorne null (strings) ou 0.00 (números).
 
 ═══════════════════════════════════════════════════
-BLOCO 3 — NOTAS FISCAIS GRANDES (DANFE / NF-e)
+2. TIPOS DE DOCUMENTO
 ═══════════════════════════════════════════════════
 
-**3.1 — VALOR TOTAL:**
-- O valor final e correto está SEMPRE no bloco "CÁLCULO DO IMPOSTO" → campo "VALOR TOTAL DA NOTA" (vTotNota).
-- NÃO confunda com "Base de Cálculo ICMS" ou "Valor dos Produtos" (que é apenas o subtotal dos itens).
-
-**3.2 — DATAS:**
-- Prefira a "DATA DE EMISSÃO" (dhEmi).
-- Se não houver, use a "DATA DE SAÍDA/ENTRADA" (dhSaiEnt).
-- Formato do DANFE geralmente é DD/MM/YYYY — converta para YYYY-MM-DD.
-
-**3.3 — CHAVE DE ACESSO:**
-- São exatamente 44 dígitos numéricos, geralmente impressos em blocos de 4 no rodapé do DANFE.
-- Retorne apenas os dígitos, sem espaços ou separadores.
-
-**3.4 — EMITENTE vs DESTINATÁRIO:**
-- O EMITENTE é quem vendeu/prestou o serviço (fornecedor).
-- O DESTINATÁRIO é quem comprou/recebeu (geralmente a paróquia/convento).
-- O campo estabelecimento.nome deve ser preenchido com o nome do EMITENTE (fornecedor).
+- **NF-e**: Nota Fiscal Eletrônica (DANFE A4).
+- **NFC-e**: Nota Fiscal de Consumidor Eletrônica (tira de papel, cupom eletrônico).
+- **CUPOM**: Cupom fiscal antigo (não eletrônico) ou SAT/CF-e.
+- **BOLETO**: Boleto bancário (com código de barras, linha digitável).
+- **RECIBO**: Recibo simples de serviço, doação, pagamento manual.
+- **FATURA_CARTAO**: Fatura ou comprovante de cartão de crédito/débito (TEF/POS, resumo de fatura).
+- **COMPROVANTE**: Comprovante de transferência bancária, PIX, TED, DOC, depósito.
+- **OUTRO**: Documento não classificável nas categorias acima.
 
 ═══════════════════════════════════════════════════
-BLOCO 4 — BOLETOS BANCÁRIOS
+3. VALOR TOTAL — REGRA DE OURO (CRÍTICO)
 ═══════════════════════════════════════════════════
 
-**4.1 — VALORES:**
-- "Valor do Documento" é o valor original (valor_principal).
-- "Valor Cobrado" ou "(=) Valor Pago" é o valor final com juros/multa/desconto (valor_total).
-- Se houver campos separados para Juros, Multa e Desconto, extraia cada um.
+O campo valor_total deve conter o VALOR FINAL A PAGAR.
 
-**4.2 — DATAS:**
-- "Data de Vencimento" é a data principal — use como data_emissao se não houver data de emissão explícita.
-- Se o boleto estiver vencido (data < hoje), mencione nas observacoes.
+⚠️ ARMADILHAS — NÃO confunda com:
+- "VALOR PAGO R$" = dinheiro entregue ao caixa (pode incluir troco).
+- "SUBTOTAL" = total parcial antes de descontos/acréscimos.
 
-**4.3 — BENEFICIÁRIO vs PAGADOR:**
-- O BENEFICIÁRIO (Cedente) é quem vai receber o dinheiro (fornecedor) → estabelecimento.nome.
-- O PAGADOR (Sacado) é quem vai pagar → destinatário.
+REGRAS DE CÁLCULO:
+- Se houver "VALOR PAGO" e "TROCO": valor_total = Valor Pago − Troco.
+- Se houver "SUBTOTAL" e "DESCONTO": valor_total = Subtotal − Desconto.
+- Se houver "SUBTOTAL" e "ACRÉSCIMO" (gorjeta, taxa): valor_total = Subtotal + Acréscimo.
+- valor_principal = subtotal original (ANTES de ajustes).
 
-═══════════════════════════════════════════════════
-BLOCO 5 — RECIBOS E COMPROVANTES DE MAQUININHA
-═══════════════════════════════════════════════════
-
-**5.1 — COMPROVANTES DE CARTÃO (TEF/POS):**
-- O valor da transação é o "VALOR" principal.
-- Identifique se é "Crédito" ou "Débito" e o número de parcelas (se houver).
-- O nome do estabelecimento geralmente está no topo.
-
-**5.2 — RECIBOS SIMPLES:**
-- Podem não ter CNPJ. Nesse caso, retorne cnpj como null.
-- Extraia o valor e a descrição do serviço/produto.
+Exemplo:
+  TOTAL R$: 82,85 ← valor_total
+  Valor Pago: R$ 100,00 ← NÃO usar
+  Troco: R$ 17,15 ← Confirma: 100,00 − 17,15 = 82,85 ✓
 
 ═══════════════════════════════════════════════════
-BLOCO 6 — JUROS, MULTA E PARCELAMENTO
+4. REGRAS POR TIPO DE DOCUMENTO
 ═══════════════════════════════════════════════════
 
-1. **Juros:** Procure por "Juros", "Encargos", "Mora", "Juros de Mora". Se não encontrar explicitamente, retorne 0.00.
-2. **Multa:** Procure por "Multa", "Multa por Atraso". Se não encontrar, retorne 0.00.
-3. **Desconto:** Procure por "Desconto", "Desc.", "Abatimento". Se não encontrar, retorne 0.00.
-4. **Parcelamento:** Procure padrões como:
-   - "01/12", "Parc 1 de 3", "Parcela 1/6"
-   - "10x de R$ 50,00", "3x s/ juros"
-   - Se parcelado, preencha is_parcelado=true, parcela_atual e total_parcelas.
-5. **Impostos Retidos:** Em NF-e de serviços, procure por ISS, IRRF, PIS, COFINS, CSLL retidos.
+**NF-e / DANFE:**
+- valor_total = "VALOR TOTAL DA NOTA" (bloco Cálculo do Imposto), NÃO "Valor dos Produtos".
+- Prefira "DATA DE EMISSÃO" (dhEmi). Fallback: "DATA DE SAÍDA" (dhSaiEnt).
+- Chave de acesso = 44 dígitos (sem espaços).
+- estabelecimento = EMITENTE (fornecedor). Destinatário = quem comprou.
+- Se NF-e de serviço, busque impostos retidos (ISS, IRRF, PIS, COFINS, CSLL).
+
+**NFC-e / CUPOM:**
+- Itens: ignore códigos EAN/GTIN. "1,000 UN" → 1.0. "0,500 KG" → 0.5.
+- valor_unitario = preço de UMA unidade, NÃO subtotal da linha.
+- valor_total_item = quantidade × valor_unitario.
+- Taxa de serviço/gorjeta: some ao valor_total e registre em observacoes_financeiras.
+
+**BOLETO:**
+- valor_principal = "Valor do Documento" (original).
+- valor_total = "Valor Cobrado" (com juros/multa/desconto).
+- data_emissao = data de emissão do boleto.
+- data_vencimento = "Data de Vencimento" (campo dedicado, obrigatório para boletos).
+- BENEFICIÁRIO (Cedente) → estabelecimento.nome. PAGADOR (Sacado) → nfe_info.destinatario.
+
+**RECIBO:**
+- Pode não ter CNPJ (retorne null).
+- Doações/dízimo: categoria_sugerida = "DOAÇÃO/DÍZIMO".
+
+**COMPROVANTE (PIX/TED/DOC/Depósito):**
+- Identifique o tipo de transferência.
+- Extraia remetente, destinatário, valor, data/hora.
+- Em comprovantes PIX, busque a chave PIX e o ID da transação.
+
+**FATURA_CARTAO:**
+- Identifique bandeira, crédito vs débito, parcelas.
+- Em comprovantes TEF/POS: extraia NSU, código de autorização.
 
 ═══════════════════════════════════════════════════
-BLOCO 7 — CONTEXTO CATÓLICO / ECLESIAL
+5. DATAS
 ═══════════════════════════════════════════════════
 
-1. **MATERIAIS LITÚRGICOS:** Se encontrar itens como 'Vinho Canônico', 'Partículas', 'Hóstias', 'Círio Pascal', 'Velas', 'Incenso', 'Carvão para Incenso', 'Paramentos' (túnicas, estolas, casulas), classifique a categoria_sugerida como "LITURGIA" ou "CULTO".
-2. **FESTAS E EVENTOS:** Se for compra de grande quantidade de descartáveis, refrigerantes, carnes ou decoração, verifique se parece ser para Quermesse, Cantina ou Festa Paroquial. Classifique como "FESTAS/EVENTOS" e mencione nas observacoes.
-3. **MANUTENÇÃO:** Igrejas são prédios antigos. Materiais de construção, elétrica, hidráulica devem ser classificados como "MANUTENÇÃO".
-4. **DATA LITÚRGICA:** Se a data do documento for próxima de grandes festas (Páscoa, Natal, Corpus Christi, Padroeiro), mencione nas observacoes se relevante (ex: 'Compra de flores próxima à Páscoa').
-5. **DOAÇÕES E DÍZIMO:** Recibos de doação devem ser classificados como "DOAÇÃO/DÍZIMO".
+- data_emissao: Data de emissão/realização do documento. SEMPRE YYYY-MM-DD.
+- data_vencimento: Apenas para boletos, faturas ou documentos com vencimento explícito. Null se não aplicável.
+- Para boletos: AMBAS as datas devem ser preenchidas quando disponíveis.
 
 ═══════════════════════════════════════════════════
-BLOCO 8 — EXTRAÇÃO DE NF-e/NFC-e (CAMPOS ESPECÍFICOS)
+6. JUROS, MULTA, DESCONTO E PARCELAMENTO
 ═══════════════════════════════════════════════════
 
-- **chave_acesso**: Chave de acesso da NF-e/NFC-e (44 dígitos numéricos).
-- **numero_nf**: Número da nota fiscal (ex: "000.123.456" → retorne "123456").
-- **serie**: Série da NF (ex: "Série 1" → retorne "1").
-- **emitente**: Empresa que emitiu a nota (nome e CNPJ).
-- **destinatario**: Quem recebeu a nota (nome e CNPJ/CPF).
+- Juros: "Juros", "Encargos", "Mora". Se não encontrar → 0.00.
+- Multa: "Multa", "Multa por Atraso". Se não encontrar → 0.00.
+- Desconto: "Desconto", "Abatimento". Se não encontrar → 0.00.
+- Impostos retidos: Some ISS + IRRF + PIS + COFINS + CSLL. Se não encontrar → 0.00.
+- Parcelamento: "Parcela 1/6", "3x de R$ 50", "01/12" → is_parcelado=true.
+
+═══════════════════════════════════════════════════
+7. CONTEXTO ECLESIAL
+═══════════════════════════════════════════════════
+
+- Itens litúrgicos (velas, hóstias, vinho canônico, incenso, paramentos) → categoria "LITURGIA".
+- Grandes compras de descartáveis/alimentos → verificar se é Quermesse/Festa → "FESTAS/EVENTOS".
+- Materiais de construção/elétrica/hidráulica → "MANUTENÇÃO".
+- Doações e dízimo → "DOAÇÃO/DÍZIMO".
+- Se data próxima de Páscoa, Natal, Corpus Christi → mencionar nas observacoes.
+
+═══════════════════════════════════════════════════
+8. NF-e/NFC-e — CAMPOS ESPECÍFICOS
+═══════════════════════════════════════════════════
+
 - Se o documento NÃO for NF-e/NFC-e, preencha TODOS os campos de nfe_info com null.
+- numero_nf: apenas dígitos, sem zeros à esquerda ("000.123.456" → "123456").
+- serie: apenas o número ("Série 1" → "1").
 
 ═══════════════════════════════════════════════════
-BLOCO 9 — OBSERVAÇÕES (DOIS CAMPOS DISTINTOS)
+9. OBSERVAÇÕES — DOIS CAMPOS DISTINTOS
 ═══════════════════════════════════════════════════
 
-- **financeiro.observacoes_financeiras**: Apenas notas sobre cobrança, vencimento, juros/multa, parcelamento (ex: "Vencimento em 5 dias úteis", "Juros de 2% ao mês após vencimento", "Parcela 3 de 12").
-- **observacoes** (campo raiz): Alertas gerais e contextuais sobre o documento (ex: "Documento aparenta estar vencido", "Contém bebida alcoólica - verificar se é vinho canônico", "Compra próxima ao Natal", "Nota com valor alto - conferir aprovação").
+- financeiro.observacoes_financeiras: APENAS dados de cobrança (vencimento, juros, parcelas).
+- observacoes: Alertas contextuais ("Documento vencido", "Possível vinho canônico", "Valor alto - conferir").
 
 ═══════════════════════════════════════════════════
-BLOCO 10 — TIPOS DE DOCUMENTO
+10. ITENS DO DOCUMENTO
 ═══════════════════════════════════════════════════
 
-- NF-e: Nota Fiscal Eletrônica (DANFE grande, geralmente A4)
-- NFC-e: Nota Fiscal de Consumidor Eletrônica (cupom fiscal eletrônico, tira de papel)
-- BOLETO: Boleto bancário (com código de barras)
-- RECIBO: Recibo simples ou comprovante de pagamento
-- FATURA_CARTAO: Fatura/comprovante de cartão de crédito ou débito
-- CUPOM: Cupom fiscal antigo (não eletrônico) ou cupom SAT
-- OUTRO: Qualquer documento que não se encaixe nas categorias acima
-
-REGRA FINAL: Se o documento não for um documento fiscal brasileiro reconhecível, retorne tipo_documento como "OUTRO" e preencha os campos disponíveis com as informações que conseguir extrair. NUNCA invente dados — se não encontrar, retorne null (para strings) ou 0.00 (para números).
-
-IMPORTANTE: Retorne APENAS o JSON válido conforme o schema fornecido. Sem markdown, sem explicações adicionais.
+- Extraia todos os itens com descrição limpa (sem EAN), quantidade, valor_unitario.
+- Calcule valor_total_item = quantidade × valor_unitario para cada item.
+- A soma dos valor_total_item deve ser ≈ valor_principal (use como validação interna).
 PROMPT;
+
+        // ═══ SEÇÃO DINÂMICA: Formas de Pagamento do Banco ═══
+        $formasPagamento = $this->getFormasPagamentoList();
+        $formasPagamentoSection = '';
+
+        if (!empty($formasPagamento)) {
+            $listaFormas = collect($formasPagamento)
+                ->map(fn($nome, $id) => "  - ID {$id}: {$nome}")
+                ->implode("\n");
+
+            $formasPagamentoSection = <<<FORMAS
+
+═══════════════════════════════════════════════════
+11. FORMAS DE PAGAMENTO CADASTRADAS
+═══════════════════════════════════════════════════
+
+Ao identificar a forma de pagamento do documento, preencha:
+- forma_pagamento: texto descritivo identificado no documento.
+- forma_pagamento_id: o ID correspondente da lista abaixo. Se não houver correspondência clara, retorne null.
+
+Lista de formas de pagamento:
+{$listaFormas}
+
+Dicas de mapeamento:
+- "Dinheiro" → procure por DINHEIRO
+- "PIX", "Chave PIX" → procure por PIX
+- "Cartão de Crédito" → procure por opção de crédito (CC_OUTROS ou similar)
+- "Cartão de Débito" → procure por opção de débito (CD_OUTROS ou similar)
+- "Boleto" → procure por BOLETO
+- "Transferência", "TED", "DOC" → procure por TRANSFERENCIA
+- "Depósito" → procure por DEPOSITO
+- "Cheque" → procure por CHEQUE
+FORMAS;
+        }
+
+        // ═══ SEÇÃO DINÂMICA: Lançamentos Padrão da Empresa ═══
+        $lancamentosPadrao = $this->getLancamentosPadraoList();
+        $lancamentosPadraoSection = '';
+
+        if (!empty($lancamentosPadrao)) {
+            $listaLancamentos = collect($lancamentosPadrao)
+                ->map(fn($descricao, $id) => "  - ID {$id}: {$descricao}")
+                ->implode("\n");
+
+            $lancamentosPadraoSection = <<<LANCAMENTOS
+
+═══════════════════════════════════════════════════
+12. LANÇAMENTOS PADRÃO DA EMPRESA
+═══════════════════════════════════════════════════
+
+Ao analisar o documento, tente identificar qual lançamento padrão melhor corresponde ao conteúdo.
+Preencha classificacao.lancamento_padrao_id com o ID mais adequado. Se nenhum corresponder, retorne null.
+
+{$listaLancamentos}
+LANCAMENTOS;
+        }
+
+        return $basePrompt . $formasPagamentoSection . $lancamentosPadraoSection;
     }
 
 
@@ -1415,11 +1455,13 @@ PROMPT;
             ],
             'financeiro' => [
                 'data_emissao' => $this->normalizeDate($data['financeiro']['data_emissao'] ?? null),
+                'data_vencimento' => $this->normalizeDate($data['financeiro']['data_vencimento'] ?? null),
                 'valor_total' => $this->parseMoney($data['financeiro']['valor_total'] ?? 0),
                 'valor_principal' => $this->parseMoney(
                     $data['financeiro']['valor_principal'] ?? $data['financeiro']['valor_total'] ?? 0
                 ),
                 'forma_pagamento' => $data['financeiro']['forma_pagamento'] ?? null,
+                'forma_pagamento_id' => isset($data['financeiro']['forma_pagamento_id']) ? (int) $data['financeiro']['forma_pagamento_id'] : null,
                 'numero_documento' => $data['financeiro']['numero_documento'] ?? null,
                 'juros' => $this->parseMoney($data['financeiro']['juros'] ?? 0),
                 'multa' => $this->parseMoney($data['financeiro']['multa'] ?? 0),
@@ -1437,6 +1479,7 @@ PROMPT;
                 'descricao_detalhada' => $data['classificacao']['descricao_detalhada'] ?? null,
                 'categoria_sugerida' => $data['classificacao']['categoria_sugerida'] ?? null,
                 'codigo_referencia' => $data['classificacao']['codigo_referencia'] ?? null,
+                'lancamento_padrao_id' => isset($data['classificacao']['lancamento_padrao_id']) ? (int) $data['classificacao']['lancamento_padrao_id'] : null,
             ],
             'observacoes' => $data['observacoes'] ?? null,
             'itens' => [],
@@ -1445,10 +1488,17 @@ PROMPT;
         // Normalizar itens
         if (isset($data['itens']) && is_array($data['itens'])) {
             foreach ($data['itens'] as $item) {
+                $quantidade = $this->parseMoney($item['quantidade'] ?? 0);
+                $valorUnitario = $this->parseMoney($item['valor_unitario'] ?? 0);
+                $valorTotalItem = isset($item['valor_total_item'])
+                    ? $this->parseMoney($item['valor_total_item'])
+                    : round($quantidade * $valorUnitario, 2);
+
                 $normalized['itens'][] = [
                     'descricao' => $item['descricao'] ?? null,
-                    'quantidade' => $this->parseMoney($item['quantidade'] ?? 0),
-                    'valor_unitario' => $this->parseMoney($item['valor_unitario'] ?? 0),
+                    'quantidade' => $quantidade,
+                    'valor_unitario' => $valorUnitario,
+                    'valor_total_item' => $valorTotalItem,
                     'categoria_sugerida' => $item['categoria_sugerida'] ?? null,
                 ];
             }
