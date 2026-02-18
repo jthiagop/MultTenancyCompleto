@@ -448,6 +448,32 @@ class WhatsAppIntegrationController extends Controller
                     return;
                 }
 
+                // Verificar se este número já está vinculado a outro usuário/tenant
+                $existingBinding = WhatsappAuthRequest::where('wa_id', $from)
+                    ->where('status', 'active')
+                    ->where('id', '!=', $authRequest->id)
+                    ->first();
+
+                if ($existingBinding) {
+                    Log::warning("⚠️ Número já vinculado a outro usuário/tenant (Controller)", [
+                        'from' => $from,
+                        'existing_auth_id' => $existingBinding->id,
+                        'existing_tenant_id' => $existingBinding->tenant_id,
+                        'existing_user_id' => $existingBinding->user_id,
+                        'new_auth_id' => $authRequest->id,
+                        'new_tenant_id' => $authRequest->tenant_id,
+                        'new_user_id' => $authRequest->user_id,
+                    ]);
+
+                    $this->sendTextMessage($from,
+                        "⚠️ Este número de WhatsApp já está vinculado a outro usuário no Sistema Dominus.\n\n" .
+                        "Cada número só pode ser vinculado a um único usuário.\n\n" .
+                        "Se você deseja trocar a vinculação, peça ao administrador para desvincular o número anterior no painel do sistema."
+                    );
+                    $this->markMessageAsRead($messageId);
+                    return;
+                }
+
                 Log::info("Vinculando usuário {$authRequest->user_id} do tenant {$authRequest->tenant_id} ao número {$from}");
 
                 try {
