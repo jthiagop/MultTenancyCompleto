@@ -109,12 +109,16 @@ export class DrawerInitializer {
         tipo = this.normalizeTipo(tipo || this.getTipoAtual());
         this._currentTipo = tipo;
         
+
         const labels = this.config.labels[tipo] || this.config.labels.despesa;
 
         // Atualiza label do select de fornecedor
         const fornecedorSelect = $(`#${this.config.fornecedorSelectId}`);
         if (fornecedorSelect.length) {
             this._updateFornecedorLabel(fornecedorSelect, labels);
+
+            // Limpa seleção se o parceiro atual não pertence mais ao filtro
+            this._validarSelecaoFornecedor(fornecedorSelect, tipo);
         }
 
         // Atualiza título do drawer de fornecedor
@@ -226,6 +230,34 @@ export class DrawerInitializer {
                 theme: 'bootstrap5'
             };
 
+            // Matcher personalizado para filtrar parceiros por natureza
+            if (selectId === self.config.fornecedorSelectId) {
+
+                options.matcher = function(params, data) {
+                    // Sempre exibe a option placeholder
+                    if (!data.id) return data;
+
+                    const tipo = self._currentTipo || self.getTipoAtual();
+                    const naturezasPermitidas = tipo === 'receita'
+                        ? ['cliente', 'ambos']
+                        : ['fornecedor', 'ambos'];
+
+                    const natureza = (data.element?.getAttribute('data-natureza') || '').toLowerCase();
+
+
+                    // Filtra por natureza
+                    if (!naturezasPermitidas.includes(natureza)) return null;
+
+                    // Aplica filtro de texto (busca do usuário)
+                    if (!params.term || params.term.trim() === '') return data;
+
+                    const term = params.term.toLowerCase();
+                    if (data.text.toLowerCase().indexOf(term) > -1) return data;
+
+                    return null;
+                };
+            }
+
             // Template para entidade_id (ícones)
             if (selectId === 'entidade_id') {
                 const formatWithIcon = (item) => {
@@ -310,6 +342,30 @@ export class DrawerInitializer {
     }
 
     // ==================== MÉTODOS PRIVADOS ====================
+
+    /**
+     * Valida se o parceiro atualmente selecionado é compatível com o tipo.
+     * Se não for, limpa a seleção. O filtro visual fica por conta do matcher do Select2.
+     * 
+     * @private
+     * @param {jQuery} $select - O elemento select do fornecedor
+     * @param {string} tipo - 'receita' ou 'despesa'
+     */
+    _validarSelecaoFornecedor($select, tipo) {
+        const valorAtual = $select.val();
+        if (!valorAtual) return;
+
+        const naturezasPermitidas = tipo === 'receita'
+            ? ['cliente', 'ambos']
+            : ['fornecedor', 'ambos'];
+
+        const $selectedOption = $select.find(`option[value="${valorAtual}"]`);
+        const natureza = ($selectedOption.attr('data-natureza') || '').toLowerCase();
+
+        if (!naturezasPermitidas.includes(natureza)) {
+            $select.val(null).trigger('change');
+        }
+    }
 
     /**
      * @private

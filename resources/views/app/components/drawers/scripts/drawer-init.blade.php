@@ -96,6 +96,31 @@
 
         // Armazena o texto do botão para uso posterior
         window.fornecedorButtonText = buttonText;
+
+        // Valida se a categoria selecionada é compatível com o novo tipo
+        var lpSelect = $('#lancamento_padraos_id');
+        if (lpSelect.length && lpSelect.val()) {
+            var tipoPermitido = tipo === 'receita' ? 'entrada' : 'saida';
+            var $selectedLp = lpSelect.find('option[value="' + lpSelect.val() + '"]');
+            var dataType = ($selectedLp.attr('data-type') || '').toLowerCase();
+
+            if (dataType && dataType !== tipoPermitido) {
+                lpSelect.val(null).trigger('change');
+            }
+        }
+
+        // Valida se o parceiro selecionado é compatível com o novo tipo
+        if (fornecedorSelect.length && fornecedorSelect.val()) {
+            var naturezasPermitidas = tipo === 'receita'
+                ? ['cliente', 'ambos']
+                : ['fornecedor', 'ambos'];
+            var $selectedOption = fornecedorSelect.find('option[value="' + fornecedorSelect.val() + '"]');
+            var natureza = ($selectedOption.attr('data-natureza') || '').toLowerCase();
+
+            if (naturezasPermitidas.indexOf(natureza) === -1) {
+                fornecedorSelect.val(null).trigger('change');
+            }
+        }
     }
 
     // Torna a função acessível globalmente
@@ -104,7 +129,6 @@
     // Verifica se jQuery está disponível
     function initDrawerScript() {
         if (typeof $ === 'undefined') {
-            console.warn('[DrawerInit] jQuery não está disponível. Aguardando...');
             setTimeout(initDrawerScript, 100);
             return;
         }
@@ -161,6 +185,31 @@
                 theme: 'bootstrap5'
             };
 
+            if (selectId === 'fornecedor_id') {
+                options.matcher = function(params, data) {
+                    // Sempre exibe a option placeholder
+                    if (!data.id) return data;
+
+                    var tipoAtual = normalizeTipo($('#tipo').val() || $('#tipo_financeiro').val());
+                    var naturezasPermitidas = tipoAtual === 'receita'
+                        ? ['cliente', 'ambos']
+                        : ['fornecedor', 'ambos'];
+
+                    var natureza = (data.element ? data.element.getAttribute('data-natureza') || '' : '').toLowerCase();
+
+                    // Filtra por natureza
+                    if (naturezasPermitidas.indexOf(natureza) === -1) return null;
+
+                    // Aplica filtro de texto (busca do usuário)
+                    if (!params.term || params.term.trim() === '') return data;
+
+                    var term = params.term.toLowerCase();
+                    if (data.text.toLowerCase().indexOf(term) > -1) return data;
+
+                    return null;
+                };
+            }
+
             // Adiciona template personalizado para o select de entidade_id (ícones de banco/caixa) 
             if (selectId === 'entidade_id') {
                 // Função para formatar opções com ícone
@@ -187,8 +236,26 @@
                 options.templateResult = formatOptionWithIcon;
             }
 
-            // Adiciona template personalizado para o select de lancamento_padraos_id (badge de tipo)
+            // Matcher + template personalizado para o select de lancamento_padraos_id
             if (selectId === 'lancamento_padraos_id') {
+                options.matcher = function(params, data) {
+                    if (!data.id) return data;
+
+                    var tipoAtual = normalizeTipo($('#tipo').val() || $('#tipo_financeiro').val());
+                    // receita = entrada, despesa = saida
+                    var tipoPermitido = tipoAtual === 'receita' ? 'entrada' : 'saida';
+                    var dataType = (data.element ? data.element.getAttribute('data-type') || '' : '').toLowerCase();
+
+                    if (dataType && dataType !== tipoPermitido) return null;
+
+                    if (!params.term || params.term.trim() === '') return data;
+
+                    var term = params.term.toLowerCase();
+                    if (data.text.toLowerCase().indexOf(term) > -1) return data;
+
+                    return null;
+                };
+
                 var formatLancamentoPadrao = function(item) {
                     if (!item.id) {
                         return item.text;
@@ -304,7 +371,6 @@
                                 var parceiroTipo = tipoAtual === 'receita' ? 'cliente' : 'fornecedor';
                                 $('#parceiro_tipo_hidden').val(parceiroTipo);
                                 
-                                console.log('[DrawerInit] Abrindo drawer para:', parceiroTipo, '| Select alvo:', window.__drawerTargetSelect);
                                 // ===== FIM NOVO =====
                                 
                                 // Atualiza labels antes de abrir o drawer
@@ -425,8 +491,6 @@
 
     // Quando o drawer for aberto via função global
     window.abrirDrawerLancamento = function(tipo, origem) {
-        console.log('🎯 [Drawer-Init] Abrindo drawer para tipo:', tipo);
-        
         // LIMPEZA PREVENTIVA: Sempre limpa antes de abrir
         if (typeof limparFormularioDrawerCompleto === 'function') {
             limparFormularioDrawerCompleto();
@@ -553,8 +617,6 @@
      * @param {number} transacaoId - ID da transação a ser editada
      */
     window.abrirDrawerEdicao = function(transacaoId) {
-        console.log('✏️ [Drawer-Init] Abrindo drawer para edição. ID:', transacaoId);
-        
         // LIMPEZA PREVENTIVA: Sempre limpa antes de abrir
         if (typeof limparFormularioDrawerCompleto === 'function') {
             limparFormularioDrawerCompleto();
@@ -589,8 +651,6 @@
                 if (response.success && response.data) {
                     var dados = response.data;
                     
-                    console.log('📦 [Drawer-Init] Dados recebidos:', dados);
-                    
                     // Define modo edição
                     $('#transacao_id').val(dados.id);
                     $('#_method').val('PUT');
@@ -622,8 +682,16 @@
                         
                         // Preenche os campos após o drawer abrir
                         setTimeout(function() {
+                            // 1. Preenche campos de texto, datas, checkboxes
                             preencherFormularioEdicao(dados);
+                            
+                            // 2. Inicializa Select2 com matchers
                             initDrawerSelect2();
+                            
+                            // 3. Define valores dos selects APÓS Select2 inicializar
+                            preencherSelectsEdicao(dados);
+                            
+                            // 4. Atualiza labels e estado visual
                             updateFornecedorLabels(tipo);
                             inicializarEstadoDrawer();
                         }, 300);
@@ -638,8 +706,6 @@
                 if (typeof Swal !== 'undefined') {
                     Swal.close();
                 }
-                
-                console.error('❌ [Drawer-Init] Erro ao buscar dados:', xhr);
                 
                 if (typeof toastr !== 'undefined') {
                     toastr.error('Erro ao carregar dados da transação', 'Erro');
@@ -673,8 +739,6 @@
      * @param {object} dados - Dados da transação
      */
     function preencherFormularioEdicao(dados) {
-        console.log('📝 [Drawer-Init] Preenchendo formulário com dados:', dados);
-        
         // Campos de texto simples
         $('#descricao').val(dados.descricao || '');
         $('#numero_documento').val(dados.numero_documento || '');
@@ -713,41 +777,8 @@
             dataPagamentoInput.val(dataPagamento);
         }
         
-        // Selects - precisam ser tratados após Select2 inicializar
-        setTimeout(function() {
-            // Entidade Financeira
-            if (dados.entidade_id) {
-                $('#entidade_id').val(dados.entidade_id).trigger('change');
-            }
-            
-            // Lançamento Padrão (Categoria)
-            if (dados.lancamento_padrao_id) {
-                $('#lancamento_padraos_id').val(dados.lancamento_padrao_id).trigger('change');
-            }
-            
-            // Centro de Custo
-            if (dados.cost_center_id) {
-                $('#cost_center_id').val(dados.cost_center_id).trigger('change');
-            }
-            
-            // Forma de Pagamento
-            if (dados.tipo_documento) {
-                $('#tipo_documento').val(dados.tipo_documento).trigger('change');
-            }
-            
-            // Fornecedor/Cliente
-            if (dados.fornecedor_id) {
-                var fornecedorSelect = $('#fornecedor_id');
-                // Verifica se a opção existe
-                if (fornecedorSelect.find('option[value="' + dados.fornecedor_id + '"]').length) {
-                    fornecedorSelect.val(dados.fornecedor_id).trigger('change');
-                } else if (dados.parceiro_nome) {
-                    // Se não existe, adiciona a opção dinamicamente
-                    var newOption = new Option(dados.parceiro_nome, dados.fornecedor_id, true, true);
-                    fornecedorSelect.append(newOption).trigger('change');
-                }
-            }
-        }, 100);
+        // Nota: Os valores dos selects são definidos por preencherSelectsEdicao()
+        // que é chamada no fluxo principal APÓS initDrawerSelect2()
         
         // Checkboxes
         $('#comprovacao_fiscal_checkbox').prop('checked', dados.comprovacao_fiscal === true);
@@ -765,7 +796,6 @@
 
         // Exibir card somente-leitura de parcelas (PAI com parcelas)
         if (dados.is_parcelado && dados.parcelas && dados.parcelas.length > 0) {
-            console.log('📦 [Drawer-Init] Exibindo card de parcelas readonly:', dados.parcelas.length);
             exibirCardParcelasReadonly(dados.parcelas, null);
             
             // Esconde o select de parcelamento na edição (não é editável)
@@ -773,13 +803,48 @@
         }
         // Se for transação FILHA (parcela individual), exibe banner informativo
         else if (dados.parent_id && dados.parcela_info) {
-            console.log('📦 [Drawer-Init] Transação é parcela filha, parent_id:', dados.parent_id);
             exibirCardParcelasReadonly(null, dados.parcela_info);
         }
-        
-        console.log('✅ [Drawer-Init] Formulário preenchido com sucesso');
     }
     
+    /**
+     * Define os valores dos selects Select2 no modo edição.
+     * DEVE ser chamada APÓS initDrawerSelect2() para garantir que o Select2
+     * esteja inicializado e sincronize os valores corretamente.
+     */
+    function preencherSelectsEdicao(dados) {
+        // Entidade Financeira
+        if (dados.entidade_id) {
+            $('#entidade_id').val(dados.entidade_id).trigger('change');
+        }
+        
+        // Lançamento Padrão (Categoria)
+        if (dados.lancamento_padrao_id) {
+            $('#lancamento_padraos_id').val(dados.lancamento_padrao_id).trigger('change');
+        }
+        
+        // Centro de Custo
+        if (dados.cost_center_id) {
+            $('#cost_center_id').val(dados.cost_center_id).trigger('change');
+        }
+        
+        // Forma de Pagamento
+        if (dados.tipo_documento) {
+            $('#tipo_documento').val(dados.tipo_documento).trigger('change');
+        }
+        
+        // Fornecedor/Cliente
+        if (dados.fornecedor_id) {
+            var fornecedorSelect = $('#fornecedor_id');
+            if (fornecedorSelect.find('option[value="' + dados.fornecedor_id + '"]').length) {
+                fornecedorSelect.val(dados.fornecedor_id).trigger('change');
+            } else if (dados.parceiro_nome) {
+                var newOption = new Option(dados.parceiro_nome, dados.fornecedor_id, true, true);
+                fornecedorSelect.append(newOption).trigger('change');
+            }
+        }
+    }
+
     /**
      * Exibe o card somente-leitura de parcelas no drawer de edição
      * @param {Array|null} parcelas - Array com dados das parcelas (quando é PAI)
@@ -854,12 +919,11 @@
             }
             filhaInfoText.html(infoHtml);
         }
-        
-        console.log('✅ [Drawer-Init] Card de parcelas readonly exibido');
     }
     
     // Torna a função acessível globalmente
     window.preencherFormularioEdicao = preencherFormularioEdicao;
+    window.preencherSelectsEdicao = preencherSelectsEdicao;
     window.exibirCardParcelasReadonly = exibirCardParcelasReadonly;
     
     // Handler delegado: clique no botão de editar parcela individual
@@ -867,7 +931,6 @@
         e.preventDefault();
         var transacaoId = $(this).data('transacao-id');
         if (transacaoId && typeof abrirDrawerEdicao === 'function') {
-            console.log('📝 [Drawer-Init] Abrindo parcela para edição, ID:', transacaoId);
             abrirDrawerEdicao(transacaoId);
         }
     });
@@ -896,8 +959,6 @@
                     form.attr('action', '{{ route("banco.store") }}');
                 }
             }
-            
-            console.log('🔄 [Drawer-Init] Origem atualizada para:', origemEntidade);
         }
     });
 
@@ -1191,7 +1252,7 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
             try {
                 flatpickr(vencimentoInput, flatpickrConfig);
             } catch (error) {
-                console.error('[DrawerInit] Erro ao inicializar flatpickr:', error);
+                // erro ao inicializar flatpickr
             }
         }
         
@@ -1274,7 +1335,7 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
 
                 flatpickr(vencimentoInput, config);
             } catch (error) {
-                console.error('[DrawerInit] Erro ao inicializar flatpickr:', error);
+                // erro ao inicializar flatpickr
             }
         }
         
@@ -1636,44 +1697,23 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
     
     // Função para inicializar o estado visual do drawer (independente de limpeza)
     function inicializarEstadoDrawer() {
-        console.log('🔄 [Drawer-Init] Inicializando estado visual do drawer...');
-        
         // Garante que elementos necessários estejam visíveis/ocultos conforme o estado atual
         var tipo = $('#tipo').val() || $('#tipo_financeiro').val();
         
-        console.log('📋 [Drawer-Init] #tipo.val():', $('#tipo').val());
-        console.log('📋 [Drawer-Init] #tipo_financeiro.val():', $('#tipo_financeiro').val());
-        console.log('📋 [Drawer-Init] Tipo detectado (final):', tipo);
-        
         // Se há um tipo definido, configura a visibilidade dos checkboxes
         if (tipo) {
-            console.log('✅ [Drawer-Init] Aplicando lógica de checkbox para tipo:', tipo);
-            console.log('✅ [Drawer-Init] window.toggleCheckboxesByTipo existe?', typeof window.toggleCheckboxesByTipo);
-            
             if (typeof window.toggleCheckboxesByTipo === 'function') {
-                console.log('🎯 [Drawer-Init] Chamando toggleCheckboxesByTipo com tipo:', tipo);
                 window.toggleCheckboxesByTipo(tipo);
-            } else {
-                console.warn('⚠️ [Drawer-Init] toggleCheckboxesByTipo não está disponível - verificando se scripts foram carregados');
-                console.log('⚠️ [Drawer-Init] Scripts no window:', {
-                    toggleCheckboxesByTipo: typeof window.toggleCheckboxesByTipo,
-                    toggleCheckboxPago: typeof window.toggleCheckboxPago,
-                    toggleCheckboxAgendado: typeof window.toggleCheckboxAgendado
-                });
             }
             
             // Pequeno delay para garantir que o DOM foi atualizado
             setTimeout(function() {
                 if (typeof window.toggleCheckboxPago === 'function') {
-                    console.log('🎯 [Drawer-Init] Chamando toggleCheckboxPago...');
                     window.toggleCheckboxPago();
-                } else {
-                    console.warn('⚠️ [Drawer-Init] toggleCheckboxPago não está disponível');
                 }
             }, 50);
         } else {
             // Se não há tipo definido, oculta todos os checkboxes (estado inicial)
-            console.log('❌ [Drawer-Init] Nenhum tipo definido - ocultando checkboxes');
             $('#checkboxes-entrada-wrapper').addClass('d-none');
             $('#checkboxes-saida-wrapper').addClass('d-none').removeClass('d-flex');
             $('#checkbox-pago-wrapper, #checkbox-recebido-wrapper').hide();
@@ -1684,21 +1724,16 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
         
         // 🔧 CORREÇÃO: Reinicializa tooltips após mudanças de estado
         setTimeout(function() {
-            console.log('🎯 [Drawer-Init] Reinicializando tooltips do drawer...');
             if (typeof window.initializeDrawerTooltips === 'function') {
                 window.initializeDrawerTooltips();
             }
         }, 100);
-        
-        console.log('✅ [Drawer-Init] Estado visual inicializado com sucesso');
     }
     
     // Função para limpar completamente o formulário do drawer
     function limparFormularioDrawerCompleto() {
         var form = $('#kt_drawer_lancamento_form');
         if (!form.length) return;
-        
-        console.log('🧹 [Drawer-Init] Limpando dados do formulário completo...');
         
         // Reset básico do formulário
         form[0].reset();
@@ -1718,8 +1753,6 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
         var drawer = $('#kt_drawer_lancamento');
         var drawerTitle = drawer.find('.card-title').first();
         drawerTitle.text('Novo Lançamento');
-        
-        console.log('📝 [Drawer-Init] Campos básicos limpos - restaurando selects e checkboxes...');
         
         // Limpa e reinicializa Select2 especificamente
         form.find('select[data-control="select2"]').each(function() {
@@ -1793,8 +1826,6 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
                 $('#parcelamento').trigger('change');
             }
         }, 100);
-        
-        console.log('✅ [Drawer-Init] Dados do formulário limpos com sucesso');
     }
     
     // Torna as funções acessíveis globalmente para reutilização
@@ -1818,7 +1849,6 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
     
     // Event listener para botão X (fechar) - garantir que limpe também
     $(document).on('click', '#kt_drawer_lancamento [data-kt-drawer-dismiss="true"]:not(#kt_drawer_lancamento_cancel)', function() {
-        console.log('❌ [Drawer-Init] Botão X clicado - executando limpeza preventiva');
         limparFormularioDrawerCompleto();
     });
     });

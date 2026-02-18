@@ -11,13 +11,10 @@ $(document).ready(function() {
         var tipo = tipoSelect.val();
         var isReceita = (window.normalizeTipo ? window.normalizeTipo(tipo) : tipo) === 'receita';
         
-        console.log('[Labels Dinâmicos] Tipo:', tipo, '| É Receita:', isReceita);
-        
         // 1. Atualiza label do checkbox "Pago/Recebido"
         var checkboxLabel = $('label[for="pago_checkbox"]');
         if (checkboxLabel.length) {
             checkboxLabel.text(isReceita ? 'Recebido' : 'Pago');
-            console.log('[Labels Dinâmicos] Label checkbox atualizado para:', isReceita ? 'Recebido' : 'Pago');
         }
         
         // 2. Atualiza título do accordion de pagamento
@@ -25,7 +22,6 @@ $(document).ready(function() {
         if (accordionButton.length) {
             var novoTitulo = isReceita ? 'Informações de Recebimento' : 'Informações de Pagamento';
             accordionButton.find('.accordion-title').text(novoTitulo);
-            console.log('[Labels Dinâmicos] Título accordion atualizado para:', novoTitulo);
         }
         
         // 3. Atualiza placeholders dos campos de pagamento
