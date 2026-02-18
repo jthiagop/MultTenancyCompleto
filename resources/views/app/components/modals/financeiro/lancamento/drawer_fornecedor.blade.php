@@ -225,7 +225,7 @@
                         <!--begin::Col-->
                         <div class="col-md-8 fv-row">
                             <!--begin::Label-->
-                            <label class="required fs-6 fw-semibold mb-2">Rua</label>
+                            <label class="required fs-6 fw-semibold mb-2">Cidade</label>
                             <!--end::Label-->
                             <!--begin::Input-->
                             <input class="form-control" placeholder="" name="city" />
@@ -1269,6 +1269,19 @@
                     // Prepare Data
                     const formData = new FormData(form);
                     const data = Object.fromEntries(formData.entries());
+
+                    // Garante que 'tipo' tenha um valor válido (pf/pj) baseado no select
+                    const tipoSelectEl = document.getElementById('fornecedor_tipo');
+                    if (tipoSelectEl) {
+                        const selVal = typeof $ !== 'undefined' && $.fn.select2 && $(tipoSelectEl).hasClass('select2-hidden-accessible')
+                            ? $(tipoSelectEl).val()
+                            : tipoSelectEl.value;
+                        if (selVal === '1') data.tipo = 'pf';
+                        else if (selVal === '2') data.tipo = 'pj';
+                        else if (!data.tipo || !['pf', 'pj'].includes(data.tipo)) data.tipo = 'pj';
+                    }
+                    // Remove campo auxiliar do select que não deve ir ao backend
+                    delete data.fornecedor_tipo;
 
                     // Button State
                     const originalText = submitButton.querySelector('.indicator-label').textContent;
