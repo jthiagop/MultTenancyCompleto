@@ -39,8 +39,6 @@ class DrawerFormManager {
         this.bindElements();
         this.bindEvents();
         this.bindFieldValidationEvents();
-        
-        console.log('[DrawerFormManager] Inicializado com sucesso');
     }
     
     /**
@@ -475,10 +473,6 @@ class DrawerFormManager {
         if (valorInput && valorInput.value) {
             const valorStr = valorInput.value || '';
             
-            console.log('[prepareFormData] Valor enviado exatamente como o usuário vê', {
-                'valor_original': valorStr
-            });
-            
             // Envia a string exatamente como está (formato brasileiro: "1.991,44")
             formData.delete('valor');
             formData.append('valor', valorStr);
@@ -537,7 +531,6 @@ class DrawerFormManager {
     async submit(mode = 'enviar') {
         // Proteção contra duplo clique
         if (this.isSubmitting) {
-            console.warn('[DrawerFormManager] Submissão já em andamento, ignorando');
             return;
         }
         
@@ -576,7 +569,6 @@ class DrawerFormManager {
             // Se está editando, adiciona _method=PUT para method spoofing do Laravel
             if (isEditing) {
                 formData.append('_method', 'PUT');
-                console.log('[DrawerFormManager] Modo edição detectado, usando PUT', { action: formAction });
             }
             
             const response = await fetch(formAction, {
@@ -646,13 +638,11 @@ class DrawerFormManager {
         switch (mode) {
             case 'clonar':
                 // Mantém dados e drawer aberto
-                console.log('[DrawerFormManager] Modo clonar: mantendo drawer aberto');
                 break;
                 
             case 'branco':
                 // Limpa formulário e mantém drawer aberto
                 this.resetForm();
-                console.log('[DrawerFormManager] Modo branco: formulário limpo');
                 break;
                 
             default:
@@ -674,7 +664,6 @@ class DrawerFormManager {
                 tables.ajax.reload(null, false);
             }
         }
-        console.log('[DrawerFormManager] DataTable atualizada');
     }
     
     /**

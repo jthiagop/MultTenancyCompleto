@@ -3,10 +3,12 @@
 namespace App\Http\Requests\Financer;
 
 use App\Models\LancamentoPadrao;
+use App\Models\Parceiro;
 use App\Support\Money;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class StoreTransacaoFinanceiraRequest extends FormRequest
@@ -73,6 +75,8 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'entidade_id' => 'required|exists:entidades_financeiras,id',
             'fornecedor_id' => 'nullable|exists:parceiros,id', // Alias - mapeado para parceiro_id no prepareForValidation
             'parceiro_id' => 'nullable|exists:parceiros,id',
+            'novo_parceiro_nome' => 'nullable|string|max:255', // Auto-cadastro via Domus IA
+            'novo_parceiro_cnpj' => 'nullable|string|max:20',  // Auto-cadastro via Domus IA
             'banco_id' => 'nullable|exists:cadastro_bancos,id',
             'entidade_banco_id' => [
                 'nullable',
@@ -155,14 +159,15 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'desconto_pagamento' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
 
             // Validações de parcelas (quando parcelamento é 2x ou mais)
-            // Obrigatórios: vencimento, valor, forma_pagamento_id
-            // Opcionais: percentual (calculado), descricao (gerada), conta_pagamento_id, agendado
+            // Obrigatórios: vencimento, valor
+            // Opcionais: percentual (calculado), descricao (gerada), agendado
+            // Nota: entidade_id vem do formulário principal, não por parcela
             'parcelamento' => 'nullable|string',
             'parcelas' => 'nullable|array',
             'parcelas.*.vencimento' => 'required_with:parcelas|date_format:d/m/Y',
             'parcelas.*.valor' => 'required_with:parcelas|numeric|gt:0',  // Em DECIMAL (ex: 1991.44)
             'parcelas.*.percentual' => 'nullable|numeric|min:0|max:100',  // Calculado automaticamente se não informado
-            'parcelas.*.forma_pagamento_id' => 'required_with:parcelas|exists:entidades_financeiras,id',
+            'parcelas.*.forma_pagamento_id' => 'nullable|exists:entidades_financeiras,id',
             'parcelas.*.conta_pagamento_id' => 'nullable|exists:entidades_financeiras,id',
             'parcelas.*.descricao' => 'nullable|string|max:255',  // Gerada automaticamente se não informada
             'parcelas.*.agendado' => 'nullable|boolean',
@@ -360,6 +365,23 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             }
         }
 
+        // ✅ Auto-cadastro de parceiro via Domus IA
+        // Se fornecedor_id === '__novo__' e os hidden fields estão preenchidos,
+        // cria o parceiro automaticamente e substitui pelo ID real
+        if ($this->input('fornecedor_id') === '__novo__' && $this->filled('novo_parceiro_cnpj')) {
+            $parceiroId = $this->autoCreateParceiro();
+            if ($parceiroId) {
+                $this->merge([
+                    'fornecedor_id' => $parceiroId,
+                    'novo_parceiro_nome' => null,
+                    'novo_parceiro_cnpj' => null,
+                ]);
+            } else {
+                // Se falhou, remove o valor inválido para não quebrar a validação exists
+                $this->merge(['fornecedor_id' => null]);
+            }
+        }
+
         // ✅ Mapeia fornecedor_id → parceiro_id (nome usado pelo formulário vs nome da coluna no banco)
         if ($this->has('fornecedor_id') && !$this->has('parceiro_id')) {
             $this->merge(['parceiro_id' => $this->input('fornecedor_id')]);
@@ -420,6 +442,78 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                     // Se falhar, mantém o valor original
                 }
             }
+        }
+    }
+
+    /**
+     * Auto-cadastro de parceiro a partir dos dados extraídos pela IA (Domus IA).
+     * Verifica se o CNPJ já existe para evitar duplicatas. Se já existir, retorna o ID existente.
+     * Se não existir, cria um novo parceiro com os dados mínimos.
+     */
+    private function autoCreateParceiro(): ?int
+    {
+        $cnpj = preg_replace('/\D/', '', $this->input('novo_parceiro_cnpj', ''));
+        $nome = trim($this->input('novo_parceiro_nome', ''));
+
+        if (empty($cnpj) || empty($nome)) {
+            return null;
+        }
+
+        $companyId = session('active_company_id');
+        if (!$companyId) {
+            Log::warning('[AutoCreateParceiro] company_id não encontrado na sessão');
+            return null;
+        }
+
+        try {
+            // Verificar se CNPJ já existe na empresa (pode ter sido cadastrado entre o carregamento da tela e o submit)
+            $existente = Parceiro::where('company_id', $companyId)
+                ->where('cnpj', $cnpj)
+                ->whereNull('deleted_at')
+                ->first();
+
+            if ($existente) {
+                Log::info('[AutoCreateParceiro] Parceiro já existe, usando ID existente', [
+                    'parceiro_id' => $existente->id,
+                    'nome' => $existente->nome,
+                    'cnpj' => $cnpj,
+                ]);
+                return $existente->id;
+            }
+
+            // Determinar natureza baseada no tipo da transação
+            $tipo = $this->input('tipo');
+            $natureza = ($tipo === 'entrada') ? 'cliente' : 'fornecedor';
+
+            // Criar novo parceiro com dados mínimos da IA
+            $parceiro = Parceiro::create([
+                'company_id' => $companyId,
+                'nome' => $nome,
+                'cnpj' => $cnpj,
+                'tipo' => 'pj',
+                'natureza' => $natureza,
+                'active' => true,
+                'created_by' => Auth::id(),
+                'created_by_name' => Auth::user()?->name,
+                'updated_by' => Auth::id(),
+                'updated_by_name' => Auth::user()?->name,
+            ]);
+
+            Log::info('[AutoCreateParceiro] Novo parceiro criado automaticamente via Domus IA', [
+                'parceiro_id' => $parceiro->id,
+                'nome' => $nome,
+                'cnpj' => $cnpj,
+                'natureza' => $natureza,
+            ]);
+
+            return $parceiro->id;
+
+        } catch (\Exception $e) {
+            Log::error('[AutoCreateParceiro] Erro ao criar parceiro: ' . $e->getMessage(), [
+                'nome' => $nome,
+                'cnpj' => $cnpj,
+            ]);
+            return null;
         }
     }
 }

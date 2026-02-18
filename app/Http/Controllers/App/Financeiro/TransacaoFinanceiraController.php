@@ -76,11 +76,107 @@ class TransacaoFinanceiraController extends Controller
         $situacoesEfetivadas = ['pago', 'recebido'];
         $movimentacao = null;
 
+        // ========================================================
+        // PARCELAMENTO: Se há parcelas, criar N transações separadas
+        // ========================================================
+        $parcelas = $validatedData['parcelas'] ?? null;
+        unset($validatedData['parcelas'], $validatedData['parcelamento']);
+
+        if (is_array($parcelas) && count($parcelas) >= 2) {
+            $transacoesCriadas = [];
+            $primeiraCaixa = null;
+
+            foreach ($parcelas as $index => $parcela) {
+                $dadosParcela = $validatedData;
+
+                // Sobrescrever campos com dados da parcela
+                $dadosParcela['valor'] = $parcela['valor'];
+                $dadosParcela['descricao'] = $parcela['descricao'] ?? $validatedData['descricao'] . ' ' . $index . '/' . count($parcelas);
+
+                // Converter vencimento da parcela (dd/mm/yyyy → Y-m-d)
+                if (!empty($parcela['vencimento'])) {
+                    try {
+                        $dadosParcela['data_vencimento'] = Carbon::createFromFormat('d/m/Y', $parcela['vencimento'])->format('Y-m-d');
+                    } catch (\Exception $e) {
+                        $dadosParcela['data_vencimento'] = $validatedData['data_competencia'];
+                    }
+                }
+
+                // Entidade financeira: usar a entidade do formulário principal
+                // (não vem mais por parcela, usa a entidade_id já presente em $validatedData)
+
+                // Situação: parcelas são em_aberto (não pagas)
+                $dadosParcela['situacao'] = 'em_aberto';
+                $dadosParcela['agendado'] = $parcela['agendado'] ?? false;
+                $dadosParcela['movimentacao_id'] = null;
+
+                // Vincular parcelas à primeira transação como parent
+                if ($primeiraCaixa) {
+                    $dadosParcela['parent_id'] = $primeiraCaixa->id;
+                }
+
+                $caixa = TransacaoFinanceira::create($dadosParcela);
+                $transacoesCriadas[] = $caixa;
+
+                if (!$primeiraCaixa) {
+                    $primeiraCaixa = $caixa;
+                }
+
+                // Processar lançamento padrão para cada parcela
+                $this->processarLancamentoPadrao($dadosParcela);
+            }
+
+            // Usar a primeira parcela como referência para anexos e Domus
+            $caixa = $primeiraCaixa;
+
+            // Processar anexos na primeira parcela
+            $this->processarAnexos($request, $caixa);
+
+            $mensagem = count($transacoesCriadas) . ' parcelas criadas com sucesso!';
+            Flasher::addSuccess($mensagem);
+
+            // Se veio do Domus IA (AJAX)
+            if ($request->ajax() || $request->wantsJson()) {
+                $domusDocumentoId = null;
+                if ($request->filled('domus_documento_id')) {
+                    try {
+                        $domusDoc = \App\Models\DomusDocumento::find($request->input('domus_documento_id'));
+                        if ($domusDoc) {
+                            $domusDocumentoId = $domusDoc->id;
+                            $domusDoc->update(['status' => \App\Enums\StatusDomusDocumento::LANCADO]);
+                            $this->anexarDocumentoDomus($domusDoc, $caixa);
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Erro ao processar DomusDocumento: ' . $e->getMessage());
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => $mensagem,
+                    'transacao_id' => $caixa->id,
+                    'parcelas_count' => count($transacoesCriadas),
+                    'domus_documento_id' => $domusDocumentoId,
+                ]);
+            }
+
+            return redirect()->back()->with('message', $mensagem);
+        }
+
+        // ========================================================
+        // TRANSAÇÃO ÚNICA (À Vista / 1x)
+        // ========================================================
+
         if (in_array($situacao, $situacoesEfetivadas)) {
+            // ✅ Usar valor_pago na movimentação (valor real que saiu/entrou na conta)
+            // valor_pago = valor + juros + multa - desconto (calculado no prepareForValidation)
+            // Se não houver valor_pago, fallback para valor original
+            $valorMovimentacao = $validatedData['valor_pago'] ?? $validatedData['valor'];
+
             $movimentacao = Movimentacao::create([
                 'entidade_id' => $validatedData['entidade_id'],
                 'tipo' => $validatedData['tipo'],
-                'valor' => $validatedData['valor'],
+                'valor' => $valorMovimentacao,
                 'data' => $validatedData['data_competencia'],
                 'descricao' => $validatedData['descricao'],
                 'company_id' => $validatedData['company_id'],

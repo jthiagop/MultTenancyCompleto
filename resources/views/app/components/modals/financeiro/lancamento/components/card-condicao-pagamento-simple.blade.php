@@ -76,7 +76,7 @@
             </div>
 
             {{-- Checkbox Agendado --}}
-            <div class="col-md-3 fv-row d-flex align-items-end pb-2">
+            <div class="col-md-3 fv-row d-flex align-items-end pb-2" id="{{ $idPrefix }}agendado_wrapper">
                 <div class="form-check form-switch form-check-custom form-check-solid">
                     <input class="form-check-input" type="checkbox" name="agendado"
                         value="1" id="{{ $agendadoCheckboxId }}" />
@@ -121,5 +121,88 @@
                 :readonly="true" />
         </div>
         @endif
+
+        {{-- Accordion de Parcelas (exibido quando parcelamento >= 2x) --}}
+        <div class="mt-4" id="{{ $idPrefix }}parcelas_accordion" style="display: none;">
+            <div class="separator separator-dashed my-4"></div>
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <i class="fa-solid fa-layer-group text-primary fs-5"></i>
+                <span class="fw-bold text-gray-700 fs-6">Parcelas</span>
+                <span class="badge badge-light-primary fs-8" id="{{ $idPrefix }}parcelas_count_badge"></span>
+            </div>
+            <div class="table-responsive">
+                <table class="table align-middle table-row-dashed fs-7 gy-3" id="{{ $idPrefix }}parcelas_table">
+                    <thead>
+                        <tr class="text-start text-muted fw-bold fs-8 text-uppercase gs-0">
+                            <th class="min-w-30px">#</th>
+                            <th class="min-w-110px">Vencimento</th>
+                            <th class="min-w-100px">Valor (R$)</th>
+                            <th class="min-w-80px">% </th>
+                            <th class="min-w-150px">Descrição</th>
+                            <th class="min-w-80px">Agendado</th>
+                        </tr>
+                    </thead>
+                    <tbody id="{{ $idPrefix }}parcelas_table_body">
+                        {{-- Linhas geradas dinamicamente via JS --}}
+                    </tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
+
+{{-- Template de linha de parcela para o Domusia drawer --}}
+<template id="{{ $idPrefix }}parcela_row_template">
+    <tr data-parcela="">
+        <td class="parcela-numero fw-bold text-gray-600"></td>
+        <td>
+            <input type="text"
+                class="form-control form-control-sm parcela-vencimento"
+                name="parcelas[][vencimento]"
+                placeholder="dd/mm/yyyy"
+                data-parcela-input="vencimento"
+                data-parcela-num=""
+                required>
+        </td>
+        <td>
+            <div class="input-group input-group-sm">
+                <span class="input-group-text py-1 px-2">R$</span>
+                <input type="text"
+                    class="form-control parcela-valor"
+                    name="parcelas[][valor]"
+                    placeholder="0,00"
+                    data-parcela-input="valor"
+                    data-parcela-num=""
+                    required>
+            </div>
+        </td>
+        <td>
+            <input type="text"
+                class="form-control form-control-sm parcela-percentual"
+                name="parcelas[][percentual]"
+                placeholder="0.00"
+                data-parcela-input="percentual"
+                data-parcela-num="">
+        </td>
+
+        <td>
+            <input type="text"
+                class="form-control form-control-sm parcela-descricao"
+                name="parcelas[][descricao]"
+                placeholder="Descrição"
+                data-parcela-input="descricao"
+                data-parcela-num=""
+                data-descricao-base="">
+        </td>
+        <td>
+            <div class="form-check form-check-custom form-check-solid form-check-sm">
+                <input class="form-check-input parcela-agendado"
+                    type="checkbox"
+                    name="parcelas[][agendado]"
+                    value="1"
+                    data-parcela-input="agendado"
+                    data-parcela-num="">
+            </div>
+        </td>
+    </tr>
+</template>
