@@ -116,12 +116,17 @@
                     <!--begin::Col-->
                     <div class="col-xl-9 fv-row">
                         <div class="input-group">
-                            <input type="text" class="form-control form-control-solid" name="cnpj" id="cnpj"
-                                value="{{ $company->cnpj }}" placeholder="CNPJ" />
+                            <input type="text" class="form-control form-control-solid @error('cnpj') is-invalid @enderror" name="cnpj" id="cnpj"
+                                value="{{ old('cnpj', $company->cnpj) }}" placeholder="CNPJ" />
                             <button type="button" class="btn btn-secondary" id="btn-consultar-cnpj">
                                 <i class="bi bi-search"></i> Consultar
                             </button>
                         </div>
+                        @error('cnpj')
+                            <div class="fv-plugins-message-container invalid-feedback d-block">
+                                <div>{{ $message }}</div>
+                            </div>
+                        @enderror
                     </div>
                 </div>
                 <!--end::Row-->
