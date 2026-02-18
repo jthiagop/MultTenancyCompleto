@@ -586,7 +586,6 @@ class TransacaoFinanceiraController extends Controller
                     'valor' => (float) $valor,
                     'tipo' => $tipo,
                     'origem' => $origem,
-                    'saldo_recalculado' => $entidade ? $entidade->saldo_atual : null,
                     'user_id' => Auth::id(),
                     'user_name' => Auth::user()->name
                 ]);
