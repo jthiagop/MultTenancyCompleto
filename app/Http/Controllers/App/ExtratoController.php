@@ -118,6 +118,20 @@ class ExtratoController extends Controller
 
         $saldoFinal = $saldoCorrente;
 
+        Log::info('[ExtratoController] Totais calculados', [
+            'entidade' => $entidade->nome,
+            'entidade_id' => $entidadeId,
+            'saldo_inicial' => $saldoInicial,
+            'entradas_antes' => $entradasAntes,
+            'saidas_antes' => $saidasAntes,
+            'saldo_anterior' => $saldoAnterior,
+            'total_entradas' => $totalEntradas,
+            'total_saidas' => $totalSaidas,
+            'saldo_final' => $saldoFinal,
+            'total_transacoes' => count($movimentacoes),
+            'periodo' => $dataInicial . ' a ' . $dataFinal,
+        ]);
+
         // 6) Buscar company da sessão ativa
         $company = Auth::user()
             ->companies()

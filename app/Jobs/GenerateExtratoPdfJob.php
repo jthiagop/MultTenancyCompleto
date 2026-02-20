@@ -105,7 +105,15 @@ class GenerateExtratoPdfJob implements ShouldQueue
                 ->where('data_competencia', '<', $dataInicio)
                 ->sum('valor');
 
-            $saldoAnterior = $entradasAntes - $saidasAntes;
+            $saldoInicial = $entidade->saldo_inicial ?? 0;
+            $saldoAnterior = $saldoInicial + $entradasAntes - $saidasAntes;
+
+            Log::info('[GenerateExtratoPdfJob] Saldo anterior calculado', [
+                'saldo_inicial' => $saldoInicial,
+                'entradas_antes' => $entradasAntes,
+                'saidas_antes' => $saidasAntes,
+                'saldo_anterior' => $saldoAnterior,
+            ]);
 
             // Transações do período
             $transacoes = TransacaoFinanceira::where('entidade_id', $this->entidadeId)
@@ -150,9 +158,15 @@ class GenerateExtratoPdfJob implements ShouldQueue
 
             $saldoFinal = $saldoCorrente;
 
-            Log::info('[GenerateExtratoPdfJob] HTML sendo gerado', [
+            Log::info('[GenerateExtratoPdfJob] Totais calculados', [
                 'entidade' => $entidade->nome,
+                'entidade_id' => $this->entidadeId,
                 'total_transacoes' => count($movimentacoes),
+                'total_entradas' => $totalEntradas,
+                'total_saidas' => $totalSaidas,
+                'saldo_anterior' => $saldoAnterior,
+                'saldo_final' => $saldoFinal,
+                'periodo' => $dataInicio->format('Y-m-d') . ' a ' . $dataFim->format('Y-m-d'),
             ]);
 
             $viewData = [
