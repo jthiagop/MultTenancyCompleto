@@ -98,8 +98,7 @@
 </div>
 <!--end::Filtros Wrapper-->
 
-@once
-@push('styles')
+{{-- Estilos inline (alguns layouts não possuem @stack('styles')) --}}
 <style>
     /* Tenant Datatable Filters */
     .tenant-filter-account-wrapper {
@@ -114,8 +113,6 @@
         min-width: 300px;
     }
 </style>
-@endpush
-@endonce
 
 @push('scripts')
 <script>

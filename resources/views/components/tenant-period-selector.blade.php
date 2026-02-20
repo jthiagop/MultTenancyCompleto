@@ -59,8 +59,7 @@
 </div>
 <!--end::Período-->
 
-@once
-@push('styles')
+{{-- Estilos inline (layout não possui @stack('styles')) --}}
 <style>
     .tenant-filter-period-nav {
         z-index: 1;
@@ -72,8 +71,6 @@
         border-color: var(--bs-primary) !important;
     }
 </style>
-@endpush
-@endonce
 
 @push('scripts')
 <script>

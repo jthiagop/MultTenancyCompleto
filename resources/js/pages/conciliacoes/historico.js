@@ -501,17 +501,19 @@ if (!el) {
             console.error('   Message:', error.message);
             console.error('   Stack:', error.stack);
 
-            tbody.innerHTML = `
-                <tr><td colspan="7" class="text-center py-10">
-                    <div class="d-flex flex-column align-items-center">
-                        <i class="ki-duotone ki-cross-circle fs-3x text-danger mb-3">
-                            <span class="path1"></span>
-                            <span class="path2"></span>
-                        </i>
-                        <span class="text-danger">Erro ao carregar histórico de conciliações</span>
-                        <small class="text-muted mt-2">${escapeHtml(error.message)}</small>
-                    </div>
-                </td></tr>`;
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr><td colspan="7" class="text-center py-10">
+                        <div class="d-flex flex-column align-items-center">
+                            <i class="ki-duotone ki-cross-circle fs-3x text-danger mb-3">
+                                <span class="path1"></span>
+                                <span class="path2"></span>
+                            </i>
+                            <span class="text-danger">Erro ao carregar histórico de conciliações</span>
+                            <small class="text-muted mt-2">${escapeHtml(error.message)}</small>
+                        </div>
+                    </td></tr>`;
+            }
         }
     }
 
