@@ -17,38 +17,7 @@
 <div class="d-flex flex-wrap gap-3 align-items-end" id="filters-wrapper-{{ $tableId }}">
     
     <!--begin::Período-->
-    <div class="me-3">
-        <div class="btn-group w-100" role="group" aria-label="Navegação de período">
-            <button class="btn btn-light btn-sm btn-icon btn-light-primary tenant-filter-period-nav" 
-                    type="button" 
-                    id="prev-period-btn-{{ $tableId }}"
-                    aria-label="Período anterior">
-                <i class="bi bi-chevron-left"></i>
-            </button>
-
-            <button class="btn btn-light btn-sm flex-grow-1 btn-light-primary position-relative tenant-filter-period-nav" 
-                    type="button" 
-                    id="period-selector-{{ $tableId }}"
-                    aria-label="Selecionar período">
-                <span id="period-display-{{ $tableId }}">{{ $periodLabel }}</span>
-                {{-- Input invisível para facilitar posicionamento do Daterangepicker --}}
-                <input type="text" 
-                       class="position-absolute opacity-0 top-0 start-0 w-100 h-100" 
-                       id="kt_daterangepicker_{{ $tableId }}" 
-                       style="cursor: pointer; z-index: 10;" 
-                       readonly 
-                       tabindex="-1"
-                       aria-hidden="true" />
-            </button>
-
-            <button class="btn btn-light btn-sm btn-icon btn-light-primary tenant-filter-period-nav" 
-                    type="button" 
-                    id="next-period-btn-{{ $tableId }}"
-                    aria-label="Próximo período">
-                <i class="bi bi-chevron-right"></i>
-            </button>
-        </div>
-    </div>
+    <x-tenant-period-selector :tableId="$tableId" :periodLabel="$periodLabel" />
     <!--end::Período-->
 
     <!--begin::Busca-->
@@ -133,10 +102,6 @@
 @push('styles')
 <style>
     /* Tenant Datatable Filters */
-    .tenant-filter-period-nav {
-        z-index: 1;
-        position: relative;
-    }
     .tenant-filter-account-wrapper {
         min-width: 220px;
     }

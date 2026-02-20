@@ -9,6 +9,8 @@
     'accountOptions' => [],
     'showAccountFilter' => false,
     'showMoreFilters' => false,
+    'showPeriodFilter' => false,
+    'showAllPeriod' => false,
     'moreFilters' => [],
     'filterId' => null, // ID do filtro (fallback para tableId)
 ])
@@ -167,6 +169,14 @@
                 :showAccountFilter="$showAccountFilter"
                 :showMoreFilters="$showMoreFilters" 
                 :moreFilters="$moreFilters" />
+        </div>
+    </div>
+    @elseif($showPeriodFilter)
+    <div class="card mb-0 border-0 rounded-0" style="border-bottom: 1px solid var(--bs-border-color-translucent) !important;">
+        <div class="card-body">
+            <div class="d-flex flex-wrap gap-3 align-items-end">
+                <x-tenant-period-selector :tableId="$filterId ?? $tableId ?? $id" :periodLabel="$periodLabel" :showAllPeriod="$showAllPeriod" />
+            </div>
         </div>
     </div>
     @endif

@@ -1,5 +1,6 @@
 /**
  * TenantFiltersRegistry - Gerenciador global de filtros para datatables
+ * Delega a lógica de período ao initTenantPeriod (period-selector.js)
  */
 window.TenantFiltersRegistry = {};
 
@@ -17,148 +18,10 @@ window.initTenantFilters = function(tableId) {
         return;
     }
 
-    // Verifica se moment está disponível
-    if (typeof moment === 'undefined') {
-        return;
-    }
-
-    // Estado local
-    let currentStart = moment().startOf('month');
-    let currentEnd = moment().endOf('month');
-    let pickerInitialized = false;
-
-    // Elementos
-    const labelDisplay = document.getElementById(`period-display-${tableId}`);
-    const inputPicker = document.getElementById(`kt_daterangepicker_${tableId}`);
-    const prevBtn = document.getElementById(`prev-period-btn-${tableId}`);
-    const nextBtn = document.getElementById(`next-period-btn-${tableId}`);
-    const periodSelector = document.getElementById(`period-selector-${tableId}`);
-    
-    // --- Lógica de Período ---
-    const updateDisplay = () => {
-        if (!labelDisplay) return;
-        
-        if (currentStart.format('YYYY-MM') === currentEnd.format('YYYY-MM') &&
-            currentStart.date() === 1 &&
-            currentEnd.isSame(currentEnd.clone().endOf('month'), 'day')) {
-            labelDisplay.textContent = currentStart.format('MMMM [de] YYYY');
-        } else {
-            labelDisplay.textContent = `${currentStart.format('DD/MM/YYYY')} - ${currentEnd.format('DD/MM/YYYY')}`;
-        }
-    };
-
-    const triggerChange = () => {
-        document.dispatchEvent(new CustomEvent('periodChanged', {
-            detail: { start: currentStart.clone(), end: currentEnd.clone(), tableId: tableId }
-        }));
-    };
-
-    // Navegação Mês Anterior/Próximo
-    if (prevBtn) {
-        prevBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Calcula a duração do período atual para manter
-            const duracao = currentEnd.diff(currentStart, 'days');
-            
-            // Move para o mês anterior mantendo a duração
-            currentStart = currentStart.clone().subtract(1, 'month').startOf('month');
-            currentEnd = currentStart.clone().add(duracao, 'days');
-            
-            // Se a duração era de um mês completo, mantém o mês completo
-            if (duracao >= 27 && duracao <= 31) {
-                currentEnd = currentStart.clone().endOf('month');
-            }
-            
-            updateDisplay();
-            triggerChange();
-            if(pickerInitialized) updatePickerDates();
-        });
-    }
-
-    if (nextBtn) {
-        nextBtn.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            
-            // Calcula a duração do período atual para manter
-            const duracao = currentEnd.diff(currentStart, 'days');
-            
-            // Move para o próximo mês mantendo a duração
-            currentStart = currentStart.clone().add(1, 'month').startOf('month');
-            currentEnd = currentStart.clone().add(duracao, 'days');
-            
-            // Se a duração era de um mês completo, mantém o mês completo
-            if (duracao >= 27 && duracao <= 31) {
-                currentEnd = currentStart.clone().endOf('month');
-            }
-            
-            updateDisplay();
-            triggerChange();
-            if(pickerInitialized) updatePickerDates();
-        });
-    }
-
-    // --- Lazy Loading do Daterangepicker ---
-    const initPicker = () => {
-        if (pickerInitialized) return;
-        if (typeof $ === 'undefined' || !$.fn.daterangepicker) {
-            return;
-        }
-        
-        $(inputPicker).daterangepicker({
-            startDate: currentStart,
-            endDate: currentEnd,
-            autoApply: false,
-            opens: 'left',
-            drops: 'auto',
-            ranges: {
-                "Este Mês": [moment().startOf("month"), moment().endOf("month")],
-                "Mês Passado": [moment().subtract(1, "month").startOf("month"), moment().subtract(1, "month").endOf("month")],
-                "Últimos 30 Dias": [moment().subtract(29, "days"), moment()],
-                "Hoje": [moment(), moment()]
-            },
-            locale: {
-                format: "DD/MM/YYYY",
-                applyLabel: "Aplicar",
-                cancelLabel: "Cancelar",
-                customRangeLabel: "Personalizado",
-                daysOfWeek: ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"],
-                monthNames: ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"],
-                firstDay: 0
-            }
-        }, (start, end) => {
-            currentStart = start;
-            currentEnd = end;
-            updateDisplay();
-            triggerChange();
-        });
-
-        pickerInitialized = true;
-        // Abre imediatamente após inicializar
-        $(inputPicker).data('daterangepicker').show();
-    };
-    
-    const updatePickerDates = () => {
-        const drp = $(inputPicker).data('daterangepicker');
-        if (drp) {
-            drp.setStartDate(currentStart);
-            drp.setEndDate(currentEnd);
-        }
-    }
-
-    // Listener de clique no seletor para Lazy Load
-    if (periodSelector) {
-        periodSelector.addEventListener('click', (e) => {
-            e.preventDefault();
-            if (!pickerInitialized) {
-                initPicker();
-            } else {
-                $(inputPicker).data('daterangepicker').toggle();
-            }
-        });
-    }
+    // Inicializa o seletor de período via módulo reutilizável
+    const periodApi = typeof window.initTenantPeriod === 'function'
+        ? window.initTenantPeriod(tableId)
+        : null;
 
     // --- Busca e Outros Filtros ---
     const searchInput = document.getElementById(`search-${tableId}`);
@@ -224,19 +87,14 @@ window.initTenantFilters = function(tableId) {
                 }
             });
 
-            // Volta para o mês atual
-            currentStart = moment().startOf('month');
-            currentEnd = moment().endOf('month');
-            updateDisplay();
-            if(pickerInitialized) updatePickerDates();
+            // Reseta o período via API do módulo reutilizável
+            if (periodApi) {
+                periodApi.reset();
+            }
             
             triggerSearch();
-            triggerChange();
         });
     }
-
-    // Inicializa o display
-    updateDisplay();
 
     // Registra que já inicializou
     window.TenantFiltersRegistry[tableId] = true;
