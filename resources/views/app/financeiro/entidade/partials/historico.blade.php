@@ -19,13 +19,21 @@
         ['key' => 'ignorado', 'label' => 'Ignorados', 'count' => $counts['ignorado']],
         ['key' => 'divergente', 'label' => 'Divergentes', 'count' => $counts['divergente']],
     ];
+
+    $periodLabel = \Carbon\Carbon::now()->translatedFormat('F \d\e Y');
 @endphp
+
+
 
 <x-tenant.segmented-tabs-toolbar
     id="historico-status-tabs"
     :tabs="$abasStatus"
     :active="request('status', 'all')"
     class="mb-5"
+    filterId="historico-conciliacoes"
+    :periodLabel="$periodLabel"
+    :showPeriodFilter="true"
+    :showAllPeriod="true"
 >
     @slot('panes')
         {{-- Loop para criar os containers de cada status --}}
@@ -49,6 +57,7 @@
                      data-url-detalhes="{{ route('conciliacao.detalhes', ':id') }}"
                      data-url-desfazer="{{ route('conciliacao.desfazer', ':id') }}"
                      class="mt-4">
+                     
 
                     <div class="card card-flush">
                         <div class="card-header border-0 pt-5 separator">
@@ -62,18 +71,18 @@
                             </h3>
                             <div class="card-toolbar">
                                 <div class="d-flex align-items-center gap-2">
-                                    {{-- Campo de busca (apenas no All inicialmente para não duplicar IDs complexos) --}}
-                                    @if($aba['key'] === 'all')
                                     <div class="d-flex align-items-center position-relative">
                                         <i class="bi bi-search fs-3 position-absolute ms-4"></i>
-                                        <input type="text" id="busca-historico"
-                                            class="form-control btn btn-sm form-control-solid w-250px ps-12"
+                                        <input type="text"
+                                            class="form-control btn btn-sm form-control-solid w-250px ps-12 busca-historico-input"
+                                            id="busca-historico-{{ $aba['key'] }}"
+                                            data-status="{{ $aba['key'] }}"
                                             placeholder="Buscar..." />
                                     </div>
-                                    @endif
                                 </div>
                             </div>
                         </div>
+                        
                         <div class="card-body py-4">
                             <div class="table-responsive">
                                 <table class="table table-striped table-row-bordered fs-6 gy-3"
@@ -104,22 +113,26 @@
                                             </td>
                                         </tr>
                                     </tbody>
+                                    <tfoot>
+                                        <tr class="fw-bold fs-6">
+                                            <th colspan="3" class="text-nowrap align-end">Total:</th>
+                                            <th class="text-end fs-5" id="historico-total-{{ $aba['key'] }}">R$ 0,00</th>
+                                        </tr>
+                                    </tfoot>
                                 </table>
 
-                                {{-- Paginação apenas no ALL por enquanto --}}
-                                @if($aba['key'] === 'all')
-                                <div class="d-flex justify-content-between align-items-center flex-wrap pt-5">
+                                {{-- Paginação para todas as tabs --}}
+                                <div class="d-flex justify-content-between align-items-center flex-wrap pt-5 historico-pagination-wrapper" data-status="{{ $aba['key'] }}">
                                     <div class="d-flex align-items-center">
-                                        <select id="items-per-page" class="form-select form-select-sm w-75px">
+                                        <select id="items-per-page-{{ $aba['key'] }}" class="form-select form-select-sm w-75px items-per-page-select" data-status="{{ $aba['key'] }}">
                                             <option value="10" selected>10</option>
                                             <option value="25">25</option>
                                             <option value="50">50</option>
                                             <option value="100">100</option>
                                         </select>
                                     </div>
-                                    <ul class="pagination" id="historico-pagination"></ul>
+                                    <ul class="pagination historico-pagination-list" id="historico-pagination-{{ $aba['key'] }}" data-status="{{ $aba['key'] }}"></ul>
                                 </div>
-                                @endif
                             </div>
                         </div>
                     </div>

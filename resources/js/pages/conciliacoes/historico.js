@@ -18,9 +18,42 @@ if (!el) {
 
     // Elementos DOM - busca inicial para tab 'all'
     let tbody = document.getElementById('historico-conciliacoes-body');
-    const buscaInput = document.getElementById('busca-historico');
-    const perPageSelect = document.getElementById('items-per-page');
-    const paginationContainer = document.getElementById('historico-pagination');
+
+    // Busca dinâmica por tab
+    function getBuscaInput(status) {
+        status = status || getActiveStatus();
+        return document.getElementById(`busca-historico-${status}`);
+    }
+
+    // Paginação dinâmica por tab (funções helper)
+    function getActiveStatus() {
+        const activeBtn = document.querySelector('#historico-status-tabs-tabs .nav-link.active');
+        if (activeBtn) {
+            const key = activeBtn.getAttribute('data-tab-key') || activeBtn.getAttribute('data-status-tab');
+            if (key) return key;
+            const targetId = activeBtn.getAttribute('data-bs-target')?.replace('#', '');
+            if (targetId) {
+                const pane = document.getElementById(targetId);
+                if (pane) return pane.getAttribute('data-status') || 'all';
+            }
+        }
+        const activePane = document.querySelector('[data-status].show.active');
+        return activePane ? activePane.getAttribute('data-status') || 'all' : 'all';
+    }
+
+    function getPerPageSelect(status) {
+        status = status || getActiveStatus();
+        return document.getElementById(`items-per-page-${status}`);
+    }
+
+    function getPaginationContainer(status) {
+        status = status || getActiveStatus();
+        return document.getElementById(`historico-pagination-${status}`);
+    }
+
+    // Referências iniciais (compatibilidade)
+    let perPageSelect = getPerPageSelect('all');
+    let paginationContainer = getPaginationContainer('all');
 
     // Função auxiliar para obter tbody baseado no status
     function getTbodyByStatus(status) {
@@ -68,9 +101,38 @@ if (!el) {
             "'": '&#039;'
         }[m]));
 
-    // Estado da paginação/busca
-    let state = { page: 1, per_page: 10, q: '' };
+    // Estado da paginação/busca/período
+    let state = { page: 1, per_page: 10, q: '', start_date: null, end_date: null };
     let aborter = null;
+
+    // Período: inicializa com mês atual
+    if (typeof moment !== 'undefined') {
+        state.start_date = moment().startOf('month').format('YYYY-MM-DD');
+        state.end_date = moment().endOf('month').format('YYYY-MM-DD');
+    }
+
+    /**
+     * Atualiza tfoot com o total da página
+     */
+    function updateTotal(json, status) {
+        status = status || getActiveStatus();
+        const totalEl = document.getElementById(`historico-total-${status}`);
+        if (!totalEl) return;
+
+        const entradas = json?.total_entradas || 0;
+        const saidas = json?.total_saidas || 0;
+        const saldo = entradas - saidas;
+
+        if (saldo >= 0) {
+            totalEl.textContent = `R$ ${money.format(saldo)}`;
+            totalEl.classList.remove('text-danger');
+            totalEl.classList.add('text-success');
+        } else {
+            totalEl.textContent = `-R$ ${money.format(Math.abs(saldo))}`;
+            totalEl.classList.remove('text-success');
+            totalEl.classList.add('text-danger');
+        }
+    }
 
     /**
      * Debounce helper
@@ -231,12 +293,15 @@ if (!el) {
     /**
      * Renderiza paginação
      */
-    function renderPagination(meta) {
+    function renderPagination(meta, targetStatus) {
+        const container = targetStatus ? getPaginationContainer(targetStatus) : (getPaginationContainer() || paginationContainer);
+        if (!container) return;
+
         const totalPages = meta?.last_page || 1;
         const current = meta?.current_page || 1;
 
         if (totalPages <= 1) {
-            paginationContainer.innerHTML = '';
+            container.innerHTML = '';
             return;
         }
 
@@ -260,7 +325,7 @@ if (!el) {
 
         html += mk(current + 1, '<i class="next"></i>', current === totalPages);
 
-        paginationContainer.innerHTML = html;
+        container.innerHTML = html;
     }
 
     /**
@@ -332,8 +397,12 @@ if (!el) {
                 page: String(state.page),
                 per_page: String(state.per_page),
                 q: state.q || '',
-                status: activeStatus, // ✅ Passa o status da aba ativa para filtrar no backend
+                status: activeStatus,
             });
+
+            // Adiciona período se definido
+            if (state.start_date) qs.set('start_date', state.start_date);
+            if (state.end_date) qs.set('end_date', state.end_date);
 
             const fullUrl = `${urlHistorico}?${qs.toString()}`;
             console.log('[Historico] Carregando dados:', {
@@ -341,6 +410,8 @@ if (!el) {
                 page: state.page,
                 per_page: state.per_page,
                 q: state.q,
+                start_date: state.start_date,
+                end_date: state.end_date,
                 url: fullUrl
             });
 
@@ -380,7 +451,8 @@ if (!el) {
 
                     // Renderiza HTML diretamente no tbody correto
                     tbody.innerHTML = json.html;
-                    renderPagination(json?.meta);
+                    renderPagination(json?.meta, activeStatus);
+                    updateTotal(json, activeStatus);
 
                     // Reinicializa menus apenas no tbody atual
                     if (typeof KTMenu !== 'undefined') {
@@ -417,7 +489,8 @@ if (!el) {
             }
 
             renderRows(items);
-            renderPagination(json?.meta);
+            renderPagination(json?.meta, activeStatus);
+            updateTotal(json, activeStatus);
 
         } catch (error) {
             if (error.name === 'AbortError') {
@@ -446,25 +519,34 @@ if (!el) {
      * Event Listeners
      */
 
-    // Busca com debounce
+    // Busca com debounce - event delegation para todos os inputs de busca
     const debouncedSearch = debounce(() => {
+        const buscaInput = getBuscaInput();
         state.page = 1;
-        state.q = buscaInput.value.trim();
+        state.q = buscaInput ? buscaInput.value.trim() : '';
         load().catch(console.error);
     });
 
-    buscaInput?.addEventListener('input', debouncedSearch);
+    document.addEventListener('input', (e) => {
+        if (e.target.closest('.busca-historico-input')) {
+            debouncedSearch();
+        }
+    });
 
-    // Mudança de itens por página
-    perPageSelect?.addEventListener('change', () => {
-        state.per_page = Number(perPageSelect.value || 10);
+    // Mudança de itens por página - event delegation para todos os selects
+    document.addEventListener('change', (e) => {
+        const sel = e.target.closest('.items-per-page-select');
+        if (!sel) return;
+        state.per_page = Number(sel.value || 10);
         state.page = 1;
+        // Sincroniza o valor em todos os selects
+        document.querySelectorAll('.items-per-page-select').forEach(s => { s.value = sel.value; });
         load().catch(console.error);
     });
 
-    // Event delegation: paginação
-    paginationContainer?.addEventListener('click', (e) => {
-        const a = e.target.closest('.page-link');
+    // Event delegation: paginação em todas as tabs
+    document.addEventListener('click', (e) => {
+        const a = e.target.closest('.historico-pagination-list .page-link');
         if (!a) return;
 
         e.preventDefault();
@@ -496,6 +578,16 @@ if (!el) {
             desfazerConciliacao(id);
         }
     });
+
+    // ========== SELETOR DE PERÍODO (via tenant-datatable-filters / periodChanged event) ==========
+    document.addEventListener('periodChanged', (e) => {
+        if (e.detail.tableId !== 'historico-conciliacoes') return;
+        state.start_date = e.detail.start ? e.detail.start.format('YYYY-MM-DD') : null;
+        state.end_date = e.detail.end ? e.detail.end.format('YYYY-MM-DD') : null;
+        state.page = 1;
+        load().catch(console.error);
+    });
+    // ========== FIM SELETOR DE PERÍODO ==========
 
     /**
      * Abre o drawer com detalhes da conciliação
@@ -867,11 +959,12 @@ if (!el) {
                     const newTbody = document.getElementById(newItemBodyId);
                     if (newTbody) {
                         tbody = newTbody;
+                        perPageSelect = getPerPageSelect(status);
+                        paginationContainer = getPaginationContainer(status);
                         state.page = 1;
                         state.q = '';
-                        if (buscaInput && status === 'all') {
-                            buscaInput.value = '';
-                        }
+                        const buscaEl = getBuscaInput(status);
+                        if (buscaEl) buscaEl.value = '';
                         newTbody.innerHTML = `
                             <tr><td colspan="7" class="text-center py-10">
                                 <div class="spinner-border text-primary" role="status">
@@ -903,16 +996,17 @@ if (!el) {
 
         if (newTbody) {
             tbody = newTbody; // Atualiza a variável global do escopo
+            perPageSelect = getPerPageSelect(status);
+            paginationContainer = getPaginationContainer(status);
             console.log('[Historico] Tbody atualizado para:', newItemBodyId);
 
             // Reseta paginação ao trocar de aba
             state.page = 1;
             state.q = ''; // Limpa busca ao trocar de tab
 
-            // Limpa o campo de busca se existir (apenas na tab 'all')
-            if (buscaInput && status === 'all') {
-                buscaInput.value = '';
-            }
+            // Limpa o campo de busca da tab nova
+            const buscaEl = getBuscaInput(status);
+            if (buscaEl) buscaEl.value = '';
 
             // Mostra loading no tbody da nova tab
             newTbody.innerHTML = `
