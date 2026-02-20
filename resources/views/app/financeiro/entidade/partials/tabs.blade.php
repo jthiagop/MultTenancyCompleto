@@ -142,16 +142,11 @@
     </div>
     <!--end::Nav Tabs-->
 </div>
-{{-- Scripts necessários --}}
-<script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/moment.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/moment@2.30.1/locale/pt-br.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.min.js"></script>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/daterangepicker@3.1.0/daterangepicker.css">
-{{-- Toast Script --}}
-<script src="/tenancy/assets/js/toasts.js"></script>
+{{-- moment, daterangepicker e jQuery já vêm do plugins.bundle.js (carregado no layout) --}}
+{{-- Não carregar via CDN para evitar erro: $.fn undefined --}}
 
 <script>
-    // Variável global para armazenar o período selecionado
+    // Variável global para armazenar o período selecionado (precisa estar antes do @push)
     window.periodoFiltro = {
         dataInicio: null,
         dataFim: null
@@ -167,8 +162,19 @@
             }
         }));
     };
+</script>
 
-    document.addEventListener('DOMContentLoaded', function () {
+@push('scripts')
+<script>
+    // Wrapper que funciona tanto se o DOM já carregou quanto se ainda não
+    (function initTabs() {
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', run);
+        } else {
+            run();
+        }
+
+        function run() {
         const entidadeId = {{ $entidade->id ?? 'null' }};
 
         if (!entidadeId) {
@@ -523,5 +529,7 @@
                 window.location.href = newUrl;
             }
         });
-    });
+    } // end run()
+    })(); // end initTabs
 </script>
+@endpush
