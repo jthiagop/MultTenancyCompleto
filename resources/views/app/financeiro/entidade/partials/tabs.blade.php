@@ -146,7 +146,7 @@
 {{-- Não carregar via CDN para evitar erro: $.fn undefined --}}
 
 <script>
-    // Variável global para armazenar o período selecionado (precisa estar antes do @push)
+    // Variável global para armazenar o período selecionado (precisa estar antes do push)
     window.periodoFiltro = {
         dataInicio: null,
         dataFim: null
