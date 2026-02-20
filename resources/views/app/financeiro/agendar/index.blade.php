@@ -1,4 +1,4 @@
-<x-tenant-app-layout pageTitle="Agendar Relatório" :breadcrumbs="[['label' => 'Financeiro', 'url' => route('financeiro.index')], ['label' => 'Agendar Relatório']]">
+<x-tenant-app-layout pageTitle="Agendar Relatório" :breadcrumbs="[['label' => 'Financeiro', 'url' => route('banco.list')], ['label' => 'Agendar Relatório']]">
 
     <!--begin::Content wrapper-->
     <div class="d-flex flex-column flex-column-fluid py-3 py-lg-6">
@@ -22,7 +22,7 @@
                             <!--end::Description-->
                             <!--begin::Action-->
                             <a href="#" class="btn btn-primary er fs-6 px-8 py-4" data-bs-toggle="modal"
-                                data-bs-target="#kt_modal_create_api_key">Create API Key</a>
+                                data-bs-target="#kt_modal_create_api_key">Novo Relatório - <span class="text-warning">EM BREVE</span></a>
                             <!--end::Action-->
                         </div>
                         <!--end::Heading-->

@@ -743,6 +743,10 @@ class EntidadeFinanceiraController extends Controller
         $q = trim((string) $request->input('q', ''));
         $status = trim((string) $request->input('status', 'all')); // Filtro de status (default: 'all' para mostrar todos)
 
+        // Filtro de período
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+
         // Status permitidos: ok, pendente, ignorado, divergente, all, todos
         $statusPermitidos = ['ok', 'pendente', 'ignorado', 'divergente', 'all', 'todos'];
         if (!in_array($status, $statusPermitidos)) {
@@ -753,6 +757,11 @@ class EntidadeFinanceiraController extends Controller
         $countBaseQuery = BankStatement::query()
             ->where('company_id', $activeCompanyId)
             ->where('entidade_financeira_id', $id);
+
+        // Aplica filtro de período nos contadores também
+        if ($startDate && $endDate) {
+            $countBaseQuery->whereBetween('dtposted', [$startDate, $endDate]);
+        }
 
         $counts = [
             'all' => (clone $countBaseQuery)->where('status_conciliacao', '!=', 'pendente')->count(),
@@ -773,6 +782,11 @@ class EntidadeFinanceiraController extends Controller
         } else {
             // No status 'all', listamos tudo EXCETO os pendentes (que são o extrato aberto)
             $query->where('status_conciliacao', '!=', 'pendente');
+        }
+
+        // Filtro de período na query principal
+        if ($startDate && $endDate) {
+            $query->whereBetween('dtposted', [$startDate, $endDate]);
         }
 
         // Eager loading e ordenação
@@ -837,7 +851,10 @@ class EntidadeFinanceiraController extends Controller
             return response()->json([
                 'success' => true,
                 'html' => $html,
-                'counts' => $counts, // ✅ Novo: retorna contadores
+                'counts' => $counts,
+                'total_valor' => $dados->sum('valor'),
+                'total_entradas' => $dados->where('tipo', 'entrada')->sum('valor'),
+                'total_saidas' => $dados->where('tipo', 'saida')->sum('valor'),
                 'meta' => [
                     'current_page' => $paginator->currentPage(),
                     'last_page' => $paginator->lastPage(),
@@ -851,7 +868,10 @@ class EntidadeFinanceiraController extends Controller
         return response()->json([
             'success' => true,
             'data' => $dados,
-            'counts' => $counts, // ✅ Novo: retorna contadores
+            'counts' => $counts,
+            'total_valor' => $dados->sum('valor'),
+            'total_entradas' => $dados->where('tipo', 'entrada')->sum('valor'),
+            'total_saidas' => $dados->where('tipo', 'saida')->sum('valor'),
             'meta' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
