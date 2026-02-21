@@ -145,7 +145,8 @@ class GenerateBoletimPdfJob implements ShouldQueue
             $saldoAtualTotal = 0;
 
             foreach ($entidades as $entidade) {
-                // Opção A: saldo_inicial = 0, movimentações são a fonte de verdade
+                // Saldo inicial da conta
+                $saldoInicial = $entidade->saldo_inicial ?? 0;
 
                 // Entradas e Saídas ANTES do período (para o saldo anterior)
                 $entradasAntes = TransacaoFinanceira::where('entidade_id', $entidade->id)
@@ -164,7 +165,7 @@ class GenerateBoletimPdfJob implements ShouldQueue
                     ->where('data_competencia', '<', $dataInicio)
                     ->sum('valor');
 
-                $saldoAnterior = $entradasAntes - $saidasAntes;
+                $saldoAnterior = $saldoInicial + $entradasAntes - $saidasAntes;
 
                 // Entradas e Saídas NO período
                 $entradasPeriodo = $transacoes->where('entidade_id', $entidade->id)

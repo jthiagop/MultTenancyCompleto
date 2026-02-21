@@ -118,53 +118,21 @@ class EntidadeFinanceiraController extends Controller
         $validatedData['updated_by_name'] = Auth::user()->name;
 
         try {
-            // Guarda o valor real do saldo para a movimentação
-            $valorSaldoInicial = $validatedData['saldo_inicial'];
-
-            // Opção A: saldo_inicial = 0 na tabela, movimentação é a fonte de verdade
-            $validatedData['saldo_inicial'] = 0;
-            $validatedData['saldo_atual'] = 0;
-
             $entidade = EntidadeFinanceira::create($validatedData);
 
-            // Cria a movimentação de saldo inicial (fonte única de verdade)
-            if ($valorSaldoInicial != 0) {
-                Movimentacao::create([
-                    'entidade_id'   => $entidade->id,
-                    'tipo'          => $valorSaldoInicial >= 0 ? 'entrada' : 'saida',
-                    'valor'         => abs($valorSaldoInicial),
-                    'descricao'     => 'Saldo inicial da entidade financeira',
-                    'data'          => now()->toDateString(),
-                    'categoria'     => 'saldo_inicial',
-                    'status'        => 'concluida',
-                    'company_id'    => $validatedData['company_id'],
-                    'created_by'    => Auth::id(),
-                    'created_by_name' => Auth::user()->name,
-                ]);
-            }
-
-            // Resposta AJAX (modal) ou redirect tradicional
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => true,
-                    'message' => 'A entidade financeira foi criada com sucesso!',
-                    'entidade' => $entidade->fresh(),
-                ]);
-            }
+            // Lógica para criar a primeira movimentação... (seu código aqui está ótimo)
+            Movimentacao::create([
+                'entidade_id'   => $entidade->id,
+                'tipo'          => 'entrada',
+                'valor'         => $validatedData['saldo_inicial'],
+                'descricao'     => 'Saldo inicial da entidade financeira',
+                'company_id'    => $validatedData['company_id'],
+            ]);
 
             flash()->success('A entidade financeira foi criada com sucesso!');
             return redirect()->route('entidades.index');
         } catch (\Exception $e) {
             \Log::error('Erro ao criar entidade: ' . $e->getMessage());
-
-            if ($request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Ocorreu um erro ao criar a entidade.',
-                    'error'   => $e->getMessage(),
-                ], 500);
-            }
-
             Flasher::addError('Ocorreu um erro ao criar a entidade.');
             return redirect()->back()->withInput();
         }
@@ -743,10 +711,6 @@ class EntidadeFinanceiraController extends Controller
         $q = trim((string) $request->input('q', ''));
         $status = trim((string) $request->input('status', 'all')); // Filtro de status (default: 'all' para mostrar todos)
 
-        // Filtro de período
-        $startDate = $request->input('start_date');
-        $endDate = $request->input('end_date');
-
         // Status permitidos: ok, pendente, ignorado, divergente, all, todos
         $statusPermitidos = ['ok', 'pendente', 'ignorado', 'divergente', 'all', 'todos'];
         if (!in_array($status, $statusPermitidos)) {
@@ -757,11 +721,6 @@ class EntidadeFinanceiraController extends Controller
         $countBaseQuery = BankStatement::query()
             ->where('company_id', $activeCompanyId)
             ->where('entidade_financeira_id', $id);
-
-        // Aplica filtro de período nos contadores também
-        if ($startDate && $endDate) {
-            $countBaseQuery->whereBetween('dtposted', [$startDate, $endDate]);
-        }
 
         $counts = [
             'all' => (clone $countBaseQuery)->where('status_conciliacao', '!=', 'pendente')->count(),
@@ -782,11 +741,6 @@ class EntidadeFinanceiraController extends Controller
         } else {
             // No status 'all', listamos tudo EXCETO os pendentes (que são o extrato aberto)
             $query->where('status_conciliacao', '!=', 'pendente');
-        }
-
-        // Filtro de período na query principal
-        if ($startDate && $endDate) {
-            $query->whereBetween('dtposted', [$startDate, $endDate]);
         }
 
         // Eager loading e ordenação
@@ -851,10 +805,7 @@ class EntidadeFinanceiraController extends Controller
             return response()->json([
                 'success' => true,
                 'html' => $html,
-                'counts' => $counts,
-                'total_valor' => $dados->sum('valor'),
-                'total_entradas' => $dados->where('tipo', 'entrada')->sum('valor'),
-                'total_saidas' => $dados->where('tipo', 'saida')->sum('valor'),
+                'counts' => $counts, // ✅ Novo: retorna contadores
                 'meta' => [
                     'current_page' => $paginator->currentPage(),
                     'last_page' => $paginator->lastPage(),
@@ -868,10 +819,7 @@ class EntidadeFinanceiraController extends Controller
         return response()->json([
             'success' => true,
             'data' => $dados,
-            'counts' => $counts,
-            'total_valor' => $dados->sum('valor'),
-            'total_entradas' => $dados->where('tipo', 'entrada')->sum('valor'),
-            'total_saidas' => $dados->where('tipo', 'saida')->sum('valor'),
+            'counts' => $counts, // ✅ Novo: retorna contadores
             'meta' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
@@ -1088,19 +1036,15 @@ class EntidadeFinanceiraController extends Controller
                 $entidade = EntidadeFinanceira::findOrFail($entidadeId);
                 $saldoAnterior = $entidade->saldo_atual;
 
-                // 1. Deletar a movimentação relacionada (via instância Eloquent)
-                // O MovimentacaoObserver::deleted() reverte o saldo_atual automaticamente
-                if ($movimentacaoId) {
-                    $movimentacao = Movimentacao::find($movimentacaoId);
-                    if ($movimentacao) {
-                        $movimentacao->delete(); // Dispara MovimentacaoObserver::deleted() → reverte saldo
-                    }
+                // 1. REVERTER O CACHE (saldo_atual) - ATOMICAMENTE
+                if ($tipo === 'entrada') {
+                    $entidade->saldo_atual -= $valor;
+                } else {
+                    $entidade->saldo_atual += $valor;
                 }
+                $entidade->save();
 
-                // Recarrega a entidade para obter saldo atualizado pelo Observer
-                $entidade->refresh();
-
-                \Log::info('Saldo revertido via Observer', [
+                \Log::info('Saldo revertido', [
                     'entidade_id' => $entidadeId,
                     'tipo' => $tipo,
                     'valor' => $valor,
@@ -1108,13 +1052,18 @@ class EntidadeFinanceiraController extends Controller
                     'saldo_novo' => $entidade->saldo_atual
                 ]);
 
-                // 2. Remover o vínculo na tabela pivot
+                // 2. Deletar a movimentação relacionada
+                if ($movimentacaoId) {
+                    Movimentacao::where('id', $movimentacaoId)->delete();
+                }
+
+                // 3. Remover o vínculo na tabela pivot
                 $bankStatement->transacoes()->detach($transacao->id);
 
-                // 3. Deletar a transação financeira
+                // 4. Deletar a transação financeira
                 $transacao->delete();
 
-                // 4. Atualizar o status do bank statement
+                // 5. Atualizar o status do bank statement
                 $bankStatement->update([
                     'reconciled' => false,
                     'status_conciliacao' => 'pendente'
