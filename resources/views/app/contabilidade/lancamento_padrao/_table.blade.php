@@ -21,15 +21,15 @@
         <x-slot:actionsRight>
             <!--begin::Toolbar-->
             <div class="d-flex justify-content-end" data-kt-lancamento-padrao-table-toolbar="base">
-                <!--begin::Export-->
-                <button type="button" class="btn btn-sm btn-light-primary me-3" data-bs-toggle="modal"
-                    data-bs-target="#kt_subscriptions_export_modal">
-                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
-                    <span class="svg-icon svg-icon-2">
-                        <i class="bi bi-box-arrow-up fs-3"></i>
-                    </span>
-                    <!--end::Svg Icon-->Exportar</button>
-                <!--end::Export-->
+                    <!--begin::Export-->
+                    <button type="button" class="btn btn-sm btn-light-primary me-3" data-bs-toggle="modal" 
+                        data-bs-target="#kt_modal_export_lancamento_padrao">
+                        <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
+                        <span class="svg-icon svg-icon-2">
+                            <i class="bi bi-box-arrow-up fs-3"></i>
+                        </span>
+                        <!--end::Svg Icon-->Exportar</button>
+                    <!--end::Export-->
                 <!--begin::Import Bulk-->
                 <button type="button" class="btn btn-sm btn-light-primary me-3" data-bs-toggle="modal"
                     data-bs-target="#kt_modal_import_bulk">
@@ -90,8 +90,8 @@
             </div>
             <!--end::Card-->
             <!--begin::Modals-->
-            <!--begin::Modal - Adjust Balance-->
-            <div class="modal fade" id="kt_subscriptions_export_modal" tabindex="-1" aria-hidden="true">
+            <!--begin::Modal - Export Lancamento Padrao-->
+            <div class="modal fade" tabindex="-1" id="kt_modal_export_lancamento_padrao">
                 <!--begin::Modal dialog-->
                 <div class="modal-dialog modal-dialog-centered mw-650px">
                     <!--begin::Modal content-->
@@ -99,36 +99,30 @@
                         <!--begin::Modal header-->
                         <div class="modal-header">
                             <!--begin::Modal title-->
-                            <h2 class="fw-bold">Export Subscriptions</h2>
+                            <h3 class="modal-title">Exportar Lançamentos Padrão</h3>
                             <!--end::Modal title-->
                             <!--begin::Close-->
-                            <div id="kt_subscriptions_export_close"
-                                class="btn btn-icon btn-sm btn-active-icon-primary">
-                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-                                <span class="svg-icon svg-icon-1">
-                                    <i class="bi bi-x-lg fs-3"></i>
-                                </span>
-                                <!--end::Svg Icon-->
+                            <div class="btn btn-icon btn-sm btn-active-light-primary ms-2" data-bs-dismiss="modal" aria-label="Fechar">
+                                <i class="ki-duotone ki-cross fs-1"><span class="path1"></span><span class="path2"></span></i>
                             </div>
                             <!--end::Close-->
                         </div>
                         <!--end::Modal header-->
                         <!--begin::Modal body-->
-                        <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
+                        <div class="modal-body">
                             <!--begin::Form-->
-                            <form id="kt_subscriptions_export_form" class="form" action="#">
+                            <form id="kt_lancamento_padrao_export_form" class="form" action="#">
                                 <!--begin::Input group-->
                                 <div class="fv-row mb-10">
                                     <!--begin::Label-->
-                                    <label class="fs-5 fw-semibold form-label mb-5">Select Export Format:</label>
+                                    <label class="fs-5 fw-semibold form-label mb-5">Formato de Exportação:</label>
                                     <!--end::Label-->
                                     <!--begin::Input-->
-                                    <select data-control="select2" data-placeholder="Select a format"
-                                        data-hide-search="true" name="format" class="form-select form-select-solid">
-                                        <option value="excell">Excel</option>
+                                    <select data-control="select2" data-placeholder="Selecione um formato"
+                                        data-hide-search="true" name="format" class="form-select">
+                                        <option value="excel">Excel (.xlsx)</option>
+                                        <option value="csv">CSV</option>
                                         <option value="pdf">PDF</option>
-                                        <option value="cvs">CVS</option>
-                                        <option value="zip">ZIP</option>
                                     </select>
                                     <!--end::Input-->
                                 </div>
@@ -136,74 +130,52 @@
                                 <!--begin::Input group-->
                                 <div class="fv-row mb-10">
                                     <!--begin::Label-->
-                                    <label class="fs-5 fw-semibold form-label mb-5">Select Date Range:</label>
-                                    <!--end::Label-->
-                                    <!--begin::Input-->
-                                    <input class="form-control form-control-solid" placeholder="Pick a date"
-                                        name="date" />
-                                    <!--end::Input-->
-                                </div>
-                                <!--end::Input group-->
-                                <!--begin::Row-->
-                                <div class="row fv-row mb-15">
-                                    <!--begin::Label-->
-                                    <label class="fs-5 fw-semibold form-label mb-5">Payment Type:</label>
+                                    <label class="fs-5 fw-semibold form-label mb-5">Filtrar por Tipo:</label>
                                     <!--end::Label-->
                                     <!--begin::Radio group-->
                                     <div class="d-flex flex-column">
                                         <!--begin::Radio button-->
-                                        <label
-                                            class="form-check form-check-custom form-check-sm form-check-solid mb-3">
-                                            <input class="form-check-input" type="checkbox" value="1"
-                                                checked="checked" name="payment_type" />
-                                            <span class="form-check-label text-gray-600 fw-semibold">All</span>
+                                        <label class="form-check form-check-custom form-check-sm mb-3">
+                                            <input class="form-check-input" type="radio" value="todos" 
+                                                checked="checked" name="tipo_lancamento" />
+                                            <span class="form-check-label text-gray-600 fw-semibold">Todos</span>
                                         </label>
                                         <!--end::Radio button-->
                                         <!--begin::Radio button-->
-                                        <label
-                                            class="form-check form-check-custom form-check-sm form-check-solid mb-3">
-                                            <input class="form-check-input" type="checkbox" value="2"
-                                                checked="checked" name="payment_type" />
-                                            <span class="form-check-label text-gray-600 fw-semibold">Visa</span>
+                                        <label class="form-check form-check-custom form-check-sm mb-3">
+                                            <input class="form-check-input" type="radio" value="entrada" 
+                                                name="tipo_lancamento" />
+                                            <span class="form-check-label text-gray-600 fw-semibold">Receitas (Entradas)</span>
                                         </label>
                                         <!--end::Radio button-->
                                         <!--begin::Radio button-->
-                                        <label
-                                            class="form-check form-check-custom form-check-sm form-check-solid mb-3">
-                                            <input class="form-check-input" type="checkbox" value="3"
-                                                name="payment_type" />
-                                            <span class="form-check-label text-gray-600 fw-semibold">Mastercard</span>
-                                        </label>
-                                        <!--end::Radio button-->
-                                        <!--begin::Radio button-->
-                                        <label class="form-check form-check-custom form-check-sm form-check-solid">
-                                            <input class="form-check-input" type="checkbox" value="4"
-                                                name="payment_type" />
-                                            <span class="form-check-label text-gray-600 fw-semibold">American
-                                                Express</span>
+                                        <label class="form-check form-check-custom form-check-sm">
+                                            <input class="form-check-input" type="radio" value="saida" 
+                                                name="tipo_lancamento" />
+                                            <span class="form-check-label text-gray-600 fw-semibold">Despesas (Saídas)</span>
                                         </label>
                                         <!--end::Radio button-->
                                     </div>
-                                    <!--end::Input group-->
+                                    <!--end::Radio group-->
                                 </div>
-                                <!--end::Row-->
-                                <!--begin::Actions-->
-                                <div class="text-center">
-                                    <button type="reset" id="kt_subscriptions_export_cancel"
-                                        class="btn btn-light me-3">Discard</button>
-                                    <button type="submit" id="kt_subscriptions_export_submit"
-                                        class="btn btn-primary">
-                                        <span class="indicator-label">Submit</span>
-                                        <span class="indicator-progress">Por favor, aguarde...
-                                            <span
-                                                class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                                    </button>
-                                </div>
-                                <!--end::Actions-->
+                                <!--end::Input group-->
                             </form>
                             <!--end::Form-->
                         </div>
                         <!--end::Modal body-->
+                        
+                        <!--begin::Modal footer-->
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                            <button type="button" class="btn btn-primary" onclick="exportarLancamentosPadrao()">
+                                <span class="indicator-label">Exportar</span>
+                                <span class="indicator-progress d-none">Exportando... 
+                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                </span>
+                            </button>
+                        </div>
+                        <!--end::Modal footer-->
+
                     </div>
                     <!--end::Modal content-->
                 </div>
@@ -267,8 +239,11 @@
                                     <!--end::Content-->
                                     <!--begin::Actions-->
                                     <div class="d-flex modal-footer">
-                                        <button type="button" class="btn btn-danger fw-bold">
-                                            Baixar
+                                        <button type="button" class="btn btn-danger fw-bold" onclick="baixarTemplateLancamentoPadrao()">
+                                            <span class="indicator-label">Baixar</span>
+                                            <span class="indicator-progress d-none">Baixando... 
+                                                <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                            </span>
                                         </button>
                                     </div>
                                     <!--end::Actions-->
@@ -359,3 +334,182 @@
 <!--end::Segmented Tabs Wrapper-->
 
 <script src="/tenancy/assets/js/custom/apps/contabilidade/lancamento-padrao/list.js"></script>
+<script>
+// Função para exportar lançamentos padrão com download real
+function exportarLancamentosPadrao() {
+    const btn = document.querySelector('#kt_modal_export_lancamento_padrao .btn-primary');
+    const form = document.getElementById('kt_lancamento_padrao_export_form');
+    
+    if (!form) {
+        alert('Formulário não encontrado');
+        return;
+    }
+    
+    // Mostra indicador de progresso
+    const indicatorLabel = btn.querySelector('.indicator-label');
+    const indicatorProgress = btn.querySelector('.indicator-progress');
+    
+    indicatorLabel.classList.add('d-none');
+    indicatorProgress.classList.remove('d-none');
+    btn.disabled = true;
+    
+    // Coleta dados do formulário
+    const formData = new FormData(form);
+    const format = formData.get('format');
+    const tipoLancamento = formData.get('tipo_lancamento');
+    
+    console.log('Iniciando exportação real:', { format, tipoLancamento });
+    
+    try {
+        // Cria URL com parâmetros para exportação
+        const params = new URLSearchParams({
+            format: format,
+            tipo: tipoLancamento,
+            _token: document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+        });
+        
+        // URL da rota de exportação (ajuste conforme necessário)
+        const exportUrl = `{{ route('lancamentoPadrao.export') }}?${params.toString()}`;
+        
+        // Método 1: Tentar download direto via fetch
+        fetch(exportUrl, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/octet-stream'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro na exportação: ' + response.statusText);
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            // Cria link para download
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Define nome do arquivo baseado no formato
+            const timestamp = new Date().toISOString().split('T')[0];
+            const extension = format === 'excel' ? 'xlsx' : format;
+            link.download = `lancamentos-padrao-${tipoLancamento}-${timestamp}.${extension}`;
+            
+            // Adiciona ao DOM, clica e remove
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Libera a URL do blob
+            window.URL.revokeObjectURL(url);
+            
+            console.log('Download concluído com sucesso');
+        })
+        .catch(error => {
+            console.error('Erro no download:', error);
+            
+            // Fallback: abre em nova aba se fetch falhar
+            console.log('Tentando download via abertura de nova aba...');
+            window.open(exportUrl, '_blank');
+        })
+        .finally(() => {
+            // Remove indicador de progresso
+            indicatorLabel.classList.remove('d-none');
+            indicatorProgress.classList.add('d-none');
+            btn.disabled = false;
+            
+            // Fecha o modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('kt_modal_export_lancamento_padrao'));
+            modal.hide();
+        });
+        
+    } catch (error) {
+        console.error('Erro geral na exportação:', error);
+        alert('Erro ao iniciar a exportação. Tente novamente.');
+        
+        // Remove indicador de progresso em caso de erro
+        indicatorLabel.classList.remove('d-none');
+        indicatorProgress.classList.add('d-none');
+        btn.disabled = false;
+    }
+}
+
+// Função para baixar template de importação em massa
+function baixarTemplateLancamentoPadrao() {
+    const btn = event.target.closest('button');
+    
+    if (!btn) return;
+    
+    // Mostra indicador de progresso
+    const indicatorLabel = btn.querySelector('.indicator-label');
+    const indicatorProgress = btn.querySelector('.indicator-progress');
+    
+    indicatorLabel.classList.add('d-none');
+    indicatorProgress.classList.remove('d-none');
+    btn.disabled = true;
+    
+    try {
+        // URL da rota de download do template
+        const templateUrl = '{{ route('lancamentoPadrao.download-template') }}';
+        
+        console.log('Iniciando download do template...');
+        
+        // Método 1: Tentar download direto via fetch
+        fetch(templateUrl, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/octet-stream'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erro no download: ' + response.statusText);
+            }
+            return response.blob();
+        })
+        .then(blob => {
+            // Cria link para download
+            const url = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = `template_lancamentos_padrao_${new Date().toISOString().split('T')[0]}.xlsx`;
+            
+            // Adiciona ao DOM, clica e remove
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            // Libera a URL do blob
+            window.URL.revokeObjectURL(url);
+            
+            console.log('Download do template concluído com sucesso');
+        })
+        .catch(error => {
+            console.error('Erro no download do template:', error);
+            
+            // Fallback: abre em nova aba se fetch falhar
+            console.log('Tentando download direto via abertura de nova aba...');
+            window.open(templateUrl, '_blank');
+        })
+        .finally(() => {
+            // Remove indicador de progresso
+            indicatorLabel.classList.remove('d-none');
+            indicatorProgress.classList.add('d-none');
+            btn.disabled = false;
+            
+            console.log('Processo de download finalizado');
+        });
+        
+    } catch (error) {
+        console.error('Erro geral no download do template:', error);
+        alert('Erro ao baixar o template. Tente novamente.');
+        
+        // Remove indicador de progresso em caso de erro
+        indicatorLabel.classList.remove('d-none');
+        indicatorProgress.classList.add('d-none');
+        btn.disabled = false;
+    }
+}
+</script>

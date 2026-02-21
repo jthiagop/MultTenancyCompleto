@@ -10,6 +10,8 @@ use Flasher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Yajra\DataTables\Facades\DataTables;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class LancamentoPadraoController extends Controller
 {
@@ -631,6 +633,152 @@ class LancamentoPadraoController extends Controller
             ->first();
 
         return $conta ? $conta->id : null;
+    }
+
+    /**
+     * Exporta lançamentos padrão em diferentes formatos
+     */
+    public function export(Request $request)
+    {
+        try {
+            $format = $request->get('format', 'excel');
+            $tipo = $request->get('tipo', 'todos');
+            $companyId = session('active_company_id');
+            
+            if (!$companyId) {
+                return response()->json(['error' => 'Nenhuma empresa selecionada.'], 403);
+            }
+
+            // Busca lançamentos baseado no filtro
+            $query = LancamentoPadrao::where('company_id', $companyId);
+            
+            if ($tipo !== 'todos') {
+                $query->where('type', $tipo);
+            }
+            
+            $lancamentos = $query->with(['contaDebito', 'contaCredito'])->get();
+
+            // Prepara dados para exportação
+            $dadosParaExportar = $lancamentos->map(function ($lancamento) {
+                return [
+                    'ID' => $lancamento->id,
+                    'Descrição' => $lancamento->description,
+                    'Tipo' => $lancamento->type === 'entrada' ? 'Receita (Entrada)' : 'Despesa (Saída)',
+                    'Categoria' => $lancamento->category,
+                    'Valor' => $lancamento->amount ? 'R$ ' . number_format($lancamento->amount, 2, ',', '.') : 'Não definido',
+                    'Conta Débito' => $lancamento->contaDebito ? $lancamento->contaDebito->code . ' - ' . $lancamento->contaDebito->name : 'Não definido',
+                    'Conta Crédito' => $lancamento->contaCredito ? $lancamento->contaCredito->code . ' - ' . $lancamento->contaCredito->name : 'Não definido',
+                    'Observações' => $lancamento->observations ?? '',
+                    'Data Criação' => $lancamento->created_at ? $lancamento->created_at->format('d/m/Y H:i:s') : '',
+                ];
+            });
+
+            // Determina o nome do arquivo
+            $timestamp = now()->format('Y-m-d_H-i-s');
+            $tipoLabel = $tipo === 'todos' ? 'todos' : ($tipo === 'entrada' ? 'receitas' : 'despesas');
+            
+            if ($format === 'excel') {
+                return $this->exportToExcel($dadosParaExportar, $tipoLabel, $timestamp);
+            } elseif ($format === 'csv') {
+                return $this->exportToCSV($dadosParaExportar, $tipoLabel, $timestamp);
+            } elseif ($format === 'pdf') {
+                return $this->exportToPDF($dadosParaExportar, $tipoLabel, $timestamp);
+            }
+            
+            return response()->json(['error' => 'Formato não suportado'], 400);
+            
+        } catch (\Exception $e) {
+            \Log::error('Erro na exportação de lançamentos padrão: ' . $e->getMessage());
+            return response()->json(['error' => 'Erro interno na exportação: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Exporta para Excel usando PhpSpreadsheet
+     */
+    private function exportToExcel($dados, $tipoLabel, $timestamp)
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        
+        // Título
+        $sheet->setCellValue('A1', 'Lançamentos Padrão - ' . ucfirst($tipoLabel));
+        $sheet->mergeCells('A1:I1');
+        $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+        $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
+        
+        // Cabeçalhos
+        if ($dados->isNotEmpty()) {
+            $headers = array_keys($dados->first());
+            $col = 'A';
+            foreach ($headers as $header) {
+                $sheet->setCellValue($col . '3', $header);
+                $sheet->getStyle($col . '3')->getFont()->setBold(true);
+                $col++;
+            }
+            
+            // Dados
+            $row = 4;
+            foreach ($dados as $item) {
+                $col = 'A';
+                foreach ($item as $value) {
+                    $sheet->setCellValue($col . $row, $value);
+                    $col++;
+                }
+                $row++;
+            }
+            
+            // Auto-size columns
+            foreach (range('A', 'I') as $column) {
+                $sheet->getColumnDimension($column)->setAutoSize(true);
+            }
+        }
+        
+        $writer = new Xlsx($spreadsheet);
+        $filename = "lancamentos-padrao-{$tipoLabel}-{$timestamp}.xlsx";
+        $tempFile = tempnam(sys_get_temp_dir(), $filename);
+        $writer->save($tempFile);
+        
+        return response()->download($tempFile, $filename)->deleteFileAfterSend(true);
+    }
+
+    /**
+     * Exporta para CSV
+     */
+    private function exportToCSV($dados, $tipoLabel, $timestamp)
+    {
+        $filename = "lancamentos-padrao-{$tipoLabel}-{$timestamp}.csv";
+        $handle = fopen('php://temp', 'r+');
+        
+        if ($dados->isNotEmpty()) {
+            // Cabeçalhos
+            fputcsv($handle, array_keys($dados->first()), ';');
+            
+            // Dados
+            foreach ($dados as $item) {
+                fputcsv($handle, array_values($item), ';');
+            }
+        }
+        
+        rewind($handle);
+        $csv = stream_get_contents($handle);
+        fclose($handle);
+        
+        return response($csv)
+            ->header('Content-Type', 'text/csv; charset=UTF-8')
+            ->header('Content-Disposition', "attachment; filename=\"{$filename}\"");
+    }
+
+    /**
+     * Exporta para PDF
+     */
+    private function exportToPDF($dados, $tipoLabel, $timestamp)
+    {
+        // Esta implementação requer configuração adicional do PDF (DOMPDF/TCPDF)
+        // Por simplicidade, vamos retornar um erro informativo
+        return response()->json([
+            'error' => 'Exportação em PDF ainda não implementada. Use Excel ou CSV.'
+        ], 501);
     }
 
 }

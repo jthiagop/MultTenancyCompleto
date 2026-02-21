@@ -353,6 +353,7 @@ Route::middleware([
             Route::resource('caixa', CaixaController::class);
             Route::get('/lancamentoPadrao/data', [LancamentoPadraoController::class, 'getData'])->name('lancamentoPadrao.data');
             Route::get('/lancamentoPadrao/stats', [LancamentoPadraoController::class, 'getStats'])->name('lancamentoPadrao.stats');
+            Route::get('/lancamentoPadrao/export', [LancamentoPadraoController::class, 'export'])->name('lancamentoPadrao.export');
             Route::post('/lancamentoPadrao/validate-field', [LancamentoPadraoController::class, 'validateField'])->name('lancamentoPadrao.validate-field');
             Route::get('/lancamentoPadrao/download-template', [LancamentoPadraoController::class, 'downloadTemplate'])->name('lancamentoPadrao.download-template');
             Route::post('/lancamentoPadrao/upload-template', [LancamentoPadraoController::class, 'uploadTemplate'])->name('lancamentoPadrao.upload-template');
