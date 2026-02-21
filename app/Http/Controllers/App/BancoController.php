@@ -989,53 +989,50 @@ class BancoController extends Controller
             switch ($status) {
                 // =====================================================
                 // FILTROS ESPECÍFICOS PARA EXTRATO
+                // Usam data_competencia + excluem desconsiderado/parcelado/agendado
+                // para manter consistência com ExtratoController (PDF)
                 // =====================================================
                 case 'receitas_aberto':
-                    // Receitas em Aberto: entrada + não recebido + vencimento no período
+                    // Receitas em Aberto: entrada + não recebido + competência no período
                     if ($startDate && $endDate && $isExtrato) {
-                        $query->where('tipo', 'entrada')
-                              ->whereBetween('data_vencimento', [$startDate, $endDate])
+                        $query->whereNotIn('situacao', [\App\Enums\SituacaoTransacao::DESCONSIDERADO, \App\Enums\SituacaoTransacao::PARCELADO])
+                              ->where('agendado', false)
+                              ->where('tipo', 'entrada')
+                              ->whereBetween('data_competencia', [$startDate, $endDate])
                               ->where('situacao', '!=', 'recebido');
                     }
                     break;
 
                 case 'receitas_realizadas':
-                    // Receitas Realizadas: entrada + recebido + vencimento no período
+                    // Receitas Realizadas: entrada + recebido + competência no período
                     if ($startDate && $endDate && $isExtrato) {
-                        $query->where('tipo', 'entrada')
-                              ->whereBetween('data_vencimento', [$startDate, $endDate])
+                        $query->whereNotIn('situacao', [\App\Enums\SituacaoTransacao::DESCONSIDERADO, \App\Enums\SituacaoTransacao::PARCELADO])
+                              ->where('agendado', false)
+                              ->where('tipo', 'entrada')
+                              ->whereBetween('data_competencia', [$startDate, $endDate])
                               ->where('situacao', 'recebido');
                     }
                     break;
 
                 case 'despesas_aberto':
-                    // Despesas em Aberto: saída + não pago + vencimento no período
+                    // Despesas em Aberto: saída + não pago + competência no período
                     if ($startDate && $endDate && $isExtrato) {
-                        $query->where('tipo', 'saida')
-                              ->whereBetween('data_vencimento', [$startDate, $endDate])
-                              ->where(function($q) {
-                                  $q->whereNull('situacao')
-                                    ->orWhere('situacao', '!=', 'pago')
-                                    ->orWhere(function($subQ) {
-                                        $subQ->whereColumn('valor_pago', '<', 'valor')
-                                             ->orWhereNull('valor_pago');
-                                    });
-                              });
+                        $query->whereNotIn('situacao', [\App\Enums\SituacaoTransacao::DESCONSIDERADO, \App\Enums\SituacaoTransacao::PARCELADO])
+                              ->where('agendado', false)
+                              ->where('tipo', 'saida')
+                              ->whereBetween('data_competencia', [$startDate, $endDate])
+                              ->whereNotIn('situacao', ['pago']);
                     }
                     break;
 
                 case 'despesas_realizadas':
-                    // Despesas Realizadas: saída + pago + vencimento no período
+                    // Despesas Realizadas: saída + pago + competência no período
                     if ($startDate && $endDate && $isExtrato) {
-                        $query->where('tipo', 'saida')
-                              ->whereBetween('data_vencimento', [$startDate, $endDate])
-                              ->where(function($q) {
-                                  $q->where('situacao', 'pago')
-                                    ->orWhere(function($subQ) {
-                                        $subQ->whereColumn('valor_pago', '>=', 'valor')
-                                             ->whereNotNull('valor_pago');
-                                    });
-                              });
+                        $query->whereNotIn('situacao', [\App\Enums\SituacaoTransacao::DESCONSIDERADO, \App\Enums\SituacaoTransacao::PARCELADO])
+                              ->where('agendado', false)
+                              ->where('tipo', 'saida')
+                              ->whereBetween('data_competencia', [$startDate, $endDate])
+                              ->where('situacao', 'pago');
                     }
                     break;
 
@@ -1120,14 +1117,11 @@ class BancoController extends Controller
             // Deve incluir transações que têm data_vencimento dentro do período
             if ($startDate && $endDate) {
                 if ($isExtrato) {
-                    // Para Extrato (Total do Período): filtrar por data de vencimento OU data_competencia
-                    $query->where(function($q) use ($startDate, $endDate) {
-                        $q->whereBetween('data_vencimento', [$startDate, $endDate])
-                          ->orWhere(function($subQ) use ($startDate, $endDate) {
-                              $subQ->whereNull('data_vencimento')
-                                   ->whereBetween('data_competencia', [$startDate, $endDate]);
-                          });
-                    });
+                    // Para Extrato: mesmos filtros do ExtratoController (PDF)
+                    // Usa data_competencia, exclui desconsiderado/parcelado/agendado
+                    $query->whereNotIn('situacao', [\App\Enums\SituacaoTransacao::DESCONSIDERADO, \App\Enums\SituacaoTransacao::PARCELADO])
+                          ->where('agendado', false)
+                          ->whereBetween('data_competencia', [$startDate, $endDate]);
                 } elseif ($isContasReceberPagar) {
                     // Para contas a receber/pagar, filtrar por data_vencimento OU data_competencia (se vencimento for null)
                     $query->where(function($q) use ($startDate, $endDate) {
@@ -3627,12 +3621,15 @@ class BancoController extends Controller
         $start = Carbon::createFromFormat('Y-m-d', $startDate)->startOfDay();
         $end = Carbon::createFromFormat('Y-m-d', $endDate)->endOfDay();
         
-        // Query base para extrato
+        // Query base para extrato — mesmos filtros do ExtratoController (PDF)
+        // para garantir consistência entre a aba extrato e o relatório PDF
         $query = TransacaoFinanceira::whereHas('entidadeFinanceira', function ($q) {
-                $q->whereIn('tipo', ['banco', 'caixa']); // Inclui banco e caixa
+                $q->whereIn('tipo', ['banco', 'caixa']);
             })
             ->where('company_id', $companyId)
-            ->whereBetween('data_competencia', [$start, $end]); // Filtrar por data de competência
+            ->whereNotIn('situacao', [\App\Enums\SituacaoTransacao::DESCONSIDERADO, \App\Enums\SituacaoTransacao::PARCELADO])
+            ->where('agendado', false)
+            ->whereBetween('data_competencia', [$start, $end]);
         
         // Aplicar filtro de conta se fornecido
         if ($entidadeId) {
