@@ -541,7 +541,11 @@ class TransacaoFinanceiraService
         $valorParaComparacao = $data['valor_pago'] + $jurosPago + $multaPago;
 
         // Verifica se é pagamento completo ou parcial
-        if (abs($valorParaComparacao - $data['valor']) < 0.01 || $valorParaComparacao >= $data['valor']) {
+        // Compara em centavos (inteiros) para evitar erros de ponto flutuante
+        $comparacaoCents = (int) round($valorParaComparacao * 100);
+        $valorCents = (int) round((float) $data['valor'] * 100);
+
+        if ($comparacaoCents >= $valorCents) {
             // Pagamento completo - define situação baseada no tipo
             // Entrada → recebido | Saída → pago
             $transacao->situacao = ($transacao->tipo === 'entrada') 

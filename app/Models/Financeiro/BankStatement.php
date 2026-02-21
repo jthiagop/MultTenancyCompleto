@@ -179,22 +179,30 @@ class BankStatement extends Model
             // ✅ Marca o registro como conciliado
             $this->reconciled = true;
 
-            // ✅ Define o status de conciliação com base no valor (ambos em DECIMAL)
-            // Compara valorConciliado (DECIMAL) com amount (DECIMAL) do BankStatement
-            $bankStatementAmount = abs((float) $this->amount); // Valor absoluto em DECIMAL
-            
-            if (abs($valorConciliado - $bankStatementAmount) < 0.01) {
-                $this->status_conciliacao = 'ok'; // Conciliação perfeita (diferença < 1 centavo)
-                \Log::info('Status definido como: ok (conciliação perfeita)');
-            } elseif ($valorConciliado < $bankStatementAmount) {
-                $this->status_conciliacao = 'parcial'; // Conciliação parcial (valor menor)
-                \Log::info('Status definido como: parcial (valor menor)');
-            } elseif ($valorConciliado > $bankStatementAmount) {
-                $this->status_conciliacao = 'divergente'; // Conciliação divergente (valor maior)
-                \Log::info('Status definido como: divergente (valor maior)');
-            } else {
-                $this->status_conciliacao = 'pendente'; // Valor não foi conciliado
-                \Log::warning('Status definido como: pendente (valor não conciliado)');
+            // ✅ Define o status de conciliação com base no valor
+            // Usa comparação em centavos (inteiros) para evitar erros de ponto flutuante
+            // Ex: em float, 345.70 pode virar 345.6999999... causando divergências falsas
+            $bankStatementCents = (int) round(abs((float) $this->amount) * 100);
+            $valorConciliadoCents = (int) round((float) $valorConciliado * 100);
+
+            if ($valorConciliadoCents === $bankStatementCents) {
+                $this->status_conciliacao = 'ok'; // Conciliação perfeita (valores iguais)
+                \Log::info('Status definido como: ok (conciliação perfeita)', [
+                    'valor_conciliado_cents' => $valorConciliadoCents,
+                    'bank_statement_cents' => $bankStatementCents,
+                ]);
+            } elseif ($valorConciliadoCents < $bankStatementCents) {
+                $this->status_conciliacao = 'parcial'; // Conciliação parcial (valor conciliado menor)
+                \Log::info('Status definido como: parcial (valor menor)', [
+                    'valor_conciliado_cents' => $valorConciliadoCents,
+                    'bank_statement_cents' => $bankStatementCents,
+                ]);
+            } else { // $valorConciliadoCents > $bankStatementCents
+                $this->status_conciliacao = 'divergente'; // Conciliação divergente (valor conciliado maior)
+                \Log::info('Status definido como: divergente (valor maior)', [
+                    'valor_conciliado_cents' => $valorConciliadoCents,
+                    'bank_statement_cents' => $bankStatementCents,
+                ]);
             }
 
             // ✅ Salva os campos diretamente na tabela
