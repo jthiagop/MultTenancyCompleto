@@ -73,9 +73,9 @@ class ExtratoController extends Controller
             ->get()
             ->keyBy('tipo');
 
-        $entradasAntes = $movAntes->get('entrada')?->total ?? 0;
-        $saidasAntes   = $movAntes->get('saida')?->total ?? 0;
-        $saldoAnterior = $saldoInicial + $entradasAntes - $saidasAntes;
+        $entradasAntes = (float) ($movAntes->get('entrada')?->total ?? 0);
+        $saidasAntes   = (float) ($movAntes->get('saida')?->total ?? 0);
+        $saldoAnterior = round($saldoInicial + $entradasAntes - $saidasAntes, 2);
 
         // 4) Buscar transações do período, ordenadas por data
         $transacoes = $this->baseQuery()
@@ -93,14 +93,14 @@ class ExtratoController extends Controller
         $totalSaidas   = 0;
 
         foreach ($transacoes as $transacao) {
-            $valor = $transacao->valor;
+            $valor = round((float) $transacao->valor, 2);
 
             if ($transacao->tipo === 'entrada') {
-                $saldoCorrente += $valor;
-                $totalEntradas += $valor;
+                $saldoCorrente = round($saldoCorrente + $valor, 2);
+                $totalEntradas = round($totalEntradas + $valor, 2);
             } else {
-                $saldoCorrente -= $valor;
-                $totalSaidas   += $valor;
+                $saldoCorrente = round($saldoCorrente - $valor, 2);
+                $totalSaidas   = round($totalSaidas + $valor, 2);
             }
 
             $movimentacoes[] = [

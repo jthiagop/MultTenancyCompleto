@@ -105,8 +105,10 @@ class GenerateExtratoPdfJob implements ShouldQueue
                 ->where('data_competencia', '<', $dataInicio)
                 ->sum('valor');
 
-            $saldoInicial = $entidade->saldo_inicial ?? 0;
-            $saldoAnterior = $saldoInicial + $entradasAntes - $saidasAntes;
+            $saldoInicial = (float) ($entidade->saldo_inicial ?? 0);
+            $entradasAntes = (float) $entradasAntes;
+            $saidasAntes = (float) $saidasAntes;
+            $saldoAnterior = round($saldoInicial + $entradasAntes - $saidasAntes, 2);
 
             Log::info('[GenerateExtratoPdfJob] Saldo anterior calculado', [
                 'saldo_inicial' => $saldoInicial,
@@ -133,14 +135,14 @@ class GenerateExtratoPdfJob implements ShouldQueue
             $totalSaidas   = 0;
 
             foreach ($transacoes as $transacao) {
-                $valor = $transacao->valor;
+                $valor = round((float) $transacao->valor, 2);
 
                 if ($transacao->tipo === 'entrada') {
-                    $saldoCorrente += $valor;
-                    $totalEntradas += $valor;
+                    $saldoCorrente = round($saldoCorrente + $valor, 2);
+                    $totalEntradas = round($totalEntradas + $valor, 2);
                 } else {
-                    $saldoCorrente -= $valor;
-                    $totalSaidas   += $valor;
+                    $saldoCorrente = round($saldoCorrente - $valor, 2);
+                    $totalSaidas   = round($totalSaidas + $valor, 2);
                 }
 
                 $movimentacoes[] = [
