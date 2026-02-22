@@ -54,8 +54,9 @@ class ChartOfAccountController extends Controller
         $validatedData = $validator->validated();
         $validatedData['company_id'] = $activeCompanyId;
         
-        // Converte allows_posting para boolean
-        $validatedData['allows_posting'] = (bool) $validatedData['allows_posting'];
+        // Mapeia allows_posting (formulário) → is_analytical (banco de dados)
+        $validatedData['is_analytical'] = (bool) $validatedData['allows_posting'];
+        unset($validatedData['allows_posting']);
 
         // --- INÍCIO DA ADIÇÃO DO TRY-CATCH ---
         try {
@@ -193,8 +194,9 @@ class ChartOfAccountController extends Controller
             'external_code' => 'nullable|string|max:50',
         ]);
         
-        // Converte allows_posting para boolean
-        $validatedData['allows_posting'] = (bool) $validatedData['allows_posting'];
+        // Mapeia allows_posting (formulário) → is_analytical (banco de dados)
+        $validatedData['is_analytical'] = (bool) $validatedData['allows_posting'];
+        unset($validatedData['allows_posting']);
 
         $conta->update($validatedData);
 
@@ -290,6 +292,10 @@ class ChartOfAccountController extends Controller
                         $row['tpconta'] ?? 
                         ''
                     ));
+
+                    // Determina se é conta analítica (aceita lançamentos)
+                    // tpconta: 'A' = Analítica, 'S' = Sintética
+                    $isAnalytical = in_array($tipoConta, ['A', 'ANALITICA', 'ANALÍTICA']);
                     
                     $name = trim(
                         $row['descricao'] ?? 
@@ -321,6 +327,7 @@ class ChartOfAccountController extends Controller
                             'name' => $name,
                             'type' => $accountType,
                             'parent_id' => $parentId,
+                            'is_analytical' => $isAnalytical,
                         ]);
                         $accountsMap[$code] = $existingAccount->id;
                         $updated++;
@@ -332,6 +339,7 @@ class ChartOfAccountController extends Controller
                             'name' => $name,
                             'type' => $accountType,
                             'parent_id' => $parentId,
+                            'is_analytical' => $isAnalytical,
                         ]);
                         $accountsMap[$code] = $account->id;
                         $imported++;
