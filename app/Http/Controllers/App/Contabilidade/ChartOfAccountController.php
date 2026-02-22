@@ -207,6 +207,20 @@ class ChartOfAccountController extends Controller
             'allows_posting' => 'required|boolean',
             'external_code' => 'nullable|string|max:50',
         ]);
+
+        // Valida unicidade do código excluindo o registro atual
+        $existsDuplicate = ChartOfAccount::where('company_id', $conta->company_id)
+            ->where('code', $validatedData['code'])
+            ->where('id', '!=', $conta->id)
+            ->exists();
+
+        if ($existsDuplicate) {
+            $error = 'Já existe uma conta com o código "' . $validatedData['code'] . '" nesta empresa.';
+            if ($request->wantsJson()) {
+                return response()->json(['errors' => ['code' => [$error]]], 422);
+            }
+            return redirect()->back()->withErrors(['code' => $error])->withInput();
+        }
         
         // Mapeia allows_posting (formulário) → is_analytical (banco de dados)
         $validatedData['is_analytical'] = (bool) $validatedData['allows_posting'];
@@ -234,17 +248,28 @@ class ChartOfAccountController extends Controller
             }
         }
 
-        $conta->update($validatedData);
+        try {
+            $conta->update($validatedData);
 
-        // Retorna JSON para requisições AJAX
-        if ($request->wantsJson()) {
-            return response()->json([
-                'message' => 'Conta contábil atualizada com sucesso!',
-                'conta' => $conta
-            ]);
+            // Retorna JSON para requisições AJAX
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Conta contábil atualizada com sucesso!',
+                    'conta' => $conta->fresh()
+                ]);
+            }
+
+            return redirect()->route('contabilidade.plano-contas.index')->with('success', 'Conta contábil atualizada com sucesso!');
+        } catch (\Exception $e) {
+            Log::error('Erro ao atualizar conta contábil: ' . $e->getMessage());
+
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Ocorreu um erro inesperado ao atualizar a conta.'], 500);
+            }
+
+            return redirect()->back()->with('error', 'Ocorreu um erro inesperado. Tente novamente.');
         }
-
-        return redirect()->route('contabilidade.plano-contas.index')->with('success', 'Conta contábil atualizada com sucesso!');
     }
 
     /**

@@ -409,24 +409,43 @@
             // Limpa erros anteriores
             clearErrors();
 
-            const formData = new FormData(form);
+            // Monta payload manualmente para garantir que Select2 e radios sejam capturados
+            const isEditing = form.querySelector('input[name="_method"]')?.value === 'PUT';
+            const payload = {
+                code: document.getElementById('account_code_mask').value,
+                name: form.querySelector('input[name="name"]').value,
+                type: form.querySelector('select[name="type"]').value,
+                parent_id: form.querySelector('select[name="parent_id"]').value || null,
+                allows_posting: form.querySelector('input[name="allows_posting"]:checked')?.value || '0',
+                external_code: document.getElementById('external_code_input').value || null,
+            };
+
+            if (isEditing) {
+                payload._method = 'PUT';
+            }
 
             fetch(form.action, {
-                    method: form.method,
+                    method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
                             .getAttribute('content'),
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify(Object.fromEntries(formData))
+                    body: JSON.stringify(payload)
                 })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.message) {
+                .then(response => {
+                    return response.json().then(data => ({
+                        ok: response.ok,
+                        status: response.status,
+                        data: data
+                    }));
+                })
+                .then(({ ok, status, data }) => {
+                    if (ok && (data.message || data.success)) {
                         // Sucesso
                         Swal.fire({
-                            text: data.message,
+                            text: data.message || 'Operação realizada com sucesso!',
                             icon: "success",
                             buttonsStyling: false,
                             confirmButtonText: "Ok!",
@@ -440,20 +459,31 @@
                                 window.location.reload();
                             }
                         });
-                    } else if (data.errors) {
+                    } else if (status === 422 && data.errors) {
                         // Erros de validação
                         showErrors(data.errors);
+                    } else {
+                        // Erro do servidor (403, 500, etc)
+                        Swal.fire({
+                            text: data.message || 'Ocorreu um erro inesperado.',
+                            icon: "error",
+                            buttonsStyling: false,
+                            confirmButtonText: "Ok!",
+                            customClass: {
+                                confirmButton: "btn btn-danger"
+                            }
+                        });
                     }
                 })
                 .catch(error => {
                     console.error('Erro:', error);
                     Swal.fire({
-                        text: "Ocorreu um erro inesperado. Tente novamente.",
+                        text: "Erro de comunicação com o servidor. Tente novamente.",
                         icon: "error",
                         buttonsStyling: false,
                         confirmButtonText: "Ok!",
                         customClass: {
-                            confirmButton: "btn btn-primary"
+                            confirmButton: "btn btn-danger"
                         }
                     });
                 })
