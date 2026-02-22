@@ -37,12 +37,19 @@ class ChartOfAccountController extends Controller
         }
 
         $validator = Validator::make($request->all(), [
-            'code' => 'required|string|max:255',
+            'code' => [
+                'required', 'string', 'max:255',
+                Rule::unique('chart_of_accounts', 'code')
+                    ->where('company_id', $activeCompanyId)
+                    ->whereNull('deleted_at'),
+            ],
             'name' => 'required|string|max:255',
             'type' => 'required|in:ativo,passivo,patrimonio_liquido,receita,despesa',
             'parent_id' => 'nullable|integer|exists:chart_of_accounts,id',
             'allows_posting' => 'required|boolean',
             'external_code' => 'nullable|string|max:50',
+        ], [
+            'code.unique' => 'Já existe uma conta com este código nesta empresa.',
         ]);
 
         if ($validator->fails()) {
@@ -79,6 +86,7 @@ class ChartOfAccountController extends Controller
 
             if ($request->wantsJson()) {
                 return response()->json([
+                    'success' => true,
                     'message' => 'Conta contábil criada com sucesso!',
                     'conta' => $conta
                 ], 201);
@@ -270,18 +278,41 @@ class ChartOfAccountController extends Controller
     /**
      * Remove uma conta contábil.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         $conta = ChartOfAccount::forActiveCompany()->findOrFail($id);
 
-        // Lógica para impedir a exclusão se a conta tiver filhas (opcional, mas recomendado)
+        // Impede exclusão se a conta tiver sub-contas
         if ($conta->children()->exists()) {
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Não é possível excluir uma conta que possui sub-contas.'
+                ], 422);
+            }
             return redirect()->back()->with('error', 'Não é possível excluir uma conta que possui sub-contas.');
         }
 
-        $conta->delete();
+        try {
+            $conta->delete();
 
-        return redirect()->route('plano-contas.index')->with('success', 'Conta contábil excluída com sucesso!');
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Conta contábil excluída com sucesso!'
+                ]);
+            }
+
+            return redirect()->route('contabilidade.plano-contas.index')->with('success', 'Conta contábil excluída com sucesso!');
+        } catch (\Exception $e) {
+            Log::error('Erro ao excluir conta contábil: ' . $e->getMessage());
+
+            if ($request->wantsJson()) {
+                return response()->json(['message' => 'Ocorreu um erro inesperado ao excluir a conta.'], 500);
+            }
+
+            return redirect()->back()->with('error', 'Ocorreu um erro inesperado. Tente novamente.');
+        }
     }
 
     /**

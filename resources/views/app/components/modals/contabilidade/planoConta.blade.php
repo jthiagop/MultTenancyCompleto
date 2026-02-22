@@ -401,16 +401,45 @@
         }
 
         // Manipula o envio do formulário
+        let isSubmitting = false;
+
         form.addEventListener('submit', function(e) {
             e.preventDefault();
 
-            // Mostra loading
-            submitBtn.setAttribute('data-kt-indicator', 'on');
-            indicator.style.display = 'inline-block';
-            label.style.display = 'none';
+            // Proteção contra duplo-clique
+            if (isSubmitting) return;
 
             // Limpa erros anteriores
             clearErrors();
+
+            // ─── Validação client-side ───
+            const clientErrors = {};
+
+            const nameValue = form.querySelector('input[name="name"]').value.trim();
+            const codeValue = document.getElementById('account_code_mask').value.trim();
+            const typeValue = form.querySelector('select[name="type"]').value;
+
+            if (!nameValue) {
+                clientErrors.name = ['O nome da conta é obrigatório.'];
+            }
+            if (!codeValue) {
+                clientErrors.code = ['O código da conta é obrigatório.'];
+            }
+            if (!typeValue) {
+                clientErrors.type = ['O tipo da conta é obrigatório.'];
+            }
+
+            if (Object.keys(clientErrors).length > 0) {
+                showErrors(clientErrors);
+                return;
+            }
+
+            // Marca como enviando e mostra loading
+            isSubmitting = true;
+            submitBtn.setAttribute('data-kt-indicator', 'on');
+            submitBtn.disabled = true;
+            indicator.style.display = 'inline-block';
+            label.style.display = 'none';
 
             // Monta payload manualmente para garantir que Select2 e radios sejam capturados
             const isEditing = form.querySelector('input[name="_method"]')?.value === 'PUT';
@@ -491,7 +520,9 @@
                     });
                 })
                 .finally(() => {
-                    // Remove loading
+                    // Remove loading e reabilita o botão
+                    isSubmitting = false;
+                    submitBtn.disabled = false;
                     submitBtn.removeAttribute('data-kt-indicator');
                     indicator.style.display = 'none';
                     label.style.display = 'inline-block';
