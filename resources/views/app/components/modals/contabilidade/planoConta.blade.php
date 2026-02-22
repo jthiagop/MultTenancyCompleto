@@ -475,49 +475,29 @@
                 })
                 .then(({ ok, status, data }) => {
                     if (ok && (data.message || data.success)) {
-                        // Sucesso
-                        Swal.fire({
-                            text: data.message || 'Operação realizada com sucesso!',
-                            icon: "success",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok!",
-                            customClass: {
-                                confirmButton: "btn btn-primary"
-                            }
-                        }).then(() => {
-                            if (data.redirect) {
-                                window.location.href = data.redirect;
-                            } else {
-                                window.location.reload();
-                            }
-                        });
+                        // Sucesso: fecha o modal e mostra toast após reload
+                        const modalEl = document.getElementById('kt_modal_new_account');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        if (modalInstance) {
+                            modalInstance.hide();
+                        }
+
+                        // Salva mensagem para exibir toast após reload
+                        sessionStorage.setItem('toast_success', data.message || 'Operação realizada com sucesso!');
+
+                        // Recarrega para atualizar a tabela
+                        window.location.reload();
                     } else if (status === 422 && data.errors) {
                         // Erros de validação
                         showErrors(data.errors);
                     } else {
                         // Erro do servidor (403, 500, etc)
-                        Swal.fire({
-                            text: data.message || 'Ocorreu um erro inesperado.',
-                            icon: "error",
-                            buttonsStyling: false,
-                            confirmButtonText: "Ok!",
-                            customClass: {
-                                confirmButton: "btn btn-danger"
-                            }
-                        });
+                        toastr.error(data.message || 'Ocorreu um erro inesperado.');
                     }
                 })
                 .catch(error => {
                     console.error('Erro:', error);
-                    Swal.fire({
-                        text: "Erro de comunicação com o servidor. Tente novamente.",
-                        icon: "error",
-                        buttonsStyling: false,
-                        confirmButtonText: "Ok!",
-                        customClass: {
-                            confirmButton: "btn btn-danger"
-                        }
-                    });
+                    toastr.error('Erro de comunicação com o servidor. Tente novamente.');
                 })
                 .finally(() => {
                     // Remove loading e reabilita o botão
@@ -541,6 +521,19 @@
             const modal = new bootstrap.Modal(document.getElementById('kt_modal_new_account'));
             modal.show();
         };
+
+        // ─── Toast pós-reload: exibe mensagem de sucesso salva no sessionStorage ───
+        const toastMessage = sessionStorage.getItem('toast_success');
+        if (toastMessage) {
+            sessionStorage.removeItem('toast_success');
+            toastr.options = {
+                closeButton: true,
+                progressBar: true,
+                positionClass: 'toastr-top-right',
+                timeOut: 4000,
+            };
+            toastr.success(toastMessage);
+        }
     });
 </script>
 <!--end::Scripts-->
