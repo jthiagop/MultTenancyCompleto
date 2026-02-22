@@ -303,24 +303,7 @@
                                 </div>
 
                                 <!--begin::Actions-->
-                                <div class="d-flex justify-content-between pt-5">
-                                    <!--begin::Delete-->
-                                    <button type="button" class="btn btn-light-danger d-none"
-                                        id="kt_drawer_edit_entidade_delete" data-delete-url="">
-                                        <i class="ki-duotone ki-trash fs-4 me-1">
-                                            <span class="path1"></span>
-                                            <span class="path2"></span>
-                                            <span class="path3"></span>
-                                            <span class="path4"></span>
-                                            <span class="path5"></span>
-                                        </i>
-                                        <span class="indicator-label">Excluir</span>
-                                        <span class="indicator-progress">Aguarde...
-                                            <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                        </span>
-                                    </button>
-                                    <!--end::Delete-->
-
+                                <div class="d-flex justify-content-end pt-5">
                                     <div class="d-flex gap-3">
                                         <button type="button" class="btn btn-light"
                                             id="kt_drawer_edit_entidade_close_btn">Cancelar</button>

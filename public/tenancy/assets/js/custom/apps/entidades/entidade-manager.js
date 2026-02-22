@@ -13,7 +13,6 @@ var EntidadeManager = (function () {
     var formValidator;
     var submitBtn;
     var cancelBtn;
-    var deleteBtn;
 
     // ─── Helpers ───
     function formatCurrency(value) {
@@ -122,14 +121,12 @@ var EntidadeManager = (function () {
         form = document.getElementById('kt_drawer_edit_entidade_form');
         submitBtn = document.getElementById('kt_drawer_edit_entidade_submit');
         cancelBtn = document.getElementById('kt_drawer_edit_entidade_close_btn');
-        deleteBtn = document.getElementById('kt_drawer_edit_entidade_delete');
 
         if (!form) return;
 
         initFormValidation();
         handleSubmit();
         handleCancel();
-        handleDelete();
     }
 
     // ─── FormValidation ───
@@ -374,105 +371,6 @@ var EntidadeManager = (function () {
         }
     }
 
-    // ─── Excluir ───
-    function handleDelete() {
-        if (!deleteBtn) return;
-
-        deleteBtn.addEventListener('click', function () {
-            var entidadeId = document.getElementById('edit_entidade_id').value;
-            var entidadeNome = document.getElementById('edit_nome').value ||
-                               document.getElementById('edit_tipo').value;
-            var deleteUrl = deleteBtn.getAttribute('data-delete-url');
-
-            if (!deleteUrl || !entidadeId) return;
-
-            Swal.fire({
-                html: '<p class="fs-5">Tem certeza que deseja excluir a entidade:<br><strong>' + entidadeNome + '</strong>?</p>' +
-                      '<div class="notice d-flex bg-light-danger rounded border-danger border border-dashed p-4 mt-4">' +
-                      '<i class="ki-duotone ki-information-5 fs-2tx text-danger me-4"><span class="path1"></span><span class="path2"></span><span class="path3"></span></i>' +
-                      '<div class="text-start text-gray-700 fw-semibold">' +
-                      '<p class="mb-1">Esta ação irá:</p>' +
-                      '<ul class="mb-0"><li>Excluir todas as movimentações associadas</li>' +
-                      '<li>Remover a entidade permanentemente</li></ul>' +
-                      '<p class="text-danger fw-bold mt-2 mb-0">Esta ação não pode ser desfeita!</p>' +
-                      '</div></div>',
-                icon: 'warning',
-                showCancelButton: true,
-                buttonsStyling: false,
-                confirmButtonText: 'Sim, excluir',
-                cancelButtonText: 'Cancelar',
-                customClass: {
-                    confirmButton: 'btn btn-danger me-3',
-                    cancelButton: 'btn btn-light',
-                },
-            }).then(function (result) {
-                if (!result.isConfirmed) return;
-
-                deleteBtn.setAttribute('data-kt-indicator', 'on');
-                deleteBtn.disabled = true;
-
-                fetch(deleteUrl, {
-                    method: 'DELETE',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Accept': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                })
-                .then(function (response) { return response.json(); })
-                .then(function (data) {
-                    deleteBtn.removeAttribute('data-kt-indicator');
-                    deleteBtn.disabled = false;
-
-                    if (data.success) {
-                        if (drawerInstance) drawerInstance.hide();
-                        Swal.fire({
-                            text: data.message,
-                            icon: 'success',
-                            buttonsStyling: false,
-                            confirmButtonText: 'Ok',
-                            customClass: { confirmButton: 'btn btn-primary' },
-                        }).then(function () {
-                            // Remove a linha da tabela
-                            removeTableRow(entidadeId);
-                        });
-                    } else {
-                        Swal.fire({
-                            text: data.message || 'Erro ao excluir.',
-                            icon: 'error',
-                            buttonsStyling: false,
-                            confirmButtonText: 'Ok',
-                            customClass: { confirmButton: 'btn btn-danger' },
-                        });
-                    }
-                })
-                .catch(function () {
-                    deleteBtn.removeAttribute('data-kt-indicator');
-                    deleteBtn.disabled = false;
-                    Swal.fire({
-                        text: 'Erro de comunicação com o servidor.',
-                        icon: 'error',
-                        buttonsStyling: false,
-                        confirmButtonText: 'Ok',
-                        customClass: { confirmButton: 'btn btn-danger' },
-                    });
-                });
-            });
-        });
-    }
-
-    function removeTableRow(entidadeId) {
-        var btn = document.querySelector('.btn-edit-entidade[data-entidade-id="' + entidadeId + '"]');
-        if (btn) {
-            var tr = btn.closest('tr');
-            if (tr && dataTable) {
-                dataTable.row(tr).remove().draw();
-            } else if (tr) {
-                tr.remove();
-            }
-        }
-    }
-
     // ─── Abrir Drawer ───
     function openDrawer(button) {
         if (!drawerElement || !drawerInstance || !form) return;
@@ -522,12 +420,6 @@ var EntidadeManager = (function () {
 
         // Descrição
         document.getElementById('edit_descricao').value = descricao;
-
-        // Botão de excluir — configura URL
-        if (deleteBtn) {
-            deleteBtn.setAttribute('data-delete-url', baseUrl + '/' + id);
-            deleteBtn.classList.remove('d-none');
-        }
 
         // Abre drawer
         drawerInstance.show();
