@@ -7,6 +7,7 @@ use App\Models\Contabilide\ChartOfAccount;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class ChartOfAccountController extends Controller
 {
@@ -200,27 +201,21 @@ class ChartOfAccountController extends Controller
         $conta = ChartOfAccount::forActiveCompany()->findOrFail($id);
 
         $validatedData = $request->validate([
-            'code' => 'required|string|max:255',
+            'code' => [
+                'required', 'string', 'max:255',
+                Rule::unique('chart_of_accounts', 'code')
+                    ->where('company_id', $conta->company_id)
+                    ->whereNull('deleted_at')
+                    ->ignore($conta->id),
+            ],
             'name' => 'required|string|max:255',
             'type' => 'required|in:ativo,passivo,patrimonio_liquido,receita,despesa',
             'parent_id' => 'nullable|integer|exists:chart_of_accounts,id',
             'allows_posting' => 'required|boolean',
             'external_code' => 'nullable|string|max:50',
+        ], [
+            'code.unique' => 'Já existe uma conta com este código nesta empresa.',
         ]);
-
-        // Valida unicidade do código excluindo o registro atual
-        $existsDuplicate = ChartOfAccount::where('company_id', $conta->company_id)
-            ->where('code', $validatedData['code'])
-            ->where('id', '!=', $conta->id)
-            ->exists();
-
-        if ($existsDuplicate) {
-            $error = 'Já existe uma conta com o código "' . $validatedData['code'] . '" nesta empresa.';
-            if ($request->wantsJson()) {
-                return response()->json(['errors' => ['code' => [$error]]], 422);
-            }
-            return redirect()->back()->withErrors(['code' => $error])->withInput();
-        }
         
         // Mapeia allows_posting (formulário) → is_analytical (banco de dados)
         $validatedData['is_analytical'] = (bool) $validatedData['allows_posting'];
