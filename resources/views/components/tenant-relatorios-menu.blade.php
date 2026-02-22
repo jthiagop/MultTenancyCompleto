@@ -63,6 +63,15 @@
         </div>
         <!--end::Menu item-->
 
+                <!--begin::Menu item - Gerar OFX-->
+        <div class="menu-item px-3">
+            <a href="#" data-bs-toggle="modal" data-bs-target="#modal_ofx"
+                class="menu-link px-3">
+                OFX            
+            </a>
+        </div>
+        <!--end::Menu item-->
+
         {{-- Slot para itens extras --}}
         {{ $slot }}
 

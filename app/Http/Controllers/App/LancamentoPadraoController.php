@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LancamentoPadraoRequest;
 use App\Models\LancamentoPadrao;
 use App\Models\Contabilide\ChartOfAccount;
 use App\Exports\LancamentosPadraoTemplateExport;
@@ -197,12 +198,10 @@ class LancamentoPadraoController extends Controller
             'conta_credito_id' => [
                 'nullable',
                 function ($attribute, $value, $fail) {
-                    // Permite valor "0" que significa usar conta do banco/caixa
                     if ($value == '0') {
                         return;
                     }
-                    // Valida se existe na tabela chart_of_accounts
-                    if ($value && !\App\Models\Contabilide\ChartOfAccount::where('id', $value)->exists()) {
+                    if ($value && !ChartOfAccount::where('id', $value)->exists()) {
                         $fail('A conta de crédito selecionada não existe.');
                     }
                 },
@@ -234,6 +233,55 @@ class LancamentoPadraoController extends Controller
             ]);
         }
 
+        // Validação adicional: conta analítica para débito e crédito
+        if (in_array($field, ['conta_debito_id', 'conta_credito_id']) && $value && $value != '0') {
+            $conta = ChartOfAccount::find($value);
+            if ($conta && !$conta->allowsPosting()) {
+                return response()->json([
+                    'valid' => false,
+                    'message' => "A conta \"{$conta->code} - {$conta->name}\" é sintética (grupo). Selecione uma conta analítica."
+                ]);
+            }
+
+            // Validação de empresa ativa
+            $companyId = session('active_company_id');
+            if ($companyId && $conta && $conta->company_id != $companyId) {
+                return response()->json([
+                    'valid' => false,
+                    'message' => 'Esta conta não pertence à empresa ativa.'
+                ]);
+            }
+        }
+
+        // Validação de coerência débito/crédito quando ambos e o tipo estiverem disponíveis
+        if (in_array($field, ['conta_debito_id', 'conta_credito_id'])) {
+            $type = $request->input('type');
+            $debitoId = $field === 'conta_debito_id' ? $value : $request->input('conta_debito_id');
+            $creditoId = $field === 'conta_credito_id' ? $value : $request->input('conta_credito_id');
+
+            if ($type && $debitoId && $creditoId && $creditoId != '0') {
+                $contaDebito = ChartOfAccount::find($debitoId);
+                $contaCredito = ChartOfAccount::find($creditoId);
+
+                if ($contaDebito && $contaCredito) {
+                    if ($debitoId == $creditoId) {
+                        return response()->json([
+                            'valid' => false,
+                            'message' => 'A conta de débito e crédito não podem ser iguais.'
+                        ]);
+                    }
+
+                    $coerenciaMsg = $this->verificarCoerenciaContabil($type, $contaDebito, $contaCredito, $field);
+                    if ($coerenciaMsg) {
+                        return response()->json([
+                            'valid' => false,
+                            'message' => $coerenciaMsg
+                        ]);
+                    }
+                }
+            }
+        }
+
         return response()->json([
             'valid' => true,
             'message' => ''
@@ -241,53 +289,66 @@ class LancamentoPadraoController extends Controller
     }
 
     /**
-     * Store a newly created resource in storage.
+     * Verifica coerência contábil entre contas de débito e crédito por tipo de lançamento.
+     *
+     * Regras:
+     * - ENTRADA: D=Ativo (caixa/banco), C=Receita
+     * - SAÍDA:   D=Despesa, C=Ativo (caixa/banco)
+     * - AMBOS:   D e C devem ser de tipos diferentes
      */
-    public function store(Request $request)
+    private function verificarCoerenciaContabil(string $type, ChartOfAccount $debito, ChartOfAccount $credito, string $campo): ?string
     {
-        // Validação dos dados
-        $rules = [
-            'description' => 'required|string|max:255',
-            'type' => 'required|in:entrada,saida,ambos',
-            'category' => 'required|string|max:255',
-            'conta_debito_id' => 'required|exists:chart_of_accounts,id',
-            'conta_credito_id' => [
-                'required',
-                function ($attribute, $value, $fail) {
-                    // Permite valor "0" que significa usar conta do banco/caixa
-                    if ($value == '0' || $value === 0) {
-                        return;
-                    }
-                    // Valida se existe na tabela chart_of_accounts
-                    if ($value && !\App\Models\Contabilide\ChartOfAccount::where('id', $value)->exists()) {
-                        $fail('A conta de crédito selecionada não existe.');
-                    }
-                },
-            ],
-        ];
+        switch ($type) {
+            case 'entrada':
+                if ($campo === 'conta_debito_id' && $debito->type !== 'ativo') {
+                    return "Para entradas, o débito deve ser conta de Ativo (caixa/banco). Selecionada: {$debito->code} ({$debito->type}).";
+                }
+                if ($campo === 'conta_credito_id' && $credito->type !== 'receita') {
+                    return "Para entradas, o crédito deve ser conta de Receita. Selecionada: {$credito->code} ({$credito->type}).";
+                }
+                break;
 
-        $messages = [
-            'description.required' => 'O nome do lançamento é obrigatório.',
-            'type.required' => 'O tipo do lançamento é obrigatório.',
-            'type.in' => 'O tipo deve ser "entrada", "saída" ou "ambos".',
-            'category.required' => 'A categoria é obrigatória.',
-            'conta_debito_id.required' => 'A conta de débito é obrigatória.',
-            'conta_debito_id.exists' => 'A conta de débito selecionada não existe.',
-            'conta_credito_id.required' => 'A conta de crédito é obrigatória.',
-        ];
+            case 'saida':
+                if ($campo === 'conta_debito_id' && $debito->type !== 'despesa') {
+                    return "Para saídas, o débito deve ser conta de Despesa. Selecionada: {$debito->code} ({$debito->type}).";
+                }
+                if ($campo === 'conta_credito_id' && $credito->type !== 'ativo') {
+                    return "Para saídas, o crédito deve ser conta de Ativo (caixa/banco). Selecionada: {$credito->code} ({$credito->type}).";
+                }
+                break;
 
-        $request->validate($rules, $messages);
+            case 'ambos':
+                if ($debito->type === $credito->type) {
+                    return "Para tipo 'ambos', débito e crédito devem ser de tipos diferentes. Ambos são '{$debito->type}'.";
+                }
+                break;
+        }
 
-        $user = Auth::user(); // Usuário autenticado
+        return null;
+    }
+
+    /**
+     * Store a newly created resource in storage.
+     *
+     * Validações aplicadas pelo LancamentoPadraoRequest:
+     * - Campos obrigatórios (description, type, category, contas)
+     * - Conta de débito e crédito devem ser analíticas (aceitam lançamentos)
+     * - Contas devem pertencer à empresa ativa
+     * - Coerência contábil: entrada (D=Ativo, C=Receita), saída (D=Despesa, C=Ativo)
+     * - Débito e crédito não podem ser a mesma conta
+     */
+    public function store(LancamentoPadraoRequest $request)
+    {
+        $user = Auth::user();
         $companyId = session('active_company_id');
 
-        // Criação do lançamento
+        // Criação do lançamento (validação já feita pelo FormRequest)
         LancamentoPadrao::create([
             'type' => $request->input('type'),
             'description' => $request->input('description'),
             'category' => $request->input('category'),
-            'user_id' => $user->id, // Pegando o ID do usuário autenticado
-            'company_id' => $companyId, // ID da empresa ativa
+            'user_id' => $user->id,
+            'company_id' => $companyId,
             'conta_debito_id' => $request->input('conta_debito_id'),
             'conta_credito_id' => $request->input('conta_credito_id') == '0' ? null : $request->input('conta_credito_id'),
         ]);
@@ -300,7 +361,6 @@ class LancamentoPadraoController extends Controller
             ]);
         }
 
-            // Adiciona mensagem de sucesso
         Flasher::addSuccess('Lançamento cadastrado com sucesso!');
         return redirect()->back()->with('message', 'Lançamento Padrão criado com sucesso!');
     }
@@ -346,51 +406,20 @@ class LancamentoPadraoController extends Controller
 
     /**
      * Update the specified resource in storage.
+     *
+     * Validações aplicadas pelo LancamentoPadraoRequest:
+     * - Campos obrigatórios (description, type, category, contas)
+     * - Conta de débito e crédito devem ser analíticas (aceitam lançamentos)
+     * - Contas devem pertencer à empresa ativa
+     * - Coerência contábil: entrada (D=Ativo, C=Receita), saída (D=Despesa, C=Ativo)
+     * - Débito e crédito não podem ser a mesma conta
      */
-    public function update(Request $request, string $id)
+    public function update(LancamentoPadraoRequest $request, string $id)
     {
-        // Validação dos dados
-        $validator = \Validator::make($request->all(), [
-            'description' => 'required|string|max:255',
-            'type' => 'required|in:entrada,saida,ambos',
-            'category' => 'required|string|max:255',
-            'conta_debito_id' => 'required|exists:chart_of_accounts,id',
-            'conta_credito_id' => [
-                'required',
-                function ($attribute, $value, $fail) {
-                    if ($value == '0') {
-                        return; // Permite valor "0" que significa usar conta do banco/caixa
-                    }
-                    if ($value && !\App\Models\Contabilide\ChartOfAccount::where('id', $value)->exists()) {
-                        $fail('A conta de crédito selecionada não existe.');
-                    }
-                },
-            ],
-        ], [
-            'description.required' => 'O nome do lançamento é obrigatório.',
-            'type.required' => 'O tipo do lançamento é obrigatório.',
-            'type.in' => 'O tipo deve ser "entrada", "saída" ou "ambos".',
-            'category.required' => 'A categoria é obrigatória.',
-            'conta_debito_id.required' => 'A conta de débito é obrigatória.',
-            'conta_debito_id.exists' => 'A conta de débito selecionada não existe.',
-            'conta_credito_id.required' => 'A conta de crédito é obrigatória.',
-        ]);
-
-        // Se houver erros de validação, retornar JSON para AJAX
-        if ($validator->fails()) {
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json([
-                    'success' => false,
-                    'errors' => $validator->errors()
-                ], 422);
-            }
-            return redirect()->back()->withErrors($validator)->withInput();
-        }
-
         // Encontra o lançamento padrão pelo ID
         $lancamento = LancamentoPadrao::findOrFail($id);
 
-        // Atualiza os dados do lançamento
+        // Atualiza os dados do lançamento (validação já feita pelo FormRequest)
         $lancamento->update([
             'description' => $request->description,
             'type' => $request->type,

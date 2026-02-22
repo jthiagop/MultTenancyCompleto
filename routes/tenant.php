@@ -597,6 +597,10 @@ Route::middleware([
                 Route::get('/pdf/status/{id}', [ConciliacaoController::class, 'checkPdfStatus'])
                     ->name('pdf.status');
 
+                // Exportação OFX
+                Route::get('/ofx/exportar', [OfxController::class, 'exportar'])
+                    ->name('relatorios.ofx.exportar');
+
                 Route::post('/filter', [PrestacaoDeContaController::class, 'generateReport']);
 
                 Route::resource('fieis', FielController::class);

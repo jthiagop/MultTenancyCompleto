@@ -37,3 +37,4 @@
 @include('app.components.modals.financeiro.conciliacao.modal_conciliacao_bancaria')
 @include('app.components.modals.financeiro.prestacao_contas.modal_prestacao_contas')
 @include('app.components.modals.financeiro.boletim.modal_boletim_financeiro')
+@include('app.components.modals.financeiro.ofx.modal_ofx')

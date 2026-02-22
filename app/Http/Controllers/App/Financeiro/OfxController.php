@@ -8,16 +8,56 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Financeiro\BankStatement;
 use App\Services\OfxService;
+use App\Services\OfxExportService;
 use Illuminate\Support\Facades\Auth;
 use Endeken\OFX\OFX;
 
 class OfxController extends Controller
 {
     protected $ofxService;
+    protected $ofxExportService;
 
-    public function __construct(OfxService $ofxService)
+    public function __construct(OfxService $ofxService, OfxExportService $ofxExportService)
     {
         $this->ofxService = $ofxService;
+        $this->ofxExportService = $ofxExportService;
+    }
+
+    /**
+     * Exporta as transações financeiras em formato OFX (download direto).
+     *
+     * GET /relatorios/ofx/exportar?entidade_id=X&data_inicial=dd/mm/YYYY&data_final=dd/mm/YYYY
+     */
+    public function exportar(Request $request)
+    {
+        $request->validate([
+            'entidade_id'  => 'required|integer',
+            'data_inicial' => 'required|string',
+            'data_final'   => 'required|string',
+        ], [
+            'entidade_id.required'  => 'Selecione uma conta financeira.',
+            'data_inicial.required' => 'O período inicial é obrigatório.',
+            'data_final.required'   => 'O período final é obrigatório.',
+        ]);
+
+        try {
+            $resultado = $this->ofxExportService->gerarOfx(
+                (int) $request->entidade_id,
+                $request->data_inicial,
+                $request->data_final
+            );
+
+            return response($resultado['conteudo'])
+                ->header('Content-Type', 'application/x-ofx')
+                ->header('Content-Disposition', "attachment; filename=\"{$resultado['nome_arquivo']}\"")
+                ->header('Cache-Control', 'no-cache, no-store, must-revalidate');
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+            ], 422);
+        }
     }
 
     public function upload(Request $request)

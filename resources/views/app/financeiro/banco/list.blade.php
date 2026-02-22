@@ -53,6 +53,10 @@
     @include('app.components.modals.financeiro.conciliacao.modal_conciliacao_bancaria')
     <!--end::Modal - Conciliação Bancária-->
 
+    <!--begin::Modal - Exportação OFX-->
+    @include('app.components.modals.financeiro.ofx.modal_ofx')
+    <!--end::Modal - Exportação OFX-->
+
     <!--end::Modal - Upgrade plan-->
 
     {{-- Drawers e Modals que dependem do jQuery --}}
@@ -106,6 +110,7 @@
         <script src="/tenancy/assets/js/custom/utilities/modals/boletim-financeiro.js"></script>
         <script src="/tenancy/assets/js/custom/utilities/modals/conciliacao-bancaria.js"></script>
         <script src="/tenancy/assets/js/custom/utilities/modals/extrato.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/ofx-export.js"></script>
 
         <script>
             // Função para excluir transação diretamente do dropdown (sem abrir drawer)
