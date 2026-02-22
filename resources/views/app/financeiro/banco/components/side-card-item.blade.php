@@ -31,8 +31,8 @@
 
         <div class="d-flex align-items-start">
             {{-- Logo / Avatar --}}
-            <div class="me-4 flex-shrink-0">
-                <div class="symbol symbol-50px">
+            <div class="me-5 flex-shrink-0">
+                <div class="symbol symbol-65px">
                     @if ($entidade->tipo === 'banco')
                         @if ($entidade->bank?->logo_url)
                             <img src="{{ $entidade->bank->logo_url }}"
@@ -62,7 +62,7 @@
                 {{-- Linha 1: Nome + Editar --}}
                 <div class="d-flex align-items-center justify-content-between mb-1">
                     <div class="d-flex align-items-center gap-2 min-w-0">
-                        <span class="fw-bold text-gray-800 fs-6 text-truncate" data-entidade-nome="{{ $entidade->id }}">
+                        <span class="fw-bold text-gray-800 fs-4 text-truncate" data-entidade-nome="{{ $entidade->id }}">
                             @if ($entidade->tipo === 'banco')
                                 {{ $entidade->bank?->name ?? $entidade->nome }}
                             @else
@@ -75,7 +75,7 @@
                                   data-bs-placement="top"
                                   title="Conciliação pendente"
                                   aria-label="Status: Conciliação pendente">
-                                <i class="bi bi-flag-fill text-warning fs-8" aria-hidden="true"></i>
+                                <i class="bi bi-flag-fill text-warning fs-7" aria-hidden="true"></i>
                             </span>
                         @endif
                     </div>
@@ -88,12 +88,12 @@
                        data-bs-placement="top"
                        title="Renomear"
                        aria-label="Renomear entidade">
-                        <i class="fa-regular fa-pen-to-square fs-8" aria-hidden="true"></i>
+                        <i class="fa-regular fa-pen-to-square fs-7" aria-hidden="true"></i>
                     </a>
                 </div>
 
                 {{-- Linha 2: Agência/Conta --}}
-                <div class="text-gray-500 fs-8 mb-3">
+                <div class="text-gray-500 fs-7 mb-4">
                     @if ($entidade->tipo === 'banco')
                         Ag {{ $entidade->agencia }} • Cc {{ $entidade->conta }}
                     @else
@@ -106,13 +106,13 @@
                     {{-- Badge tipo de conta --}}
                     <div>
                         @if ($entidade->tipo === 'banco' && $accountInfo)
-                            <span class="badge {{ $accountInfo['badge'] }} rounded-pill px-3 py-2 fs-9 fw-semibold">
-                                <i class="bi {{ $accountInfo['icon'] }} me-1 fs-9" aria-hidden="true"></i>
+                            <span class="badge {{ $accountInfo['badge'] }} rounded-pill px-3 py-2 fs-8 fw-semibold">
+                                <i class="bi {{ $accountInfo['icon'] }} me-1 fs-8" aria-hidden="true"></i>
                                 {{ $accountInfo['label'] }}
                             </span>
                         @else
-                            <span class="badge badge-light-success rounded-pill px-3 py-2 fs-9 fw-semibold">
-                                <i class="bi bi-cash-stack me-1 fs-9" aria-hidden="true"></i>
+                            <span class="badge badge-light-success rounded-pill px-3 py-2 fs-8 fw-semibold">
+                                <i class="bi bi-cash-stack me-1 fs-8" aria-hidden="true"></i>
                                 Caixa
                             </span>
                         @endif
@@ -121,7 +121,7 @@
                     {{-- Saldo --}}
                     <div class="text-end" aria-label="Saldo atual">
                         <div class="d-flex align-items-baseline justify-content-end">
-                            <span class="fw-semibold me-1 fs-7 {{ $saldoNegativo ? 'text-danger' : 'text-gray-400' }}" aria-hidden="true">R$</span>
+                            <span class="fw-semibold me-1 fs-6 {{ $saldoNegativo ? 'text-danger' : 'text-gray-400' }}" aria-hidden="true">R$</span>
                             <span class="fw-bold lh-1 fs-2x {{ $saldoNegativo ? 'text-danger' : 'text-gray-900' }}">
                                 {{ $entidade->saldo_formatado ?? number_format($saldo, 2, ',', '.') }}
                             </span>
@@ -130,9 +130,9 @@
                         {{-- Variação --}}
                         @if ($temVariacao)
                             <div class="mt-2">
-                                <span class="badge {{ $variacaoPositiva ? 'badge-light-success' : 'badge-light-danger' }} rounded-pill px-2 py-1 fs-9"
+                                <span class="badge {{ $variacaoPositiva ? 'badge-light-success' : 'badge-light-danger' }} rounded-pill px-3 py-2 fs-8"
                                       aria-label="Variação de {{ number_format(abs($variacaoPercentual), 1, ',', '.') }}% {{ $variacaoPositiva ? 'positiva' : 'negativa' }}">
-                                    <i class="bi {{ $variacaoPositiva ? 'bi-arrow-up' : 'bi-arrow-down' }} fs-9 me-1" aria-hidden="true"></i>
+                                    <i class="bi {{ $variacaoPositiva ? 'bi-arrow-up' : 'bi-arrow-down' }} fs-8 me-1" aria-hidden="true"></i>
                                     R$ {{ number_format(abs($variacaoValor), 2, ',', '.') }}
                                     •
                                     {{ number_format(abs($variacaoPercentual), 1, ',', '.') }}%
