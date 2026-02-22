@@ -282,8 +282,8 @@
             parentSelect.value = contaData.parent_id || '';
             $(parentSelect).trigger('change'); // Atualiza o Select2
 
-            // Preenche allows_posting
-            if (contaData.allows_posting == 1 || contaData.allows_posting === true) {
+            // Preenche classificação (is_analytical vem do banco de dados)
+            if (contaData.is_analytical == 1 || contaData.is_analytical === true) {
                 document.getElementById('type_analitica').checked = true;
             } else {
                 document.getElementById('type_sintetica').checked = true;
