@@ -117,6 +117,7 @@
                                         <tr class="fw-bold fs-6">
                                             <th colspan="3" class="text-nowrap align-end">Total:</th>
                                             <th class="text-end fs-5" id="historico-total-{{ $aba['key'] }}">R$ 0,00</th>
+                                            <th colspan="3"></th>
                                         </tr>
                                     </tfoot>
                                 </table>
