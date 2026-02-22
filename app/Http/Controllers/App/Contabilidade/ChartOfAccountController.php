@@ -58,6 +58,20 @@ class ChartOfAccountController extends Controller
         $validatedData['is_analytical'] = (bool) $validatedData['allows_posting'];
         unset($validatedData['allows_posting']);
 
+        // ─── Validação estrutural: Sintética x Analítica ───
+        // Regra: conta analítica NÃO pode ser pai (ter filhos)
+        // Regra: ao criar filho, o pai deve ser sintético
+        if (!empty($validatedData['parent_id'])) {
+            $parent = ChartOfAccount::find($validatedData['parent_id']);
+            if ($parent && $parent->is_analytical) {
+                $error = 'A conta pai "' . $parent->code . ' - ' . $parent->name . '" é analítica e não pode ter sub-contas. Altere-a para sintética primeiro.';
+                if ($request->wantsJson()) {
+                    return response()->json(['errors' => ['parent_id' => [$error]]], 422);
+                }
+                return redirect()->back()->withErrors(['parent_id' => $error])->withInput();
+            }
+        }
+
         // --- INÍCIO DA ADIÇÃO DO TRY-CATCH ---
         try {
             $conta = ChartOfAccount::create($validatedData);
@@ -198,6 +212,28 @@ class ChartOfAccountController extends Controller
         $validatedData['is_analytical'] = (bool) $validatedData['allows_posting'];
         unset($validatedData['allows_posting']);
 
+        // ─── Validação estrutural: Sintética x Analítica ───
+        // Regra 1: Conta analítica NÃO pode ter filhos
+        if ($validatedData['is_analytical'] && $conta->children()->exists()) {
+            $error = 'Esta conta possui sub-contas e não pode ser marcada como analítica. Remova as sub-contas primeiro ou mantenha-a como sintética.';
+            if ($request->wantsJson()) {
+                return response()->json(['errors' => ['allows_posting' => [$error]]], 422);
+            }
+            return redirect()->back()->withErrors(['allows_posting' => $error])->withInput();
+        }
+
+        // Regra 2: Ao vincular a um pai, o pai deve ser sintético
+        if (!empty($validatedData['parent_id'])) {
+            $parent = ChartOfAccount::find($validatedData['parent_id']);
+            if ($parent && $parent->is_analytical) {
+                $error = 'A conta pai "' . $parent->code . ' - ' . $parent->name . '" é analítica e não pode ter sub-contas. Altere-a para sintética primeiro.';
+                if ($request->wantsJson()) {
+                    return response()->json(['errors' => ['parent_id' => [$error]]], 422);
+                }
+                return redirect()->back()->withErrors(['parent_id' => $error])->withInput();
+            }
+        }
+
         $conta->update($validatedData);
 
         // Retorna JSON para requisições AJAX
@@ -320,6 +356,26 @@ class ChartOfAccountController extends Controller
                     $existingAccount = ChartOfAccount::where('company_id', $activeCompanyId)
                         ->where('code', $code)
                         ->first();
+
+                    // ─── Validação estrutural na importação ───
+                    // Se a conta tem filhos, forçar sintética
+                    if ($isAnalytical) {
+                        $existingCheck = ChartOfAccount::where('company_id', $activeCompanyId)
+                            ->where('code', $code)->first();
+                        if ($existingCheck && $existingCheck->children()->exists()) {
+                            $isAnalytical = false;
+                            $errors[] = "Linha " . ($index + 2) . ": Conta '{$code}' possui sub-contas, forçada como sintética.";
+                        }
+                    }
+                    // Se o pai é analítico, alertar
+                    if ($parentId) {
+                        $parentAccount = ChartOfAccount::find($parentId);
+                        if ($parentAccount && $parentAccount->is_analytical) {
+                            // Corrige o pai para sintético automaticamente
+                            $parentAccount->update(['is_analytical' => false]);
+                            $errors[] = "Linha " . ($index + 2) . ": Conta pai '{$parentAccount->code}' era analítica, corrigida para sintética.";
+                        }
+                    }
 
                     if ($existingAccount) {
                         // Atualiza a conta existente
