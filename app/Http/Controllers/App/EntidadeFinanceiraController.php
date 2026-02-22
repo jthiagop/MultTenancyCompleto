@@ -812,6 +812,10 @@ class EntidadeFinanceiraController extends Controller
             });
         }
 
+        // ✅ Calcula totais (entradas e saídas) da query filtrada completa (antes de paginar)
+        $totalEntradas = (clone $query)->where('amount', '>=', 0)->sum('amount');
+        $totalSaidas = abs((clone $query)->where('amount', '<', 0)->sum('amount'));
+
         // Paginação
         $paginator = $query->paginate($perPage)->appends(request()->query());
 
@@ -859,7 +863,9 @@ class EntidadeFinanceiraController extends Controller
             return response()->json([
                 'success' => true,
                 'html' => $html,
-                'counts' => $counts, // ✅ Novo: retorna contadores
+                'counts' => $counts,
+                'total_entradas' => $totalEntradas,
+                'total_saidas' => $totalSaidas,
                 'meta' => [
                     'current_page' => $paginator->currentPage(),
                     'last_page' => $paginator->lastPage(),
@@ -873,7 +879,9 @@ class EntidadeFinanceiraController extends Controller
         return response()->json([
             'success' => true,
             'data' => $dados,
-            'counts' => $counts, // ✅ Novo: retorna contadores
+            'counts' => $counts,
+            'total_entradas' => $totalEntradas,
+            'total_saidas' => $totalSaidas,
             'meta' => [
                 'current_page' => $paginator->currentPage(),
                 'last_page' => $paginator->lastPage(),
