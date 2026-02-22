@@ -188,8 +188,13 @@ class EntidadeFinanceiraController extends Controller
     // Atualiza uma entidade financeira
     public function update(Request $request, string $id)
     {
+        $isAjax = $request->expectsJson();
+
         // Verifica se o usuário é admin ou global
         if (!Auth::user()->hasRole(['admin', 'global'])) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Você não tem permissão para editar entidades financeiras.'], 403);
+            }
             Flasher::addError('Você não tem permissão para editar entidades financeiras.');
             return redirect()->route('entidades.index');
         }
@@ -221,12 +226,10 @@ class EntidadeFinanceiraController extends Controller
         try {
             // Atualiza os campos permitidos
             if ($entidade->tipo === 'caixa') {
-                // Para caixa, atualiza nome, descrição e conta contábil
                 $entidade->nome = $validatedData['nome'];
                 $entidade->descricao = $validatedData['descricao'] ?? null;
                 $entidade->conta_contabil_id = $validatedData['conta_contabil_id'] ?? null;
             } else {
-                // Para banco, atualiza banco_id, agencia, conta, account_type, descrição e conta contábil
                 $entidade->banco_id = $validatedData['bank_id'];
                 $entidade->agencia = $validatedData['agencia'];
                 $entidade->conta = $validatedData['conta'];
@@ -253,10 +256,37 @@ class EntidadeFinanceiraController extends Controller
             $entidade->updated_by_name = Auth::user()->name;
             $entidade->save();
 
+            // Recarrega com conta contábil
+            $entidade->load('contaContabil');
+
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Entidade financeira atualizada com sucesso!',
+                    'data' => [
+                        'id' => $entidade->getRouteKey(),
+                        'nome' => $entidade->nome,
+                        'tipo' => $entidade->tipo,
+                        'descricao' => $entidade->descricao,
+                        'conta_contabil' => $entidade->contaContabil
+                            ? $entidade->contaContabil->code . ' - ' . $entidade->contaContabil->name
+                            : null,
+                        'saldo_atual' => $entidade->saldo_atual,
+                        'saldo_inicial_real' => $entidade->saldo_inicial_real,
+                        'updated_at' => $entidade->updated_at->format('d/m/Y H:i'),
+                    ],
+                ]);
+            }
+
             Flasher::addSuccess('Entidade financeira atualizada com sucesso!');
             return redirect()->route('entidades.index');
         } catch (\Exception $e) {
             \Log::error('Erro ao atualizar entidade: ' . $e->getMessage());
+
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Ocorreu um erro ao atualizar a entidade.'], 500);
+            }
+
             Flasher::addError('Ocorreu um erro ao atualizar a entidade.');
             return redirect()->back()->withInput();
         }
@@ -299,24 +329,48 @@ class EntidadeFinanceiraController extends Controller
         }
     }
 
-    public function destroy(string $id)
+    public function destroy(Request $request, string $id)
     {
-        try {
-            // 1) Localiza a entidade financeira pelo ID
-            // CORREÇÃO DE SEGURANÇA: Busca a entidade dentro do escopo da empresa ativa
-            $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
-            // 2) Exclui as movimentações associadas (se necessário)
-            $movimentacao = Movimentacao::where('entidade_id', $entidade->id)->delete();
+        $isAjax = $request->expectsJson();
 
-            // 3) Exclui a entidade financeira
+        if (!Auth::user()->hasRole(['admin', 'global'])) {
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Você não tem permissão para excluir entidades financeiras.'], 403);
+            }
+            Flasher::addError('Você não tem permissão para excluir entidades financeiras.');
+            return redirect()->back();
+        }
+
+        try {
+            $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+
+            // Verifica se há transações vinculadas
+            $totalTransacoes = $entidade->transacoesFinanceiras()->count();
+            if ($totalTransacoes > 0) {
+                $msg = "Esta entidade possui {$totalTransacoes} transação(ões) vinculada(s). Exclua as transações primeiro.";
+                if ($isAjax) {
+                    return response()->json(['success' => false, 'message' => $msg], 422);
+                }
+                Flasher::addError($msg);
+                return redirect()->back();
+            }
+
+            // Exclui movimentações e entidade
+            Movimentacao::where('entidade_id', $entidade->id)->delete();
             $entidade->delete();
 
-            // 4) Mensagem de sucesso e redirecionamento
+            if ($isAjax) {
+                return response()->json(['success' => true, 'message' => 'Entidade financeira excluída com sucesso!']);
+            }
+
             flash()->success('A entidade financeira foi excluída com sucesso!');
-            return redirect()->back(); // Redireciona para a lista de entidades
+            return redirect()->back();
         } catch (\Exception $e) {
-            // 5) Em caso de erro, registra log e retorna com mensagem de erro
             \Log::error('Erro ao excluir entidade financeira: ' . $e->getMessage());
+
+            if ($isAjax) {
+                return response()->json(['success' => false, 'message' => 'Ocorreu um erro ao excluir a entidade financeira.'], 500);
+            }
 
             Flasher::addError('Ocorreu um erro ao excluir a entidade financeira: ' . $e->getMessage());
             return redirect()->back();
