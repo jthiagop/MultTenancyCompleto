@@ -334,6 +334,7 @@ Route::middleware([
 
                 // Rotas para o CRUD do Plano de Contas.
                 Route::get('plano-contas/next-code', [ChartOfAccountController::class, 'getNextCode'])->name('plano-contas.next-code');
+                Route::get('plano-contas/table-data', [ChartOfAccountController::class, 'tableData'])->name('plano-contas.table-data');
                 Route::post('plano-contas/import', [ChartOfAccountController::class, 'import'])->name('plano-contas.import');
                 Route::post('plano-contas/export', [ChartOfAccountController::class, 'export'])->name('plano-contas.export');
                 Route::resource('plano-contas', ChartOfAccountController::class)->names('plano-contas');

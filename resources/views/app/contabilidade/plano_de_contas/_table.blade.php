@@ -102,76 +102,110 @@
                 <!--begin::Scripts-->
                 <script>
                     document.addEventListener('DOMContentLoaded', function() {
-                        // Funcionalidade de busca
-                        const searchInput = document.getElementById('search-plano-contas');
-                        const tableRows = document.querySelectorAll('#plano_contas_tabela tbody tr');
+                        const planoContasBaseUrl = "{{ route('contabilidade.plano-contas.index') }}";
+                        const tableDataUrl = "{{ route('contabilidade.plano-contas.table-data') }}";
+                        const tableBody = document.querySelector('#plano_contas_tabela tbody');
 
+                        // ─── Função global: recarrega apenas a tabela via AJAX ───
+                        window.reloadPlanoContasTable = async function() {
+                            try {
+                                const response = await fetch(tableDataUrl, {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                    }
+                                });
+                                const data = await response.json();
+
+                                if (data.success) {
+                                    // Atualiza o tbody da tabela
+                                    tableBody.innerHTML = data.tbodyHtml;
+
+                                    // Re-inicializa os menus do Metronic nas novas linhas
+                                    if (typeof KTMenu !== 'undefined') {
+                                        KTMenu.createInstances();
+                                    }
+
+                                    // Atualiza o Select2 do modal de criação/edição
+                                    const parentSelect = document.getElementById('parent_id_select');
+                                    if (parentSelect && data.accounts) {
+                                        const currentVal = $(parentSelect).val();
+                                        // Limpa opções existentes (mantém o placeholder vazio)
+                                        parentSelect.innerHTML = '<option></option>';
+                                        data.accounts.forEach(acc => {
+                                            const opt = document.createElement('option');
+                                            opt.value = acc.id;
+                                            opt.textContent = `${acc.code} - ${acc.name}`;
+                                            opt.setAttribute('data-type', acc.type);
+                                            parentSelect.appendChild(opt);
+                                        });
+                                        // Restaura seleção se existia
+                                        if (currentVal) {
+                                            $(parentSelect).val(currentVal);
+                                        }
+                                        $(parentSelect).trigger('change');
+                                    }
+                                }
+                            } catch (error) {
+                                console.error('Erro ao recarregar tabela:', error);
+                            }
+                        };
+
+                        // ─── Busca (funciona com event delegation — não precisa re-bind) ───
+                        const searchInput = document.getElementById('search-plano-contas');
                         searchInput.addEventListener('input', function() {
                             const searchTerm = this.value.toLowerCase();
+                            const rows = tableBody.querySelectorAll('tr');
 
-                            tableRows.forEach(row => {
-                                const contaName = row.querySelector('td:first-child span').textContent
-                                    .toLowerCase();
-                                const contaCode = row.querySelector('td:nth-child(2)').textContent
-                            .toLowerCase();
+                            rows.forEach(row => {
+                                const contaName = row.querySelector('td:first-child span')?.textContent?.toLowerCase() || '';
+                                const contaCode = row.querySelector('td:nth-child(2)')?.textContent?.toLowerCase() || '';
 
-                                if (contaName.includes(searchTerm) || contaCode.includes(searchTerm)) {
-                                    row.style.display = '';
-                                } else {
-                                    row.style.display = 'none';
-                                }
+                                row.style.display = (contaName.includes(searchTerm) || contaCode.includes(searchTerm)) ? '' : 'none';
                             });
                         });
 
-                        // Funcionalidade de exclusão
-                        document.querySelectorAll('.delete-btn').forEach(btn => {
-                            btn.addEventListener('click', function(e) {
+                        // ─── Event delegation: edição e exclusão (funciona p/ linhas novas) ───
+                        document.getElementById('plano_contas_tabela').addEventListener('click', function(e) {
+                            // Exclusão
+                            const deleteBtn = e.target.closest('.delete-btn');
+                            if (deleteBtn) {
                                 e.preventDefault();
+                                const contaId = deleteBtn.getAttribute('data-id');
+                                const contaName = deleteBtn.getAttribute('data-name');
 
-                                const contaId = this.getAttribute('data-id');
-                                const contaName = this.getAttribute('data-name');
-
-                                // Atualiza o modal
                                 document.getElementById('conta-name').textContent = contaName;
                                 document.getElementById('delete-plano-conta-form').action =
-                                    `/contabilidade/plano-contas/${contaId}`;
+                                    `${planoContasBaseUrl}/${contaId}`;
 
-                                // Abre o modal
-                                const modal = new bootstrap.Modal(document.getElementById(
-                                    'kt_modal_delete_plano_conta'));
+                                const modal = new bootstrap.Modal(document.getElementById('kt_modal_delete_plano_conta'));
                                 modal.show();
-                            });
-                        });
+                                return;
+                            }
 
-                        // Funcionalidade de edição
-                        document.querySelectorAll('.edit-btn').forEach(btn => {
-                            btn.addEventListener('click', function(e) {
+                            // Edição
+                            const editBtn = e.target.closest('.edit-btn');
+                            if (editBtn) {
                                 e.preventDefault();
+                                const contaId = editBtn.getAttribute('data-id');
 
-                                const contaId = this.getAttribute('data-id');
-
-                                // Busca os dados da conta via AJAX
-                                fetch(`/contabilidade/plano-contas/${contaId}/edit`)
-                                    .then(response => response.json())
-                                    .then(data => {
-                                        if (data.success) {
-                                            // Usa a função global para edição
-                                            window.editPlanoConta(data.conta);
-                                        }
-                                    })
-                                    .catch(error => {
-                                        console.error('Erro ao buscar dados da conta:', error);
-                                        Swal.fire({
-                                            text: "Erro ao carregar dados da conta para edição.",
-                                            icon: "error",
-                                            buttonsStyling: false,
-                                            confirmButtonText: "Ok!",
-                                            customClass: {
-                                                confirmButton: "btn btn-primary"
-                                            }
-                                        });
-                                    });
-                            });
+                                fetch(`${planoContasBaseUrl}/${contaId}/edit`, {
+                                    headers: {
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                    }
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success) {
+                                        window.editPlanoConta(data.conta);
+                                    }
+                                })
+                                .catch(error => {
+                                    console.error('Erro ao buscar dados da conta:', error);
+                                    toastr.error('Erro ao carregar dados da conta para edição.');
+                                });
+                            }
                         });
                     });
                 </script>

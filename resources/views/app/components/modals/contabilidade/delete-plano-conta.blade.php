@@ -56,45 +56,51 @@ document.addEventListener('DOMContentLoaded', function() {
         submitBtn.disabled = true;
 
         fetch(form.action, {
-            method: form.method,
+            method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
-            }
+            },
+            body: JSON.stringify({ _method: 'DELETE' })
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.message) {
-                // Sucesso
-                Swal.fire({
-                    text: data.message,
-                    icon: "success",
-                    buttonsStyling: false,
-                    confirmButtonText: "Ok!",
-                    customClass: {
-                        confirmButton: "btn btn-primary"
-                    }
-                }).then(() => {
-                    if (data.redirect) {
-                        window.location.href = data.redirect;
-                    } else {
-                        window.location.reload();
-                    }
-                });
+        .then(response => {
+            return response.json().then(data => ({
+                ok: response.ok,
+                status: response.status,
+                data: data
+            }));
+        })
+        .then(({ ok, status, data }) => {
+            if (ok && (data.success || data.message)) {
+                // Fecha o modal de exclusão
+                const modalEl = document.getElementById('kt_modal_delete_plano_conta');
+                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
+
+                // Recarrega apenas a tabela
+                if (typeof window.reloadPlanoContasTable === 'function') {
+                    window.reloadPlanoContasTable();
+                }
+
+                // Toast de sucesso
+                toastr.options = {
+                    closeButton: true,
+                    progressBar: true,
+                    positionClass: 'toastr-top-right',
+                    timeOut: 4000,
+                };
+                toastr.success(data.message || 'Conta excluída com sucesso!');
+            } else {
+                // Erro de validação ou servidor
+                toastr.error(data.message || 'Ocorreu um erro ao excluir a conta.');
             }
         })
         .catch(error => {
             console.error('Erro:', error);
-            Swal.fire({
-                text: "Ocorreu um erro inesperado. Tente novamente.",
-                icon: "error",
-                buttonsStyling: false,
-                confirmButtonText: "Ok!",
-                customClass: {
-                    confirmButton: "btn btn-primary"
-                }
-            });
+            toastr.error('Erro de comunicação com o servidor. Tente novamente.');
         })
         .finally(() => {
             // Restaura o botão

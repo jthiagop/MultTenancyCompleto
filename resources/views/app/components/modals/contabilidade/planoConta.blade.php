@@ -475,18 +475,26 @@
                 })
                 .then(({ ok, status, data }) => {
                     if (ok && (data.message || data.success)) {
-                        // Sucesso: fecha o modal e mostra toast após reload
+                        // Sucesso: fecha o modal e mostra toast
                         const modalEl = document.getElementById('kt_modal_new_account');
                         const modalInstance = bootstrap.Modal.getInstance(modalEl);
                         if (modalInstance) {
                             modalInstance.hide();
                         }
 
-                        // Salva mensagem para exibir toast após reload
-                        sessionStorage.setItem('toast_success', data.message || 'Operação realizada com sucesso!');
+                        // Recarrega apenas a tabela (sem reload da página toda)
+                        if (typeof window.reloadPlanoContasTable === 'function') {
+                            window.reloadPlanoContasTable();
+                        }
 
-                        // Recarrega para atualizar a tabela
-                        window.location.reload();
+                        // Toast de sucesso imediato
+                        toastr.options = {
+                            closeButton: true,
+                            progressBar: true,
+                            positionClass: 'toastr-top-right',
+                            timeOut: 4000,
+                        };
+                        toastr.success(data.message || 'Operação realizada com sucesso!');
                     } else if (status === 422 && data.errors) {
                         // Erros de validação
                         showErrors(data.errors);
@@ -521,19 +529,6 @@
             const modal = new bootstrap.Modal(document.getElementById('kt_modal_new_account'));
             modal.show();
         };
-
-        // ─── Toast pós-reload: exibe mensagem de sucesso salva no sessionStorage ───
-        const toastMessage = sessionStorage.getItem('toast_success');
-        if (toastMessage) {
-            sessionStorage.removeItem('toast_success');
-            toastr.options = {
-                closeButton: true,
-                progressBar: true,
-                positionClass: 'toastr-top-right',
-                timeOut: 4000,
-            };
-            toastr.success(toastMessage);
-        }
     });
 </script>
 <!--end::Scripts-->

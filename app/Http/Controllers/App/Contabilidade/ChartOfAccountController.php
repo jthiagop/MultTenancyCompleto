@@ -188,6 +188,39 @@ class ChartOfAccountController extends Controller
     }
 
     /**
+     * Retorna os dados da tabela (HTML do tbody + opções do Select2) via AJAX.
+     * Usado para atualizar a tabela sem recarregar a página toda.
+     */
+    public function tableData()
+    {
+        $allAccounts = ChartOfAccount::forActiveCompany()->orderBy('code')->get();
+        $allGroupedAccounts = $allAccounts->groupBy('parent_id');
+        $rootAccounts = $allGroupedAccounts[null] ?? collect();
+
+        // Renderiza apenas o tbody
+        $tbodyHtml = '';
+        foreach ($rootAccounts as $conta) {
+            $tbodyHtml .= view('app.contabilidade.plano_de_contas._conta_linha', [
+                'conta' => $conta,
+                'allGroupedAccounts' => $allGroupedAccounts,
+                'level' => 0,
+            ])->render();
+        }
+
+        // Retorna HTML do tbody + dados para atualizar o Select2 do modal
+        return response()->json([
+            'success' => true,
+            'tbodyHtml' => $tbodyHtml,
+            'accounts' => $allAccounts->map(fn($c) => [
+                'id' => $c->id,
+                'code' => $c->code,
+                'name' => $c->name,
+                'type' => $c->type,
+            ]),
+        ]);
+    }
+
+    /**
      * Exibe o formulário para editar uma conta.
      */
     public function edit($id)
