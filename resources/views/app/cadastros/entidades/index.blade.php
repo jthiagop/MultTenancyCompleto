@@ -346,11 +346,7 @@
 
 <!--begin::Vendors Javascript(used for this page only)-->
 <script src="/tenancy/assets/plugins/custom/datatables/datatables.bundle.js"></script>
-<script src="/tenancy/assets/plugins/custom/formvalidation/dist/js/FormValidation.min.js"></script>
-<script src="/tenancy/assets/plugins/custom/formvalidation/dist/js/plugins/Bootstrap5.min.js"></script>
-<script src="/tenancy/assets/plugins/custom/formvalidation/dist/js/plugins/Trigger.min.js"></script>
 <!--end::Vendors Javascript-->
 <!--begin::Custom Javascript(used for this page only)-->
-<script src="/tenancy/assets/js/custom/utilities/modals/bidding.js"></script>
 <script src="/tenancy/assets/js/custom/apps/entidades/entidade-manager.js"></script>
 
