@@ -225,6 +225,9 @@
         const indicator = submitBtn.querySelector('.indicator-progress');
         const label = submitBtn.querySelector('.indicator-label');
 
+        // Base URL para o resource (gerada pelo Blade com prefixo tenant correto)
+        const planoContasBaseUrl = "{{ route('contabilidade.plano-contas.index') }}";
+
         // Inicializa o modal para criação
         function initCreateModal() {
             form.action = "{{ route('contabilidade.plano-contas.store') }}";
@@ -254,7 +257,7 @@
 
         // Inicializa o modal para edição
         function initEditModal(contaData) {
-            form.action = `/contabilidade/plano-contas/${contaData.id}`;
+            form.action = `${planoContasBaseUrl}/${contaData.id}`;
             form.method = 'POST';
 
             // Adiciona método PUT
