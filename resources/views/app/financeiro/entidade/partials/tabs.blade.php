@@ -515,18 +515,17 @@
 
         // Quando o usuário selecionar uma entidade financeira
         bancoSelect.on('change', function () {
-            const entidadeId = $(this).val();
+            const newId = $(this).val();
 
-            if (entidadeId) {
-                // Redireciona para a página da entidade selecionada
-                // A rota resource 'entidades' gera a rota 'entidades.show'
-                // Usa a URL base atual e substitui apenas o ID
+            if (newId) {
+                // Substitui apenas o ID que vem logo após "entidades/" na URL,
+                // preservando qualquer sub-rota (historico, movimentacoes, informacoes, etc.)
                 const currentPath = window.location.pathname;
-                const pathParts = currentPath.split('/').filter(part => part !== '');
-                // Remove o último segmento (ID atual) e adiciona o novo ID
-                pathParts[pathParts.length - 1] = entidadeId;
-                const newUrl = '/' + pathParts.join('/');
-                window.location.href = newUrl;
+                const newPath = currentPath.replace(
+                    /(\/entidades\/)\d+(\/|$)/,
+                    '$1' + newId + '$2'
+                );
+                window.location.href = newPath;
             }
         });
     } // end run()
