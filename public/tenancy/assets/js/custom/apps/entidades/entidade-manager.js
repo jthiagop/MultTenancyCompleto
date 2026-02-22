@@ -72,10 +72,15 @@ var EntidadeManager = (function () {
     }
 
     // ─── Select2 Helpers ───
-    function initBancoSelect2() {
+    // Os selects usam <x-tenant-select> com data-control="select2",
+    // então o Metronic já inicializa automaticamente.
+    // Aqui só setamos valores e customizamos templates do banco.
+
+    function reinitBancoSelect2() {
         var el = $('#edit_banco-select');
         if (el.length === 0) return;
 
+        // Reinicializa com template customizado de logo do banco
         if (el.hasClass('select2-hidden-accessible')) {
             el.select2('destroy');
         }
@@ -86,21 +91,6 @@ var EntidadeManager = (function () {
             dropdownParent: $(drawerElement),
             templateResult: formatBankOption,
             templateSelection: formatBankOption,
-        });
-    }
-
-    function initContaContabilSelect2() {
-        var el = $('#edit_conta_contabil_id');
-        if (el.length === 0) return;
-
-        if (el.hasClass('select2-hidden-accessible')) {
-            el.select2('destroy');
-        }
-
-        el.select2({
-            placeholder: 'Selecione a conta contábil...',
-            allowClear: true,
-            dropdownParent: $(drawerElement),
         });
     }
 
@@ -527,7 +517,7 @@ var EntidadeManager = (function () {
             if (bancoDetailsGroup) bancoDetailsGroup.classList.remove('d-none');
             document.getElementById('edit_agencia').value = agencia;
             document.getElementById('edit_conta').value = conta;
-            document.getElementById('edit_account_type').value = accountType;
+            // account_type é setado via Select2 trigger('change') no evento drawer.shown
         }
 
         // Descrição
@@ -545,8 +535,8 @@ var EntidadeManager = (function () {
         // Inicializa Select2 após drawer visível
         drawerInstance.on('kt.drawer.shown', function () {
             if (tipo === 'banco') {
-                initBancoSelect2();
-                // Define valor após init
+                // Reinicializa banco com template de logo
+                reinitBancoSelect2();
                 setTimeout(function () {
                     if (bancoId && bancoId !== 'null') {
                         $('#edit_banco-select').val(parseInt(bancoId)).trigger('change');
@@ -554,12 +544,19 @@ var EntidadeManager = (function () {
                 }, 50);
             }
 
-            initContaContabilSelect2();
+            // Conta contábil — já inicializado pelo Metronic, só seta valor
             setTimeout(function () {
                 if (contaContabilId) {
                     $('#edit_conta_contabil_id').val(contaContabilId).trigger('change');
                 }
             }, 50);
+
+            // Natureza da conta — seta valor via Select2
+            if (tipo === 'banco' && accountType) {
+                setTimeout(function () {
+                    $('#edit_account_type').val(accountType).trigger('change');
+                }, 50);
+            }
         });
 
         // Busca saldos via AJAX

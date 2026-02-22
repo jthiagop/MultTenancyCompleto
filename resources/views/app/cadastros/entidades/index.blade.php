@@ -207,12 +207,16 @@
                                 </div>
 
                                 <!-- Banco (para tipo Banco) -->
-                                <div class="mb-5 d-none" id="edit_banco-group">
-                                    <label class="required fs-5 fw-semibold mb-2">Banco</label>
-                                    <select id="edit_banco-select" name="bank_id"
-                                        class="form-select form-select-solid"
-                                        data-placeholder="Selecione um banco">
-                                        <option></option>
+                                <div class="d-none" id="edit_banco-group">
+                                    <x-tenant-select
+                                        name="bank_id"
+                                        id="edit_banco-select"
+                                        label="Banco"
+                                        :required="true"
+                                        class="mb-5 w-100"
+                                        placeholder="Selecione um banco"
+                                        dropdownParent="#kt_drawer_edit_entidade"
+                                        :allowClear="true">
                                         @isset($banks)
                                             @foreach ($banks as $bank)
                                                 <option value="{{ $bank->id }}" data-icon="{{ $bank->logo_url }}">
@@ -220,7 +224,7 @@
                                                 </option>
                                             @endforeach
                                         @endisset
-                                    </select>
+                                    </x-tenant-select>
                                 </div>
 
                                 <!-- Agência, Conta e Natureza (para tipo Banco) -->
@@ -235,18 +239,21 @@
                                         <input type="text" class="form-control form-control-solid" name="conta"
                                             id="edit_conta" placeholder="Conta" />
                                     </div>
-                                    <div class="col-md-4">
-                                        <label class="required fs-5 fw-semibold mb-2">Natureza</label>
-                                        <select name="account_type" id="edit_account_type"
-                                            class="form-select form-select-solid">
-                                            <option value="" disabled>Selecione</option>
-                                            <option value="corrente">Conta Corrente</option>
-                                            <option value="poupanca">Poupança</option>
-                                            <option value="aplicacao">Aplicação</option>
-                                            <option value="renda_fixa">Renda Fixa</option>
-                                            <option value="tesouro_direto">Tesouro Direto</option>
-                                        </select>
-                                    </div>
+                                    <x-tenant-select
+                                        name="account_type"
+                                        id="edit_account_type"
+                                        label="Natureza"
+                                        :required="true"
+                                        class="col-md-4"
+                                        placeholder="Selecione"
+                                        dropdownParent="#kt_drawer_edit_entidade"
+                                        :hideSearch="true">
+                                        <option value="corrente">Conta Corrente</option>
+                                        <option value="poupanca">Poupança</option>
+                                        <option value="aplicacao">Aplicação</option>
+                                        <option value="renda_fixa">Renda Fixa</option>
+                                        <option value="tesouro_direto">Tesouro Direto</option>
+                                    </x-tenant-select>
                                 </div>
 
                                 <!--begin::Separator-->
@@ -260,22 +267,23 @@
                                 </div>
 
                                 <!-- Conta Contábil -->
-                                <div class="mb-5">
-                                    <label class="fs-5 fw-semibold mb-2">Conta Contábil (Plano de Contas)</label>
-                                    <select class="form-select form-select-solid"
-                                        data-placeholder="Selecione a conta contábil..." name="conta_contabil_id"
-                                        id="edit_conta_contabil_id">
-                                        <option></option>
-                                        @isset($contas)
-                                            @foreach ($contas as $conta)
-                                                <option value="{{ $conta->id }}">
-                                                    {{ $conta->code }} - {{ $conta->name }}
-                                                </option>
-                                            @endforeach
-                                        @endisset
-                                    </select>
-                                    <div class="text-muted fs-7 mt-2">Vínculo contábil para exportação (De/Para)</div>
-                                </div>
+                                <x-tenant-select
+                                    name="conta_contabil_id"
+                                    id="edit_conta_contabil_id"
+                                    label="Conta Contábil (Plano de Contas)"
+                                    class="mb-5 w-100"
+                                    placeholder="Selecione a conta contábil..."
+                                    dropdownParent="#kt_drawer_edit_entidade"
+                                    :allowClear="true"
+                                    tooltip="Vínculo contábil para exportação (De/Para)">
+                                    @isset($contas)
+                                        @foreach ($contas as $conta)
+                                            <option value="{{ $conta->id }}">
+                                                {{ $conta->code }} - {{ $conta->name }}
+                                            </option>
+                                        @endforeach
+                                    @endisset
+                                </x-tenant-select>
 
                                 <!--begin::Separator-->
                                 <div class="separator separator-dashed my-6"></div>
