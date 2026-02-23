@@ -14,6 +14,9 @@ var EntidadeManager = (function () {
     var submitBtn;
     var cancelBtn;
 
+    // Dados pendentes para preenchimento do drawer (lido pelo handler de shown)
+    var _pendingEditData = null;
+
     // ─── Helpers ───
     function formatCurrency(value) {
         return parseFloat(value || 0).toLocaleString('pt-BR', {
@@ -127,6 +130,51 @@ var EntidadeManager = (function () {
         initFormValidation();
         handleSubmit();
         handleCancel();
+
+        // Registra handler do kt.drawer.shown UMA vez (via API do KTDrawer)
+        if (drawerInstance) {
+            drawerInstance.on('kt.drawer.shown', handleDrawerShown);
+        }
+    }
+
+    // ─── Handler único para kt.drawer.shown ───
+    function handleDrawerShown() {
+        if (!_pendingEditData) return;
+        var data = _pendingEditData;
+        _pendingEditData = null;
+
+        // Re-seta valores simples como safety-net (garante visibilidade após transição)
+        if (data.tipo === 'banco') {
+            var nomeBancoInput = document.getElementById('edit_nome_banco');
+            if (nomeBancoInput) nomeBancoInput.value = data.nome;
+
+            // Inicializa Select2 do banco (precisa DOM visível)
+            reinitBancoSelect2();
+            setTimeout(function () {
+                if (data.bancoId && data.bancoId !== 'null' && data.bancoId !== '') {
+                    $('#edit_banco-select').val(parseInt(data.bancoId)).trigger('change');
+                }
+            }, 50);
+
+            // Natureza da conta
+            if (data.accountType) {
+                setTimeout(function () {
+                    $('#edit_account_type').val(data.accountType).trigger('change');
+                }, 50);
+            }
+        } else {
+            var nomeInput = document.getElementById('edit_nome');
+            if (nomeInput) nomeInput.value = data.nome;
+        }
+
+        // Conta contábil
+        setTimeout(function () {
+            if (data.contaContabilId) {
+                $('#edit_conta_contabil_id').val(data.contaContabilId).trigger('change');
+            } else {
+                $('#edit_conta_contabil_id').val(null).trigger('change');
+            }
+        }, 50);
     }
 
     // ─── FormValidation ───
@@ -399,6 +447,15 @@ var EntidadeManager = (function () {
         var descricao = button.getAttribute('data-entidade-descricao') || '';
         var contaContabilId = button.getAttribute('data-entidade-conta-contabil-id') || '';
 
+        // Armazena dados para o handler de shown (Select2 precisa DOM visível)
+        _pendingEditData = {
+            tipo: tipo,
+            nome: nome,
+            bancoId: bancoId,
+            accountType: accountType,
+            contaContabilId: contaContabilId,
+        };
+
         // Action URL
         var baseUrl = form.getAttribute('data-base-url');
         form.setAttribute('action', baseUrl + '/' + id);
@@ -418,72 +475,38 @@ var EntidadeManager = (function () {
         var bancoGroup = document.getElementById('edit_banco-group');
         var bancoDetailsGroup = document.getElementById('edit_banco-details-group');
 
-        // Referências dos inputs de nome
-        var nomeInput = document.getElementById('edit_nome');
-        var nomeBancoInput = document.getElementById('edit_nome_banco');
-
         if (tipo === 'caixa') {
             if (nomeGroup) nomeGroup.classList.remove('d-none');
             if (bancoGroup) bancoGroup.classList.add('d-none');
             if (bancoDetailsGroup) bancoDetailsGroup.classList.add('d-none');
-            // Preenche o nome da entidade (caixa)
-            if (nomeInput) nomeInput.value = nome;
         } else {
             if (nomeGroup) nomeGroup.classList.add('d-none');
             if (bancoGroup) bancoGroup.classList.remove('d-none');
             if (bancoDetailsGroup) bancoDetailsGroup.classList.remove('d-none');
-            // Preenche o nome da conta (banco)
-            if (nomeBancoInput) nomeBancoInput.value = nome;
-            // Preenche agência e conta
-            var agenciaInput = document.getElementById('edit_agencia');
-            var contaInput = document.getElementById('edit_conta');
-            if (agenciaInput) agenciaInput.value = agencia;
-            if (contaInput) contaInput.value = conta;
         }
 
-        // Descrição
-        var descricaoInput = document.getElementById('edit_descricao');
-        if (descricaoInput) descricaoInput.value = descricao;
-
-        // Remove listener anterior para evitar acumular (stacking)
-        if (drawerInstance._shownHandler) {
-            drawerElement.removeEventListener('kt.drawer.shown', drawerInstance._shownHandler);
-        }
-
-        // Handler para quando o drawer estiver visível (Select2 precisa do DOM visível)
-        drawerInstance._shownHandler = function () {
-            if (tipo === 'banco') {
-                // Reinicializa banco com template de logo
-                reinitBancoSelect2();
-                setTimeout(function () {
-                    if (bancoId && bancoId !== 'null') {
-                        $('#edit_banco-select').val(parseInt(bancoId)).trigger('change');
-                    }
-                }, 50);
+        // Preenche inputs simples com pequeno atraso para garantir que
+        // qualquer handler assíncrono disparado por form.reset() já completou
+        setTimeout(function () {
+            if (tipo === 'caixa') {
+                var nomeInput = document.getElementById('edit_nome');
+                if (nomeInput) nomeInput.value = nome;
+            } else {
+                var nomeBancoInput = document.getElementById('edit_nome_banco');
+                if (nomeBancoInput) nomeBancoInput.value = nome;
+                var agenciaInput = document.getElementById('edit_agencia');
+                var contaInput = document.getElementById('edit_conta');
+                if (agenciaInput) agenciaInput.value = agencia;
+                if (contaInput) contaInput.value = conta;
             }
 
-            // Conta contábil — já inicializado pelo Metronic, só seta valor
-            setTimeout(function () {
-                if (contaContabilId) {
-                    $('#edit_conta_contabil_id').val(contaContabilId).trigger('change');
-                } else {
-                    $('#edit_conta_contabil_id').val(null).trigger('change');
-                }
-            }, 50);
+            // Descrição
+            var descricaoInput = document.getElementById('edit_descricao');
+            if (descricaoInput) descricaoInput.value = descricao;
 
-            // Natureza da conta — seta valor via Select2
-            if (tipo === 'banco' && accountType) {
-                setTimeout(function () {
-                    $('#edit_account_type').val(accountType).trigger('change');
-                }, 50);
-            }
-        };
-
-        // Abre drawer
-        drawerInstance.show();
-
-        // Registra o handler (usa one para garantir uma única execução)
-        drawerElement.addEventListener('kt.drawer.shown', drawerInstance._shownHandler, { once: true });
+            // Abre drawer (o handler handleDrawerShown cuida do Select2)
+            drawerInstance.show();
+        }, 10);
     }
 
     // ─── Bind botões de editar ───
