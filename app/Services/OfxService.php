@@ -56,30 +56,57 @@ class OfxService
     }
 
     /**
-     * Busca a entidade financeira usando BANKID + Conta + AccountType.
+     * Normaliza o número da agência removendo pontuação e zeros à esquerda.
      *
-     * Quando há múltiplas entidades com mesma conta (ex: corrente e aplicação),
-     * o accountType do OFX é usado para desambiguar.
-     * Se o tipo não estiver disponível no OFX, retorna a primeira que bater
-     * (comportamento legado).
+     * @param string|null $agencia
+     * @return string|null
+     */
+    private function normalizarAgencia(?string $agencia): ?string
+    {
+        if (!$agencia || trim($agencia) === '') {
+            return null;
+        }
+
+        // Remove pontuação (traços, pontos, espaços)
+        $agenciaNormalizada = preg_replace('/[^0-9]/i', '', $agencia);
+
+        // Remove zeros à esquerda
+        $agenciaNormalizada = ltrim($agenciaNormalizada, '0');
+
+        return $agenciaNormalizada ?: null;
+    }
+
+    /**
+     * Busca a entidade financeira usando BANKID + Conta + AccountType + Agência.
+     *
+     * Estratégia de matching (da mais específica para a mais genérica):
+     * 1. Banco + Conta → coleta candidatas
+     * 2. Se múltiplas → filtra por agência (BRANCHID), se disponível no OFX
+     * 3. Se ainda múltiplas → filtra por tipo de conta (ACCTTYPE)
+     * 4. Fallback → primeira candidata (com log de warning)
+     *
+     * Nem todos os bancos enviam BRANCHID no OFX (ex: Banco do Brasil omite).
+     * Nesses casos, a desambiguação acontece apenas pelo tipo de conta.
      * 
      * @param string $bankIdOFX   - BANKID do OFX (ex: "001")
      * @param string $contaOFX    - ACCTID do OFX (ex: "12771-X")
      * @param int    $companyId   - ID da empresa
      * @param string|null $accountTypeOFX - ACCTTYPE do OFX (ex: "CHECKING", "SAVINGS")
+     * @param string|null $agenciaOFX     - BRANCHID do OFX (ex: "1851"), pode ser null
      * @return EntidadeFinanceira|null
      */
-    private function encontrarEntidade($bankIdOFX, $contaOFX, $companyId, $accountTypeOFX = null)
+    private function encontrarEntidade($bankIdOFX, $contaOFX, $companyId, $accountTypeOFX = null, $agenciaOFX = null)
     {
         $contaNormalizadaOFX = $this->normalizarConta($contaOFX);
         $tipoMapeado = $this->mapearAccountType($accountTypeOFX);
+        $agenciaNormalizadaOFX = $this->normalizarAgencia($agenciaOFX);
 
         // Busca todas as entidades da empresa com relacionamento de banco
         $entidades = EntidadeFinanceira::where('company_id', $companyId)
             ->with('bank')
             ->get();
 
-        // Primeira passada: busca match exato (banco + conta + tipo)
+        // Primeira passada: busca candidatas por banco + conta
         $candidatas = [];
 
         foreach ($entidades as $entidade) {
@@ -117,7 +144,26 @@ class OfxService
             return $candidatas[0];
         }
 
-        // Múltiplas candidatas: tenta desambiguar pelo tipo de conta
+        // --- Desambiguação em cascata ---
+
+        // 2. Filtra por agência (BRANCHID), se disponível no OFX
+        if ($agenciaNormalizadaOFX) {
+            $filtradas = array_filter($candidatas, function ($c) use ($agenciaNormalizadaOFX) {
+                $agBD = $this->normalizarAgencia($c->agencia);
+                return $agBD && $agBD === $agenciaNormalizadaOFX;
+            });
+
+            if (count($filtradas) === 1) {
+                return array_values($filtradas)[0];
+            }
+
+            // Se filtrou e ainda tem resultados, usa como base para próximo filtro
+            if (!empty($filtradas)) {
+                $candidatas = array_values($filtradas);
+            }
+        }
+
+        // 3. Filtra por tipo de conta (ACCTTYPE)
         if ($tipoMapeado) {
             foreach ($candidatas as $candidata) {
                 if ($candidata->account_type === $tipoMapeado) {
@@ -126,10 +172,11 @@ class OfxService
             }
         }
 
-        // Fallback: retorna a primeira candidata (comportamento legado)
-        \Log::warning('OFX: Múltiplas entidades encontradas para mesma conta, sem tipo para desambiguar', [
+        // 4. Fallback: retorna a primeira candidata (comportamento legado)
+        \Log::warning('OFX: Múltiplas entidades encontradas para mesma conta, sem critério para desambiguar', [
             'bank_id' => $bankIdOFX,
             'conta' => $contaOFX,
+            'agencia_ofx' => $agenciaOFX,
             'account_type_ofx' => $accountTypeOFX,
             'candidatas' => collect($candidatas)->pluck('id', 'account_type')->toArray(),
         ]);
@@ -173,16 +220,18 @@ class OfxService
                 $bankIdOFX      = $account->routingNumber;   // BANKID do OFX (ex: "001")
                 $contaOFX       = $account->accountNumber;   // ACCTID do OFX (ex: "12771-X")
                 $accountTypeOFX = $account->accountType ?? null; // ACCTTYPE do OFX (ex: "CHECKING", "SAVINGS")
+                $agenciaOFX     = $account->agencyNumber ?? null; // BRANCHID do OFX (ex: "1851") — nem todos os bancos enviam
                 $companyId      = session('active_company_id'); // Empresa do usuário logado
 
-                // 7. Busca a entidade usando BANKID + Conta + AccountType para desambiguação
-                $entidade = $this->encontrarEntidade($bankIdOFX, $contaOFX, $companyId, $accountTypeOFX);
+                // 7. Busca a entidade usando BANKID + Conta + AccountType + Agência para desambiguação
+                $entidade = $this->encontrarEntidade($bankIdOFX, $contaOFX, $companyId, $accountTypeOFX, $agenciaOFX);
 
                 if (!$entidade) {
                     $tipoLabel = $accountTypeOFX ? " ({$accountTypeOFX})" : '';
+                    $agLabel   = $agenciaOFX ? " Ag: {$agenciaOFX}," : '';
                     throw new \Exception(
                         "Conta bancária não encontrada! " .
-                        "Banco (COMPE): {$bankIdOFX}, Conta: {$contaOFX}{$tipoLabel}. " .
+                        "Banco (COMPE): {$bankIdOFX},{$agLabel} Conta: {$contaOFX}{$tipoLabel}. " .
                         "Verifique se a conta está cadastrada no sistema."
                     );
                 }
