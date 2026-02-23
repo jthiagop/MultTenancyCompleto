@@ -63,12 +63,36 @@
         </div>
         <!--end::Menu item-->
 
-                <!--begin::Menu item - Gerar OFX-->
+        <!--begin::Menu item - Gerar OFX-->
         <div class="menu-item px-3">
-            <a href="#" data-bs-toggle="modal" data-bs-target="#modal_ofx"
-                class="menu-link px-3">
-                OFX            
+            <a href="#" data-bs-toggle="modal" data-bs-target="#modal_ofx" class="menu-link px-3">
+                OFX
             </a>
+        </div>
+        <!--end::Menu item-->
+
+        <!--begin::Menu item-->
+        <div class="menu-item px-3" data-kt-menu-trigger="hover" data-kt-menu-placement="right-start">
+            <a href="#" class="menu-link px-3">
+                <span class="menu-title">Contabilidade</span>
+                <span class="menu-arrow"></span>
+            </a>
+            <!--begin::Menu sub-->
+            <div class="menu-sub menu-sub-dropdown w-175px py-4">
+                <!--begin::Menu item-->
+                <div class="menu-item px-3">
+                    <a class="menu-link px-3" href="#"
+                        data-bs-toggle="modal" data-bs-target="#modal_lote_contabil_txt">TXT</a>
+                </div>
+                <!--end::Menu item-->
+                <!--begin::Menu item-->
+                <div class="menu-item px-3">
+                    <a class="menu-link px-3" href="#"
+                        data-bs-toggle="modal" data-bs-target="#modal_lote_contabil_csv">CSV</a>
+                </div>
+                <!--end::Menu item-->
+            </div>
+            <!--end::Menu sub-->
         </div>
         <!--end::Menu item-->
 

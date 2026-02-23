@@ -38,3 +38,5 @@
 @include('app.components.modals.financeiro.prestacao_contas.modal_prestacao_contas')
 @include('app.components.modals.financeiro.boletim.modal_boletim_financeiro')
 @include('app.components.modals.financeiro.ofx.modal_ofx')
+@include('app.components.modals.financeiro.lote-contabil.modal_lote_contabil_txt')
+@include('app.components.modals.financeiro.lote-contabil.modal_lote_contabil_csv')

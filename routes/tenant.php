@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Http\Controllers\App\Contabilidade\AccountMappingController;
 use App\Http\Controllers\App\Contabilidade\ChartOfAccountController;
+use App\Http\Controllers\App\Contabilidade\LoteContabilController;
 use App\Http\Controllers\App\PrestacaoDeContaController;
 use App\Http\Controllers\App\BoletimFinanceiroController;
 use App\Http\Controllers\App\ExtratoController;
@@ -601,6 +602,10 @@ Route::middleware([
                 // Exportação OFX
                 Route::get('/ofx/exportar', [OfxController::class, 'exportar'])
                     ->name('relatorios.ofx.exportar');
+
+                // Exportação Lote Contábil (TXT/CSV para Alterdata)
+                Route::get('/lote-contabil/exportar', [LoteContabilController::class, 'exportar'])
+                    ->name('relatorios.lote-contabil.exportar');
 
                 Route::post('/filter', [PrestacaoDeContaController::class, 'generateReport']);
 

@@ -111,6 +111,7 @@
         <script src="/tenancy/assets/js/custom/utilities/modals/conciliacao-bancaria.js"></script>
         <script src="/tenancy/assets/js/custom/utilities/modals/extrato.js"></script>
         <script src="/tenancy/assets/js/custom/utilities/modals/ofx-export.js"></script>
+        <script src="/tenancy/assets/js/custom/utilities/modals/lote-contabil-export.js"></script>
 
         <script>
             // Função para excluir transação diretamente do dropdown (sem abrir drawer)
