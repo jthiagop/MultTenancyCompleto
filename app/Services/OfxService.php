@@ -88,10 +88,12 @@ class OfxService
                 continue;
             }
 
-            $compeCodeBD = (string) $entidade->bank->compe_code;
-            $bankIdOFXStr = (string) $bankIdOFX;
+            // Normaliza os códigos COMPE removendo zeros à esquerda
+            // (alguns OFX enviam "1" ao invés de "001")
+            $compeCodeBD  = ltrim((string) $entidade->bank->compe_code, '0');
+            $bankIdOFXStr = ltrim((string) $bankIdOFX, '0');
 
-            // Compara os códigos de banco
+            // Compara os códigos de banco (sem zeros à esquerda)
             if ($compeCodeBD !== $bankIdOFXStr) {
                 continue;
             }
