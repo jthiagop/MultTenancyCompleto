@@ -57,7 +57,10 @@
     @include('app.components.modals.financeiro.ofx.modal_ofx')
     <!--end::Modal - Exportação OFX-->
 
-    <!--end::Modal - Upgrade plan-->
+    <!--begin::Modal - Lote Contábil TXT/CSV-->
+    @include('app.components.modals.financeiro.lote-contabil.modal_lote_contabil_txt')
+    @include('app.components.modals.financeiro.lote-contabil.modal_lote_contabil_csv')
+    <!--end::Modal - Lote Contábil TXT/CSV-->
 
     {{-- Drawers e Modals que dependem do jQuery --}}
     @include('app.components.drawers.transacao_detalhes')
