@@ -112,13 +112,6 @@
                                         <!--begin::Menu sub-->
                                         <div class="menu-sub menu-sub-dropdown w-175px py-4">
                                             <!--begin::Menu item-->
-                                            <div class="menu-item px-3 ">
-                                                <a
-                                                    class="menu-link px-3 {{ Route::currentRouteName() == 'entidades.index' ? 'active' : '' }}"href="{{ route('entidades.index') }}">
-                                                    Criar Entidade Financeira</a>
-                                            </div>
-                                            <!--end::Menu item-->
-                                            <!--begin::Menu item-->
                                             <div class="menu-item px-3">
                                                 <a class="menu-link px-3 {{ Route::currentRouteName() == 'lancamentoPadrao.index' ? 'active' : '' }}"
                                                     href="{{ route('lancamentoPadrao.index') }}">Categorias
@@ -211,7 +204,6 @@
                     </div>
                     <!--end::Wrapper-->
                     @include('app.financeiro.banco.components.side-card')
-
                 </div>
                 <!--end::Details-->
             </div>

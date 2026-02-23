@@ -26,13 +26,11 @@
 
 <div class="carousel-item {{ $isActive ? 'active' : '' }}">
     <a href="{{ route('entidades.show', $entidade->id) }}" 
-       class="d-block text-decoration-none"
-       aria-label="Ver detalhes de {{ $entidade->tipo === 'banco' ? ($entidade->bank?->name ?? 'Banco') . ' - Ag ' . $entidade->agencia . ' Cc ' . $entidade->conta : $entidade->nome }}">
-
+       class="d-block text-decoration-none" aria-label="Ver detalhes de {{ $entidade->tipo === 'banco' ? ($entidade->bank?->name ?? 'Banco') . ' - Ag ' . $entidade->agencia . ' Cc ' . $entidade->conta : $entidade->nome }}">
         <div class="d-flex align-items-start">
             {{-- Logo / Avatar --}}
             <div class="me-5 flex-shrink-0">
-                <div class="symbol symbol-65px">
+                <div class="symbol symbol-75px">
                     @if ($entidade->tipo === 'banco')
                         @if ($entidade->bank?->logo_url)
                             <img src="{{ $entidade->bank->logo_url }}"
@@ -48,8 +46,7 @@
                     @else
                         <span class="symbol-label rounded-2 overflow-hidden bg-light">
                             <img src="/tenancy/assets/media/svg/bancos/caixa.svg" 
-                                 alt="Caixa"
-                                 class="w-100 h-100 object-fit-contain p-1" 
+                                 alt="Caixa" class="w-100 h-100 object-fit-contain p-1" 
                                  loading="lazy" 
                                  decoding="async" />
                         </span>
@@ -62,7 +59,7 @@
                 {{-- Linha 1: Nome + Editar --}}
                 <div class="d-flex align-items-center justify-content-between mb-1">
                     <div class="d-flex align-items-center gap-2 min-w-0">
-                        <span class="fw-bold text-gray-800 fs-4 text-truncate" data-entidade-nome="{{ $entidade->id }}">
+                        <span class="fw-bold text-gray-800 fs-2 text-truncate" data-entidade-nome="{{ $entidade->id }}">
                             @if ($entidade->tipo === 'banco')
                                 {{ $entidade->bank?->name ?? $entidade->nome }}
                             @else
@@ -88,12 +85,12 @@
                        data-bs-placement="top"
                        title="Renomear"
                        aria-label="Renomear entidade">
-                        <i class="fa-regular fa-pen-to-square fs-7" aria-hidden="true"></i>
+                        <i class="fa-regular fa-pen-to-square fs-5" aria-hidden="true"></i>
                     </a>
                 </div>
 
                 {{-- Linha 2: Agência/Conta --}}
-                <div class="text-gray-500 fs-7 mb-4">
+                <div class="text-gray-500 fs-5 mb-4">
                     @if ($entidade->tipo === 'banco')
                         Ag {{ $entidade->agencia }} • Cc {{ $entidade->conta }}
                     @else
