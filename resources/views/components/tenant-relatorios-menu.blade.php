@@ -81,14 +81,14 @@
             <div class="menu-sub menu-sub-dropdown w-175px py-4">
                 <!--begin::Menu item-->
                 <div class="menu-item px-3">
-                    <a class="menu-link px-3" href="#"
-                        data-bs-toggle="modal" data-bs-target="#modal_lote_contabil_txt">TXT</a>
+                    <a class="menu-link px-3" href="javascript:void(0)"
+                        data-lote-contabil-target="#modal_lote_contabil_txt">TXT</a>
                 </div>
                 <!--end::Menu item-->
                 <!--begin::Menu item-->
                 <div class="menu-item px-3">
-                    <a class="menu-link px-3" href="#"
-                        data-bs-toggle="modal" data-bs-target="#modal_lote_contabil_csv">CSV</a>
+                    <a class="menu-link px-3" href="javascript:void(0)"
+                        data-lote-contabil-target="#modal_lote_contabil_csv">CSV</a>
                 </div>
                 <!--end::Menu item-->
             </div>

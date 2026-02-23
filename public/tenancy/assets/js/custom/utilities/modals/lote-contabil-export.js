@@ -364,4 +364,20 @@ var KTModalLoteContabilExport = function () {
 // On document ready
 document.addEventListener('DOMContentLoaded', function () {
 	KTModalLoteContabilExport.init();
+
+	// Handler para abrir modais via data-lote-contabil-target (evita conflito com KTMenu submenu)
+	document.addEventListener('click', function (e) {
+		var link = e.target.closest('[data-lote-contabil-target]');
+		if (!link) return;
+
+		e.preventDefault();
+		e.stopPropagation();
+
+		var targetSelector = link.getAttribute('data-lote-contabil-target');
+		var modalEl = document.querySelector(targetSelector);
+		if (modalEl) {
+			var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+			modal.show();
+		}
+	});
 });
