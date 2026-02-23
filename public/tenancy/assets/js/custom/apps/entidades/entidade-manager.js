@@ -413,6 +413,9 @@ var EntidadeManager = (function () {
             if (nomeGroup) nomeGroup.classList.add('d-none');
             if (bancoGroup) bancoGroup.classList.remove('d-none');
             if (bancoDetailsGroup) bancoDetailsGroup.classList.remove('d-none');
+            // Preenche o nome da conta (banco)
+            var nomeBancoInput = document.getElementById('edit_nome_banco');
+            if (nomeBancoInput) nomeBancoInput.value = nome;
             document.getElementById('edit_agencia').value = agencia;
             document.getElementById('edit_conta').value = conta;
             // account_type é setado via Select2 trigger('change') no evento drawer.shown

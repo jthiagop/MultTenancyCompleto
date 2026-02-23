@@ -242,18 +242,24 @@ class EntidadeFinanceiraController extends Controller
                 $entidade->descricao = $validatedData['descricao'] ?? null;
                 $entidade->conta_contabil_id = $validatedData['conta_contabil_id'] ?? null;
 
-                // Regenera o nome com os novos dados
-                $bank = Bank::find($entidade->banco_id);
-                if ($bank) {
-                    $accountTypeNames = [
-                        'corrente' => 'Conta Corrente',
-                        'poupanca' => 'Poupança',
-                        'aplicacao' => 'Aplicação',
-                        'renda_fixa' => 'Renda Fixa',
-                        'tesouro_direto' => 'Tesouro Direto',
-                    ];
-                    $accountTypeName = $accountTypeNames[$entidade->account_type] ?? 'Conta';
-                    $entidade->nome = "{$bank->name} - {$accountTypeName} - Ag. {$entidade->agencia} C/C {$entidade->conta}";
+                // Se o usuário forneceu um nome personalizado, usa ele
+                $nomeBanco = $request->input('nome_banco');
+                if (!empty($nomeBanco)) {
+                    $entidade->nome = $nomeBanco;
+                } else {
+                    // Regenera o nome com os novos dados
+                    $bank = Bank::find($entidade->banco_id);
+                    if ($bank) {
+                        $accountTypeNames = [
+                            'corrente' => 'Conta Corrente',
+                            'poupanca' => 'Poupança',
+                            'aplicacao' => 'Aplicação',
+                            'renda_fixa' => 'Renda Fixa',
+                            'tesouro_direto' => 'Tesouro Direto',
+                        ];
+                        $accountTypeName = $accountTypeNames[$entidade->account_type] ?? 'Conta';
+                        $entidade->nome = "{$bank->name} - {$accountTypeName} - Ag. {$entidade->agencia} C/C {$entidade->conta}";
+                    }
                 }
             }
 

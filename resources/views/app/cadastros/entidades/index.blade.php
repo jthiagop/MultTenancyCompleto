@@ -198,44 +198,66 @@
 
                                 <!-- Nome (para tipo Caixa) -->
                                 <div class="mb-5" id="edit_nome-group">
-                                    <label class="required fs-5 fw-semibold mb-2">Nome da Entidade</label>
-                                    <input type="text" class="form-control form-control-solid" name="nome"
-                                        id="edit_nome" placeholder="Ex: Caixa Central" />
+                                    <x-tenant-input
+                                        name="nome"
+                                        id="edit_nome"
+                                        label="Nome da Entidade"
+                                        :required="true"
+                                        placeholder="Ex: Caixa Central"
+                                        class="" />
                                 </div>
 
                                 <!-- Banco (para tipo Banco) -->
                                 <div class="d-none" id="edit_banco-group">
-                                    <x-tenant-select
-                                        name="bank_id"
-                                        id="edit_banco-select"
-                                        label="Banco"
-                                        :required="true"
-                                        class="mb-5 w-100"
-                                        placeholder="Selecione um banco"
-                                        dropdownParent="#kt_drawer_edit_entidade"
-                                        :allowClear="true">
-                                        @isset($banks)
-                                            @foreach ($banks as $bank)
-                                                <option value="{{ $bank->id }}" data-icon="{{ $bank->logo_url }}">
-                                                    {{ $bank->name }}
-                                                </option>
-                                            @endforeach
-                                        @endisset
-                                    </x-tenant-select>
+                                    <div class="row mb-5">
+                                        <div class="col-6">
+                                            <x-tenant-input
+                                                name="nome_banco"
+                                                id="edit_nome_banco"
+                                                label="Nome da Conta (opcional)"
+                                                placeholder="Ex: Conta Principal, Conta Salários..."
+                                                class="" />
+                                            <div class="text-muted fs-7 mt-1">
+                                                <i class="bi bi-info-circle me-1"></i>
+                                                Se preenchido, será usado como nome da entidade.
+                                            </div>
+                                        </div>
+                                        <x-tenant-select
+                                            name="bank_id"
+                                            id="edit_banco-select"
+                                            label="Banco"
+                                            :required="true"
+                                            class="col-6"
+                                            placeholder="Selecione um banco"
+                                            dropdownParent="#kt_drawer_edit_entidade"
+                                            :allowClear="true">
+                                            @isset($banks)
+                                                @foreach ($banks as $bank)
+                                                    <option value="{{ $bank->id }}" data-icon="{{ $bank->logo_url }}">
+                                                        {{ $bank->name }}
+                                                    </option>
+                                                @endforeach
+                                            @endisset
+                                        </x-tenant-select>
+                                    </div>
                                 </div>
 
                                 <!-- Agência, Conta e Natureza (para tipo Banco) -->
                                 <div class="row mb-5 d-none" id="edit_banco-details-group">
-                                    <div class="col-md-4">
-                                        <label class="required fs-5 fw-semibold mb-2">Agência</label>
-                                        <input type="text" class="form-control form-control-solid" name="agencia"
-                                            id="edit_agencia" placeholder="Agência" />
-                                    </div>
-                                    <div class="col-md-4">
-                                        <label class="required fs-5 fw-semibold mb-2">Conta</label>
-                                        <input type="text" class="form-control form-control-solid" name="conta"
-                                            id="edit_conta" placeholder="Conta" />
-                                    </div>
+                                    <x-tenant-input
+                                        name="agencia"
+                                        id="edit_agencia"
+                                        label="Agência"
+                                        :required="true"
+                                        placeholder="Número da agência"
+                                        class="col-md-4" />
+                                    <x-tenant-input
+                                        name="conta"
+                                        id="edit_conta"
+                                        label="Conta"
+                                        :required="true"
+                                        placeholder="Número da conta"
+                                        class="col-md-4" />
                                     <x-tenant-select
                                         name="account_type"
                                         id="edit_account_type"
@@ -259,7 +281,7 @@
                                 <!-- Descrição -->
                                 <div class="mb-5">
                                     <label class="fs-5 fw-semibold mb-2">Descrição</label>
-                                    <textarea class="form-control form-control-solid" rows="3" name="descricao" id="edit_descricao"
+                                    <textarea class="form-control" rows="3" name="descricao" id="edit_descricao"
                                         placeholder="Insira uma descrição (opcional)"></textarea>
                                 </div>
 
@@ -284,20 +306,6 @@
 
                                 <!--begin::Separator-->
                                 <div class="separator separator-dashed my-6"></div>
-
-                                <!-- Saldo Inicial e Atual (readonly) -->
-                                <div class="row mb-7">
-                                    <div class="col-md-6">
-                                        <label class="fs-6 fw-semibold mb-2 text-gray-500">Saldo Inicial</label>
-                                        <input type="text" class="form-control form-control-solid bg-light"
-                                            id="edit_saldo_inicial" readonly disabled>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <label class="fs-6 fw-semibold mb-2 text-gray-500">Saldo Atual</label>
-                                        <input type="text" class="form-control form-control-solid bg-light"
-                                            id="edit_saldo_atual" readonly disabled>
-                                    </div>
-                                </div>
 
                                 <!--begin::Actions-->
                                 <div class="d-flex justify-content-end pt-5">
