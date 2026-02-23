@@ -61,7 +61,7 @@
                     <div class="d-flex align-items-center gap-2 min-w-0">
                         <span class="fw-bold text-gray-800 fs-2 text-truncate" data-entidade-nome="{{ $entidade->id }}">
                             @if ($entidade->tipo === 'banco')
-                                {{ $entidade->bank?->name ?? $entidade->nome }}
+                                {{ $entidade->nome }}
                             @else
                                 {{ $entidade->nome }}
                             @endif
