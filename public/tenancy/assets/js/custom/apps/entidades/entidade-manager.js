@@ -135,7 +135,17 @@ var EntidadeManager = (function () {
             fields: {
                 nome: {
                     validators: {
-                        notEmpty: { message: 'O nome é obrigatório' },
+                        callback: {
+                            message: 'O nome é obrigatório',
+                            callback: function (input) {
+                                var tipo = document.getElementById('edit_tipo_hidden');
+                                // Só valida nome para tipo caixa
+                                if (tipo && tipo.value === 'caixa') {
+                                    return input.value.trim() !== '';
+                                }
+                                return true; // Banco usa nome_banco
+                            },
+                        },
                         stringLength: { max: 100, message: 'Máximo 100 caracteres' },
                     },
                 },
@@ -375,6 +385,10 @@ var EntidadeManager = (function () {
     function openDrawer(button) {
         if (!drawerElement || !drawerInstance || !form) return;
 
+        // Reseta o form e validação antes de popular
+        form.reset();
+        if (formValidator) formValidator.resetForm();
+
         var id = button.getAttribute('data-entidade-id');
         var tipo = button.getAttribute('data-entidade-tipo');
         var nome = button.getAttribute('data-entidade-nome') || '';
@@ -404,31 +418,40 @@ var EntidadeManager = (function () {
         var bancoGroup = document.getElementById('edit_banco-group');
         var bancoDetailsGroup = document.getElementById('edit_banco-details-group');
 
+        // Referências dos inputs de nome
+        var nomeInput = document.getElementById('edit_nome');
+        var nomeBancoInput = document.getElementById('edit_nome_banco');
+
         if (tipo === 'caixa') {
             if (nomeGroup) nomeGroup.classList.remove('d-none');
             if (bancoGroup) bancoGroup.classList.add('d-none');
             if (bancoDetailsGroup) bancoDetailsGroup.classList.add('d-none');
-            document.getElementById('edit_nome').value = nome;
+            // Preenche o nome da entidade (caixa)
+            if (nomeInput) nomeInput.value = nome;
         } else {
             if (nomeGroup) nomeGroup.classList.add('d-none');
             if (bancoGroup) bancoGroup.classList.remove('d-none');
             if (bancoDetailsGroup) bancoDetailsGroup.classList.remove('d-none');
             // Preenche o nome da conta (banco)
-            var nomeBancoInput = document.getElementById('edit_nome_banco');
             if (nomeBancoInput) nomeBancoInput.value = nome;
-            document.getElementById('edit_agencia').value = agencia;
-            document.getElementById('edit_conta').value = conta;
-            // account_type é setado via Select2 trigger('change') no evento drawer.shown
+            // Preenche agência e conta
+            var agenciaInput = document.getElementById('edit_agencia');
+            var contaInput = document.getElementById('edit_conta');
+            if (agenciaInput) agenciaInput.value = agencia;
+            if (contaInput) contaInput.value = conta;
         }
 
         // Descrição
-        document.getElementById('edit_descricao').value = descricao;
+        var descricaoInput = document.getElementById('edit_descricao');
+        if (descricaoInput) descricaoInput.value = descricao;
 
-        // Abre drawer
-        drawerInstance.show();
+        // Remove listener anterior para evitar acumular (stacking)
+        if (drawerInstance._shownHandler) {
+            drawerElement.removeEventListener('kt.drawer.shown', drawerInstance._shownHandler);
+        }
 
-        // Inicializa Select2 após drawer visível
-        drawerInstance.on('kt.drawer.shown', function () {
+        // Handler para quando o drawer estiver visível (Select2 precisa do DOM visível)
+        drawerInstance._shownHandler = function () {
             if (tipo === 'banco') {
                 // Reinicializa banco com template de logo
                 reinitBancoSelect2();
@@ -443,6 +466,8 @@ var EntidadeManager = (function () {
             setTimeout(function () {
                 if (contaContabilId) {
                     $('#edit_conta_contabil_id').val(contaContabilId).trigger('change');
+                } else {
+                    $('#edit_conta_contabil_id').val(null).trigger('change');
                 }
             }, 50);
 
@@ -452,28 +477,13 @@ var EntidadeManager = (function () {
                     $('#edit_account_type').val(accountType).trigger('change');
                 }, 50);
             }
-        });
+        };
 
-        // Busca saldos via AJAX
-        fetch(baseUrl + '/' + id + '/json', {
-            headers: { 'Accept': 'application/json' },
-        })
-        .then(function (r) { return r.json(); })
-        .then(function (data) {
-            if (data.success && data.data && data.data.entidade) {
-                var ent = data.data.entidade;
-                var saldoInicialEl = document.getElementById('edit_saldo_inicial');
-                var saldoAtualEl = document.getElementById('edit_saldo_atual');
-                if (saldoInicialEl) saldoInicialEl.value = formatCurrency(ent.saldo_inicial_real);
-                if (saldoAtualEl) saldoAtualEl.value = formatCurrency(ent.saldo_atual);
-            }
-        })
-        .catch(function (err) {
-            console.error('Erro ao buscar saldos:', err);
-        });
+        // Abre drawer
+        drawerInstance.show();
 
-        // Reseta validação
-        if (formValidator) formValidator.resetForm();
+        // Registra o handler (usa one para garantir uma única execução)
+        drawerElement.addEventListener('kt.drawer.shown', drawerInstance._shownHandler, { once: true });
     }
 
     // ─── Bind botões de editar ───
