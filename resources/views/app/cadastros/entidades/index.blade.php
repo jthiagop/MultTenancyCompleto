@@ -315,7 +315,7 @@
                                         <button type="button" class="btn btn-primary"
                                             id="kt_drawer_edit_entidade_submit">
                                             <span class="indicator-label">
-                                                <i class="bi bi-x-lg fs-4 me-1"></i>
+                                                <i class="bi bi-check-lg fs-4 me-1"></i>
                                                 Salvar Alterações
                                             </span>
                                             <span class="indicator-progress">Salvando...
