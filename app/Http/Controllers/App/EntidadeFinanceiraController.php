@@ -91,24 +91,28 @@ class EntidadeFinanceiraController extends Controller
             'conta_contabil_id' => 'nullable|integer|exists:chart_of_accounts,id',
         ]);
 
-        // 4. Lógica para gerar o nome da entidade (A CORREÇÃO PRINCIPAL)
+        // 4. Lógica para gerar o nome da entidade
         if ($request->tipo === 'banco') {
             // Busca o nome do banco no banco de dados usando o ID
             $bank = Bank::find($validatedData['bank_id']);
 
-            // Mapeia o account_type para o nome em português
-            $accountTypeNames = [
-                'corrente' => 'Conta Corrente',
-                'poupanca' => 'Poupança',
-                'aplicacao' => 'Aplicação',
-                'renda_fixa' => 'Renda Fixa',
-                'tesouro_direto' => 'Tesouro Direto',
-            ];
+            // Se o usuário forneceu um apelido (nome_banco), usa ele como nome
+            $nomeBanco = $request->input('nome_banco');
+            if (!empty($nomeBanco)) {
+                $validatedData['nome'] = $nomeBanco;
+            } else {
+                // Caso contrário, gera automaticamente
+                $accountTypeNames = [
+                    'corrente' => 'Conta Corrente',
+                    'poupanca' => 'Poupança',
+                    'aplicacao' => 'Aplicação',
+                    'renda_fixa' => 'Renda Fixa',
+                    'tesouro_direto' => 'Tesouro Direto',
+                ];
 
-            $accountTypeName = $accountTypeNames[$validatedData['account_type']] ?? 'Conta';
-
-            // Cria um nome descritivo para a entidade incluindo o tipo de conta
-            $validatedData['nome'] = "{$bank->name} - {$accountTypeName} - Ag. {$validatedData['agencia']} C/C {$validatedData['conta']}";
+                $accountTypeName = $accountTypeNames[$validatedData['account_type']] ?? 'Conta';
+                $validatedData['nome'] = "{$bank->name} - {$accountTypeName} - Ag. {$validatedData['agencia']} C/C {$validatedData['conta']}";
+            }
         }
 
         $validatedData['banco_id'] = $request->tipo === 'banco' ? $validatedData['bank_id'] : null; // Adiciona o banco_id se for do tipo 'banco'
@@ -120,12 +124,13 @@ class EntidadeFinanceiraController extends Controller
         try {
             $entidade = EntidadeFinanceira::create($validatedData);
 
-            // Lógica para criar a primeira movimentação... (seu código aqui está ótimo)
+            // Lógica para criar a primeira movimentação (com categoria para o accessor saldo_inicial_real)
             Movimentacao::create([
                 'entidade_id'   => $entidade->id,
                 'tipo'          => 'entrada',
                 'valor'         => $validatedData['saldo_inicial'],
                 'descricao'     => 'Saldo inicial da entidade financeira',
+                'categoria'     => 'saldo_inicial',
                 'company_id'    => $validatedData['company_id'],
             ]);
 

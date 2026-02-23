@@ -146,11 +146,11 @@
                                     <div class="row mb-5 d-none" id="banco-group">
                                         <div class="col-6 fv-row">
                                             <x-tenant-input name="nome_banco" id="nome_banco"
-                                                label="Apelido da Conta (opcional)" placeholder="Ex: Conta Principal, Conta Salários..."
+                                                label="Nome da Conta (opcional)" placeholder="Ex: Conta Principal, Conta Salários..."
                                                 value="{{ old('nome_banco') }}" class="" />
                                             <div class="text-muted fs-7 mt-1">
                                                 <i class="bi bi-info-circle me-1"></i>
-                                                O sistema criará automaticamente o nome baseado nos dados bancários
+                                                Se preenchido, será usado como nome da entidade. Caso contrário, o nome será gerado automaticamente.
                                             </div>
                                         </div>
                                         <x-tenant-select name="bank_id" id="banco-select" label="Banco" required
@@ -854,8 +854,11 @@
                 if (conta && conta.trim()) mappedFormData.append('conta', conta);
                 if (accountType) mappedFormData.append('account_type', accountType);
                 
-                // Comentário: O backend vai ignorar qualquer 'nome' enviado para bancos
-                // e vai criar: "Banco do Brasil S.A - Poupança - Ag. 1234 C/C 5678"
+                // Se o usuário preencheu o apelido, envia como nome_banco
+                // O backend usa como nome da entidade; se vazio, gera automaticamente
+                if (nomeBanco && nomeBanco.trim()) {
+                    mappedFormData.append('nome_banco', nomeBanco.trim());
+                }
                 
             } else if (tipoEntidade === 'caixa') {
                 // Para caixa: enviar apenas nome (sem dados bancários)
