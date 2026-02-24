@@ -29,6 +29,7 @@
         data-dropdown-css-class="w-400px"
         id="{{ $selectId }}"
         data-placeholder="{{ $placeholder }}"
+        style="visibility: hidden; height: 0; overflow: hidden;"
         @if($multiple) multiple @endif
         {!! $attributes->merge([]) !!}>
         {{-- Opção vazia para placeholder quando múltiplo --}}
@@ -375,8 +376,11 @@
                 }, 100);
             });
 
-            // Marcar como inicializado
+            // Marcar como inicializado e restaurar visibilidade
             selectElement.setAttribute('data-kt-initialized', '1');
+            selectElement.style.visibility = '';
+            selectElement.style.height = '';
+            selectElement.style.overflow = '';
         } catch (error) {
             console.error('Erro ao inicializar Select2 com checkboxes para ' + selectId + ':', error);
         }
