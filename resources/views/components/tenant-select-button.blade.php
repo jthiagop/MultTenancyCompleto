@@ -116,6 +116,36 @@
         border-top-color: var(--bs-gray-500, #99a1b7);
     }
 
+    /* ── Botão limpar (lixeira) ── */
+    .tenant-sb-wrapper {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    .tenant-sb-clear {
+        display: none;
+        align-items: center;
+        justify-content: center;
+        width: 30px;
+        height: 34px;
+        border: none;
+        background: transparent;
+        color: var(--bs-gray-500, #99a1b7);
+        cursor: pointer;
+        padding: 0;
+        border-radius: 0.375rem;
+        transition: color .15s ease, background .15s ease;
+        flex-shrink: 0;
+    }
+    .tenant-sb-clear:hover {
+        color: var(--bs-danger, #f1416c);
+        background: var(--bs-light-danger, #fff5f8);
+    }
+    .tenant-sb-clear.visible {
+        display: flex;
+    }
+
     /* ── Dropdown (janela aberta) ── */
     .tenant-sb-dropdown {
         border: 1px solid var(--bs-gray-300, #dbdfe9) !important;
@@ -233,6 +263,31 @@
         var $container = $select.next('.select2-container');
         $container.addClass('tenant-sb');
 
+        // ── Botão limpar (lixeira) ──
+        var $wrapper = $container.parent();
+        if (!$wrapper.hasClass('tenant-sb-wrapper')) {
+            $container.wrap('<div class="tenant-sb-wrapper"></div>');
+            $wrapper = $container.parent();
+        }
+        var $clearBtn = $('<button type="button" class="tenant-sb-clear" title="Limpar seleção">' +
+            '<i class="bi bi-x-circle-fill" style="font-size: 16px;"></i>' +
+        '</button>');
+        $wrapper.append($clearBtn);
+
+        $clearBtn.on('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            $select.val(null).trigger('change');
+            document.dispatchEvent(new CustomEvent('selectApplied', {
+                detail: { selectId: selectId, selectedValues: [] }
+            }));
+        });
+
+        function updateClearBtn() {
+            var vals = $select.val() || [];
+            $clearBtn.toggleClass('visible', vals.length > 0);
+        }
+
         // ── Helpers ──
         function getSummary() {
             var vals = $select.val() || [];
@@ -286,6 +341,7 @@
         // ── Eventos ──
         $select.on('change.tenantSB', function() {
             updateSummary();
+            updateClearBtn();
             setTimeout(syncCheckboxes, 10);
         });
 
@@ -357,6 +413,7 @@
 
         // ── Estado inicial ──
         updateSummary();
+        updateClearBtn();
 
         // ── Marca inicializado e desfaz FOUC ──
         el.setAttribute('data-kt-initialized', '1');
