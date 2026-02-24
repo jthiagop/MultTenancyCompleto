@@ -18,12 +18,12 @@
     <!--begin::Input group-->
     <div class="input-group w-100">
         <input type="text"
-            class="form-control form-control-sm "
+            class="form-control"
             id="{{ $inputId }}"
             placeholder="{{ $placeholder }}"
             aria-label="Pesquisar"
             aria-describedby="{{ $buttonId }}" />
-        <span class="input-group-text btn btn-light btn-sm btn-icon btn-light-primary" id="{{ $buttonId }}">
+        <span class="input-group-text btn btn-light btn-icon btn-light-primary" id="{{ $buttonId }}">
             <i class="bi bi-search fs-4"></i>
         </span>
     </div>

@@ -40,8 +40,8 @@
 
     <!--begin::Limpar tudo + Badge-->
     <div class="d-none align-items-center gap-2 tenant-filter-active-group" id="active-filters-{{ $tableId }}">
-        <span class="badge badge-primary badge-sm py-1 px-2 fs-8" id="active-filters-badge-{{ $tableId }}"></span>
-        <button type="button" class="btn btn-sm btn-icon btn-light-danger tenant-filter-clear-all"
+        <span class="badge badge-primary py-1 px-2 fs-7" id="active-filters-badge-{{ $tableId }}"></span>
+        <button type="button" class="btn btn-icon btn-light-danger tenant-filter-clear-all"
                 id="clear-all-filters-{{ $tableId }}"
                 data-bs-toggle="tooltip" data-bs-placement="top" title="Limpar todos os filtros">
             <i class="bi bi-x-lg fs-7"></i>
@@ -57,7 +57,7 @@
             
             <div class="dropdown">
                 <button type="button" 
-                        class="btn btn-sm btn-light-primary dropdown-toggle" 
+                        class="btn btn-light-primary dropdown-toggle" 
                         data-bs-toggle="dropdown" 
                         aria-expanded="false"
                         aria-haspopup="true"
@@ -73,7 +73,7 @@
                                 {{ $filter['label'] ?? 'Filtro' }}
                             </label>
                             @if (($filter['type'] ?? '') === 'select')
-                                <select class="form-select form-select-sm" 
+                                <select class="form-select" 
                                         name="{{ $filter['name'] ?? '' }}" 
                                         id="{{ $filter['id'] ?? 'filter-'.$index.'-'.$tableId }}">
                                     @foreach ($filter['options'] ?? [] as $opt)
@@ -82,7 +82,7 @@
                                 </select>
                             @elseif(($filter['type'] ?? '') === 'input')
                                 <input type="{{ $filter['inputType'] ?? 'text' }}" 
-                                       class="form-control form-control-sm" 
+                                       class="form-control" 
                                        placeholder="{{ $filter['placeholder'] ?? '' }}" 
                                        id="{{ $filter['id'] ?? 'filter-'.$index.'-'.$tableId }}" />
                             @endif
@@ -95,7 +95,7 @@
                     <div class="separator my-2"></div>
                     <div class="d-flex justify-content-end">
                         <button type="button" 
-                                class="btn btn-sm btn-link text-danger text-decoration-none" 
+                                class="btn btn-link text-danger text-decoration-none" 
                                 id="clear-filters-btn-{{ $tableId }}"
                                 aria-label="Limpar todos os filtros">
                             <i class="bi bi-trash me-1"></i> Limpar Filtros
@@ -131,8 +131,8 @@
         display: none !important;
     }
     .tenant-filter-clear-all {
-        width: 28px !important;
-        height: 28px !important;
+        width: 34px !important;
+        height: 34px !important;
     }
     @keyframes tenantFilterFadeIn {
         from { opacity: 0; transform: scale(.9); }

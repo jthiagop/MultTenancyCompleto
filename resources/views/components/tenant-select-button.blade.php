@@ -24,7 +24,7 @@
 
     <!--begin::Select com botão-->
     <select
-        class="form-select form-select-sm"
+        class="form-select"
         name="{{ $selectName }}"
         data-dropdown-css-class="w-400px"
         id="{{ $selectId }}"
@@ -73,7 +73,7 @@
 
     /* ── Container de seleção (campo fechado) ── */
     .tenant-sb .select2-selection--multiple {
-        min-height: 34px !important;
+        min-height: 42px !important;
         border: 1px solid var(--bs-gray-300, #dbdfe9) !important;
         border-radius: 0.475rem;
         cursor: pointer;
@@ -128,7 +128,7 @@
         align-items: center;
         justify-content: center;
         width: 30px;
-        height: 34px;
+        height: 42px;
         border: none;
         background: transparent;
         color: var(--bs-gray-500, #99a1b7);

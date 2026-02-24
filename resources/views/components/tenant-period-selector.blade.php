@@ -17,14 +17,14 @@
 <div class="d-flex align-items-center gap-2">
     <div>
         <div class="btn-group w-100" role="group" aria-label="Navegação de período">
-            <button class="btn btn-light btn-sm btn-icon btn-light-primary tenant-filter-period-nav"
+            <button class="btn btn-light btn-icon btn-light-primary tenant-filter-period-nav"
                     type="button"
                     id="prev-period-btn-{{ $selectorId }}"
                     aria-label="Período anterior">
                 <i class="bi bi-chevron-left"></i>
             </button>
 
-            <button class="btn btn-light btn-sm flex-grow-1 btn-light-primary position-relative tenant-filter-period-nav"
+            <button class="btn btn-light flex-grow-1 btn-light-primary position-relative tenant-filter-period-nav"
                     type="button"
                     id="period-selector-{{ $selectorId }}"
                     aria-label="Selecionar período">
@@ -39,7 +39,7 @@
                        aria-hidden="true" />
             </button>
 
-            <button class="btn btn-light btn-sm btn-icon btn-light-primary tenant-filter-period-nav"
+            <button class="btn btn-light btn-icon btn-light-primary tenant-filter-period-nav"
                     type="button"
                     id="next-period-btn-{{ $selectorId }}"
                     aria-label="Próximo período">
@@ -49,7 +49,7 @@
     </div>
 
     @if($showAllPeriod)
-        <button class="btn btn-light btn-sm btn-light-primary tenant-period-all-btn"
+        <button class="btn btn-light btn-light-primary tenant-period-all-btn"
                 type="button"
                 id="period-all-btn-{{ $selectorId }}"
                 aria-label="Todo o período">
