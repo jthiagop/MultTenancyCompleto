@@ -396,16 +396,11 @@ class EntidadeFinanceiraController extends Controller
             return redirect()->route('dashboard')->with('error', 'Nenhuma empresa selecionada.');
         }
 
-        // 2. Carrega a entidade financeira usando o scope para garantir segurança.
-        //    O 'with' já carrega as transações de forma otimizada.
-        $entidade = EntidadeFinanceira::forActiveCompany()
-            ->with(['transacoesFinanceiras' => function ($query) {
-                $query->orderBy('data_competencia', 'desc');
-            }])
-            ->findOrFail($id);
+        // 2. Carrega a entidade financeira SEM eager loading de transações.
+        //    As transações são carregadas via AJAX (showJson) pelas abas movimentacao/informacoes.
+        $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
 
-        // ✅ 2.5. Filtragem Server-Side por Tab (amount_cents)
-        // Recebe: ?tab=all (padrão), ?tab=received (amount_cents > 0), ?tab=paid (amount_cents < 0)
+        // 2.5. Filtragem Server-Side por Tab (amount_cents)
         $tab = $request->input('tab', 'all');
 
         // Base query para conciliações pendentes (com filtro de company_id para segurança multi-tenant)
@@ -420,13 +415,10 @@ class EntidadeFinanceiraController extends Controller
 
         // Aplica filtro baseado na tab
         if ($tab === 'received') {
-            // Recebimentos: amount_cents > 0 (valores positivos)
             $query->where('amount_cents', '>', 0);
         } elseif ($tab === 'paid') {
-            // Pagamentos: amount_cents < 0 (valores negativos)
             $query->where('amount_cents', '<', 0);
         }
-        // Se $tab === 'all', não aplica filtro (retorna todas)
 
         // Calcula contadores ANTES de paginar (reutiliza base query com company_id)
         $countsBaseQuery = BankStatement::where('company_id', $activeCompanyId)
@@ -444,62 +436,58 @@ class EntidadeFinanceiraController extends Controller
             'paid'     => (clone $countsBaseQuery)->where('amount_cents', '<', 0)->count(),
         ];
 
-        // 3. Busca os lançamentos DO EXTRATO pendentes para esta entidade, FILTRADOS POR TAB
-        //    + mantém query string para paginação
+        // 3. Busca os lançamentos DO EXTRATO pendentes, paginados
         $bankStatements = $query->orderBy('dtposted', 'desc')->paginate(20)->withQueryString();
 
         // 4. Para cada lançamento do extrato, busca possíveis correspondências com score inteligente.
-        //    Usa o ConciliacaoMatchingService para consistência com conciliacoesTab()
         $matchingService = new \App\Services\ConciliacaoMatchingService();
         foreach ($bankStatements as $lancamento) {
             $lancamento->possiveisTransacoes = $matchingService->buscarPossiveisTransacoes($lancamento, $id, 5);
         }
 
-        // 5. CORREÇÃO: Carrega dados auxiliares usando os scopes.
+        // 5. Carrega dados auxiliares usando os scopes.
         $centrosAtivos = CostCenter::forActiveCompany()->get();
-
         $lps = LancamentoPadrao::all();
-        
         $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
 
-        // 6. A sua lógica de cálculo de percentual e agrupamento por dia está ótima.
-        $totalTransacoes = $entidade->transacoesFinanceiras->count();
-        $totalConciliadas = $entidade->transacoesFinanceiras->where('status_conciliacao', 'ok')->count();
+        // 6. Calcula percentual de conciliação via DB (sem carregar transações na memória).
+        //    Nota: status_conciliacao é coluna pivot (bank_statement_transacao), não da transação.
+        //    Conta transações que possuem ao menos uma conciliação 'ok' na pivot.
+        $totalTransacoes = $entidade->transacoesFinanceiras()->count();
+        $totalConciliadas = $entidade->transacoesFinanceiras()
+            ->whereHas('bankStatements', fn($q) => $q->where('bank_statement_transacao.status_conciliacao', 'ok'))
+            ->count();
         $percentualConciliado = $totalTransacoes > 0 ? ($totalConciliadas / $totalTransacoes) * 100 : 0;
-        $transacoesPorDia = $entidade->transacoesFinanceiras->groupBy(fn($item) => Carbon::parse($item->data_competencia)->format('Y-m-d'));
 
-        // 6.1. Carrega todas as entidades financeiras do tipo 'banco' para o select
+        // 6.1. Carrega entidades financeiras para os selects
         $entidadesBancos = EntidadeFinanceira::forActiveCompany()
             ->where('tipo', 'banco')
             ->orderBy('nome')
             ->get();
 
-        // 6.1.1. Carrega todas as entidades financeiras do tipo 'caixa' para o select
         $entidadesCaixa = EntidadeFinanceira::forActiveCompany()
             ->where('tipo', 'caixa')
             ->orderBy('nome')
             ->get();
 
         // 6.2. Verifica se existem horários de missa cadastrados para a empresa ativa
-        $companyId = session('active_company_id');
-        $hasHorariosMissas = HorarioMissa::where('company_id', $companyId)->exists();
+        $hasHorariosMissas = HorarioMissa::where('company_id', $activeCompanyId)->exists();
 
-        // 7. Retorna a view com todos os dados corretamente filtrados.
+        // 7. Retorna a view SEM variáveis pesadas (transacoes, transacoesPorDia).
+        //    Essas são carregadas sob demanda via AJAX (showJson) com filtro de data.
         return view('app.financeiro.entidade.show', [
             'entidade' => $entidade,
-            'transacoes' => $entidade->transacoesFinanceiras,
             'conciliacoesPendentes' => $bankStatements,
-            'counts' => $counts, // ✅ Novo: contadores por tipo
-            'tab' => $tab, // ✅ Novo: tab atual
+            'counts' => $counts,
+            'tab' => $tab,
             'centrosAtivos' => $centrosAtivos,
             'lps' => $lps,
             'formasPagamento' => $formasPagamento,
             'percentualConciliado' => round($percentualConciliado),
-            'transacoesPorDia' => $transacoesPorDia,
             'entidadesBancos' => $entidadesBancos,
             'entidadesCaixa' => $entidadesCaixa,
             'hasHorariosMissas' => $hasHorariosMissas,
-            'activeTab' => 'conciliacoes', // Aba padrão
+            'activeTab' => 'conciliacoes',
         ]);
     }
 
@@ -520,26 +508,22 @@ class EntidadeFinanceiraController extends Controller
             ], 403);
         }
 
-        // Filtros de data (opcionais)
+        // Filtros de data (opcionais — default: mês atual para evitar carregar tudo)
         $dataInicio = $request->input('data_inicio');
         $dataFim = $request->input('data_fim');
 
-        // 2. Carrega a entidade financeira usando o scope para garantir segurança.
-        //    O 'with' já carrega as transações de forma otimizada.
-        $entidade = EntidadeFinanceira::forActiveCompany()
-            ->with(['transacoesFinanceiras' => function ($query) use ($dataInicio, $dataFim) {
-                if ($dataInicio) {
-                    $query->whereDate('data_competencia', '>=', Carbon::parse($dataInicio)->startOfDay());
-                }
-                if ($dataFim) {
-                    $query->whereDate('data_competencia', '<=', Carbon::parse($dataFim)->endOfDay());
-                }
-                $query->orderBy('data_competencia', 'desc');
-            }])
-            ->findOrFail($id);
+        // 2. Carrega a entidade financeira SEM eager loading.
+        $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+
+        // 2.1 Query base para transações com filtro de data
+        $transacoesQuery = $entidade->transacoesFinanceiras()
+            ->when($dataInicio, fn($q) => $q->whereDate('data_competencia', '>=', Carbon::parse($dataInicio)->startOfDay()))
+            ->when($dataFim, fn($q) => $q->whereDate('data_competencia', '<=', Carbon::parse($dataFim)->endOfDay()));
+
+        // 2.2 Carrega transações filtradas (com cursor para menor uso de memória em datasets grandes)
+        $transacoesFiltradas = (clone $transacoesQuery)->orderBy('data_competencia', 'desc')->get();
 
         // 3. Busca os lançamentos do extrato pendentes para esta entidade.
-        //    Filtro de company_id para segurança multi-tenant.
         $bankStatements = BankStatement::where('company_id', $activeCompanyId)
             ->where('entidade_financeira_id', $id)
             ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
@@ -548,12 +532,8 @@ class EntidadeFinanceiraController extends Controller
                 $q->where('conciliado_com_missa', false)
                   ->orWhereNull('conciliado_com_missa');
             })
-            ->when($dataInicio, function ($query) use ($dataInicio) {
-                $query->whereDate('dtposted', '>=', Carbon::parse($dataInicio)->startOfDay());
-            })
-            ->when($dataFim, function ($query) use ($dataFim) {
-                $query->whereDate('dtposted', '<=', Carbon::parse($dataFim)->endOfDay());
-            })
+            ->when($dataInicio, fn($query) => $query->whereDate('dtposted', '>=', Carbon::parse($dataInicio)->startOfDay()))
+            ->when($dataFim, fn($query) => $query->whereDate('dtposted', '<=', Carbon::parse($dataFim)->endOfDay()))
             ->orderBy('dtposted', 'desc')
             ->paginate(20);
 
@@ -563,29 +543,25 @@ class EntidadeFinanceiraController extends Controller
             $lancamento->possiveisTransacoes = $matchingService->buscarPossiveisTransacoes($lancamento, $id, 5);
         }
 
-        // 5. CORREÇÃO: Carrega dados auxiliares usando os scopes.
+        // 5. Carrega dados auxiliares usando os scopes.
         $centrosAtivos = CostCenter::forActiveCompany()->get();
-
         $lps = LancamentoPadrao::all();
 
-        // 6. A sua lógica de cálculo de percentual e agrupamento por dia está ótima.
-        $totalTransacoes = $entidade->transacoesFinanceiras->count();
-        $totalConciliadas = $entidade->transacoesFinanceiras->where('status_conciliacao', 'ok')->count();
+        // 6. Cálculos de percentual e agrupamento por dia (sobre dados filtrados).
+        $totalTransacoes = $transacoesFiltradas->count();
+        $totalConciliadas = $transacoesFiltradas->where('status_conciliacao', 'ok')->count();
         $percentualConciliado = $totalTransacoes > 0 ? ($totalConciliadas / $totalTransacoes) * 100 : 0;
-        $transacoesPorDia = $entidade->transacoesFinanceiras->groupBy(fn($item) => Carbon::parse($item->data_competencia)->format('Y-m-d'));
+        $transacoesPorDia = $transacoesFiltradas->groupBy(fn($item) => Carbon::parse($item->data_competencia)->format('Y-m-d'));
 
         // 7. Calcula informações adicionais
-        // Data da última atualização (updated_at da entidade)
         $dataUltimaAtualizacao = $entidade->updated_at;
 
-        // Data do último lançamento importado (dtposted mais recente ou imported_at mais recente)
         $ultimoLancamentoImportado = BankStatement::where('company_id', $activeCompanyId)
             ->where('entidade_financeira_id', $id)
             ->orderBy('dtposted', 'desc')
             ->first();
         $dataUltimoLancamento = $ultimoLancamentoImportado ? $ultimoLancamentoImportado->dtposted : null;
 
-        // Valor pendente de conciliação (soma dos amounts dos bank statements pendentes)
         $valorPendenteConciliacao = BankStatement::where('company_id', $activeCompanyId)
             ->where('entidade_financeira_id', $id)
             ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
@@ -597,7 +573,7 @@ class EntidadeFinanceiraController extends Controller
             'success' => true,
             'data' => [
                 'entidade' => $entidade,
-                'transacoes' => $entidade->transacoesFinanceiras,
+                'transacoes' => $transacoesFiltradas,
                 'conciliacoesPendentes' => $bankStatements,
                 'centrosAtivos' => $centrosAtivos,
                 'lancamentosPadrao' => $lps,
@@ -612,7 +588,7 @@ class EntidadeFinanceiraController extends Controller
                     'data_ultima_atualizacao' => $dataUltimaAtualizacao,
                     'data_ultimo_lancamento_importado' => $dataUltimoLancamento,
                     'valor_pendente_conciliacao' => abs($valorPendenteConciliacao),
-                    'saldo_atual' => $entidade->saldo_atual ?? '0.00', // DECIMAL: retorna como string para preservar precisão
+                    'saldo_atual' => $entidade->saldo_atual ?? '0.00',
                 ]
             ]
         ]);
