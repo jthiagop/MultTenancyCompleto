@@ -5,6 +5,7 @@
     'centrosAtivos' => [],
     'lps' => [],
     'formasPagamento' => [],
+    'fornecedores' => [],
 ])
 
 @php
@@ -289,7 +290,8 @@
                                 <x-conciliacao.novo-lancamento-form :conciliacao="$conciliacao"
                                     :transacaoSugerida="$transacaoSugerida"
                                     :centrosAtivos="$centrosAtivos" :lps="$lps"
-                                    :formasPagamento="$formasPagamento" :entidade="$entidade" />
+                                    :formasPagamento="$formasPagamento" :entidade="$entidade"
+                                    :fornecedores="$fornecedores" />
                             </div>
                             <!--end::Body-->
                         </div>

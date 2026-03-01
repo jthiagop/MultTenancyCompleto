@@ -138,6 +138,106 @@
     }
 
     // ============================================================
+    // 4.1 TOGGLE DO BOTÃO "COMPLETAR INFORMAÇÕES"
+    // ============================================================
+
+    function handleCollapseToggle(event) {
+        const collapseEl = event.target;
+        if (!collapseEl || !collapseEl.id || !collapseEl.id.startsWith('collapse_info_extra_')) return;
+
+        // Metronic toggle-on/toggle-off é gerenciado via CSS (classe .collapsed no parent)
+        // Inicializa Select2 apenas quando o collapse é expandido (para calcular largura corretamente)
+        if (event.type === 'shown.bs.collapse') {
+            const conciliacaoId = collapseEl.dataset.conciliacaoId || collapseEl.id.replace('collapse_info_extra_', '');
+            const select = collapseEl.querySelector(`#fornecedor_id_${conciliacaoId}`);
+
+            if (select && typeof jQuery !== 'undefined' && jQuery.fn.select2) {
+                const $select = jQuery(select);
+
+                // Destroi Select2 anterior (se auto-inicializado pelo Metronic com dimensões erradas)
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+
+                $select.select2({
+                    placeholder: select.getAttribute('data-placeholder') || 'Selecione',
+                    allowClear: true,
+                    minimumResultsForSearch: 0,
+                    width: '100%'
+                });
+
+                // Injeta botão "Adicionar Fornecedor/Cliente" no dropdown do Select2
+                setupAddFornecedorButton($select, conciliacaoId);
+            }
+        }
+    }
+
+    // ============================================================
+    // 4.2 BOTÃO "ADICIONAR FORNECEDOR/CLIENTE" NO SELECT2
+    // ============================================================
+
+    function setupAddFornecedorButton($select, conciliacaoId) {
+        $select.on('select2:open', function () {
+            setTimeout(function () {
+                var $dropdown = jQuery('.select2-container--open');
+                var $results = $dropdown.find('.select2-results');
+
+                // Remove botão anterior se existir
+                $results.find('.select2-add-fornecedor-footer').remove();
+
+                // Determina tipo com base no campo hidden do form
+                var form = $select.closest('form.conciliacao-form');
+                var tipo = form.find('input[name="tipo"]').val(); // 'entrada' ou 'saida'
+                var buttonText = tipo === 'entrada' ? 'Adicionar Cliente' : 'Adicionar Fornecedor';
+
+                // Cria footer com botão
+                var $footer = jQuery(
+                    '<div class="select2-add-fornecedor-footer border-top p-2 text-center"></div>'
+                );
+                var $button = jQuery(
+                    '<button type="button" class="btn btn-sm btn-light-primary w-100">' +
+                    '<i class="fas fa-plus me-1"></i> ' + buttonText + '</button>'
+                );
+                $footer.append($button);
+                $results.append($footer);
+
+                // Evento de clique no botão
+                $button.on('click', function (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+
+                    // Fecha o Select2
+                    $select.select2('close');
+
+                    // Define qual select deve ser atualizado ao salvar
+                    window.__drawerTargetSelect = '#fornecedor_id_' + conciliacaoId;
+
+                    // Define o tipo no hidden field do drawer
+                    var parceiroTipo = tipo === 'entrada' ? 'cliente' : 'fornecedor';
+                    jQuery('#parceiro_tipo_hidden').val(parceiroTipo);
+
+                    // Atualiza labels do drawer se a função existir
+                    if (typeof window.updateFornecedorLabels === 'function') {
+                        window.updateFornecedorLabels(tipo === 'entrada' ? 'receita' : 'despesa');
+                    }
+
+                    // Abre o drawer de fornecedor
+                    var fornecedorDrawer = document.getElementById('kt_drawer_fornecedor');
+                    if (fornecedorDrawer) {
+                        var drawerInstance = typeof KTDrawer !== 'undefined' ? KTDrawer.getInstance(fornecedorDrawer) : null;
+                        if (drawerInstance) {
+                            drawerInstance.show();
+                        } else if (typeof KTDrawer !== 'undefined' && typeof KTDrawer.getOrCreateInstance === 'function') {
+                            var inst = KTDrawer.getOrCreateInstance(fornecedorDrawer);
+                            if (inst) inst.show();
+                        }
+                    }
+                });
+            }, 50);
+        });
+    }
+
+    // ============================================================
     // 5. ALTERNAR ENTRE VISUALIZAÇÃO E EDIÇÃO
     // ============================================================
 
@@ -711,6 +811,10 @@
         document.addEventListener('click', handleConciliarButton);
         document.addEventListener('click', handleConciliarNovoLancamento);
         document.addEventListener('shown.bs.tab', handleTabSwitching);
+
+        // Listeners para Toggle "Completar Informações" (Bootstrap Collapse)
+        document.addEventListener('shown.bs.collapse', handleCollapseToggle);
+        document.addEventListener('hidden.bs.collapse', handleCollapseToggle);
 
         // Listeners para Upload de Arquivo
         document.addEventListener('change', handleFileInputChange);

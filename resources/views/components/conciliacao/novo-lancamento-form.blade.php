@@ -4,6 +4,7 @@
     'centrosAtivos' => [],
     'lps' => [],
     'formasPagamento' => [],
+    'fornecedores' => [],
     'entidade',
 ])
 
@@ -145,23 +146,124 @@
         @endif
     </x-tenant-select>
 
-    <div class="card-footer">
+    <!--begin::Informações complementares (collapsible Metronic)-->
+    <div class="py-1">
+        <!--begin::Header-->
+        <div class="py-3 d-flex flex-stack flex-wrap">
+            <!--begin::Toggle-->
+            <div class="d-flex align-items-center collapsible toggle collapsed" 
+                 data-bs-toggle="collapse" 
+                 data-bs-target="#collapse_info_extra_{{ $conciliacao->id }}">
+                <!--begin::Arrow-->
+                <div class="btn btn-sm btn-icon btn-active-color-primary ms-n3 me-2">
+                    <!--begin::Svg Icon | path: icons/duotune/general/gen036.svg (toggle-on = minus)-->
+                    <span class="svg-icon toggle-on svg-icon-primary svg-icon-2">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect opacity="0.3" x="2" y="2" width="20" height="20" rx="5" fill="currentColor" />
+                            <rect x="6.0104" y="10.9247" width="12" height="2" rx="1" fill="currentColor" />
+                        </svg>
+                    </span>
+                    <!--end::Svg Icon-->
+                    <!--begin::Svg Icon | path: icons/duotune/general/gen035.svg (toggle-off = plus)-->
+                    <span class="svg-icon toggle-off svg-icon-2">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect opacity="0.3" x="2" y="2" width="20" height="20" rx="5" fill="currentColor" />
+                            <rect x="10.8891" y="17.8033" width="12" height="2" rx="1" transform="rotate(-90 10.8891 17.8033)" fill="currentColor" />
+                            <rect x="6.01041" y="10.9247" width="12" height="2" rx="1" fill="currentColor" />
+                        </svg>
+                    </span>
+                    <!--end::Svg Icon-->
+                </div>
+                <!--end::Arrow-->
+                <!--begin::Summary-->
+                <div class="me-3">
+                    <div class="d-flex align-items-center fw-bold text-gray-800">
+                        Completar informações
+                        <span class="badge badge-light-primary ms-3 fs-8">Opcional</span>
+                    </div>
+                    <div class="text-muted fs-7">
+                        {{ $tipoTransacao === 'saida' ? 'Fornecedor' : 'Cliente' }}, nº documento, comprovação fiscal e anexos
+                    </div>
+                </div>
+                <!--end::Summary-->
+            </div>
+            <!--end::Toggle-->
+        </div>
+        <!--end::Header-->
+        <!--begin::Body-->
+        <div id="collapse_info_extra_{{ $conciliacao->id }}" class="collapse fs-6 ps-10" data-conciliacao-id="{{ $conciliacao->id }}">
+            <!--begin::Campos complementares-->
+            <div class="row g-5 py-5">
+                <!--begin::Fornecedor/Cliente (contextual ao tipo)-->
+                @php
+                    $tipoLabel = $tipoTransacao === 'saida' ? 'Fornecedor' : 'Cliente';
+                    $tipoPlaceholder = $tipoTransacao === 'saida' ? 'Selecione um fornecedor' : 'Selecione um cliente';
+                    $naturezaPermitida = $tipoTransacao === 'saida' ? ['fornecedor', 'ambos'] : ['cliente', 'ambos'];
+                @endphp
+                <x-tenant-select 
+                    name="fornecedor_id" 
+                    id="fornecedor_id_{{ $conciliacao->id }}" 
+                    :label="$tipoLabel"
+                    :placeholder="$tipoPlaceholder"
+                    :minimumResultsForSearch="0"
+                    control="manual"
+                    class="col-md-8 mb-3">
+                    @if (isset($fornecedores) && count($fornecedores) > 0)
+                        @foreach ($fornecedores as $fornecedor)
+                            @if(in_array($fornecedor->natureza, $naturezaPermitida))
+                                <option value="{{ $fornecedor->id }}" data-natureza="{{ $fornecedor->natureza }}">
+                                    {{ $fornecedor->nome }}
+                                </option>
+                            @endif
+                        @endforeach
+                    @endif
+                </x-tenant-select>
+                <!--end::Fornecedor/Cliente-->
 
-        <!-- Checkbox: Comprovação Fiscal -->
-        <div class="col-md-12">
-            <label class="form-check form-switch form-check-custom form-check-solid">
-                <input type="hidden" name="comprovacao_fiscal" value="0">
-                <input type="checkbox" class="form-check-input comprovacao-fiscal-check" name="comprovacao_fiscal"
-                    value="1" data-conciliacao-id="{{ $conciliacao->id }}">
-                <span class="form-check-label fw-semibold">Existe comprovação fiscal para este lançamento?</span>
-            </label>
+                <!--begin::Número do Documento-->
+                <x-tenant-input 
+                    name="numero_documento_extra" 
+                    id="numero_documento_{{ $conciliacao->id }}" 
+                    label="Nº Documento"
+                    placeholder="Ex: 1234567890" 
+                    type="text" 
+                    value="{{ $conciliacao->checknum }}"
+                    class="col-md-4 mb-3" />
+                <!--end::Número do Documento-->
+
+                <!--begin::Separator-->
+                <div class="col-md-12">
+                    <div class="separator separator-dashed my-3"></div>
+                </div>
+                <!--end::Separator-->
+
+                <!--begin::Comprovação Fiscal-->
+                <div class="col-md-12">
+                    <label class="form-check form-switch form-check-custom form-check-solid">
+                        <input type="hidden" name="comprovacao_fiscal" value="0">
+                        <input type="checkbox" class="form-check-input comprovacao-fiscal-check" name="comprovacao_fiscal"
+                            value="1" data-conciliacao-id="{{ $conciliacao->id }}">
+                        <span class="form-check-label fw-semibold text-gray-800">Existe comprovação fiscal para este lançamento?</span>
+                    </label>
+                </div>
+                <!--end::Comprovação Fiscal-->
+
+                <!--begin::Container de Anexos (inicialmente oculto)-->
+                <div class="col-md-12 anexo-container d-none mt-4" data-conciliacao-id="{{ $conciliacao->id }}">
+                    <x-tenant-file-one 
+                        name="anexo" 
+                        id="anexo_{{ $conciliacao->id }}" 
+                        accept=".pdf,.jpg,.jpeg,.png,.ofx" 
+                    />
+                </div>
+                <!--end::Container de Anexos-->
+            </div>
+            <!--end::Campos complementares-->
         </div>
-        <!-- Container de Anexos (inicialmente oculto) -->
-        <div class="col-md-12 anexo-container d-none mt-4" data-conciliacao-id="{{ $conciliacao->id }}">
-            <x-tenant-file-one 
-                name="anexo" 
-                id="anexo_{{ $conciliacao->id }}" 
-                accept=".pdf,.jpg,.jpeg,.png,.ofx" 
-            />
-        </div>
+        <!--end::Body-->
     </div>
+    <!--end::Informações complementares-->
+
+
+
+    

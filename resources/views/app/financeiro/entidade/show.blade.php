@@ -36,6 +36,9 @@
 
 {{-- Modal de Conciliação de Missas --}}
 @include('app.components.modals.financeiro.conciliacao-missas')
+
+{{-- Drawer de Fornecedor/Cliente (para adição rápida na conciliação) --}}
+@include('app.components.modals.financeiro.lancamento.drawer_fornecedor')
 </x-tenant-app-layout>
 
 {{-- Scripts JavaScript --}}

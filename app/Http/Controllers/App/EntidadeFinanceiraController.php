@@ -13,6 +13,7 @@ use App\Models\FormasPagamento;
 use App\Models\HorarioMissa;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
+use App\Models\Parceiro;
 use App\Support\Money;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -672,6 +673,7 @@ class EntidadeFinanceiraController extends Controller
             $centrosAtivos = CostCenter::forActiveCompany()->get();
             $lps = LancamentoPadrao::all();
             $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
+            $fornecedores = Parceiro::forActiveCompany()->orderBy('nome')->get();
 
             // ✅ Calcula counts atualizados para todas as tabs (UX melhor)
             $baseQuery = BankStatement::where('company_id', $activeCompanyId)
@@ -697,6 +699,7 @@ class EntidadeFinanceiraController extends Controller
                 'centrosAtivos' => $centrosAtivos,
                 'lps' => $lps,
                 'formasPagamento' => $formasPagamento,
+                'fornecedores' => $fornecedores,
             ])->render();
 
             return response()->json([
