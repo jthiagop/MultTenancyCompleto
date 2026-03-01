@@ -7,6 +7,7 @@
     "require": {
         "php": "^8.4",
         "asgrim/ofxparser": "^1.1",
+        "cweagans/composer-patches": "^2.0",
         "davidhsianturi/blade-bootstrap-icons": "^1.5",
         "doctrine/dbal": "*",
         "endeken/ofx-php-parser": "^0.1.1",
@@ -90,6 +91,11 @@
     "extra": {
         "laravel": {
             "dont-discover": []
+        },
+        "patches": {
+            "endeken/ofx-php-parser": {
+                "Fix normalizeOfx returning string instead of SimpleXMLElement for SGML with closing tags": "patches/endeken-ofx-php-parser-fix-sgml-string-return.patch"
+            }
         }
     },
     "config": {
@@ -98,7 +104,8 @@
         "sort-packages": true,
         "allow-plugins": {
             "pestphp/pest-plugin": true,
-            "php-http/discovery": true
+            "php-http/discovery": true,
+            "cweagans/composer-patches": true
         }
     },
     "minimum-stability": "stable",
