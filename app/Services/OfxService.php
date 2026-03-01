@@ -128,9 +128,19 @@ class OfxService
             // Normaliza a conta do banco de dados
             $contaBD = $this->normalizarConta($entidade->conta);
 
-            // Compara usando str_ends_with para ser mais robusto
-            if (str_ends_with($contaBD, $contaNormalizadaOFX) || $contaBD === $contaNormalizadaOFX) {
+            // Compara as contas normalizadas
+            // Primeiro tenta igualdade exata, depois verifica se uma contém a outra
+            // (bancos podem enviar conta com ou sem dígito verificador)
+            // Exige que a conta menor tenha pelo menos 4 caracteres para evitar falsos positivos
+            if ($contaBD === $contaNormalizadaOFX) {
                 $candidatas[] = $entidade;
+            } elseif (strlen($contaNormalizadaOFX) >= 4 && strlen($contaBD) >= 4) {
+                // Aceita match parcial apenas se a diferença for pequena (dígito verificador)
+                $menor = strlen($contaBD) <= strlen($contaNormalizadaOFX) ? $contaBD : $contaNormalizadaOFX;
+                $maior = strlen($contaBD) > strlen($contaNormalizadaOFX) ? $contaBD : $contaNormalizadaOFX;
+                if (str_ends_with($maior, $menor) && (strlen($maior) - strlen($menor)) <= 2) {
+                    $candidatas[] = $entidade;
+                }
             }
         }
 
@@ -184,9 +194,12 @@ class OfxService
         return $candidatas[0];
     }
 
-    public function processOfx($file, $usarHorariosMissas = false, $fileHash = null, $fileName = null)
+    public function processOfx($file, $usarHorariosMissas = false, $fileHash = null, $fileName = null, $companyId = null)
     {
         ini_set('memory_limit', '512M'); // Aumenta o limite para 512MB
+
+        // Garante que temos um companyId (fallback para sessão apenas como último recurso)
+        $companyId = $companyId ?? session('active_company_id');
 
         // 1. Salvar arquivo no storage
         $path = $file->store('ofx_uploads');
@@ -194,11 +207,21 @@ class OfxService
 
         // 2. Ler e tratar o conteúdo
         $contents = file_get_contents($ofxPath);
-        $contents = preg_replace('/[^\x20-\x7E\r\n]/', '', $contents);
+
+        // Remove apenas caracteres de controle (0x00-0x1F exceto \r\n\t), preservando acentos e UTF-8
+        $contents = preg_replace('/[\x00-\x08\x0B\x0C\x0E-\x1F]/', '', $contents);
+
+        // Remove timezone labels que causam erro no parser (ex: [-3:BRT], [-3:GMT])
         $contents = preg_replace('/\[-?\d+:BRT\]/', '', $contents);
         $contents = preg_replace('/\[-?\d+:GMT\]/', '', $contents);
-        $contents = iconv('cp1252', 'utf-8//TRANSLIT', $contents);
-        file_put_contents($ofxPath, $contents);
+
+        // Detecta encoding e converte para UTF-8 apenas se necessário
+        // A biblioteca OFX já faz mb_convert_encoding internamente,
+        // mas pré-tratamos aqui para garantir que o conteúdo chegue limpo
+        $encoding = mb_detect_encoding($contents, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
+        if ($encoding && $encoding !== 'UTF-8') {
+            $contents = mb_convert_encoding($contents, 'UTF-8', $encoding);
+        }
 
         // 3. Processar o OFX
         $parsedData = OFX::parse($contents);
@@ -221,7 +244,6 @@ class OfxService
                 $contaOFX       = $account->accountNumber;   // ACCTID do OFX (ex: "12771-X")
                 $accountTypeOFX = $account->accountType ?? null; // ACCTTYPE do OFX (ex: "CHECKING", "SAVINGS")
                 $agenciaOFX     = $account->agencyNumber ?? null; // BRANCHID do OFX (ex: "1851") — nem todos os bancos enviam
-                $companyId      = session('active_company_id'); // Empresa do usuário logado
 
                 // 7. Busca a entidade usando BANKID + Conta + AccountType + Agência para desambiguação
                 $entidade = $this->encontrarEntidade($bankIdOFX, $contaOFX, $companyId, $accountTypeOFX, $agenciaOFX);
@@ -238,8 +260,11 @@ class OfxService
 
                 // 8. Iterar sobre as transações da conta
                 $transacoesImportadas = [];
-                foreach ($account->statement->transactions ?? [] as $transaction) {
-                    $bankStatement = BankStatement::storeTransaction($account, $transaction, $entidade->id, $fileHash, $fileName);
+                $transactions = ($account->statement ?? null)?->transactions ?? [];
+                foreach ($transactions as $transaction) {
+                    $bankStatement = BankStatement::storeTransaction(
+                        $account, $transaction, $entidade->id, $fileHash, $fileName, $companyId
+                    );
                     if ($bankStatement) {
                         $transacoesImportadas[] = $bankStatement;
                         $totalTransacoesImportadas++;
@@ -280,6 +305,9 @@ class OfxService
             // Rollback em caso de erro
             \DB::rollBack();
             throw $e;
+        } finally {
+            // Limpa o arquivo OFX do storage após processamento (sucesso ou erro)
+            Storage::delete($path);
         }
 
         return [

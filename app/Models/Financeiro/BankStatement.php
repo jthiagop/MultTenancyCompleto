@@ -102,7 +102,7 @@ class BankStatement extends Model
     /**
      * 🔄 Método para armazenar uma nova transação do OFX
      */
-    public static function storeTransaction($account, $transaction, $entidadeId, $fileHash = null, $fileName = null)
+    public static function storeTransaction($account, $transaction, $entidadeId, $fileHash = null, $fileName = null, $companyId = null)
     {
         // ✅ Usa Money::fromOfx para converter valor do OFX (pode ser negativo)
         $money = \App\Support\Money::fromOfx((float) $transaction->amount);
@@ -111,9 +111,12 @@ class BankStatement extends Model
         $amountValue = round($money->getSignedAmount(), 2); // DECIMAL com sinal
         $amountCents = (int) round($money->getSignedAmount() * 100); // Integer em centavos com sinal
 
-        // ✅ Busca o company_id da entidade financeira para garantir consistência
-        $entidade = \App\Models\EntidadeFinanceira::find($entidadeId);
-        $companyId = $entidade?->company_id ?? session('active_company_id') ?? Auth::user()?->company_id;
+        // ✅ Usa companyId passado como parâmetro (evita query N+1)
+        // Fallback para busca na entidade apenas se não foi informado
+        if (!$companyId) {
+            $entidade = \App\Models\EntidadeFinanceira::find($entidadeId);
+            $companyId = $entidade?->company_id ?? session('active_company_id') ?? Auth::user()?->company_id;
+        }
 
         // ✅ Usa firstOrCreate com chave composta para garantir unicidade
         // Mesmo arquivo (file_hash igual) pode ter múltiplas transações (fitid diferente)
@@ -141,6 +144,8 @@ class BankStatement extends Model
                 'status_conciliacao' => 'pendente', // ✅ Status inicial padrão
                 'file_hash'     => $fileHash, // Hash do arquivo (múltiplas transações do mesmo arquivo)
                 'file_name'     => $fileName, // Nome do arquivo
+                'imported_at'   => now(), // Data/hora da importação
+                'imported_by'   => Auth::id(), // Usuário que importou
             ]
         );
 
@@ -257,9 +262,23 @@ class BankStatement extends Model
         }
 
         if (is_string($ofxDateString)) {
-            $dateString = substr($ofxDateString, 0, 14);
-            $dt = new \DateTime(substr($dateString, 0, 4) . '-' . substr($dateString, 4, 2) . '-' . substr($dateString, 6, 2) .
-                ' ' . substr($dateString, 8, 2) . ':' . substr($dateString, 10, 2) . ':' . substr($dateString, 12, 2));
+            // Remove timezone info e pega apenas os dígitos
+            $dateString = preg_replace('/[^\d]/', '', substr($ofxDateString, 0, 14));
+            $len = strlen($dateString);
+
+            // Mínimo: 8 dígitos para data (YYYYMMDD)
+            if ($len < 8) {
+                return now()->format('Y-m-d H:i:s');
+            }
+
+            $year  = substr($dateString, 0, 4);
+            $month = substr($dateString, 4, 2);
+            $day   = substr($dateString, 6, 2);
+            $hour  = $len >= 10 ? substr($dateString, 8, 2) : '00';
+            $min   = $len >= 12 ? substr($dateString, 10, 2) : '00';
+            $sec   = $len >= 14 ? substr($dateString, 12, 2) : '00';
+
+            $dt = new \DateTime("{$year}-{$month}-{$day} {$hour}:{$min}:{$sec}");
             $dt->setTimezone(new \DateTimeZone('America/Sao_Paulo'));
             return $dt->format('Y-m-d H:i:s');
         }
