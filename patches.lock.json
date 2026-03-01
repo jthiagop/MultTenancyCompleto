@@ -1,12 +1,12 @@
 {
-    "_hash": "08344d4e82fba2db5b4aba611aa05b069b2f451ba1116ed56e755d46de4b7b69",
+    "_hash": "b5487a37a8f6b7e627ed3b80133b06a609d59a7fb31a5c72f1302d323f86de19",
     "patches": {
         "endeken/ofx-php-parser": [
             {
                 "package": "endeken/ofx-php-parser",
                 "description": "Fix normalizeOfx returning string instead of SimpleXMLElement for SGML with closing tags",
                 "url": "patches/endeken-ofx-php-parser-fix-sgml-string-return.patch",
-                "sha256": "d793f3e94da4f67c3809d7b9c8ad9281bbd15e0e7a3ee64e16aa65d4a15979dd",
+                "sha256": "8fcdfbf9985a486bc773a6e564451ce32f0e86ea9ceaab2af174310a817e311b",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"

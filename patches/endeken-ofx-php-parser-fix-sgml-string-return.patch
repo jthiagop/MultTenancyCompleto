@@ -1,15 +1,16 @@
---- a/src/OFXUtils.php	2026-03-01 16:31:21.103592521 -0300
-+++ b/src/OFXUtils.php	2026-03-01 16:31:37.839705814 -0300
-@@ -19,9 +19,10 @@
+--- a/src/OFXUtils.php
++++ b/src/OFXUtils.php
+@@ -19,9 +19,9 @@
              $ofxXml = $ofxSgml;
          } else {
-             if (preg_match('/<OFX>.*<\/OFX>/', $ofxSgml) === 1) {
+-            if (preg_match('/<OFX>.*<\/OFX>/', $ofxSgml) === 1) {
 -                return str_replace('<', "\n<", $ofxSgml); // add line breaks to allow XML to parse
-+                $ofxXml = str_replace('<', "\n<", $ofxSgml);
-+            } else {
-+                $ofxXml = self::convertSgmlToXml($ofxSgml);
-             }
+-            }
 -            $ofxXml = self::convertSgmlToXml($ofxSgml);
++            // Garante que cada tag fique em sua própria linha (alguns OFX vêm tudo numa linha)
++            $ofxSgml = str_replace('<', "\n<", $ofxSgml);
++            // Fecha tags folha abertas (ex: <SEVERITY>INFO → <SEVERITY>INFO</SEVERITY>)
++            $ofxXml = self::convertSgmlToXml($ofxSgml);
          }
          libxml_clear_errors();
          libxml_use_internal_errors(true);
