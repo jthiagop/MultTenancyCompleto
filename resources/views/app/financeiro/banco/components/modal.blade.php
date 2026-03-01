@@ -250,7 +250,20 @@
                 if (!fileInput.files || fileInput.files.length === 0) {
                     e.preventDefault();
                     exibirMensagem('⚠️ Por favor, selecione um arquivo OFX!', 'danger');
+                    return;
                 }
+
+                // Proteção contra duplo clique: desabilita o botão e exibe spinner
+                if (importButton.disabled) {
+                    e.preventDefault();
+                    return;
+                }
+
+                importButton.disabled = true;
+                const labelEl = importButton.querySelector('.indicator-label');
+                const progressEl = importButton.querySelector('.indicator-progress');
+                if (labelEl) labelEl.classList.add('d-none');
+                if (progressEl) progressEl.classList.remove('d-none');
             });
         }
 
