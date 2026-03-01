@@ -22,7 +22,7 @@
         : collect($todasEntidades);
 @endphp
 
-<div class="col-12 col-sm-12 col-md-4">
+<div class="col-12 col-sm-12 col-md-4 overflow-hidden">
     @if($todasEntidades->isEmpty())
         {{-- Estado vazio --}}
         <div class="card card-flush h-xl-100">
@@ -35,7 +35,7 @@
         </div>
     @else
         <div id="{{ $carouselId }}"
-             class="carousel carousel-custom slide h-xl-100 border-start border-2 border-primary ps-6 ms-6 d-flex flex-column justify-content-center"
+             class="carousel carousel-custom slide h-xl-100 border-start border-2 border-primary ps-6 ms-6 d-flex flex-column justify-content-center overflow-hidden"
              data-bs-ride="carousel"
              data-bs-interval="9000"
              role="region"

@@ -26,8 +26,8 @@
 
 <div class="carousel-item {{ $isActive ? 'active' : '' }}">
     <a href="{{ route('entidades.show', $entidade->id) }}" 
-       class="d-block text-decoration-none" aria-label="Ver detalhes de {{ $entidade->tipo === 'banco' ? ($entidade->bank?->name ?? 'Banco') . ' - Ag ' . $entidade->agencia . ' Cc ' . $entidade->conta : $entidade->nome }}">
-        <div class="d-flex align-items-start">
+       class="d-block text-decoration-none overflow-hidden" aria-label="Ver detalhes de {{ $entidade->tipo === 'banco' ? ($entidade->bank?->name ?? 'Banco') . ' - Ag ' . $entidade->agencia . ' Cc ' . $entidade->conta : $entidade->nome }}">
+        <div class="d-flex align-items-start overflow-hidden">
             {{-- Logo / Avatar --}}
             <div class="me-5 flex-shrink-0">
                 <div class="symbol symbol-75px">
@@ -55,10 +55,10 @@
             </div>
 
             {{-- Info + Saldo --}}
-            <div class="flex-grow-1 min-w-0">
+            <div class="flex-grow-1 min-w-0 overflow-hidden">
                 {{-- Linha 1: Nome + Editar --}}
-                <div class="d-flex align-items-center justify-content-between mb-1">
-                    <div class="d-flex align-items-center gap-2 min-w-0">
+                <div class="d-flex align-items-center justify-content-between mb-1 overflow-hidden">
+                    <div class="d-flex align-items-center gap-2 min-w-0 overflow-hidden">
                         <span class="fw-bold text-gray-800 fs-2 text-truncate" data-entidade-nome="{{ $entidade->id }}">
                             @if ($entidade->tipo === 'banco')
                                 {{ $entidade->nome }}
@@ -99,7 +99,7 @@
                 </div>
 
                 {{-- Linha 3: Badge tipo + Saldo --}}
-                <div class="d-flex align-items-end justify-content-between">
+                <div class="d-flex align-items-end justify-content-between flex-wrap gap-2">
                     {{-- Badge tipo de conta --}}
                     <div>
                         @if ($entidade->tipo === 'banco' && $accountInfo)
@@ -116,10 +116,10 @@
                     </div>
 
                     {{-- Saldo --}}
-                    <div class="text-end" aria-label="Saldo atual">
-                        <div class="d-flex align-items-baseline justify-content-end">
-                            <span class="fw-semibold me-1 fs-6 {{ $saldoNegativo ? 'text-danger' : 'text-gray-400' }}" aria-hidden="true">R$</span>
-                            <span class="fw-bold lh-1 fs-2x {{ $saldoNegativo ? 'text-danger' : 'text-gray-900' }}">
+                    <div class="text-end flex-shrink-0" aria-label="Saldo atual">
+                        <div class="d-flex align-items-baseline justify-content-end text-nowrap">
+                            <span class="fw-semibold me-1 fs-7 {{ $saldoNegativo ? 'text-danger' : 'text-gray-400' }}" aria-hidden="true">R$</span>
+                            <span class="fw-bold lh-1 fs-2 {{ $saldoNegativo ? 'text-danger' : 'text-gray-900' }}">
                                 {{ $entidade->saldo_formatado ?? number_format($saldo, 2, ',', '.') }}
                             </span>
                         </div>
