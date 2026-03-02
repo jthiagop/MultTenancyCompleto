@@ -1,16 +1,40 @@
 --- a/src/OFXUtils.php
 +++ b/src/OFXUtils.php
-@@ -19,9 +19,9 @@
+@@ -18,9 +18,9 @@
+         if (stripos($ofxHeader, '<?xml') === 0) {
              $ofxXml = $ofxSgml;
          } else {
 -            if (preg_match('/<OFX>.*<\/OFX>/', $ofxSgml) === 1) {
 -                return str_replace('<', "\n<", $ofxSgml); // add line breaks to allow XML to parse
 -            }
--            $ofxXml = self::convertSgmlToXml($ofxSgml);
 +            // Garante que cada tag fique em sua própria linha (alguns OFX vêm tudo numa linha)
 +            $ofxSgml = str_replace('<', "\n<", $ofxSgml);
 +            // Fecha tags folha abertas (ex: <SEVERITY>INFO → <SEVERITY>INFO</SEVERITY>)
-+            $ofxXml = self::convertSgmlToXml($ofxSgml);
+             $ofxXml = self::convertSgmlToXml($ofxSgml);
          }
          libxml_clear_errors();
-         libxml_use_internal_errors(true);
+@@ -86,8 +86,22 @@
+             if ($matches[1][0] == '/') {
+                 $tag = substr($matches[1], 1);
+ 
+-                while (($last = array_pop($tags)) && $last[1] != $tag) {
+-                    $lines[$last[0]] = "<{$last[1]}/>";
++                // Verifica se a tag existe na pilha antes de popar
++                $tagExistsOnStack = false;
++                foreach ($tags as $t) {
++                    if ($t[1] === $tag) {
++                        $tagExistsOnStack = true;
++                        break;
++                    }
++                }
++
++                if ($tagExistsOnStack) {
++                    while (($last = array_pop($tags)) && $last[1] != $tag) {
++                        $lines[$last[0]] = "<{$last[1]}/>";
++                    }
++                } else {
++                    // Closing tag órfão (já fechado por closeUnclosedXmlTags) — remover
++                    $lines[$i] = "";
+                 }
+             } else {
+                 $tags[] = [$i, $matches[1]];
