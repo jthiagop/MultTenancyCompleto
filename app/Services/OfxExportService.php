@@ -177,13 +177,23 @@ class OfxExportService
         // ID único da transação (FITID) — prefixo DOMUS + ID
         $fitId = "DOMUS-{$transacao->id}";
 
-        return "          <STMTTRN>\n"
+        // Número do documento (CHECKNUM) — código da transação
+        $numDoc = $transacao->numero_documento ?? '';
+
+        $bloco = "          <STMTTRN>\n"
             . "            <TRNTYPE>{$tipo}\n"
             . "            <DTPOSTED>{$dataMov}\n"
             . "            <TRNAMT>{$valorFormatado}\n"
-            . "            <FITID>{$fitId}\n"
-            . "            <MEMO>{$memo}\n"
+            . "            <FITID>{$fitId}\n";
+
+        if ($numDoc !== '') {
+            $bloco .= "            <CHECKNUM>{$this->limparTexto($numDoc)}\n";
+        }
+
+        $bloco .= "            <MEMO>{$memo}\n"
             . "          </STMTTRN>\n";
+
+        return $bloco;
     }
 
     /**
