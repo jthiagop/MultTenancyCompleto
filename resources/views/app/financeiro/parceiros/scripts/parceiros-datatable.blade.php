@@ -100,6 +100,10 @@ var ParceirosDataTable = (function () {
             render: function (data, type, row) {
                 let html = '<div class="d-flex justify-content-end gap-2">';
 
+                // Visualizar
+                html += '<a href="' + baseUrl + '/' + row.hash_id + '/show" class="btn btn-icon btn-sm btn-light-info" title="Visualizar">' +
+                    '<i class="bi bi-eye fs-6"></i></a>';
+
                 // Editar
                 html += '<button class="btn btn-icon btn-sm btn-light-primary btn-edit-parceiro" ' +
                     'data-id="' + row.hash_id + '" ' +

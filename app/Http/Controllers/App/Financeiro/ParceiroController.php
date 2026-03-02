@@ -6,9 +6,11 @@ use App\Enums\NaturezaParceiro;
 use App\Http\Controllers\Controller;
 use App\Models\Parceiro;
 use App\Models\Address;
+use App\Models\Financeiro\TransacaoFinanceira;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Carbon;
 
 class ParceiroController extends Controller
 {
@@ -33,6 +35,155 @@ class ParceiroController extends Controller
         $naturezaOptions = NaturezaParceiro::options();
 
         return view('app.financeiro.parceiros.index', compact('activeTab', 'naturezaOptions'));
+    }
+
+    /**
+     * Display the partner detail page with related transactions.
+     */
+    public function show(Parceiro $parceiro)
+    {
+        $parceiro->load('address');
+
+        $activeTab = request('tab', 'todas');
+        $validTabs = ['todas', 'a_receber', 'a_pagar'];
+        if (!in_array($activeTab, $validTabs)) {
+            $activeTab = 'todas';
+        }
+
+        // Totais para cards de resumo
+        $transacoesQuery = TransacaoFinanceira::where('parceiro_id', $parceiro->id)
+            ->where('company_id', session('active_company_id'));
+
+        $totalEntradas = (clone $transacoesQuery)->where('tipo', 'entrada')->sum('valor');
+        $totalSaidas = (clone $transacoesQuery)->where('tipo', 'saida')->sum('valor');
+        $totalEmAberto = (clone $transacoesQuery)->where('situacao', 'em_aberto')->sum('valor');
+        $totalAtrasado = (clone $transacoesQuery)->where('situacao', 'atrasado')->sum('valor');
+        $totalPago = (clone $transacoesQuery)->whereIn('situacao', ['pago', 'recebido'])->sum('valor');
+        $totalTransacoes = (clone $transacoesQuery)->count();
+
+        return view('app.financeiro.parceiros.show', compact(
+            'parceiro',
+            'activeTab',
+            'totalEntradas',
+            'totalSaidas',
+            'totalEmAberto',
+            'totalAtrasado',
+            'totalPago',
+            'totalTransacoes',
+        ));
+    }
+
+    /**
+     * DataTables server-side data endpoint for partner transactions.
+     */
+    public function transacoesData(Request $request, Parceiro $parceiro)
+    {
+        $tab = $request->input('tab', 'todas');
+        $search = $request->input('search.value', '');
+
+        $query = TransacaoFinanceira::where('parceiro_id', $parceiro->id)
+            ->where('company_id', session('active_company_id'))
+            ->with(['entidadeFinanceira', 'lancamentoPadrao', 'costCenter']);
+
+        // Filtro por tab
+        switch ($tab) {
+            case 'a_receber':
+                $query->where('tipo', 'entrada');
+                break;
+            case 'a_pagar':
+                $query->where('tipo', 'saida');
+                break;
+        }
+
+        // Filtro por situação
+        $situacao = $request->input('situacao');
+        if ($situacao && $situacao !== 'todos') {
+            $query->where('situacao', $situacao);
+        }
+
+        // Filtro por período
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        if ($startDate && $endDate) {
+            $query->whereBetween('data_competencia', [$startDate, $endDate]);
+        }
+
+        // Busca textual
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('descricao', 'LIKE', "%{$search}%")
+                  ->orWhere('numero_documento', 'LIKE', "%{$search}%")
+                  ->orWhere('historico_complementar', 'LIKE', "%{$search}%")
+                  ->orWhereHas('lancamentoPadrao', function ($lp) use ($search) {
+                      $lp->where('nome', 'LIKE', "%{$search}%");
+                  })
+                  ->orWhereHas('entidadeFinanceira', function ($ef) use ($search) {
+                      $ef->where('nome', 'LIKE', "%{$search}%");
+                  });
+            });
+        }
+
+        // Contagens
+        $totalRecords = TransacaoFinanceira::where('parceiro_id', $parceiro->id)
+            ->where('company_id', session('active_company_id'))->count();
+        $filteredRecords = $query->count();
+
+        // Ordenação
+        $orderColumnIndex = (int) $request->input('order.0.column', 0);
+        $orderDir = $request->input('order.0.dir', 'desc');
+
+        $sortableColumns = ['data_competencia', 'descricao', 'tipo', 'valor', 'situacao', 'data_vencimento'];
+        $orderColumn = $sortableColumns[$orderColumnIndex] ?? 'data_competencia';
+        $query->orderBy($orderColumn, $orderDir);
+
+        // Paginação
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 50);
+        $transacoes = $query->skip($start)->take($length)->get();
+
+        // Mapear dados
+        $data = $transacoes->map(function (TransacaoFinanceira $t) {
+            $situacaoLabels = [
+                'em_aberto' => ['label' => 'Em aberto', 'badge' => 'badge-light-warning'],
+                'pago' => ['label' => 'Pago', 'badge' => 'badge-light-success'],
+                'recebido' => ['label' => 'Recebido', 'badge' => 'badge-light-success'],
+                'atrasado' => ['label' => 'Atrasado', 'badge' => 'badge-light-danger'],
+                'previsto' => ['label' => 'Previsto', 'badge' => 'badge-light-primary'],
+                'cancelado' => ['label' => 'Cancelado', 'badge' => 'badge-light-secondary'],
+                'parcial' => ['label' => 'Parcial', 'badge' => 'badge-light-info'],
+            ];
+
+            $sit = $t->getRawOriginal('situacao') ?? 'em_aberto';
+            $sitInfo = $situacaoLabels[$sit] ?? ['label' => ucfirst($sit), 'badge' => 'badge-light-secondary'];
+
+            return [
+                'id' => $t->id,
+                'hash_id' => $t->getRouteKey(),
+                'data_competencia' => $t->data_competencia ? Carbon::parse($t->data_competencia)->format('d/m/Y') : '-',
+                'data_vencimento' => $t->data_vencimento ? Carbon::parse($t->data_vencimento)->format('d/m/Y') : '-',
+                'data_pagamento' => $t->data_pagamento ? Carbon::parse($t->data_pagamento)->format('d/m/Y') : '-',
+                'descricao' => $t->descricao ?? '-',
+                'lancamento_padrao' => $t->lancamentoPadrao->nome ?? '-',
+                'entidade' => $t->entidadeFinanceira->nome ?? '-',
+                'centro_custo' => $t->costCenter->nome ?? '-',
+                'tipo' => $t->tipo,
+                'tipo_label' => $t->tipo === 'entrada' ? 'Entrada' : 'Saída',
+                'tipo_badge' => $t->tipo === 'entrada' ? 'badge-light-success' : 'badge-light-danger',
+                'valor' => number_format($t->getRawOriginal('valor') ?? 0, 2, ',', '.'),
+                'valor_pago' => number_format($t->getRawOriginal('valor_pago') ?? 0, 2, ',', '.'),
+                'situacao' => $sit,
+                'situacao_label' => $sitInfo['label'],
+                'situacao_badge' => $sitInfo['badge'],
+                'numero_documento' => $t->numero_documento,
+            ];
+        });
+
+        return response()->json([
+            'draw' => (int) $request->input('draw', 1),
+            'recordsTotal' => $totalRecords,
+            'recordsFiltered' => $filteredRecords,
+            'data' => $data->values(),
+        ]);
     }
 
     /**

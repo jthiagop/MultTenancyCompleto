@@ -392,6 +392,8 @@ Route::middleware([
                 Route::get('/data', [ParceiroController::class, 'data'])->name('data');
                 Route::get('/stats', [ParceiroController::class, 'stats'])->name('stats');
                 Route::post('/check-documento', [ParceiroController::class, 'checkDocumento'])->name('check-documento');
+                Route::get('/{parceiro}/show', [ParceiroController::class, 'show'])->name('show');
+                Route::get('/{parceiro}/transacoes-data', [ParceiroController::class, 'transacoesData'])->name('transacoes-data');
                 Route::put('/{parceiro}', [ParceiroController::class, 'update'])->name('update');
                 Route::post('/{parceiro}/toggle-active', [ParceiroController::class, 'toggleActive'])->name('toggle-active');
                 Route::delete('/{parceiro}', [ParceiroController::class, 'destroy'])->name('destroy');
