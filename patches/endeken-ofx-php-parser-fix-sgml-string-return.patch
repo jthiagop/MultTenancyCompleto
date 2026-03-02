@@ -1,6 +1,20 @@
 --- a/src/OFXUtils.php
 +++ b/src/OFXUtils.php
-@@ -18,9 +18,9 @@
+@@ -11,10 +11,15 @@
+     public static function normalizeOfx(string $ofxContent): string|false|SimpleXMLElement
+     {
+-        $ofxContent = str_replace(['\r\n'], '\n', $ofxContent);
+-        $ofxContent = mb_convert_encoding($ofxContent, 'UTF-8', 'ISO-8859-1');
++        $ofxContent = str_replace("\r\n", "\n", $ofxContent);
++        // Detecta encoding real antes de converter (evita corromper UTF-8 já válido)
++        $detectedEncoding = mb_detect_encoding($ofxContent, ['UTF-8', 'ISO-8859-1', 'Windows-1252'], true);
++        if ($detectedEncoding && $detectedEncoding !== 'UTF-8') {
++            $ofxContent = mb_convert_encoding($ofxContent, 'UTF-8', $detectedEncoding);
++        }
+         $sgmlStart = stripos($ofxContent, '<OFX>');
+         $ofxHeader = trim(substr($ofxContent, 0, $sgmlStart));
+         $header = self::parseHeader($ofxHeader);
+         $ofxSgml = trim(substr($ofxContent, $sgmlStart));
          if (stripos($ofxHeader, '<?xml') === 0) {
              $ofxXml = $ofxSgml;
          } else {
@@ -13,7 +27,7 @@
              $ofxXml = self::convertSgmlToXml($ofxSgml);
          }
          libxml_clear_errors();
-@@ -86,8 +86,22 @@
+@@ -86,8 +91,22 @@
              if ($matches[1][0] == '/') {
                  $tag = substr($matches[1], 1);
  
@@ -38,3 +52,31 @@
                  }
              } else {
                  $tags[] = [$i, $matches[1]];
++            }
++        }
++
++        return implode("\n", array_map('trim', $lines));
++    }
++
++    private static function closeUnclosedXmlTags($line): string
++    {
++        // Special case discovered where empty content tag wasn't closed
++        $line = trim($line);
++        if (preg_match('/<MEMO>$/', $line) === 1) {
++            return '<MEMO></MEMO>';
++        }
++
++        // Matches: <SOMETHING>blah
++        // Does not match: <SOMETHING>
++        // Does not match: <SOMETHING>blah</SOMETHING>
++        // Uses [^<]+ to match ANY content after the tag (except '<'),
++        // which is safe because preprocessing splits each tag onto its own line.
++        if (preg_match(
++            "/<([A-Za-z0-9.]+)>([^<]+)$/",
++            $line,
++            $matches
++        )) {
++            return "<$matches[1]>$matches[2]</$matches[1]>";
++        }
++        return $line;
++    }
