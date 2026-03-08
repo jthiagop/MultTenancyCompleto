@@ -369,6 +369,7 @@ Route::middleware([
         Route::get('/costCenter/modal/data', [CostCenterController::class, 'getDataForModal'])->name('costCenter.modal.data');
         Route::get('/costCenter/contas-financeiras', [CostCenterController::class, 'getContasFinanceiras'])->name('costCenter.contas.financeiras');
         Route::post('/costCenter/store-ajax', [CostCenterController::class, 'storeAjax'])->name('costCenter.storeAjax');
+        Route::post('/costCenter/check-code', [CostCenterController::class, 'checkCode'])->name('costCenter.checkCode');
         Route::resource('costCenter', CostCenterController::class);
 
         // Rotas acessíveis para todos os usuários autenticados com role

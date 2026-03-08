@@ -57,12 +57,13 @@
                 <div class="row g-9 mb-8">
                     <div class="col-md-4 fv-row">
                         <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
-                            <span>Código</span>
+                            <span class="required">Código</span>
                             <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
-                                title="Código de Identificação (opcional, será gerado automaticamente se vazio)"></i>
+                                title="Código de Identificação do Centro de Custo"></i>
                         </label>
                         <input type="number" class="form-control"
-                            placeholder="Automático" name="code" id="centro_custo_code" />
+                            placeholder="Informe o código" name="code" id="centro_custo_code" />
+                        <div class="invalid-feedback" id="centro_custo_code_error"></div>
                     </div>
 
                     <!--begin::Input group - Nome-->
@@ -74,6 +75,7 @@
                         </label>
                         <input type="text" class="form-control"
                             placeholder="Informe o nome do Centro de Custo" name="name" id="centro_custo_name" />
+                        <div class="invalid-feedback" id="centro_custo_name_error"></div>
                     </div>
                 </div>
                 <!--end::Input group-->
@@ -110,16 +112,109 @@
                 const form = document.querySelector('#kt_drawer_centro_custo_form');
                 const submitButton = document.querySelector('#kt_drawer_centro_custo_submit');
                 const cancelButton = document.querySelector('#kt_drawer_centro_custo_cancel');
+                const codeInput = document.getElementById('centro_custo_code');
+                const codeError = document.getElementById('centro_custo_code_error');
+                const nomeInput = document.getElementById('centro_custo_name');
+                const nomeError = document.getElementById('centro_custo_name_error');
+
+                let codeDuplicado = false;
+                let checkCodeTimeout = null;
+
+                // Função auxiliar para limpar validação de um campo
+                function clearFieldError(input, errorDiv) {
+                    if (input) input.classList.remove('is-invalid', 'is-valid');
+                    if (errorDiv) {
+                        errorDiv.textContent = '';
+                        errorDiv.classList.remove('d-block');
+                    }
+                }
+
+                // Função auxiliar para marcar campo com erro
+                function setFieldError(input, errorDiv, message) {
+                    if (input) input.classList.add('is-invalid');
+                    if (errorDiv) {
+                        errorDiv.textContent = message;
+                        errorDiv.classList.add('d-block');
+                    }
+                }
+
+                // Verificação de duplicidade do código via AJAX
+                if (codeInput) {
+                    codeInput.addEventListener('input', function() {
+                        clearFieldError(codeInput, codeError);
+                        codeDuplicado = false;
+                    });
+
+                    codeInput.addEventListener('blur', function() {
+                        const valor = this.value.trim();
+                        if (!valor) return;
+
+                        if (checkCodeTimeout) clearTimeout(checkCodeTimeout);
+
+                        checkCodeTimeout = setTimeout(function() {
+                            fetch('{{ route("costCenter.checkCode") }}', {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                    'Accept': 'application/json',
+                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                                },
+                                body: JSON.stringify({ code: valor })
+                            })
+                            .then(response => response.json())
+                            .then(data => {
+                                clearFieldError(codeInput, codeError);
+                                if (data.exists) {
+                                    codeDuplicado = true;
+                                    setFieldError(codeInput, codeError, data.message || 'Este código já está em uso.');
+                                } else {
+                                    codeDuplicado = false;
+                                    codeInput.classList.add('is-valid');
+                                }
+                            })
+                            .catch(function() {
+                                // silently fail
+                            });
+                        }, 400);
+                    });
+                }
+
+                // Limpa validação do nome ao digitar
+                if (nomeInput) {
+                    nomeInput.addEventListener('input', function() {
+                        clearFieldError(nomeInput, nomeError);
+                    });
+                }
 
                 if (form) {
                     form.addEventListener('submit', function(e) {
                         e.preventDefault();
 
-                        // Validação básica
-                        const nomeInput = document.getElementById('centro_custo_name');
+                        // Limpa validações anteriores
+                        clearFieldError(codeInput, codeError);
+                        clearFieldError(nomeInput, nomeError);
+
+                        let hasError = false;
+
+                        // Validação do código (obrigatório)
+                        if (!codeInput || !codeInput.value.trim()) {
+                            setFieldError(codeInput, codeError, 'O código é obrigatório.');
+                            hasError = true;
+                        } else if (codeDuplicado) {
+                            setFieldError(codeInput, codeError, 'Este código já está em uso.');
+                            hasError = true;
+                        }
+
+                        // Validação do nome (obrigatório)
                         if (!nomeInput || !nomeInput.value.trim()) {
-                            toastr.warning('Por favor, informe o nome do centro de custo.');
-                            if (nomeInput) nomeInput.focus();
+                            setFieldError(nomeInput, nomeError, 'O nome é obrigatório.');
+                            hasError = true;
+                        }
+
+                        if (hasError) {
+                            // Foca no primeiro campo com erro
+                            const firstInvalid = form.querySelector('.is-invalid');
+                            if (firstInvalid) firstInvalid.focus();
                             return;
                         }
 
@@ -188,6 +283,9 @@
 
                                     // Reset form
                                     form.reset();
+                                    clearFieldError(codeInput, codeError);
+                                    clearFieldError(nomeInput, nomeError);
+                                    codeDuplicado = false;
 
                                     // Emite evento para outros listeners
                                     document.dispatchEvent(new CustomEvent('centro-custo-created', {
@@ -201,9 +299,13 @@
                                 } else {
                                     toastr.error(result.message || 'Erro ao salvar centro de custo.');
                                     if (result.errors) {
-                                        Object.values(result.errors).forEach(errors => {
-                                            errors.forEach(err => toastr.error(err));
-                                        });
+                                        // Exibe erros inline nos campos
+                                        if (result.errors.code) {
+                                            setFieldError(codeInput, codeError, result.errors.code[0]);
+                                        }
+                                        if (result.errors.name) {
+                                            setFieldError(nomeInput, nomeError, result.errors.name[0]);
+                                        }
                                     }
                                 }
                             })

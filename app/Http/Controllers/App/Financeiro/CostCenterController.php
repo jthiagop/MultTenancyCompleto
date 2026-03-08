@@ -104,17 +104,17 @@ class CostCenterController extends Controller
         }
 
         $validated = $request->validate([
-            'code' => 'nullable|numeric|unique:cost_centers,code',
+            'code' => 'required|numeric|unique:cost_centers,code',
             'name' => 'required|string|max:255',
+        ], [
+            'code.required' => 'O código é obrigatório.',
+            'code.numeric' => 'O código deve ser um número.',
+            'code.unique' => 'Este código já está em uso por outro centro de custo.',
+            'name.required' => 'O nome é obrigatório.',
+            'name.max' => 'O nome não pode ter mais de 255 caracteres.',
         ]);
 
         $data = $validated;
-
-        // Gera o próximo código disponível se não foi informado
-        if (empty($data['code'])) {
-            $maxCode = CostCenter::where('company_id', $activeCompanyId)->max('code');
-            $data['code'] = ($maxCode ?? 0) + 1;
-        }
 
         $data['company_id'] = $activeCompanyId;
         $data['status'] = 1; // Ativo por padrão
@@ -143,6 +143,25 @@ class CostCenterController extends Controller
                 'message' => 'Erro ao criar centro de custo: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Verifica se um código de centro de custo já existe (via AJAX).
+     */
+    public function checkCode(Request $request)
+    {
+        $code = $request->input('code');
+
+        if (!$code) {
+            return response()->json(['exists' => false]);
+        }
+
+        $exists = CostCenter::where('code', $code)->exists();
+
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists ? 'Este código já está em uso por outro centro de custo.' : null,
+        ]);
     }
 
     /**
