@@ -90,6 +90,62 @@ class CostCenterController extends Controller
     }
 
     /**
+     * Store a newly created resource via AJAX (cadastro rápido pelo drawer).
+     */
+    public function storeAjax(Request $request)
+    {
+        $activeCompanyId = session('active_company_id');
+
+        if (!$activeCompanyId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhuma empresa selecionada.',
+            ], 422);
+        }
+
+        $validated = $request->validate([
+            'code' => 'nullable|numeric|unique:cost_centers,code',
+            'name' => 'required|string|max:255',
+        ]);
+
+        $data = $validated;
+
+        // Gera o próximo código disponível se não foi informado
+        if (empty($data['code'])) {
+            $maxCode = CostCenter::where('company_id', $activeCompanyId)->max('code');
+            $data['code'] = ($maxCode ?? 0) + 1;
+        }
+
+        $data['company_id'] = $activeCompanyId;
+        $data['status'] = 1; // Ativo por padrão
+        $data['start_date'] = now()->format('Y-m-d');
+        $data['budget'] = 0;
+        $data['created_by'] = Auth::id();
+        $data['created_by_name'] = Auth::user()->name;
+        $data['updated_by'] = Auth::id();
+        $data['updated_by_name'] = Auth::user()->name;
+
+        try {
+            $costCenter = CostCenter::create($data);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Centro de custo criado com sucesso!',
+                'data' => [
+                    'id' => $costCenter->id,
+                    'code' => $costCenter->code,
+                    'name' => $costCenter->name,
+                ],
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao criar centro de custo: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Display the specified resource.
      */
     public function show(string $id)

@@ -368,6 +368,7 @@ Route::middleware([
         // IMPORTANT: Custom routes must come BEFORE resource routes to avoid conflicts
         Route::get('/costCenter/modal/data', [CostCenterController::class, 'getDataForModal'])->name('costCenter.modal.data');
         Route::get('/costCenter/contas-financeiras', [CostCenterController::class, 'getContasFinanceiras'])->name('costCenter.contas.financeiras');
+        Route::post('/costCenter/store-ajax', [CostCenterController::class, 'storeAjax'])->name('costCenter.storeAjax');
         Route::resource('costCenter', CostCenterController::class);
 
         // Rotas acessíveis para todos os usuários autenticados com role
