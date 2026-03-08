@@ -40,45 +40,49 @@
         </div>
         <!--end::Header-->
 
-        <div class="card-body drawer-body py-10 px-lg-17">
+        <div class="card-body drawer-body ">
             <form id="kt_drawer_centro_custo_form">
                 @csrf
                 <meta name="csrf-token" content="{{ csrf_token() }}">
 
-                <!--begin::Descrição-->
-                <div class="mb-8 text-center">
-                    <div class="text-muted fw-semibold fs-6">
-                        Cadastro rápido de Centro de Custo. Preencha o código e nome para criar.
+                <!--begin::Card de campos-->
+                <div class="card card-flush border border-gray-300">
+                    <div class="card-body p-6">
+                        <!--begin::Descrição-->
+                        <div class="mb-8 text-center">
+                            <div class="text-muted fw-semibold fs-6">
+                                Cadastro rápido de Centro de Custo. Preencha o código e nome para criar.
+                            </div>
+                        </div>
+                        <!--end::Descrição-->
+                        <!--begin::Input group - Código-->
+                        <div class="fv-row mb-6">
+                            <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
+                                <span class="required">Código</span>
+                                <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                    title="Código de Identificação do Centro de Custo"></i>
+                            </label>
+                            <input type="number" class="form-control" placeholder="Informe o código" name="code"
+                                id="centro_custo_code" />
+                            <div class="invalid-feedback" id="centro_custo_code_error"></div>
+                        </div>
+                        <!--end::Input group - Código-->
+
+                        <!--begin::Input group - Nome-->
+                        <div class="fv-row">
+                            <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
+                                <span class="required">Nome</span>
+                                <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
+                                    title="Nome do centro de custo (ex: Marketing, TI, Administrativo)"></i>
+                            </label>
+                            <input type="text" class="form-control" placeholder="Informe o nome do Centro de Custo"
+                                name="name" id="centro_custo_name" />
+                            <div class="invalid-feedback" id="centro_custo_name_error"></div>
+                        </div>
+                        <!--end::Input group - Nome-->
                     </div>
                 </div>
-                <!--end::Descrição-->
-
-                <!--begin::Input group - Código-->
-                <div class="row g-9 mb-8">
-                    <div class="col-md-4 fv-row">
-                        <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
-                            <span class="required">Código</span>
-                            <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
-                                title="Código de Identificação do Centro de Custo"></i>
-                        </label>
-                        <input type="number" class="form-control"
-                            placeholder="Informe o código" name="code" id="centro_custo_code" />
-                        <div class="invalid-feedback" id="centro_custo_code_error"></div>
-                    </div>
-
-                    <!--begin::Input group - Nome-->
-                    <div class="col-md-8 fv-row">
-                        <label class="d-flex align-items-center fs-6 fw-semibold mb-2">
-                            <span class="required">Nome</span>
-                            <i class="fas fa-exclamation-circle ms-2 fs-7" data-bs-toggle="tooltip"
-                                title="Nome do centro de custo (ex: Marketing, TI, Administrativo)"></i>
-                        </label>
-                        <input type="text" class="form-control"
-                            placeholder="Informe o nome do Centro de Custo" name="name" id="centro_custo_name" />
-                        <div class="invalid-feedback" id="centro_custo_name_error"></div>
-                    </div>
-                </div>
-                <!--end::Input group-->
+                <!--end::Card de campos-->
             </form>
         </div>
         <!--end::Body-->
@@ -152,29 +156,34 @@
                         if (checkCodeTimeout) clearTimeout(checkCodeTimeout);
 
                         checkCodeTimeout = setTimeout(function() {
-                            fetch('{{ route("costCenter.checkCode") }}', {
-                                method: 'POST',
-                                headers: {
-                                    'Content-Type': 'application/json',
-                                    'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                                },
-                                body: JSON.stringify({ code: valor })
-                            })
-                            .then(response => response.json())
-                            .then(data => {
-                                clearFieldError(codeInput, codeError);
-                                if (data.exists) {
-                                    codeDuplicado = true;
-                                    setFieldError(codeInput, codeError, data.message || 'Este código já está em uso.');
-                                } else {
-                                    codeDuplicado = false;
-                                    codeInput.classList.add('is-valid');
-                                }
-                            })
-                            .catch(function() {
-                                // silently fail
-                            });
+                            fetch('{{ route('costCenter.checkCode') }}', {
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                        'Accept': 'application/json',
+                                        'X-CSRF-TOKEN': document.querySelector(
+                                            'meta[name="csrf-token"]').getAttribute(
+                                            'content')
+                                    },
+                                    body: JSON.stringify({
+                                        code: valor
+                                    })
+                                })
+                                .then(response => response.json())
+                                .then(data => {
+                                    clearFieldError(codeInput, codeError);
+                                    if (data.exists) {
+                                        codeDuplicado = true;
+                                        setFieldError(codeInput, codeError, data.message ||
+                                            'Este código já está em uso.');
+                                    } else {
+                                        codeDuplicado = false;
+                                        codeInput.classList.add('is-valid');
+                                    }
+                                })
+                                .catch(function() {
+                                    // silently fail
+                                });
                         }, 400);
                     });
                 }
@@ -226,12 +235,13 @@
                         submitButton.setAttribute('data-kt-indicator', 'on');
                         submitButton.disabled = true;
 
-                        fetch('{{ route("costCenter.storeAjax") }}', {
+                        fetch('{{ route('costCenter.storeAjax') }}', {
                                 method: 'POST',
                                 headers: {
                                     'Content-Type': 'application/json',
                                     'Accept': 'application/json',
-                                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')
+                                    'X-CSRF-TOKEN': document.querySelector(
+                                            'meta[name="csrf-token"]')
                                         .getAttribute('content')
                                 },
                                 body: JSON.stringify(data)
@@ -239,7 +249,8 @@
                             .then(response => response.json())
                             .then(result => {
                                 if (result.success) {
-                                    toastr.success(result.message || 'Centro de custo criado com sucesso!');
+                                    toastr.success(result.message ||
+                                        'Centro de custo criado com sucesso!');
 
                                     // Atualizar Select2 do Centro de Custo no formulário de lançamento
                                     const novoId = result.data?.id;
@@ -254,7 +265,8 @@
                                             $target.find('option[value="' + novoId + '"]').remove();
 
                                             // Cria texto da option
-                                            var optionText = novoCode ? novoCode + ' - ' + novoNome : novoNome;
+                                            var optionText = novoCode ? novoCode + ' - ' +
+                                                novoNome : novoNome;
 
                                             // Cria nova option já selecionada
                                             const opt = new Option(optionText, novoId, true, true);
@@ -265,17 +277,21 @@
                                     }
 
                                     // Fecha o Drawer
-                                    const drawerElement = document.getElementById('kt_drawer_centro_custo');
+                                    const drawerElement = document.getElementById(
+                                        'kt_drawer_centro_custo');
                                     if (drawerElement) {
                                         const drawer = KTDrawer.getInstance(drawerElement);
                                         if (drawer) {
                                             drawer.hide();
                                         } else {
-                                            if (typeof KTDrawer.getOrCreateInstance === 'function') {
-                                                const inst = KTDrawer.getOrCreateInstance(drawerElement);
+                                            if (typeof KTDrawer.getOrCreateInstance ===
+                                                'function') {
+                                                const inst = KTDrawer.getOrCreateInstance(
+                                                    drawerElement);
                                                 if (inst) inst.hide();
                                             } else {
-                                                const closeBtn = document.querySelector('#kt_drawer_centro_custo_close');
+                                                const closeBtn = document.querySelector(
+                                                    '#kt_drawer_centro_custo_close');
                                                 if (closeBtn) closeBtn.click();
                                             }
                                         }
@@ -297,14 +313,17 @@
                                     }));
 
                                 } else {
-                                    toastr.error(result.message || 'Erro ao salvar centro de custo.');
+                                    toastr.error(result.message ||
+                                        'Erro ao salvar centro de custo.');
                                     if (result.errors) {
                                         // Exibe erros inline nos campos
                                         if (result.errors.code) {
-                                            setFieldError(codeInput, codeError, result.errors.code[0]);
+                                            setFieldError(codeInput, codeError, result.errors.code[
+                                                0]);
                                         }
                                         if (result.errors.name) {
-                                            setFieldError(nomeInput, nomeError, result.errors.name[0]);
+                                            setFieldError(nomeInput, nomeError, result.errors.name[
+                                                0]);
                                         }
                                     }
                                 }
