@@ -196,7 +196,6 @@ class UserController extends Controller
             'roles' => 'nullable|array',
             'roles.*' => 'integer|exists:roles,id',
             'filiais' => 'array',
-            'status' => 'nullable|boolean',
             'notifications' => 'nullable|array',
             'must_change_password' => 'nullable|boolean',
         ], [
@@ -212,8 +211,6 @@ class UserController extends Controller
             'avatar.mimes' => 'Formatos permitidos: jpeg, png, jpg.',
             'avatar.max' => 'O avatar não pode exceder 2MB.',
         ]);
-
-        $validatedData['status'] = json_encode($request->input('status', [0]));
 
         // Processar avatar: usa o novo upload se fornecido, senão mantém o atual (edição) ou usa padrão (criação)
         if ($request->hasFile('avatar')) {
@@ -235,7 +232,7 @@ class UserController extends Controller
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
                 'avatar' => $validatedData['avatar'],
-                'active' => json_encode($validatedData['status'] ?? [0]),
+                'active' => true, // Usuário é criado ativo automaticamente
                 'notifications' => json_encode($validatedData['notifications'] ?? []),
                 'must_change_password' => $request->has('must_change_password') && $request->input('must_change_password') == '1',
             ];
