@@ -344,6 +344,66 @@ function carregarConfiguracaoRecorrencia(parentElement) {
                                                 minimumResultsForSearch: 0
                                             });
                                         }
+
+                                        // Adiciona botão "Adicionar Centro de Custo" no footer do Select2
+                                        costCenterSelect.on('select2:open', function() {
+                                            var $dropdown = $('.select2-container--open');
+                                            var $results = $dropdown.find('.select2-results');
+
+                                            // Remove botão anterior se existir
+                                            $results.find('.select2-add-centro-custo-footer').remove();
+
+                                            // Adiciona footer com botão
+                                            var $footer = $(
+                                                '<div class="select2-add-centro-custo-footer border-top p-2 text-center"></div>'
+                                            );
+                                            var $button = $(
+                                                '<button type="button" class="btn btn-sm btn-light-primary w-100"><i class="fas fa-plus"></i> Adicionar Centro de Custo</button>'
+                                            );
+                                            $footer.append($button);
+                                            $results.append($footer);
+
+                                            // Evento de clique no botão
+                                            $button.on('click', function(e) {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+
+                                                // Fecha o Select2
+                                                costCenterSelect.select2('close');
+
+                                                // Abre o drawer
+                                                var drawerElement = document.querySelector(
+                                                    '#kt_drawer_centro_custo');
+                                                var modalElement = document.querySelector(
+                                                    '#Dm_modal_financeiro');
+
+                                                if (drawerElement && typeof KTDrawer !== 'undefined') {
+                                                    var drawer = KTDrawer.getInstance(drawerElement);
+
+                                                    if (drawer) {
+                                                        // Disable modal focus trap when drawer opens
+                                                        if (modalElement) {
+                                                            var bsModal = bootstrap.Modal
+                                                                .getInstance(modalElement);
+
+                                                            if (bsModal) {
+                                                                if (bsModal._focustrap) {
+                                                                    bsModal._focustrap.deactivate();
+                                                                }
+                                                                modalElement.removeAttribute('tabindex');
+                                                            }
+                                                        }
+
+                                                        drawer.show();
+
+                                                        // Focus the first input in the drawer
+                                                        setTimeout(function() {
+                                                            $('#centro_custo_name').focus();
+                                                        }, 300);
+                                                    }
+                                                }
+                                            });
+                                        });
                                     }
 
                                     // Inicializa/reinicializa o Select2 do parcelamento

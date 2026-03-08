@@ -46,6 +46,10 @@
 @include('app.components.modals.financeiro.lancamento.drawer_recorrencia')
 <!--end::Drawer - Configuração de Recorrência-->
 
+<!--begin::Drawer - Novo Centro de Custo-->
+@include('app.components.modals.financeiro.lancamento.drawer_centro_custo')
+<!--end::Drawer - Novo Centro de Custo-->
+
 {{-- Template para linhas de parcelas --}}
 @include('app.components.drawers.templates.parcela-row-template')
 

@@ -446,6 +446,61 @@
                         }, 50);
                     });
                 }
+
+                // Adiciona botão "Adicionar Centro de Custo" se for o select de centro de custo
+                if (selectId === 'cost_center_id') {
+
+                    // Remove eventos anteriores para evitar duplicação
+                    $select.off('select2:open');
+
+                    $select.on('select2:open', function() {
+
+                        setTimeout(function() {
+                            var $dropdown = $('.select2-container--open');
+                            var $results = $dropdown.find('.select2-results');
+
+                            if ($results.length === 0) {
+                                return;
+                            }
+
+                            // Remove botão anterior se existir
+                            $results.find('.select2-add-centro-custo-footer').remove();
+
+                            // Adiciona footer com botão
+                            var $footer = $(
+                                '<div class="select2-add-centro-custo-footer border-top p-2 text-center"></div>'
+                            );
+                            var $button = $(
+                                '<button type="button" class="btn btn-sm btn-light-primary w-100"><i class="fas fa-plus"></i> Adicionar Centro de Custo</button>'
+                            );
+                            $footer.append($button);
+                            $results.append($footer);
+
+                            // Evento de clique no botão
+                            $button.on('click', function(e) {
+                                e.preventDefault();
+                                e.stopPropagation();
+
+                                // Fecha o Select2
+                                $select.select2('close');
+
+                                // Abre o drawer de centro de custo
+                                var centroCustoDrawer = document.getElementById('kt_drawer_centro_custo');
+                                if (centroCustoDrawer) {
+                                    var drawerInstance = KTDrawer.getInstance(centroCustoDrawer);
+                                    if (drawerInstance) {
+                                        drawerInstance.show();
+                                    } else {
+                                        if (typeof KTDrawer.getOrCreateInstance === 'function') {
+                                            var inst = KTDrawer.getOrCreateInstance(centroCustoDrawer);
+                                            if (inst) inst.show();
+                                        }
+                                    }
+                                }
+                            });
+                        }, 50);
+                    });
+                }
             } catch (error) {
             }
         });
