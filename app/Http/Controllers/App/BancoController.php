@@ -149,11 +149,11 @@ class BancoController extends Controller
         // 🟢 Obtém a data do mês selecionado ou usa o mês atual
         $mesSelecionado = $request->input('mes', Carbon::now()->month);
         $anoSelecionado = $request->input('ano', Carbon::now()->year);
-        // 🟢 Obtém os dados do gráfico usando o Service
-        $dadosGrafico = $this->transacaoService->getDadosGrafico($mesSelecionado, $anoSelecionado);
+        // 🟢 Obtém os dados do gráfico usando o Service (filtrado por empresa ativa)
+        $dadosGrafico = $this->transacaoService->getDadosGrafico($mesSelecionado, $anoSelecionado, $companyId);
 
-        // 🟢 Obtém os dados do fluxo de caixa anual (entradas e saídas por mês)
-        $dadosFluxoCaixaAnual = $this->transacaoService->getDadosFluxoCaixaAnual($anoSelecionado);
+        // 🟢 Obtém os dados do fluxo de caixa anual (entradas e saídas por mês, filtrado por empresa ativa)
+        $dadosFluxoCaixaAnual = $this->transacaoService->getDadosFluxoCaixaAnual($anoSelecionado, $companyId);
 
         $total  = EntidadeFinanceira::getValorTotalEntidadeBC();
 

@@ -979,10 +979,15 @@ class TransacaoFinanceiraService
     /**
      * Obtém dados do gráfico de transações por dia
      */
-    public function getDadosGrafico($mes, $ano)
+    public function getDadosGrafico($mes, $ano, $companyId = null)
     {
         // Obtém a quantidade de dias no mês selecionado
         $diasNoMes = Carbon::create($ano, $mes, 1)->daysInMonth;
+
+        // Se não informado, tenta obter da sessão
+        if (!$companyId) {
+            $companyId = session('active_company_id');
+        }
 
         // Inicializa arrays para armazenar os dados do gráfico
         $dias = [];
@@ -992,8 +997,9 @@ class TransacaoFinanceiraService
         $transfSaida = [];
         $saldo = [];
 
-        // Busca todas as transações do mês selecionado
-        $transacoes = TransacaoFinanceira::whereYear('data_competencia', $ano)
+        // Busca todas as transações do mês selecionado (filtradas por empresa)
+        $transacoes = TransacaoFinanceira::when($companyId, fn($q) => $q->where('company_id', $companyId))
+        ->whereYear('data_competencia', $ano)
         ->whereMonth('data_competencia', $mes)
         ->orderBy('data_competencia')
         ->get()
@@ -1038,21 +1044,28 @@ class TransacaoFinanceiraService
     /**
      * Obtém os dados de fluxo de caixa anual (entradas e saídas por mês)
      */
-    public function getDadosFluxoCaixaAnual($ano)
+    public function getDadosFluxoCaixaAnual($ano, $companyId = null)
     {
         $entradas = [];
         $saidas = [];
 
+        // Se não informado, tenta obter da sessão
+        if (!$companyId) {
+            $companyId = session('active_company_id');
+        }
+
         // Loop para cada mês do ano
         for ($mes = 1; $mes <= 12; $mes++) {
-            // Busca o total de entradas (receitas) do mês
-            $totalEntradas = TransacaoFinanceira::whereYear('data_competencia', $ano)
+            // Busca o total de entradas (receitas) do mês (filtradas por empresa)
+            $totalEntradas = TransacaoFinanceira::when($companyId, fn($q) => $q->where('company_id', $companyId))
+                ->whereYear('data_competencia', $ano)
                 ->whereMonth('data_competencia', $mes)
                 ->where('tipo', 'entrada')
                 ->sum('valor');
 
-            // Busca o total de saídas (despesas) do mês
-            $totalSaidas = TransacaoFinanceira::whereYear('data_competencia', $ano)
+            // Busca o total de saídas (despesas) do mês (filtradas por empresa)
+            $totalSaidas = TransacaoFinanceira::when($companyId, fn($q) => $q->where('company_id', $companyId))
+                ->whereYear('data_competencia', $ano)
                 ->whereMonth('data_competencia', $mes)
                 ->where('tipo', 'saida')
                 ->sum('valor');
