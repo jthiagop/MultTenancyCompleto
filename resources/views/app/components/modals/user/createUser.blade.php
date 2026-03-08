@@ -59,15 +59,17 @@
                                 <!-- Linha 1: Nome e Email -->
                                 <div class="row mb-6">
                                     <div class="col-md-6 fv-row">
-                                        <label class="fw-semibold fs-6 mb-2">Nome</label>
-                                        <input type="text" name="name" class="form-control"
+                                        <label class="fw-semibold fs-6 mb-2">Nome <span class="text-danger">*</span></label>
+                                        <input type="text" name="name" id="user_name" class="form-control"
                                             placeholder="Ex: Frei Abelardo José" value=""  />
+                                        <div class="invalid-feedback" id="user_name_feedback"></div>
                                         <x-input-error :messages="$errors->get('name')" class="mt-2" />
                                     </div>
                                     <div class="col-md-6 fv-row">
-                                        <label class="fw-semibold fs-6 mb-2">Email</label>
-                                        <input type="email" name="email" class="form-control"
+                                        <label class="fw-semibold fs-6 mb-2">Email <span class="text-danger">*</span></label>
+                                        <input type="email" name="email" id="user_email" class="form-control"
                                             placeholder="Ex: frei@gmail.com" value=""  />
+                                        <div class="invalid-feedback" id="user_email_feedback"></div>
                                         <x-input-error :messages="$errors->get('email')" class="mt-2" />
                                     </div>
                                 </div>
@@ -75,16 +77,18 @@
                                 <!-- Linha 2: Senha e Confirmação de Senha -->
                                 <div class="row mb-6">
                                     <div class="col-md-6 fv-row">
-                                        <label class="fw-semibold fs-6 mb-2">Senha</label>
+                                        <label class="fw-semibold fs-6 mb-2">Senha <span class="text-danger" id="user_password_required">*</span></label>
                                         <input type="password" name="password" id="user_password" class="form-control"
                                             autocomplete="new-password" placeholder="**********"  />
+                                        <div class="invalid-feedback" id="user_password_feedback"></div>
                                         <x-input-error :messages="$errors->get('password')" class="mt-2" />
                                     </div>
                                     <div class="col-md-6 fv-row">
-                                        <label class="fw-semibold fs-6 mb-2">Repita a Senha</label>
+                                        <label class="fw-semibold fs-6 mb-2">Repita a Senha <span class="text-danger" id="user_password_conf_required">*</span></label>
                                         <input type="password" name="password_confirmation"
                                             id="user_password_confirmation" class="form-control"
                                             autocomplete="new-password" placeholder="**********"  />
+                                        <div class="invalid-feedback" id="user_password_confirmation_feedback"></div>
                                         <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
                                     </div>
                                 </div>
@@ -472,20 +476,266 @@
                             const submitButton = document.getElementById('kt_modal_add_user_submit');
                             const modal = document.getElementById('kt_modal_add_user');
                             const errorsContainer = document.getElementById('kt_modal_add_user_errors');
+                            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-                            // Submit do formulário via Ajax
+                            // Referências dos campos
+                            const nameInput = document.getElementById('user_name');
+                            const emailInput = document.getElementById('user_email');
+                            const passwordInput = document.getElementById('user_password');
+                            const passwordConfInput = document.getElementById('user_password_confirmation');
+                            const userIdInput = document.getElementById('user_id');
+
+                            // Estado de validação
+                            let emailDuplicado = false;
+                            let emailCheckTimer = null;
+
+                            // ============================================================
+                            // FUNÇÕES AUXILIARES DE VALIDAÇÃO INLINE
+                            // ============================================================
+                            function setFieldValid(input, feedbackId) {
+                                input.classList.remove('is-invalid');
+                                input.classList.add('is-valid');
+                                const fb = document.getElementById(feedbackId);
+                                if (fb) { fb.textContent = ''; fb.style.display = 'none'; }
+                            }
+
+                            function setFieldInvalid(input, feedbackId, message) {
+                                input.classList.remove('is-valid');
+                                input.classList.add('is-invalid');
+                                const fb = document.getElementById(feedbackId);
+                                if (fb) { fb.textContent = message; fb.style.display = 'block'; }
+                            }
+
+                            function clearField(input, feedbackId) {
+                                input.classList.remove('is-valid', 'is-invalid');
+                                const fb = document.getElementById(feedbackId);
+                                if (fb) { fb.textContent = ''; fb.style.display = 'none'; }
+                            }
+
+                            function isEditMode() {
+                                return userIdInput && userIdInput.value && userIdInput.value.trim() !== '';
+                            }
+
+                            // ============================================================
+                            // VALIDAÇÃO DO NOME (blur)
+                            // ============================================================
+                            nameInput.addEventListener('blur', function() {
+                                const val = this.value.trim();
+                                if (!val) {
+                                    setFieldInvalid(this, 'user_name_feedback', 'O nome é obrigatório.');
+                                } else if (val.length < 3) {
+                                    setFieldInvalid(this, 'user_name_feedback', 'O nome deve ter no mínimo 3 caracteres.');
+                                } else {
+                                    setFieldValid(this, 'user_name_feedback');
+                                }
+                            });
+
+                            nameInput.addEventListener('input', function() {
+                                if (this.classList.contains('is-invalid') && this.value.trim().length >= 3) {
+                                    setFieldValid(this, 'user_name_feedback');
+                                }
+                            });
+
+                            // ============================================================
+                            // VALIDAÇÃO DO EMAIL (blur + AJAX duplicidade)
+                            // ============================================================
+                            emailInput.addEventListener('blur', function() {
+                                const val = this.value.trim();
+                                if (!val) {
+                                    setFieldInvalid(this, 'user_email_feedback', 'O email é obrigatório.');
+                                    return;
+                                }
+
+                                // Validar formato
+                                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                                if (!emailRegex.test(val)) {
+                                    setFieldInvalid(this, 'user_email_feedback', 'Informe um email válido.');
+                                    return;
+                                }
+
+                                // Verificar duplicidade via AJAX
+                                clearTimeout(emailCheckTimer);
+                                emailCheckTimer = setTimeout(() => {
+                                    const bodyData = { email: val };
+                                    if (isEditMode()) {
+                                        bodyData.user_id = userIdInput.value;
+                                    }
+
+                                    fetch('{{ route("users.checkEmail") }}', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRF-TOKEN': csrfToken,
+                                            'X-Requested-With': 'XMLHttpRequest',
+                                            'Accept': 'application/json'
+                                        },
+                                        body: JSON.stringify(bodyData)
+                                    })
+                                    .then(r => r.json())
+                                    .then(data => {
+                                        if (data.exists) {
+                                            emailDuplicado = true;
+                                            setFieldInvalid(emailInput, 'user_email_feedback', data.message || 'Este email já está em uso.');
+                                        } else {
+                                            emailDuplicado = false;
+                                            setFieldValid(emailInput, 'user_email_feedback');
+                                        }
+                                    })
+                                    .catch(() => {
+                                        // Não bloquear se a verificação falhar
+                                        emailDuplicado = false;
+                                        setFieldValid(emailInput, 'user_email_feedback');
+                                    });
+                                }, 400);
+                            });
+
+                            emailInput.addEventListener('input', function() {
+                                if (this.classList.contains('is-invalid')) {
+                                    clearField(this, 'user_email_feedback');
+                                    emailDuplicado = false;
+                                }
+                            });
+
+                            // ============================================================
+                            // VALIDAÇÃO DA SENHA (blur)
+                            // ============================================================
+                            passwordInput.addEventListener('blur', function() {
+                                const val = this.value;
+
+                                // Senha obrigatória apenas em criação
+                                if (!isEditMode() && !val) {
+                                    setFieldInvalid(this, 'user_password_feedback', 'A senha é obrigatória.');
+                                    return;
+                                }
+
+                                if (val && val.length < 8) {
+                                    setFieldInvalid(this, 'user_password_feedback', 'A senha deve ter no mínimo 8 caracteres.');
+                                    return;
+                                }
+
+                                if (val) {
+                                    setFieldValid(this, 'user_password_feedback');
+                                } else {
+                                    clearField(this, 'user_password_feedback');
+                                }
+
+                                // Revalidar confirmação se já estiver preenchida
+                                if (passwordConfInput.value) {
+                                    passwordConfInput.dispatchEvent(new Event('blur'));
+                                }
+                            });
+
+                            passwordInput.addEventListener('input', function() {
+                                if (this.classList.contains('is-invalid') && this.value.length >= 8) {
+                                    setFieldValid(this, 'user_password_feedback');
+                                }
+                            });
+
+                            // ============================================================
+                            // VALIDAÇÃO DA CONFIRMAÇÃO DE SENHA (blur)
+                            // ============================================================
+                            passwordConfInput.addEventListener('blur', function() {
+                                const passVal = passwordInput.value;
+                                const confVal = this.value;
+
+                                if (!isEditMode() && !confVal && passVal) {
+                                    setFieldInvalid(this, 'user_password_confirmation_feedback', 'Confirme a senha.');
+                                    return;
+                                }
+
+                                if (confVal && confVal !== passVal) {
+                                    setFieldInvalid(this, 'user_password_confirmation_feedback', 'As senhas não conferem.');
+                                    return;
+                                }
+
+                                if (confVal && confVal === passVal) {
+                                    setFieldValid(this, 'user_password_confirmation_feedback');
+                                } else {
+                                    clearField(this, 'user_password_confirmation_feedback');
+                                }
+                            });
+
+                            passwordConfInput.addEventListener('input', function() {
+                                if (this.classList.contains('is-invalid') && this.value === passwordInput.value) {
+                                    setFieldValid(this, 'user_password_confirmation_feedback');
+                                }
+                            });
+
+                            // ============================================================
+                            // VALIDAÇÃO NO SUBMIT (antes de enviar)
+                            // ============================================================
+                            function validateBeforeSubmit() {
+                                let valid = true;
+
+                                // Nome
+                                if (!nameInput.value.trim()) {
+                                    setFieldInvalid(nameInput, 'user_name_feedback', 'O nome é obrigatório.');
+                                    valid = false;
+                                } else if (nameInput.value.trim().length < 3) {
+                                    setFieldInvalid(nameInput, 'user_name_feedback', 'O nome deve ter no mínimo 3 caracteres.');
+                                    valid = false;
+                                }
+
+                                // Email
+                                if (!emailInput.value.trim()) {
+                                    setFieldInvalid(emailInput, 'user_email_feedback', 'O email é obrigatório.');
+                                    valid = false;
+                                } else if (emailDuplicado) {
+                                    setFieldInvalid(emailInput, 'user_email_feedback', 'Este email já está em uso.');
+                                    valid = false;
+                                }
+
+                                // Senha (obrigatória apenas em criação)
+                                if (!isEditMode()) {
+                                    if (!passwordInput.value) {
+                                        setFieldInvalid(passwordInput, 'user_password_feedback', 'A senha é obrigatória.');
+                                        valid = false;
+                                    } else if (passwordInput.value.length < 8) {
+                                        setFieldInvalid(passwordInput, 'user_password_feedback', 'A senha deve ter no mínimo 8 caracteres.');
+                                        valid = false;
+                                    }
+
+                                    if (!passwordConfInput.value) {
+                                        setFieldInvalid(passwordConfInput, 'user_password_confirmation_feedback', 'Confirme a senha.');
+                                        valid = false;
+                                    } else if (passwordConfInput.value !== passwordInput.value) {
+                                        setFieldInvalid(passwordConfInput, 'user_password_confirmation_feedback', 'As senhas não conferem.');
+                                        valid = false;
+                                    }
+                                } else {
+                                    // Em edição, validar apenas se senha foi preenchida
+                                    if (passwordInput.value && passwordInput.value.length < 8) {
+                                        setFieldInvalid(passwordInput, 'user_password_feedback', 'A senha deve ter no mínimo 8 caracteres.');
+                                        valid = false;
+                                    }
+                                    if (passwordInput.value && passwordConfInput.value !== passwordInput.value) {
+                                        setFieldInvalid(passwordConfInput, 'user_password_confirmation_feedback', 'As senhas não conferem.');
+                                        valid = false;
+                                    }
+                                }
+
+                                return valid;
+                            }
+
+                            // ============================================================
+                            // SUBMIT DO FORMULÁRIO VIA AJAX
+                            // ============================================================
                             form.addEventListener('submit', async function(e) {
                                 e.preventDefault();
+
+                                // Validação frontend antes de enviar
+                                if (!validateBeforeSubmit()) {
+                                    return;
+                                }
 
                                 // Mostrar loading
                                 submitButton.setAttribute('data-kt-indicator', 'on');
                                 submitButton.disabled = true;
 
-                                // Limpar erros anteriores
+                                // Limpar erros anteriores do servidor
                                 errorsContainer.classList.add('d-none');
                                 errorsContainer.innerHTML = '';
-                                document.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
-                                document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+                                document.querySelectorAll('.server-feedback').forEach(el => el.remove());
 
                                 try {
                                     // Preparar FormData
@@ -527,9 +777,11 @@
                                     const result = await response.json();
 
                                     if (response.ok && result.success) {
-                                        // Sucesso
-                                        console.log('Usuário criado com sucesso!', result.message);
-                                        
+                                        // Sucesso — limpar validação visual
+                                        form.querySelectorAll('.is-valid, .is-invalid').forEach(el => {
+                                            el.classList.remove('is-valid', 'is-invalid');
+                                        });
+
                                         // Fechar modal
                                         const modalInstance = bootstrap.Modal.getInstance(modal);
                                         modalInstance.hide();
@@ -544,19 +796,20 @@
                                             window.location.reload();
                                         }
                                     } else {
-                                        // Erro de validação
+                                        // Erro de validação do servidor
                                         if (result.errors) {
                                             Object.keys(result.errors).forEach(field => {
                                                 const fieldErrors = result.errors[field];
                                                 const fieldElement = form.querySelector(`[name="${field}"], [name="${field}[]"]`);
                                                 
                                                 if (fieldElement) {
+                                                    fieldElement.classList.remove('is-valid');
                                                     fieldElement.classList.add('is-invalid');
                                                     
                                                     // Adicionar mensagem de erro próxima ao campo
                                                     fieldErrors.forEach(error => {
                                                         const errorDiv = document.createElement('div');
-                                                        errorDiv.className = 'invalid-feedback d-block';
+                                                        errorDiv.className = 'invalid-feedback d-block server-feedback';
                                                         errorDiv.textContent = error;
                                                         fieldElement.parentNode.appendChild(errorDiv);
                                                     });
@@ -574,7 +827,6 @@
                                     }
                                 } catch (error) {
                                     console.error('Erro ao enviar formulário:', error);
-                                    // Exibir erro visual para o usuário
                                     errorsContainer.innerHTML = '<strong>Erro de conexão:</strong> Não foi possível processar a solicitação. Verifique sua conexão e tente novamente.';
                                     errorsContainer.classList.remove('d-none');
                                 } finally {

@@ -139,6 +139,32 @@ class UserController extends Controller
     }
 
     /**
+     * Verifica se um email já está em uso (AJAX).
+     */
+    public function checkEmail(Request $request)
+    {
+        $email = $request->input('email');
+        $userId = $request->input('user_id'); // Para ignorar o próprio usuário na edição
+
+        if (!$email) {
+            return response()->json(['exists' => false]);
+        }
+
+        $query = User::where('email', $email);
+
+        if ($userId) {
+            $query->where('id', '!=', (int) $userId);
+        }
+
+        $exists = $query->exists();
+
+        return response()->json([
+            'exists' => $exists,
+            'message' => $exists ? 'Este email já está em uso por outro usuário.' : ''
+        ]);
+    }
+
+    /**
      * Store a newly created resource in storage.
      */
     public function store(Request $request)
@@ -173,6 +199,18 @@ class UserController extends Controller
             'status' => 'nullable|boolean',
             'notifications' => 'nullable|array',
             'must_change_password' => 'nullable|boolean',
+        ], [
+            'name.required' => 'O nome é obrigatório.',
+            'name.max' => 'O nome não pode exceder 255 caracteres.',
+            'email.required' => 'O email é obrigatório.',
+            'email.email' => 'Informe um email válido.',
+            'email.unique' => 'Este email já está em uso por outro usuário.',
+            'password.required' => 'A senha é obrigatória.',
+            'password.confirmed' => 'A confirmação de senha não confere.',
+            'password.min' => 'A senha deve ter no mínimo :min caracteres.',
+            'avatar.image' => 'O avatar deve ser uma imagem.',
+            'avatar.mimes' => 'Formatos permitidos: jpeg, png, jpg.',
+            'avatar.max' => 'O avatar não pode exceder 2MB.',
         ]);
 
         $validatedData['status'] = json_encode($request->input('status', [0]));

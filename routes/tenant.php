@@ -292,6 +292,7 @@ Route::middleware([
             Route::resource('caixa', CaixaController::class);
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
             Route::resource('users', UserController::class);
+            Route::post('/users/check-email', [UserController::class, 'checkEmail'])->name('users.checkEmail');
             // Rota dedicada APENAS para atualizar as permissões de um usuário
             Route::put('/users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.roles.update');
             Route::put('/users/{user}/permissions', [UserController::class, 'updatePermissions'])->name('users.permissions.update');
