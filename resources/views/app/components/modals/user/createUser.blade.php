@@ -107,17 +107,17 @@
                         </div>
                     </div>
                     <!--begin::Accordion-->
-                    <div class="accordion my-6" id="kt_accordion_1">
+                    <div class="accordion my-6" id="kt_accordion_organismos">
                         <div class="accordion-item">
-                            <h2 class="accordion-header" id="kt_accordion_1_header_1">
+                            <h2 class="accordion-header" id="kt_accordion_organismos_header">
                                 <button class="accordion-button fs-4 fw-semibold" type="button"
-                                    data-bs-toggle="collapse" data-bs-target="#kt_accordion_2_body_2"
-                                    aria-expanded="true" aria-controls="kt_accordion_2_body_2">
+                                    data-bs-toggle="collapse" data-bs-target="#kt_accordion_organismos_body"
+                                    aria-expanded="true" aria-controls="kt_accordion_organismos_body">
                                     Organismos com Acesso
                                 </button>
                             </h2>
-                            <div id="kt_accordion_2_body_2" class="accordion-collapse collapse show"
-                                aria-labelledby="kt_accordion_1_header_1" data-bs-parent="#kt_accordion_1">
+                            <div id="kt_accordion_organismos_body" class="accordion-collapse collapse show"
+                                aria-labelledby="kt_accordion_organismos_header" data-bs-parent="#kt_accordion_organismos">
                                 <div class="accordion-body">
                                     <!-- Filiais -->
                                     <div class="fv-row mb-8">
@@ -202,17 +202,17 @@
                     @endphp
 
                     <!--begin::Accordion-->
-                    <div class="accordion" id="kt_accordion_1">
+                    <div class="accordion" id="kt_accordion_permissoes">
                         <div class="accordion-item">
-                            <h2 class="accordion-header" id="kt_accordion_1_header_1">
+                            <h2 class="accordion-header" id="kt_accordion_permissoes_header">
                                 <button class="accordion-button fs-4 fw-semibold" type="button"
-                                    data-bs-toggle="collapse" data-bs-target="#kt_accordion_1_body_1"
-                                    aria-expanded="true" aria-controls="kt_accordion_1_body_1">
+                                    data-bs-toggle="collapse" data-bs-target="#kt_accordion_permissoes_body"
+                                    aria-expanded="true" aria-controls="kt_accordion_permissoes_body">
                                     Permissões por módulo
                                 </button>
                             </h2>
-                            <div id="kt_accordion_1_body_1" class="accordion-collapse collapse show"
-                                aria-labelledby="kt_accordion_1_header_1" data-bs-parent="#kt_accordion_1">
+                            <div id="kt_accordion_permissoes_body" class="accordion-collapse collapse show"
+                                aria-labelledby="kt_accordion_permissoes_header" data-bs-parent="#kt_accordion_permissoes">
                                 <div class="accordion-body">
                                     <!-- Filiais -->
 
@@ -446,8 +446,23 @@
                         </div>
                     </div>
 
+            </div>
 
-                    <script>
+            <!-- Ações -->
+            <div class="modal-footer text-center">
+                <button type="reset" class="btn btn-light me-3"
+                    data-kt-users-modal-action="cancel">Cancelar</button>
+                <button type="submit" class="btn btn-primary" id="kt_modal_add_user_submit">
+                    <span class="indicator-label">Salvar</span>
+                    <span class="indicator-progress">Aguarde...
+                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                    </span>
+                </button>
+            </div>
+            </form>
+
+            @push('scripts')
+            <script>
                         document.addEventListener('DOMContentLoaded', function() {
                             // Evitar duplicação de listeners
                             if (window.__userModalPermissionListenersInitialized) return;
@@ -547,12 +562,21 @@
                                                     });
                                                 }
                                             });
-                                        } else {
-                                            console.error('Erro ao criar usuário:', result.message);
+
+                                            // Exibir resumo dos erros no topo
+                                            const allErrors = Object.values(result.errors).flat();
+                                            errorsContainer.innerHTML = '<strong>Corrija os erros abaixo:</strong><ul class="mb-0 mt-1">' + allErrors.map(e => '<li>' + e + '</li>').join('') + '</ul>';
+                                            errorsContainer.classList.remove('d-none');
+                                        } else if (result.message) {
+                                            errorsContainer.innerHTML = '<strong>Erro:</strong> ' + result.message;
+                                            errorsContainer.classList.remove('d-none');
                                         }
                                     }
                                 } catch (error) {
                                     console.error('Erro ao enviar formulário:', error);
+                                    // Exibir erro visual para o usuário
+                                    errorsContainer.innerHTML = '<strong>Erro de conexão:</strong> Não foi possível processar a solicitação. Verifique sua conexão e tente novamente.';
+                                    errorsContainer.classList.remove('d-none');
                                 } finally {
                                     // Remover loading
                                     submitButton.setAttribute('data-kt-indicator', 'off');
@@ -610,20 +634,7 @@
                             });
                         });
                     </script>
-            </div>
-
-            <!-- Ações -->
-            <div class="modal-footer text-center">
-                <button type="reset" class="btn btn-light me-3"
-                    data-kt-users-modal-action="cancel">Cancelar</button>
-                <button type="submit" class="btn btn-primary" id="kt_modal_add_user_submit">
-                    <span class="indicator-label">Salvar</span>
-                    <span class="indicator-progress">Aguarde...
-                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                    </span>
-                </button>
-            </div>
-            </form>
+            @endpush
         </div>
     </div>
 </div>

@@ -145,115 +145,122 @@ class UserController extends Controller
     {
         // Verificar se é atualização (tem user_id) ou criação
         $userId = $request->input('user_id');
+
+        // Sanitizar user_id: garantir que é um inteiro válido e que o usuário existe
+        if ($userId) {
+            $userId = (int) $userId;
+            if (!User::where('id', $userId)->exists()) {
+                $userId = null;
+            }
+        }
+
         $emailRule = $userId
             ? 'required|email|max:255|unique:users,email,' . $userId
             : 'required|email|max:255|unique:users,email';
 
-        // Obtendo o nome do banco de dados
         $validatedData = $request->validate([
             'name' => 'required|string|max:255',
             'email' => $emailRule,
             'password' => $userId
                 ? ['nullable', 'confirmed', Rules\Password::defaults()]
                 : ['required', 'confirmed', Rules\Password::defaults()],
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Exemplo de regras para o campo avatar
+            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'permissions' => 'nullable|array',
             'permissions.*' => 'integer|exists:permissions,id',
             'roles' => 'nullable|array',
             'roles.*' => 'integer|exists:roles,id',
-            'filiais' => 'array', // Certifique-se que 'filiais' é um array
-            'status' => 'nullable|boolean', // Status como um campo booleano
-            'notifications' => 'nullable|array', // Deve ser um array, opcional (email/telefone)
-            'must_change_password' => 'nullable|boolean', // Campo para obrigar troca de senha
+            'filiais' => 'array',
+            'status' => 'nullable|boolean',
+            'notifications' => 'nullable|array',
+            'must_change_password' => 'nullable|boolean',
         ]);
 
         $validatedData['status'] = json_encode($request->input('status', [0]));
 
-        // Verificar se já existe um usuário associado ao e-mail para manter o avatar atual
-        $existingUser = User::where('email', $validatedData['email'])->first();
-
-        if ($existingUser) {
-            $validatedData['avatar'] = $existingUser->avatar;
-        } else {
-            // Processar o upload do avatar se não existir
+        // Processar avatar: usa o novo upload se fornecido, senão mantém o atual (edição) ou usa padrão (criação)
+        if ($request->hasFile('avatar')) {
             $validatedData['avatar'] = $this->handleAvatarUpload($request);
-        }
-
-        // Criação ou atualização do usuário
-        $userData = [
-            'name' => $validatedData['name'],
-            'avatar' => $validatedData['avatar'],
-            'active' => json_encode($validatedData['status'] ?? [0]),
-            'notifications' => json_encode($validatedData['notifications'] ?? []),
-            'must_change_password' => $request->has('must_change_password') && $request->input('must_change_password') == '1' ? true : false,
-        ];
-
-        // Atualizar senha apenas se fornecida
-        if (!empty($validatedData['password'])) {
-            $userData['password'] = bcrypt($validatedData['password']);
+        } elseif ($userId) {
+            $existingUser = User::find($userId);
+            $validatedData['avatar'] = $existingUser?->avatar ?? 'tenant/blank.png';
+        } else {
+            $validatedData['avatar'] = 'tenant/blank.png';
         }
 
         // Verificar se é o primeiro usuário do tenant (antes de criar)
         $isFirstUser = !$userId && User::count() === 0;
 
-        if ($userId) {
-            // Atualização
-            $user = User::findOrFail($userId);
-            $user->update($userData);
-        } else {
-            // Criação
-            $userData['email'] = $validatedData['email'];
-            $userData['password'] = bcrypt($validatedData['password']);
-            $user = User::create($userData);
-        }
+        // Envolver tudo em uma transação para garantir consistência
+        $user = DB::transaction(function () use ($request, $validatedData, $userId, $isFirstUser) {
+            // Montar dados do usuário
+            $userData = [
+                'name' => $validatedData['name'],
+                'email' => $validatedData['email'],
+                'avatar' => $validatedData['avatar'],
+                'active' => json_encode($validatedData['status'] ?? [0]),
+                'notifications' => json_encode($validatedData['notifications'] ?? []),
+                'must_change_password' => $request->has('must_change_password') && $request->input('must_change_password') == '1',
+            ];
 
-        // Sincronizar roles
-        if (isset($validatedData['roles']) && !empty($validatedData['roles'])) {
-            // Se roles foram enviados no request, usar eles
-            $validRoles = Role::whereIn('id', $request->input('roles'))->pluck('id')->toArray();
-            $user->syncRoles($validRoles);
-        } elseif (!$userId) {
-            // Se for criação e não houver roles no request, atribuir role padrão "user"
-            $defaultRole = Role::where('name', 'user')->first();
-            if ($defaultRole) {
-                $user->assignRole($defaultRole);
-            } elseif ($isFirstUser) {
-                // Se for o primeiro usuário, atribuir role "admin" ou "global"
-                $adminRole = Role::whereIn('name', ['admin', 'global'])->first();
-                if ($adminRole) {
-                    $user->assignRole($adminRole);
+            // Atualizar senha apenas se fornecida
+            if (!empty($validatedData['password'])) {
+                $userData['password'] = Hash::make($validatedData['password']);
+            }
+
+            if ($userId) {
+                // Atualização
+                $user = User::findOrFail($userId);
+                $user->update($userData);
+            } else {
+                // Criação — senha obrigatória
+                $userData['password'] = Hash::make($validatedData['password']);
+                $user = User::create($userData);
+            }
+
+            // Sincronizar roles
+            if (isset($validatedData['roles']) && !empty($validatedData['roles'])) {
+                $validRoles = Role::whereIn('id', $request->input('roles'))->pluck('id')->toArray();
+                $user->syncRoles($validRoles);
+            } elseif (!$userId) {
+                // Criação sem roles: atribuir role padrão "user"
+                $defaultRole = Role::where('name', 'user')->first();
+                if ($defaultRole) {
+                    $user->assignRole($defaultRole);
+                } elseif ($isFirstUser) {
+                    $adminRole = Role::whereIn('name', ['admin', 'global'])->first();
+                    if ($adminRole) {
+                        $user->assignRole($adminRole);
+                    }
                 }
             }
-        }
 
-        // Sincronizar permissões
-        if (isset($validatedData['permissions']) && !empty($validatedData['permissions'])) {
-            // Validar que as permissões existem
-            $validPermissions = Permission::whereIn('id', $request->input('permissions'))->pluck('id')->toArray();
-            $user->syncPermissions($validPermissions);
-        } elseif ($isFirstUser) {
-            // Se for o primeiro usuário, dar todas as permissões
-            $allPermissions = Permission::all()->pluck('id')->toArray();
-            if (!empty($allPermissions)) {
-                $user->syncPermissions($allPermissions);
+            // Sincronizar permissões
+            if (isset($validatedData['permissions']) && !empty($validatedData['permissions'])) {
+                $validPermissions = Permission::whereIn('id', $request->input('permissions'))->pluck('id')->toArray();
+                $user->syncPermissions($validPermissions);
+            } elseif ($isFirstUser) {
+                $allPermissions = Permission::all()->pluck('id')->toArray();
+                if (!empty($allPermissions)) {
+                    $user->syncPermissions($allPermissions);
+                }
+            } elseif (!$userId) {
+                // Apenas em criação sem permissões selecionadas: iniciar sem permissões
+                $user->syncPermissions([]);
             }
-        } else {
-            // Se não houver permissões e não for o primeiro usuário, remover todas
-            $user->syncPermissions([]);
-        }
-        // --- A LÓGICA PRINCIPAL ESTÁ AQUI ---
-        // Junta a empresa principal com as filiais
-        $companiesToSync = $request->input('filiais', []);
+            // Na atualização sem permissões no request, manter as permissões existentes
 
-        // Remove duplicatas e sincroniza com a tabela pivot
-        $user->companies()->sync(array_unique($companiesToSync));
+            // Sincronizar empresas (companies) — usando sempre o mesmo relacionamento
+            $companiesToSync = $request->input('filiais', []);
+            $user->companies()->sync(array_unique($companiesToSync));
 
+            return $user;
+        });
 
         // Se for requisição AJAX, retornar JSON
         if ($request->expectsJson() || $request->wantsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
             return response()->json([
                 'success' => true,
-                'message' => 'Usuário criado ou atualizado com sucesso!',
+                'message' => $userId ? 'Usuário atualizado com sucesso!' : 'Usuário criado com sucesso!',
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
@@ -263,10 +270,8 @@ class UserController extends Controller
             ]);
         }
 
-        // Adicionar mensagem de sucesso ao Flasher
-        session()->flash('success', 'Usuário criado ou atualizado com sucesso.');
+        session()->flash('success', $userId ? 'Usuário atualizado com sucesso.' : 'Usuário criado com sucesso.');
 
-        // Retornar para a página anterior
         return redirect()->back();
     }
     /**
@@ -341,36 +346,36 @@ class UserController extends Controller
             'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'permissions' => 'nullable|array',
             'permissions.*' => 'integer|exists:permissions,id',
-            'filiais' => 'array', // Adicione esta linha para validar o campo 'filiais'
-            'must_change_password' => 'nullable|boolean', // Campo para obrigar troca de senha
+            'filiais' => 'nullable|array',
+            'must_change_password' => 'nullable|boolean',
         ]);
 
+        DB::transaction(function () use ($request, $validateData, $user) {
+            // Processar upload do avatar se fornecido
+            if ($request->hasFile('avatar')) {
+                $validateData['avatar'] = $this->handleAvatarUpload($request);
+            }
 
-        // Processar upload do avatar se fornecido
-        if ($request->hasFile('avatar')) {
-            $validateData['avatar'] = $this->handleAvatarUpload($request);
-        }
+            // Atualizar must_change_password se fornecido
+            if ($request->has('must_change_password')) {
+                $validateData['must_change_password'] = $request->input('must_change_password') == '1';
+            }
 
-        // Atualizar must_change_password se fornecido
-        if ($request->has('must_change_password')) {
-            $validateData['must_change_password'] = $request->input('must_change_password') == '1';
-        }
+            $user->update($validateData);
 
-        $user->update($validateData);
+            // Sincronizar permissões se estiverem presentes no request
+            if ($request->has('permissions')) {
+                $validPermissions = Permission::whereIn('id', $request->input('permissions', []))->pluck('id')->toArray();
+                $user->syncPermissions($validPermissions);
+            }
+            // Se 'permissions' não foi enviado no request, manter as permissões existentes
 
-        // Sincronizar permissões se estiverem presentes
-        if (isset($validateData['permissions']) && !empty($validateData['permissions'])) {
-            // Validar que as permissões existem antes de sincronizar
-            $validPermissions = Permission::whereIn('id', $request->input('permissions', []))->pluck('id')->toArray();
-            $user->syncPermissions($validPermissions);
-        } else {
-            // Se não houver permissões, remover todas
-            $user->syncPermissions([]);
-        }
-        // Adicione o trecho abaixo para sincronizar as filiais
-        if (isset($validateData['filiais'])) {
-            $user->filiais()->sync($validateData['filiais']);
-        }
+            // Sincronizar empresas (companies) — usando o mesmo relacionamento do store()
+            if ($request->has('filiais')) {
+                $companiesToSync = $request->input('filiais', []);
+                $user->companies()->sync(array_unique($companiesToSync));
+            }
+        });
 
         // Se for requisição AJAX, retornar JSON
         if ($request->expectsJson() || $request->wantsJson() || $request->ajax() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
@@ -386,7 +391,7 @@ class UserController extends Controller
             ]);
         }
 
-        return redirect()->route('users.index')->with('success', ' Usuário cadastrodo com Sucesso!');;
+        return redirect()->route('users.index')->with('success', 'Usuário atualizado com sucesso!');
     }
 
     /**
