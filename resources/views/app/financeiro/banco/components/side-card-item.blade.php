@@ -45,7 +45,7 @@
                         @endif
                     @else
                         <span class="symbol-label rounded-2 overflow-hidden bg-light">
-                            <img src="/tenancy/assets/media/svg/bancos/caixa.svg" 
+                            <img src="/tenancy/assets/media/svg/bancos/fraternidadecaixa.svg" 
                                  alt="Caixa" class="w-100 h-100 object-fit-contain p-1" 
                                  loading="lazy" 
                                  decoding="async" />
