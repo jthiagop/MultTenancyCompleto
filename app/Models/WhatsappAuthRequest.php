@@ -20,6 +20,7 @@ class WhatsappAuthRequest extends Model
         'wa_id',
         'access_token',
         'user_id',
+        'company_id',
         'status',
     ];
 
