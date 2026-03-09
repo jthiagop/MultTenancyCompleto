@@ -43,6 +43,11 @@ class TenantDatabaseSeeder extends Seeder
             ['description' => 'Ideal para pessoas que precisam visualizar dados de conteúdo, mas não precisa fazer quaisquer atualizações']
         );
 
+        Role::firstOrCreate(
+            ['name' => 'authenticated', 'guard_name' => 'web'],
+            ['description' => 'Role base sem permissões — usado como padrão para novos usuários até que o admin defina permissões específicas']
+        );
+
         // Chama o nosso novo seeder de bancos
         $this->call(BankSeeder::class);
 

@@ -257,15 +257,20 @@ class UserController extends Controller
                 $validRoles = Role::whereIn('id', $request->input('roles'))->pluck('id')->toArray();
                 $user->syncRoles($validRoles);
             } elseif (!$userId) {
-                // Criação sem roles: atribuir role padrão "user"
-                $defaultRole = Role::where('name', 'user')->first();
-                if ($defaultRole) {
-                    $user->assignRole($defaultRole);
-                } elseif ($isFirstUser) {
+                if ($isFirstUser) {
+                    // Primeiro usuário do tenant: atribuir role admin/global
                     $adminRole = Role::whereIn('name', ['admin', 'global'])->first();
                     if ($adminRole) {
                         $user->assignRole($adminRole);
                     }
+                } else {
+                    // Criação sem roles: atribuir role "authenticated" (sem permissões)
+                    // para que o usuário acesse as rotas protegidas por middleware de role,
+                    // mas sem herdar permissões indesejadas do role "user".
+                    $defaultRole = Role::firstOrCreate(
+                        ['name' => 'authenticated', 'guard_name' => 'web']
+                    );
+                    $user->assignRole($defaultRole);
                 }
             }
 
