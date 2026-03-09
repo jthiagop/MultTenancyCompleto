@@ -268,59 +268,68 @@ Route::middleware([
         Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
         Route::post('/company/consultar-cnpj', [CompanyController::class, 'consultarCNPJ'])->name('company.consultar-cnpj');
 
-        // Notas Fiscais de Entrada (DFe)
-        Route::get('/nfe-entrada', [NfeEntradaController::class, 'index'])->name('nfe_entrada.index');
-        Route::post('/nfe-entrada/filtrar', [NfeEntradaController::class, 'filtrar'])->name('nfe_entrada.filtrar');
+        // Notas Fiscais de Entrada (DFe) — protegido por permissão
+        Route::middleware(['can:notafiscal.index'])->group(function () {
+            Route::get('/nfe-entrada', [NfeEntradaController::class, 'index'])->name('nfe_entrada.index');
+            Route::post('/nfe-entrada/filtrar', [NfeEntradaController::class, 'filtrar'])->name('nfe_entrada.filtrar');
+        });
 
-        // Rotas de módulos
-        Route::get('/modules', [ModuleController::class, 'index'])->name('modules.list');
-        Route::get('/modules/data', [ModuleController::class, 'getData'])->name('modules.data');
-        Route::post('/modules', [ModuleController::class, 'store'])->name('modules.store');
-        Route::put('/modules/{module}', [ModuleController::class, 'update'])->name('modules.update');
-        Route::delete('/modules/{module}', [ModuleController::class, 'destroy'])->name('modules.destroy');
+        // Rotas de módulos e permissões — protegidas por permissão company.index
+        Route::middleware(['can:company.index'])->group(function () {
+            Route::get('/modules', [ModuleController::class, 'index'])->name('modules.list');
+            Route::get('/modules/data', [ModuleController::class, 'getData'])->name('modules.data');
+            Route::post('/modules', [ModuleController::class, 'store'])->name('modules.store');
+            Route::put('/modules/{module}', [ModuleController::class, 'update'])->name('modules.update');
+            Route::delete('/modules/{module}', [ModuleController::class, 'destroy'])->name('modules.destroy');
 
-        // Rotas de permissões
-        Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.list');
-        Route::get('/permissions/data', [PermissionController::class, 'getData'])->name('permissions.data');
-        Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
-        Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->name('permissions.update');
-        Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
+            // Rotas de permissões
+            Route::get('/permissions', [PermissionController::class, 'index'])->name('permissions.list');
+            Route::get('/permissions/data', [PermissionController::class, 'getData'])->name('permissions.data');
+            Route::post('/permissions', [PermissionController::class, 'store'])->name('permissions.store');
+            Route::put('/permissions/{permission}', [PermissionController::class, 'update'])->name('permissions.update');
+            Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
+        });
 
         // Rotas acessíveis para administradores (admin e global)
         Route::middleware(['role:admin|global'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
-            Route::resource('users', UserController::class);
-            Route::post('/users/check-email', [UserController::class, 'checkEmail'])->name('users.checkEmail');
-            // Rota dedicada APENAS para atualizar as permissões de um usuário
-            Route::put('/users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.roles.update');
-            Route::put('/users/{user}/permissions', [UserController::class, 'updatePermissions'])->name('users.permissions.update');
-            Route::post('/users/{user}/assign-all-permissions', [UserController::class, 'assignAllPermissions'])->name('users.assign-all-permissions');
-            Route::put('/users/{user}/filiais', [UserController::class, 'updateFiliais'])->name('users.filiais.update');
-            // Rota dedicada APENAS para ativar ou desativar um usuário
-            Route::put('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status.update');
-            Route::put('/users/{user}/email', [UserController::class, 'updateEmail'])->name('users.email.update');
-            Route::post('/users/{user}/verify-password', [UserController::class, 'verifyPassword'])->name('users.password.verify');
-            Route::put('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.password.reset');
 
-            // Rotas para alteração obrigatória de senha
+            // Rotas de usuários — protegidas por permissão users.index
+            Route::middleware(['can:users.index'])->group(function () {
+                Route::resource('users', UserController::class);
+                Route::post('/users/check-email', [UserController::class, 'checkEmail'])->name('users.checkEmail');
+                Route::put('/users/{user}/roles', [UserController::class, 'updateRoles'])->name('users.roles.update');
+                Route::put('/users/{user}/permissions', [UserController::class, 'updatePermissions'])->name('users.permissions.update');
+                Route::post('/users/{user}/assign-all-permissions', [UserController::class, 'assignAllPermissions'])->name('users.assign-all-permissions');
+                Route::put('/users/{user}/filiais', [UserController::class, 'updateFiliais'])->name('users.filiais.update');
+                Route::put('/users/{user}/status', [UserController::class, 'updateStatus'])->name('users.status.update');
+                Route::put('/users/{user}/email', [UserController::class, 'updateEmail'])->name('users.email.update');
+                Route::post('/users/{user}/verify-password', [UserController::class, 'verifyPassword'])->name('users.password.verify');
+                Route::put('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.password.reset');
+            });
+
+            // Rotas para alteração obrigatória de senha (acessível por qualquer admin)
             Route::get('/password/change', [UserController::class, 'showPasswordChange'])->name('password.change.show');
             Route::post('/password/change', [UserController::class, 'updatePasswordChange'])->name('password.change');
 
-            Route::resource('company', CompanyController::class)->except(['edit', 'update']);
+            // Organismos — protegido por permissão company.index
+            Route::resource('company', CompanyController::class)->except(['edit', 'update'])->middleware('can:company.index');
 
-            // Rotas para configurações bancárias
-            Route::resource('bank-config', BankConfigController::class);
-            Route::post('bank-config/test-connection', [BankConfigController::class, 'testConnection'])->name('bank-config.test-connection');
-            Route::post('bank-config/test-extrato', [BankConfigController::class, 'testExtrato'])->name('bank-config.test-extrato');
+            // Configurações bancárias — protegido por permissão financeiro.index
+            Route::middleware(['can:financeiro.index'])->group(function () {
+                Route::resource('bank-config', BankConfigController::class);
+                Route::post('bank-config/test-connection', [BankConfigController::class, 'testConnection'])->name('bank-config.test-connection');
+                Route::post('bank-config/test-extrato', [BankConfigController::class, 'testExtrato'])->name('bank-config.test-extrato');
 
-            // Rotas para extratos bancários
-            Route::prefix('bank-statements')->name('bank-statements.')->group(function () {
-                Route::get('/', [BankStatementController::class, 'index'])->name('index');
-                Route::post('/sync', [BankStatementController::class, 'sync'])->name('sync');
-                Route::post('/fetch', [BankStatementController::class, 'fetch'])->name('fetch');
-                Route::get('/{id}', [BankStatementController::class, 'show'])->name('show');
+                // Rotas para extratos bancários
+                Route::prefix('bank-statements')->name('bank-statements.')->group(function () {
+                    Route::get('/', [BankStatementController::class, 'index'])->name('index');
+                    Route::post('/sync', [BankStatementController::class, 'sync'])->name('sync');
+                    Route::post('/fetch', [BankStatementController::class, 'fetch'])->name('fetch');
+                    Route::get('/{id}', [BankStatementController::class, 'show'])->name('show');
+                });
             });
 
             Route::post('/filter', [RebortController::class, 'generateReport']);
@@ -365,13 +374,15 @@ Route::middleware([
             Route::resource('users', UserController::class);
         });
 
-        // Rotas para gerenciamento de centros de custo
+        // Rotas para gerenciamento de centros de custo — protegidas por permissão financeiro.index
         // IMPORTANT: Custom routes must come BEFORE resource routes to avoid conflicts
-        Route::get('/costCenter/modal/data', [CostCenterController::class, 'getDataForModal'])->name('costCenter.modal.data');
-        Route::get('/costCenter/contas-financeiras', [CostCenterController::class, 'getContasFinanceiras'])->name('costCenter.contas.financeiras');
-        Route::post('/costCenter/store-ajax', [CostCenterController::class, 'storeAjax'])->name('costCenter.storeAjax');
-        Route::post('/costCenter/check-code', [CostCenterController::class, 'checkCode'])->name('costCenter.checkCode');
-        Route::resource('costCenter', CostCenterController::class);
+        Route::middleware(['can:financeiro.index'])->group(function () {
+            Route::get('/costCenter/modal/data', [CostCenterController::class, 'getDataForModal'])->name('costCenter.modal.data');
+            Route::get('/costCenter/contas-financeiras', [CostCenterController::class, 'getContasFinanceiras'])->name('costCenter.contas.financeiras');
+            Route::post('/costCenter/store-ajax', [CostCenterController::class, 'storeAjax'])->name('costCenter.storeAjax');
+            Route::post('/costCenter/check-code', [CostCenterController::class, 'checkCode'])->name('costCenter.checkCode');
+            Route::resource('costCenter', CostCenterController::class);
+        });
 
         // Rotas acessíveis para todos os usuários autenticados com role
         Route::middleware(['role:authenticated|user|sub_user|admin_user|admin|global'])->group(function () {
@@ -391,7 +402,7 @@ Route::middleware([
             // =====================================================================
             // PARCEIROS (Fornecedores e Clientes) - CRUD completo
             // =====================================================================
-            Route::prefix('financeiro/parceiros')->name('parceiros.')->group(function () {
+            Route::prefix('financeiro/parceiros')->name('parceiros.')->middleware('can:financeiro.index')->group(function () {
                 Route::get('/data', [ParceiroController::class, 'data'])->name('data');
                 Route::get('/stats', [ParceiroController::class, 'stats'])->name('stats');
                 Route::post('/check-documento', [ParceiroController::class, 'checkDocumento'])->name('check-documento');
@@ -426,7 +437,7 @@ Route::middleware([
             Route::get('/banco/sugestao', [BancoController::class, 'getSugestao'])->name('banco.sugestao');
             Route::post('/banco/relatorio/gerar', [BancoController::class, 'gerarRelatorio'])->name('banco.relatorio.gerar');
             Route::get('/banco/{id}/dados-edicao', [BancoController::class, 'getDadosEdicao'])->name('banco.dados-edicao');
-            Route::resource('banco', BancoController::class);
+            Route::resource('banco', BancoController::class)->middleware('can:financeiro.index');
 
             // Rotas para configurações de recorrência
             Route::get('/recorrencias', [RecorrenciaController::class, 'index'])->name('recorrencias.index');
@@ -514,23 +525,23 @@ Route::middleware([
 
 
             // *** Editar Patrimônio ***
-            Route::resource('patrimonio', PatrimonioController::class);
-            Route::post('/save-location', [PatrimonioController::class, 'updateLocation'])->name('patrimonios.updateLocation');
+            Route::resource('patrimonio', PatrimonioController::class)->middleware('can:patrimonio.index');
+            Route::post('/save-location', [PatrimonioController::class, 'updateLocation'])->name('patrimonios.updateLocation')->middleware('can:patrimonio.index');
 
             // *** Rotas para Bens (Novo Sistema) ***
-            Route::resource('bem', BemController::class);
+            Route::resource('bem', BemController::class)->middleware('can:patrimonio.index');
 
             // *** Rotas resource para Contas Financeiras ***
-            Route::resource('contas-financeiras', ContasFinanceirasController::class);
+            Route::resource('contas-financeiras', ContasFinanceirasController::class)->middleware('can:financeiro.index');
 
 
-            Route::resource('escritura', EscrituraController::class);
-            Route::resource('patrimonioAnexo', PatrimonioAnexoController::class);
+            Route::resource('escritura', EscrituraController::class)->middleware('can:patrimonio.index');
+            Route::resource('patrimonioAnexo', PatrimonioAnexoController::class)->middleware('can:patrimonio.index');
             Route::get('patrimonios/filtrar', [PatrimonioController::class, 'filtrar'])->name('patrimonio.filtrar');
             Route::get('patrimonios/imoveis', [PatrimonioController::class, 'imoveis'])->name('patrimonio.imoveis');
             Route::get('patrimonios/bens-moveis', [PatrimonioController::class, 'bensMoveis'])->name('patrimonio.bens-moveis');
             Route::get('patrimonios/veiculos', [PatrimonioController::class, 'veiculos'])->name('patrimonio.veiculos');
-            Route::resource('namePatrimonio', NamePatrimonioController::class);
+            Route::resource('namePatrimonio', NamePatrimonioController::class)->middleware('can:patrimonio.index');
             Route::post('/validar-num-foro', [NamePatrimonioController::class, 'validarNumForo']);
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
 
@@ -538,10 +549,10 @@ Route::middleware([
             Route::get('/patrimonios/grafico', [PatrimonioController::class, 'grafico']);
             Route::get('/report/shipping', [ReportController::class, 'shippingReport'])->name('report.shipping');
             Route::get('/report/shipping/data', [ReportController::class, 'shippingReportData'])->name('report.shipping.data');
-            Route::resource('cemiterio', CemeteryController::class);
-            Route::resource('sepultura', SepulturaController::class);
+            Route::resource('cemiterio', CemeteryController::class)->middleware('can:cemiterio.index');
+            Route::resource('sepultura', SepulturaController::class)->middleware('can:cemiterio.index');
 
-            Route::resource('avaliador', AvaliadorController::class);
+            Route::resource('avaliador', AvaliadorController::class)->middleware('can:patrimonio.index');
 
             Route::post('/upload-ofx', [OfxController::class, 'upload'])->name('upload.ofx');
 
@@ -614,14 +625,14 @@ Route::middleware([
 
                 Route::post('/filter', [PrestacaoDeContaController::class, 'generateReport']);
 
-                Route::resource('fieis', FielController::class);
-                Route::get('fieis/charts/data', [FielController::class, 'getChartData'])->name('fieis.charts.data');
-                Route::post('fieis/relatorio/pdf', [FielController::class, 'relatorioPdf'])->name('fieis.relatorio.pdf');
+                Route::resource('fieis', FielController::class)->middleware('can:fieis.index');
+                Route::get('fieis/charts/data', [FielController::class, 'getChartData'])->name('fieis.charts.data')->middleware('can:fieis.index');
+                Route::post('fieis/relatorio/pdf', [FielController::class, 'relatorioPdf'])->name('fieis.relatorio.pdf')->middleware('can:fieis.index');
 
-                Route::resource('dizimos', DizimoController::class);
+                Route::resource('dizimos', DizimoController::class)->middleware('can:dizimos.index');
                 
                 // Secretary (Membros Religiosos)
-                Route::prefix('secretary')->name('secretary.')->group(function () {
+                Route::prefix('secretary')->name('secretary.')->middleware('can:secretary.index')->group(function () {
                     Route::get('/', [SecretaryController::class, 'index'])->name('index');
                     Route::get('/data', [SecretaryController::class, 'getData'])->name('data');
                     Route::get('/stats', [SecretaryController::class, 'getStats'])->name('stats');
@@ -636,10 +647,10 @@ Route::middleware([
                     Route::put('/{member}/ministries/{ministry}', [SecretaryController::class, 'updateMinistry'])->name('ministries.update');
                 });
                 
-                Route::get('/notafiscal', [NotaFiscalController::class, 'index'])->name('notafiscal.index');
-                Route::post('/notafiscal/conta', [NotaFiscalController::class, 'storeConta'])->name('notafiscal.conta.store');
+                Route::get('/notafiscal', [NotaFiscalController::class, 'index'])->name('notafiscal.index')->middleware('can:notafiscal.index');
+                Route::post('/notafiscal/conta', [NotaFiscalController::class, 'storeConta'])->name('notafiscal.conta.store')->middleware('can:notafiscal.index');
 
-                Route::resource('entidades', EntidadeFinanceiraController::class);
+                Route::resource('entidades', EntidadeFinanceiraController::class)->middleware('can:financeiro.index');
 
                 Route::post('entidades/{id}/movimentacao', [EntidadeFinanceiraController::class, 'addMovimentacao'])
                     ->name('entidades.movimentacao');
@@ -673,13 +684,13 @@ Route::middleware([
                 Route::patch('entidades/{id}/renomear', [EntidadeFinanceiraController::class, 'renomear'])
                     ->name('entidades.renomear');
 
-                Route::resource('car_insurance', CarInsuranceController::class);
+                Route::resource('car_insurance', CarInsuranceController::class)->middleware('can:patrimonio.index');
 
                 Route::post('car_insurance/{id}/sell', [CarInsuranceController::class, 'sell'])
                     ->name('car_insurance.sell');
 
                 Route::resource('transacoes-financeiras', TransacaoFinanceiraController::class)
-                    ->parameters(['transacoes-financeiras' => 'transacaoFinanceira']);
+                    ->parameters(['transacoes-financeiras' => 'transacaoFinanceira'])->middleware('can:financeiro.index');
                 Route::get('/transacao-financeira/grafico', [TransacaoFinanceiraController::class, 'grafico'])
                     ->name('transacao.grafico');
 
