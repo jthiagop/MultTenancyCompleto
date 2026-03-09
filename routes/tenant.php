@@ -221,8 +221,8 @@ Route::middleware([
     // Grupo de rotas protegido pelo middleware 'auth', 'check.user.active', 'ensureUserHasAccess' e 'password.change.required'
     Route::middleware(['auth', 'check.user.active', 'ensureUserHasAccess', 'password.change.required'])->group(function () {
 
-        // Módulo Financeiro
-        Route::prefix('financeiro')->name('financeiro.')->group(function () {
+        // Módulo Financeiro — protegido por permissão financeiro.index
+        Route::prefix('financeiro')->name('financeiro.')->middleware('can:financeiro.index')->group(function () {
             Route::get('/', [FinanceiroController::class, 'index'])->name('index');
             Route::get('/agendar-relatorio', fn () => view('app.financeiro.agendar.index'))->name('agendar-relatorio');
         });

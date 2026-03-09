@@ -21,6 +21,12 @@ class SessionHandler {
             try {
                 const response = await originalFetch(...args);
 
+                // Verificar se a resposta indica acesso negado (403)
+                if (response.status === 403) {
+                    this.handleAccessDenied();
+                    return response;
+                }
+
                 // Verificar se a resposta indica sessão expirada
                 if (response.status === 419 || response.status === 401) {
                     // Clonar a resposta para poder ler sem consumir
@@ -73,6 +79,12 @@ class SessionHandler {
         // Interceptar requisições jQuery AJAX
         if (typeof $ !== 'undefined') {
             $(document).ajaxError((event, xhr, settings, thrownError) => {
+                // Verificar acesso negado (403)
+                if (xhr.status === 403) {
+                    this.handleAccessDenied();
+                    return;
+                }
+
                 if (xhr.status === 419 || xhr.status === 401) {
                     try {
                         const data = JSON.parse(xhr.responseText);
@@ -122,6 +134,33 @@ class SessionHandler {
         }
 
         this.showSessionExpiredModal(message);
+    }
+
+    handleAccessDenied() {
+        // Evitar múltiplas chamadas
+        if (this._accessDeniedShown) {
+            return;
+        }
+        this._accessDeniedShown = true;
+
+        // Usar SweetAlert2 se disponível
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                icon: 'error',
+                title: 'Acesso Negado',
+                text: 'Você não tem permissão para acessar este recurso. Entre em contato com o administrador.',
+                confirmButtonText: 'Voltar ao Início',
+                allowOutsideClick: false,
+                allowEscapeKey: false
+            }).then(() => {
+                this._accessDeniedShown = false;
+                window.location.href = '/';
+            });
+        } else {
+            alert('Acesso Negado: Você não tem permissão para acessar este recurso.');
+            this._accessDeniedShown = false;
+            window.location.href = '/';
+        }
     }
 
     showSessionExpiredModal(message) {
