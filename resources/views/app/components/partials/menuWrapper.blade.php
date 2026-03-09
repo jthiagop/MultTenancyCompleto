@@ -146,6 +146,7 @@
                     <!--end:Menu separator-->
 
                     <!--begin:Menu item - Financeiro-->
+                    @can('financeiro.index')
                     <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
                         <span class="menu-link">
                             <span class="menu-icon">
@@ -200,6 +201,7 @@
                                     <span class="menu-title">Domus IA <i class="bi bi-robot fs-6 ms-2"></i></span>
                                 </a>
                             </div>
+                            @can('notafiscal.index')
                             <div class="menu-item">
                                 <a class="menu-link {{ request()->routeIs('nfe_entrada.index') ? 'active' : '' }}"
                                     href="{{ route('nfe_entrada.index') }}">
@@ -209,11 +211,14 @@
                                     <span class="menu-title">Nota Fiscal</span>
                                 </a>
                             </div>
+                            @endcan
                         </div>
                     </div>
+                    @endcan
                     <!--end:Menu item - Financeiro-->
 
                     <!--begin:Menu item - patrimonio-->
+                    @can('patrimonio.index')
                     <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
                         <span class="menu-link">
                             <span class="menu-icon">
@@ -265,9 +270,10 @@
                             </div>
                         </div>
                     </div>
+                    @endcan
                     <!--end:Menu item - patrimonio-->
 
-                    @can('company.index')
+                    @canany(['company.index', 'users.index'])
                         <!--begin:Menu item - Cadastros-->
                         <div data-kt-menu-trigger="click" class="menu-item menu-accordion">
                             <span class="menu-link">
@@ -278,6 +284,7 @@
                                 <span class="menu-arrow"></span>
                             </span>
                             <div class="menu-sub menu-sub-accordion menu-active-bg">
+                                @can('users.index')
                                 <div class="menu-item">
                                     <a class="menu-link {{ request()->routeIs('users.index') ? 'active' : '' }}"
                                         href="{{ route('users.index') }}">
@@ -287,6 +294,8 @@
                                         <span class="menu-title">Usuários</span>
                                     </a>
                                 </div>
+                                @endcan
+                                @can('company.index')
                                 <div class="menu-item">
                                     <a class="menu-link {{ request()->routeIs('modules.index') ? 'active' : '' }}"
                                         href="{{ route('modules.list') }}">
@@ -305,10 +314,11 @@
                                         <span class="menu-title">Permissões</span>
                                     </a>
                                 </div>
+                                @endcan
                             </div>
                         </div>
                         <!--end:Menu item - Cadastros-->
-                    @endcan
+                    @endcanany
 
                 </div>
                 <!--end::Menu-->
