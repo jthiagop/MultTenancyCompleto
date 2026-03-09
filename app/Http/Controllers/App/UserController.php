@@ -509,18 +509,12 @@ class UserController extends Controller
                 ->withInput();
         }
 
-        // Estratégia: trocar o role do usuário para 'authenticated' (role sem permissões,
-        // usada apenas para satisfazer o middleware de rotas) e definir TODAS as
-        // permissões selecionadas como diretas. Assim, desmarcar funciona corretamente.
-        $authenticatedRole = \Spatie\Permission\Models\Role::firstOrCreate(
-            ['name' => 'authenticated', 'guard_name' => 'web']
-        );
-        $user->syncRoles([$authenticatedRole->id]);
-
-        // Sincroniza TODAS as permissões selecionadas como diretas
+        // Sincronizar apenas as permissões diretas do usuário, SEM alterar os roles.
+        // Os roles devem ser gerenciados exclusivamente pela aba/formulário de roles.
+        // Permissões herdadas via role continuam funcionando normalmente pelo Spatie.
         $user->syncPermissions($validPermissions);
 
-        \Log::info("Permissões do usuário #{$user->id} ({$user->email}) atualizadas. Role='authenticated'. Diretas: " . count($validPermissions));
+        \Log::info("Permissões do usuário #{$user->id} ({$user->email}) atualizadas. Roles mantidos: [{$user->getRoleNames()->implode(', ')}]. Diretas: " . count($validPermissions));
 
         return redirect()->back()->with('success', 'Permissões atualizadas com sucesso!');
     }
