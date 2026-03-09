@@ -247,7 +247,8 @@ class TransacaoFinanceiraService
      */
     public function inverterTipo(TransacaoFinanceira $transacao): TransacaoFinanceira
     {
-        return DB::transaction(function () use ($transacao) {
+        /** @var TransacaoFinanceira $result */
+        $result = DB::transaction(function () use ($transacao) {
             // 1. Inverte a transação principal
             $this->inverterTipoUnico($transacao);
 
@@ -265,6 +266,8 @@ class TransacaoFinanceiraService
 
             return $transacao;
         });
+
+        return $result;
     }
 
     /**
