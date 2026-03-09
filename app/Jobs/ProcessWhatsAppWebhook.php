@@ -217,9 +217,11 @@ class ProcessWhatsAppWebhook implements ShouldQueue
                 }
 
                 // Verificar se este número já está vinculado a outro usuário/tenant
+                // Ignorar registros inativos (integração excluída) para permitir re-vinculação
                 $existingBinding = WhatsappAuthRequest::where('wa_id', $from)
                     ->whereNotNull('wa_id')
                     ->where('id', '!=', $authRequest->id)
+                    ->where('status', 'active')
                     ->first();
 
                 if ($existingBinding) {
@@ -539,18 +541,20 @@ class ProcessWhatsAppWebhook implements ShouldQueue
             $userName = null;
             $companyId = null;
 
-            // Buscar user_id através do WhatsappAuthRequest usando wa_id (banco central)
+            // Buscar user_id e company_id através do WhatsappAuthRequest usando wa_id (banco central)
+            // O company_id salvo no auth_request é a empresa ativa no momento da vinculação
             $phoneNumberId = $this->extractPhoneNumberId();
             $authRequest = WhatsappAuthRequest::byPhoneNumberId($phoneNumberId)
                 ->where('wa_id', $from)
                 ->where('status', 'active')
                 ->first();
 
-            if ($authRequest && $authRequest->user_id) {
+            if ($authRequest) {
                 $userId = $authRequest->user_id;
+                $companyId = $authRequest->company_id; // Empresa vinculada ao WhatsApp
             }
 
-            // Entrar no contexto do tenant para buscar dados do usuário e empresa
+            // Entrar no contexto do tenant para buscar dados do usuário e complementar company_id
             $tenant = Tenant::find($this->tenantId);
             if ($tenant) {
                 $tenant->run(function () use ($userId, &$userName, &$companyId) {
@@ -559,7 +563,10 @@ class ProcessWhatsAppWebhook implements ShouldQueue
                         $user = User::find($userId);
                         if ($user) {
                             $userName = $user->name;
-                            $companyId = $user->company_id;
+                            // Usar company_id do auth_request; fallback para company_id do perfil
+                            if (!$companyId) {
+                                $companyId = $user->company_id;
+                            }
                         }
                     }
 
@@ -622,7 +629,7 @@ class ProcessWhatsAppWebhook implements ShouldQueue
             }
 
             // 6. GATILHO PARA A IA: Despachar Job que vai analisar o documento com GPT-4o
-            \App\Jobs\AnalyzeDocumentWithAi::dispatch($this->tenantId, $path, $from);
+            \App\Jobs\AnalyzeDocumentWithAi::dispatch($this->tenantId, $path, $from, $companyId);
 
             // 7. Enviar mensagem informando que está processando (em vez de "sucesso final")
             $this->sendTextMessage($from, "✅ Arquivo recebido! A Inteligência Artificial está analisando seu documento. Aguarde um instante...");

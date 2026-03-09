@@ -64,11 +64,15 @@ class WhatsAppIntegrationController extends Controller
                 ->where('user_id', $user->id)
                 ->first();
 
+            // Capturar company_id ativo na sessão do usuário no momento da vinculação
+            $activeCompanyId = session('active_company_id') ?? $user->company_id;
+
             if ($authRequest) {
                 // Atualizar registro existente
                 $authRequest->verification_code = $verificationCode;
                 $authRequest->phone_number_id = $phoneNumberId;
                 $authRequest->access_token = $accessToken;
+                $authRequest->company_id = $activeCompanyId;
                 $authRequest->status = 'pending';
                 $authRequest->save();
             } else {
@@ -77,6 +81,7 @@ class WhatsAppIntegrationController extends Controller
                 $authRequest->verification_code = $verificationCode;
                 $authRequest->tenant_id = $tenantId;
                 $authRequest->user_id = $user->id;
+                $authRequest->company_id = $activeCompanyId;
                 $authRequest->phone_number_id = $phoneNumberId;
                 $authRequest->access_token = $accessToken;
                 $authRequest->status = 'pending';
@@ -449,9 +454,11 @@ class WhatsAppIntegrationController extends Controller
                 }
 
                 // Verificar se este número já está vinculado a outro usuário/tenant
+                // Ignorar registros inativos (integração excluída) para permitir re-vinculação
                 $existingBinding = WhatsappAuthRequest::where('wa_id', $from)
                     ->whereNotNull('wa_id')
                     ->where('id', '!=', $authRequest->id)
+                    ->where('status', 'active')
                     ->first();
 
                 if ($existingBinding) {
@@ -1435,6 +1442,7 @@ class WhatsAppIntegrationController extends Controller
 
                 // Marcar como inativo e limpar dados sensíveis
                 $authRequest->status = 'inactive';
+                $authRequest->wa_id = null; // Liberar número para re-vinculação em outro tenant
                 $authRequest->access_token = null; // Limpar token sensível por segurança
                 $authRequest->save();
 
