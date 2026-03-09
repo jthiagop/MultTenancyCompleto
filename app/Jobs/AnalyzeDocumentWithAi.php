@@ -25,15 +25,17 @@ class AnalyzeDocumentWithAi implements ShouldQueue
     protected $tenantId;
     protected $filePath;
     protected $userPhone;
+    protected $companyId;
 
-    public function __construct($tenantId, $filePath, $userPhone)
+    public function __construct($tenantId, $filePath, $userPhone, $companyId = null)
     {
         $this->tenantId = $tenantId;
         $this->filePath = $filePath;
         $this->userPhone = $userPhone;
+        $this->companyId = $companyId;
     }
 
-    public function handle(DocumentExtractorService $extractor)
+    public function handle()
     {
         $tenant = Tenant::find($this->tenantId);
 
@@ -43,7 +45,10 @@ class AnalyzeDocumentWithAi implements ShouldQueue
             return;
         }
 
-        $tenant->run(function () use ($extractor) {
+        $tenant->run(function () {
+            // Instanciar o serviço com o companyId correto (em queue não há sessão)
+            $extractor = new DocumentExtractorService($this->companyId);
+
             try {
                 Log::info("🤖 Iniciando análise de IA para: {$this->filePath}");
 
