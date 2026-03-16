@@ -1250,6 +1250,10 @@ class BancoController extends Controller
                     $descricaoTexto = '<i class="bi bi-signpost-split text-primary me-2" title="Lançamento parcelado"></i>' . $descricaoTexto;
                 }
             }
+            // Verifica se a transação é uma transferência entre contas
+            elseif ($transacao->transferencia_id) {
+                $descricaoTexto = '<i class="bi bi-arrow-left-right text-primary me-2" title="Transferência entre contas"></i>' . $descricaoTexto;
+            }
 
             $descricaoHtml = '<div class="fw-bold"><a href="#" onclick="abrirDrawerTransacao(' . $transacao->id . '); return false;" class="text-gray-800 text-hover-primary">' . $descricaoTexto . '</a></div>';
             
@@ -1492,8 +1496,18 @@ class BancoController extends Controller
             'id' => $transacao->id,
             'descricao' => $transacao->descricao,
             'tipo' => $transacao->tipo,
-            'valor' => (float) $transacao->valor, // Valor já está em DECIMAL
+            'valor' => (float) $transacao->valor,
+            'situacao' => $transacao->situacao instanceof \App\Enums\SituacaoTransacao
+                ? $transacao->situacao->value
+                : ($transacao->situacao ?? 'em_aberto'),
+            'agendado' => (bool) $transacao->agendado,
             'data_competencia_formatada' => $transacao->data_competencia ? Carbon::parse($transacao->data_competencia)->format('d/m/Y') : null,
+            'data_vencimento_formatada' => $transacao->data_vencimento ? Carbon::parse($transacao->data_vencimento)->format('d/m/Y') : null,
+            'data_pagamento_formatada' => $transacao->data_pagamento ? Carbon::parse($transacao->data_pagamento)->format('d/m/Y') : null,
+            'valor_pago' => $transacao->valor_pago ? (float) $transacao->valor_pago : null,
+            'juros' => $transacao->juros ? (float) $transacao->juros : null,
+            'multa' => $transacao->multa ? (float) $transacao->multa : null,
+            'desconto' => $transacao->desconto ? (float) $transacao->desconto : null,
             'lancamento_padrao' => $transacao->lancamentoPadrao->description ?? null,
             'tipo_documento' => $transacao->tipo_documento,
             'numero_documento' => $transacao->numero_documento,
@@ -1501,6 +1515,7 @@ class BancoController extends Controller
             'origem' => $transacao->origem,
             'entidade_financeira' => $transacao->entidadeFinanceira->nome ?? null,
             'centro_custo' => $transacao->costCenter->descricao ?? null,
+            'parceiro_nome' => $transacao->parceiro->nome ?? null,
             'historico_complementar' => $transacao->historico_complementar,
             'created_by_name' => $transacao->created_by_name ?? ($transacao->createdBy->name ?? null),
             'updated_by_name' => $transacao->updated_by_name ?? ($transacao->updatedBy->name ?? null),
@@ -1540,8 +1555,14 @@ class BancoController extends Controller
             ] : null,
             'anexos' => $transacao->modulos_anexos->map(function($anexo) {
                 return [
+                    'id' => $anexo->id,
                     'nome' => $anexo->nome_arquivo,
-                    'url' => $anexo->caminho_arquivo ? route('file', ['path' => $anexo->caminho_arquivo]) : ($anexo->link ?? '#')
+                    'url' => $anexo->caminho_arquivo ? route('file', ['path' => $anexo->caminho_arquivo]) : ($anexo->link ?? '#'),
+                    'forma_anexo' => $anexo->forma_anexo ?? 'arquivo',
+                    'tipo_anexo' => $anexo->tipo_anexo,
+                    'extensao' => $anexo->extensao_arquivo,
+                    'tamanho' => $anexo->tamanho_arquivo,
+                    'descricao' => $anexo->descricao,
                 ];
             }),
             // Dados de parcelamento (para transação filha)
@@ -2727,6 +2748,18 @@ class BancoController extends Controller
         
         // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
         
+        // Processa anexos (se houver)
+        if ($request->has('anexos') && is_array($request->input('anexos'))) {
+            try {
+                $this->transacaoService->processarAnexosPublic($request, $transacao);
+            } catch (\Exception $e) {
+                Log::warning('Erro ao processar anexos na atualização', [
+                    'transacao_id' => $transacao->id,
+                    'erro' => $e->getMessage()
+                ]);
+            }
+        }
+        
         // Resposta de sucesso
         if ($request->expectsJson() || $request->ajax()) {
             return response()->json([
@@ -2789,6 +2822,17 @@ class BancoController extends Controller
                 'origem' => $transacao->origem,
                 'historico_complementar' => $transacao->historico_complementar,
                 'comprovacao_fiscal' => (bool) $transacao->comprovacao_fiscal,
+                'anexos' => $transacao->modulos_anexos->map(function ($anexo) {
+                    return [
+                        'id' => $anexo->id,
+                        'forma_anexo' => $anexo->forma_anexo,
+                        'nome_arquivo' => $anexo->nome_arquivo,
+                        'caminho_arquivo' => $anexo->caminho_arquivo,
+                        'tipo_anexo' => $anexo->tipo_anexo,
+                        'descricao' => $anexo->descricao,
+                        'link' => $anexo->link ?? null,
+                    ];
+                })->values()->toArray(),
                 'situacao' => $transacao->situacao?->value ?? $transacao->situacao,
                 'agendado' => (bool) $transacao->agendado,
                 'valor_pago' => $transacao->valor_pago ? number_format($transacao->valor_pago, 2, ',', '.') : null,

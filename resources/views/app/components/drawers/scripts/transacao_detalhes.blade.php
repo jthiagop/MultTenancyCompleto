@@ -42,57 +42,172 @@
                     tipoBadge.className = 'badge badge-light-danger fs-7 fw-bold';
                 }
 
-                // Valor
-                document.getElementById('drawer_transacao_valor').textContent =
-                    `R$ ${parseFloat(data.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                // Situação badge
+                const situacaoBadgeEl = document.getElementById('drawer_transacao_situacao_badge');
+                const sit = data.situacao || 'em_aberto';
+                if (sit === 'pago' || sit === 'recebido') {
+                    situacaoBadgeEl.textContent = sit === 'pago' ? 'Pago' : 'Recebido';
+                    situacaoBadgeEl.className = 'badge badge-light-success fs-8 fw-bold';
+                } else if (sit === 'agendado' || data.agendado) {
+                    situacaoBadgeEl.textContent = 'Agendado';
+                    situacaoBadgeEl.className = 'badge badge-light-info fs-8 fw-bold';
+                } else {
+                    situacaoBadgeEl.textContent = 'Em aberto';
+                    situacaoBadgeEl.className = 'badge badge-light-warning fs-8 fw-bold';
+                }
+
+                // Valor com cor contextual
+                const valorEl = document.getElementById('drawer_transacao_valor');
+                const valorFormatadoPrincipal = `R$ ${parseFloat(data.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                valorEl.textContent = valorFormatadoPrincipal;
+                valorEl.className = data.tipo === 'entrada' ? 'fw-bold fs-3 text-success' : 'fw-bold fs-3 text-danger';
+
+                // Valor pago (se diferente do valor principal)
+                const valorPagoRow = document.getElementById('drawer_transacao_valor_pago_row');
+                if (data.valor_pago && parseFloat(data.valor_pago) > 0 && parseFloat(data.valor_pago) !== parseFloat(data.valor)) {
+                    const valorPagoFormatado = `R$ ${parseFloat(data.valor_pago).toLocaleString('pt-BR', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    document.getElementById('drawer_transacao_valor_pago').textContent = valorPagoFormatado;
+                    valorPagoRow.style.display = 'block';
+                } else {
+                    valorPagoRow.style.display = 'none';
+                }
 
                 // Data
                 document.getElementById('drawer_transacao_data').textContent = data.data_competencia_formatada || '-';
 
-                // Lançamento Padrão
+                // Data de vencimento
+                const vencimentoRow = document.getElementById('drawer_transacao_vencimento_row');
+                if (data.data_vencimento_formatada) {
+                    document.getElementById('drawer_transacao_vencimento').textContent = data.data_vencimento_formatada;
+                    vencimentoRow.style.display = 'block';
+                } else {
+                    vencimentoRow.style.display = 'none';
+                }
+
+                // Data de pagamento
+                const pagamentoRow = document.getElementById('drawer_transacao_pagamento_row');
+                if (data.data_pagamento_formatada) {
+                    document.getElementById('drawer_transacao_pagamento').textContent = data.data_pagamento_formatada;
+                    pagamentoRow.style.display = 'block';
+                } else {
+                    pagamentoRow.style.display = 'none';
+                }
+
+                // Categoria (Lançamento Padrão)
                 document.getElementById('drawer_transacao_lancamento').textContent = data.lancamento_padrao || '-';
+
+                // Financeiro
+                document.getElementById('drawer_transacao_entidade').textContent = data.entidade_financeira || '-';
+                document.getElementById('drawer_transacao_origem').textContent = data.origem || '-';
+
+                // Centro de custo
+                const centroCustoRow = document.getElementById('drawer_transacao_centro_custo_row');
+                if (data.centro_custo) {
+                    document.getElementById('drawer_transacao_centro_custo').textContent = data.centro_custo;
+                    centroCustoRow.style.display = 'block';
+                } else {
+                    centroCustoRow.style.display = 'none';
+                }
+
+                // Fornecedor/Cliente
+                const fornecedorRow = document.getElementById('drawer_transacao_fornecedor_row');
+                if (data.parceiro_nome) {
+                    const labelEl = document.getElementById('drawer_transacao_fornecedor_label');
+                    labelEl.textContent = data.tipo === 'entrada' ? 'Cliente:' : 'Fornecedor:';
+                    document.getElementById('drawer_transacao_fornecedor').textContent = data.parceiro_nome;
+                    fornecedorRow.style.display = 'block';
+                } else {
+                    fornecedorRow.style.display = 'none';
+                }
 
                 // Documento
                 document.getElementById('drawer_transacao_tipo_doc').textContent = data.tipo_documento || '-';
-                document.getElementById('drawer_transacao_num_doc').textContent = data.numero_documento || '-';
+                const numDocRow = document.getElementById('drawer_transacao_num_doc_row');
+                if (data.numero_documento) {
+                    document.getElementById('drawer_transacao_num_doc').textContent = data.numero_documento;
+                    numDocRow.style.display = 'block';
+                } else {
+                    numDocRow.style.display = 'none';
+                }
                 document.getElementById('drawer_transacao_comprovacao').textContent = data.comprovacao_fiscal || '-';
 
-                // Financeiro
-                document.getElementById('drawer_transacao_origem').textContent = data.origem || '-';
-                document.getElementById('drawer_transacao_entidade').textContent = data.entidade_financeira || '-';
-                document.getElementById('drawer_transacao_centro_custo').textContent = data.centro_custo || '-';
-
-                // Histórico
+                // Histórico complementar - ocultar seção se vazio
                 const historicoEl = document.getElementById('drawer_transacao_historico');
+                const historicoSection = document.getElementById('drawer_transacao_historico_section');
+                const historicoSeparator = document.getElementById('drawer_historico_separator');
                 if (data.historico_complementar) {
                     historicoEl.innerHTML = `<p class="mb-0">${data.historico_complementar}</p>`;
+                    historicoSection.style.display = 'block';
+                    historicoSeparator.style.display = 'block';
                 } else {
-                    historicoEl.innerHTML = '<span class="text-muted">Nenhum histórico complementar</span>';
+                    historicoSection.style.display = 'none';
+                    historicoSeparator.style.display = 'none';
                 }
 
                 // Anexos
                 const anexosEl = document.getElementById('drawer_transacao_anexos');
                 if (data.anexos && data.anexos.length > 0) {
-                    let anexosHtml = '<div class="d-flex flex-column gap-2">';
+                    let anexosHtml = '<div class="d-flex flex-column gap-3">';
                     data.anexos.forEach(anexo => {
+                        const isLink = anexo.forma_anexo === 'link';
+                        let iconClass = 'bi bi-file-earmark text-primary';
+                        let bgClass = 'bg-light-primary';
+                        if (isLink) {
+                            iconClass = 'bi bi-link-45deg text-info';
+                            bgClass = 'bg-light-info';
+                        } else if (anexo.extensao) {
+                            const ext = anexo.extensao.toLowerCase();
+                            if (ext === 'pdf') { iconClass = 'bi bi-file-earmark-pdf text-danger'; bgClass = 'bg-light-danger'; }
+                            else if (['jpg','jpeg','png','gif','webp'].includes(ext)) { iconClass = 'bi bi-file-earmark-image text-info'; bgClass = 'bg-light-info'; }
+                            else if (['xls','xlsx','csv'].includes(ext)) { iconClass = 'bi bi-file-earmark-excel text-success'; bgClass = 'bg-light-success'; }
+                            else if (['doc','docx'].includes(ext)) { iconClass = 'bi bi-file-earmark-word text-primary'; bgClass = 'bg-light-primary'; }
+                            else if (ext === 'xml') { iconClass = 'bi bi-file-earmark-code text-warning'; bgClass = 'bg-light-warning'; }
+                        }
+                        let tamanhoStr = '';
+                        if (anexo.tamanho) {
+                            const kb = anexo.tamanho / 1024;
+                            tamanhoStr = kb >= 1024 ? (kb / 1024).toFixed(1) + ' MB' : Math.round(kb) + ' KB';
+                        }
+                        const nomeExibicao = anexo.nome || (isLink ? 'Link externo' : 'Arquivo');
+                        const tipoBadge = anexo.tipo_anexo ? `<span class="badge badge-light-primary fs-9">${anexo.tipo_anexo}</span>` : '';
+                        const descHtml = anexo.descricao ? `<span class="text-muted fs-8 d-block">${anexo.descricao}</span>` : '';
+                        const tamanhoHtml = tamanhoStr ? `<span class="text-muted fs-9">${tamanhoStr}</span>` : '';
                         anexosHtml += `
-                            <a href="${anexo.url}" target="_blank" class="d-flex align-items-center text-gray-800 text-hover-primary">
-                                <i class="ki-duotone ki-file fs-2 me-2"><span class="path1"></span><span class="path2"></span></i>
-                                ${anexo.nome}
+                            <a href="${anexo.url}" target="_blank" class="d-flex align-items-center p-3 rounded ${bgClass} text-hover-primary" style="text-decoration:none">
+                                <div class="symbol symbol-35px symbol-circle me-3">
+                                    <span class="symbol-label ${bgClass}"><i class="${iconClass} fs-3"></i></span>
+                                </div>
+                                <div class="flex-grow-1 me-2">
+                                    <span class="text-gray-800 fw-semibold fs-7 d-block">${nomeExibicao}</span>
+                                    ${descHtml}
+                                    <div class="d-flex align-items-center gap-2 mt-1">${tipoBadge} ${tamanhoHtml}</div>
+                                </div>
+                                <i class="bi bi-download text-gray-500 fs-5"></i>
                             </a>
                         `;
                     });
                     anexosHtml += '</div>';
                     anexosEl.innerHTML = anexosHtml;
+                    const countEl = document.getElementById('drawer_transacao_anexos_count');
+                    if (countEl) countEl.textContent = '(' + data.anexos.length + ')';
                 } else {
                     anexosEl.innerHTML = '<span class="text-muted">Nenhum anexo</span>';
+                    const countEl = document.getElementById('drawer_transacao_anexos_count');
+                    if (countEl) countEl.textContent = '';
                 }
 
                 // Auditoria
                 document.getElementById('drawer_transacao_criado_por').textContent = data.created_by_name || '-';
                 document.getElementById('drawer_transacao_criado_em').textContent = data.created_at_formatado || '-';
-                document.getElementById('drawer_transacao_atualizado_por').textContent = data.updated_by_name || '-';
-                document.getElementById('drawer_transacao_atualizado_em').textContent = data.updated_at_formatado || '-';
+
+                const atualizadoRow = document.getElementById('drawer_transacao_atualizado_row');
+                if (data.updated_by_name) {
+                    document.getElementById('drawer_transacao_atualizado_por').textContent = data.updated_by_name;
+                    document.getElementById('drawer_transacao_atualizado_em').textContent = data.updated_at_formatado || '-';
+                    atualizadoRow.style.display = 'flex';
+                } else {
+                    atualizadoRow.style.display = 'none';
+                }
 
                 // Parcela Info (quando transação é filha)
                 const parcelaInfoSection = document.getElementById('drawer_transacao_parcela_info_section');
@@ -175,8 +290,28 @@
             });
     }
 
-    // Handler para o botão de excluir transação
+    // Handler para os botões do footer
     document.addEventListener('DOMContentLoaded', function() {
+        // Botão Editar - abre o drawer de edição
+        const btnEditar = document.getElementById('btn_editar_transacao');
+        if (btnEditar) {
+            btnEditar.addEventListener('click', function() {
+                const transacaoId = document.getElementById('drawer_transacao_id_hidden').value;
+                if (!transacaoId) return;
+
+                // Fechar o drawer de detalhes
+                const drawer = KTDrawer.getInstance(document.getElementById('kt_drawer_transacao_detalhes'));
+                if (drawer) {
+                    drawer.hide();
+                }
+
+                // Abrir o drawer de edição
+                if (typeof abrirDrawerEdicao === 'function') {
+                    abrirDrawerEdicao(transacaoId);
+                }
+            });
+        }
+
         const btnExcluir = document.getElementById('btn_excluir_transacao');
         if (btnExcluir) {
             btnExcluir.addEventListener('click', function() {
