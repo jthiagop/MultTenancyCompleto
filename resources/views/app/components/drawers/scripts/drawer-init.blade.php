@@ -799,6 +799,11 @@
         $('#numero_documento').val(dados.numero_documento || '');
         $('#historico_complementar').val(dados.historico_complementar || '');
         
+        // Preenche anexos existentes
+        if (dados.anexos && dados.anexos.length > 0) {
+            preencherAnexosExistentes(dados.anexos);
+        }
+        
         // Campos de valor (com máscara)
         var valorInput = $('#valor2');
         if (valorInput.length) {
@@ -975,6 +980,111 @@
             filhaInfoText.html(infoHtml);
         }
     }
+    
+    /**
+     * Preenche anexos existentes no componente x-anexos-input durante edição
+     */
+    function preencherAnexosExistentes(anexos) {
+        var container = $('#kt_drawer_lancamento_form .anexos-container');
+        if (!container.length) return;
+        
+        var rowsContainer = container.find('.anexos-rows');
+        rowsContainer.empty();
+        
+        // Ativa a aba de anexos se houver anexos
+        if (anexos.length > 0) {
+            $('#tab_anexos_item a').tab('show');
+            setTimeout(function() {
+                $('#kt_tab_pane_1 a[data-bs-toggle="tab"]').first().tab('show');
+            }, 100);
+        }
+        
+        anexos.forEach(function(anexo) {
+            var isLink = anexo.forma_anexo === 'link';
+            var nomeExibicao = isLink ? (anexo.link || 'Link') : (anexo.nome_arquivo || 'Arquivo anexado');
+            var tipoExibicao = anexo.tipo_anexo || '-';
+            var descExibicao = anexo.descricao || '-';
+            
+            var iconClass = 'fas fa-file-alt text-primary';
+            if (!isLink && anexo.nome_arquivo) {
+                var ext = anexo.nome_arquivo.split('.').pop().toLowerCase();
+                if (ext === 'pdf') iconClass = 'fas fa-file-pdf text-danger';
+                else if (['jpg','jpeg','png','gif'].indexOf(ext) >= 0) iconClass = 'fas fa-file-image text-info';
+                else if (['xls','xlsx','csv'].indexOf(ext) >= 0) iconClass = 'fas fa-file-excel text-success';
+                else if (['doc','docx'].indexOf(ext) >= 0) iconClass = 'fas fa-file-word text-primary';
+            }
+            if (isLink) iconClass = 'fas fa-link text-info';
+            
+            var rowHTML = '<div class="anexo-row-existente mb-3 p-3 border rounded bg-light-primary" data-anexo-id="' + anexo.id + '">' +
+                '<div class="row g-2 align-items-center">' +
+                    '<div class="col-md-1 text-center">' +
+                        '<i class="' + iconClass + ' fs-3"></i>' +
+                    '</div>' +
+                    '<div class="col-md-4">' +
+                        '<span class="fw-semibold text-gray-800 fs-7">' + nomeExibicao + '</span>' +
+                    '</div>' +
+                    '<div class="col-md-2">' +
+                        '<span class="badge badge-light-primary fs-8">' + tipoExibicao + '</span>' +
+                    '</div>' +
+                    '<div class="col-md-4">' +
+                        '<span class="text-muted fs-7">' + descExibicao + '</span>' +
+                    '</div>' +
+                    '<div class="col-md-1 text-center">' +
+                        '<button type="button" class="btn btn-sm btn-icon btn-light-danger btn-excluir-anexo-existente" ' +
+                            'data-anexo-id="' + anexo.id + '" title="Excluir anexo">' +
+                            '<i class="fas fa-trash-alt fs-7"></i>' +
+                        '</button>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+            
+            rowsContainer.append(rowHTML);
+        });
+    }
+    
+    // Handler: exclusão de anexo existente via AJAX
+    $(document).on('click', '.btn-excluir-anexo-existente', function(e) {
+        e.preventDefault();
+        var btn = $(this);
+        var anexoId = btn.data('anexo-id');
+        var row = btn.closest('.anexo-row-existente');
+        
+        Swal.fire({
+            title: 'Excluir anexo?',
+            text: 'Esta ação não pode ser desfeita.',
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Sim, excluir',
+            cancelButtonText: 'Cancelar',
+            customClass: {
+                confirmButton: 'btn btn-danger',
+                cancelButton: 'btn btn-secondary'
+            },
+            buttonsStyling: false
+        }).then(function(result) {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: '/modulosAnexos/' + anexoId,
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content'),
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    success: function(response) {
+                        row.fadeOut(300, function() { $(this).remove(); });
+                        if (typeof toastr !== 'undefined') {
+                            toastr.success('Anexo excluído com sucesso!');
+                        }
+                    },
+                    error: function() {
+                        if (typeof toastr !== 'undefined') {
+                            toastr.error('Erro ao excluir o anexo.');
+                        }
+                    }
+                });
+            }
+        });
+    });
     
     // Torna a função acessível globalmente
     window.preencherFormularioEdicao = preencherFormularioEdicao;
@@ -1803,6 +1913,11 @@ if (!diaCobrancaWrapper.length || !diaCobrancaSelect.length) {
         $('#transacao_id').val('');
         $('#_method').val('POST');
         form.attr('action', '{{ route("banco.store") }}');
+        
+        // Limpa anexos existentes exibidos na edição
+        form.find('.anexos-container .anexos-rows').empty();
+        // Remove flag de inicialização para permitir re-inicialização
+        form.find('.anexos-container').removeAttr('data-initialized');
         
         // Restaura título padrão do drawer
         var drawer = $('#kt_drawer_lancamento');

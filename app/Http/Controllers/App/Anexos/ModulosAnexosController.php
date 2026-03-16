@@ -114,7 +114,7 @@ class ModulosAnexosController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(Request $request, $id)
     {
         try {
             // Busca o anexo pelo ID ou retorna erro 404 se não encontrado
@@ -133,6 +133,14 @@ class ModulosAnexosController extends Controller
             // Exclui o registro do banco de dados
             $anexo->delete();
 
+            // Se for AJAX, retorna JSON
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Arquivo excluído com sucesso!',
+                ]);
+            }
+
             // Adiciona mensagem de sucesso com Flasher
             Flasher::addSuccess('Arquivo excluído com sucesso!');
 
@@ -141,6 +149,14 @@ class ModulosAnexosController extends Controller
         } catch (\Exception $e) {
             // Loga o erro e adiciona mensagem de falha com Flasher
             Log::error('Erro ao excluir o arquivo:', ['error' => $e->getMessage()]);
+
+            if ($request->expectsJson() || $request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro ao excluir o arquivo.',
+                ], 500);
+            }
+
             Flasher::addError('Erro ao excluir o arquivo. Tente novamente mais tarde.');
 
             // Retorna para a página anterior com mensagem de erro
