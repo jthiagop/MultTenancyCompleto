@@ -658,6 +658,14 @@ class TransacaoFinanceiraService
     }
 
     /**
+     * Processa os anexos enviados (acesso público para uso no controller de update)
+     */
+    public function processarAnexosPublic(Request $request, TransacaoFinanceira $transacao): void
+    {
+        $this->processarAnexos($request, $transacao);
+    }
+
+    /**
      * Processa os anexos enviados
      */
     protected function processarAnexos(Request $request, TransacaoFinanceira $transacao): void

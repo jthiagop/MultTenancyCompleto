@@ -19,8 +19,8 @@
             <div class="d-flex flex-column mb-5 fv-row">
                 <div class="tab-content" id="myTabContent">
                     <div class="tab-pane fade show active" id="kt_tab_pane_1" role="tabpanel">
-                        <textarea class="form-control" name="historico_complementar" id="complemento" cmaxlength="250" rows="3"
-                            name="target_details" placeholder="Mais detalhes sobre o lançamento"></textarea>
+                        <textarea class="form-control" name="historico_complementar" id="historico_complementar" maxlength="250" rows="3"
+                            placeholder="Mais detalhes sobre o lançamento"></textarea>
                         <span class="fs-6 text-muted">Insira no máximo 250 caracteres</span>
                     </div>
                     <div class="tab-pane fade" id="kt_tab_pane_2" role="tabpanel">
