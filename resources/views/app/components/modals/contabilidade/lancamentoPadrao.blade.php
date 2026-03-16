@@ -30,6 +30,11 @@
                 <div class="modal-body scroll-y px-10 px-lg-15 ">
                     <!--begin::Hidden Type Field-->
                     <input type="hidden" name="type" id="type_hidden" value="saida">
+                    <div class="fv-plugins-message-container">
+                        <div class="fv-help-block">
+                            <span class="error-message text-danger fs-7" id="error-type" style="display: none;"></span>
+                        </div>
+                    </div>
                     <!--end::Hidden Type Field-->
                     <!--begin::Row - Tipo e Categoria-->
                     <div class="row mb-8 g-5">
@@ -303,12 +308,15 @@
                         option.textContent = '';
                         contaCreditoSelect.appendChild(option);
                     } else if (opt.value === '0' && opt.type === 'banco_caixa') {
-                        // Sempre inclui a opção especial
-                        const option = document.createElement('option');
-                        option.value = opt.value;
-                        option.textContent = opt.text;
-                        option.setAttribute('data-type', opt.type);
-                        contaCreditoSelect.appendChild(option);
+                        // Opção especial "Usar conta do Banco/Caixa" - só faz sentido para saída
+                        // (na saída, o crédito é a conta de ativo/banco de onde sai o recurso)
+                        if (tipoSelecionado === 'saida') {
+                            const option = document.createElement('option');
+                            option.value = opt.value;
+                            option.textContent = opt.text;
+                            option.setAttribute('data-type', opt.type);
+                            contaCreditoSelect.appendChild(option);
+                        }
                     } else {
                         if (tipoSelecionado === 'saida') {
                             // Saída: Crédito = ativo
@@ -592,7 +600,8 @@
 
                 // Valida todos os campos obrigatórios antes de enviar
                 const description = document.getElementById('description').value.trim();
-                const type = document.querySelector('input[name="type"]:checked');
+                const typeHiddenField = document.getElementById('type_hidden');
+                const typeValue = typeHiddenField ? typeHiddenField.value : '';
                 const category = document.getElementById('category');
                 const contaDebito = document.getElementById('conta_debito_id');
                 const contaCredito = document.getElementById('conta_credito_id');
@@ -620,7 +629,7 @@
                 }
 
                 // Valida tipo
-                if (!type) {
+                if (!typeValue) {
                     const errorEl = document.getElementById('error-type');
                     if (errorEl) {
                         errorEl.textContent = 'O tipo do lançamento é obrigatório.';
@@ -945,19 +954,11 @@
                     document.getElementById('lancamento_padrao_id').value = lp.id;
                     document.getElementById('description').value = lp.description || '';
 
-                    // Selecionar tipo (radio) - fazer isso antes de abrir o modal para filtrar contas
+                    // Selecionar tipo - definir no campo hidden
                     if (lp.type) {
-                        const typeRadio = document.querySelector(`input[name="type"][value="${lp.type}"]`);
-                        if (typeRadio) {
-                            typeRadio.checked = true;
-                            // Disparar evento change para filtrar contas
-                            if (typeof Event !== 'undefined') {
-                                typeRadio.dispatchEvent(new Event('change', {
-                                    bubbles: true
-                                }));
-                            } else if (typeof jQuery !== 'undefined') {
-                                $(typeRadio).trigger('change');
-                            }
+                        const typeHiddenField = document.getElementById('type_hidden');
+                        if (typeHiddenField) {
+                            typeHiddenField.value = lp.type;
                         }
                     }
 
