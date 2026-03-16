@@ -22,11 +22,11 @@ class LancamentoPadraoController extends Controller
     public function index()
     {
 
-        $lps = LancamentoPadrao::all();
-        $lancamentoPadrao = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
+        $lancamentoPadrao = LancamentoPadrao::forActiveCompany()->get();
 
-        // Busca contas contábeis para os dropdowns
-        $contas = ChartOfAccount::forActiveCompany()->orderBy('code')->get();
+        // Busca apenas contas analíticas (que aceitam lançamentos) para os dropdowns
+        $contas = ChartOfAccount::forActiveCompany()->analytical()->orderBy('code')->get();
 
         // Mapeia categorias para classes de cor
         $categoryColors = [
@@ -57,6 +57,7 @@ class LancamentoPadraoController extends Controller
             $companyId = session('active_company_id');
             
             $lancamentos = LancamentoPadrao::with(['contaDebito', 'contaCredito', 'user'])
+                ->where('company_id', $companyId)
                 ->select('lancamento_padraos.*');
 
             // Filtro por tipo (tabs: entrada, saida, todos)
@@ -144,9 +145,9 @@ class LancamentoPadraoController extends Controller
      */
     public function getStats(Request $request)
     {
-        $todos   = LancamentoPadrao::count();
-        $entrada = LancamentoPadrao::where('type', 'entrada')->count();
-        $saida   = LancamentoPadrao::where('type', 'saida')->count();
+        $todos   = LancamentoPadrao::forActiveCompany()->count();
+        $entrada = LancamentoPadrao::forActiveCompany()->where('type', 'entrada')->count();
+        $saida   = LancamentoPadrao::forActiveCompany()->where('type', 'saida')->count();
 
         return response()->json([
             'todos'   => $todos,
@@ -162,13 +163,13 @@ class LancamentoPadraoController extends Controller
     {
         // Obtém o tipo selecionado do request
         $tipo = $request->input('tipo');
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
 
-        // Busca contas contábeis para os dropdowns
-        $contas = ChartOfAccount::forActiveCompany()->orderBy('code')->get();
+        // Busca apenas contas analíticas (que aceitam lançamentos) para os dropdowns
+        $contas = ChartOfAccount::forActiveCompany()->analytical()->orderBy('code')->get();
 
         // Se um tipo foi selecionado, busque os lançamentos correspondentes
-        $lancamentos = $tipo ? LancamentoPadrao::where('tipo', $tipo)->get() : collect();
+        $lancamentos = $tipo ? LancamentoPadrao::forActiveCompany()->where('type', $tipo)->get() : collect();
 
         return view('app.cadastros.lancamentoPadrao.create', compact('lancamentos', 'tipo', 'lps', 'contas'));
     }
@@ -396,10 +397,10 @@ class LancamentoPadraoController extends Controller
             ]);
         }
 
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
 
-        // Busca contas contábeis para os dropdowns
-        $contas = ChartOfAccount::forActiveCompany()->orderBy('code')->get();
+        // Busca apenas contas analíticas (que aceitam lançamentos) para os dropdowns
+        $contas = ChartOfAccount::forActiveCompany()->analytical()->orderBy('code')->get();
 
         return view('app.cadastros.lancamentoPadrao.edit', ['lps' => $lps, 'lp' => $lp, 'contas' => $contas ]);
     }
@@ -689,22 +690,33 @@ class LancamentoPadraoController extends Controller
 
             // Prepara dados para exportação
             $dadosParaExportar = $lancamentos->map(function ($lancamento) {
+                $tipoLabel = match($lancamento->type) {
+                    'entrada' => 'Receita (Entrada)',
+                    'saida' => 'Despesa (Saída)',
+                    'ambos' => 'Ambos',
+                    default => $lancamento->type,
+                };
+
                 return [
                     'ID' => $lancamento->id,
                     'Descrição' => $lancamento->description,
-                    'Tipo' => $lancamento->type === 'entrada' ? 'Receita (Entrada)' : 'Despesa (Saída)',
+                    'Tipo' => $tipoLabel,
                     'Categoria' => $lancamento->category,
-                    'Valor' => $lancamento->amount ? 'R$ ' . number_format($lancamento->amount, 2, ',', '.') : 'Não definido',
                     'Conta Débito' => $lancamento->contaDebito ? $lancamento->contaDebito->code . ' - ' . $lancamento->contaDebito->name : 'Não definido',
-                    'Conta Crédito' => $lancamento->contaCredito ? $lancamento->contaCredito->code . ' - ' . $lancamento->contaCredito->name : 'Não definido',
-                    'Observações' => $lancamento->observations ?? '',
+                    'Conta Crédito' => $lancamento->contaCredito ? $lancamento->contaCredito->code . ' - ' . $lancamento->contaCredito->name : 'Usar conta do Banco/Caixa',
                     'Data Criação' => $lancamento->created_at ? $lancamento->created_at->format('d/m/Y H:i:s') : '',
                 ];
             });
 
             // Determina o nome do arquivo
             $timestamp = now()->format('Y-m-d_H-i-s');
-            $tipoLabel = $tipo === 'todos' ? 'todos' : ($tipo === 'entrada' ? 'receitas' : 'despesas');
+            $tipoLabel = match($tipo) {
+                'todos' => 'todos',
+                'entrada' => 'receitas',
+                'saida' => 'despesas',
+                'ambos' => 'ambos',
+                default => $tipo,
+            };
             
             if ($format === 'excel') {
                 return $this->exportToExcel($dadosParaExportar, $tipoLabel, $timestamp);
@@ -732,7 +744,7 @@ class LancamentoPadraoController extends Controller
         
         // Título
         $sheet->setCellValue('A1', 'Lançamentos Padrão - ' . ucfirst($tipoLabel));
-        $sheet->mergeCells('A1:I1');
+        $sheet->mergeCells('A1:G1');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
         $sheet->getStyle('A1')->getAlignment()->setHorizontal('center');
         
@@ -758,7 +770,7 @@ class LancamentoPadraoController extends Controller
             }
             
             // Auto-size columns
-            foreach (range('A', 'I') as $column) {
+            foreach (range('A', 'G') as $column) {
                 $sheet->getColumnDimension($column)->setAutoSize(true);
             }
         }

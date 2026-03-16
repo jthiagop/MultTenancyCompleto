@@ -42,6 +42,7 @@ class TransacaoFinanceira extends Model
         'lancamento_padrao_id',
         'movimentacao_id', // Usado pela conciliação bancária
         'recorrencia_id',
+        'transferencia_id',
         'cost_center_id',
         'tipo_documento',
         'numero_documento',
@@ -162,6 +163,14 @@ class TransacaoFinanceira extends Model
     public function modulos_anexos()
     {
         return $this->hasMany(ModulosAnexo::class, 'anexavel_id');
+    }
+
+    /**
+     * Relacionamento: Transferência que originou esta transação
+     */
+    public function transferencia()
+    {
+        return $this->belongsTo(Transferencia::class, 'transferencia_id');
     }
 
     /**

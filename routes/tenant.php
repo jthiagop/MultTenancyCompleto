@@ -44,6 +44,7 @@ use App\Http\Controllers\App\Financeiro\ParceiroController;
 use App\Http\Controllers\App\Financeiro\OfxController;
 use App\Http\Controllers\App\Relatorios\ReciboController;
 use App\Http\Controllers\App\Financeiro\TransacaoFinanceiraController;
+use App\Http\Controllers\App\Financeiro\TransferenciaController;
 use App\Http\Controllers\Financeiro\FinanceiroController;
 use App\Http\Controllers\App\Frota\CarInsuranceController;
 use App\Http\Controllers\App\NamePatrimonioController;
@@ -520,7 +521,7 @@ Route::middleware([
 
             Route::resource('modulosAnexos', ModulosAnexosController::class);
             Route::resource('post', PostController::class);
-            Route::get('/lancamento_padrao/tipo/{tipo}', [LancamentoPadraoController::class, 'getLancamentosByTipo']);
+            // Rota removida: getLancamentosByTipo não está implementado no controller
 
 
 
@@ -570,8 +571,10 @@ Route::middleware([
             Route::post('/conciliacao/rejeitar-missa', [ConciliacaoController::class, 'rejeitarMissa'])->name('conciliacao.rejeitar-missa');
             Route::post('/conciliacao/transferir', [ConciliacaoController::class, 'transferir'])->name('conciliacao.transferir');
 
-
-
+            // Transferência entre contas
+            Route::post('/transferencia', [TransferenciaController::class, 'store'])->name('transferencia.store');
+            Route::get('/transferencia/{id}', [TransferenciaController::class, 'show'])->name('transferencia.show');
+            Route::put('/transferencia/{id}', [TransferenciaController::class, 'update'])->name('transferencia.update');
 
             // Grupo de rotas para relatórios
             Route::prefix('relatorios')->group(function () {

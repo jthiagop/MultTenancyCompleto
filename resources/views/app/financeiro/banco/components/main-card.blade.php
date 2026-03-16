@@ -49,6 +49,12 @@
                                     ariaLabel="Adicionar nova despesa">
                                     Nova Despesa
                                 </x-tenant-dropdown-item>
+                                <div class="separator my-2"></div>
+                                <x-tenant-dropdown-item icon="bi bi-arrow-left-right" iconClass="text-info"
+                                    onclick="abrirDrawerTransferencia(); return false;"
+                                    ariaLabel="Transferência entre contas">
+                                    Transferência
+                                </x-tenant-dropdown-item>
                             </x-tenant-dropdown-button>
                             <!--end::Novo Lançamento Drawer Button-->
 
