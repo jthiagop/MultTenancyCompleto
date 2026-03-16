@@ -126,7 +126,7 @@ class DocumentExtractorService
                                 [
                                     'type' => 'text',
                                     'text' => 'Analise este documento fiscal brasileiro e extraia todos os dados conforme o schema JSON. '
-                                        . 'ATENÇÃO: (1) valor_total = valor FINAL a pagar (se houver Troco, calcule: Pago − Troco). '
+                                        . 'ATENÇÃO: (1) valor_total = valor FINAL a pagar. Se existir "VALOR A PAGAR", use-o. Se houver Troco: Pago − Troco. valor_principal = subtotal ANTES de desconto. '
                                         . '(2) Preencha data_vencimento para boletos/faturas. '
                                         . '(3) Se a lista de formas de pagamento foi fornecida, preencha forma_pagamento_id com o ID correspondente. '
                                         . '(4) Se a lista de lançamentos padrão foi fornecida, preencha lancamento_padrao_id com o ID mais adequado. '
@@ -252,6 +252,12 @@ class DocumentExtractorService
 
             // Validar mimeType (apenas imagens funcionam com a API atual)
             if (!str_starts_with($mimeType, 'image/')) {
+                return $this->generateGenericName($mimeType);
+            }
+
+            // Validar tamanho do arquivo
+            $fileSize = strlen(base64_decode($base64Content, true) ?: '');
+            if ($fileSize > self::MAX_FILE_SIZE) {
                 return $this->generateGenericName($mimeType);
             }
 
@@ -438,113 +444,6 @@ class DocumentExtractorService
         ];
 
         return in_array(strtolower($mimeType), $supportedTypes);
-    }
-
-    /**
-     * Faz upload de um arquivo para a OpenAI Files API
-     *
-     * @param string $base64Content
-     * @param string $mimeType
-     * @return string file_id
-     * @throws DocumentExtractionException
-     */
-    private function uploadFileToOpenAI(string $base64Content, string $mimeType): string
-    {
-        try {
-            $apiKey = config('services.openai.key');
-
-            // Decodificar base64 com validação estrita
-            $fileContent = base64_decode($base64Content, true);
-            if ($fileContent === false) {
-                Log::error('Base64 inválido fornecido para upload');
-                throw new DocumentExtractionException('Conteúdo base64 inválido');
-            }
-
-            // Validar tamanho do arquivo
-            $fileSize = strlen($fileContent);
-            if ($fileSize > self::MAX_FILE_SIZE) {
-                $fileSizeMB = round($fileSize / (1024 * 1024), 2);
-                $maxSizeMB = round(self::MAX_FILE_SIZE / (1024 * 1024), 2);
-
-                Log::warning('Arquivo muito grande para upload', [
-                    'file_size_mb' => $fileSizeMB,
-                    'max_size_mb' => $maxSizeMB,
-                ]);
-
-                throw new DocumentExtractionException(
-                    "O arquivo é muito grande ({$fileSizeMB}MB). Por favor, envie um arquivo menor que {$maxSizeMB}MB. "
-                    . "Dica: Se for um PDF com várias páginas, extraia apenas as páginas necessárias para reduzir o tamanho."
-                );
-            }
-
-            // Determinar extensão
-            $extension = 'pdf';
-            if (str_starts_with($mimeType, 'image/')) {
-                $extension = str_replace('image/', '', $mimeType);
-            }
-
-            $filename = 'document_' . time() . '.' . $extension;
-
-            // Fazer upload usando multipart/form-data com retry
-            $response = Http::withHeaders([
-                'Authorization' => 'Bearer ' . $apiKey,
-            ])
-                ->retry(3, 100, function ($exception, $request) {
-                    // Retry apenas para erros transitórios
-                    if ($exception instanceof \Illuminate\Http\Client\RequestException) {
-                        // Defensive: verificar se response existe antes de acessar
-                        if (isset($exception->response)) {
-                            $status = $exception->response->status();
-                            return in_array($status, [429, 500, 502, 503, 504]);
-                        }
-                    }
-                    return false;
-                }, throw: false)
-                ->attach('file', $fileContent, $filename)
-                ->post('https://api.openai.com/v1/files', [
-                    'purpose' => 'user_data',
-                ]);
-
-            // Verificar se a resposta existe após retries
-            if (!$response) {
-                Log::error('Resposta nula do upload após retries');
-                throw new DocumentExtractionException('Falha no upload do arquivo após múltiplas tentativas');
-            }
-
-            if (!$response->successful()) {
-                $errorData = $response->json();
-                // LGPD: Não loga errorData completo que pode conter dados sensíveis
-                Log::error('Erro ao fazer upload do arquivo para OpenAI', [
-                    'status' => $response->status(),
-                    'error_type' => $errorData['error']['type'] ?? null,
-                    'error_code' => $errorData['error']['code'] ?? null,
-                    'error_message' => $errorData['error']['message'] ?? 'Erro desconhecido',
-                ]);
-                throw new DocumentExtractionException('Erro ao fazer upload do arquivo: ' . ($errorData['error']['message'] ?? 'Erro desconhecido'));
-            }
-
-            $responseData = $response->json();
-            $fileId = $responseData['id'] ?? null;
-
-            if (empty($fileId)) {
-                throw new DocumentExtractionException('Upload bem-sucedido mas file_id não retornado');
-            }
-
-            Log::info('Arquivo enviado para OpenAI', [
-                'file_id' => $fileId,
-                'filename' => $filename,
-            ]);
-
-            return $fileId;
-
-        } catch (DocumentExtractionException $e) {
-            throw $e;
-        } catch (\Exception $e) {
-            Log::error('Erro inesperado ao fazer upload do arquivo', [
-                'error' => $e->getMessage(),
-            ]);
-            throw new DocumentExtractionException('Erro ao fazer upload: ' . $e->getMessage());
-        }
     }
 
     /**
@@ -876,7 +775,7 @@ class DocumentExtractorService
                         ],
                         'valor_total' => [
                             'type' => 'number',
-                            'description' => 'Valor FINAL a pagar (após juros, multa, desconto). REGRA: Valor Pago − Troco, ou Subtotal ± ajustes.',
+                            'description' => 'Valor FINAL a pagar. Prioridade: (1) VALOR A PAGAR, (2) Pago − Troco, (3) Subtotal − Desconto + Acréscimo.',
                         ],
                         'valor_principal' => [
                             'type' => 'number',
@@ -1070,17 +969,25 @@ O campo valor_total deve conter o VALOR FINAL A PAGAR.
 ⚠️ ARMADILHAS — NÃO confunda com:
 - "VALOR PAGO R$" = dinheiro entregue ao caixa (pode incluir troco).
 - "SUBTOTAL" = total parcial antes de descontos/acréscimos.
+- "VALOR TOTAL R$" em NFC-e/cupons = soma dos itens ANTES de desconto/acréscimo. Se existir "VALOR A PAGAR", este é o valor final.
 
-REGRAS DE CÁLCULO:
-- Se houver "VALOR PAGO" e "TROCO": valor_total = Valor Pago − Troco.
-- Se houver "SUBTOTAL" e "DESCONTO": valor_total = Subtotal − Desconto.
-- Se houver "SUBTOTAL" e "ACRÉSCIMO" (gorjeta, taxa): valor_total = Subtotal + Acréscimo.
-- valor_principal = subtotal original (ANTES de ajustes).
+REGRAS DE CÁLCULO (em ordem de prioridade):
+1. Se houver "VALOR A PAGAR" → valor_total = VALOR A PAGAR (este é SEMPRE o valor final).
+2. Se houver "VALOR PAGO" e "TROCO" → valor_total = Valor Pago − Troco.
+3. Se houver "SUBTOTAL"/"VALOR TOTAL" e "DESCONTO" → valor_total = Subtotal − Desconto.
+4. Se houver "SUBTOTAL" e "ACRÉSCIMO" (gorjeta, taxa) → valor_total = Subtotal + Acréscimo.
+- valor_principal = subtotal/soma dos itens ANTES de descontos e acréscimos.
 
-Exemplo:
+Exemplo 1 (com troco):
   TOTAL R$: 82,85 ← valor_total
   Valor Pago: R$ 100,00 ← NÃO usar
   Troco: R$ 17,15 ← Confirma: 100,00 − 17,15 = 82,85 ✓
+
+Exemplo 2 (NFC-e com desconto):
+  VALOR TOTAL R$: 63,48 ← valor_principal (soma dos itens)
+  DESCONTO R$: 7,99 ← desconto
+  VALOR A PAGAR R$: 55,49 ← valor_total (ESTE é o valor final)
+  Confirma: 63,48 − 7,99 = 55,49 ✓
 
 ═══════════════════════════════════════════════════
 4. REGRAS POR TIPO DE DOCUMENTO
@@ -1098,6 +1005,11 @@ Exemplo:
 - valor_unitario = preço de UMA unidade, NÃO subtotal da linha.
 - valor_total_item = quantidade × valor_unitario.
 - Taxa de serviço/gorjeta: some ao valor_total e registre em observacoes_financeiras.
+- ⚠️ DESCONTO EM NFC-e: Se houver "VALOR TOTAL", "DESCONTO" e "VALOR A PAGAR":
+  → valor_principal = VALOR TOTAL (antes do desconto, ex: R$ 63,48)
+  → desconto = DESCONTO (ex: R$ 7,99)
+  → valor_total = VALOR A PAGAR (após desconto, ex: R$ 55,49)
+  NÃO use "VALOR TOTAL" como valor_total quando existir desconto.
 
 **BOLETO:**
 - valor_principal = "Valor do Documento" (original).
@@ -1504,7 +1416,89 @@ LANCAMENTOS;
             }
         }
 
+        // Validar IDs contra o banco de dados
+        $normalized = $this->validateForeignIds($normalized);
+
+        // Validar consistência financeira
+        $normalized = $this->validateFinancialConsistency($normalized);
+
         return $normalized;
+    }
+
+    /**
+     * Valida se os IDs retornados pela IA existem no banco de dados.
+     * Anula IDs inválidos para evitar erros de FK.
+     */
+    private function validateForeignIds(array $data): array
+    {
+        // Validar forma_pagamento_id
+        $formaPagId = $data['financeiro']['forma_pagamento_id'] ?? null;
+        if ($formaPagId !== null) {
+            $exists = FormasPagamento::where('id', $formaPagId)->where('ativo', true)->exists();
+            if (!$exists) {
+                Log::warning('forma_pagamento_id retornado pela IA não existe no banco', ['id' => $formaPagId]);
+                $data['financeiro']['forma_pagamento_id'] = null;
+            }
+        }
+
+        // Validar lancamento_padrao_id
+        $lancamentoId = $data['classificacao']['lancamento_padrao_id'] ?? null;
+        if ($lancamentoId !== null && $this->companyId) {
+            $exists = LancamentoPadrao::where('id', $lancamentoId)
+                ->where('company_id', $this->companyId)
+                ->exists();
+            if (!$exists) {
+                Log::warning('lancamento_padrao_id retornado pela IA não existe no banco', [
+                    'id' => $lancamentoId,
+                    'company_id' => $this->companyId,
+                ]);
+                $data['classificacao']['lancamento_padrao_id'] = null;
+            }
+        }
+
+        return $data;
+    }
+
+    /**
+     * Valida consistência entre valor_total, valor_principal, desconto, juros e multa.
+     * Corrige valor_total se a IA retornou o subtotal ao invés do valor final.
+     */
+    private function validateFinancialConsistency(array $data): array
+    {
+        $valorTotal = $data['financeiro']['valor_total'];
+        $valorPrincipal = $data['financeiro']['valor_principal'];
+        $desconto = $data['financeiro']['desconto'];
+        $juros = $data['financeiro']['juros'];
+        $multa = $data['financeiro']['multa'];
+
+        // Se valor_total == valor_principal mas existe desconto sem juros/multa,
+        // a IA provavelmente usou o subtotal como valor_total
+        if ($valorTotal > 0 && $valorPrincipal > 0 && $desconto > 0
+            && abs($valorTotal - $valorPrincipal) < 0.01
+            && $juros == 0 && $multa == 0
+        ) {
+            $valorCorrigido = round($valorPrincipal - $desconto, 2);
+            Log::warning('valor_total corrigido: IA retornou subtotal ao invés do valor final', [
+                'valor_total_original' => $valorTotal,
+                'valor_principal' => $valorPrincipal,
+                'desconto' => $desconto,
+                'valor_total_corrigido' => $valorCorrigido,
+            ]);
+            $data['financeiro']['valor_total'] = $valorCorrigido;
+        }
+
+        // Se valor_total > valor_principal e não há juros/multa, algo está errado
+        if ($valorTotal > 0 && $valorPrincipal > 0
+            && $valorTotal > $valorPrincipal
+            && $juros == 0 && $multa == 0
+        ) {
+            Log::warning('valor_total maior que valor_principal sem juros/multa', [
+                'valor_total' => $valorTotal,
+                'valor_principal' => $valorPrincipal,
+            ]);
+        }
+
+        return $data;
     }
 }
 
