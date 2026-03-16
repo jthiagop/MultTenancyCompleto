@@ -65,7 +65,7 @@ class LancamentosPadraoTemplateExport
         $sheet->getStyle('A1:E1')->applyFromArray($headerStyle);
         
         // Busca os lançamentos
-        $lancamentos = LancamentoPadrao::where('company_id', $this->companyId)->get();
+        $lancamentos = LancamentoPadrao::all();
         
         // Dados
         $row = 2;

@@ -680,7 +680,7 @@ class LancamentoPadraoController extends Controller
             }
 
             // Busca lançamentos baseado no filtro
-            $query = LancamentoPadrao::where('company_id', $companyId);
+            $query = LancamentoPadrao::query();
             
             if ($tipo !== 'todos') {
                 $query->where('type', $tipo);

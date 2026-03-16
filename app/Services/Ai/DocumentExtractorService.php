@@ -656,7 +656,7 @@ class DocumentExtractorService
                 return [];
             }
 
-            $query = LancamentoPadrao::where('company_id', $this->companyId);
+            $query = LancamentoPadrao::query();
 
             if ($tipo) {
                 $query->where('type', $tipo);
