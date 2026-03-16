@@ -103,16 +103,8 @@ class LancamentoPadrao extends Model
      */
     public function scopeForActiveCompany($query)
     {
-        // Pega o ID da empresa que está na sessão
-        $activeCompanyId = session('active_company_id');
-
-        // Se houver uma empresa ativa, aplica o filtro.
-        if ($activeCompanyId) {
-            return $query->where('company_id', $activeCompanyId);
-        }
-
-        // Se não houver, retorna uma consulta que não trará resultados para proteger os dados.
-        return $query->whereRaw('1 = 0');
+        // Lançamentos padrão são compartilhados entre todas as companies do tenant
+        return $query;
     }
 
     /**

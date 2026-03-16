@@ -490,8 +490,7 @@ Route::middleware([
                     ->where('tipo', 'banco')->with('bank')->get();
                 $entidadesCaixa = \App\Models\EntidadeFinanceira::where('company_id', $activeCompanyId)
                     ->where('tipo', 'caixa')->get();
-                $lps = \App\Models\LancamentoPadrao::where('company_id', $activeCompanyId)
-                    ->orderBy('description')->get();
+                $lps = \App\Models\LancamentoPadrao::orderBy('description')->get();
                 $centrosAtivos = \App\Models\Financeiro\CostCenter::where('company_id', $activeCompanyId)
                     ->where('status', 1)->orderBy('code')->get();
                 $formasPagamento = \App\Models\FormasPagamento::where('ativo', true)->orderBy('nome')->get();
