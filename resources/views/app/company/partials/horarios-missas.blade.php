@@ -211,9 +211,15 @@
                     <label for="intervalo_padrao" class="fw-semibold text-gray-600">Intervalo:</label>
                     <div class="input-group" style="width: 150px;" data-td-target-input="nearest"
                         data-td-target-toggle="nearest" id="kt_td_picker_intervalo">
+                        @php
+                            $intervaloMinutos = isset($company) && $company->horariosMissas->first()
+                                ? ($company->horariosMissas->first()->intervalo ?? 90)
+                                : 90;
+                            $intervaloFormatado = sprintf('%02d:%02d', intdiv($intervaloMinutos, 60), $intervaloMinutos % 60);
+                        @endphp
                         <input type="text" class="form-control form-control-sm" name="intervalo_padrao" id="intervalo_padrao"
                             data-td-target="#kt_td_picker_intervalo" placeholder="00:00"
-                            value="{{ isset($company) && $company->horariosMissas->first() ? \Carbon\Carbon::createFromTime(0, $company->horariosMissas->first()->intervalo ?? 90)->format('H:i') : '01:30' }}" />
+                            value="{{ $intervaloFormatado }}" />
                         <span class="input-group-text" data-td-target="#kt_td_picker_intervalo"
                             data-td-toggle="datetimepicker">
                             <i class="fa-solid fa-clock fs-5"></i>
