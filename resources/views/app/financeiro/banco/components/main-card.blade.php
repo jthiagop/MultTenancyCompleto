@@ -11,7 +11,7 @@
                         <li class="nav-item">
                             <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'contas_receber' ? 'active' : '' }}"
                                 href="{{ route('banco.list', ['tab' => 'contas_receber', 'status' => 'total']) }}">
-                                Receitas
+                                <i class="fa-regular fa-circle-up me-1 fs-6"></i> Receitas
                             </a>
                         </li>
                         <!--end::Nav item-->
@@ -19,7 +19,7 @@
                         <li class="nav-item">
                             <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'contas_pagar' ? 'active' : '' }}"
                                 href="{{ route('banco.list', ['tab' => 'contas_pagar', 'status' => 'total']) }}">
-                                Despesas
+                                <i class="fa-regular fa-circle-down me-1 fs-6"></i> Despesas
                             </a>
                         </li>
                         <!--end::Nav item-->
@@ -27,10 +27,56 @@
                         <li class="nav-item">
                             <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'extrato' ? 'active' : '' }}"
                                 href="{{ route('banco.list', ['tab' => 'extrato']) }}">
-                                Extrato
+                                <i class="bi bi-journal-text me-1 fs-6"></i> Extrato
                             </a>
                         </li>
                         <!--end::Nav item-->
+                        @if($isMatriz ?? false)
+                        <!--begin::Nav item Repasses (dropdown) - Matriz-->
+                        <li class="nav-item">
+                            <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'repasses' ? 'active' : '' }}"
+                                href="#" data-kt-menu-trigger="click" data-kt-menu-placement="bottom-start">
+                                <i class="bi bi-diagram-3 me-1 fs-6"></i> Repasses
+                                @if(($repassesPendentes ?? 0) > 0)
+                                    <span class="badge badge-sm badge-circle badge-warning ms-1">{{ $repassesPendentes }}</span>
+                                @endif
+                                <i class="fa-solid fa-chevron-down fs-9 ms-1"></i>
+                            </a>
+                            <!--begin::Dropdown Menu-->
+                            <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-800 menu-state-bg-light-primary fw-semibold w-200px py-3"
+                                data-kt-menu="true">
+                                <div class="menu-item px-3">
+                                    <div class="menu-content text-muted pb-2 px-3 fs-7 text-uppercase">Tipo de repasse</div>
+                                </div>
+                                <div class="menu-item px-3">
+                                    <a href="{{ route('banco.list', ['tab' => 'repasses', 'tipo_repasse' => 'a_pagar']) }}"
+                                        class="menu-link px-3">
+                                        <i class="bi bi-arrow-up-right text-danger me-2 fs-6"></i> Repasse a Pagar
+                                    </a>
+                                </div>
+                                <div class="menu-item px-3">
+                                    <a href="{{ route('banco.list', ['tab' => 'repasses', 'tipo_repasse' => 'a_receber']) }}"
+                                        class="menu-link px-3">
+                                        <i class="bi bi-arrow-down-left text-success me-2 fs-6"></i> Repasse a Receber
+                                    </a>
+                                </div>
+                            </div>
+                            <!--end::Dropdown Menu-->
+                        </li>
+                        <!--end::Nav item Repasses-->
+                        @elseif($isFilial ?? false)
+                        <!--begin::Nav item Repasses - Filial (link direto, sem dropdown)-->
+                        <li class="nav-item">
+                            <a class="nav-link text-active-primary py-5 me-6 {{ $activeTab === 'repasses' ? 'active' : '' }}"
+                                href="{{ route('banco.list', ['tab' => 'repasses', 'tipo_repasse' => 'a_receber']) }}">
+                                <i class="bi bi-arrow-down-left me-1 fs-6"></i> Repasses a Receber
+                                @if(($repassesPendentes ?? 0) > 0)
+                                    <span class="badge badge-sm badge-circle badge-warning ms-1">{{ $repassesPendentes }}</span>
+                                @endif
+                            </a>
+                        </li>
+                        <!--end::Nav item Repasses Filial-->
+                        @endif
                     </ul>
                     <!--end::Nav-->
                     <div class="card-toolbar flex-nowrap ms-2">
@@ -134,10 +180,19 @@
                                             <!--begin::Menu item-->
                                             <div class="menu-item px-3 ">
                                                 <a
-                                                    class="menu-link px-3 {{ Route::currentRouteName() == 'formas-pagamento.index' ? 'active' : '' }}"href="{{ route('formas-pagamento.index') }}">Formas
-                                                    de Pagamento</a>
+                                                    class="menu-link px-3 {{ Route::currentRouteName() == 'formas-pagamento.index' ? 'active' : '' }}"href="{{ route('formas-pagamento.index') }}">
+                                                    Formas de Pagamento</a>
                                             </div>
                                             <!--end::Menu item-->
+                                            @role('global')
+                                            <!--begin::Menu item-->
+                                            <div class="menu-item px-3 ">
+                                                <a
+                                                    class="menu-link px-3 {{ Route::currentRouteName() == 'formas-recebimento.index' ? 'active' : '' }}"href="{{ route('formas-recebimento.index') }}">
+                                                    Formas de Recebimento</a>
+                                            </div>
+                                            <!--end::Menu item-->
+                                            @endrole
                                             <!--begin::Menu item-->
                                             <div class="menu-item px-3 ">
                                                 <a class="menu-link px-3 {{ Route::currentRouteName() == 'entidades.index' ? 'active' : '' }}"

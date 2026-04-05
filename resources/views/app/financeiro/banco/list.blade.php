@@ -66,6 +66,7 @@
     @include('app.components.drawers.transacao_detalhes')
     @include('app.components.drawers.lancamento')
     @include('app.components.modals.financeiro.lancamento.drawer_transferencia')
+    @include('app.components.modals.financeiro.lancamento.drawer_repasse')
     @include('app.components.modals.financeiro.recibo.modal_gerar_recibo_ajax')
     @include('app.components.modals.financeiro.modal-delete-recurrence')
 

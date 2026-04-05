@@ -162,13 +162,22 @@
     @if($showAccountFilter || $showMoreFilters)
     <div class="card mb-0 border-0 rounded-0" style="border-bottom: 1px solid var(--bs-border-color-translucent) !important;">
         <div class="card-body">
-            <x-tenant-datatable-filters 
-                :tableId="$filterId ?? $tableId ?? $id" 
-                :periodLabel="$periodLabel" 
-                :accountOptions="$accountOptions" 
-                :showAccountFilter="$showAccountFilter"
-                :showMoreFilters="$showMoreFilters" 
-                :moreFilters="$moreFilters" />
+            <div class="d-flex align-items-end justify-content-between flex-wrap gap-3">
+                <div class="d-flex flex-wrap gap-3 align-items-end flex-grow-1">
+                    <x-tenant-datatable-filters 
+                        :tableId="$filterId ?? $tableId ?? $id" 
+                        :periodLabel="$periodLabel" 
+                        :accountOptions="$accountOptions" 
+                        :showAccountFilter="$showAccountFilter"
+                        :showMoreFilters="$showMoreFilters" 
+                        :moreFilters="$moreFilters" />
+                </div>
+                @if(isset($filterActions))
+                <div class="d-flex align-items-center gap-2">
+                    {{ $filterActions }}
+                </div>
+                @endif
+            </div>
         </div>
     </div>
     @elseif($showPeriodFilter)

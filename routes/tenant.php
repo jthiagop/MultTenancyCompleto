@@ -40,11 +40,13 @@ use App\Http\Controllers\App\Financeiro\ConciliacaoController;
 use App\Http\Controllers\App\Financeiro\ContasFinanceirasController;
 use App\Http\Controllers\App\Financeiro\CostCenterController;
 use App\Http\Controllers\App\Financeiro\FormasPagamentoController;
+use App\Http\Controllers\App\Financeiro\FormasRecebimentoController;
 use App\Http\Controllers\App\Financeiro\ParceiroController;
 use App\Http\Controllers\App\Financeiro\OfxController;
 use App\Http\Controllers\App\Relatorios\ReciboController;
 use App\Http\Controllers\App\Financeiro\TransacaoFinanceiraController;
 use App\Http\Controllers\App\Financeiro\TransferenciaController;
+use App\Http\Controllers\App\Financeiro\RepasseController;
 use App\Http\Controllers\Financeiro\FinanceiroController;
 use App\Http\Controllers\App\Frota\CarInsuranceController;
 use App\Http\Controllers\App\NamePatrimonioController;
@@ -244,6 +246,7 @@ Route::middleware([
             Route::resource('telaLogin', TelaDeLoginController::class);
 
             Route::resource('formas-pagamento', FormasPagamentoController::class);
+            Route::resource('formas-recebimento', FormasRecebimentoController::class);
             Route::post('/fornecedores/store', [ParceiroController::class, 'store'])->name('fornecedores.store');
         });
 
@@ -574,6 +577,19 @@ Route::middleware([
             Route::post('/transferencia', [TransferenciaController::class, 'store'])->name('transferencia.store');
             Route::get('/transferencia/{id}', [TransferenciaController::class, 'show'])->name('transferencia.show');
             Route::put('/transferencia/{id}', [TransferenciaController::class, 'update'])->name('transferencia.update');
+
+            // Repasses (matriz → filiais)
+            Route::prefix('repasses')->group(function () {
+                Route::get('/data', [RepasseController::class, 'data'])->name('repasses.data');
+                Route::get('/stats-data', [RepasseController::class, 'statsData'])->name('repasses.stats.data');
+                Route::get('/filiais/list', [RepasseController::class, 'filiais'])->name('repasses.filiais');
+                Route::get('/entidades/{companyId}', [RepasseController::class, 'entidadesPorCompany'])->name('repasses.entidades');
+                Route::post('/', [RepasseController::class, 'store'])->name('repasses.store');
+                Route::put('/{id}', [RepasseController::class, 'update'])->name('repasses.update');
+                Route::get('/{id}', [RepasseController::class, 'show'])->name('repasses.show');
+                Route::post('/{id}/executar', [RepasseController::class, 'executar'])->name('repasses.executar');
+                Route::post('/{id}/cancelar', [RepasseController::class, 'cancelar'])->name('repasses.cancelar');
+            });
 
             // Grupo de rotas para relatórios
             Route::prefix('relatorios')->group(function () {

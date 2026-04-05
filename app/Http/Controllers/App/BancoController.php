@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Financer\StoreTransacaoFinanceiraRequest;
 use App\Models\Anexo;
 use App\Models\Banco;
+use App\Models\Company;
 use App\Models\EntidadeFinanceira;
 use App\Models\Financeiro\BankStatement;
 use App\Models\Financeiro\CostCenter;
@@ -121,7 +122,7 @@ class BancoController extends Controller
         $activeTab = $request->input('tab', 'contas_receber'); // 'contas_receber' é o padrão
 
         // Tabs válidas (removidas: 'overview', 'bancos', 'relatorios' e 'registros')
-        $validTabs = ['contas_receber', 'contas_pagar', 'extrato', 'conciliacao', 'lancamento'];
+        $validTabs = ['contas_receber', 'contas_pagar', 'extrato', 'conciliacao', 'lancamento', 'repasses'];
 
         // Se a tab não for válida, redirecionar para a tab padrão
         if (!in_array($activeTab, $validTabs)) {
@@ -289,7 +290,32 @@ class BancoController extends Controller
                 'showFilters' => false,
                 'showStats' => false,
             ],
+            'repasses' => [
+                'title' => 'Repasses',
+                'showFilters' => false,
+                'showStats' => false,
+            ],
         ];
+
+        // Verifica se a empresa ativa é do tipo matriz (para exibir aba de repasses)
+        $activeCompany = Company::find($companyId);
+        $isMatriz = $activeCompany && $activeCompany->type === 'matriz';
+        $isFilial = $activeCompany && $activeCompany->parent_id !== null;
+
+        // Formas de recebimento para drawer de repasse
+        $formasRecebimento = $isMatriz ? \App\Models\FormasRecebimento::where('ativo', true)->orderBy('nome')->get() : collect();
+
+        // Contagem de repasses pendentes (para badge na aba)
+        $repassesPendentes = 0;
+        if ($isFilial) {
+            $repassesPendentes = \App\Models\Financeiro\RepasseItem::where('company_destino_id', $companyId)
+                ->whereHas('repasse', fn($q) => $q->where('status', 'pendente'))
+                ->count();
+        } elseif ($isMatriz) {
+            $repassesPendentes = \App\Models\Financeiro\Repasse::where('company_origem_id', $companyId)
+                ->where('status', 'pendente')
+                ->count();
+        }
 
         // 🟢 Retorna a View com todos os dados
         return view('app.financeiro.banco.list', array_merge([
@@ -315,6 +341,10 @@ class BancoController extends Controller
             'dadosFluxoCaixaAnual' => $dadosFluxoCaixaAnual,
             'accountOptions' => $accountOptions,
             'fornecedores' => $parceiros,
+            'isMatriz' => $isMatriz,
+            'isFilial' => $isFilial,
+            'formasRecebimento' => $formasRecebimento,
+            'repassesPendentes' => $repassesPendentes,
         ], $dadosGrafico ));
     }
 

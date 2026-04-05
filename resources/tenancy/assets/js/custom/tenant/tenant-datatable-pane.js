@@ -139,6 +139,9 @@
                     if (config.key === 'extrato') {
                         // Tabs específicas para extrato
                         tabKeys = ['receitas_aberto', 'receitas_realizadas', 'despesas_aberto', 'despesas_realizadas', 'total'];
+                    } else if (config.key === 'repasses') {
+                        // Tabs específicas para repasses
+                        tabKeys = ['atrasados', 'a_pagar', 'pagos', 'total'];
                     } else {
                         // Tabs padrão para contas a receber/pagar
                         tabKeys = ['vencidos', 'hoje', 'a_vencer'];
