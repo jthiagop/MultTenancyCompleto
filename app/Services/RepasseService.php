@@ -147,89 +147,95 @@ class RepasseService
             ];
 
             $companyOrigemId = $repasse->company_origem_id;
+            $nomeOrigem      = Company::find($companyOrigemId)?->name ?? 'Matriz';
 
-            // Buscar/criar LPs de repasse
+            $repasse->load('itens');
+
+            // Buscar/criar LP de repasse na matriz
             $lpSaida = LancamentoPadrao::firstOrCreate(
                 ['company_id' => $companyOrigemId, 'description' => 'Repasse Enviado'],
                 ['type' => 'saida', 'category' => 'Repasse', 'user_id' => $user->id]
             );
 
-            $repasse->load('itens');
+            // ──────────────────────────────────────────────────────────────────
+            // REGRA: a Matriz gera UM ÚNICO registro de saída pelo valor total
+            // do repasse — igual ao que aparece no extrato bancário real.
+            // Cada filial gera apenas seu próprio registro de entrada.
+            // ──────────────────────────────────────────────────────────────────
+            $nomeDestinosTodos = $repasse->itens
+                ->map(fn ($i) => Company::find($i->company_destino_id)?->name ?? 'Filial')
+                ->join(', ');
 
+            $movSaida = Movimentacao::create([
+                'entidade_id'        => $repasse->entidade_origem_id,
+                'tipo'               => 'saida',
+                'valor'              => $repasse->valor_total,
+                'data'               => $repasse->data_emissao,
+                'descricao'          => $repasse->descricao ?? "Repasse para {$nomeDestinosTodos}",
+                'company_id'         => $companyOrigemId,
+                'lancamento_padrao_id' => $lpSaida->id,
+                'data_competencia'   => $repasse->data_emissao,
+                'origem_type'        => TransacaoFinanceira::class,
+                ...$auditFields,
+            ]);
+
+            $txSaida = TransacaoFinanceira::create([
+                'company_id'          => $companyOrigemId,
+                'data_competencia'    => $repasse->data_emissao,
+                'data_vencimento'     => $repasse->data_vencimento ?? $repasse->data_emissao,
+                'entidade_id'         => $repasse->entidade_origem_id,
+                'tipo'                => 'saida',
+                'valor'               => $repasse->valor_total,
+                'descricao'           => $repasse->descricao ?? "Repasse para {$nomeDestinosTodos}",
+                'situacao'            => 'em_aberto',
+                'lancamento_padrao_id' => $lpSaida->id,
+                'movimentacao_id'     => $movSaida->id,
+                'tipo_documento'      => $repasse->tipo_documento,
+                'numero_documento'    => $repasse->numero_documento,
+                'origem'              => 'repasse',
+                'historico_complementar' => "Repasse para {$nomeDestinosTodos} - Competência: {$repasse->competencia}",
+                ...$auditFields,
+            ]);
+
+            $movSaida->update([
+                'origem_id'   => $txSaida->id,
+                'origem_type' => TransacaoFinanceira::class,
+            ]);
+
+            // ── Para cada filial: apenas a ENTRADA (o que ela receberá) ──
             foreach ($repasse->itens as $item) {
+                $nomeDestino = Company::find($item->company_destino_id)?->name ?? 'Filial';
+
                 $lpEntrada = LancamentoPadrao::firstOrCreate(
                     ['company_id' => $item->company_destino_id, 'description' => 'Repasse Recebido'],
                     ['type' => 'entrada', 'category' => 'Repasse', 'user_id' => $user->id]
                 );
 
-                $nomeDestino = Company::find($item->company_destino_id)?->name ?? 'Filial';
-                $nomeOrigem = Company::find($companyOrigemId)?->name ?? 'Matriz';
-
-                // ── Movimentação de SAÍDA (na matriz) ──
-                $movSaida = Movimentacao::create([
-                    'entidade_id' => $repasse->entidade_origem_id,
-                    'tipo' => 'saida',
-                    'valor' => $item->valor,
-                    'data' => $repasse->data_emissao,
-                    'descricao' => "Repasse para {$nomeDestino}",
-                    'company_id' => $companyOrigemId,
-                    'lancamento_padrao_id' => $lpSaida->id,
-                    'data_competencia' => $repasse->data_emissao,
-                    'origem_type' => TransacaoFinanceira::class,
-                    ...$auditFields,
-                ]);
-
-                // ── Transação Financeira de SAÍDA (na matriz, em_aberto) ──
-                $txSaida = TransacaoFinanceira::create([
-                    'company_id' => $companyOrigemId,
-                    'data_competencia' => $repasse->data_emissao,
-                    'data_vencimento' => $repasse->data_vencimento ?? $repasse->data_emissao,
-                    'entidade_id' => $repasse->entidade_origem_id,
-                    'tipo' => 'saida',
-                    'valor' => $item->valor,
-                    'descricao' => $repasse->descricao ?? "Repasse para {$nomeDestino}",
-                    'situacao' => 'em_aberto',
-                    'lancamento_padrao_id' => $lpSaida->id,
-                    'movimentacao_id' => $movSaida->id,
-                    'tipo_documento' => $repasse->tipo_documento,
-                    'numero_documento' => $repasse->numero_documento,
-                    'origem' => 'repasse',
-                    'historico_complementar' => "Repasse para {$nomeDestino} - Competência: {$repasse->competencia}",
-                    ...$auditFields,
-                ]);
-
-                $movSaida->update([
-                    'origem_id' => $txSaida->id,
-                    'origem_type' => TransacaoFinanceira::class,
-                ]);
-
-                // ── Transação Financeira de ENTRADA (na filial, em_aberto - aguarda confirmação) ──
-                // A transação de entrada só é criada se a filial já tiver uma conta destino definida.
-                // Caso contrário, será criada quando a filial confirmar o recebimento e informar a conta.
+                // A transação de entrada só é criada se a filial já tiver conta destino.
+                // Caso contrário, será criada quando a filial confirmar o recebimento.
                 $txEntrada = null;
                 if ($item->entidade_destino_id) {
                     $txEntrada = TransacaoFinanceira::create([
-                        'company_id' => $item->company_destino_id,
-                        'data_competencia' => $repasse->data_entrada ?? $repasse->data_emissao,
-                        'data_vencimento' => $repasse->data_vencimento ?? $repasse->data_emissao,
-                        'entidade_id' => $item->entidade_destino_id,
-                        'tipo' => 'entrada',
-                        'valor' => $item->valor,
-                        'descricao' => $repasse->descricao ?? "Repasse recebido de {$nomeOrigem}",
-                        'situacao' => 'em_aberto',
+                        'company_id'          => $item->company_destino_id,
+                        'data_competencia'    => $repasse->data_entrada ?? $repasse->data_emissao,
+                        'data_vencimento'     => $repasse->data_vencimento ?? $repasse->data_emissao,
+                        'entidade_id'         => $item->entidade_destino_id,
+                        'tipo'                => 'entrada',
+                        'valor'               => $item->valor,
+                        'descricao'           => $repasse->descricao ?? "Repasse recebido de {$nomeOrigem}",
+                        'situacao'            => 'em_aberto',
                         'lancamento_padrao_id' => $lpEntrada->id,
-                        'tipo_documento' => $repasse->tipo_documento,
-                        'numero_documento' => $repasse->numero_documento,
-                        'origem' => 'repasse',
+                        'tipo_documento'      => $repasse->tipo_documento,
+                        'numero_documento'    => $repasse->numero_documento,
+                        'origem'              => 'repasse',
                         'historico_complementar' => "Repasse de {$nomeOrigem} - Competência: {$repasse->competencia}",
                         ...$auditFields,
                     ]);
                 }
 
-                // ── Atualizar item com IDs das transações/movimentações ──
-                // Mov/tx entrada será criada quando a filial confirmar o recebimento (se ainda não existir)
+                // Todos os itens apontam para a mesma saída da Matriz
                 $item->update([
-                    'transacao_saida_id' => $txSaida->id,
+                    'transacao_saida_id'   => $txSaida->id,
                     'transacao_entrada_id' => $txEntrada?->id,
                     'movimentacao_saida_id' => $movSaida->id,
                 ]);
@@ -238,10 +244,11 @@ class RepasseService
             $repasse->update(['status' => 'executado']);
 
             Log::info('Repasse executado com sucesso', [
-                'repasse_id' => $repasse->id,
-                'valor_total' => $repasse->valor_total,
-                'itens' => $repasse->itens->count(),
-                'user_id' => $user->id,
+                'repasse_id'        => $repasse->id,
+                'valor_total'       => $repasse->valor_total,
+                'tx_saida_id'       => $txSaida->id,
+                'itens'             => $repasse->itens->count(),
+                'user_id'           => $user->id,
             ]);
 
             return $repasse->fresh('itens');

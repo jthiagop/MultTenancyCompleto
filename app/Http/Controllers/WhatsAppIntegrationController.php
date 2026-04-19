@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Models\WhatsappAuthRequest;
@@ -30,8 +31,30 @@ class WhatsAppIntegrationController extends Controller
         $this->phoneNumberId = config('services.meta.phone_id');
         $this->accessToken = config('services.meta.token');
         $this->webhookVerifyToken = config('services.meta.verify_token');
-        $this->systemNumber = config('services.meta.whatsapp_number');
+        // wa.me exige E.164 sem símbolos (+, espaços). PHP também normaliza hub.* na query do webhook.
+        $rawWa = (string) config('services.meta.whatsapp_number', '');
+        $digitsOnly = preg_replace('/\D+/', '', $rawWa);
+        $this->systemNumber = $digitsOnly !== '' ? $digitsOnly : $rawWa;
         $this->appSecret = config('services.meta.app_secret');
+    }
+
+    /**
+     * A migration central pode ainda não ter sido aplicada; Blade e React usam o mesmo endpoint getQRCode.
+     */
+    private function centralWhatsappAuthHasCompanyIdColumn(): bool
+    {
+        static $cached = null;
+        if ($cached !== null) {
+            return $cached;
+        }
+        try {
+            $cached = Schema::connection('mysql')->hasColumn('whatsapp_auth_requests', 'company_id');
+        } catch (\Throwable $e) {
+            Log::warning('Não foi possível verificar coluna company_id em whatsapp_auth_requests: ' . $e->getMessage());
+            $cached = false;
+        }
+
+        return $cached;
     }
 
     /**
@@ -72,7 +95,9 @@ class WhatsAppIntegrationController extends Controller
                 $authRequest->verification_code = $verificationCode;
                 $authRequest->phone_number_id = $phoneNumberId;
                 $authRequest->access_token = $accessToken;
-                $authRequest->company_id = $activeCompanyId;
+                if ($this->centralWhatsappAuthHasCompanyIdColumn()) {
+                    $authRequest->company_id = $activeCompanyId;
+                }
                 $authRequest->status = 'pending';
                 $authRequest->save();
             } else {
@@ -81,7 +106,9 @@ class WhatsAppIntegrationController extends Controller
                 $authRequest->verification_code = $verificationCode;
                 $authRequest->tenant_id = $tenantId;
                 $authRequest->user_id = $user->id;
-                $authRequest->company_id = $activeCompanyId;
+                if ($this->centralWhatsappAuthHasCompanyIdColumn()) {
+                    $authRequest->company_id = $activeCompanyId;
+                }
                 $authRequest->phone_number_id = $phoneNumberId;
                 $authRequest->access_token = $accessToken;
                 $authRequest->status = 'pending';
@@ -127,7 +154,8 @@ class WhatsAppIntegrationController extends Controller
                 return response()->json(['success' => false, 'status' => 'unknown']);
             }
 
-            $authRequest = WhatsappAuthRequest::where('verification_code', $code)->first();
+            // Força uso do banco central para evitar override do contexto de tenancy.
+            $authRequest = WhatsappAuthRequest::on('mysql')->where('verification_code', $code)->first();
 
             if ($authRequest && $authRequest->status === 'active') {
                 return response()->json([
@@ -176,8 +204,10 @@ class WhatsAppIntegrationController extends Controller
             }
 
             $data = $request->all();
+            // Log apenas metadados — nunca o conteúdo da mensagem (LGPD/privacidade)
             Log::info('Meta Webhook POST recebido', [
-                'payload_completo' => json_encode($data, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE)
+                'event_object' => $data['object'] ?? 'unknown',
+                'entry_count'  => count($data['entry'] ?? []),
             ]);
 
             // Verificar estrutura da Meta: entry[0].changes[0].value.metadata.phone_number_id
@@ -344,14 +374,12 @@ class WhatsAppIntegrationController extends Controller
         $challenge = $request->query('hub_challenge');
 
         Log::info('Tentativa de verificação de webhook', [
-            'mode' => $mode,
-            'token_recebido' => $token,
-            'token_esperado' => $this->webhookVerifyToken,
-            'challenge' => $challenge
+            'mode'      => $mode,
+            'challenge' => $challenge,
         ]);
 
-        // Verificar se é uma requisição de verificação e se o token está correto
-        if ($mode === 'subscribe' && $token === $this->webhookVerifyToken) {
+        // hash_equals previne timing attacks na comparação do token
+        if ($mode === 'subscribe' && hash_equals((string) $this->webhookVerifyToken, (string) $token)) {
             Log::info('Webhook verificado com sucesso. Retornando challenge: ' . $challenge);
 
             // Retornar o hub_challenge em plain text (sem JSON, sem HTML)
@@ -971,13 +999,85 @@ class WhatsAppIntegrationController extends Controller
                 ], 401);
             }
 
+            // Fonte de verdade do vínculo WhatsApp para a empresa ativa:
+            // whatsapp_auth_requests (banco central) escopado por tenant_id + user_id + company_id.
+            // A tabela `integracoes` (banco tenant) não possui company_id e não serve como fonte
+            // de status por empresa — ela apenas registra que o usuário passou pelo fluxo de setup.
+            $tenantId  = tenant('id');
+            $companyId = session('active_company_id');
+
+            // Buscar binding da empresa atual. Inclui registros com company_id = NULL para
+            // compatibilidade retroativa com vinculações feitas antes da coluna existir.
+            $whatsappBinding = WhatsappAuthRequest::on('mysql')
+                ->where('tenant_id', $tenantId)
+                ->where('user_id', $user->id)
+                ->where(function ($q) use ($companyId) {
+                    $q->where('company_id', $companyId)
+                      ->orWhereNull('company_id');
+                })
+                ->first();
+
+            // Se o binding é legado (company_id NULL), associá-lo à empresa atual automaticamente.
+            if ($whatsappBinding && is_null($whatsappBinding->company_id) && $companyId) {
+                $whatsappBinding->company_id = $companyId;
+                $whatsappBinding->save();
+            }
+
+            // Horário de notificação WhatsApp configurado pela empresa
+            $company = $companyId ? \App\Models\Company::find($companyId) : null;
+            $companyDetails = json_decode($company->details ?? '{}', true);
+            $horaNotificacao = $companyDetails['whatsapp_hora_notificacao'] ?? '08:00';
+
             $integracoes = Integracao::where('user_id', $user->id)
+                ->with('user:id,name')
                 ->orderBy('tipo')
-                ->get();
+                ->get()
+                ->map(static function (Integracao $i) use ($whatsappBinding, $horaNotificacao) {
+                    // Para WhatsApp: status e remetente vêm do banco central (company-scoped),
+                    // ignorando o valor armazenado em `integracoes` que não tem company_id.
+                    if ($i->tipo === 'whatsapp') {
+                        if ($whatsappBinding && $whatsappBinding->status === 'active' && $whatsappBinding->wa_id) {
+                            $status    = 'configurado';
+                            $remetente = $whatsappBinding->wa_id;
+                        } elseif ($whatsappBinding && $whatsappBinding->status === 'pending') {
+                            $status    = 'pendente';
+                            $remetente = null;
+                        } else {
+                            // Binding existe para outra empresa ou não existe para esta — não configurado aqui
+                            $status    = 'nao_configurado';
+                            $remetente = null;
+                        }
+
+                        return [
+                            'id'               => $i->id,
+                            'tipo'             => $i->tipo,
+                            'status'           => $status,
+                            'remetente'        => $remetente,
+                            'destinatario'     => $i->destinatario,
+                            'user_id'          => $i->user_id,
+                            'hora_notificacao' => $horaNotificacao,
+                            'created_at'       => $i->created_at,
+                            'updated_at'       => $i->updated_at,
+                            'cadastrado_por'   => $i->user?->name,
+                        ];
+                    }
+
+                    return [
+                        'id'            => $i->id,
+                        'tipo'          => $i->tipo,
+                        'status'        => $i->status,
+                        'remetente'     => $i->remetente,
+                        'destinatario'  => $i->destinatario,
+                        'user_id'       => $i->user_id,
+                        'created_at'    => $i->created_at,
+                        'updated_at'    => $i->updated_at,
+                        'cadastrado_por' => $i->user?->name,
+                    ];
+                });
 
             return response()->json([
                 'success' => true,
-                'data' => $integracoes
+                'data' => $integracoes,
             ]);
         } catch (\Exception $e) {
             Log::error('Erro ao listar integrações: ' . $e->getMessage());
@@ -1013,12 +1113,15 @@ class WhatsAppIntegrationController extends Controller
                 ], 404);
             }
 
-            // Se for WhatsApp configurado, remover número do usuário E marcar auth request como inactive
+            // WhatsApp configurado: limpar número do usuário e inativar vínculo no banco central
             if ($integracao->tipo === 'whatsapp' && $integracao->status === 'configurado') {
                 $user->whatsapp_number = null;
                 $user->save();
+                $this->markAuthRequestAsInactive($user->id);
+            }
 
-                // Marcar registro whatsapp_auth_requests como inactive (não deletar para manter histórico)
+            // WhatsApp pendente (fluxo QR não concluído): só inativa solicitação no central e remove linha no tenant
+            if ($integracao->tipo === 'whatsapp' && $integracao->status === 'pendente') {
                 $this->markAuthRequestAsInactive($user->id);
             }
 
@@ -1040,8 +1143,58 @@ class WhatsAppIntegrationController extends Controller
     }
 
     /**
+     * Retorna o horário de notificação WhatsApp configurado para a empresa ativa.
+     */
+    public function buscarHorarioNotificacao()
+    {
+        $companyId = session('active_company_id');
+        $company   = $companyId ? \App\Models\Company::find($companyId) : null;
+        $details   = json_decode($company->details ?? '{}', true);
+
+        return response()->json([
+            'hora_notificacao' => $details['whatsapp_hora_notificacao'] ?? '08:00',
+        ]);
+    }
+
+    /**
+     * Configurar horário diário de notificação WhatsApp por empresa.
+     * Salva em companies.details->whatsapp_hora_notificacao (ex: "08:00").
+     */
+    public function configurarHorarioNotificacao(\Illuminate\Http\Request $request)
+    {
+        $request->validate([
+            'hora' => ['required', 'regex:/^([01]\d|2[0-3]):[0-5]\d$/'],
+        ]);
+
+        $companyId = session('active_company_id');
+        if (! $companyId) {
+            return response()->json(['success' => false, 'error' => 'Empresa não identificada.'], 422);
+        }
+
+        $company = \App\Models\Company::find($companyId);
+        if (! $company) {
+            return response()->json(['success' => false, 'error' => 'Empresa não encontrada.'], 404);
+        }
+
+        $details = json_decode($company->details ?? '{}', true);
+        $details['whatsapp_hora_notificacao'] = $request->input('hora');
+        $company->details = json_encode($details);
+        $company->save();
+
+        Log::info('[WhatsApp] Horário de notificação atualizado', [
+            'company_id' => $companyId,
+            'hora'       => $request->input('hora'),
+            'user_id'    => Auth::id(),
+        ]);
+
+        return response()->json([
+            'success'          => true,
+            'hora_notificacao' => $request->input('hora'),
+        ]);
+    }
+
+    /**
      * Extrair wamid (WhatsApp Message ID) do payload
-     * Busca o campo 'id' nas mensagens do payload
      *
      * @param array $data
      * @return string|null

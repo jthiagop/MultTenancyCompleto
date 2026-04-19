@@ -92,6 +92,9 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
                 }
             }
 
+            // Definir company na sessão para que scopes forActiveCompany() funcionem no contexto da queue
+            session(['active_company_id' => $this->companyId]);
+
             // Atualizar status para processing
             $pdfGen = PdfGeneration::find($this->pdfGenerationId);
             if ($pdfGen) {

@@ -19,7 +19,12 @@ class EnsureUserHasAccess
     public function handle(Request $request, Closure $next): Response
     {
         $user = Auth::user();
-        $companyId = $request->route('company_id'); // Supondo que o ID da empresa é passado na rota
+        $companyId = $request->route('company_id'); // ID da empresa passado na rota (opcional)
+
+        // Se não há company_id na rota, não há restrição a verificar
+        if (!$companyId) {
+            return $next($request);
+        }
 
         // Verifica se o usuário está associado à empresa ou a uma empresa matriz
         $hasAccess = $user->companies()->where(function($query) use ($companyId) {

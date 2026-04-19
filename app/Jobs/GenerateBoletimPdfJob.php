@@ -66,6 +66,9 @@ class GenerateBoletimPdfJob implements ShouldQueue
                 }
             }
 
+            // Definir company na sessão para que scopes forActiveCompany() funcionem no contexto da queue
+            session(['active_company_id' => $this->companyId]);
+
             // Atualizar status para processing
             $pdfGen = PdfGeneration::find($this->pdfGenerationId);
             Log::info('[GenerateBoletimPdfJob] PdfGeneration', [
@@ -99,8 +102,8 @@ class GenerateBoletimPdfJob implements ShouldQueue
             ]);
             
             // Usar as datas reais selecionadas pelo usuário
-            $dataInicio = Carbon::createFromFormat('d/m/Y', $this->dataInicial)->startOfDay();
-            $dataFim = Carbon::createFromFormat('d/m/Y', $this->dataFinal)->endOfDay();
+            $dataInicio = Carbon::createFromFormat('Y-m-d', $this->dataInicial)->startOfDay();
+            $dataFim = Carbon::createFromFormat('Y-m-d', $this->dataFinal)->endOfDay();
 
             // Buscar transações — excluir desconsideradas, parceladas e agendadas
             $transacoes = TransacaoFinanceira::where('company_id', $this->companyId)
@@ -323,7 +326,9 @@ class GenerateBoletimPdfJob implements ShouldQueue
             // Notificar usuário sobre o erro
             $user = User::find($this->userId);
             if ($user) {
-                $periodoNome = $dataInicio->format('d/m/Y') . ' a ' . $dataFim->format('d/m/Y');
+                $dataInicioFallback = isset($dataInicio) ? $dataInicio : Carbon::parse($this->dataInicial);
+                $dataFimFallback    = isset($dataFim)    ? $dataFim    : Carbon::parse($this->dataFinal);
+                $periodoNome = $dataInicioFallback->format('d/m/Y') . ' a ' . $dataFimFallback->format('d/m/Y');
                 $user->notify(new RelatorioErroNotification(
                     "Boletim Financeiro - {$periodoNome}",
                     $e->getMessage(),

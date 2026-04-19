@@ -5,9 +5,13 @@ namespace App\Http\Controllers\App\Financeiro;
 use App\Http\Controllers\Controller;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use App\Models\Financeiro\BankStatement;
+use App\Models\PdfGeneration;
 use App\Services\OfxService;
 use App\Services\OfxExportService;
+use App\Jobs\GenerateOfxJob;
 
 class OfxController extends Controller
 {
@@ -71,14 +75,26 @@ class OfxController extends Controller
 
             $file = $request->file('file');
             $fileContents = file_get_contents($file->getRealPath());
+
+            // Verificar magic bytes: OFX deve começar com OFXHEADER: (SGML) ou <OFX (XML)
+            if (!preg_match('/^\s*(OFXHEADER:|<\?OFX|<OFX\b)/i', $fileContents)) {
+                $msg = 'O arquivo não é um OFX válido. Verifique se o arquivo correto foi selecionado.';
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'type' => 'error', 'message' => $msg], 422);
+                }
+                return redirect()->back()->withErrors(['file' => $msg]);
+            }
+
             $fileHash = hash('sha256', $fileContents);
             $fileName = $file->getClientOriginalName();
 
             // Verifica se já foi importado (ANTES de processar)
             if (BankStatement::where('file_hash', $fileHash)->exists()) {
-                return redirect()
-                    ->route('banco.list', ['tab' => 'overview'])
-                    ->with('warning', 'Este arquivo OFX já foi importado anteriormente.');
+                $msg = 'Este arquivo OFX já foi importado anteriormente.';
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'type' => 'warning', 'message' => $msg], 422);
+                }
+                return redirect()->route('banco.list', ['tab' => 'overview'])->with('warning', $msg);
             }
 
             // Verifica se o usuário escolheu usar horários de missa
@@ -93,14 +109,25 @@ class OfxController extends Controller
             
             // Verifica se alguma transação foi realmente importada
             if ($totalTransacoes === 0) {
-                return redirect()
-                    ->route('banco.list', ['tab' => 'overview'])
-                    ->with('warning', 'Nenhuma transação nova foi importada. Todas as transações deste arquivo já existem no sistema.');
+                $msg = 'Nenhuma transação nova foi importada. Todas as transações deste arquivo já existem no sistema.';
+                if ($request->wantsJson() || $request->ajax()) {
+                    return response()->json(['success' => false, 'type' => 'warning', 'message' => $msg], 422);
+                }
+                return redirect()->route('banco.list', ['tab' => 'overview'])->with('warning', $msg);
             }
 
             $mensagemSucesso = "Extrato OFX importado com sucesso! {$totalTransacoes} transação(ões) importada(s).";
             if ($usarHorariosMissas) {
                 $mensagemSucesso .= ' A conciliação com horários de missa foi processada.';
+            }
+
+            if ($request->wantsJson() || $request->ajax()) {
+                $entidadeId = count($entidades) === 1 ? $entidades[0]['id'] : null;
+                return response()->json([
+                    'success'     => true,
+                    'message'     => $mensagemSucesso,
+                    'entidade_id' => $entidadeId,
+                ]);
             }
 
             // Se houver apenas 1 entidade importada, redireciona para o show dela
@@ -116,9 +143,91 @@ class OfxController extends Controller
                 ->with('success', $mensagemSucesso);
 
         } catch (\Throwable $e) {
+            $raw = $e->getMessage();
+
+            // O parser lança "Failed to parse OFX: array(...LibXMLError...)" com var_export bruto.
+            // Detectar esse padrão e substituir por mensagem amigável.
+            if (str_starts_with($raw, 'Failed to parse OFX:') || str_contains($raw, 'LibXMLError')) {
+                $errorMsg = "O arquivo OFX está em um formato não suportado ou está corrompido.\n"
+                    . "Verifique se o arquivo exportado pelo seu banco está no formato OFX 1.x (SGML) ou OFX 2.x (XML) e tente novamente.";
+            } else {
+                $errorMsg = $raw;
+            }
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => $errorMsg], 422);
+            }
             return redirect()
                 ->route('banco.list', ['tab' => 'overview'])
-                ->with('error', 'Erro ao importar o arquivo: ' . $e->getMessage());
+                ->with('error', $errorMsg);
+        }
+    }
+
+    /**
+     * Exporta OFX de forma assíncrona via fila (React).
+     *
+     * POST /relatorios/ofx/exportar-async
+     */
+    public function exportarAsync(Request $request)
+    {
+        try {
+            $entidadeId  = $request->input('entidade_id');
+            $dataInicial = $request->input('data_inicial');
+            $dataFinal   = $request->input('data_final');
+            $companyId   = session('active_company_id');
+            $tenantId    = tenant('id');
+
+            if (!$companyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa não selecionada.',
+                ], 400);
+            }
+
+            if (!$entidadeId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selecione uma conta financeira.',
+                ], 400);
+            }
+
+            $pdfGen = PdfGeneration::create([
+                'type'       => 'ofx',
+                'user_id'    => Auth::id(),
+                'company_id' => $companyId,
+                'status'     => 'pending',
+                'parameters' => [
+                    'data_inicial' => $dataInicial,
+                    'data_final'   => $dataFinal,
+                    'entidade_id'  => $entidadeId,
+                ],
+            ]);
+
+            GenerateOfxJob::dispatch(
+                $dataInicial,
+                $dataFinal,
+                (int) $entidadeId,
+                $companyId,
+                Auth::id(),
+                $tenantId,
+                $pdfGen->id
+            );
+
+            return response()->json([
+                'success' => true,
+                'pdf_id'  => $pdfGen->id,
+                'message' => 'OFX sendo gerado em background. Aguarde a notificação.',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao despachar job de OFX', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao iniciar geração do OFX: ' . $e->getMessage(),
+            ], 500);
         }
     }
 

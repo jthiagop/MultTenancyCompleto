@@ -9,6 +9,7 @@ use Yajra\DataTables\Facades\DataTables;
 use App\Models\Financeiro\ModulosAnexo;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Auth;
+use App\Services\DomusDocumentoLancamentoService;
 use App\Services\RecurrenceService;
 use App\Models\LancamentoPadrao;
 use Illuminate\Http\Request;
@@ -24,8 +25,10 @@ class TransacaoFinanceiraController extends Controller
 {
     protected RecurrenceService $recurrenceService;
 
-    public function __construct(RecurrenceService $recurrenceService)
-    {
+    public function __construct(
+        RecurrenceService $recurrenceService,
+        protected DomusDocumentoLancamentoService $domusLancamentoService
+    ) {
         $this->recurrenceService = $recurrenceService;
     }
 
@@ -140,14 +143,13 @@ class TransacaoFinanceiraController extends Controller
                 $domusDocumentoId = null;
                 if ($request->filled('domus_documento_id')) {
                     try {
-                        $domusDoc = \App\Models\DomusDocumento::find($request->input('domus_documento_id'));
+                        $domusDoc = $this->domusLancamentoService->findForActiveCompany((int) $request->input('domus_documento_id'));
                         if ($domusDoc) {
+                            $this->domusLancamentoService->markLancadoAndAttachAnexo($domusDoc, $caixa);
                             $domusDocumentoId = $domusDoc->id;
-                            $domusDoc->update(['status' => \App\Enums\StatusDomusDocumento::LANCADO]);
-                            $this->anexarDocumentoDomus($domusDoc, $caixa);
                         }
                     } catch (\Exception $e) {
-                        Log::warning('Erro ao processar DomusDocumento: ' . $e->getMessage());
+                        Log::warning('Erro ao processar DomusDocumento: '.$e->getMessage());
                     }
                 }
 
@@ -221,22 +223,16 @@ class TransacaoFinanceiraController extends Controller
 
         // Se veio do Domus IA (AJAX), atualizar status do documento e retornar JSON
         if ($request->ajax() || $request->wantsJson()) {
-            // Atualizar status do DomusDocumento e criar anexo automático
             $domusDocumentoId = null;
             if ($request->filled('domus_documento_id')) {
                 try {
-                    $domusDoc = \App\Models\DomusDocumento::find($request->input('domus_documento_id'));
+                    $domusDoc = $this->domusLancamentoService->findForActiveCompany((int) $request->input('domus_documento_id'));
                     if ($domusDoc) {
+                        $this->domusLancamentoService->markLancadoAndAttachAnexo($domusDoc, $caixa);
                         $domusDocumentoId = $domusDoc->id;
-                        
-                        // Atualizar status para lançado
-                        $domusDoc->update(['status' => \App\Enums\StatusDomusDocumento::LANCADO]);
-                        
-                        // Criar anexo automático a partir do documento do Domus IA
-                        $this->anexarDocumentoDomus($domusDoc, $caixa);
                     }
                 } catch (\Exception $e) {
-                    Log::warning('Erro ao processar DomusDocumento: ' . $e->getMessage());
+                    Log::warning('Erro ao processar DomusDocumento: '.$e->getMessage());
                 }
             }
 
@@ -402,77 +398,6 @@ class TransacaoFinanceiraController extends Controller
     }
 
     /**
-     * Anexa automaticamente o documento do Domus IA à transação financeira.
-     * 
-     * @param \App\Models\DomusDocumento $domusDoc
-     * @param TransacaoFinanceira $transacao
-     * @return void
-     */
-    private function anexarDocumentoDomus(\App\Models\DomusDocumento $domusDoc, TransacaoFinanceira $transacao): void
-    {
-        try {
-            // Verificar se o documento tem um arquivo válido
-            if (empty($domusDoc->caminho_arquivo)) {
-                Log::warning('DomusDocumento sem caminho de arquivo', ['id' => $domusDoc->id]);
-                return;
-            }
-
-            // Determinar tipo de anexo baseado no tipo do documento
-            $tipoAnexo = match($domusDoc->tipo_documento) {
-                'NF-e', 'NFC-e', 'NOTA_FISCAL' => 'nota_fiscal',
-                'CUPOM', 'CUPOM_FISCAL' => 'cupom_fiscal',
-                'BOLETO' => 'boleto',
-                'RECIBO' => 'recibo',
-                'FATURA_CARTAO' => 'fatura',
-                'COMPROVANTE' => 'comprovante',
-                default => 'documento'
-            };
-
-            // Descrição automática
-            $descricao = 'Documento importado via Domus IA';
-            if ($domusDoc->estabelecimento_nome) {
-                $descricao .= ' - ' . $domusDoc->estabelecimento_nome;
-            }
-            if ($domusDoc->tipo_documento) {
-                $descricao = $domusDoc->tipo_documento . ' - ' . $descricao;
-            }
-
-            // Criar o anexo vinculado à transação
-            ModulosAnexo::create([
-                'anexavel_id'      => $transacao->id,
-                'anexavel_type'    => TransacaoFinanceira::class,
-                'forma_anexo'      => 'arquivo',
-                'nome_arquivo'     => $domusDoc->nome_arquivo,
-                'caminho_arquivo'  => $domusDoc->caminho_arquivo,
-                'tipo_arquivo'     => $domusDoc->tipo_arquivo ?? '',
-                'extensao_arquivo' => pathinfo($domusDoc->nome_arquivo, PATHINFO_EXTENSION),
-                'mime_type'        => $domusDoc->mime_type ?? '',
-                'tamanho_arquivo'  => $domusDoc->tamanho_arquivo ?? 0,
-                'tipo_anexo'       => $tipoAnexo,
-                'descricao'        => $descricao,
-                'status'           => 'ativo',
-                'data_upload'      => now(),
-                'created_by'       => Auth::id(),
-                'created_by_name'  => Auth::user()->name ?? 'Sistema',
-            ]);
-
-            Log::info('Anexo criado automaticamente a partir do DomusDocumento', [
-                'domus_documento_id' => $domusDoc->id,
-                'transacao_id' => $transacao->id,
-                'arquivo' => $domusDoc->nome_arquivo,
-            ]);
-
-        } catch (\Exception $e) {
-            Log::error('Erro ao anexar documento Domus à transação: ' . $e->getMessage(), [
-                'domus_documento_id' => $domusDoc->id,
-                'transacao_id' => $transacao->id,
-                'trace' => $e->getTraceAsString(),
-            ]);
-        }
-    }
-
-
-    /**
      * Display the specified resource.
      */
     public function show(TransacaoFinanceira $transacaoFinanceira)
@@ -499,7 +424,13 @@ class TransacaoFinanceiraController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(TransacaoFinanceira $transacaoFinanceira)
+    public function destroyById(Request $request, int $id)
+    {
+        $transacaoFinanceira = TransacaoFinanceira::findOrFail($id);
+        return $this->destroy($transacaoFinanceira, $request);
+    }
+
+    public function destroy(TransacaoFinanceira $transacaoFinanceira, Request $request)
     {
         $activeCompanyId = session('active_company_id');
         if (!$activeCompanyId) {
@@ -509,7 +440,6 @@ class TransacaoFinanceiraController extends Controller
             ], 403);
         }
 
-        // Verificar se a transação pertence à empresa ativa
         if ($transacaoFinanceira->company_id != $activeCompanyId) {
             return response()->json([
                 'success' => false,
@@ -517,97 +447,213 @@ class TransacaoFinanceiraController extends Controller
             ], 404);
         }
 
+        $scope       = $request->input('scope', 'single');          // 'single' | 'all'
+        $rateioScope = $request->input('rateio_scope', 'parent_only'); // 'parent_only' | 'all' | 'children_only'
+
         try {
-            return \DB::transaction(function () use ($transacaoFinanceira) {
-                // Guardar informações para log
-                $transacaoId = $transacaoFinanceira->id;
-                $entidadeId = $transacaoFinanceira->entidade_id;
-                $valor = $transacaoFinanceira->valor;
-                $tipo = $transacaoFinanceira->tipo;
-                $movimentacaoId = $transacaoFinanceira->movimentacao_id;
-                $origem = $transacaoFinanceira->origem;
+            return \DB::transaction(function () use ($transacaoFinanceira, $scope, $rateioScope) {
 
-                // ✅ Saldo será recalculado dinamicamente via calculateBalance()
-                \Log::info('Deletando transação - saldo será recalculado dinamicamente', [
-                    'transacao_id' => $transacaoFinanceira->id,
-                    'entidade_id' => $transacaoFinanceira->entidade_id,
-                    'valor' => $valor,
-                    'tipo' => $tipo
-                ]);
+                // ── A) Trata lançamentos intercompany (rateio filhos) ──────────────────
+                if ($transacaoFinanceira->rateioFilhos()->exists()) {
+                    // 'all' ou 'children_only' → exclui filhos ainda em aberto
+                    if ($rateioScope === 'all' || $rateioScope === 'children_only') {
+                        $transacaoFinanceira->rateioFilhos()
+                            ->whereNotIn('situacao', ['pago', 'recebido'])
+                            ->get()
+                            ->each(fn ($filho) => $this->deleteSingle($filho));
+                    }
+                    // Desvincula todos os filhos restantes (pagos/recebidos viram independentes)
+                    $transacaoFinanceira->rateioFilhos()->update(['rateio_origem_id' => null]);
 
-                // 2. Se conciliada, desfazer vínculo com bank_statement
-                if ($transacaoFinanceira->bankStatements()->exists()) {
-                    $bankStatements = $transacaoFinanceira->bankStatements;
-                    
-                    foreach ($bankStatements as $bankStatement) {
-                        $bankStatement->update([
-                            'reconciled' => false,
-                            'status_conciliacao' => 'pendente'
-                        ]);
-                        
-                        \Log::info('Bank statement resetado', [
-                            'bank_statement_id' => $bankStatement->id,
-                            'status' => 'pendente'
+                    // 'children_only' → só exclui os filhos; mantém o registro pai
+                    if ($rateioScope === 'children_only') {
+                        return response()->json([
+                            'success' => true,
+                            'message' => 'Registros filhos (filiais) excluídos com sucesso! O lançamento da matriz foi mantido.',
                         ]);
                     }
-                    
-                    // Remover vínculo na tabela pivot
-                    $transacaoFinanceira->bankStatements()->detach();
                 }
 
-                // 3. Atualizar movimentação relacionada (se houver campo valor_conciliado)
-                if ($movimentacaoId) {
-                    $movimentacao = Movimentacao::find($movimentacaoId);
-                    
-                    if ($movimentacao) {
-                        // Se existir campo valor_conciliado, resetar para null
-                        if (\Schema::hasColumn('movimentacoes', 'valor_conciliado')) {
-                            $movimentacao->valor_conciliado = null;
-                            $movimentacao->save();
+                // ── A2) Transação atual É um filho de rateio ──────────────────────────
+                if ($transacaoFinanceira->rateio_origem_id !== null) {
+                    $parentId = $transacaoFinanceira->rateio_origem_id;
+                    $parent   = TransacaoFinanceira::find($parentId);
+
+                    if ($parent) {
+                        if ($rateioScope === 'parent_only') {
+                            // Desvincula todos os filhos (tornam-se independentes) e deleta o pai
+                            $parent->rateioFilhos()->update(['rateio_origem_id' => null]);
+                            $this->deleteSingle($parent);
+
+                            return response()->json([
+                                'success' => true,
+                                'message' => 'Registro pai excluído. Os registros filhos tornaram-se independentes.',
+                            ]);
                         }
-                        
-                        // Deletar a movimentação
-                        $movimentacao->delete();
-                        
-                        \Log::info('Movimentação deletada', [
-                            'movimentacao_id' => $movimentacaoId
-                        ]);
+
+                        if ($rateioScope === 'all') {
+                            // Deleta o pai + todos os filhos em aberto (incluindo o atual)
+                            $parent->rateioFilhos()
+                                ->whereNotIn('situacao', ['pago', 'recebido'])
+                                ->get()
+                                ->each(fn ($f) => $this->deleteSingle($f));
+                            $parent->rateioFilhos()->update(['rateio_origem_id' => null]);
+                            $this->deleteSingle($parent);
+
+                            return response()->json([
+                                'success' => true,
+                                'message' => 'Registro pai e filhos excluídos com sucesso! Os já pagos/recebidos foram mantidos.',
+                            ]);
+                        }
+
+                        if ($rateioScope === 'children_only') {
+                            // Deleta todos os filhos em aberto (incluindo o atual), mantém o pai
+                            $parent->rateioFilhos()
+                                ->whereNotIn('situacao', ['pago', 'recebido'])
+                                ->get()
+                                ->each(fn ($f) => $this->deleteSingle($f));
+                            $parent->rateioFilhos()->update(['rateio_origem_id' => null]);
+
+                            return response()->json([
+                                'success' => true,
+                                'message' => 'Registros filhos excluídos com sucesso! O lançamento da matriz foi mantido.',
+                            ]);
+                        }
                     }
+
+                    // Fallback (pai não encontrado): exclui apenas o filho atual
+                    $this->deleteSingle($transacaoFinanceira);
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Lançamento excluído com sucesso!',
+                    ]);
                 }
 
-                // 4. Deletar a transação financeira
-                $transacaoFinanceira->delete();
-                // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
+                // ── B) scope=all + parcelado ──────────────────────────────────────────
+                $ehParcelado = $transacaoFinanceira->parent_id !== null
+                    || $transacaoFinanceira->parcelas()->exists();
 
-                \Log::info('Transação excluída com sucesso', [
-                    'transacao_id' => $transacaoId,
-                    'movimentacao_id' => $movimentacaoId,
-                    'entidade_id' => $entidadeId,
-                    'valor' => (float) $valor,
-                    'tipo' => $tipo,
-                    'origem' => $origem,
-                    'user_id' => Auth::id(),
-                    'user_name' => Auth::user()->name
-                ]);
+                if ($scope === 'all' && $ehParcelado) {
+                    $rootId = $transacaoFinanceira->parent_id ?? $transacaoFinanceira->id;
+                    TransacaoFinanceira::where(function ($q) use ($rootId) {
+                        $q->where('id', $rootId)->orWhere('parent_id', $rootId);
+                    })
+                        ->whereNotIn('situacao', ['pago', 'recebido'])
+                        ->get()
+                        ->each(fn ($item) => $this->deleteSingle($item));
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Parcelas excluídas com sucesso! As já pagas/recebidas foram mantidas.',
+                    ]);
+                }
+
+                // ── C) scope=all + recorrente ─────────────────────────────────────────
+                $ehRecorrente = $transacaoFinanceira->recorrencia_id !== null
+                    || $transacaoFinanceira->recorrencia()->exists();
+
+                if ($scope === 'all' && $ehRecorrente) {
+                    // Busca via coluna recorrencia_id (vínculo direto)
+                    $recorrenciaId = $transacaoFinanceira->recorrencia_id;
+                    if ($recorrenciaId) {
+                        TransacaoFinanceira::where('recorrencia_id', $recorrenciaId)
+                            ->whereNotIn('situacao', ['pago', 'recebido'])
+                            ->get()
+                            ->each(fn ($item) => $this->deleteSingle($item));
+                    } else {
+                        // Fallback: busca via pivot recorrencia_transacoes
+                        $recorrencias = $transacaoFinanceira->recorrencia()->pluck('recorrencias.id');
+                        if ($recorrencias->isNotEmpty()) {
+                            TransacaoFinanceira::whereHas('recorrencia', fn ($q) => $q->whereIn('recorrencias.id', $recorrencias))
+                                ->whereNotIn('situacao', ['pago', 'recebido'])
+                                ->get()
+                                ->each(fn ($item) => $this->deleteSingle($item));
+                        } else {
+                            $this->deleteSingle($transacaoFinanceira);
+                        }
+                    }
+
+                    return response()->json([
+                        'success' => true,
+                        'message' => 'Ocorrências excluídas com sucesso! As já pagas/recebidas foram mantidas.',
+                    ]);
+                }
+
+                // ── D) scope=single (padrão) ──────────────────────────────────────────
+                $this->deleteSingle($transacaoFinanceira);
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Transação excluída com sucesso!'
+                    'message' => 'Lançamento excluído com sucesso!',
                 ]);
             });
         } catch (\Exception $e) {
             \Log::error('Erro ao excluir transação', [
                 'transacao_id' => $transacaoFinanceira->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-                'user_id' => Auth::id()
+                'error'        => $e->getMessage(),
+                'trace'        => $e->getTraceAsString(),
+                'user_id'      => Auth::id(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Erro ao excluir transação: ' . $e->getMessage()
+                'message' => 'Erro ao excluir transação: ' . $e->getMessage(),
             ], 500);
         }
+    }
+
+    /**
+     * Executa a exclusão física de um único lançamento financeiro,
+     * desfazendo vínculos de conciliação e movimentação antes de deletar.
+     */
+    private function deleteSingle(TransacaoFinanceira $t): void
+    {
+        // Safety: desvincula qualquer filho de rateio que possa bloquear o observer
+        if ($t->rateioFilhos()->exists()) {
+            $t->rateioFilhos()->update(['rateio_origem_id' => null]);
+        }
+
+        // Desfaz conciliações bancárias vinculadas
+        if ($t->bankStatements()->exists()) {
+            foreach ($t->bankStatements as $bs) {
+                $bs->update([
+                    'reconciled'          => false,
+                    'status_conciliacao'  => 'pendente',
+                ]);
+            }
+            $t->bankStatements()->detach();
+        }
+
+        // Deleta a movimentação (o MovimentacaoObserver atualiza saldo_atual automaticamente).
+        // Busca por DUAS vias: movimentacao_id direto OU relação polimórfica (origem_type/origem_id).
+        // Transações baixadas via TransacaoFinanceiraService::registrarBaixa() usam apenas o
+        // vínculo polimórfico e não preenchem movimentacao_id na transação.
+        $movimentacao = null;
+        if ($t->movimentacao_id) {
+            $movimentacao = Movimentacao::find($t->movimentacao_id);
+        }
+        if (!$movimentacao) {
+            $movimentacao = $t->movimentacao()->first();
+        }
+        if ($movimentacao) {
+            if (\Schema::hasColumn('movimentacoes', 'valor_conciliado')) {
+                $movimentacao->valor_conciliado = null;
+                $movimentacao->save();
+            }
+            $movimentacao->delete();
+        }
+
+        \Log::info('Transação excluída via deleteSingle', [
+            'transacao_id' => $t->id,
+            'entidade_id'  => $t->entidade_id,
+            'valor'        => (float) $t->valor,
+            'tipo'         => $t->tipo,
+            'origem'       => $t->origem,
+            'user_id'      => Auth::id(),
+        ]);
+
+        $t->delete();
     }
 
 

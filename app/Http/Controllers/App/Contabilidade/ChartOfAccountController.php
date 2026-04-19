@@ -8,6 +8,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class ChartOfAccountController extends Controller
 {
@@ -216,6 +220,8 @@ class ChartOfAccountController extends Controller
                 'code' => $c->code,
                 'name' => $c->name,
                 'type' => $c->type,
+                'is_analytical' => (bool) $c->is_analytical,
+                'is_deductible' => (bool) $c->is_deductible,
             ]),
         ]);
     }
@@ -590,7 +596,7 @@ class ChartOfAccountController extends Controller
      */
     private function exportToExcel($accounts)
     {
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
 
         // Headers
@@ -603,7 +609,7 @@ class ChartOfAccountController extends Controller
         $headerStyle = [
             'font' => ['bold' => true],
             'fill' => [
-                'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                'fillType' => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => 'E2E8F0']
             ]
         ];
@@ -625,7 +631,7 @@ class ChartOfAccountController extends Controller
         }
 
         // Gera o arquivo
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer = new Xlsx($spreadsheet);
         $filename = 'plano_de_contas_' . date('Y-m-d_His') . '.xlsx';
         $tempFile = tempnam(sys_get_temp_dir(), $filename);
         $writer->save($tempFile);
@@ -795,7 +801,7 @@ class ChartOfAccountController extends Controller
     private function parseExcel($file)
     {
         // Se não tiver a biblioteca PhpSpreadsheet, tenta usar CSV
-        if (!class_exists(\PhpOffice\PhpSpreadsheet\IOFactory::class)) {
+        if (!class_exists(IOFactory::class)) {
             throw new \Exception('Biblioteca PhpSpreadsheet não instalada. Use arquivos CSV.');
         }
 
@@ -804,7 +810,7 @@ class ChartOfAccountController extends Controller
             'tamanho' => $file->getSize()
         ]);
 
-        $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($file->getRealPath());
+        $spreadsheet = IOFactory::load($file->getRealPath());
         $worksheet = $spreadsheet->getActiveSheet();
         $data = [];
 

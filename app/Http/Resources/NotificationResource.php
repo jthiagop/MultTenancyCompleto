@@ -12,9 +12,12 @@ class NotificationResource extends JsonResource
      * Mapa de ícones por tipo de notificação.
      */
     private const ICON_MAP = [
-        'relatorio_gerado' => ['icon' => 'fa-solid fa-file-pdf', 'color' => 'danger'],
-        'conta_vencendo'   => ['icon' => 'fa-solid fa-clock', 'color' => 'warning'],
-        'aviso_sistema'    => ['icon' => 'fa-solid fa-circle-info', 'color' => 'info'],
+        'relatorio_gerado'      => ['icon' => 'fa-solid fa-file-pdf',              'color' => 'danger',  'categoria' => 'sistema'],
+        'conta_vencendo'        => ['icon' => 'fa-solid fa-clock',                 'color' => 'warning', 'categoria' => 'financeiro'],
+        'aviso_sistema'         => ['icon' => 'fa-solid fa-circle-info',           'color' => 'info',    'categoria' => 'sistema'],
+        'lancamento_financeiro' => ['icon' => 'fa-solid fa-money-bill-wave',       'color' => 'success', 'categoria' => 'financeiro'],
+        'repasse_criado'        => ['icon' => 'fa-solid fa-arrow-right-arrow-left','color' => 'primary', 'categoria' => 'financeiro'],
+        'rateio_recebido'       => ['icon' => 'fa-solid fa-code-branch',           'color' => 'warning', 'categoria' => 'financeiro'],
     ];
 
     /**
@@ -32,6 +35,7 @@ class NotificationResource extends JsonResource
         $data = $this->resource->data;
         $tipo = $data['tipo'] ?? 'geral';
         $iconInfo = self::ICON_MAP[$tipo] ?? self::ICON_DEFAULT;
+        $categoria = $data['categoria'] ?? ($iconInfo['categoria'] ?? 'geral');
 
         // Triggered by — resolve user name/avatar
         $triggeredBy = $this->resolveTriggeredBy($data['triggered_by'] ?? null);
@@ -49,6 +53,7 @@ class NotificationResource extends JsonResource
             'action_url'      => $data['action_url'] ?? null,
             'target'          => $data['target'] ?? '_self',
             'tipo'            => $tipo,
+            'categoria'       => $categoria,
 
             // Metadados do arquivo
             'file_type'       => $data['file_type'] ?? null,
@@ -56,6 +61,16 @@ class NotificationResource extends JsonResource
             'expires_at'      => $expiresAt,
             'expires_in'      => $expirationInfo['text'],
             'expires_percent' => $expirationInfo['percent'],
+
+            // Metadados financeiros (conta vencendo / lançamento / rateio)
+            'urgencia'             => $data['urgencia'] ?? null,
+            'sub_tipo'             => $data['sub_tipo'] ?? null,
+            'acao'                 => $data['acao'] ?? null,
+            'transacao_id'         => $data['transacao_id'] ?? null,
+            'data_vencimento'      => $data['data_vencimento'] ?? null,
+            'data_vencimento_iso'  => $data['data_vencimento_iso'] ?? null,
+            'valor'                => isset($data['valor']) ? (float) $data['valor'] : null,
+            'nome_matriz'          => $data['nome_matriz'] ?? null,
 
             // Estado
             'read_at'         => $this->resource->read_at?->toISOString(),
@@ -68,7 +83,10 @@ class NotificationResource extends JsonResource
     }
 
     /**
-     * Resolve informações do usuário que disparou a notificação.
+     * Resolve informações do usuário remetente (quem disparou a ação).
+     *
+     * Cache por requisição: evita N queries quando várias notificações
+     * foram disparadas pelo mesmo usuário.
      */
     private function resolveTriggeredBy(?int $userId): ?array
     {
@@ -76,16 +94,20 @@ class NotificationResource extends JsonResource
             return null;
         }
 
-        $user = \App\Models\User::find($userId);
+        /** @var array<int, array{name: string, avatar: string|null}|null> $cache */
+        static $cache = [];
 
-        if (!$user) {
-            return null;
+        if (array_key_exists($userId, $cache)) {
+            return $cache[$userId];
         }
 
-        return [
-            'name'   => $user->name,
-            'avatar' => $user->avatar_url ?? null,
-        ];
+        $user = \App\Models\User::find($userId);
+
+        $cache[$userId] = $user
+            ? ['name' => $user->name, 'avatar' => $user->avatar_url]
+            : null;
+
+        return $cache[$userId];
     }
 
     /**

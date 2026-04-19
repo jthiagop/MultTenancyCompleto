@@ -465,6 +465,9 @@ class ConciliacaoController extends Controller
             // 🤖 APRENDIZADO AUTOMÁTICO - Sistema aprende com a ação do usuário
             $this->aprenderComUsuario($request, $bankStatement);
 
+            // 📊 FEEDBACK DA SUGESTÃO — registra aceite/rejeição para melhoria contínua
+            $this->registrarFeedbackSugestao($request, $bankStatement);
+
             // Retornar JSON se for requisição AJAX, senão redirecionar
             if ($request->expectsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
                 // Busca dados atualizados para retornar
@@ -734,7 +737,7 @@ class ConciliacaoController extends Controller
         return redirect()->back()->with('success', 'Lançamento ignorado com sucesso!');
     }
 
-    public function ignorar($id)
+    public function ignorar(Request $request, $id)
     {
         // Encontra o lançamento bancário pelo ID (com filtro de company_id para segurança multi-tenant)
         $companyId = session('active_company_id');
@@ -743,7 +746,13 @@ class ConciliacaoController extends Controller
         // Atualiza o status para "ignorado"
         $bankStatement->update(['status_conciliacao' => 'ignorado']);
 
-        // Redireciona com mensagem de sucesso
+        if ($request->wantsJson() || $request->header('Accept') === 'application/json') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Lançamento ignorado com sucesso!',
+            ]);
+        }
+
         return redirect()->back()->with('success', 'Lançamento ignorado com sucesso!');
     }
 
@@ -1565,31 +1574,241 @@ class ConciliacaoController extends Controller
         }
     }
 
-    /**
-     * 🤖 MOTOR DE APRENDIZADO AUTOMÁTICO
-     * Cria regras inteligentes baseadas no comportamento do usuário
-     */
+    // ── Conciliação em lote ─────────────────────────────────────────────
+
+    public function conciliarLote(Request $request)
+    {
+        $companyId = session('active_company_id');
+        if (!$companyId) {
+            return response()->json(['success' => false, 'message' => 'Companhia não encontrada.'], 403);
+        }
+
+        $itens = $request->input('itens', []);
+        if (empty($itens) || !is_array($itens)) {
+            return response()->json(['success' => false, 'message' => 'Nenhum item informado.'], 422);
+        }
+
+        $sucesso = 0;
+        $erros = [];
+
+        DB::beginTransaction();
+        try {
+            $suggestionService = app(ConciliacaoSuggestionService::class);
+
+            foreach ($itens as $item) {
+                $bsId = $item['bank_statement_id'] ?? null;
+                $mode = $item['mode'] ?? 'sugestao';
+
+                $bs = BankStatement::where('company_id', $companyId)->find($bsId);
+                if (!$bs) {
+                    $erros[] = "Extrato #{$bsId} não encontrado.";
+                    continue;
+                }
+
+                if ($mode === 'match' && !empty($item['transacao_id'])) {
+                    $transacao = TransacaoFinanceira::where('company_id', $companyId)->find($item['transacao_id']);
+                    if ($transacao) {
+                        $bs->conciliarCom($transacao, (float) $transacao->valor);
+                        $sucesso++;
+                    } else {
+                        $erros[] = "Transação #{$item['transacao_id']} não encontrada.";
+                    }
+                } else {
+                    $sug = $suggestionService->sugerirPorDados($companyId, $bs->memo, null, (float) $bs->amount);
+                    if (($sug['confianca'] ?? 0) < 50 || !$sug['lancamento_padrao_id']) {
+                        $erros[] = "Extrato #{$bsId}: confiança insuficiente ({$sug['confianca']}%).";
+                        continue;
+                    }
+
+                    $tipo = $bs->amount < 0 ? 'saida' : 'entrada';
+                    $valor = abs((float) $bs->amount);
+                    $data = [
+                        'company_id'          => $companyId,
+                        'tipo'                => $tipo,
+                        'valor'               => $valor,
+                        'data_competencia'    => $bs->dtposted,
+                        'descricao'           => $sug['descricao'] ?? $bs->memo ?? 'Conciliação em lote',
+                        'descricao2'          => $sug['descricao'] ?? $bs->memo ?? 'Conciliação em lote',
+                        'entidade_id'         => $bs->entidade_financeira_id,
+                        'lancamento_padrao_id' => $sug['lancamento_padrao_id'],
+                        'cost_center_id'      => $sug['cost_center_id'],
+                        'tipo_documento'      => $sug['tipo_documento'] ?? '',
+                        'origem'              => 'conciliacao_bancaria',
+                        'situacao'            => $tipo === 'entrada' ? 'recebido' : 'pago',
+                        'created_by'          => Auth::id(),
+                        'created_by_name'     => Auth::user()->name,
+                        'updated_by'          => Auth::id(),
+                        'updated_by_name'     => Auth::user()->name,
+                    ];
+
+                    if ($sug['parceiro_id']) {
+                        $data['parceiro_id'] = $sug['parceiro_id'];
+                    }
+
+                    $lp = LancamentoPadrao::find($sug['lancamento_padrao_id']);
+                    if ($lp) {
+                        if ($lp->conta_debito_id) $data['conta_debito_id'] = $lp->conta_debito_id;
+                        if ($lp->conta_credito_id) $data['conta_credito_id'] = $lp->conta_credito_id;
+                    }
+
+                    $mov = $this->movimentacao($data);
+                    $data['movimentacao_id'] = $mov->id;
+                    $transacao = TransacaoFinanceira::create($data);
+                    $mov->origem_id = $transacao->id;
+                    $mov->origem_type = TransacaoFinanceira::class;
+                    $mov->save();
+
+                    $bs->conciliarCom($transacao, $valor);
+                    $sucesso++;
+                }
+            }
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+            Log::error('Erro conciliação em lote', ['error' => $e->getMessage()]);
+            return response()->json(['success' => false, 'message' => 'Erro: ' . $e->getMessage()], 500);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$sucesso} conciliação(ões) realizada(s).",
+            'data'    => ['sucesso' => $sucesso, 'erros' => $erros],
+        ]);
+    }
+
+    public function ignorarLote(Request $request)
+    {
+        $companyId = session('active_company_id');
+        $ids = $request->input('ids', []);
+
+        if (empty($ids)) {
+            return response()->json(['success' => false, 'message' => 'Nenhum item informado.'], 422);
+        }
+
+        $updated = BankStatement::where('company_id', $companyId)
+            ->whereIn('id', $ids)
+            ->update(['status_conciliacao' => 'ignorado']);
+
+        return response()->json([
+            'success' => true,
+            'message' => "{$updated} extrato(s) ignorado(s).",
+            'data'    => ['total' => $updated],
+        ]);
+    }
+
+    // ── Dashboard de acurácia da IA ─────────────────────────────────────
+
+    public function dashboardIa()
+    {
+        try {
+            $companyId = session('active_company_id');
+            if (!$companyId) {
+                return response()->json(['success' => false, 'data' => null], 200);
+            }
+
+            $service = app(ConciliacaoSuggestionService::class);
+            $data = $service->getDashboardData((int) $companyId);
+
+            return response()->json(['success' => true, 'data' => $data], 200);
+        } catch (\Throwable $e) {
+            Log::warning('dashboardIa: indisponível', ['message' => $e->getMessage()]);
+            return response()->json(['success' => false, 'data' => null], 200);
+        }
+    }
+
+    public function buscarLancamento(Request $request)
+    {
+        try {
+            $companyId = session('active_company_id');
+
+            if (!$companyId) {
+                return response()->json(['success' => false, 'message' => 'Empresa não identificada.'], 403);
+            }
+
+            $entidadeId = $request->input('entidade_id');
+            $searchTerm = trim($request->input('q', ''));
+            $startDate  = $request->input('start_date');
+            $endDate    = $request->input('end_date');
+
+            $builder = TransacaoFinanceira::where('company_id', $companyId)
+                ->with(['parceiro:id,nome', 'entidadeFinanceira:id,nome', 'lancamentoPadrao:id,description']);
+
+            if ($entidadeId) {
+                $builder->where('entidade_id', $entidadeId);
+            }
+
+            if ($startDate && $endDate) {
+                $builder->where(function ($q) use ($startDate, $endDate) {
+                    $q->whereBetween('data_vencimento', [$startDate, $endDate])
+                      ->orWhere(function ($q2) use ($startDate, $endDate) {
+                          $q2->whereNull('data_vencimento')
+                             ->whereBetween('data_competencia', [$startDate, $endDate]);
+                      });
+                });
+            }
+
+            if ($searchTerm !== '') {
+                $builder->where(function ($q) use ($searchTerm) {
+                    $q->where('descricao', 'like', "%{$searchTerm}%")
+                      ->orWhereHas('parceiro', function ($pq) use ($searchTerm) {
+                          $pq->where('nome', 'like', "%{$searchTerm}%");
+                      });
+                });
+            }
+
+            $results = $builder->orderByDesc('data_vencimento')->orderByDesc('data_competencia')
+                ->limit(50)
+                ->get()
+                ->map(function ($t) {
+                    return [
+                        'id'                => $t->id,
+                        'data_competencia'  => $t->getRawOriginal('data_competencia'),
+                        'data_vencimento'   => $t->getRawOriginal('data_vencimento'),
+                        'data_pagamento'    => $t->getRawOriginal('data_pagamento'),
+                        'tipo'              => $t->tipo,
+                        'valor'             => (float) $t->valor,
+                        'valor_pago'        => (float) $t->valor_pago,
+                        'descricao'         => $t->descricao,
+                        'parceiro_nome'     => $t->parceiro?->nome,
+                        'conta_nome'        => $t->entidadeFinanceira?->nome,
+                        'categoria'         => $t->lancamentoPadrao?->description,
+                        'situacao'          => $t->getRawOriginal('situacao'),
+                        'tipo_documento'    => $t->tipo_documento,
+                        'numero_documento'  => $t->numero_documento,
+                        'conciliado'        => $t->movimentacao_id !== null,
+                    ];
+                });
+
+            return response()->json(['success' => true, 'data' => $results]);
+        } catch (\Exception $e) {
+            Log::error('buscarLancamento: erro', [
+                'message' => $e->getMessage(),
+                'file'    => $e->getFile() . ':' . $e->getLine(),
+            ]);
+            return response()->json(['success' => false, 'message' => 'Erro interno ao buscar lançamentos.'], 500);
+        }
+    }
+
+    // ── Motor de aprendizado automático ─────────────────────────────────
+
     private function aprenderComUsuario($request, $bankStatement)
     {
-        // Só aprende se o usuário selecionou um Lançamento Padrão
         if (!$request->lancamento_padrao_id) {
             return;
         }
 
+        $companyId = session('active_company_id');
         $memo = $bankStatement->memo ?? '';
-        
-        // Pega os primeiros 20 caracteres como padrão de busca
         $termoBusca = Str::upper(substr($memo, 0, 20));
 
-        // Verifica se já existe uma regra para este padrão
-        $regraExiste = ConciliacaoRegra::where('company_id', session('active_company_id'))
+        $regraExiste = ConciliacaoRegra::where('company_id', $companyId)
             ->where('termo_busca', $termoBusca)
             ->exists();
 
-        // Se não existe e o termo não está vazio, cria a regra
         if (!$regraExiste && !empty($termoBusca)) {
             ConciliacaoRegra::create([
-                'company_id'           => session('active_company_id'),
+                'company_id'           => $companyId,
                 'termo_busca'          => $termoBusca,
                 'lancamento_padrao_id' => $request->lancamento_padrao_id,
                 'cost_center_id'       => $request->cost_center_id,
@@ -1600,10 +1819,41 @@ class ConciliacaoController extends Controller
                 'created_by_name'      => Auth::user()->name,
             ]);
 
-            \Log::debug('Nova regra de conciliação aprendida', [
+            Log::debug('Nova regra de conciliação aprendida', [
                 'termo_busca' => $termoBusca,
                 'lancamento_padrao_id' => $request->lancamento_padrao_id,
             ]);
         }
+
+        ConciliacaoSuggestionService::invalidarCacheRegras((int) $companyId);
+    }
+
+    private function registrarFeedbackSugestao($request, $bankStatement)
+    {
+        $sugOrigem = $request->input('sug_origem');
+        if (!$sugOrigem) return;
+
+        $companyId = session('active_company_id');
+        $service = app(ConciliacaoSuggestionService::class);
+
+        $sugOriginal = [
+            'sug_lancamento_padrao_id' => $request->input('sug_lancamento_padrao_id'),
+            'sug_cost_center_id'       => $request->input('sug_cost_center_id'),
+            'sug_tipo_documento'       => $request->input('sug_tipo_documento'),
+            'sug_descricao'            => $request->input('sug_descricao'),
+            'sug_parceiro_id'          => $request->input('sug_parceiro_id'),
+            'sug_confianca'            => $request->input('sug_confianca', 0),
+            'sug_origem'               => $sugOrigem,
+        ];
+
+        $dadosEscolhidos = [
+            'lancamento_padrao_id' => $request->input('lancamento_padrao_id'),
+            'cost_center_id'       => $request->input('cost_center_id'),
+            'tipo_documento'       => $request->input('tipo_documento'),
+            'descricao'            => $request->input('descricao2', $request->input('descricao')),
+            'fornecedor_id'        => $request->input('fornecedor_id'),
+        ];
+
+        $service->registrarFeedback((int) $companyId, $bankStatement->id, $sugOriginal, $dadosEscolhidos);
     }
 }

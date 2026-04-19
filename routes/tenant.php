@@ -11,6 +11,7 @@ use App\Http\Controllers\App\ExtratoController;
 use App\Http\Controllers\App\AnexoController;
 use App\Http\Controllers\App\Anexos\ModulosAnexosController;
 use App\Http\Controllers\App\BancoController;
+use App\Http\Controllers\App\ReactBancoController;
 use App\Http\Controllers\App\BankConfigController;
 use App\Http\Controllers\App\RecorrenciaController;
 use App\Http\Controllers\App\BankStatementController;
@@ -27,6 +28,7 @@ use App\Http\Controllers\App\CaixaController;
 use App\Http\Controllers\App\LancamentoPadraoController;
 use App\Http\Controllers\App\BankController;
 use App\Http\Controllers\App\Cemiterio\CemeteryController;
+use App\Http\Controllers\App\Cemiterio\DifuntoController;
 use App\Http\Controllers\App\Cemiterio\SepulturaController;
 use App\Http\Controllers\App\Contabilidade\ContabilidadeController;
 use App\Http\Controllers\App\EntidadeFinanceiraController;
@@ -42,11 +44,15 @@ use App\Http\Controllers\App\Financeiro\CostCenterController;
 use App\Http\Controllers\App\Financeiro\FormasPagamentoController;
 use App\Http\Controllers\App\Financeiro\FormasRecebimentoController;
 use App\Http\Controllers\App\Financeiro\ParceiroController;
+use App\Http\Controllers\App\Financeiro\FinanceiroFormDataController;
 use App\Http\Controllers\App\Financeiro\OfxController;
 use App\Http\Controllers\App\Relatorios\ReciboController;
 use App\Http\Controllers\App\Financeiro\TransacaoFinanceiraController;
 use App\Http\Controllers\App\Financeiro\TransferenciaController;
 use App\Http\Controllers\App\Financeiro\RepasseController;
+use App\Http\Controllers\App\ReactAppController;
+use App\Http\Controllers\App\ReactAuthController;
+use App\Http\Controllers\App\ReactCadastrosController;
 use App\Http\Controllers\Financeiro\FinanceiroController;
 use App\Http\Controllers\App\Frota\CarInsuranceController;
 use App\Http\Controllers\App\NamePatrimonioController;
@@ -115,6 +121,28 @@ Route::middleware([
         return view('app.auth.login', compact('randomImage', 'backgroundImage'));
     });
 
+    // SPA React — autenticação (guest); deve ficar fora do grupo auth para permitir acesso sem sessão
+    Route::middleware(['guest'])->group(function () {
+        Route::get('/app/login', [ReactAuthController::class, 'index'])
+            ->name('react-auth.login-page');
+        Route::get('/app/auth/{any?}', [ReactAuthController::class, 'index'])
+            ->where('any', '.*')
+            ->name('react-auth.index');
+    });
+
+    // Endpoint JSON leve para o React SPA verificar o status do usuário autenticado.
+    // Usado após opaqueredirect no login para saber se precisa trocar a senha.
+    Route::get('/api/auth/status', function () {
+        if (!Auth::check()) {
+            return response()->json(['authenticated' => false], 200);
+        }
+        $user = Auth::user();
+        return response()->json([
+            'authenticated'        => true,
+            'must_change_password' => (bool) $user->must_change_password,
+        ], 200);
+    })->middleware(['web'])->name('api.auth.status');
+
     // Rota para o dashboard, acessível apenas por usuários autenticados e verificados
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware(['auth', 'check.user.active', 'verified'])
@@ -123,9 +151,10 @@ Route::middleware([
         ->middleware(['auth', 'check.user.active', 'verified'])
         ->name('dashboard.missas-chart-data');
 
-    // Rota alternativa para teste sem autenticação (desenvolvimento)
+    // Rota alternativa para teste (desenvolvimento) — mantém autenticação
     if (app()->environment(['local', 'development', 'testing'])) {
-        Route::get('/api/dashboard/missas-chart-data', [DashboardController::class, 'getMissasChartData'])
+        Route::middleware(['auth', 'verified'])
+            ->get('/api/dashboard/missas-chart-data', [DashboardController::class, 'getMissasChartData'])
             ->name('api.dashboard.missas-chart-data');
     }
 
@@ -152,27 +181,28 @@ Route::middleware([
     });
 
     // Rota específica para avatars
+    // Requer autenticação + prevenção de path traversal
     Route::get('/avatar/{id}', function ($id) {
-        $filePath = Storage::disk('public')->path($id);
+        $storageRoot = realpath(Storage::disk('public')->path(''));
+        $filePath    = realpath(Storage::disk('public')->path($id));
 
-        // Verificar se o arquivo existe
-        if (!file_exists($filePath)) {
+        // Bloqueia path traversal: o caminho resolvido deve estar dentro do storage root
+        if (!$filePath || !$storageRoot || !str_starts_with($filePath, $storageRoot . DIRECTORY_SEPARATOR)) {
+            $filePath = null;
+        }
+
+        if (!$filePath || !file_exists($filePath)) {
             $defaultAvatar = public_path('assets/images/avatars/default-avatar.png');
 
-            // Se o avatar padrão não existir, criar um simples
             if (!file_exists($defaultAvatar)) {
-                // Criar diretório se não existir
                 if (!is_dir(dirname($defaultAvatar))) {
                     mkdir(dirname($defaultAvatar), 0755, true);
                 }
-
-                // Criar um avatar padrão simples (SVG)
                 $svgContent = '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
                     <rect width="100" height="100" fill="#e5e7eb"/>
                     <circle cx="50" cy="35" r="15" fill="#9ca3af"/>
                     <path d="M20 80 Q50 60 80 80" stroke="#9ca3af" stroke-width="3" fill="none"/>
                 </svg>';
-
                 file_put_contents($defaultAvatar, $svgContent);
             }
 
@@ -180,46 +210,33 @@ Route::middleware([
         }
 
         return response()->file($filePath);
-    })->name('avatar');
+    })->middleware('auth')->name('avatar');
 
-    // Rota para servir arquivos públicos
+    // Rota para servir arquivos públicos (requer autenticação + prevenção de path traversal)
     Route::get('/file/{path}', function ($path) {
-        $filePath = Storage::disk('public')->path($path);
+        $storageRoot = realpath(Storage::disk('public')->path(''));
+        $filePath    = realpath(Storage::disk('public')->path($path));
 
-        // Verificar se o arquivo existe
+        // Bloqueia path traversal: o caminho resolvido deve estar dentro do storage root
+        if (!$filePath || !$storageRoot || !str_starts_with($filePath, $storageRoot . DIRECTORY_SEPARATOR)) {
+            abort(403);
+        }
+
         if (!file_exists($filePath)) {
-            // Se for um avatar, retornar avatar padrão
-            if (str_contains($path, 'avatar') || is_numeric($path)) {
-                $defaultAvatar = public_path('assets/images/avatars/default-avatar.png');
-
-                // Se o avatar padrão não existir, criar um simples
-                if (!file_exists($defaultAvatar)) {
-                    // Criar diretório se não existir
-                    if (!is_dir(dirname($defaultAvatar))) {
-                        mkdir(dirname($defaultAvatar), 0755, true);
-                    }
-
-                    // Criar um avatar padrão simples (SVG)
-                    $svgContent = '<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg">
-                        <rect width="100" height="100" fill="#e5e7eb"/>
-                        <circle cx="50" cy="35" r="15" fill="#9ca3af"/>
-                        <path d="M20 80 Q50 60 80 80" stroke="#9ca3af" stroke-width="3" fill="none"/>
-                    </svg>';
-
-                    file_put_contents($defaultAvatar, $svgContent);
-                }
-
-                return response()->file($defaultAvatar);
-            }
-
-            // Para outros arquivos, retornar erro 404
             return response()->json(['error' => 'Arquivo não encontrado'], 404);
         }
 
         return response()->file($filePath);
-    })->where('path', '.*')->name('file');
+    })->middleware('auth')->where('path', '.*')->name('file');
 
 
+
+    // Alteração obrigatória de senha (qualquer usuário autenticado)
+    // throttle:5,1 = máximo 5 tentativas por minuto (proteção contra brute force na current_password)
+    Route::middleware(['auth', 'throttle:5,1'])->group(function () {
+        Route::get('/password/change', [UserController::class, 'showPasswordChange'])->name('password.change.show');
+        Route::post('/password/change', [UserController::class, 'updatePasswordChange'])->name('password.change');
+    });
 
     // Grupo de rotas protegido pelo middleware 'auth', 'check.user.active', 'ensureUserHasAccess' e 'password.change.required'
     Route::middleware(['auth', 'check.user.active', 'ensureUserHasAccess', 'password.change.required'])->group(function () {
@@ -251,6 +268,8 @@ Route::middleware([
         });
 
         Route::get('/session/switch-company/{company}', [SessionController::class, 'switchCompany'])->name('session.switch-company');
+        // React App: POST JSON em /app/session/switch-company — grava sessão, responde {ok:true}, React faz reload()
+        Route::post('/app/session/switch-company', [SessionController::class, 'switchCompanyReact'])->name('session.switch-company-react');
         Route::delete('/profile/sessions/{sessionId}', [SessionController::class, 'destroy'])->name('profile.sessions.destroy');
 
         // =====================================================================
@@ -271,6 +290,10 @@ Route::middleware([
         Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
         Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
         Route::post('/company/consultar-cnpj', [CompanyController::class, 'consultarCNPJ'])->name('company.consultar-cnpj');
+
+        // API React da fraternidade (empresa ativa na sessão)
+        Route::get('/api/cadastros/company/active', [ReactCadastrosController::class, 'activeCompany'])->name('react.cadastros.company.active');
+        Route::put('/api/cadastros/company/active', [ReactCadastrosController::class, 'updateActiveCompany'])->name('react.cadastros.company.active.update');
 
         // Notas Fiscais de Entrada (DFe) — protegido por permissão
         Route::middleware(['can:notafiscal.index'])->group(function () {
@@ -294,13 +317,24 @@ Route::middleware([
             Route::delete('/permissions/{permission}', [PermissionController::class, 'destroy'])->name('permissions.destroy');
         });
 
+        // API React de usuários — acessível a qualquer role que tenha a permission users.index
+        Route::middleware(['can:users.index'])->group(function () {
+            Route::get('/api/cadastros/usuarios', [ReactCadastrosController::class, 'usuarios'])->name('react.cadastros.usuarios');
+            Route::get('/api/cadastros/usuarios/{user}', [ReactCadastrosController::class, 'showUsuario'])->name('react.cadastros.usuario.show');
+            Route::get('/api/cadastros/companies', [ReactCadastrosController::class, 'allCompanies'])->name('react.cadastros.companies');
+            Route::get('/api/cadastros/permissions', [ReactCadastrosController::class, 'permissions'])->name('react.cadastros.permissions');
+            Route::post('/api/cadastros/usuarios', [UserController::class, 'store'])->name('react.cadastros.usuarios.store');
+            Route::put('/api/cadastros/usuarios/{user}', [UserController::class, 'update'])->name('react.cadastros.usuarios.update');
+            Route::post('/api/cadastros/usuarios/{user}/reset-password', [UserController::class, 'resetPassword'])->name('react.cadastros.usuarios.reset-password');
+        });
+
         // Rotas acessíveis para administradores (admin e global)
         Route::middleware(['role:admin|global'])->group(function () {
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
             Route::get('app/financeiro/caixa/list', [CaixaController::class, 'list'])->name('caixa.list');
 
-            // Rotas de usuários — protegidas por permissão users.index
+            // Gerenciamento avançado de usuários (Blade) — protegido por permissão users.index
             Route::middleware(['can:users.index'])->group(function () {
                 Route::resource('users', UserController::class);
                 Route::post('/users/check-email', [UserController::class, 'checkEmail'])->name('users.checkEmail');
@@ -314,9 +348,8 @@ Route::middleware([
                 Route::put('/users/{user}/reset-password', [UserController::class, 'resetPassword'])->name('users.password.reset');
             });
 
-            // Rotas para alteração obrigatória de senha (acessível por qualquer admin)
-            Route::get('/password/change', [UserController::class, 'showPasswordChange'])->name('password.change.show');
-            Route::post('/password/change', [UserController::class, 'updatePasswordChange'])->name('password.change');
+            // Rotas para alteração obrigatória de senha foram movidas para fora deste grupo
+            // (qualquer usuário autenticado pode trocar sua própria senha).
 
             // Organismos — protegido por permissão company.index
             Route::resource('company', CompanyController::class)->except(['edit', 'update'])->middleware('can:company.index');
@@ -346,6 +379,11 @@ Route::middleware([
 
                 // Rota principal que exibe a página com as abas.
                 Route::get('/', [ContabilidadeController::class, 'index'])->name('index');
+                Route::get('categorias/data', [ContabilidadeController::class, 'categoriasData'])->name('categorias.data');
+                Route::post('categorias', [ContabilidadeController::class, 'store'])->name('categorias.store');
+                Route::get('categorias/{id}/edit', [ContabilidadeController::class, 'edit'])->name('categorias.edit');
+                Route::put('categorias/{id}', [ContabilidadeController::class, 'update'])->name('categorias.update');
+                Route::delete('categorias/{id}', [ContabilidadeController::class, 'destroy'])->name('categorias.destroy');
 
                 // Rotas para o CRUD do Plano de Contas.
                 Route::get('plano-contas/next-code', [ChartOfAccountController::class, 'getNextCode'])->name('plano-contas.next-code');
@@ -403,6 +441,9 @@ Route::middleware([
             Route::get('/financeiro/saldos-mensais', [CaixaController::class, 'getSaldosMensais'])->name('financeiro.saldos-mensais');
             Route::post('/financeiro/parceiros', [ParceiroController::class, 'store'])->name('financeiro.fornecedores.store');
 
+            // Dados para os selects do formulário React de lançamento
+            Route::get('/financeiro/api/form-data', [FinanceiroFormDataController::class, 'formData'])->name('financeiro.api.form-data');
+
             // =====================================================================
             // PARCEIROS (Fornecedores e Clientes) - CRUD completo
             // =====================================================================
@@ -424,6 +465,22 @@ Route::middleware([
             Route::get('/banco/fluxo-chart-data', [BancoController::class, 'getFluxoBancoChartData'])->name('banco.fluxo.chart.data');
             Route::get('/banco/transacoes-data', [BancoController::class, 'getTransacoesData'])->name('banco.transacoes.data');
             Route::get('/banco/stats-data', [BancoController::class, 'getStatsData'])->name('banco.stats.data');
+            // Endpoints REST para as tabelas React (retornam JSON limpo)
+            Route::get('/app/financeiro/banco/entidades', [ReactBancoController::class, 'entidades'])->name('react.banco.entidades');
+            Route::post('/app/financeiro/banco/entidades/store', [ReactBancoController::class, 'storeEntidade'])->name('react.banco.entidades.store');
+            Route::get('/app/financeiro/banco/banks', [ReactBancoController::class, 'banks'])->name('react.banco.banks');
+            Route::get('/app/financeiro/banco/contas-contabeis', [ReactBancoController::class, 'contasContabeis'])->name('react.banco.contas-contabeis');
+            Route::get('/app/financeiro/banco/entidade/{id}/resumo', [ReactBancoController::class, 'entidadeResumo'])->name('react.banco.entidade.resumo');
+            Route::get('/app/financeiro/banco/entidade/{id}/conciliacoes-pendentes', [ReactBancoController::class, 'conciliacoesPendentes'])->name('react.banco.entidade.conciliacoes-pendentes');
+            Route::get('/app/financeiro/banco/entidade/{id}/movimentacoes-conciliadas', [ReactBancoController::class, 'movimentacoesConciliadas'])->name('react.banco.entidade.movimentacoes-conciliadas');
+            Route::get('/app/financeiro/banco/transacoes', [ReactBancoController::class, 'transacoes'])->name('react.banco.transacoes');
+            Route::get('/app/financeiro/banco/transacoes-opcoes-origem', [ReactBancoController::class, 'transacoesOpcoesOrigem'])->name('react.banco.transacoes.opcoes.origem');
+            Route::get('/app/financeiro/banco/stats', [ReactBancoController::class, 'stats'])->name('react.banco.stats');
+            Route::post('/app/financeiro/banco/lancamento', [ReactBancoController::class, 'store'])->name('react.banco.lancamento.store');
+            Route::get('/app/financeiro/banco/lancamento/{id}', [ReactBancoController::class, 'show'])->name('react.banco.lancamento.show');
+            Route::put('/app/financeiro/banco/lancamento/{id}', [ReactBancoController::class, 'update'])->name('react.banco.lancamento.update');
+            Route::post('/app/financeiro/banco/lancamento/{id}/pagamento', [ReactBancoController::class, 'registrarPagamento'])->name('react.banco.lancamento.pagamento');
+            Route::delete('/app/financeiro/banco/lancamento/anexo/{anexoId}', [ReactBancoController::class, 'destroyAnexo'])->name('react.banco.lancamento.anexo.destroy');
             Route::get('/banco/summary', [BancoController::class, 'getSummary'])->name('banco.summary');
             Route::post('/banco/mark-as-paid', [BancoController::class, 'markAsPaid'])->name('banco.mark-as-paid');
             Route::post('/banco/mark-as-open', [BancoController::class, 'markAsOpen'])->name('banco.mark-as-open');
@@ -517,6 +574,8 @@ Route::middleware([
             Route::prefix('integracoes')->group(function () {
                 Route::get('/', [App\Http\Controllers\WhatsAppIntegrationController::class, 'listarIntegracoes'])->name('integracoes.listar');
                 Route::delete('/{id}', [App\Http\Controllers\WhatsAppIntegrationController::class, 'excluirIntegracao'])->name('integracoes.excluir');
+                Route::get('/whatsapp/horario', [App\Http\Controllers\WhatsAppIntegrationController::class, 'buscarHorarioNotificacao'])->name('integracoes.buscar-horario');
+                Route::post('/whatsapp/horario', [App\Http\Controllers\WhatsAppIntegrationController::class, 'configurarHorarioNotificacao'])->name('integracoes.configurar-horario');
             });
 
             Route::resource('anexos', AnexoController::class);
@@ -552,6 +611,22 @@ Route::middleware([
             Route::get('/patrimonios/grafico', [PatrimonioController::class, 'grafico']);
             Route::get('/report/shipping', [ReportController::class, 'shippingReport'])->name('report.shipping');
             Route::get('/report/shipping/data', [ReportController::class, 'shippingReportData'])->name('report.shipping.data');
+            Route::get('cemiterio/difuntos', [DifuntoController::class, 'index'])->middleware('can:cemiterio.index');
+            Route::post('cemiterio/difuntos', [DifuntoController::class, 'store'])->middleware('can:cemiterio.index');
+            Route::get('cemiterio/difuntos/{id}', [DifuntoController::class, 'show'])->middleware('can:cemiterio.index');
+            Route::put('cemiterio/difuntos/{id}', [DifuntoController::class, 'update'])->middleware('can:cemiterio.index');
+            Route::get('cemiterio/sepulturas/search', [DifuntoController::class, 'searchSepulturas'])->middleware('can:cemiterio.index');
+            Route::get('cemiterio/difuntos/search', [DifuntoController::class, 'searchDifuntos'])->middleware('can:cemiterio.index');
+            Route::get('cemiterio/parentes/search', [DifuntoController::class, 'searchParentes'])->middleware('can:cemiterio.index');
+            Route::post('cemiterio/sepulturas/quick', [DifuntoController::class, 'storeQuickSepultura'])->middleware('can:cemiterio.index');
+            Route::get('cemiterio/tumulos', [SepulturaController::class, 'index'])->middleware('can:cemiterio.index');
+            Route::post('cemiterio/tumulos', [SepulturaController::class, 'storeJson'])->middleware('can:cemiterio.index');
+            Route::get('cemiterio/tumulos/{id}', [SepulturaController::class, 'show'])->middleware('can:cemiterio.index');
+            Route::put('cemiterio/tumulos/{id}', [SepulturaController::class, 'updateJson'])->middleware('can:cemiterio.index');
+            Route::get('cemiterio/stats', [SepulturaController::class, 'stats'])->middleware('can:cemiterio.index');
+            Route::get('cemiterio/cobrancas', [\App\Http\Controllers\App\Cemiterio\CobrancaController::class, 'index'])->middleware('can:cemiterio.index');
+            Route::post('cemiterio/cobrancas', [\App\Http\Controllers\App\Cemiterio\CobrancaController::class, 'store'])->middleware('can:cemiterio.index');
+            Route::put('cemiterio/cobrancas/{id}/pagar', [\App\Http\Controllers\App\Cemiterio\CobrancaController::class, 'pagar'])->middleware('can:cemiterio.index');
             Route::resource('cemiterio', CemeteryController::class)->middleware('can:cemiterio.index');
             Route::resource('sepultura', SepulturaController::class)->middleware('can:cemiterio.index');
 
@@ -563,8 +638,16 @@ Route::middleware([
             Route::get('/conciliacao', [ConciliacaoController::class, 'index'])->name('conciliacao.index');
             Route::get('/conciliacao/comparar/{id}', [ConciliacaoController::class, 'comparar'])->name('conciliacao.comparar');
             Route::post('/conciliacao/conciliar', [ConciliacaoController::class, 'conciliar'])->name('conciliacao.conciliar');
+            Route::post('/conciliacao/conciliar-lote', [ConciliacaoController::class, 'conciliarLote'])->name('conciliacao.conciliar-lote');
+            Route::post('/conciliacao/ignorar-lote', [ConciliacaoController::class, 'ignorarLote'])->name('conciliacao.ignorar-lote');
+            Route::get('/conciliacao/dashboard-ia', [ConciliacaoController::class, 'dashboardIa'])->name('conciliacao.dashboard-ia');
+            Route::get('/conciliacao/buscar-lancamento', [ConciliacaoController::class, 'buscarLancamento'])->name('conciliacao.buscar-lancamento');
             Route::post('/conciliacao', [ConciliacaoController::class, 'pivot'])->name('conciliacao.pivot');
             Route::put('/transacoes-financeiras/{id}', [ConciliacaoController::class, 'update'])->name('conciliacao.update');
+            // Rota DELETE usada pelo React SPA (sem prefixo /relatorios, ID numérico)
+            Route::delete('/transacoes-financeiras/{id}', [TransacaoFinanceiraController::class, 'destroyById'])
+                ->middleware('can:financeiro.index')
+                ->name('transacoes-financeiras.react.destroy');
             Route::get('/conciliacao/contas-disponiveis', [ConciliacaoController::class, 'contasDisponiveis'])->name('conciliacao.contas-disponiveis');
             Route::post('/conciliacao/processar-missas', [ConciliacaoController::class, 'processarConciliacaoMissas'])->name('conciliacao.processar-missas');
             Route::get('/conciliacao/missas', [ConciliacaoController::class, 'getConciliacoesMissas'])->name('conciliacao.missas');
@@ -636,10 +719,14 @@ Route::middleware([
                 // Exportação OFX
                 Route::get('/ofx/exportar', [OfxController::class, 'exportar'])
                     ->name('relatorios.ofx.exportar');
+                Route::post('/ofx/exportar-async', [OfxController::class, 'exportarAsync'])
+                    ->name('relatorios.ofx.exportar.async');
 
                 // Exportação Lote Contábil (TXT/CSV para Alterdata)
                 Route::get('/lote-contabil/exportar', [LoteContabilController::class, 'exportar'])
                     ->name('relatorios.lote-contabil.exportar');
+                Route::post('/lote-contabil/exportar-async', [LoteContabilController::class, 'exportarAsync'])
+                    ->name('relatorios.lote-contabil.exportar.async');
 
                 Route::post('/filter', [PrestacaoDeContaController::class, 'generateReport']);
 
@@ -648,7 +735,7 @@ Route::middleware([
                 Route::post('fieis/relatorio/pdf', [FielController::class, 'relatorioPdf'])->name('fieis.relatorio.pdf')->middleware('can:fieis.index');
 
                 Route::resource('dizimos', DizimoController::class)->middleware('can:dizimos.index');
-                
+
                 // Secretary (Membros Religiosos)
                 Route::prefix('secretary')->name('secretary.')->middleware('can:secretary.index')->group(function () {
                     Route::get('/', [SecretaryController::class, 'index'])->name('index');
@@ -659,12 +746,12 @@ Route::middleware([
                     Route::get('/{member}/edit', [SecretaryController::class, 'edit'])->name('edit');
                     Route::put('/{member}', [SecretaryController::class, 'update'])->name('update');
                     Route::delete('/{member}', [SecretaryController::class, 'destroy'])->name('destroy');
-                    
+
                     // Ministérios
                     Route::post('/{member}/ministries', [SecretaryController::class, 'storeMinistry'])->name('ministries.store');
                     Route::put('/{member}/ministries/{ministry}', [SecretaryController::class, 'updateMinistry'])->name('ministries.update');
                 });
-                
+
                 Route::get('/notafiscal', [NotaFiscalController::class, 'index'])->name('notafiscal.index')->middleware('can:notafiscal.index');
                 Route::post('/notafiscal/conta', [NotaFiscalController::class, 'storeConta'])->name('notafiscal.conta.store')->middleware('can:notafiscal.index');
 
@@ -702,6 +789,19 @@ Route::middleware([
                 Route::patch('entidades/{id}/renomear', [EntidadeFinanceiraController::class, 'renomear'])
                     ->name('entidades.renomear');
 
+                Route::patch('entidades/{id}/saldo-inicial', [EntidadeFinanceiraController::class, 'atualizarSaldoInicial'])
+                    ->name('entidades.saldo-inicial')
+                    ->middleware('can:financeiro.index');
+
+                // Reparo manual de saldo: audita (GET) ou corrige (POST) divergências.
+                // Requer permissão de admin financeiro.
+                Route::get('entidades/saldos/auditoria', [EntidadeFinanceiraController::class, 'auditoriaSaldos'])
+                    ->name('entidades.saldos.auditoria')
+                    ->middleware('can:financeiro.index');
+                Route::post('entidades/saldos/recalcular', [EntidadeFinanceiraController::class, 'recalcularSaldos'])
+                    ->name('entidades.saldos.recalcular')
+                    ->middleware('can:financeiro.index');
+
                 Route::resource('car_insurance', CarInsuranceController::class)->middleware('can:patrimonio.index');
 
                 Route::post('car_insurance/{id}/sell', [CarInsuranceController::class, 'sell'])
@@ -724,7 +824,7 @@ Route::middleware([
 
                     try {
                         $corrigidas = \App\Models\EntidadeFinanceira::recalcularTodosSaldos();
-                        
+
                         return back()->with('success', "✅ Recálculo concluído! {$corrigidas} entidade(s) sincronizada(s).");
                     } catch (\Exception $e) {
                         return back()->with('error', "❌ Erro ao recalcular: " . $e->getMessage());
@@ -747,6 +847,11 @@ Route::middleware([
                 Route::get('/patrimonios/imprimir', [PatrimonioController::class, 'imprimirPDF'])->name('patrimonio.imprimir');
             });
         });
+
+        // Painel React (Metronic) — wildcard DEVE ficar por último para não engolir rotas Blade
+        Route::get('/app/{any?}', [ReactAppController::class, 'index'])
+            ->where('any', '.*')
+            ->name('react-app.index');
     });
 
     // Autenticação específica para tenants

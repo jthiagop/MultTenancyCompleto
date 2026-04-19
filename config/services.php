@@ -48,4 +48,9 @@ return [
         'key' => env('OPENAI_API_KEY'),
     ],
 
+    'webmaniabr' => [
+        'app_key'    => env('WEBMANIABR_APP_KEY', ''),
+        'app_secret' => env('WEBMANIABR_APP_SECRET', ''),
+    ],
+
 ];

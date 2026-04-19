@@ -43,6 +43,10 @@ class TransacaoFinanceira extends Model
         'movimentacao_id', // Usado pela conciliação bancária
         'recorrencia_id',
         'transferencia_id',
+        'rateio_origem_id',
+        'reembolso_par_id',
+        'sepultura_id',
+        'sepultado_id',
         'cost_center_id',
         'tipo_documento',
         'numero_documento',
@@ -145,6 +149,16 @@ class TransacaoFinanceira extends Model
         return $this->belongsTo(\App\Models\Parceiro::class, 'parceiro_id');
     }
 
+    public function sepultura()
+    {
+        return $this->belongsTo(\App\Models\Cemiterio\Sepultura::class, 'sepultura_id');
+    }
+
+    public function sepultado()
+    {
+        return $this->belongsTo(\App\Models\Cemiterio\Sepultado::class, 'sepultado_id');
+    }
+
     public function movimentacao()
     {
         return $this->morphOne(Movimentacao::class, 'origem');
@@ -171,6 +185,26 @@ class TransacaoFinanceira extends Model
     public function transferencia()
     {
         return $this->belongsTo(Transferencia::class, 'transferencia_id');
+    }
+
+    public function rateios()
+    {
+        return $this->hasMany(TransacaoRateio::class, 'transacao_financeira_id');
+    }
+
+    public function rateioFilhos()
+    {
+        return $this->hasMany(self::class, 'rateio_origem_id');
+    }
+
+    public function rateioOrigem()
+    {
+        return $this->belongsTo(TransacaoFinanceira::class, 'rateio_origem_id');
+    }
+
+    public function rateiosGerados()
+    {
+        return $this->hasMany(TransacaoFinanceira::class, 'rateio_origem_id');
     }
 
     /**
@@ -464,11 +498,38 @@ class TransacaoFinanceira extends Model
     {
         parent::boot();
 
+        // Protege exclusão de lançamentos que geraram rateio intercompany
+        static::deleting(function (self $transacao) {
+            $filhos = $transacao->rateioFilhos();
+
+            if (! $filhos->exists()) {
+                return; // sem rateio, pode deletar normalmente
+            }
+
+            $situacoesQuitadas = ['pago', 'recebido'];
+            $temFilhoQuitado   = $filhos
+                ->whereIn('situacao', $situacoesQuitadas)
+                ->exists();
+
+            if ($temFilhoQuitado) {
+                throw new \RuntimeException(
+                    'Não é possível excluir este lançamento: um ou mais registros de rateio ' .
+                    'nas filiais já foram liquidados. Cancele ou estorne manualmente.'
+                );
+            }
+
+            // Todos em aberto → cascade soft-delete nos filhos
+            $filhos->get()->each(fn ($filho) => $filho->delete());
+        });
+
         // Atualiza situação antes de salvar
         static::saving(function ($transacao) {
-            // PRIORIDADE 1: Se há fracionamentos, SEMPRE deve ser "pago_parcial"
+            // PRIORIDADE 1: Se há fracionamentos em_aberto, deve ser "pago_parcial"
+            // (se só existem fracionamentos tipo 'pago', o pagamento total já foi feito)
             if ($transacao->exists) {
-                if ($transacao->fracionamentos()->exists()) {
+                $temFracionamentos = $transacao->fracionamentos()->exists();
+                $temEmAberto = $temFracionamentos && $transacao->fracionamentos()->where('tipo', 'em_aberto')->exists();
+                if ($temFracionamentos && $temEmAberto) {
                     $transacao->situacao = \App\Enums\SituacaoTransacao::PAGO_PARCIAL;
                     return;
                 }

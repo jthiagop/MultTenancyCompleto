@@ -10,6 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Exceptions\HttpResponseException;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class StoreTransacaoFinanceiraRequest extends FormRequest
 {
@@ -65,7 +66,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'valor' => 'required|numeric|gt:0',  // Em DECIMAL (ex: 1991.44)
             'tipo' => 'required|in:entrada,saida',
             'lancamento_padrao_id' => 'required|exists:lancamento_padraos,id',
-            'cost_center_id' => 'required|string',
+            'cost_center_id' => 'nullable|string',
             'origem' => 'required|string',
             'tipo_documento' => 'required|string',
             'numero_documento' => 'nullable|string',
@@ -88,26 +89,24 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'conta_credito_id' => 'nullable|exists:chart_of_accounts,id',
 
             // Validações de recorrência (quando checkbox repetir estiver marcado)
+            'repetir_lancamento' => 'nullable|boolean',
             'intervalo_repeticao' => 'nullable|integer|min:1',
             'frequencia' => 'nullable|in:diario,semanal,mensal,anual',
             'apos_ocorrencias' => 'nullable|integer|min:1|max:366',
             'dia_cobranca' => 'required_if:repetir_lancamento,1',
             'configuracao_recorrencia' => [
-                'required_if:repetir_lancamento,1',
                 'nullable',
+                'required_if:repetir_lancamento,1',
                 function ($attribute, $value, $fail) {
-                    // Se o valor estiver vazio, null ou for string vazia, permite
-                    // (pode ser uma nova configuração sendo criada com campos temporários)
                     if (empty($value) || $value === '' || $value === null) {
                         return;
                     }
 
-                    // Se for string que começa com "temp_", permite (nova configuração do drawer)
+                    // Modal Blade: opção provisória "temp_" (intervalo/frequência vêm em campos separados)
                     if (is_string($value) && strpos($value, 'temp_') === 0) {
                         return;
                     }
 
-                    // Se for um ID numérico (string ou int), valida que existe na tabela
                     if (is_numeric($value) || (is_string($value) && ctype_digit($value))) {
                         $id = (int) $value;
                         $companyId = session('active_company_id');
@@ -129,8 +128,10 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'configuracao_recorrencia_temp' => 'nullable',
 
             // Validações de situação e agendamento
-            'vencimento' => 'required_if:repetir_lancamento,1|nullable|date_format:d/m/Y', // Campo do formulário
+            // React envia Y-m-d em data_vencimento; Blade usa d/m/Y em "vencimento" — aceita qualquer data válida
+            'vencimento' => 'required_if:repetir_lancamento,1|nullable|date',
             'data_vencimento' => 'nullable|date', // Campo processado
+            'previsao_pagamento' => 'nullable|date',
             'valor_pago' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
             'juros' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
             'multa' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
@@ -158,20 +159,112 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'multa_pagamento' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
             'desconto_pagamento' => 'nullable|numeric|min:0',  // Em DECIMAL (ex: 1991.44)
 
+            // Validações de rateio
+            'rateios' => 'nullable|array',
+            'rateios.*.filial_id' => 'required|exists:companies,id',
+            'rateios.*.centro_custo_id' => 'nullable|exists:cost_centers,id',
+            'rateios.*.lancamento_padrao_id' => 'nullable|exists:lancamento_padraos,id',
+            'rateios.*.valor' => 'required|numeric|min:0.01',
+            'rateios.*.percentual' => 'required|numeric|min:0|max:100',
+
             // Validações de parcelas (quando parcelamento é 2x ou mais)
             // Obrigatórios: vencimento, valor
             // Opcionais: percentual (calculado), descricao (gerada), agendado
             // Nota: entidade_id vem do formulário principal, não por parcela
             'parcelamento' => 'nullable|string',
+            'intervalo_parcelas_dias' => 'nullable|integer|min:1|max:366',
             'parcelas' => 'nullable|array',
-            'parcelas.*.vencimento' => 'required_with:parcelas|date_format:d/m/Y',
+            'parcelas.*.vencimento' => 'required_with:parcelas|date_format:Y-m-d',
             'parcelas.*.valor' => 'required_with:parcelas|numeric|gt:0',  // Em DECIMAL (ex: 1991.44)
             'parcelas.*.percentual' => 'nullable|numeric|min:0|max:100',  // Calculado automaticamente se não informado
             'parcelas.*.forma_pagamento_id' => 'nullable|exists:entidades_financeiras,id',
             'parcelas.*.conta_pagamento_id' => 'nullable|exists:entidades_financeiras,id',
             'parcelas.*.descricao' => 'nullable|string|max:255',  // Gerada automaticamente se não informada
             'parcelas.*.agendado' => 'nullable|boolean',
+
+            'domus_documento_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('domus_documentos', 'id')->where(function ($query) {
+                    $query->whereNull('deleted_at');
+                    $companyId = session('active_company_id');
+
+                    return $companyId
+                        ? $query->where('company_id', $companyId)
+                        : $query->whereRaw('1 = 0');
+                }),
+            ],
         ];
+    }
+
+    /**
+     * Validações customizadas adicionais (ex: soma de rateios).
+     */
+    public function withValidator($validator): void
+    {
+        $validator->after(function ($validator) {
+            $repetirAtivo = (int) $this->input('repetir_lancamento') === 1;
+            if ($repetirAtivo) {
+                $cfg = $this->input('configuracao_recorrencia');
+                $isTemp = is_string($cfg) && strpos($cfg, 'temp_') === 0;
+                if ($isTemp) {
+                    $hasInline = $this->filled('intervalo_repeticao')
+                        && $this->filled('frequencia')
+                        && $this->filled('apos_ocorrencias');
+                    if (! $hasInline) {
+                        $validator->errors()->add(
+                            'configuracao_recorrencia',
+                            'Informe intervalo, frequência e número de ocorrências para a nova configuração.'
+                        );
+                    }
+                }
+            }
+
+            $rateios = $this->input('rateios');
+            if (!is_array($rateios) || empty($rateios)) {
+                return;
+            }
+
+            $somaRateios = collect($rateios)->sum(fn ($r) => (float) ($r['valor'] ?? 0));
+            $valorTotal = (float) $this->input('valor', 0);
+            $diff = abs($somaRateios - $valorTotal);
+
+            if ($diff > 0.01) {
+                $validator->errors()->add(
+                    'rateios',
+                    "A soma dos rateios (R$ " . number_format($somaRateios, 2, ',', '.') . ") deve ser igual ao valor total (R$ " . number_format($valorTotal, 2, ',', '.') . ")."
+                );
+            }
+
+            $parcelamento = (string) $this->input('parcelamento', '');
+            if (preg_match('/^(\d+)x$/', $parcelamento, $m) && (int) $m[1] >= 2) {
+                $expected = (int) $m[1];
+                $parcelas = $this->input('parcelas');
+                if (! is_array($parcelas)) {
+                    $validator->errors()->add('parcelas', 'Informe as linhas de parcelas para este parcelamento.');
+
+                    return;
+                }
+                $count = count($parcelas);
+                if ($count !== $expected) {
+                    $validator->errors()->add(
+                        'parcelas',
+                        "Para {$parcelamento} são necessárias exatamente {$expected} parcelas (enviadas: {$count})."
+                    );
+                }
+                $valorLancamento = (float) $this->input('valor', 0);
+                $somaParcelas = 0.0;
+                foreach ($parcelas as $p) {
+                    $somaParcelas += (float) ($p['valor'] ?? 0);
+                }
+                if ($count > 0 && abs($somaParcelas - $valorLancamento) > 0.02) {
+                    $validator->errors()->add(
+                        'parcelas',
+                        'A soma dos valores das parcelas deve ser igual ao valor total do lançamento.'
+                    );
+                }
+            }
+        });
     }
 
     /**
@@ -200,7 +293,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'files.*.max' => 'O tamanho máximo do arquivo é 2MB.',
             'intervalo_repeticao.required' => 'O intervalo de repetição é obrigatório quando a recorrência está ativa.',
             'dia_cobranca.required_if' => 'O campo Dia de Cobrança é obrigatório para lançamentos recorrentes.',
-            'configuracao_recorrencia.required_if' => 'Selecione uma configuração de recorrência ou crie uma nova.',
+            'configuracao_recorrencia.required_if' => 'Selecione uma configuração de recorrência quando "Repetir lançamento" estiver ativo.',
             'intervalo_repeticao.integer' => 'O intervalo de repetição deve ser um número inteiro.',
             'intervalo_repeticao.min' => 'O intervalo de repetição deve ser no mínimo 1.',
             'frequencia.required' => 'A frequência é obrigatória quando a recorrência está ativa.',
@@ -226,7 +319,7 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'valor_a_pagar.min' => 'O valor a pagar não pode ser negativo.',
             'parcelas.array' => 'As parcelas devem ser enviadas como um array.',
             'parcelas.*.vencimento.required_with' => 'A data de vencimento é obrigatória para cada parcela.',
-            'parcelas.*.vencimento.date_format' => 'A data de vencimento da parcela deve estar no formato dd/mm/aaaa.',
+            'parcelas.*.vencimento.date_format' => 'A data de vencimento da parcela deve ser uma data válida.',
             'parcelas.*.valor.required_with' => 'O valor é obrigatório para cada parcela.',
             'parcelas.*.valor.numeric' => 'O valor da parcela deve ser numérico.',
             'parcelas.*.valor.gt' => 'O valor da parcela deve ser maior que zero.',
@@ -237,6 +330,15 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             'parcelas.*.forma_pagamento_id.exists' => 'A forma de pagamento selecionada não é válida.',
             'parcelas.*.conta_pagamento_id.exists' => 'A conta de pagamento selecionada não é válida.',
             'parcelas.*.descricao.max' => 'A descrição da parcela não pode ter mais que 255 caracteres.',
+            'rateios.*.filial_id.required' => 'A filial é obrigatória em cada linha de rateio.',
+            'rateios.*.filial_id.exists' => 'A filial selecionada não é válida.',
+            'rateios.*.valor.required' => 'O valor é obrigatório em cada linha de rateio.',
+            'rateios.*.valor.numeric' => 'O valor do rateio deve ser numérico.',
+            'rateios.*.valor.min' => 'O valor do rateio deve ser maior que zero.',
+            'rateios.*.percentual.required' => 'O percentual é obrigatório em cada linha de rateio.',
+            'rateios.*.percentual.numeric' => 'O percentual do rateio deve ser numérico.',
+            'rateios.*.percentual.min' => 'O percentual do rateio não pode ser negativo.',
+            'rateios.*.percentual.max' => 'O percentual do rateio não pode ser maior que 100%.',
         ];
     }
 
@@ -249,6 +351,34 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        // Drawer React (JSON): receita/despesa → entrada/saida
+        if ($this->input('tipo') === 'receita') {
+            $this->merge(['tipo' => 'entrada']);
+        } elseif ($this->input('tipo') === 'despesa') {
+            $this->merge(['tipo' => 'saida']);
+        }
+
+        if ($this->has('recebido_pago')) {
+            $rp = filter_var($this->input('recebido_pago'), FILTER_VALIDATE_BOOLEAN);
+            if ($rp) {
+                $t = $this->input('tipo');
+                if ($t === 'entrada') {
+                    $this->merge(['recebido' => true]);
+                } elseif ($t === 'saida') {
+                    $this->merge(['pago' => true]);
+                }
+            }
+        }
+
+        if (! $this->filled('origem')) {
+            $this->merge(['origem' => 'Banco']);
+        }
+
+        $rep = $this->input('repetir_lancamento');
+        if ($rep === true || $rep === 1 || $rep === '1') {
+            $this->merge(['repetir_lancamento' => 1]);
+        }
+
         // Converte configuracao_recorrencia para inteiro se for numérico
         if ($this->has('configuracao_recorrencia') && $this->configuracao_recorrencia) {
             $value = $this->configuracao_recorrencia;
@@ -322,17 +452,53 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
                     $parcelaProcessada['percentual'] = (float) $percentual;
                 }
 
-                // Limpa e normaliza data de vencimento
+                // Normaliza data de vencimento da parcela → Y-m-d (React pode enviar dd/mm/aaaa ou ISO)
                 if (isset($parcela['vencimento']) && $parcela['vencimento']) {
-                    $vencimento = trim($parcela['vencimento']);
-                    $vencimento = preg_replace('/\s+/', '', $vencimento);
-                    $parcelaProcessada['vencimento'] = $vencimento;
+                    $vencimento = trim(preg_replace('/\s+/', '', (string) $parcela['vencimento']));
+                    if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $vencimento)) {
+                        $parcelaProcessada['vencimento'] = $vencimento;
+                    } elseif (strpos($vencimento, '/') !== false) {
+                        try {
+                            $parcelaProcessada['vencimento'] = \Carbon\Carbon::createFromFormat('d/m/Y', $vencimento)->format('Y-m-d');
+                        } catch (\Exception $e) {
+                            $parcelaProcessada['vencimento'] = $vencimento;
+                        }
+                    } else {
+                        $parcelaProcessada['vencimento'] = $vencimento;
+                    }
                 }
 
                 $parcelasProcessadas[$index] = $parcelaProcessada;
             }
 
             $this->merge(['parcelas' => $parcelasProcessadas]);
+        }
+
+        // Processa rateios - converte valores para DECIMAL usando Money
+        if ($this->has('rateios') && is_array($this->rateios)) {
+            $rateiosProcessados = [];
+
+            foreach ($this->rateios as $index => $rateio) {
+                $r = $rateio;
+
+                if (isset($rateio['valor'])) {
+                    $money = Money::fromHumanInput((string) $rateio['valor']);
+                    $r['valor'] = $money->toDatabase();
+                }
+
+                if (isset($rateio['percentual']) && $rateio['percentual'] !== '') {
+                    $pct = (string) $rateio['percentual'];
+                    if (strpos($pct, ',') !== false) {
+                        $pct = str_replace('.', '', $pct);
+                        $pct = str_replace(',', '.', $pct);
+                    }
+                    $r['percentual'] = (float) $pct;
+                }
+
+                $rateiosProcessados[$index] = $r;
+            }
+
+            $this->merge(['rateios' => $rateiosProcessados]);
         }
 
         // Processa data_vencimento se vier como 'vencimento' do formulário
@@ -349,6 +515,29 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
             } else {
                 $this->merge(['data_vencimento' => $vencimento]);
             }
+        }
+
+        if ($this->filled('previsao_pagamento')) {
+            $p = $this->input('previsao_pagamento');
+            if (is_string($p) && strpos($p, '/') !== false) {
+                try {
+                    $this->merge([
+                        'previsao_pagamento' => \Carbon\Carbon::createFromFormat('d/m/Y', $p)->format('Y-m-d'),
+                    ]);
+                } catch (\Exception $e) {
+                    // mantém valor original para a validação reportar erro
+                }
+            }
+        }
+
+        // Drawer React: cost_center vazio → null (coluna opcional)
+        if ($this->has('cost_center_id') && $this->input('cost_center_id') === '') {
+            $this->merge(['cost_center_id' => null]);
+        }
+
+        // API React: só data_vencimento (Y-m-d); regra required_if usa "vencimento"
+        if ((int) $this->input('repetir_lancamento') === 1 && !$this->filled('vencimento') && $this->filled('data_vencimento')) {
+            $this->merge(['vencimento' => $this->input('data_vencimento')]);
         }
 
         // Processa data_competencia se vier no formato brasileiro
@@ -368,17 +557,21 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
         // ✅ Auto-cadastro de parceiro via Domus IA
         // Se fornecedor_id === '__novo__' e os hidden fields estão preenchidos,
         // cria o parceiro automaticamente e substitui pelo ID real
-        if ($this->input('fornecedor_id') === '__novo__' && $this->filled('novo_parceiro_cnpj')) {
+        // Drawer React envia `parceiro_id`; Blade Domus IA envia `fornecedor_id` — ambos aceitam __novo__
+        $isNovoParceiro = ($this->input('fornecedor_id') === '__novo__' || $this->input('parceiro_id') === '__novo__')
+            && $this->filled('novo_parceiro_cnpj');
+
+        if ($isNovoParceiro) {
             $parceiroId = $this->autoCreateParceiro();
             if ($parceiroId) {
                 $this->merge([
                     'fornecedor_id' => $parceiroId,
+                    'parceiro_id' => $parceiroId,
                     'novo_parceiro_nome' => null,
                     'novo_parceiro_cnpj' => null,
                 ]);
             } else {
-                // Se falhou, remove o valor inválido para não quebrar a validação exists
-                $this->merge(['fornecedor_id' => null]);
+                $this->merge(['fornecedor_id' => null, 'parceiro_id' => null]);
             }
         }
 

@@ -33,10 +33,11 @@ class NotificationController extends Controller
     private function excludeExpiredNotifications($query)
     {
         $now = Carbon::now()->toISOString();
-        
+
+        // whereNull('data->expires_at') não captura chaves ausentes no JSON em MySQL.
+        // Usamos JSON_EXTRACT diretamente: retorna NULL tanto para chave ausente quanto para JSON null.
         return $query->where(function ($q) use ($now) {
-            // Inclui notificações sem expires_at OU com expires_at no futuro
-            $q->whereNull('data->expires_at')
+            $q->whereRaw("JSON_EXTRACT(data, '$.expires_at') IS NULL")
               ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.expires_at')) >= ?", [$now]);
         });
     }
@@ -183,13 +184,14 @@ class NotificationController extends Controller
 
         $query = $this->applyCompanyFilter($query, $companyId);
         $query = $this->excludeExpiredNotifications($query);
-        $paginated = $query->latest()->paginate(15, ['*'], 'page', $page);
+        $paginated = $query->latest()->paginate(20, ['*'], 'page', $page);
 
         return response()->json([
-            'success'      => true,
-            'notifications' => NotificationResource::collection($paginated),
-            'unread_count' => $this->getUnreadCount($companyId),
-            'pagination'   => [
+            'success'       => true,
+            // Passa ->items() para garantir array plano (não o objeto paginado com data/links/meta)
+            'notifications' => NotificationResource::collection($paginated->items()),
+            'unread_count'  => $this->getUnreadCount($companyId),
+            'pagination'    => [
                 'current_page' => $paginated->currentPage(),
                 'last_page'    => $paginated->lastPage(),
                 'total'        => $paginated->total(),

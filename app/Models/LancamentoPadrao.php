@@ -23,6 +23,7 @@ class LancamentoPadrao extends Model
         'category',
         'user_id',
         'company_id',
+        'is_active',
         'conta_debito_id',
         'conta_credito_id',
         'created_at'

@@ -249,12 +249,21 @@ class OfxService
                 $entidade = $this->encontrarEntidade($bankIdOFX, $contaOFX, $companyId, $accountTypeOFX, $agenciaOFX);
 
                 if (!$entidade) {
-                    $tipoLabel = $accountTypeOFX ? " ({$accountTypeOFX})" : '';
-                    $agLabel   = $agenciaOFX ? " Ag: {$agenciaOFX}," : '';
+                    $tipoFormatado = match(strtoupper($accountTypeOFX ?? '')) {
+                        'CHECKING'   => 'Conta Corrente',
+                        'SAVINGS'    => 'Poupança',
+                        'MONEYMRKT'  => 'Aplicação',
+                        'CREDITLINE' => 'Limite de Crédito',
+                        default      => $accountTypeOFX ?? null,
+                    };
+                    $detalhes  = "Banco: {$bankIdOFX}";
+                    $detalhes .= $agenciaOFX ? " · Ag: {$agenciaOFX}" : '';
+                    $detalhes .= " · Conta: {$contaOFX}";
+                    $detalhes .= $tipoFormatado ? " · {$tipoFormatado}" : '';
                     throw new \Exception(
-                        "Conta bancária não encontrada! " .
-                        "Banco (COMPE): {$bankIdOFX},{$agLabel} Conta: {$contaOFX}{$tipoLabel}. " .
-                        "Verifique se a conta está cadastrada no sistema."
+                        "Nenhuma conta bancária cadastrada corresponde ao extrato importado.\n" .
+                        "Dados do arquivo OFX: {$detalhes}.\n" .
+                        "Cadastre a conta no sistema antes de importar o extrato."
                     );
                 }
 

@@ -104,6 +104,11 @@
                             </x-tenant-dropdown-button>
                             <!--end::Novo Lançamento Drawer Button-->
 
+                            <!--begin::Novo Lançamento Drawer Button React-->
+                            <div data-react-component="NovoLancamentoWidget"></div>
+                            <!--end::Novo Lançamento Drawer Button React-->
+
+
                             <!--begin::Conciliação Bancária Button-->
                             <x-tenant-button-icon icon="bi bi-link-45deg" text="Conciliação Bancária"
                                 dataBsToggle="modal" dataBsTarget="#modalConciliacao" variant="primary"

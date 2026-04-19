@@ -6,6 +6,7 @@ namespace App\Models\Cemiterio;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Models\Cemiterio\Sepultado;
 
 class Sepultura extends Model
 {
@@ -27,5 +28,17 @@ class Sepultura extends Model
         'updated_by_name',
     ];
 
+    protected $casts = [
+        'data_aquisicao' => 'date',
+    ];
 
+    public function sepultados()
+    {
+        return $this->hasMany(Sepultado::class, 'sepultura_id');
+    }
+
+    public function latestSepultado()
+    {
+        return $this->hasOne(Sepultado::class, 'sepultura_id')->latestOfMany();
+    }
 }

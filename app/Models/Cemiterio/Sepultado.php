@@ -15,24 +15,44 @@ class Sepultado extends Model
 
     // Campos que podem ser atribuídos em massa
     protected $fillable = [
+        'company_id',
+        'sepultura_id',
         'nome',
+        'cpf',
         'avatar',
         'data_nascimento',
         'data_falecimento',
+        'data_sepultamento',
+        'causa_mortis',
+        'tumulo_codigo',
+        'observacoes',
         'documento_identificacao',
         'informacoes_atestado_obito',
         'familia_responsavel',
         'relacionamento',
-        'sepultura_id',
-        'data_sepultamento',
+        'livro_sepultamento',
+        'folha_sepultamento',
+        'numero_sepultamento',
+        'imagens',
+    ];
+
+    protected $casts = [
+        'imagens'           => 'array',
+        'data_nascimento'   => 'datetime',
+        'data_falecimento'  => 'datetime',
+        'data_sepultamento' => 'datetime',
     ];
 
     /**
      * Relacionamento com a tabela Sepultura.
      */
-        // Relacionamento com a Sepultura (um para muitos)
-        public function sepultura()
-        {
-            return $this->belongsTo(Sepultura::class, 'sepultura_id'); // 'sepultura_id' é a chave estrangeira
-        }
+    public function sepultura()
+    {
+        return $this->belongsTo(Sepultura::class, 'sepultura_id');
+    }
+
+    public function responsaveis()
+    {
+        return $this->hasMany(SepultadoResponsavel::class);
+    }
 }

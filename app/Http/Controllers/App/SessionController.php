@@ -97,27 +97,45 @@ class SessionController extends Controller
     }
 
     /**
-     * Define a empresa ativa na sessão do usuário.
+     * Define a empresa ativa na sessão do usuário (volta para o dashboard Blade).
      */
     public function switchCompany(Company $company)
     {
-        // 1. Pega o usuário autenticado
         $user = Auth::user();
 
-        // 2. VERIFICAÇÃO DE SEGURANÇA: Checa se o usuário realmente tem acesso a essa empresa
         if ($user->companies()->where('id', $company->id)->exists()) {
-
-            // 3. Se tiver acesso, armazena o ID da empresa na sessão
             session(['active_company_id' => $company->id]);
             session()->flash('info', "Você agora está trabalhando na empresa: {$company->name}");
         } else {
-            // 4. Se não tiver acesso, retorna um erro ou redireciona com uma mensagem
             session()->flash('error', 'Você não tem permissão para acessar esta empresa.');
             abort(403, 'Acesso não autorizado a esta empresa.');
         }
 
-        // 5. Redireciona para o dashboard ou para a página anterior
-        return redirect()->route('dashboard'); // Ou outra rota de sua preferência
+        return redirect()->route('dashboard');
+    }
+
+    /**
+     * Define a empresa ativa na sessão via POST JSON (usado pelo React).
+     *
+     * O React chama este endpoint com fetch + X-CSRF-TOKEN, evitando o redirect chain
+     * que invalidaria a sessão. Após a resposta {ok: true}, o React faz window.location.reload()
+     * para carregar o novo __APP_DATA__ com a empresa correta.
+     */
+    public function switchCompanyReact(Request $request)
+    {
+        $user = Auth::user();
+
+        $companyId = $request->input('company_id');
+        $company   = Company::find($companyId);
+
+        if (! $company || ! $user->companies()->where('id', $company->id)->exists()) {
+            return response()->json(['ok' => false, 'message' => 'Acesso não autorizado.'], 403);
+        }
+
+        session(['active_company_id' => $company->id]);
+        session()->save();
+
+        return response()->json(['ok' => true, 'company_id' => $company->id, 'company_name' => $company->name]);
     }
 
     /**

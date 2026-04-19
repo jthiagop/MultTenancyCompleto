@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\App;
 
+use App\Helpers\BrowsershotHelper;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Patrimonio\ForoRequest;
 use App\Models\Escritura;
@@ -250,14 +251,21 @@ class PatrimonioController extends Controller
     protected function logoToBase64($company): ?string
     {
         if (!$company || !$company->avatar) {
-            // Caminho para uma imagem padrão caso a empresa não tenha logo
             $path = public_path('tenancy/assets/media/png/perfil.svg');
         } else {
-            $path = storage_path('app/public/' . $company->avatar);
+            $storageRoot = realpath(storage_path('app/public'));
+            $resolved    = realpath(storage_path('app/public/' . $company->avatar));
+
+            // Prevenir path traversal: o caminho resolvido deve estar dentro do storage root
+            if (!$resolved || !$storageRoot || !str_starts_with($resolved, $storageRoot . DIRECTORY_SEPARATOR)) {
+                return null;
+            }
+
+            $path = $resolved;
         }
 
         if (!file_exists($path)) {
-            return null; // Retorna nulo se o arquivo não for encontrado
+            return null;
         }
 
         return 'data:image/' . pathinfo($path, PATHINFO_EXTENSION) . ';base64,' . base64_encode(file_get_contents($path));
@@ -329,7 +337,9 @@ public function show(string $id)
 {
     try {
         // Eager load escrituras and anexos with uploader to avoid N+1 queries
-        $patrimonio = Patrimonio::with(['escrituras', 'anexos.uploader'])->findOrFail($id);
+        $patrimonio = Patrimonio::with(['escrituras', 'anexos.uploader'])
+            ->where('company_id', session('active_company_id'))
+            ->findOrFail($id);
 
         // Fetch the most recent Escritura for the current deed value
         $escrituraAtual = $patrimonio->escrituras()->latest('created_at')->first();
@@ -389,8 +399,8 @@ public function show(string $id)
         ]);
 
         try {
-            // Localiza o registro pelo ID
-            $patrimonio = Patrimonio::findOrFail($id);
+            // Localiza o registro pelo ID (verificando ownership do tenant)
+            $patrimonio = Patrimonio::where('company_id', session('active_company_id'))->findOrFail($id);
 
             // Atualiza os campos
             $patrimonio->descricao   = $request->descricao;

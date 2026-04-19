@@ -14,6 +14,7 @@ use App\Models\HorarioMissa;
 use App\Models\LancamentoPadrao;
 use App\Models\Movimentacao;
 use App\Models\Parceiro;
+use App\Services\ConciliacoesPendentesTabData;
 use App\Support\Money;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -341,6 +342,56 @@ class EntidadeFinanceiraController extends Controller
         }
     }
 
+    public function atualizarSaldoInicial(Request $request, string $id): \Illuminate\Http\JsonResponse
+    {
+        if (!Auth::user()->hasRole(['admin', 'global'])) {
+            return response()->json(['success' => false, 'message' => 'Sem permissão para alterar o saldo inicial.'], 403);
+        }
+
+        $validated = $request->validate([
+            'saldo_inicial' => 'required|numeric',
+        ]);
+
+        try {
+            $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
+
+            $novoSaldoInicial = (float) $validated['saldo_inicial'];
+            $saldoInicialAntigo = (float) $entidade->saldo_inicial;
+
+            $entidade->saldo_inicial = $novoSaldoInicial;
+            $entidade->updated_by = Auth::id();
+            $entidade->updated_by_name = Auth::user()->name;
+            $entidade->save();
+
+            // Recalcula o saldo_atual: saldo_inicial + soma das movimentações
+            $saldosMovimentacoes = EntidadeFinanceira::saldosCalculadosPorEntidadeIds([$entidade->id]);
+            $somaMovimentacoes = round($saldosMovimentacoes[$entidade->id] ?? 0.0, 2);
+            $saldoRecalculado = round($novoSaldoInicial + $somaMovimentacoes, 2);
+
+            \DB::table('entidades_financeiras')
+                ->where('id', $entidade->id)
+                ->update(['saldo_atual' => $saldoRecalculado]);
+
+            \Log::info('[atualizarSaldoInicial] Saldo inicial atualizado', [
+                'entidade_id'         => $entidade->id,
+                'saldo_inicial_antes' => $saldoInicialAntigo,
+                'saldo_inicial_novo'  => $novoSaldoInicial,
+                'saldo_atual_novo'    => $saldoRecalculado,
+                'user_id'             => Auth::id(),
+            ]);
+
+            return response()->json([
+                'success'          => true,
+                'message'          => 'Saldo inicial atualizado e saldo atual recalculado com sucesso.',
+                'saldo_inicial'    => $novoSaldoInicial,
+                'saldo_atual'      => $saldoRecalculado,
+            ]);
+        } catch (\Exception $e) {
+            \Log::error('Erro ao atualizar saldo inicial: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Erro ao atualizar saldo inicial.'], 500);
+        }
+    }
+
     public function destroy(Request $request, string $id)
     {
         $isAjax = $request->expectsJson();
@@ -613,60 +664,13 @@ class EntidadeFinanceiraController extends Controller
                 ], 403);
             }
 
-            $entidade = EntidadeFinanceira::forActiveCompany()->findOrFail($id);
             $tab = $request->input('tab', 'all');
-            $page = $request->input('page', 1);
+            $page = (int) $request->input('page', 1);
 
-            // ✅ Query base com isolamento de empresa (segurança multi-tenant)
-            $query = BankStatement::where('company_id', $activeCompanyId)
-                ->where('entidade_financeira_id', $id)
-                ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
-                ->whereDoesntHave('transacoes') // ✅ Garante que registros já conciliados não apareçam
-                ->where(function ($q) {
-                    $q->where('conciliado_com_missa', false)
-                      ->orWhereNull('conciliado_com_missa');
-                });
-
-            // Filtro por tab (usando amount_cents para evitar problemas com decimais)
-            if ($tab === 'received') {
-                $query->where('amount_cents', '>', 0);
-            } elseif ($tab === 'paid') {
-                $query->where('amount_cents', '<', 0);
-            }
-
-            // Paginação com 5 itens por página para melhor performance
-            $bankStatements = $query->orderBy('dtposted', 'desc')->paginate(5, ['*'], 'page', $page);
-
-            // 🤖 MOTOR DE SUGESTÃO INTELIGENTE - Injeta sugestões automáticas
-            try {
-                $suggestionService = new \App\Services\ConciliacaoSuggestionService();
-                foreach ($bankStatements as $lancamento) {
-                    try {
-                        $sugestaoGerada = $suggestionService->gerarSugestao($lancamento);
-                        $lancamento->sugestao = $sugestaoGerada;
-                    } catch (\Exception $e) {
-                        \Log::warning('Erro ao gerar sugestão para lançamento', [
-                            'lancamento_id' => $lancamento->id,
-                            'error' => $e->getMessage()
-                        ]);
-                        $lancamento->sugestao = null;
-                    }
-                }
-            } catch (\Exception $e) {
-                \Log::error('Erro ao inicializar serviço de sugestões', ['error' => $e->getMessage()]);
-            }
-
-            // ✅ Buscar possíveis transações para cada lançamento com score inteligente
-            $matchingService = new \App\Services\ConciliacaoMatchingService();
-            foreach ($bankStatements as $lancamento) {
-                $lancamento->possiveisTransacoes = $matchingService->buscarPossiveisTransacoes($lancamento, $id, 5);
-
-                // 🏦 Detectar movimentações internas (Rende Fácil, poupança automática, etc.)
-                $lancamento->movimentacao_interna = \App\Services\MovimentacaoInternaDetector::detectar(
-                    $lancamento->memo ?? '',
-                    $lancamento->amount
-                );
-            }
+            $loaded = ConciliacoesPendentesTabData::fetch($activeCompanyId, (int) $id, $tab, $page, 5);
+            $entidade = $loaded['entidade'];
+            $bankStatements = $loaded['bank_statements'];
+            $counts = $loaded['counts'];
 
             // ✅ Dados auxiliares com cache (melhora performance)
             // Nota: Removido cache por incompatibilidade com tenancy em drivers file/database
@@ -674,22 +678,6 @@ class EntidadeFinanceiraController extends Controller
             $lps = LancamentoPadrao::all();
             $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
             $fornecedores = Parceiro::forActiveCompany()->orderBy('nome')->get();
-
-            // ✅ Calcula counts atualizados para todas as tabs (UX melhor)
-            $baseQuery = BankStatement::where('company_id', $activeCompanyId)
-                ->where('entidade_financeira_id', $id)
-                ->whereNotIn('status_conciliacao', ['ok', 'ignorado'])
-                ->whereDoesntHave('transacoes') // ✅ Consistente com a query de dados
-                ->where(function ($q) {
-                    $q->where('conciliado_com_missa', false)
-                      ->orWhereNull('conciliado_com_missa');
-                });
-
-            $counts = [
-                'all' => (clone $baseQuery)->count(),
-                'received' => (clone $baseQuery)->where('amount_cents', '>', 0)->count(),
-                'paid' => (clone $baseQuery)->where('amount_cents', '<', 0)->count(),
-            ];
 
             // Renderizar o componente como HTML (SSR approach)
             $html = view('app.financeiro.entidade.partials.conciliacao-pane', [
@@ -802,6 +790,16 @@ class EntidadeFinanceiraController extends Controller
             });
         }
 
+        // Período opcional (dtposted) — mesmo parâmetros que o histórico Blade envia
+        $startDate = $request->input('start_date');
+        $endDate = $request->input('end_date');
+        if ($startDate) {
+            $query->whereDate('dtposted', '>=', $startDate);
+        }
+        if ($endDate) {
+            $query->whereDate('dtposted', '<=', $endDate);
+        }
+
         // ✅ Calcula totais (entradas e saídas) da query filtrada completa (antes de paginar)
         $totalEntradas = (clone $query)->where('amount', '>=', 0)->sum('amount');
         $totalSaidas = abs((clone $query)->where('amount', '<', 0)->sum('amount'));
@@ -840,6 +838,26 @@ class EntidadeFinanceiraController extends Controller
                 'data_extrato_formatada' => $dataExtrato?->format('d/m/Y'),
             ];
         });
+
+        // React / SPA: JSON estruturado (`data`) sem partial Blade (evita `html` quando wantsJson + XMLHttpRequest).
+        $structured = $request->boolean('structured')
+            || $request->query('format') === 'data'
+            || $request->header('X-React-Historico') === '1';
+        if ($structured) {
+            return response()->json([
+                'success' => true,
+                'data' => $dados,
+                'counts' => $counts,
+                'total_entradas' => $totalEntradas,
+                'total_saidas' => $totalSaidas,
+                'meta' => [
+                    'current_page' => $paginator->currentPage(),
+                    'last_page' => $paginator->lastPage(),
+                    'total' => $paginator->total(),
+                    'per_page' => $paginator->perPage(),
+                ],
+            ]);
+        }
 
         // Se é requisição AJAX, retorna JSON com HTML renderizado
         if ($request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest') {
@@ -1004,7 +1022,7 @@ class EntidadeFinanceiraController extends Controller
      * @param int $bankStatementId
      * @return \Illuminate\Http\JsonResponse
      */
-    public function desfazerConciliacao($bankStatementId)
+    public function desfazerConciliacao(Request $request, $bankStatementId)
     {
         $activeCompanyId = session('active_company_id');
         if (!$activeCompanyId) {
@@ -1014,8 +1032,16 @@ class EntidadeFinanceiraController extends Controller
             ], 403);
         }
 
+        $modo = $request->input('modo', 'excluir_lancamento');
+        if (!in_array($modo, ['apenas_desfazer', 'voltar_aberto', 'excluir_lancamento'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Modo inválido.'
+            ], 422);
+        }
+
         try {
-            return \DB::transaction(function () use ($bankStatementId, $activeCompanyId) {
+            return \DB::transaction(function () use ($bankStatementId, $activeCompanyId, $modo) {
                 // Busca o bank statement
                 $bankStatement = BankStatement::where('company_id', $activeCompanyId)
                     ->with(['transacoes.movimentacao', 'transacoes.entidadeFinanceira'])
@@ -1057,11 +1083,10 @@ class EntidadeFinanceiraController extends Controller
                     ]);
                 }
 
-                // Caso 2: Status "ok" (conciliado) - precisa desfazer transação e movimentação
-                // Verifica se há transação vinculada
+                // Caso 2: Status "ok" (conciliado) - bifurca conforme $modo
                 $transacao = $bankStatement->transacoes->first();
                 if (!$transacao) {
-                    // Se não há transação mas o status é "ok", apenas muda para pendente
+                    // Sem transação vinculada — apenas muda status independente do modo
                     $bankStatement->update([
                         'reconciled' => false,
                         'status_conciliacao' => 'pendente'
@@ -1070,6 +1095,7 @@ class EntidadeFinanceiraController extends Controller
                     \Log::warning('Conciliação desfeita sem transação vinculada', [
                         'bank_statement_id' => $bankStatementId,
                         'status_anterior' => $statusAtual,
+                        'modo' => $modo,
                         'user_id' => Auth::id()
                     ]);
 
@@ -1079,57 +1105,108 @@ class EntidadeFinanceiraController extends Controller
                     ]);
                 }
 
-                // Guarda informações para log
+                // Informações comuns para log
                 $entidadeId = $transacao->entidade_id;
                 $tipo = $transacao->tipo;
                 $valor = abs($transacao->valor);
                 $movimentacaoId = $transacao->movimentacao_id;
-                
-                $entidade = EntidadeFinanceira::findOrFail($entidadeId);
-                $saldoAnterior = $entidade->saldo_atual;
 
-                // 1. REVERTER O CACHE (saldo_atual) - ATOMICAMENTE
-                if ($tipo === 'entrada') {
-                    $entidade->saldo_atual -= $valor;
+                if ($modo === 'apenas_desfazer') {
+                    // Modo 1: Apenas remove o vínculo banco<->transação e marca pendente.
+                    // O lançamento (transação + movimentação) e o saldo permanecem intactos.
+                    $bankStatement->transacoes()->detach($transacao->id);
+
+                    $bankStatement->update([
+                        'reconciled' => false,
+                        'status_conciliacao' => 'pendente'
+                    ]);
+
+                    \Log::info('Conciliação desfeita (apenas_desfazer)', [
+                        'bank_statement_id' => $bankStatementId,
+                        'transacao_id' => $transacao->id,
+                        'user_id' => Auth::id()
+                    ]);
+
+                    $message = 'Conciliação desfeita. O lançamento permanece inalterado.';
+
+                } elseif ($modo === 'voltar_aberto') {
+                    // Modo 2: Reverte saldo, deleta movimentação e retorna transação para "em aberto".
+                    $entidade = EntidadeFinanceira::findOrFail($entidadeId);
+                    $saldoAnterior = $entidade->saldo_atual;
+
+                    if ($tipo === 'entrada') {
+                        $entidade->saldo_atual -= $valor;
+                    } else {
+                        $entidade->saldo_atual += $valor;
+                    }
+                    $entidade->save();
+
+                    if ($movimentacaoId) {
+                        Movimentacao::where('id', $movimentacaoId)->delete();
+                    }
+
+                    $bankStatement->transacoes()->detach($transacao->id);
+
+                    $transacao->situacao = \App\Enums\SituacaoTransacao::EM_ABERTO;
+                    $transacao->conciliada = false;
+                    $transacao->data_conciliacao = null;
+                    $transacao->movimentacao_id = null;
+                    $transacao->save();
+
+                    $bankStatement->update([
+                        'reconciled' => false,
+                        'status_conciliacao' => 'pendente'
+                    ]);
+
+                    \Log::info('Conciliação desfeita (voltar_aberto)', [
+                        'bank_statement_id' => $bankStatementId,
+                        'transacao_id' => $transacao->id,
+                        'movimentacao_id' => $movimentacaoId,
+                        'entidade_id' => $entidadeId,
+                        'saldo_anterior' => $saldoAnterior,
+                        'saldo_novo' => $entidade->saldo_atual,
+                        'user_id' => Auth::id()
+                    ]);
+
+                    $message = 'Conciliação desfeita. O lançamento voltou para "Em aberto".';
+
                 } else {
-                    $entidade->saldo_atual += $valor;
+                    // Modo 3 (excluir_lancamento): comportamento original — deleta transação e movimentação.
+                    $entidade = EntidadeFinanceira::findOrFail($entidadeId);
+                    $saldoAnterior = $entidade->saldo_atual;
+
+                    if ($tipo === 'entrada') {
+                        $entidade->saldo_atual -= $valor;
+                    } else {
+                        $entidade->saldo_atual += $valor;
+                    }
+                    $entidade->save();
+
+                    if ($movimentacaoId) {
+                        Movimentacao::where('id', $movimentacaoId)->delete();
+                    }
+
+                    $bankStatement->transacoes()->detach($transacao->id);
+
+                    $transacao->delete();
+
+                    $bankStatement->update([
+                        'reconciled' => false,
+                        'status_conciliacao' => 'pendente'
+                    ]);
+
+                    \Log::info('Conciliação desfeita (excluir_lancamento)', [
+                        'bank_statement_id' => $bankStatementId,
+                        'transacao_id' => $transacao->id,
+                        'movimentacao_id' => $movimentacaoId,
+                        'entidade_id' => $entidadeId,
+                        'saldo_anterior' => $saldoAnterior,
+                        'saldo_novo' => $entidade->saldo_atual,
+                        'user_id' => Auth::id()
+                    ]);
+
+                    $message = 'Conciliação desfeita e lançamento excluído com sucesso.';
                 }
-                $entidade->save();
-
-                \Log::info('Saldo revertido', [
-                    'entidade_id' => $entidadeId,
-                    'tipo' => $tipo,
-                    'valor' => $valor,
-                    'saldo_anterior' => $saldoAnterior,
-                    'saldo_novo' => $entidade->saldo_atual
-                ]);
-
-                // 2. Deletar a movimentação relacionada
-                if ($movimentacaoId) {
-                    Movimentacao::where('id', $movimentacaoId)->delete();
-                }
-
-                // 3. Remover o vínculo na tabela pivot
-                $bankStatement->transacoes()->detach($transacao->id);
-
-                // 4. Deletar a transação financeira
-                $transacao->delete();
-
-                // 5. Atualizar o status do bank statement
-                $bankStatement->update([
-                    'reconciled' => false,
-                    'status_conciliacao' => 'pendente'
-                ]);
-
-                \Log::info('Conciliação desfeita com sucesso', [
-                    'bank_statement_id' => $bankStatementId,
-                    'transacao_id' => $transacao->id,
-                    'movimentacao_id' => $movimentacaoId,
-                    'entidade_id' => $entidadeId,
-                    'tipo' => $tipo,
-                    'saldo_final' => $entidade->saldo_atual,
-                    'user_id' => Auth::id()
-                ]);
 
                 // Busca contadores atualizados
                 $countBaseQuery = BankStatement::query()
@@ -1145,7 +1222,7 @@ class EntidadeFinanceiraController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'message' => 'Conciliação desfeita com sucesso!',
+                    'message' => $message,
                     'counts' => $counts
                 ]);
             });
@@ -1273,6 +1350,102 @@ class EntidadeFinanceiraController extends Controller
             'entidadesCaixa' => $entidadesCaixa,
             'hasHorariosMissas' => $hasHorariosMissas,
             'activeTab' => 'historico',
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Auditoria e reparo de saldos
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * GET entidades/saldos/auditoria
+     * Retorna JSON listando entidades com divergência entre saldo_atual (cache)
+     * e a soma real das movimentações. Não altera nenhum dado.
+     */
+    public function auditoriaSaldos(): \Illuminate\Http\JsonResponse
+    {
+        $companyId = session('active_company_id');
+        if (!$companyId) {
+            return response()->json(['success' => false, 'message' => 'Sessão inválida.'], 403);
+        }
+
+        $entidades   = EntidadeFinanceira::where('company_id', $companyId)->get();
+        $ids         = $entidades->pluck('id')->toArray();
+        $saldosReais = EntidadeFinanceira::saldosCalculadosPorEntidadeIds($ids);
+
+        $divergentes = [];
+        foreach ($entidades as $e) {
+            $cache = round((float) $e->saldo_atual, 2);
+            $real  = round($saldosReais[$e->id] ?? 0.0, 2);
+            if (abs($real - $cache) >= 0.01) {
+                $divergentes[] = [
+                    'id'          => $e->id,
+                    'nome'        => $e->nome,
+                    'saldo_cache' => $cache,
+                    'saldo_real'  => $real,
+                    'diferenca'   => round($real - $cache, 2),
+                ];
+            }
+        }
+
+        return response()->json([
+            'success'     => true,
+            'total'       => $entidades->count(),
+            'divergentes' => count($divergentes),
+            'detalhes'    => $divergentes,
+        ]);
+    }
+
+    /**
+     * POST entidades/saldos/recalcular
+     * Corrige os saldos divergentes da empresa ativa.
+     * Aceita body JSON { "entidade_ids": [1,2,3] } para limitar o escopo.
+     */
+    public function recalcularSaldos(\Illuminate\Http\Request $request): \Illuminate\Http\JsonResponse
+    {
+        $companyId = session('active_company_id');
+        if (!$companyId) {
+            return response()->json(['success' => false, 'message' => 'Sessão inválida.'], 403);
+        }
+
+        $query = EntidadeFinanceira::where('company_id', $companyId);
+
+        if ($request->filled('entidade_ids')) {
+            $ids = array_map('intval', (array) $request->input('entidade_ids'));
+            $query->whereIn('id', $ids);
+        }
+
+        $entidades   = $query->get();
+        $ids         = $entidades->pluck('id')->toArray();
+        $saldosReais = EntidadeFinanceira::saldosCalculadosPorEntidadeIds($ids);
+
+        $corrigidas = [];
+        foreach ($entidades as $e) {
+            $cache = round((float) $e->saldo_atual, 2);
+            $real  = round($saldosReais[$e->id] ?? 0.0, 2);
+            if (abs($real - $cache) >= 0.01) {
+                \DB::table('entidades_financeiras')
+                    ->where('id', $e->id)
+                    ->update(['saldo_atual' => $real]);
+
+                \Log::warning('[recalcularSaldos] Saldo corrigido manualmente via painel', [
+                    'entidade_id'  => $e->id,
+                    'company_id'   => $companyId,
+                    'saldo_antes'  => $cache,
+                    'saldo_depois' => $real,
+                    'user_id'      => \Auth::id(),
+                ]);
+
+                $corrigidas[] = ['id' => $e->id, 'nome' => $e->nome, 'saldo_novo' => $real];
+            }
+        }
+
+        return response()->json([
+            'success'    => true,
+            'message'    => count($corrigidas) > 0
+                ? count($corrigidas) . ' saldo(s) corrigido(s) com sucesso.'
+                : 'Nenhuma divergência encontrada.',
+            'corrigidas' => $corrigidas,
         ]);
     }
 }

@@ -4,7 +4,11 @@ namespace App\Http\Controllers\App\Contabilidade;
 
 use App\Http\Controllers\Controller;
 use App\Services\LoteContabilExportService;
+use App\Models\PdfGeneration;
+use App\Jobs\GenerateLoteContabilJob;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class LoteContabilController extends Controller
 {
@@ -59,6 +63,80 @@ class LoteContabilController extends Controller
                 'success' => false,
                 'message' => $e->getMessage(),
             ], 422);
+        }
+    }
+
+    /**
+     * Exporta lote contábil de forma assíncrona via fila (React).
+     *
+     * POST /relatorios/lote-contabil/exportar-async
+     */
+    public function exportarAsync(Request $request)
+    {
+        try {
+            $entidadeId  = $request->input('entidade_id');
+            $dataInicial = $request->input('data_inicial');
+            $dataFinal   = $request->input('data_final');
+            $campoData   = $request->input('campo_data', 'data');
+            $formato     = $request->input('formato', 'txt');
+            $companyId   = session('active_company_id');
+            $tenantId    = tenant('id');
+
+            if (!$companyId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Empresa não selecionada.',
+                ], 400);
+            }
+
+            if (!$entidadeId) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Selecione uma conta financeira.',
+                ], 400);
+            }
+
+            $pdfGen = PdfGeneration::create([
+                'type'       => 'lote_contabil',
+                'user_id'    => Auth::id(),
+                'company_id' => $companyId,
+                'status'     => 'pending',
+                'parameters' => [
+                    'data_inicial' => $dataInicial,
+                    'data_final'   => $dataFinal,
+                    'entidade_id'  => $entidadeId,
+                    'campo_data'   => $campoData,
+                    'formato'      => $formato,
+                ],
+            ]);
+
+            GenerateLoteContabilJob::dispatch(
+                $dataInicial,
+                $dataFinal,
+                (int) $entidadeId,
+                $formato,
+                $campoData,
+                $companyId,
+                Auth::id(),
+                $tenantId,
+                $pdfGen->id
+            );
+
+            return response()->json([
+                'success' => true,
+                'pdf_id'  => $pdfGen->id,
+                'message' => 'Arquivo sendo gerado em background. Aguarde a notificação.',
+            ]);
+
+        } catch (\Exception $e) {
+            Log::error('Erro ao despachar job de Lote Contábil', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao iniciar geração: ' . $e->getMessage(),
+            ], 500);
         }
     }
 }

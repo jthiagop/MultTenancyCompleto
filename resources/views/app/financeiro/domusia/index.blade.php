@@ -1,5 +1,5 @@
-<x-tenant-app-layout 
-    pageTitle="Domus IA - Use Inteligência Artificial para os Lançamentos" 
+<x-tenant-app-layout
+    pageTitle="Domus IA - Use Inteligência Artificial para os Lançamentos"
     :breadcrumbs="[['label' => 'Financeiro', 'url' => route('banco.list')], ['label' => 'Domus IA']]">
 
     <!--begin::Content-->
@@ -30,7 +30,6 @@
             <!--begin:::Tab content-->
             <div class="tab-content" id="myTabContent">
                 @include('app.financeiro.domusia.partials.pendentes')
-                @include('app.financeiro.domusia.partials.integracoes')
             </div>
             <!--end:::Tab content-->
 

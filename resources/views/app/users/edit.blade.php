@@ -224,8 +224,7 @@
                                                 <div class="col-lg-6 mb-4 mb-lg-0">
                                                     <div class="fv-row mb-0">
                                                         <label for="emailaddress"
-                                                            class="form-label fs-6 fw-bold mb-3">Informe o novo
-                                                            email</label>
+                                                            class="form-label fs-6 fw-bold mb-3">Informe o novo email</label>
                                                         <input type="email"
                                                             class="form-control form-control-lg form-control-solid"
                                                             id="emailaddress" placeholder="Email" name="email"

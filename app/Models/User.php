@@ -91,7 +91,7 @@ class User extends Authenticatable
      */
     public function getAvatarUrlAttribute(): ?string
     {
-        if (!$this->avatar) {
+        if (!$this->avatar || $this->avatar === 'tenant/blank.png') {
             return null;
         }
 
@@ -100,8 +100,14 @@ class User extends Authenticatable
             return $this->avatar;
         }
 
-        // Se for um path do storage
-        return Storage::url($this->avatar);
+        // Remove prefixos desnecessários
+        $path = ltrim($this->avatar, '/');
+        if (str_starts_with($path, 'public/')) {
+            $path = substr($path, strlen('public/'));
+        }
+
+        // Usa a rota /file/ do tenant que serve corretamente do storage isolado
+        return '/file/' . $path;
     }
 
     /**

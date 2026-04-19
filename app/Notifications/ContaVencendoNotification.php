@@ -2,87 +2,75 @@
 
 namespace App\Notifications;
 
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 
 /**
- * Notificação para contas que vencem hoje ou estão próximas do vencimento.
+ * Notificação para contas que vencem hoje, amanhã, esta semana ou estão atrasadas.
+ *
+ * Urgências disponíveis: 'atrasado' | 'hoje' | 'amanha' | 'semana'
  */
-class ContaVencendoNotification extends Notification implements ShouldQueue
+class ContaVencendoNotification extends Notification
 {
-    use Queueable;
 
-    protected string $descricao;
-    protected float $valor;
-    protected string $dataVencimento;
-    protected ?int $transacaoId;
-    protected ?int $companyId;
-    protected string $urgencia; // 'hoje', 'amanha', 'semana'
-
-    /**
-     * Create a new notification instance.
-     *
-     * @param string $descricao Descrição da conta
-     * @param float $valor Valor da conta
-     * @param string $dataVencimento Data de vencimento formatada
-     * @param int|null $transacaoId ID da transação para link direto
-     * @param int|null $companyId ID da empresa
-     * @param string $urgencia Nível de urgência (hoje, amanha, semana)
-     */
     public function __construct(
-        string $descricao,
-        float $valor,
-        string $dataVencimento,
-        ?int $transacaoId = null,
-        ?int $companyId = null,
-        string $urgencia = 'hoje'
-    ) {
-        $this->descricao = $descricao;
-        $this->valor = $valor;
-        $this->dataVencimento = $dataVencimento;
-        $this->transacaoId = $transacaoId;
-        $this->companyId = $companyId;
-        $this->urgencia = $urgencia;
-    }
+        protected string  $descricao,
+        protected float   $valor,
+        protected string  $dataVencimento,     // formato "DD/MM/YYYY"
+        protected string  $dataVencimentoIso,  // formato "YYYY-MM-DD"
+        protected string  $subTipo,            // 'receita' | 'despesa'
+        protected ?int    $transacaoId = null,
+        protected ?int    $companyId   = null,
+        protected string  $urgencia    = 'hoje', // 'atrasado'|'hoje'|'amanha'|'semana'
+        protected ?int    $triggeredBy = null,  // ID do usuário que criou a transação
+    ) {}
 
-    /**
-     * Get the notification's delivery channels.
-     */
     public function via(object $notifiable): array
     {
         return ['database'];
     }
 
-    /**
-     * Get the array representation of the notification.
-     */
     public function toArray(object $notifiable): array
     {
-        $valorFormatado = 'R$ ' . number_format($this->valor, 2, ',', '.');
+        $valorFmt = 'R$ ' . number_format($this->valor, 2, ',', '.');
 
         $titulos = [
-            'hoje' => 'Conta Vence Hoje!',
-            'amanha' => 'Conta Vence Amanhã',
-            'semana' => 'Conta Vence Esta Semana',
+            'atrasado' => 'Conta em atraso!',
+            'hoje'     => 'Conta vence hoje',
+            'amanha'   => 'Conta vence amanhã',
+            'semana'   => 'Conta vence esta semana',
         ];
 
         $cores = [
-            'hoje' => 'danger',
-            'amanha' => 'warning',
-            'semana' => 'info',
+            'atrasado' => 'danger',
+            'hoje'     => 'warning',
+            'amanha'   => 'info',
+            'semana'   => 'info',
+        ];
+
+        $mensagens = [
+            'atrasado' => "'{$this->descricao}' ({$valorFmt}) estava prevista para {$this->dataVencimento} e ainda está em aberto.",
+            'hoje'     => "'{$this->descricao}' ({$valorFmt}) vence hoje ({$this->dataVencimento}).",
+            'amanha'   => "'{$this->descricao}' ({$valorFmt}) vence amanhã ({$this->dataVencimento}).",
+            'semana'   => "'{$this->descricao}' ({$valorFmt}) vence em {$this->dataVencimento}.",
         ];
 
         return [
-            'icon' => 'ki-calendar-tick',
-            'color' => $cores[$this->urgencia] ?? 'warning',
-            'title' => $titulos[$this->urgencia] ?? 'Conta a Vencer',
-            'message' => "'{$this->descricao}' no valor de {$valorFormatado} vence em {$this->dataVencimento}.",
-            'action_url' => $this->transacaoId ? route('banco.show', $this->transacaoId) : null,
-            'target' => '_self',
-            'company_id' => $this->companyId,
-            'tipo' => 'conta_vencendo',
-            'transacao_id' => $this->transacaoId,
+            'icon'                 => 'ki-calendar-tick',
+            'color'                => $cores[$this->urgencia]    ?? 'warning',
+            'title'                => $titulos[$this->urgencia]  ?? 'Conta a Vencer',
+            'message'              => $mensagens[$this->urgencia] ?? $mensagens['semana'],
+            'action_url'           => null,
+            'target'               => '_self',
+            'tipo'                 => 'conta_vencendo',
+            'categoria'            => 'financeiro',
+            'sub_tipo'             => $this->subTipo,
+            'urgencia'             => $this->urgencia,
+            'transacao_id'         => $this->transacaoId,
+            'data_vencimento'      => $this->dataVencimento,
+            'data_vencimento_iso'  => $this->dataVencimentoIso,
+            'valor'                => $this->valor,
+            'company_id'           => $this->companyId,
+            'triggered_by'         => $this->triggeredBy,
         ];
     }
 }

@@ -2,6 +2,7 @@
 /node_modules/
 /vendor/
 /public/build/
+/public/react-app/
 /public/hot
 /public/storage
 /resources/views/app/contabilidade/.DS_Store
@@ -10,8 +11,8 @@
 .env
 .env.*
 !.env.example
+!resources/js/react/.env.production
 .env.backup
-.env.production
 /storage/*.key
 auth.json
 

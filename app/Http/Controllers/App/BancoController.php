@@ -96,7 +96,6 @@ class BancoController extends Controller
             $descricao = $request->get('descricao');
             $valor = $request->get('valor');
 
-            // Converte valor monetário se vier formatado
             if ($valor) {
                 $money = Money::fromHumanInput($valor);
                 $valor = $money->getAmount();
@@ -110,9 +109,19 @@ class BancoController extends Controller
             );
 
             return response()->json($sugestao);
-        } catch (\Exception $e) {
-            Log::error('Erro ao buscar sugestão: ' . $e->getMessage());
-            return response()->json(['error' => 'Falha ao processar sugestão'], 500);
+        } catch (\Throwable $e) {
+            Log::warning('Erro ao buscar sugestão: ' . $e->getMessage());
+            return response()->json([
+                'confianca' => 0,
+                'origem_sugestao' => null,
+                'confianca_campos' => [
+                    'lancamento_padrao_id' => 0,
+                    'cost_center_id' => 0,
+                    'tipo_documento' => 0,
+                    'descricao' => 0,
+                    'parceiro_id' => 0,
+                ],
+            ], 200);
         }
     }
 
@@ -1518,9 +1527,20 @@ class BancoController extends Controller
                 'recibo.address', // Carregar recibo com endereço
                 'parceiro.address', // Carregar parceiro com endereço para recibo
                 'parcelas.entidadeFinanceira', // Carregar parcelas com entidade
+                'parent',
+                'rateios.filial',
+                'rateios.centroCusto',
+                'rateios.lancamentoPadrao',
+                'rateiosGerados',
             ])
             ->where('company_id', $companyId)
             ->findOrFail($id);
+
+        $rateiosGerados = $transacao->rateiosGerados;
+        $companyIds = $rateiosGerados->pluck('company_id')->unique()->filter()->values();
+        $companyNames = $companyIds->isEmpty()
+            ? collect()
+            : Company::whereIn('id', $companyIds)->pluck('name', 'id');
 
         return response()->json([
             'id' => $transacao->id,
@@ -1617,10 +1637,37 @@ class BancoController extends Controller
                     'total_parcelas' => $parcela->total_parcelas,
                     'data_vencimento' => $parcela->data_vencimento ? $parcela->data_vencimento->format('d/m/Y') : '-',
                     'valor' => (float) $parcela->valor,
-                    'situacao' => $parcela->situacao,
+                    'situacao' => $parcela->situacao instanceof \App\Enums\SituacaoTransacao
+                        ? $parcela->situacao->value
+                        : ($parcela->situacao ?? null),
                     'valor_pago' => (float) ($parcela->valor_pago ?? 0),
                     'descricao' => $parcela->descricao,
                     'entidade_nome' => $parcela->entidadeFinanceira?->nome ?? '-',
+                ];
+            })->values()->toArray(),
+            'rateios' => $transacao->rateios->map(function ($r) {
+                return [
+                    'filial_nome' => $r->filial?->name ?? null,
+                    'centro_custo' => $r->centroCusto?->descricao ?? null,
+                    'categoria' => $r->lancamentoPadrao?->description ?? null,
+                    'valor' => (float) $r->valor,
+                    'percentual' => $r->percentual !== null && $r->percentual !== '' ? (float) $r->percentual : null,
+                ];
+            })->values()->toArray(),
+            'rateios_gerados' => $rateiosGerados->map(function ($c) use ($companyNames) {
+                $situacao = $c->situacao instanceof \App\Enums\SituacaoTransacao
+                    ? $c->situacao->value
+                    : ($c->situacao ?? null);
+
+                return [
+                    'id' => $c->id,
+                    'descricao' => $c->descricao,
+                    'valor' => (float) $c->valor,
+                    'situacao' => $situacao,
+                    'filial_nome' => $companyNames[$c->company_id] ?? null,
+                    'data_vencimento_formatada' => $c->data_vencimento
+                        ? Carbon::parse($c->data_vencimento)->format('d/m/Y')
+                        : null,
                 ];
             })->values()->toArray(),
         ]);
@@ -1741,10 +1788,8 @@ class BancoController extends Controller
             }
 
             // Processa parcelas se houver
-            if ($this->temParcelas($request)) {
-                $this->criarParcelas($transacao, $validatedData, $request);
-                // A transação principal é mantida com o valor total
-                // As parcelas são criadas na tabela 'parcelamentos'
+            if ($this->transacaoService->deveCriarParcelamentos($request)) {
+                $this->transacaoService->criarParcelamentosParaLancamentoPrincipal($transacao, $validatedData, $request);
             }
 
             // Resposta de sucesso - AJAX ou redirect
@@ -1817,19 +1862,6 @@ class BancoController extends Controller
             ($request->has('intervalo_repeticao') && 
              $request->has('frequencia') && 
              $request->has('apos_ocorrencias'));
-    }
-
-    /**
-     * Verifica se tem parcelas
-     */
-    protected function temParcelas(Request $request): bool
-    {
-        return $request->has('parcelamento') && 
-            $request->input('parcelamento') !== 'avista' && 
-            $request->input('parcelamento') !== '1x' &&
-            $request->has('parcelas') && 
-            is_array($request->input('parcelas')) && 
-            count($request->input('parcelas')) > 0;
     }
 
     /**
@@ -2299,206 +2331,6 @@ class BancoController extends Controller
         $transacaoPrincipal->situacao = 'pago_parcial';
         $transacaoPrincipal->valor_pago = $valorPago;
         $transacaoPrincipal->save();
-    }
-
-    /**
-     * Cria parcelas para uma transação financeira parcelada
-     * As parcelas são armazenadas na tabela 'parcelamentos'
-     * A transação principal é mantida com o valor TOTAL
-     */
-    private function criarParcelas(
-        TransacaoFinanceira $transacaoPrincipal,
-        array $validatedData,
-        Request $request
-    ) {
-        $parcelas = $request->input('parcelas', []);
-
-        if (empty($parcelas) || !is_array($parcelas)) {
-            return;
-        }
-
-        ksort($parcelas);
-        $totalParcelas = count($parcelas);
-
-        foreach ($parcelas as $index => $parcela) {
-            $numeroParcela = (int) $index; // O índice já é o número da parcela (1, 2, 3...)
-            
-            // Se o índice começar em 0, ajusta para começar em 1
-            if ($numeroParcela === 0) {
-                $numeroParcela = 1;
-            }
-
-            // Entidade/Forma de pagamento da parcela
-            $entidadeIdParcela = $validatedData['entidade_id'];
-            if (isset($parcela['forma_pagamento_id']) && $parcela['forma_pagamento_id']) {
-                $entidadeIdParcela = $parcela['forma_pagamento_id'];
-            }
-
-            // Conta de pagamento (pode ser diferente para cada parcela)
-            $contaPagamentoId = null;
-            if (isset($parcela['conta_pagamento_id']) && $parcela['conta_pagamento_id']) {
-                $contaPagamentoId = $parcela['conta_pagamento_id'];
-            }
-
-            // Data de vencimento da parcela
-            $dataVencimentoParcela = $validatedData['data_competencia'];
-            if (isset($parcela['vencimento']) && $parcela['vencimento']) {
-                $dataVencimentoParcela = $this->converterDataVencimentoParcela(
-                    $parcela['vencimento'], 
-                    $validatedData['data_competencia'],
-                    $index
-                );
-            }
-
-            // Valor da parcela
-            $valorParcela = isset($parcela['valor']) ? $this->converterValorParaDecimal($parcela['valor']) : 0;
-
-            // Percentual da parcela (calculado automaticamente se não informado)
-            $valorTotal = (float) $transacaoPrincipal->valor;
-            $percentualParcela = isset($parcela['percentual']) && $parcela['percentual'] > 0 
-                ? (float) $parcela['percentual'] 
-                : ($valorTotal > 0 ? round(($valorParcela / $valorTotal) * 100, 2) : 0);
-
-            // Descrição da parcela (gerada automaticamente se não informada)
-            $descricaoParcela = isset($parcela['descricao']) && $parcela['descricao'] 
-                ? $parcela['descricao'] 
-                : $validatedData['descricao'] . " {$numeroParcela}/{$totalParcelas}";
-
-            // 1. Cria a TransacaoFinanceira para a parcela (aparece nas listagens)
-            $transacaoParcela = TransacaoFinanceira::create([
-                'company_id' => $validatedData['company_id'],
-                'parent_id' => $transacaoPrincipal->id, // Vincula à transação PAI
-                'data_competencia' => $validatedData['data_competencia'],
-                'data_vencimento' => $dataVencimentoParcela,
-                'entidade_id' => $entidadeIdParcela,
-                'parceiro_id' => $validatedData['parceiro_id'] ?? $validatedData['fornecedor_id'] ?? null,
-                'tipo' => $validatedData['tipo'],
-                'valor' => $valorParcela,
-                'descricao' => $descricaoParcela,
-                'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'] ?? null,
-                'cost_center_id' => $validatedData['cost_center_id'] ?? null,
-                'tipo_documento' => $validatedData['tipo_documento'] ?? null,
-                'numero_documento' => isset($validatedData['numero_documento']) 
-                    ? $validatedData['numero_documento'] . '-' . $numeroParcela 
-                    : null,
-                'origem' => $validatedData['origem'] ?? 'Banco',
-                'historico_complementar' => $validatedData['historico_complementar'] ?? null,
-                'comprovacao_fiscal' => $validatedData['comprovacao_fiscal'] ?? false,
-                'situacao' => 'em_aberto',
-                'agendado' => isset($parcela['agendado']) ? (bool) $parcela['agendado'] : false,
-                'valor_pago' => 0,
-                'juros' => 0,
-                'multa' => 0,
-                'desconto' => 0,
-                'created_by' => Auth::id(),
-                'created_by_name' => Auth::user()->name ?? 'Sistema',
-                'updated_by' => Auth::id(),
-                'updated_by_name' => Auth::user()->name ?? 'Sistema',
-            ]);
-
-            // 2. Cria o registro na tabela 'parcelamentos' vinculando à transação
-            $transacaoPrincipal->parcelas()->create([
-                'transacao_parcela_id' => $transacaoParcela->id, // Vincula à TransacaoFinanceira da parcela
-                'numero_parcela' => $numeroParcela,
-                'total_parcelas' => $totalParcelas,
-                'data_vencimento' => $dataVencimentoParcela,
-                'valor' => $valorParcela,
-                'percentual' => $percentualParcela,
-                'entidade_id' => $entidadeIdParcela,
-                'conta_pagamento_id' => $contaPagamentoId,
-                'descricao' => $descricaoParcela,
-                'situacao' => 'em_aberto',
-                'agendado' => isset($parcela['agendado']) ? (bool) $parcela['agendado'] : false,
-                'valor_pago' => 0,
-                'juros' => 0,
-                'multa' => 0,
-                'desconto' => 0,
-                'created_by' => Auth::id(),
-                'created_by_name' => Auth::user()->name ?? 'Sistema',
-                'updated_by' => Auth::id(),
-                'updated_by_name' => Auth::user()->name ?? 'Sistema',
-            ]);
-
-            \Log::info('✅ Parcela criada', [
-                'transacao_principal_id' => $transacaoPrincipal->id,
-                'transacao_parcela_id' => $transacaoParcela->id,
-                'numero_parcela' => $numeroParcela,
-                'total_parcelas' => $totalParcelas,
-                'valor' => $valorParcela,
-                'vencimento' => $dataVencimentoParcela,
-                'descricao' => $descricaoParcela
-            ]);
-        }
-
-        // Atualiza a situação da transação principal para indicar que é parcelada
-        $transacaoPrincipal->update([
-            'situacao' => \App\Enums\SituacaoTransacao::PARCELADO,
-        ]);
-
-        \Log::info('✅ Parcelamento criado com sucesso', [
-            'transacao_id' => $transacaoPrincipal->id,
-            'total_parcelas' => $totalParcelas,
-            'valor_total' => $transacaoPrincipal->valor
-        ]);
-    }
-
-    /**
-     * Converte data de vencimento da parcela para formato Y-m-d
-     */
-    private function converterDataVencimentoParcela(string $vencimentoStr, string $dataFallback, $parcelaIndex): string
-    {
-        $vencimentoStr = trim($vencimentoStr);
-        $vencimentoStr = preg_replace('/\s+/', '', $vencimentoStr);
-
-        if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $vencimentoStr, $matches)) {
-            $dia = (int)trim($matches[1]);
-            $mes = (int)trim($matches[2]);
-            $ano = (int)trim($matches[3]);
-
-            if ($dia >= 1 && $dia <= 31 && $mes >= 1 && $mes <= 12 && $ano >= 1900 && $ano <= 2100) {
-                try {
-                    return Carbon::create($ano, $mes, $dia, 0, 0, 0)->format('Y-m-d');
-                } catch (\Exception $e) {
-                    \Log::warning('Erro ao criar data de vencimento da parcela', [
-                        'vencimento' => $vencimentoStr,
-                        'erro' => $e->getMessage(),
-                        'parcela_index' => $parcelaIndex
-                    ]);
-                }
-            }
-        }
-
-        // Tenta formato alternativo
-        try {
-            return Carbon::createFromFormat('d/m/Y', $vencimentoStr)->format('Y-m-d');
-        } catch (\Exception $e) {
-            \Log::warning('Erro ao converter data de vencimento da parcela', [
-                'vencimento' => $vencimentoStr,
-                'erro' => $e->getMessage(),
-                'parcela_index' => $parcelaIndex
-            ]);
-        }
-
-        return $dataFallback;
-    }
-
-    /**
-     * Converte valor de string formatada para decimal
-     */
-    private function converterValorParaDecimal($valor): float
-    {
-        if (is_numeric($valor)) {
-            return (float) $valor;
-        }
-
-        if (is_string($valor)) {
-            // Remove pontos de milhar e substitui vírgula por ponto
-            $valor = str_replace('.', '', $valor);
-            $valor = str_replace(',', '.', $valor);
-            return (float) $valor;
-        }
-
-        return 0;
     }
 
     public function update(Request $request, $id)

@@ -92,27 +92,26 @@ class RecorrenciaController extends Controller
             ], 400);
         }
 
-        // Verifica se já existe uma configuração idêntica
+        // Uma empresa não pode cadastrar duas vezes a mesma combinação (intervalo + frequência + ocorrências).
+        // Considera qualquer registro não excluído (soft delete), independente de ativo/inativo.
         $recorrenciaExistente = Recorrencia::where('company_id', $companyId)
             ->where('intervalo_repeticao', $validated['intervalo_repeticao'])
             ->where('frequencia', $validated['frequencia'])
             ->where('total_ocorrencias', $validated['apos_ocorrencias'])
-            ->where('ativo', true)
             ->first();
 
         if ($recorrenciaExistente) {
-            // Retorna a configuração existente ao invés de criar nova
             return response()->json([
-                'success' => true,
-                'message' => 'Configuração de recorrência já existe',
+                'success' => false,
+                'message' => 'Já existe uma configuração de recorrência idêntica para esta empresa. Escolha-a na lista ou altere intervalo, frequência ou número de ocorrências.',
                 'data' => [
                     'id' => $recorrenciaExistente->id,
                     'nome' => $recorrenciaExistente->nome ?? $this->gerarNomeAutomatico($recorrenciaExistente),
                     'intervalo_repeticao' => $recorrenciaExistente->intervalo_repeticao,
                     'frequencia' => $recorrenciaExistente->frequencia,
                     'total_ocorrencias' => $recorrenciaExistente->total_ocorrencias,
-                ]
-            ], 200);
+                ],
+            ], 422);
         }
 
         // Gera nome automático se não fornecido

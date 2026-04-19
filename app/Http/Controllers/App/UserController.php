@@ -198,6 +198,7 @@ class UserController extends Controller
             'filiais' => 'array',
             'notifications' => 'nullable|array',
             'must_change_password' => 'nullable|boolean',
+            'active' => 'nullable|boolean',
         ], [
             'name.required' => 'O nome é obrigatório.',
             'name.max' => 'O nome não pode exceder 255 caracteres.',
@@ -232,7 +233,7 @@ class UserController extends Controller
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
                 'avatar' => $validatedData['avatar'],
-                'active' => true, // Usuário é criado ativo automaticamente
+                'active' => $request->has('active') ? $request->input('active') == '1' : true,
                 'notifications' => json_encode($validatedData['notifications'] ?? []),
                 'must_change_password' => $request->has('must_change_password') && $request->input('must_change_password') == '1',
             ];
@@ -381,13 +382,18 @@ class UserController extends Controller
     public function update(Request $request, User $user)
     {
         $validateData = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|email|max:255|unique:users,email,' . $user->id,
-            'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
-            'permissions' => 'nullable|array',
-            'permissions.*' => 'integer|exists:permissions,id',
-            'filiais' => 'nullable|array',
-            'must_change_password' => 'nullable|boolean',
+            'name'                  => 'required|string|max:255',
+            'email'                 => 'required|email|max:255|unique:users,email,' . $user->id,
+            'avatar'                => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'password'              => ['nullable', 'confirmed', Rules\Password::defaults()],
+            'permissions'           => 'nullable|array',
+            'permissions.*'         => 'integer|exists:permissions,id',
+            'filiais'               => 'nullable|array',
+            'must_change_password'  => 'nullable|boolean',
+            'active'                => 'nullable|boolean',
+        ], [
+            'password.confirmed' => 'A confirmação de senha não confere.',
+            'email.unique'       => 'Este email já está em uso por outro usuário.',
         ]);
 
         DB::transaction(function () use ($request, $validateData, $user) {
@@ -401,16 +407,29 @@ class UserController extends Controller
                 $validateData['must_change_password'] = $request->input('must_change_password') == '1';
             }
 
+            // Atualizar active se fornecido
+            if ($request->has('active')) {
+                $validateData['active'] = $request->input('active') == '1';
+            }
+
+            // Atualizar senha se fornecida
+            if (!empty($validateData['password'])) {
+                $validateData['password'] = Hash::make($validateData['password']);
+            } else {
+                unset($validateData['password']);
+                unset($validateData['password_confirmation']);
+            }
+
             $user->update($validateData);
 
-            // Sincronizar permissões se estiverem presentes no request
-            if ($request->has('permissions')) {
+            // Sincronizar permissões se presentes ou se sync_permissions sinalizado
+            if ($request->has('permissions') || $request->boolean('sync_permissions')) {
                 $validPermissions = Permission::whereIn('id', $request->input('permissions', []))->pluck('id')->toArray();
                 $user->syncPermissions($validPermissions);
             }
-            // Se 'permissions' não foi enviado no request, manter as permissões existentes
+            // Se nenhum sinal enviado, manter permissões existentes
 
-            // Sincronizar empresas (companies) — usando o mesmo relacionamento do store()
+            // Sincronizar empresas (companies) se enviadas
             if ($request->has('filiais')) {
                 $companiesToSync = $request->input('filiais', []);
                 $user->companies()->sync(array_unique($companiesToSync));
@@ -473,16 +492,23 @@ class UserController extends Controller
      */
     public function updateRoles(Request $request, User $user)
     {
-        // Validação para garantir que os dados recebidos são seguros
+        $this->authorize('updateRoles', $user);
+
         $request->validate([
             'roles' => 'nullable|array',
-            'roles.*' => 'integer|exists:roles,id' // Garante que cada item no array é um ID de role válido
+            'roles.*' => 'integer|exists:roles,id'
         ]);
 
-        // Pega o array de IDs de roles do formulário (ex: ['1', '4'])
         $roles = $request->input('roles', []);
 
-        // O syncRoles entende que você está passando IDs e vai sincronizar corretamente.
+        // Prevenir escalada de privilégios: somente usuário 'global' pode atribuir role 'global'
+        if (!Auth::user()->hasRole('global')) {
+            $requestedNames = Role::whereIn('id', $roles)->pluck('name');
+            if ($requestedNames->contains('global')) {
+                return redirect()->back()->withErrors(['roles' => 'Você não tem permissão para atribuir o papel global.']);
+            }
+        }
+
         if (isset($roles)) {
             $user->roles()->sync($roles);
         }
@@ -576,9 +602,9 @@ class UserController extends Controller
      */
     public function updateStatus(Request $request, User $user)
     {
+        $this->authorize('updateStatus', $user);
+
         try {
-            // Inverte o status atual do usuário.
-            // Se 'active' for true, se tornará false, e vice-versa (graças ao cast no modelo).
             $newStatus = !$user->active;
 
             $user->update(['active' => $newStatus]);
@@ -770,27 +796,23 @@ class UserController extends Controller
     /**
      * Gera uma senha segura automaticamente
      */
-    private function generateSecurePassword($length = 12)
+    private function generateSecurePassword($length = 10)
     {
-        $uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-        $lowercase = 'abcdefghijklmnopqrstuvwxyz';
-        $numbers = '0123456789';
-        $symbols = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+        $uppercase = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // sem I e O (confundem com 1 e 0)
+        $lowercase = 'abcdefghjkmnpqrstuvwxyz';  // sem i, l e o
+        $numbers   = '23456789';                  // sem 0 e 1
 
-        $all = $uppercase . $lowercase . $numbers . $symbols;
+        $all = $uppercase . $lowercase . $numbers;
 
-        // Garantir que a senha tenha pelo menos um de cada tipo
-        $password = $uppercase[random_int(0, strlen($uppercase) - 1)];
+        // Garantir pelo menos uma letra maiúscula, minúscula e número
+        $password  = $uppercase[random_int(0, strlen($uppercase) - 1)];
         $password .= $lowercase[random_int(0, strlen($lowercase) - 1)];
         $password .= $numbers[random_int(0, strlen($numbers) - 1)];
-        $password .= $symbols[random_int(0, strlen($symbols) - 1)];
 
-        // Preencher o resto da senha com caracteres aleatórios
         for ($i = strlen($password); $i < $length; $i++) {
             $password .= $all[random_int(0, strlen($all) - 1)];
         }
 
-        // Embaralhar a senha
         return str_shuffle($password);
     }
 
@@ -807,6 +829,8 @@ class UserController extends Controller
      */
     public function updatePasswordChange(Request $request)
     {
+        $isReactWeb = $request->header('X-React-Web') === '1';
+
         try {
             $user = Auth::user();
 
@@ -824,6 +848,12 @@ class UserController extends Controller
 
             // Verificar se a senha atual está correta
             if (!Hash::check($request->current_password, $user->password)) {
+                if ($isReactWeb) {
+                    return response()->json([
+                        'message' => 'A senha atual está incorreta.',
+                        'errors'  => ['current_password' => ['A senha atual está incorreta.']],
+                    ], 422);
+                }
                 return back()->withErrors([
                     'current_password' => 'A senha atual está incorreta.'
                 ])->withInput();
@@ -839,9 +869,14 @@ class UserController extends Controller
             $complexityCount = $hasUppercase + $hasLowercase + $hasNumbers + $hasSymbols;
 
             if ($complexityCount < 3) {
-                return back()->withErrors([
-                    'password' => 'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.'
-                ])->withInput();
+                $msg = 'A senha deve conter pelo menos 3 dos seguintes: letras maiúsculas, minúsculas, números e símbolos.';
+                if ($isReactWeb) {
+                    return response()->json([
+                        'message' => $msg,
+                        'errors'  => ['password' => [$msg]],
+                    ], 422);
+                }
+                return back()->withErrors(['password' => $msg])->withInput();
             }
 
             // Atualizar a senha
@@ -855,16 +890,39 @@ class UserController extends Controller
                 'user_email' => $user->email
             ]);
 
+            if ($isReactWeb) {
+                // Encerra a sessão para que o usuário entre novamente com a nova senha.
+                // Isso evita inconsistências de hash de sessão e loops de redirect.
+                Auth::logout();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Senha alterada com sucesso!',
+                ]);
+            }
+
             return redirect()->route('dashboard')->with('success', 'Senha alterada com sucesso!');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
+            if ($isReactWeb) {
+                return response()->json([
+                    'message' => 'Dados inválidos.',
+                    'errors'  => $e->errors(),
+                ], 422);
+            }
             return back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             Log::error('Erro ao alterar senha obrigatória: ' . $e->getMessage(), [
                 'user_id' => Auth::user()->id,
                 'request_data' => $request->all()
             ]);
-
+            if ($isReactWeb) {
+                return response()->json([
+                    'message' => 'Ocorreu um erro inesperado. Tente novamente.',
+                ], 500);
+            }
             return back()->withErrors([
                 'password' => 'Ocorreu um erro inesperado. Tente novamente.'
             ])->withInput();

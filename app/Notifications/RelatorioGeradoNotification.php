@@ -63,7 +63,7 @@ class RelatorioGeradoNotification extends Notification implements ShouldQueue
             'icon' => 'fa-solid fa-file-pdf',
             'color' => 'danger',
             'title' => $this->tipoRelatorio,
-            'message' => 'Seu relatório foi gerado com sucesso. Clique para baixar.',
+            'message' => 'Relatório gerado com sucesso.',
             'action_url' => $this->downloadUrl,
             'target' => '_blank',
             'company_id' => $this->companyId,

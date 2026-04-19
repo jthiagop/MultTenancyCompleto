@@ -21,10 +21,128 @@ use Illuminate\Http\Request;
 class TransacaoFinanceiraService
 {
     protected $recurrenceService;
+    protected $rateioService;
 
-    public function __construct(RecurrenceService $recurrenceService)
+    public function __construct(RecurrenceService $recurrenceService, RateioService $rateioService)
     {
         $this->recurrenceService = $recurrenceService;
+        $this->rateioService = $rateioService;
+    }
+
+    /**
+     * Sincroniza a Movimentacao de uma transação financeira de forma centralizada e à prova de erros.
+     *
+     * Este é o método canônico para garantir que o registro em `movimentacoes` — e portanto o
+     * `saldo_atual` em `entidades_financeiras` — esteja sempre consistente com o estado atual
+     * da transação. Deve ser chamado em qualquer operação que altere:
+     *   - entidade_id (troca de conta)
+     *   - tipo        (entrada ↔ saída)
+     *   - valor       (correção de montante)
+     *   - situacao    (efetivação ou reversão para em_aberto)
+     *
+     * Cenários cobertos:
+     *   A) Transação efetivada (pago/recebido) + movimentação existe
+     *      → atualiza entidade_id / tipo / valor → MovimentacaoObserver::updated reverte o
+     *        impacto antigo e aplica o novo de forma atômica.
+     *   B) Transação efetivada mas sem movimentação (inconsistência herdada ou bug anterior)
+     *      → cria nova movimentação → MovimentacaoObserver::created incrementa o saldo.
+     *   C) Transação revertida para em_aberto
+     *      → deleta movimentação existente → MovimentacaoObserver::deleted decrementa o saldo.
+     *   D) Transação em_aberto sem movimentação
+     *      → nenhuma ação necessária (estado correto, saldo não foi impactado).
+     *
+     * IMPORTANTE: deve ser chamado **dentro** de um DB::transaction para garantir atomicidade.
+     *
+     * @param TransacaoFinanceira $transacao Transação cujos campos já foram atualizados.
+     * @param string  $tipoDb     Valor do banco: 'entrada' ou 'saida'.
+     * @param float   $valorNovo  Valor a ser usado na movimentação.
+     * @param int     $entidadeId ID da entidade financeira destino.
+     * @param bool    $efetivado  true = pago/recebido; false = em_aberto/previsto.
+     */
+    public function sincronizarMovimentacao(
+        TransacaoFinanceira $transacao,
+        string $tipoDb,
+        float  $valorNovo,
+        int    $entidadeId,
+        bool   $efetivado
+    ): void {
+        // Busca por ambas as vias: movimentacao_id direto (Path A / conciliação)
+        // ou relação polimórfica morphOne (Path B / registrarBaixa).
+        $movimentacao = null;
+        if ($transacao->movimentacao_id) {
+            $movimentacao = Movimentacao::find($transacao->movimentacao_id);
+        }
+        if (!$movimentacao) {
+            $movimentacao = $transacao->movimentacao()->first();
+        }
+
+        // ── Cenário C / D: não efetivado ─────────────────────────────────────
+        if (!$efetivado) {
+            if ($movimentacao) {
+                // Cenário C: reverteu para em_aberto — desfaz o impacto no saldo.
+                $movimentacao->delete(); // MovimentacaoObserver::deleted → decrementa/incrementa saldo
+                DB::table('transacoes_financeiras')->where('id', $transacao->id)->update(['movimentacao_id' => null]);
+                $transacao->movimentacao_id = null;
+
+                Log::info('[sincronizarMovimentacao] Movimentação removida — transação revertida para em_aberto.', [
+                    'transacao_id'   => $transacao->id,
+                    'movimentacao_id' => $movimentacao->id,
+                ]);
+            }
+            // Cenário D: já estava em_aberto e sem movimentação — nada a fazer.
+            return;
+        }
+
+        // ── Cenário A: movimentação já existe — sincroniza o que mudou ────────
+        if ($movimentacao) {
+            $movimentacao->entidade_id = $entidadeId;
+            $movimentacao->tipo        = $tipoDb;
+            $movimentacao->valor       = $valorNovo;
+            $movimentacao->save(); // MovimentacaoObserver::updated → ajusta saldos das entidades
+
+            Log::info('[sincronizarMovimentacao] Movimentação sincronizada.', [
+                'transacao_id'    => $transacao->id,
+                'movimentacao_id' => $movimentacao->id,
+                'entidade_id'     => $entidadeId,
+                'tipo'            => $tipoDb,
+                'valor'           => $valorNovo,
+            ]);
+            return;
+        }
+
+        // ── Cenário B: efetivado mas sem movimentação (inconsistência) ─────────
+        Log::warning('[sincronizarMovimentacao] Transação efetivada sem movimentação vinculada — recriando.', [
+            'transacao_id' => $transacao->id,
+        ]);
+
+        $lancamentoPadrao = $transacao->lancamento_padrao_id
+            ? LancamentoPadrao::find($transacao->lancamento_padrao_id)
+            : null;
+
+        $nova = Movimentacao::create([
+            'entidade_id'       => $entidadeId,
+            'tipo'              => $tipoDb,
+            'valor'             => $valorNovo,
+            'data'              => $transacao->getRawOriginal('data_competencia') ?? now()->toDateString(),
+            'descricao'         => $transacao->descricao,
+            'company_id'        => $transacao->company_id,
+            'lancamento_padrao_id' => $transacao->lancamento_padrao_id,
+            'conta_debito_id'   => $lancamentoPadrao?->debit_account_id ?? null,
+            'conta_credito_id'  => $lancamentoPadrao?->credit_account_id ?? null,
+            'data_competencia'  => $transacao->getRawOriginal('data_competencia'),
+            'created_by'        => Auth::id(),
+            'created_by_name'   => Auth::user()?->name ?? 'Sistema',
+            'updated_by'        => Auth::id(),
+            'updated_by_name'   => Auth::user()?->name ?? 'Sistema',
+        ]); // MovimentacaoObserver::created → incrementa saldo
+
+        DB::table('transacoes_financeiras')->where('id', $transacao->id)->update(['movimentacao_id' => $nova->id]);
+        $transacao->movimentacao_id = $nova->id;
+
+        Log::info('[sincronizarMovimentacao] Movimentação recriada (Cenário B).', [
+            'transacao_id'    => $transacao->id,
+            'movimentacao_id' => $nova->id,
+        ]);
     }
 
     /**
@@ -81,6 +199,12 @@ class TransacaoFinanceiraService
             if (!$temParcelas && $this->temRecorrencia($request)) {
                 $this->processarRecorrencia($transacao, $data, $request);
             }
+
+            // 8. Processa rateio (se houver)
+            $rateios = $request->input('rateios', []);
+            if (!empty($rateios) && is_array($rateios)) {
+                $this->rateioService->processarRateio($transacao, $rateios);
+            }
             
             return $transacao;
         });
@@ -88,7 +212,6 @@ class TransacaoFinanceiraService
         /** @var \App\Models\Financeiro\TransacaoFinanceira $transacao */
         
         // 8. Processa anexos APÓS commit
-        // Se falhar, não afeta a transação criada no banco
         DB::afterCommit(function () use ($request, $transacao) {
             try {
                 $this->processarAnexos($request, $transacao);
@@ -97,7 +220,6 @@ class TransacaoFinanceiraService
                     'transacao_id' => $transacao->id,
                     'erro' => $e->getMessage()
                 ]);
-                // Não relança - transação já foi commitada com sucesso
             }
         });
         
@@ -165,6 +287,11 @@ class TransacaoFinanceiraService
 
                 $transacao->movimentacao()->create($dadosMovimentacao);
                 // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
+            }
+
+            // 4. Baixa automática da contraparte intercompany (rateio)
+            if ($transacao->rateio_origem_id) {
+                $this->baixarContraparteIntercompany($transacao);
             }
 
             Log::info('[registrarBaixa] Transação baixada com sucesso', [
@@ -253,6 +380,7 @@ class TransacaoFinanceiraService
             $this->inverterTipoUnico($transacao);
 
             // 2. Inverte todas as filhas (parcelas)
+            /** @var \Illuminate\Database\Eloquent\Collection<int, TransacaoFinanceira> $filhas */
             $filhas = TransacaoFinanceira::where('parent_id', $transacao->id)->get();
             foreach ($filhas as $filha) {
                 $this->inverterTipoUnico($filha);
@@ -324,6 +452,72 @@ class TransacaoFinanceiraService
             ]);
         }
         // Saldo atualizado automaticamente pelo MovimentacaoObserver (increment/decrement O(1))
+    }
+
+    /**
+     * Ao dar baixa numa transação de rateio intercompany, localiza
+     * e baixa automaticamente a contraparte (Receber ↔ Pagar).
+     */
+    protected function baixarContraparteIntercompany(TransacaoFinanceira $transacao): void
+    {
+        try {
+            $tipoContraparte = $transacao->tipo === 'entrada' ? 'saida' : 'entrada';
+
+            $contraparte = TransacaoFinanceira::where('rateio_origem_id', $transacao->rateio_origem_id)
+                ->where('tipo', $tipoContraparte)
+                ->where('id', '!=', $transacao->id)
+                ->whereIn('situacao', ['em_aberto'])
+                ->where('valor', $transacao->valor)
+                ->first();
+
+            if (!$contraparte) {
+                Log::info('[baixarContraparteIntercompany] Contraparte não encontrada ou já baixada', [
+                    'transacao_id' => $transacao->id,
+                    'rateio_origem_id' => $transacao->rateio_origem_id,
+                ]);
+                return;
+            }
+
+            $contraparte->situacao = ($contraparte->tipo === 'entrada')
+                ? \App\Enums\SituacaoTransacao::RECEBIDO
+                : \App\Enums\SituacaoTransacao::PAGO;
+            $contraparte->valor_pago = $transacao->valor_pago ?? $contraparte->valor;
+            $contraparte->data_pagamento = $transacao->data_pagamento ?? now()->format('Y-m-d');
+            $contraparte->updated_by = Auth::id();
+            $contraparte->updated_by_name = Auth::user()->name ?? 'Sistema';
+            $contraparte->save();
+
+            if (!$contraparte->movimentacao) {
+                $lancamentoPadrao = LancamentoPadrao::find($contraparte->lancamento_padrao_id);
+
+                $contraparte->movimentacao()->create([
+                    'entidade_id' => $contraparte->entidade_id,
+                    'tipo' => $contraparte->tipo,
+                    'valor' => $contraparte->valor_pago,
+                    'data' => $contraparte->data_pagamento,
+                    'descricao' => $contraparte->descricao,
+                    'company_id' => $contraparte->company_id,
+                    'created_by' => Auth::id(),
+                    'created_by_name' => Auth::user()->name ?? 'Sistema',
+                    'updated_by' => Auth::id(),
+                    'updated_by_name' => Auth::user()->name ?? 'Sistema',
+                    'lancamento_padrao_id' => $contraparte->lancamento_padrao_id,
+                    'conta_debito_id' => $lancamentoPadrao->debit_account_id ?? null,
+                    'conta_credito_id' => $lancamentoPadrao->credit_account_id ?? null,
+                    'data_competencia' => $contraparte->data_competencia,
+                ]);
+            }
+
+            Log::info('[baixarContraparteIntercompany] Contraparte baixada automaticamente', [
+                'transacao_id' => $transacao->id,
+                'contraparte_id' => $contraparte->id,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('[baixarContraparteIntercompany] Erro ao baixar contraparte: ' . $e->getMessage(), [
+                'transacao_id' => $transacao->id,
+                'rateio_origem_id' => $transacao->rateio_origem_id,
+            ]);
+        }
     }
 
     /**
@@ -780,7 +974,6 @@ class TransacaoFinanceiraService
      */
     protected function temRecorrencia(Request $request): bool
     {
-        // Verifica se o checkbox de repetição está marcado
         $repetirMarcado = $request->has('repetir_lancamento') && $request->input('repetir_lancamento') == 1;
         
         if (!$repetirMarcado) {
@@ -808,10 +1001,20 @@ class TransacaoFinanceiraService
         Request $request
     ): void {
         try {
-            // Obter dados da recorrência da requisição
             $intervaloRepeticao = (int) $request->input('intervalo_repeticao', 1);
             $frequencia = $request->input('frequencia', 'mensal');
             $aposOcorrencias = (int) $request->input('apos_ocorrencias', 12);
+
+            // Configuração existente (template): copia parâmetros; cada lançamento ganha um novo registro em recorrencias
+            $configId = $request->input('configuracao_recorrencia');
+            if ($configId !== null && $configId !== '' && is_numeric($configId)) {
+                $tpl = Recorrencia::forActiveCompany()->find((int) $configId);
+                if ($tpl) {
+                    $intervaloRepeticao = (int) $tpl->intervalo_repeticao;
+                    $frequencia = $tpl->frequencia;
+                    $aposOcorrencias = (int) $tpl->total_ocorrencias;
+                }
+            }
             
             // Mapear frequência para nome legível
             $frequenciaMap = [
@@ -965,17 +1168,21 @@ class TransacaoFinanceiraService
     {
         try {
             $vencimentoStr = trim(preg_replace('/\s+/', '', $vencimentoStr));
-            
+
+            if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $vencimentoStr)) {
+                return $vencimentoStr;
+            }
+
             if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/', $vencimentoStr, $matches)) {
-                $dia = (int)trim($matches[1]);
-                $mes = (int)trim($matches[2]);
-                $ano = (int)trim($matches[3]);
-                
+                $dia = (int) trim($matches[1]);
+                $mes = (int) trim($matches[2]);
+                $ano = (int) trim($matches[3]);
+
                 if ($dia >= 1 && $dia <= 31 && $mes >= 1 && $mes <= 12 && $ano >= 1900 && $ano <= 2100) {
                     return Carbon::create($ano, $mes, $dia, 0, 0, 0)->format('Y-m-d');
                 }
             }
-            
+
             return Carbon::createFromFormat('d/m/Y', $vencimentoStr)->format('Y-m-d');
         } catch (\Exception $e) {
             Log::warning('Erro ao converter data de vencimento da parcela', [
@@ -985,6 +1192,452 @@ class TransacaoFinanceiraService
             ]);
             return $fallback;
         }
+    }
+
+    /**
+     * Indica se o request traz parcelamento 2x+ com linhas de parcelas (fluxo Blade/React).
+     */
+    public function deveCriarParcelamentos(Request $request): bool
+    {
+        return $request->has('parcelamento')
+            && $request->input('parcelamento') !== 'avista'
+            && $request->input('parcelamento') !== '1x'
+            && $request->has('parcelas')
+            && is_array($request->input('parcelas'))
+            && count($request->input('parcelas')) > 0;
+    }
+
+    /**
+     * Exclui todos os parcelamentos e transações filhas existentes da transação principal
+     * e, se o request trouxer novos dados de parcelas, recria tudo do zero.
+     *
+     * Usado ao editar "todas as parcelas" quando o usuário pode ter mudado
+     * a quantidade de parcelas, valores ou datas.
+     */
+    /**
+     * Atualiza recorrência de forma inteligente:
+     *  - Reduziu quantidade → exclui excedentes da última para a primeira
+     *  - Aumentou quantidade → cria os lançamentos adicionais
+     *  - Mudou intervalo/frequência → exclui em aberto e recria tudo
+     * Lançamentos pagos/recebidos são sempre preservados.
+     */
+    public function atualizarRecorrencia(
+        TransacaoFinanceira $transacaoOriginal,
+        Recorrencia $recorrencia,
+        array $validatedData,
+        Request $request
+    ): void {
+        DB::transaction(function () use ($transacaoOriginal, $recorrencia, $validatedData, $request) {
+            // Resolve valores do template se configuracao_recorrencia foi enviado
+            $novoIntervalo     = (int) $request->input('intervalo_repeticao', $recorrencia->intervalo_repeticao);
+            $novaFrequencia    = $request->input('frequencia', $recorrencia->frequencia);
+            $novasOcorrencias  = (int) $request->input('apos_ocorrencias', $recorrencia->total_ocorrencias);
+
+            $configId = $request->input('configuracao_recorrencia');
+            if ($configId !== null && $configId !== '' && is_numeric($configId)) {
+                $tpl = Recorrencia::forActiveCompany()->find((int) $configId);
+                if ($tpl) {
+                    $novoIntervalo    = (int) $tpl->intervalo_repeticao;
+                    $novaFrequencia   = $tpl->frequencia;
+                    $novasOcorrencias = (int) $tpl->total_ocorrencias;
+                }
+            }
+
+            $configMudou = $novoIntervalo !== (int) $recorrencia->intervalo_repeticao
+                        || $novaFrequencia !== $recorrencia->frequencia;
+
+            if ($configMudou) {
+                $this->recorrenciaRecriarTudo($transacaoOriginal, $recorrencia, $validatedData, $novoIntervalo, $novaFrequencia, $novasOcorrencias);
+            } elseif ($novasOcorrencias < (int) $recorrencia->total_ocorrencias) {
+                $this->recorrenciaReduzir($recorrencia, $novasOcorrencias);
+            } elseif ($novasOcorrencias > (int) $recorrencia->total_ocorrencias) {
+                $this->recorrenciaExpandir($transacaoOriginal, $recorrencia, $validatedData, $novasOcorrencias);
+            }
+
+            $this->atualizarMetaRecorrencia($recorrencia, $novoIntervalo, $novaFrequencia, $novasOcorrencias);
+        });
+    }
+
+    /**
+     * Reduz: exclui excedentes da última ocorrência para a primeira.
+     * Pagos/recebidos são desvinculados e preservados.
+     */
+    private function recorrenciaReduzir(Recorrencia $recorrencia, int $novasOcorrencias): void
+    {
+        $situacoesProtegidas = [
+            \App\Enums\SituacaoTransacao::PAGO->value,
+            \App\Enums\SituacaoTransacao::RECEBIDO->value,
+        ];
+
+        // Busca transações ordenadas por numero_ocorrencia DESC (última → primeira)
+        $transacoes = $recorrencia->transacoesGeradas()
+            ->orderByPivot('numero_ocorrencia', 'desc')
+            ->get();
+
+        $excluidas = 0;
+        $preservadas = 0;
+        $totalAtual = $transacoes->count();
+        $quantidadeExcluir = $totalAtual - $novasOcorrencias;
+
+        if ($quantidadeExcluir <= 0) return;
+
+        foreach ($transacoes as $t) {
+            if ($excluidas + $preservadas >= $quantidadeExcluir) break;
+
+            $situacaoValue = $t->situacao instanceof \BackedEnum ? $t->situacao->value : (string) $t->situacao;
+
+            $recorrencia->transacoesGeradas()->detach($t->id);
+
+            if (in_array($situacaoValue, $situacoesProtegidas)) {
+                $t->update(['recorrencia_id' => null]);
+                $preservadas++;
+                continue;
+            }
+
+            if ($t->movimentacao_id) {
+                Movimentacao::where('id', $t->movimentacao_id)->delete();
+            }
+            $t->delete();
+            $excluidas++;
+        }
+
+        $recorrencia->decrement('ocorrencias_geradas', $excluidas);
+
+        Log::info('📉 Recorrência reduzida', [
+            'recorrencia_id' => $recorrencia->id,
+            'excluidas' => $excluidas,
+            'preservadas' => $preservadas,
+            'novas_ocorrencias' => $novasOcorrencias,
+        ]);
+    }
+
+    /**
+     * Expande: gera lançamentos adicionais a partir da última ocorrência existente.
+     */
+    private function recorrenciaExpandir(
+        TransacaoFinanceira $transacaoOriginal,
+        Recorrencia $recorrencia,
+        array $validatedData,
+        int $novasOcorrencias
+    ): void {
+        $ultimaTransacao = $recorrencia->transacoesGeradas()
+            ->orderByPivot('numero_ocorrencia', 'desc')
+            ->first();
+
+        $ocorrenciasAtuais = (int) $recorrencia->ocorrencias_geradas;
+        $adicionar = $novasOcorrencias - $ocorrenciasAtuais;
+
+        if ($adicionar <= 0 || !$ultimaTransacao) return;
+
+        $ultimaData = Carbon::parse($ultimaTransacao->data_competencia);
+
+        // Gera datas adicionais continuando de onde parou
+        $datesAdicionais = [];
+        $currentDate = $ultimaData->copy();
+        for ($i = 0; $i < $adicionar; $i++) {
+            switch ($recorrencia->frequencia) {
+                case 'diario':  $currentDate->addDays($recorrencia->intervalo_repeticao); break;
+                case 'semanal': $currentDate->addWeeks($recorrencia->intervalo_repeticao); break;
+                case 'mensal':  $currentDate->addMonthsNoOverflow($recorrencia->intervalo_repeticao); break;
+                case 'anual':   $currentDate->addYearsNoOverflow($recorrencia->intervalo_repeticao); break;
+            }
+            $datesAdicionais[] = $currentDate->copy();
+        }
+
+        $dueDateDiff = null;
+        if (isset($validatedData['data_vencimento'])) {
+            $dueDateDiff = Carbon::parse($validatedData['data_competencia'])
+                ->diffInDays(Carbon::parse($validatedData['data_vencimento']), false);
+        }
+
+        foreach ($datesAdicionais as $idx => $occurrenceDate) {
+            $occurrenceNumber = $ocorrenciasAtuais + $idx + 1;
+
+            $novaTransacaoData = $validatedData;
+            $novaTransacaoData['data_competencia'] = $occurrenceDate->format('Y-m-d');
+            $novaTransacaoData['data_vencimento'] = $dueDateDiff !== null
+                ? $occurrenceDate->copy()->addDays($dueDateDiff)->format('Y-m-d')
+                : $occurrenceDate->format('Y-m-d');
+            $novaTransacaoData['situacao'] = 'em_aberto';
+            $novaTransacaoData['agendado'] = true;
+            $novaTransacaoData['descricao'] = ($validatedData['descricao'] ?? '') . " ({$occurrenceNumber}/{$novasOcorrencias})";
+
+            $novaMovimentacao = Movimentacao::create([
+                'entidade_id' => $novaTransacaoData['entidade_id'],
+                'tipo'        => $novaTransacaoData['tipo'],
+                'valor'       => $novaTransacaoData['valor'],
+                'data'        => $novaTransacaoData['data_competencia'],
+                'descricao'   => $novaTransacaoData['descricao'],
+                'company_id'  => $novaTransacaoData['company_id'],
+                'created_by'  => Auth::id(),
+                'created_by_name' => Auth::user()?->name ?? 'Sistema',
+                'updated_by'  => Auth::id(),
+                'updated_by_name' => Auth::user()?->name ?? 'Sistema',
+            ]);
+
+            $novaTransacaoData['movimentacao_id'] = $novaMovimentacao->id;
+            $novaTransacaoData['recorrencia_id'] = $recorrencia->id;
+            $novaTransacao = TransacaoFinanceira::create($novaTransacaoData);
+
+            $recorrencia->transacoesGeradas()->attach($novaTransacao->id, [
+                'data_geracao'      => $occurrenceDate->format('Y-m-d'),
+                'numero_ocorrencia' => $occurrenceNumber,
+                'movimentacao_id'   => $novaMovimentacao->id,
+                'created_at'        => now(),
+                'updated_at'        => now(),
+            ]);
+
+            $recorrencia->increment('ocorrencias_geradas');
+        }
+
+        Log::info('📈 Recorrência expandida', [
+            'recorrencia_id' => $recorrencia->id,
+            'adicionadas' => $adicionar,
+            'novas_ocorrencias' => $novasOcorrencias,
+        ]);
+    }
+
+    /**
+     * Recria tudo: mudou intervalo ou frequência, então as datas mudam.
+     * Exclui em aberto, preserva pagos/recebidos, e gera novamente.
+     */
+    private function recorrenciaRecriarTudo(
+        TransacaoFinanceira $transacaoOriginal,
+        Recorrencia $recorrencia,
+        array $validatedData,
+        int $novoIntervalo,
+        string $novaFrequencia,
+        int $novasOcorrencias
+    ): void {
+        $situacoesProtegidas = [
+            \App\Enums\SituacaoTransacao::PAGO->value,
+            \App\Enums\SituacaoTransacao::RECEBIDO->value,
+        ];
+
+        /** @var \Illuminate\Database\Eloquent\Collection<int, TransacaoFinanceira> $transacoes */
+        $transacoes = TransacaoFinanceira::where('recorrencia_id', $recorrencia->id)->get();
+        $excluidas = 0;
+        $preservadas = 0;
+
+        foreach ($transacoes as $t) {
+            $situacaoValue = $t->situacao instanceof \BackedEnum ? $t->situacao->value : (string) $t->situacao;
+            $recorrencia->transacoesGeradas()->detach($t->id);
+
+            if (in_array($situacaoValue, $situacoesProtegidas)) {
+                $t->update(['recorrencia_id' => null]);
+                $preservadas++;
+                continue;
+            }
+
+            if ($t->movimentacao_id) {
+                Movimentacao::where('id', $t->movimentacao_id)->delete();
+            }
+            $t->delete();
+            $excluidas++;
+        }
+
+        $recorrencia->update(['ocorrencias_geradas' => 0]);
+
+        $this->recurrenceService->generateRecurringTransactions(
+            $recorrencia,
+            $transacaoOriginal,
+            $validatedData
+        );
+
+        Log::info('🔄 Recorrência recriada (config alterada)', [
+            'recorrencia_id' => $recorrencia->id,
+            'excluidas' => $excluidas,
+            'preservadas' => $preservadas,
+        ]);
+    }
+
+    /** Atualiza metadados da recorrência. */
+    private function atualizarMetaRecorrencia(
+        Recorrencia $recorrencia,
+        int $intervalo,
+        string $frequencia,
+        int $totalOcorrencias
+    ): void {
+        $frequenciaMap = [
+            'diario' => 'Dia(s)', 'semanal' => 'Semana(s)',
+            'mensal' => 'Mês(es)', 'anual' => 'Ano(s)',
+        ];
+        $texto = $frequenciaMap[$frequencia] ?? $frequencia;
+
+        $recorrencia->update([
+            'intervalo_repeticao' => $intervalo,
+            'frequencia'          => $frequencia,
+            'total_ocorrencias'   => $totalOcorrencias,
+            'nome'                => "A cada {$intervalo} {$texto} - Após {$totalOcorrencias} ocorrência(s)",
+            'updated_by'          => Auth::id(),
+            'updated_by_name'     => Auth::user()?->name ?? 'Sistema',
+        ]);
+    }
+
+    public function excluirERecriarParcelamentos(
+        TransacaoFinanceira $transacaoPrincipal,
+        array $validatedData,
+        Request $request
+    ): void {
+        // Soft-delete dos registros na tabela parcelamentos
+        $transacaoPrincipal->parcelas()->delete();
+
+        // Soft-delete das transações filhas (parcelas como TransacaoFinanceira)
+        TransacaoFinanceira::where('parent_id', $transacaoPrincipal->id)->delete();
+
+        // Reverte situação do pai para em_aberto (será reclassificado logo abaixo se houver novas parcelas)
+        $transacaoPrincipal->update(['situacao' => \App\Enums\SituacaoTransacao::EM_ABERTO]);
+
+        // Recria parcelas se o request as incluir
+        if ($this->deveCriarParcelamentos($request)) {
+            $this->criarParcelamentosParaLancamentoPrincipal($transacaoPrincipal, $validatedData, $request);
+        }
+
+        Log::info('🔄 Parcelamentos excluídos e recriados', [
+            'transacao_id'  => $transacaoPrincipal->id,
+            'novas_parcelas' => $this->deveCriarParcelamentos($request) ? count((array) $request->input('parcelas', [])) : 0,
+        ]);
+    }
+
+    /**
+     * Cria transações filhas e registros em parcelamentos (tabela parcelamentos), mantendo o pai com valor total.
+     * Usa ordem sequencial (1..N) independentemente das chaves do array (0-based JSON ou 1-based form).
+     */
+    public function criarParcelamentosParaLancamentoPrincipal(
+        TransacaoFinanceira $transacaoPrincipal,
+        array $validatedData,
+        Request $request
+    ): void {
+        $parcelas = $request->input('parcelas', []);
+
+        if (empty($parcelas) || !is_array($parcelas)) {
+            return;
+        }
+
+        $parcelasLista = array_values($parcelas);
+        $totalParcelas = count($parcelasLista);
+
+        foreach ($parcelasLista as $position => $parcela) {
+            $numeroParcela = $position + 1;
+
+            $entidadeIdParcela = $validatedData['entidade_id'];
+            if (isset($parcela['forma_pagamento_id']) && $parcela['forma_pagamento_id']) {
+                $entidadeIdParcela = $parcela['forma_pagamento_id'];
+            }
+
+            $contaPagamentoId = null;
+            if (isset($parcela['conta_pagamento_id']) && $parcela['conta_pagamento_id']) {
+                $contaPagamentoId = $parcela['conta_pagamento_id'];
+            }
+
+            $dataVencimentoParcela = $validatedData['data_competencia'];
+            if (isset($parcela['vencimento']) && $parcela['vencimento']) {
+                $dataVencimentoParcela = $this->converterDataVencimentoParcela(
+                    (string) $parcela['vencimento'],
+                    $validatedData['data_competencia'],
+                    $numeroParcela
+                );
+            }
+
+            $valorParcela = isset($parcela['valor']) ? $this->converterValorInformadoParcela($parcela['valor']) : 0.0;
+
+            $valorTotal = (float) $transacaoPrincipal->valor;
+            $percentualParcela = isset($parcela['percentual']) && (float) $parcela['percentual'] > 0
+                ? (float) $parcela['percentual']
+                : ($valorTotal > 0 ? round(($valorParcela / $valorTotal) * 100, 2) : 0.0);
+
+            $descricaoParcela = isset($parcela['descricao']) && $parcela['descricao']
+                ? $parcela['descricao']
+                : ($validatedData['descricao'] . " {$numeroParcela}/{$totalParcelas}");
+
+            $transacaoParcela = TransacaoFinanceira::create([
+                'company_id' => $validatedData['company_id'],
+                'parent_id' => $transacaoPrincipal->id,
+                'data_competencia' => $validatedData['data_competencia'],
+                'data_vencimento' => $dataVencimentoParcela,
+                'entidade_id' => $entidadeIdParcela,
+                'parceiro_id' => $validatedData['parceiro_id'] ?? $validatedData['fornecedor_id'] ?? null,
+                'tipo' => $validatedData['tipo'],
+                'valor' => $valorParcela,
+                'descricao' => $descricaoParcela,
+                'lancamento_padrao_id' => $validatedData['lancamento_padrao_id'] ?? null,
+                'cost_center_id' => $validatedData['cost_center_id'] ?? null,
+                'tipo_documento' => $validatedData['tipo_documento'] ?? null,
+                'numero_documento' => isset($validatedData['numero_documento'])
+                    ? $validatedData['numero_documento'] . '-' . $numeroParcela
+                    : null,
+                'origem' => $validatedData['origem'] ?? 'Banco',
+                'historico_complementar' => $validatedData['historico_complementar'] ?? null,
+                'comprovacao_fiscal' => $validatedData['comprovacao_fiscal'] ?? false,
+                'situacao' => 'em_aberto',
+                'agendado' => isset($parcela['agendado']) ? (bool) $parcela['agendado'] : false,
+                'valor_pago' => 0,
+                'juros' => 0,
+                'multa' => 0,
+                'desconto' => 0,
+                'created_by' => Auth::id(),
+                'created_by_name' => Auth::user()->name ?? 'Sistema',
+                'updated_by' => Auth::id(),
+                'updated_by_name' => Auth::user()->name ?? 'Sistema',
+            ]);
+
+            $transacaoPrincipal->parcelas()->create([
+                'transacao_parcela_id' => $transacaoParcela->id,
+                'numero_parcela' => $numeroParcela,
+                'total_parcelas' => $totalParcelas,
+                'data_vencimento' => $dataVencimentoParcela,
+                'valor' => $valorParcela,
+                'percentual' => $percentualParcela,
+                'entidade_id' => $entidadeIdParcela,
+                'conta_pagamento_id' => $contaPagamentoId,
+                'descricao' => $descricaoParcela,
+                'situacao' => 'em_aberto',
+                'agendado' => isset($parcela['agendado']) ? (bool) $parcela['agendado'] : false,
+                'valor_pago' => 0,
+                'juros' => 0,
+                'multa' => 0,
+                'desconto' => 0,
+                'created_by' => Auth::id(),
+                'created_by_name' => Auth::user()->name ?? 'Sistema',
+                'updated_by' => Auth::id(),
+                'updated_by_name' => Auth::user()->name ?? 'Sistema',
+            ]);
+
+            Log::info('✅ Parcela criada', [
+                'transacao_principal_id' => $transacaoPrincipal->id,
+                'transacao_parcela_id' => $transacaoParcela->id,
+                'numero_parcela' => $numeroParcela,
+                'total_parcelas' => $totalParcelas,
+                'valor' => $valorParcela,
+                'vencimento' => $dataVencimentoParcela,
+                'descricao' => $descricaoParcela,
+            ]);
+        }
+
+        $transacaoPrincipal->update([
+            'situacao' => \App\Enums\SituacaoTransacao::PARCELADO,
+        ]);
+
+        Log::info('✅ Parcelamento criado com sucesso', [
+            'transacao_id' => $transacaoPrincipal->id,
+            'total_parcelas' => $totalParcelas,
+            'valor_total' => $transacaoPrincipal->valor,
+        ]);
+    }
+
+    protected function converterValorInformadoParcela(mixed $valor): float
+    {
+        if (is_numeric($valor)) {
+            return (float) $valor;
+        }
+        if (is_string($valor)) {
+            $v = str_replace('.', '', $valor);
+            $v = str_replace(',', '.', $v);
+
+            return (float) $v;
+        }
+
+        return 0.0;
     }
 
     /**
@@ -1089,5 +1742,102 @@ class TransacaoFinanceiraService
             'entradas' => $entradas,
             'saidas' => $saidas
         ];
+    }
+
+    /**
+     * Registra pagamento (total ou parcial) de uma transação.
+     * Se parcial, cria fracionamentos na tabela transacao_fracionamentos.
+     * A Movimentacao (que impacta saldo da entidade financeira) só é criada
+     * quando o valor total é quitado — pagamentos parciais apenas registram
+     * fracionamentos e atualizam valor_pago na transação.
+     */
+    public function registrarPagamento(TransacaoFinanceira $transacao, array $dados): TransacaoFinanceira
+    {
+        /** @var TransacaoFinanceira $result */
+        $result = DB::transaction(function () use ($transacao, $dados) {
+            $valorOriginal = (float) $transacao->valor;
+            $valorPago     = (float) $dados['valor_pago'];
+            $juros         = (float) ($dados['juros'] ?? 0);
+            $multa         = (float) ($dados['multa'] ?? 0);
+            $desconto      = (float) ($dados['desconto'] ?? 0);
+            $dataPagamento = $dados['data_pagamento'] ?? Carbon::today()->format('Y-m-d');
+            $formaPagamento = $dados['forma_pagamento'] ?? '';
+            $contaPagamento = $dados['conta_pagamento'] ?? '';
+
+            // Valor restante real (considerando fracionamentos anteriores)
+            $transacao->load('fracionamentos');
+            $valorRestante = $valorOriginal;
+            if ($transacao->fracionamentos && $transacao->fracionamentos->isNotEmpty()) {
+                $emAberto = $transacao->fracionamentos->firstWhere('tipo', 'em_aberto');
+                if ($emAberto) {
+                    $valorRestante = (float) $emAberto->valor;
+                }
+            } else {
+                $valorRestante = max(0, $valorOriginal - (float) ($transacao->valor_pago ?? 0));
+            }
+
+            $valorParaComparacao = $valorPago + $juros + $multa;
+            $valorAbertoApos = max(0, $valorRestante - $valorParaComparacao);
+            $valorTotalPago  = $valorParaComparacao - $desconto;
+            $quitaTotal = $valorAbertoApos < 0.01;
+
+            // Remove fracionamento em_aberto anterior
+            $transacao->fracionamentos()
+                ->where('tipo', 'em_aberto')
+                ->delete();
+
+            // Registra o fracionamento deste pagamento
+            \App\Models\Financeiro\TransacaoFracionamento::create([
+                'transacao_principal_id' => $transacao->id,
+                'tipo'                   => 'pago',
+                'valor'                  => $valorPago,
+                'data_pagamento'         => $dataPagamento,
+                'juros'                  => $juros,
+                'multa'                  => $multa,
+                'desconto'               => $desconto,
+                'valor_total'            => $valorTotalPago,
+                'forma_pagamento'        => $formaPagamento,
+                'conta_pagamento'        => $contaPagamento,
+            ]);
+
+            if ($quitaTotal) {
+                // Tudo pago — registra baixa completa (cria Movimentacao + atualiza saldo)
+                $totalJaPago = $transacao->fracionamentos()->where('tipo', 'pago')->sum('valor');
+
+                return $this->registrarBaixa($transacao, [
+                    'valor_pago'     => $totalJaPago,
+                    'data_pagamento' => $dataPagamento,
+                    'juros'          => (float) $transacao->fracionamentos()->where('tipo', 'pago')->sum('juros'),
+                    'multa'          => (float) $transacao->fracionamentos()->where('tipo', 'pago')->sum('multa'),
+                    'desconto'       => (float) $transacao->fracionamentos()->where('tipo', 'pago')->sum('desconto'),
+                ]);
+            }
+
+            // Ainda há saldo em aberto — registra fracionamento pendente
+            \App\Models\Financeiro\TransacaoFracionamento::create([
+                'transacao_principal_id' => $transacao->id,
+                'tipo'                   => 'em_aberto',
+                'valor'                  => $valorAbertoApos,
+                'data_pagamento'         => null,
+                'juros'                  => 0,
+                'multa'                  => 0,
+                'desconto'               => 0,
+                'valor_total'            => $valorAbertoApos,
+                'forma_pagamento'        => null,
+                'conta_pagamento'        => null,
+            ]);
+
+            // Atualiza transação — situação parcial, sem criar Movimentacao
+            $transacao->situacao = \App\Enums\SituacaoTransacao::PAGO_PARCIAL;
+            $transacao->valor_pago = $transacao->fracionamentos()->where('tipo', 'pago')->sum('valor');
+            $transacao->data_pagamento = $dataPagamento;
+            $transacao->updated_by = Auth::id();
+            $transacao->updated_by_name = Auth::user()?->name ?? 'Sistema';
+            $transacao->save();
+
+            return $transacao->fresh();
+        });
+
+        return $result;
     }
 }

@@ -125,7 +125,7 @@
                         <a href="#" class="px-5" target="_blank">Contato</a>
                     </div>
                     <!--end::Links-->
-                    
+
                     <!--begin::Legal Info-->
                     <div class="text-center text-muted fs-7">
                         <p class="mb-1 fw-bold">Dominus Tecnologia</p>

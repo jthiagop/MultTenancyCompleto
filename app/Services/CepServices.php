@@ -8,10 +8,13 @@ class CepServices
 {
     public function consultar(string $cep)
     {
+        $appKey    = config('services.webmaniabr.app_key');
+        $appSecret = config('services.webmaniabr.app_secret');
+
         $response = Http::get(
-            "https://webmaniabr.com/api/1/cep/{$cep}/?app_key=dBvRCaKVRxCxLWzNcEuh08B8PWpqVW8Z&app_secret=TgUIlutKWRhtkLT5NiIGiH99251XUjX53JwaWtVOg6bLqReg"
+            "https://webmaniabr.com/api/1/cep/{$cep}/?app_key={$appKey}&app_secret={$appSecret}"
         );
 
-        return $response->json(); // Retorna a resposta como JSON
+        return $response->json();
     }
 }

@@ -17,13 +17,16 @@ return [
 
     'paths' => ['api/*', 'sanctum/csrf-cookie'],
 
-    'allowed_methods' => ['*'],
+    'allowed_methods' => ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
 
-    'allowed_origins' => ['*'],
+    // Liste explicitamente as origens permitidas (separadas por vírgula no .env).
+    // Ex.: CORS_ALLOWED_ORIGINS=https://app.dominus.eco.br,http://recife.localhost:5174
+    'allowed_origins' => array_filter(explode(',', env('CORS_ALLOWED_ORIGINS', ''))),
 
-    'allowed_origins_patterns' => [],
+    // Padrão regex alternativo para multi-tenant (ex.: /^https?:\/\/.*\.dominus\.eco\.br$/)
+    'allowed_origins_patterns' => array_filter([env('CORS_ALLOWED_ORIGINS_PATTERN', '')]),
 
-    'allowed_headers' => ['*'],
+    'allowed_headers' => ['Content-Type', 'Authorization', 'X-Requested-With', 'X-CSRF-TOKEN', 'X-XSRF-TOKEN', 'X-React-Web', 'Accept'],
 
     'exposed_headers' => [],
 

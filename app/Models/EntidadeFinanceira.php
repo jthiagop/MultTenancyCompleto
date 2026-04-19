@@ -124,6 +124,38 @@ class EntidadeFinanceira extends Model
     }
 
     /**
+     * Mesma regra que {@see calculateBalance()}, em uma query agregada (evita N+1 em listagens).
+     *
+     * @param  list<int>  $entidadeIds
+     * @return array<int, float>  entidade_id => saldo
+     */
+    public static function saldosCalculadosPorEntidadeIds(array $entidadeIds): array
+    {
+        $entidadeIds = array_values(array_unique(array_filter(array_map('intval', $entidadeIds))));
+        if ($entidadeIds === []) {
+            return [];
+        }
+
+        $out = array_fill_keys($entidadeIds, 0.0);
+
+        $rows = DB::table('movimentacoes')
+            ->whereIn('entidade_id', $entidadeIds)
+            ->whereNull('deleted_at')
+            ->groupBy('entidade_id')
+            ->selectRaw("entidade_id, SUM(CASE WHEN tipo = 'entrada' THEN valor ELSE -valor END) as saldo")
+            ->get();
+
+        foreach ($rows as $row) {
+            $id = (int) $row->entidade_id;
+            if (array_key_exists($id, $out)) {
+                $out[$id] = round((float) $row->saldo, 2);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * ✅ Accessor para obter saldo calculado dinamicamente
      * Uso em views: {{ $entidade->saldo_dinamico }}
      * 

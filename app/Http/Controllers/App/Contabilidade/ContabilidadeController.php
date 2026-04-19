@@ -7,6 +7,8 @@ use App\Models\Contabilide\AccountMapping;
 use App\Models\Contabilide\ChartOfAccount;
 use App\Models\LancamentoPadrao;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Validation\Rule;
 
 class ContabilidadeController extends Controller
 {
@@ -56,6 +58,37 @@ class ContabilidadeController extends Controller
         ));
     }
 
+    public function categoriasData(Request $request)
+    {
+        $rows = LancamentoPadrao::forActiveCompany()
+            ->with(['contaDebito:id,code,name', 'contaCredito:id,code,name'])
+            ->orderBy('description')
+            ->get()
+            ->map(fn ($lp) => [
+                'id' => (int) $lp->id,
+                'descricao' => (string) ($lp->description ?? ''),
+                'categoria' => (string) ($lp->category ?? ''),
+                'tipo' => (string) ($lp->type ?? ''),
+                'is_active' => (bool) ($lp->is_active ?? true),
+                'contaDebito' => $lp->contaDebito
+                    ? trim(($lp->contaDebito->code ?? '') . ' - ' . ($lp->contaDebito->name ?? ''))
+                    : 'Não definida',
+                'contaCredito' => $lp->conta_credito_id == 0
+                    ? '-- Usar conta do Banco/Caixa --'
+                    : ($lp->contaCredito
+                        ? trim(($lp->contaCredito->code ?? '') . ' - ' . ($lp->contaCredito->name ?? ''))
+                        : 'Não definida'),
+                'conta_debito_id' => $lp->conta_debito_id,
+                'conta_credito_id' => $lp->conta_credito_id,
+            ])
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'data' => $rows,
+        ]);
+    }
+
     /**
      * Show the form for creating a new resource.
      */
@@ -69,7 +102,36 @@ class ContabilidadeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validated = $request->validate([
+            'description'      => 'required|string|max:255',
+            'category'         => 'nullable|string|max:255',
+            'type'             => ['required', Rule::in(['entrada', 'saida', 'ambos', 'transferencia', 'somente_contabil'])],
+            'is_active'        => 'boolean',
+            'conta_debito_id'  => 'nullable|integer|exists:chart_of_accounts,id',
+            'conta_credito_id' => 'nullable|integer|exists:chart_of_accounts,id',
+        ]);
+
+        $activeCompanyId = session('active_company_id');
+        if (! $activeCompanyId) {
+            return response()->json(['success' => false, 'message' => 'Nenhuma empresa ativa.'], 403);
+        }
+
+        $categoria = LancamentoPadrao::create([
+            'description'      => $validated['description'],
+            'category'         => $validated['category'] ?? null,
+            'type'             => $validated['type'],
+            'is_active'        => $validated['is_active'] ?? true,
+            'conta_debito_id'  => $validated['conta_debito_id'] ?? null,
+            'conta_credito_id' => $validated['conta_credito_id'] ?? null,
+            'company_id'       => $activeCompanyId,
+            'user_id'          => Auth::id(),
+        ]);
+
+        return response()->json([
+            'success'   => true,
+            'message'   => 'Categoria criada com sucesso.',
+            'categoria' => $categoria,
+        ], 201);
     }
 
     /**
@@ -85,7 +147,20 @@ class ContabilidadeController extends Controller
      */
     public function edit(string $id)
     {
-        //
+        $categoria = LancamentoPadrao::forActiveCompany()->findOrFail($id);
+
+        return response()->json([
+            'success'   => true,
+            'categoria' => [
+                'id'               => $categoria->id,
+                'description'      => $categoria->description,
+                'category'         => $categoria->category,
+                'type'             => $categoria->type,
+                'is_active'        => (bool) $categoria->is_active,
+                'conta_debito_id'  => $categoria->conta_debito_id,
+                'conta_credito_id' => $categoria->conta_credito_id,
+            ],
+        ]);
     }
 
     /**
@@ -93,7 +168,30 @@ class ContabilidadeController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $categoria = LancamentoPadrao::forActiveCompany()->findOrFail($id);
+
+        $validated = $request->validate([
+            'description'      => 'required|string|max:255',
+            'category'         => 'nullable|string|max:255',
+            'type'             => ['required', Rule::in(['entrada', 'saida', 'ambos', 'transferencia', 'somente_contabil'])],
+            'is_active'        => 'boolean',
+            'conta_debito_id'  => 'nullable|integer|exists:chart_of_accounts,id',
+            'conta_credito_id' => 'nullable|integer|exists:chart_of_accounts,id',
+        ]);
+
+        $categoria->update([
+            'description'      => $validated['description'],
+            'category'         => $validated['category'] ?? null,
+            'type'             => $validated['type'],
+            'is_active'        => $validated['is_active'] ?? true,
+            'conta_debito_id'  => $validated['conta_debito_id'] ?? null,
+            'conta_credito_id' => $validated['conta_credito_id'] ?? null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Categoria atualizada com sucesso.',
+        ]);
     }
 
     /**
@@ -101,6 +199,12 @@ class ContabilidadeController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $categoria = LancamentoPadrao::forActiveCompany()->findOrFail($id);
+        $categoria->delete();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Categoria removida com sucesso.',
+        ]);
     }
 }
