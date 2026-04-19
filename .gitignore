@@ -5,8 +5,8 @@
 /public/react-app/
 /public/hot
 /public/storage
-/resources/views/app/contabilidade/.DS_Store
-/resources/views/app/.DS_Store
+**/.DS_Store
+.DS_Store
 # --- Ambiente / segredos ---
 .env
 .env.*
