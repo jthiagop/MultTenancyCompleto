@@ -1,0 +1,28 @@
+/* ── AI Button ────────────────────────────────────────────────────────────── */
+
+@property --ai-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes ai-border {
+  to { --ai-angle: 360deg; }
+}
+
+.ai-btn-border {
+  padding: 1px;
+  border-radius: 0.5rem;
+  background: conic-gradient(from var(--ai-angle), #8b5cf6, #d946ef, #8b5cf6);
+  animation: ai-border 3s linear infinite;
+  transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.ai-btn-border:hover {
+  box-shadow: 0 0 12px rgba(139, 92, 246, 0.4), 0 0 4px rgba(217, 70, 239, 0.3);
+  transform: translateY(-1px);
+}
+
+.ai-btn-border:active {
+  transform: translateY(0) scale(0.98);
+}
