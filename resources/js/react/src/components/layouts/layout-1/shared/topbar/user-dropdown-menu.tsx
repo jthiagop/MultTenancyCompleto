@@ -4,6 +4,7 @@ import {
   Building2,
   Check,
   IdCard,
+  Image as ImageIcon,
   Loader2,
   LogOut,
   Moon,
@@ -31,7 +32,7 @@ import { cn } from '@/lib/utils';
 import { Label } from 'react-aria-components';
 import { useLayout } from '@/components/layouts/layout-1/components/context';
 
-/** POST em /app/logout (rota dedicada React), aguarda JSON e navega para /auth/signin */
+/** POST em /app/logout (rota dedicada React), aguarda JSON e navega para /login (rota canônica). */
 async function submitLaravelLogout(logoutUrl: string, csrfToken: string) {
   try {
     await fetch(logoutUrl, {
@@ -44,14 +45,16 @@ async function submitLaravelLogout(logoutUrl: string, csrfToken: string) {
       credentials: 'same-origin',
     });
   } finally {
-    window.location.href = '/app/auth/signin';
+    // Rota canônica 'login' (routes/tenant-auth.php) — renderiza a tela de login React.
+    window.location.href = '/login';
   }
 }
 
 export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
   const { theme, setTheme } = useTheme();
   const { sidebarTheme, setSidebarTheme } = useLayout();
-  const { user, csrfToken, logoutUrl, companyId, companies } = useAppData();
+  const { user, csrfToken, logoutUrl, companyId, companies, hasAdminRole, hasGlobalRole } = useAppData();
+  const canManageLogin = Boolean(hasAdminRole || hasGlobalRole);
   const [switching, setSwitching] = useState<number | null>(null);
 
   async function handleSwitchCompany(id: number) {
@@ -226,6 +229,14 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
             Notificações
           </Link>
         </DropdownMenuItem>
+        {canManageLogin && (
+          <DropdownMenuItem asChild>
+            <Link to="/confs/login" className="flex items-center gap-2">
+              <ImageIcon />
+              Personalizar Tela de Login
+            </Link>
+          </DropdownMenuItem>
+        )}
           </DropdownMenuSubContent>
         </DropdownMenuSub>
 

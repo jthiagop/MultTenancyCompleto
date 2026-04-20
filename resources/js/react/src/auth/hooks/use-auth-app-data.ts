@@ -11,8 +11,12 @@ export interface AuthAppData {
   urls: AuthAppUrls;
   flashStatus: string | null;
   validationErrors: Record<string, string[]>;
-  /** Mesma lógica do auth-layout Blade: TelaDeLogin ativa ou penha.png */
+  /** Imagem ativa escolhida aleatoriamente a cada request (troca a cada reload). */
   loginBackgroundUrl: string;
+  /** Descrição (nome do convento/igreja) da imagem sorteada — opcional. */
+  loginBackgroundDescricao?: string | null;
+  /** Localidade da imagem sorteada — opcional. */
+  loginBackgroundLocalidade?: string | null;
   /** tenancy/assets/media/app/mini-logo.svg */
   loginMiniLogoUrl: string;
 }

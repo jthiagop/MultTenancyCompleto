@@ -99,27 +99,14 @@ Route::middleware([
         return view('errors.tenant_not_found');
     })->name('tenant.not.found');
 
-    // Rota para a página de login
+    // Raiz do tenant:
+    //  - guest   -> /login  (SPA React em ReactAuthController)
+    //  - auth    -> /dashboard (middleware `guest` de /login faz o hop automático)
+    // A tela de login legada em Blade (app.auth.login) foi descontinuada —
+    // React é o padrão desde 2026-04-20.
     Route::get('/', function () {
-        $randomImage = null;
-        $backgroundImage = null;
-
-        try {
-            if (class_exists(\App\Models\TelaDeLogin::class)) {
-                $randomImage = \App\Models\TelaDeLogin::where('status', 'ativo')
-                    ->inRandomOrder()
-                    ->first();
-
-                if ($randomImage) {
-                    $backgroundImage = $randomImage->imagem_caminho;
-                }
-            }
-        } catch (\Exception $e) {
-            // Fallback gracefully if table doesn't exist
-        }
-
-        return view('app.auth.login', compact('randomImage', 'backgroundImage'));
-    });
+        return redirect()->route('login');
+    })->name('tenant.root');
 
     // SPA React — autenticação (guest); deve ficar fora do grupo auth para permitir acesso sem sessão
     Route::middleware(['guest'])->group(function () {
@@ -212,6 +199,31 @@ Route::middleware([
         return response()->file($filePath);
     })->middleware('auth')->name('avatar');
 
+    // Rota PÚBLICA para servir apenas imagens de fundo da tela de login.
+    // Precisa ser acessível sem autenticação (caso contrário o navegador recebe
+    // um 302 → /login HTML ao tentar carregar o background via CSS url(...)).
+    // Restringida ao prefixo `tela_login_images/` para não vazar nada fora disso.
+    Route::get('/login-background/{path}', function ($path) {
+        if (!str_starts_with($path, 'tela_login_images/')) {
+            abort(404);
+        }
+
+        $storageRoot = realpath(Storage::disk('public')->path(''));
+        $filePath    = realpath(Storage::disk('public')->path($path));
+
+        if (!$filePath || !$storageRoot || !str_starts_with($filePath, $storageRoot . DIRECTORY_SEPARATOR)) {
+            abort(403);
+        }
+
+        if (!file_exists($filePath)) {
+            abort(404);
+        }
+
+        return response()->file($filePath, [
+            'Cache-Control' => 'public, max-age=3600',
+        ]);
+    })->where('path', '.*')->name('login.background');
+
     // Rota para servir arquivos públicos (requer autenticação + prevenção de path traversal)
     Route::get('/file/{path}', function ($path) {
         $storageRoot = realpath(Storage::disk('public')->path(''));
@@ -260,11 +272,15 @@ Route::middleware([
             Route::resource('filial', TenantFilialController::class);
             Route::resource('caixa', CaixaController::class);
             Route::resource('users', UserController::class);
-            Route::resource('telaLogin', TelaDeLoginController::class);
 
             Route::resource('formas-pagamento', FormasPagamentoController::class);
             Route::resource('formas-recebimento', FormasRecebimentoController::class);
             Route::post('/fornecedores/store', [ParceiroController::class, 'store'])->name('fornecedores.store');
+        });
+
+        // Personalização da tela de login — admin do tenant também pode gerenciar.
+        Route::middleware(['role:admin|global'])->group(function () {
+            Route::resource('telaLogin', TelaDeLoginController::class);
         });
 
         Route::get('/session/switch-company/{company}', [SessionController::class, 'switchCompany'])->name('session.switch-company');

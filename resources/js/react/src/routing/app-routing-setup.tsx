@@ -11,6 +11,7 @@ import { NotificationsPage } from '@/pages/notifications/page';
 import { CemiterioPage } from '@/pages/cemiterio/page';
 import { UsuariosPage } from '@/pages/cadastros/usuarios/page';
 import { FraternidadePage } from '@/pages/fraternidade/page';
+import { LoginCustomizationPage } from '@/pages/confs/login/page';
 
 export function AppRoutingSetup() {
   return (
@@ -40,6 +41,9 @@ export function AppRoutingSetup() {
 
         {/* Módulo Cadastros */}
         <Route path="/cadastros/usuarios" element={<UsuariosPage />} />
+
+        {/* Configurações — Personalizar Tela de Login */}
+        <Route path="/confs/login" element={<LoginCustomizationPage />} />
       </Route>
       <Route path="*" element={<Navigate to="/dashboard" replace />} />
     </Routes>

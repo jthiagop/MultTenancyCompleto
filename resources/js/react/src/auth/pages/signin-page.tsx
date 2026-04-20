@@ -273,13 +273,6 @@ export function SignInPage() {
             Entrar
           </span>
         </Button>
-
-        <div className="text-center text-sm text-muted-foreground">
-          Não tem conta?{' '}
-          <Link to="/auth/signup" className="text-sm font-semibold text-foreground hover:text-primary">
-            Cadastre-se
-          </Link>
-        </div>
       </form>
     </Form>
   );

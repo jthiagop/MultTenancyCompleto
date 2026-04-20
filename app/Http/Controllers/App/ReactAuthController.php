@@ -16,9 +16,15 @@ class ReactAuthController extends Controller
     {
         $bag = session('errors');
 
-        $backgroundImage = TelaDeLogin::where('status', 'ativo')->latest()->value('imagem_caminho');
-        $loginBackgroundUrl = $backgroundImage
-            ? route('file', ['path' => $backgroundImage])
+        // Sorteia 1 imagem ativa a cada request — imagem muda a cada reload da tela de login.
+        // Usa rota pública (login.background) porque a tela de login é exibida antes
+        // da autenticação — route('file', ...) exige auth e retornaria 302 → /login.
+        $randomImage = TelaDeLogin::where('status', 'ativo')
+            ->inRandomOrder()
+            ->first(['id', 'imagem_caminho', 'descricao', 'localidade']);
+
+        $loginBackgroundUrl = $randomImage
+            ? route('login.background', ['path' => $randomImage->imagem_caminho])
             : url('/tenancy/assets/media/misc/penha.png');
 
         $authAppData = [
@@ -32,8 +38,10 @@ class ReactAuthController extends Controller
             ],
             'flashStatus'      => session('status'),
             'validationErrors' => $bag ? $bag->getBag('default')->getMessages() : [],
-            'loginBackgroundUrl' => $loginBackgroundUrl,
-            'loginMiniLogoUrl'   => url('tenancy/assets/media/app/mini-logo.svg'),
+            'loginBackgroundUrl'         => $loginBackgroundUrl,
+            'loginBackgroundDescricao'   => $randomImage?->descricao,
+            'loginBackgroundLocalidade'  => $randomImage?->localidade,
+            'loginMiniLogoUrl'           => url('tenancy/assets/media/app/mini-logo.svg'),
         ];
 
         return view('react-auth', compact('authAppData'));

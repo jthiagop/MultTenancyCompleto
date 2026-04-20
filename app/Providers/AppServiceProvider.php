@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\View\Components\UserMenuComposer;
+use Illuminate\Auth\Middleware\RedirectIfAuthenticated;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Blade;
@@ -28,5 +29,10 @@ class AppServiceProvider extends ServiceProvider
 
         // 3. Adicione esta linha para registrar o Composer
         View::composer('app.layouts.userMenu', UserMenuComposer::class);
+
+        // Middleware `guest` (RedirectIfAuthenticated): quando um usuário autenticado
+        // acessa /login, /register etc., é redirecionado para o dashboard React.
+        // Padrão do Laravel enviaria para /home (inexistente).
+        RedirectIfAuthenticated::redirectUsing(fn () => '/app/dashboard');
     }
 }
