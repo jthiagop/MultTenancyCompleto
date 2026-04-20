@@ -15,10 +15,20 @@ use App\Http\Controllers\App\Auth\VerifyEmailController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware('guest')->group(function () {
-    Route::get('register', [RegisteredUserController::class, 'create'])
-                ->name('register');
+    // Cadastro público DESABILITADO por padrão em produção.
+    // Para reativar, setar ALLOW_PUBLIC_REGISTRATION=true no .env.
+    // Mantemos a rota nomeada 'register' apontando para um 404 explícito,
+    // porque existem links/redirects que usam route('register').
+    if (env('ALLOW_PUBLIC_REGISTRATION', false)) {
+        Route::get('register', [RegisteredUserController::class, 'create'])
+                    ->name('register');
 
-    Route::post('register', [RegisteredUserController::class, 'store']);
+        Route::post('register', [RegisteredUserController::class, 'store']);
+    } else {
+        Route::match(['get', 'post'], 'register', function () {
+            abort(404);
+        })->name('register');
+    }
 
     /** GET: SPA React (mesmo shell de /app/auth/*). POST permanece no controller de sessão. */
     Route::get('login', [ReactAuthController::class, 'index'])

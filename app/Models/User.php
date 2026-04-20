@@ -23,18 +23,19 @@ class User extends Authenticatable
     /**
      * The attributes that are mass assignable.
      *
+     * Campos sens?veis como `active`, `must_change_password`, `company_id`,
+     * `password_changed_at`, `last_login` foram REMOVIDOS do fillable para
+     * evitar escalonamento de privil?gio via mass-assignment
+     * (ex.: update($request->all())). Eles devem ser atribu?dos explicitamente,
+     * via $user->campo = valor; $user->save();
+     *
      * @var array<int, string>
      */
     protected $fillable = [
         'name',
         'email',
         'password',
-        'must_change_password',
-        'password_changed_at',
         'avatar',
-        'company_id',
-        'last_login',
-        'active',
     ];
 
     /**
@@ -111,7 +112,7 @@ class User extends Authenticatable
     }
 
     /**
-     * As empresas Ã s quais o usuÃ¡rio tem acesso.
+     * As empresas Ãÿs quais o usuÃ¡rio tem acesso.
      */
     public function companies()
     {

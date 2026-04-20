@@ -114,7 +114,7 @@ class AuthenticatedSessionController extends Controller
                 ]);
             }
 
-            return redirect()->intended(route('dashboard', absolute: false));
+            return redirect()->intended('/app/dashboard');
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             if ($isMobile || $isReactWeb) {

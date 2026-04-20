@@ -26,12 +26,29 @@ class EnsureUserHasAccess
             return $next($request);
         }
 
-        // Verifica se o usuário está associado à empresa ou a uma empresa matriz
-        $hasAccess = $user->companies()->where(function($query) use ($companyId) {
-            $query->where('companies.id', $companyId)
-                  ->orWhere('companies.parent_id', $companyId)
-                  ->orWhere('companies.type', 'matriz');
-        })->exists();
+        // Verifica se o usuário tem acesso à company solicitada.
+        // Regra:
+        //   1) Está vinculado diretamente à company ($companyId); OU
+        //   2) Está vinculado à matriz DA qual essa company é filial
+        //      (isto é, company->parent_id aparece entre as companies do user); OU
+        //   3) Está vinculado à company ($companyId) que, por sua vez, é uma matriz
+        //      e a rota pede acesso a uma de suas filiais (companies.parent_id = $companyId
+        //      E o user tem vínculo com essa matriz).
+        //
+        // IMPORTANTE: removido o `orWhere('companies.type','matriz')` solto que liberava
+        // acesso a qualquer empresa para quem tivesse vínculo com QUALQUER matriz do tenant.
+        $hasAccess = $user->companies()
+            ->where(function ($query) use ($companyId) {
+                $query->where('companies.id', $companyId)
+                      ->orWhereIn('companies.id', function ($sub) use ($companyId) {
+                          // matriz da qual $companyId é filha
+                          $sub->select('parent_id')
+                              ->from('companies')
+                              ->where('id', $companyId)
+                              ->whereNotNull('parent_id');
+                      });
+            })
+            ->exists();
 
         if ($hasAccess) {
             return $next($request);

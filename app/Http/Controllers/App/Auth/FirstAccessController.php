@@ -58,7 +58,7 @@ class FirstAccessController extends Controller
         $user->password_changed_at = now();
         $user->save();
 
-        return redirect()->route('dashboard')->with('success', 'Senha alterada com sucesso!');
+        return redirect('/app/dashboard')->with('success', 'Senha alterada com sucesso!');
     }
 }
 

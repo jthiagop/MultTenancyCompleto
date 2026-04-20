@@ -42,7 +42,11 @@ class LoginRequest extends FormRequest
         $this->ensureIsNotRateLimited();
 
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-            RateLimiter::hit($this->throttleKey());
+            // Registra hit nos DOIS rate limiters:
+            // 1) email+ip: protege contra abuso por uma origem (limite mais baixo)
+            // 2) email: protege a conta mesmo contra ataques distribuídos (limite maior)
+            RateLimiter::hit($this->throttleKey(), 60 * 15);       // 15 min
+            RateLimiter::hit($this->emailThrottleKey(), 60 * 60); // 1 h
 
             throw ValidationException::withMessages([
                 'email' => 'E-mail ou senha incorretos.',
@@ -50,6 +54,7 @@ class LoginRequest extends FormRequest
         }
 
         RateLimiter::clear($this->throttleKey());
+        RateLimiter::clear($this->emailThrottleKey());
     }
 
     /**
@@ -59,24 +64,36 @@ class LoginRequest extends FormRequest
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        $ipLimited    = RateLimiter::tooManyAttempts($this->throttleKey(), 5);
+        $emailLimited = RateLimiter::tooManyAttempts($this->emailThrottleKey(), 20);
+
+        if (! $ipLimited && ! $emailLimited) {
             return;
         }
 
         event(new Lockout($this));
 
-        $seconds = RateLimiter::availableIn($this->throttleKey());
-
+        // Mensagem genérica — não expõe segundos restantes nem qual limite foi atingido.
+        // Isso evita enumeração de usuários e dá menos informação útil pro atacante.
         throw ValidationException::withMessages([
-            'email' => 'Muitas tentativas de login. Por favor, aguarde ' . $seconds . ' segundos antes de tentar novamente.',
+            'email' => 'Muitas tentativas de login. Tente novamente mais tarde.',
         ]);
     }
 
     /**
-     * Get the rate limiting throttle key for the request.
+     * Rate limit key baseado em e-mail + IP (limite curto/baixo).
      */
     public function throttleKey(): string
     {
         return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
+    }
+
+    /**
+     * Rate limit key baseado SÓ em e-mail — protege a conta mesmo contra
+     * ataques distribuídos a partir de múltiplos IPs.
+     */
+    public function emailThrottleKey(): string
+    {
+        return 'login_email:'.Str::transliterate(Str::lower($this->string('email')));
     }
 }

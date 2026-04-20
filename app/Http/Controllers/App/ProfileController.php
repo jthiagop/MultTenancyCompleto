@@ -68,36 +68,36 @@ class ProfileController extends Controller
      */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        // Preencher os dados do usuário com os valores validados
         $user = FacadesAuth::user();
-        $user->fill($request->validated());
+
+        // Usar apenas name/email do validated — avatar é tratado à parte.
+        $user->fill($request->safe()->only(['name', 'email']));
 
         // Se o e-mail foi modificado, redefina a verificação do e-mail
         if ($user->isDirty('email')) {
             $user->email_verified_at = null;
         }
 
-        // Processar e salvar o avatar se um novo arquivo for enviado
+        // Processar e salvar o avatar se um novo arquivo for enviado.
+        // Observação: o ProfileUpdateRequest já valida mime/tamanho.
         if ($request->hasFile('avatar')) {
+            $avatar = $request->file('avatar');
+
+            // Sanitizar nome: gerar nome totalmente novo (sem confiar em getClientOriginalName).
+            // Extensão derivada do MIME validado para evitar polyglots.
+            $extension = $avatar->extension() ?: $avatar->getClientOriginalExtension();
+            $extension = strtolower(preg_replace('/[^a-z0-9]/i', '', (string) $extension)) ?: 'jpg';
+
+            $avatarName = 'u'.$user->id.'_'.time().'_'.bin2hex(random_bytes(8)).'.'.$extension;
+
             if ($user->avatar && $user->avatar !== 'tenant/blank.png') {
-                // Deletar o avatar anterior do armazenamento
                 Storage::delete($user->avatar);
             }
 
-            // Obtém o arquivo de avatar do request
-            $avatar = $request->file('avatar');
-
-            // Gera um nome único para o arquivo de avatar
-            $avatarName = time() . '_' . $avatar->getClientOriginalName();
-
-            // Salva o arquivo na pasta 'perfis' dentro da pasta de armazenamento (storage/app/public)
             $avatarPath = Storage::putFileAs('perfis', $avatar, $avatarName);
-
-            // Salva o caminho do arquivo na coluna 'avatar' do usuário
             $user->avatar = $avatarPath;
         }
 
-        // Salvar as mudanças no modelo do usuário
         $user->save();
 
         // Redirecionar para a rota de edição de perfil com uma mensagem de sucesso

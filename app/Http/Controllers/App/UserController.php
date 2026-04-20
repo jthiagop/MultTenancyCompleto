@@ -228,30 +228,34 @@ class UserController extends Controller
 
         // Envolver tudo em uma transação para garantir consistência
         $user = DB::transaction(function () use ($request, $validatedData, $userId, $isFirstUser) {
-            // Montar dados do usuário
-            $userData = [
+            // Campos fillable (seguros via mass assignment)
+            $fillableData = [
                 'name' => $validatedData['name'],
                 'email' => $validatedData['email'],
                 'avatar' => $validatedData['avatar'],
-                'active' => $request->has('active') ? $request->input('active') == '1' : true,
                 'notifications' => json_encode($validatedData['notifications'] ?? []),
-                'must_change_password' => $request->has('must_change_password') && $request->input('must_change_password') == '1',
             ];
 
             // Atualizar senha apenas se fornecida
             if (!empty($validatedData['password'])) {
-                $userData['password'] = Hash::make($validatedData['password']);
+                $fillableData['password'] = Hash::make($validatedData['password']);
             }
 
             if ($userId) {
-                // Atualização
                 $user = User::findOrFail($userId);
-                $user->update($userData);
+                $user->update($fillableData);
             } else {
                 // Criação — senha obrigatória
-                $userData['password'] = Hash::make($validatedData['password']);
-                $user = User::create($userData);
+                $fillableData['password'] = Hash::make($validatedData['password']);
+                $user = User::create($fillableData);
             }
+
+            // Campos sensíveis: NÃO estão no fillable — atribuir explicitamente
+            // (somente admins com permissão alcançam este fluxo via authorize).
+            $user->active = $request->has('active') ? $request->input('active') == '1' : true;
+            $user->must_change_password = $request->has('must_change_password')
+                && $request->input('must_change_password') == '1';
+            $user->save();
 
             // Sincronizar roles
             if (isset($validatedData['roles']) && !empty($validatedData['roles'])) {
@@ -403,14 +407,18 @@ class UserController extends Controller
             }
 
             // Atualizar must_change_password se fornecido
+            // Separar campos sensíveis (fora do fillable) dos campos seguros
+            $mustChangePasswordInput = null;
             if ($request->has('must_change_password')) {
-                $validateData['must_change_password'] = $request->input('must_change_password') == '1';
+                $mustChangePasswordInput = $request->input('must_change_password') == '1';
             }
+            unset($validateData['must_change_password']);
 
-            // Atualizar active se fornecido
+            $activeInput = null;
             if ($request->has('active')) {
-                $validateData['active'] = $request->input('active') == '1';
+                $activeInput = $request->input('active') == '1';
             }
+            unset($validateData['active']);
 
             // Atualizar senha se fornecida
             if (!empty($validateData['password'])) {
@@ -421,6 +429,17 @@ class UserController extends Controller
             }
 
             $user->update($validateData);
+
+            // Campos sensíveis setados explicitamente (bypassa fillable)
+            if ($mustChangePasswordInput !== null) {
+                $user->must_change_password = $mustChangePasswordInput;
+            }
+            if ($activeInput !== null) {
+                $user->active = $activeInput;
+            }
+            if ($mustChangePasswordInput !== null || $activeInput !== null) {
+                $user->save();
+            }
 
             // Sincronizar permissões se presentes ou se sync_permissions sinalizado
             if ($request->has('permissions') || $request->boolean('sync_permissions')) {
@@ -607,7 +626,9 @@ class UserController extends Controller
         try {
             $newStatus = !$user->active;
 
-            $user->update(['active' => $newStatus]);
+            // `active` não está no fillable por segurança; setar explicitamente.
+            $user->active = $newStatus;
+            $user->save();
 
             $message = $newStatus ? 'Usuário ativado com sucesso!' : 'Usuário desativado com sucesso!';
 
