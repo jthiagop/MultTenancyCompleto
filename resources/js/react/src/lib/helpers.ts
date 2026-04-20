@@ -65,14 +65,21 @@ export function getInitials(
     : initials.join('');
 }
 
+/**
+ * Retorna URL root-relative para assets públicos.
+ *
+ * Todos os assets estáticos (public/media, public/tenancy/assets, public/file,
+ * etc.) vivem fora do bundle Vite e são servidos pelo Laravel/nginx a partir
+ * da raiz. Por isso NÃO aplicamos `import.meta.env.BASE_URL` — em produção o
+ * base do Vite é `/react-app/` e concatená-lo geraria 404 para caminhos como
+ * `/tenancy/assets/media/app/mini-logo.svg` ou `/media/avatars/300-1.png`.
+ *
+ * Para URLs absolutas (http/https/data/blob) apenas devolvemos o valor.
+ */
 export function toAbsoluteUrl(pathname: string): string {
-  const baseUrl = import.meta.env.BASE_URL;
-
-  if (baseUrl && baseUrl !== '/') {
-    return baseUrl.replace(/\/$/, '') + pathname;
-  } else {
-    return pathname;
-  }
+  if (!pathname) return pathname;
+  if (/^(https?:|data:|blob:)/i.test(pathname)) return pathname;
+  return pathname.startsWith('/') ? pathname : `/${pathname}`;
 }
 
 export function timeAgo(date: Date | string): string {

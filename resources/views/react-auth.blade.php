@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
     <title>{{ config('app.name', 'Dominus') }} — Acesso</title>
-    <link rel="icon" href="{{ asset('media/app/favicon.svg') }}" type="image/svg+xml" />
+    <link rel="icon" href="{{ global_asset('tenancy/assets/media/app/mini-logo.svg') }}" type="image/svg+xml" />
 
     @php
         $hotFilePath = public_path('react-app/hot');

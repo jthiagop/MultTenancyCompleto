@@ -154,7 +154,11 @@ export default defineConfig(({ mode }) => {
       reactHotFile(path.resolve(__dirname, '../../../public/react-app/hot'), devServerUrl),
     ],
     appType: 'spa',
-    base: '/',
+    // Em produção os assets buildados ficam em public/react-app/ e são servidos
+    // em /react-app/*. Em dev o Vite serve tudo na raiz. Essa base afeta apenas
+    // imports internos do bundle (ex: import foo from './img.png'); os assets
+    // estáticos referenciados via toAbsoluteUrl('/media/…') continuam root-relative.
+    base: mode === 'production' ? '/react-app/' : '/',
     server: {
       port: 5174,
       strictPort: true,

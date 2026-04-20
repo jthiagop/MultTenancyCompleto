@@ -271,7 +271,7 @@ export function WhatsappIntegracaoSheet({ open, onOpenChange, onSuccess }: Props
                   aria-hidden
                 >
                   <img
-                    src="/media/app/favicon.svg"
+                    src="/tenancy/assets/media/app/mini-logo.svg"
                     alt=""
                     className="size-[19px] object-contain"
                   />
