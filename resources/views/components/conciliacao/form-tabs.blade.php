@@ -170,7 +170,7 @@
                 <div class="card card-flush py-4 flex-row-fluid overflow-hidden tab-content p-5 border">
                     {{-- ABA: Novo Lançamento --}}
                     <div x-show="tab === 'novo'" role="tabpanel">
-                        <x-conciliacao.form-novo-lancamento :conciliacao="$conciliacao" :lps="$lps"
+                        <x-conciliacao.novo-lancamento-form :conciliacao="$conciliacao" :lps="$lps"
                             :centrosAtivos="$centrosAtivos" :entidade="$entidade" />
                     </div>
 

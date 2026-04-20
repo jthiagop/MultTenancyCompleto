@@ -84,7 +84,7 @@ $tabs = [
 
 @push('scripts')
     {{-- Carregar o handler de formulários UMA VEZ só --}}
-    <script src="{{ url('/app/financeiro/entidade/conciliacoes-form-handler.js') }}"></script>
+    <script src="{{ url('/legacy-js/financeiro/entidade/conciliacoes-form-handler.js') }}"></script>
 
     {{-- TransferenciaDrawer: Gerencia o drawer de transferência entre contas --}}
     <script>
