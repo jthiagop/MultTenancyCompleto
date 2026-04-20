@@ -1,4 +1,5 @@
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router';
 import {
   Building2,
   EllipsisVertical,
@@ -28,6 +29,16 @@ type EditableCompany = AppCompany & {
 };
 
 type FraternidadeTab = 'visao-geral' | 'horarios-missas' | 'configuracoes';
+
+const FRATERNIDADE_TABS: readonly FraternidadeTab[] = [
+  'visao-geral',
+  'horarios-missas',
+  'configuracoes',
+] as const;
+
+function isFraternidadeTab(value: string | null | undefined): value is FraternidadeTab {
+  return !!value && (FRATERNIDADE_TABS as readonly string[]).includes(value);
+}
 
 function PageMenu({ tab, onTabChange }: { tab: FraternidadeTab; onTabChange: (tab: FraternidadeTab) => void }) {
   return (
@@ -99,12 +110,48 @@ export function FraternidadePage() {
   const { user, companyId, companies } = useAppData();
   const activeCompany = companies.find((company) => company.id === companyId) ?? null;
   const [sheetOpen, setSheetOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<FraternidadeTab>('visao-geral');
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // Permite deep-link via ?tab=horarios-missas / ?tab=configuracoes.
+  // Aceita também o legado 'horario-missas' (singular) para compatibilidade.
+  const tabFromUrl = searchParams.get('tab');
+  const normalizedTab = tabFromUrl === 'horario-missas' ? 'horarios-missas' : tabFromUrl;
+  const initialTab: FraternidadeTab = isFraternidadeTab(normalizedTab) ? normalizedTab : 'visao-geral';
+
+  const [activeTab, setActiveTab] = useState<FraternidadeTab>(initialTab);
   const [companyView, setCompanyView] = useState<EditableCompany | null>(activeCompany);
 
   useEffect(() => {
     setCompanyView(activeCompany);
   }, [activeCompany]);
+
+  // Sincroniza ?tab= quando o usuário troca de aba (replace, não push, para não poluir o histórico).
+  const handleTabChange = useCallback(
+    (tab: FraternidadeTab) => {
+      setActiveTab(tab);
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          if (tab === 'visao-geral') {
+            next.delete('tab');
+          } else {
+            next.set('tab', tab);
+          }
+          return next;
+        },
+        { replace: true },
+      );
+    },
+    [setSearchParams],
+  );
+
+  // Se o usuário navegar usando o botão voltar/avançar, mantém o state em sincronia com a URL.
+  useEffect(() => {
+    const urlTab = searchParams.get('tab');
+    const normalized = urlTab === 'horario-missas' ? 'horarios-missas' : urlTab;
+    const next: FraternidadeTab = isFraternidadeTab(normalized) ? normalized : 'visao-geral';
+    setActiveTab((prev) => (prev === next ? prev : next));
+  }, [searchParams]);
 
   const currentCompany = companyView ?? activeCompany;
   const fixedPageClass = 'w-[1220px] min-w-[1220px] max-w-[1220px]';
@@ -160,12 +207,12 @@ export function FraternidadePage() {
       />
       <Container className={fixedPageClass}>
         <Navbar>
-          <PageMenu tab={activeTab} onTabChange={setActiveTab} />
+          <PageMenu tab={activeTab} onTabChange={handleTabChange} />
           <NavbarActions>
             <Button variant="outline" onClick={() => setSheetOpen(true)}>
               <Pencil /> Editar
             </Button>
-            <Button onClick={() => setActiveTab('horarios-missas')}>
+            <Button onClick={() => handleTabChange('horarios-missas')}>
               <Users /> Horários de Missas
             </Button>
             <Button variant="outline" mode="icon">

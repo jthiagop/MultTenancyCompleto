@@ -98,7 +98,7 @@ export function ConciliacaoOFXDialog({ onImported }: Props) {
         {
           action: {
             label: <span className="inline-flex items-center gap-1.5"><Clock className="size-3.5" />Cadastrar</span>,
-            onClick: () => window.location.assign('/configuracoes/empresa?tab=horario-missas'),
+            onClick: () => window.location.assign('/app/fraternidade?tab=horarios-missas'),
           },
           duration: 8000,
         },
