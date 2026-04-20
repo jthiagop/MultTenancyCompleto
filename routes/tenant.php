@@ -319,6 +319,12 @@ Route::middleware([
 
         // Rotas de módulos e permissões — protegidas por permissão company.index
         Route::middleware(['can:company.index'])->group(function () {
+            // API React — CRUD de organismos
+            Route::get('/api/cadastros/organismos', [ReactCadastrosController::class, 'organismos'])->name('react.cadastros.organismos');
+            Route::get('/api/cadastros/organismos/{company}', [ReactCadastrosController::class, 'showOrganismo'])->name('react.cadastros.organismos.show');
+            Route::post('/api/cadastros/organismos', [ReactCadastrosController::class, 'storeOrganismo'])->name('react.cadastros.organismos.store');
+            Route::put('/api/cadastros/organismos/{company}', [ReactCadastrosController::class, 'updateOrganismo'])->name('react.cadastros.organismos.update');
+
             Route::get('/modules', [ModuleController::class, 'index'])->name('modules.list');
             Route::get('/modules/data', [ModuleController::class, 'getData'])->name('modules.data');
             Route::post('/modules', [ModuleController::class, 'store'])->name('modules.store');

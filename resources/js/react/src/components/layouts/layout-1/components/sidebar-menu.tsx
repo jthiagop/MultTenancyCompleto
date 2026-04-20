@@ -54,7 +54,8 @@ export function SidebarMenu() {
         // 3. Filtrar filhos do item "Cadastros" por permissão
         if (item.title === 'Cadastros' && item.children) {
           const filteredChildren = item.children.filter((child) => {
-            if (child.path === '/cadastros/usuarios') return !!canUsersIndex;
+            if (child.path === '/cadastros/organismos') return !!canCompanyIndex;
+            if (child.path === '/cadastros/usuarios')   return !!canUsersIndex;
             if (child.path === '/cadastros/modulos')    return !!canCompanyIndex;
             if (child.path === '/cadastros/permissoes') return !!canCompanyIndex;
             return true;

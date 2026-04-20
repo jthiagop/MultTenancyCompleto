@@ -10,6 +10,7 @@ import { ContabilidadePage } from '@/pages/contabilidade/page';
 import { NotificationsPage } from '@/pages/notifications/page';
 import { CemiterioPage } from '@/pages/cemiterio/page';
 import { UsuariosPage } from '@/pages/cadastros/usuarios/page';
+import { OrganismosPage } from '@/pages/cadastros/organismos/page';
 import { FraternidadePage } from '@/pages/fraternidade/page';
 import { LoginCustomizationPage } from '@/pages/confs/login/page';
 
@@ -41,6 +42,7 @@ export function AppRoutingSetup() {
 
         {/* Módulo Cadastros */}
         <Route path="/cadastros/usuarios" element={<UsuariosPage />} />
+        <Route path="/cadastros/organismos" element={<OrganismosPage />} />
 
         {/* Configurações — Personalizar Tela de Login */}
         <Route path="/confs/login" element={<LoginCustomizationPage />} />

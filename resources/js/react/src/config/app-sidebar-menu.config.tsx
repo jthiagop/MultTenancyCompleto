@@ -181,6 +181,7 @@ export const MENU_SIDEBAR = [
     icon: IdCard,
     path: '/cadastros',
     children: [
+      { title: 'Organismos', path: '/cadastros/organismos', icon: Building },
       { title: 'Usuários',   path: '/cadastros/usuarios',   icon: Users },
       { title: 'Módulos',    path: '/cadastros/modulos',    icon: LayoutGrid },
       { title: 'Permissões', path: '/cadastros/permissoes', icon: KeyRound },
