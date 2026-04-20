@@ -55,9 +55,11 @@ class LancamentoPadraoController extends Controller
     {
         if ($request->ajax()) {
             $companyId = session('active_company_id');
-            
-            $lancamentos = LancamentoPadrao::with(['contaDebito', 'contaCredito', 'user'])
-                ->where('company_id', $companyId)
+
+            // Visibilidade respeita o trait BelongsToCompanyHierarchy:
+            // globais (pivot vazio) + da company ativa + herdadas da matriz.
+            $lancamentos = LancamentoPadrao::with(['contaDebito', 'contaCredito', 'user', 'companies:id,name'])
+                ->forActiveCompany($companyId ? (int) $companyId : null)
                 ->select('lancamento_padraos.*');
 
             // Filtro por tipo (tabs: entrada, saida, todos)
@@ -344,15 +346,24 @@ class LancamentoPadraoController extends Controller
         $companyId = session('active_company_id');
 
         // Criação do lançamento (validação já feita pelo FormRequest)
-        LancamentoPadrao::create([
+        $lp = LancamentoPadrao::create([
             'type' => $request->input('type'),
             'description' => $request->input('description'),
             'category' => $request->input('category'),
             'user_id' => $user->id,
-            'company_id' => $companyId,
             'conta_debito_id' => $request->input('conta_debito_id'),
             'conta_credito_id' => $request->input('conta_credito_id') == '0' ? null : $request->input('conta_credito_id'),
         ]);
+
+        // Visibilidade por company — aceita array `company_ids` (vazio = global).
+        // Telas legadas (Blade) que não enviam o array caem no default:
+        // restrição à company ativa.
+        $companyIds = $request->input('company_ids');
+        if (is_array($companyIds)) {
+            $lp->syncCompanyHierarchy($companyIds);
+        } elseif ($companyId) {
+            $lp->syncCompanyHierarchy([(int) $companyId]);
+        }
 
         // Se for requisição AJAX, retorna JSON
         if ($request->ajax() || $request->wantsJson()) {
@@ -417,8 +428,9 @@ class LancamentoPadraoController extends Controller
      */
     public function update(LancamentoPadraoRequest $request, string $id)
     {
-        // Encontra o lançamento padrão pelo ID
-        $lancamento = LancamentoPadrao::findOrFail($id);
+        // Visibilidade defensiva: só consegue editar categorias visíveis
+        // para a company ativa (global/própria/herdada).
+        $lancamento = LancamentoPadrao::forActiveCompany()->findOrFail($id);
 
         // Atualiza os dados do lançamento (validação já feita pelo FormRequest)
         $lancamento->update([
@@ -428,6 +440,14 @@ class LancamentoPadraoController extends Controller
             'conta_debito_id' => $request->input('conta_debito_id'),
             'conta_credito_id' => $request->input('conta_credito_id') == '0' ? null : $request->input('conta_credito_id'),
         ]);
+
+        // Apenas atualiza o pivot quando o cliente enviou explicitamente
+        // o array. Caso contrário, preserva o mapeamento existente para
+        // não quebrar telas legadas que não conhecem a coluna.
+        if ($request->has('company_ids')) {
+            $companyIds = $request->input('company_ids');
+            $lancamento->syncCompanyHierarchy(is_array($companyIds) ? $companyIds : []);
+        }
 
         // Se for requisição AJAX, retornar JSON
         if ($request->ajax() || $request->wantsJson()) {

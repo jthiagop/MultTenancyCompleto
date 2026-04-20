@@ -58,7 +58,7 @@ class CaixaController extends Controller
         $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
         $entidades = Caixa::getEntidadesCaixa();
         $entidadesBanco = Caixa::getEntidadesBanco();
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
         $parceiros = Parceiro::forActiveCompany()->orderBy('nome')->get();
 
         list($somaEntradas, $somaSaida) = caixa::getCaixa();
@@ -128,7 +128,7 @@ class CaixaController extends Controller
         // 2. BUSCA DE DADOS, AGORA TODOS FILTRADOS PELA EMPRESA ATIVA
 
         // Lançamentos Padrão da empresa ativa
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
         $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
         $parceiros = Parceiro::forActiveCompany()->orderBy('nome')->get();
 
@@ -462,7 +462,9 @@ class CaixaController extends Controller
         $caixa = TransacaoFinanceira::create($validatedData);
 
         // Busca o ID do Lançamento Padrão "Depósito Bancário"
-        $lancamentoPadraoDepositoId = LancamentoPadrao::where('description', 'Deposito Bancário')->value('id');
+        $lancamentoPadraoDepositoId = LancamentoPadrao::forActiveCompany()
+            ->where('description', 'Deposito Bancário')
+            ->value('id');
 
         // 3) Se o Lançamento Padrão for "Depósito Bancário", cria o lançamento no Banco
         if (isset($validatedData['lancamento_padrao_id']) && (int) $validatedData['lancamento_padrao_id'] === (int) $lancamentoPadraoDepositoId) {
@@ -684,7 +686,7 @@ class CaixaController extends Controller
             ->findOrFail($id);
 
         // SEGURANÇA: Garante que os dados de apoio também são da empresa ativa
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
         $entidades = EntidadeFinanceira::forActiveCompany()->get();
         $centrosAtivos = CostCenter::forActiveCompany()->get();
 

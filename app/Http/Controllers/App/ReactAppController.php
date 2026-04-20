@@ -50,13 +50,24 @@ class ReactAppController extends Controller
         // Todas as empresas às quais o usuário tem acesso (espelha $allCompanies do userMenu.blade.php)
         $allCompanies = $user->companies()
             ->with(['addresses:company_id,cep,rua,bairro,numero,cidade,uf'])
-            ->get(['companies.id', 'companies.name', 'companies.razao_social', 'companies.cnpj', 'companies.email', 'companies.avatar'])
+            ->get([
+                'companies.id',
+                'companies.name',
+                'companies.razao_social',
+                'companies.cnpj',
+                'companies.email',
+                'companies.avatar',
+                'companies.type',
+                'companies.parent_id',
+            ])
             ->map(fn ($c) => [
             'id'          => $c->id,
             'name'        => $c->name,
             'razao_social'=> $c->razao_social ?: null,
             'cnpj'        => $c->cnpj,
             'email'       => $c->email,
+            'type'        => $c->type,
+            'parent_id'   => $c->parent_id,
             'avatar_url'  => $c->avatar ? '/file/' . ltrim(preg_replace('#^public/#', '', $c->avatar), '/') : null,
             'address'      => $c->addresses ? [
                 'cep'    => $c->addresses->cep,
@@ -157,12 +168,18 @@ class ReactAppController extends Controller
 
         $categorias = collect();
         try {
-            $categorias = LancamentoPadrao::where(function ($q) use ($companyId) {
-                    $q->where('company_id', $companyId)->orWhereNull('company_id');
-                })
+            $categorias = LancamentoPadrao::forActiveCompany($companyId ? (int) $companyId : null)
+                ->with('companies:id')
                 ->orderBy('description')
-                ->get(['id', 'description', 'type'])
-                ->map(fn ($c) => ['id' => (string) $c->id, 'description' => $c->description, 'type' => $c->type]);
+                ->get(['id', 'codigo', 'description', 'type'])
+                ->map(fn ($c) => [
+                    'id'          => (string) $c->id,
+                    'codigo'      => $c->codigo ?? null,
+                    'description' => $c->description,
+                    'type'        => $c->type,
+                    'scope'       => $c->classificacaoParaCompany($companyId ? (int) $companyId : null),
+                    'company_ids' => $c->companies->pluck('id')->map(fn ($v) => (string) $v)->values()->all(),
+                ]);
         } catch (\Throwable) {
         }
 

@@ -450,13 +450,16 @@ class ConciliacaoMissasService
     public function criarLancamentoFinanceiro($bankStatement, $horarioMissa)
     {
         try {
-            // Busca ou cria Lançamento Padrão
-            $lancamentoPadrao = LancamentoPadrao::firstOrCreate(
+            // Busca ou cria Lançamento Padrão para a company do bank statement.
+            // Usa o pivot (BelongsToCompanyHierarchy) — não existe mais
+            // `lancamento_padraos.company_id` na coluna.
+            $lancamentoPadrao = LancamentoPadrao::firstOrCreateForCompany(
+                (int) $bankStatement->company_id,
                 ['description' => 'Coletas Realizadas durante as missas para apoio às atividades do Convento'],
                 [
                     'type' => 'entrada',
                     'user_id' => Auth::id() ?? 1,
-                    'date' => now()
+                    'date' => now(),
                 ]
             );
 

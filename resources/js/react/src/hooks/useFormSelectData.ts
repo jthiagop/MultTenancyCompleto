@@ -23,10 +23,24 @@ export interface EntidadeOption {
   saldo_atual?: number;
 }
 
+/**
+ * Categoria (lancamento padrão) com metadados do pivot N:N.
+ *
+ * - `scope` resume a visibilidade da categoria sob a ótica da company ativa:
+ *     - 'global'     : pivot vazio → visível em todo o tenant
+ *     - 'own'        : a company ativa está no pivot
+ *     - 'inherited'  : a matriz da company ativa está no pivot (herança)
+ *     - 'other'      : fallback (não deveria aparecer quando filtrado)
+ * - `company_ids` contém os ids ligados à categoria (útil para tooltip/debug).
+ * - `codigo` é o prefixo opcional exibido antes do label.
+ */
 export interface CategoriaOption {
   id: string;
+  codigo?: string | null;
   description: string;
   type: string;
+  scope?: 'global' | 'own' | 'inherited' | 'other';
+  company_ids?: string[];
 }
 
 export interface CentroCustoOption {
@@ -86,7 +100,9 @@ export function useFormSelectData(tipo: 'receita' | 'despesa' | null) {
     return {
       parceiros:       raw.parceiros.filter(p => p.natureza === natureza || p.natureza === 'ambos'),
       entidades:       raw.entidades,
-      categorias:      raw.categorias.filter(c => c.type === tipoLp),
+      // O backend já filtra por tipo (entrada|saida|ambos). Mantemos apenas um
+      // filtro defensivo para incluir 'ambos' caso a resposta venha completa.
+      categorias:      raw.categorias.filter(c => c.type === tipoLp || c.type === 'ambos'),
       centrosCusto:    raw.centrosCusto,
       formasPagamento: raw.formasPagamento,
       filiais,

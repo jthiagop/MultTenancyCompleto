@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToCompanyHierarchy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Vinkla\Hashids\Facades\Hashids;
@@ -11,18 +12,24 @@ use App\Models\User;
 class LancamentoPadrao extends Model
 {
     use HasFactory;
+    use BelongsToCompanyHierarchy;
 
     protected $table = 'lancamento_padraos';
     protected $primaryKey = 'id';
     public $incrementing = true;
     protected $keyType = 'int';
 
+    /**
+     * Nome da tabela pivot usada pelo trait BelongsToCompanyHierarchy.
+     */
+    protected string $companyPivotTable = 'lancamento_padrao_company';
+
     protected $fillable = [
         'type',
+        'codigo',
         'description',
         'category',
         'user_id',
-        'company_id',
         'is_active',
         'conta_debito_id',
         'conta_credito_id',
@@ -96,16 +103,6 @@ class LancamentoPadrao extends Model
         ];
 
         return $emojis[$this->category] ?? '❓'; // Retorna '❓' se a categoria não for encontrada
-    }
-
-        /**
-     * Scope: Filtra a busca para incluir apenas os registros da empresa ativa na sessão.
-     * Este é o método que estava faltando.
-     */
-    public function scopeForActiveCompany($query)
-    {
-        // Lançamentos padrão são compartilhados entre todas as companies do tenant
-        return $query;
     }
 
     /**

@@ -3,6 +3,8 @@ import { notify } from '@/lib/notify';
 import { useFormSelectData, type ParceiroOption } from '@/hooks/useFormSelectData';
 import { useAppData } from '@/hooks/useAppData';
 import { ParceiroQuickCreateSheet } from './parceiro-quick-create-sheet';
+import { entidadeBadges } from './entidade-badges';
+import { categoriaBadges } from './categoria-badges';
 import {
   useLancamentoForm,
   parseCurrency,
@@ -377,7 +379,11 @@ function LancamentoInfoCard({
             </Label>
             <SearchSelect
               popoverModal={false}
-              options={data.categorias.map((c) => ({ value: String(c.id), label: c.description }))}
+              options={data.categorias.map((c) => ({
+                value: String(c.id),
+                label: c.description,
+                badges: categoriaBadges(c),
+              }))}
               value={form.categoria}
               onValueChange={(v) => {
                 markManualEdit('lancamento_padrao_id');
@@ -428,7 +434,12 @@ function LancamentoInfoCard({
               popoverModal={false}
               options={data.entidades.map((e) => ({
                 value: e.id,
-                label: e.label,
+                label: e.nome ?? e.label,
+                badges: entidadeBadges(
+                  e.tipo,
+                  e.account_type,
+                  e.tipo === 'banco' && e.label !== e.nome ? e.label : undefined,
+                ),
                 icon: e.logo
                   ?? (e.tipo === 'caixa'
                     ? '/tenancy/assets/media/svg/bancos/fraternidadecaixa.svg'

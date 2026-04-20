@@ -21,6 +21,13 @@ export interface AppCompany {
   razao_social: string | null;
   cnpj: string | null;
   email: string | null;
+  /**
+   * Tipo (matriz | filial). Usado pelo picker de disponibilidade de categoria
+   * e por UI que aplica tratamento diferente para matriz vs. filial.
+   */
+  type?: string | null;
+  /** ID da matriz desta company (null quando a própria é matriz). */
+  parent_id?: number | null;
   /** URL resolvida para o avatar (/file/…) ou null. */
   avatar_url: string | null;
   /** Endereço principal (hasOne addresses no Company). */
@@ -44,7 +51,14 @@ interface FormSelectDataRaw {
     /** Saldo efetivo via movimentações (mesma regra que `EntidadeFinanceira::calculateBalance`) */
     saldo_atual?: number;
   }>;
-  categorias: Array<{ id: string; description: string; type: string }>;
+  categorias: Array<{
+    id: string;
+    codigo?: string | null;
+    description: string;
+    type: string;
+    scope?: 'global' | 'own' | 'inherited' | 'other';
+    company_ids?: string[];
+  }>;
   centrosCusto: Array<{ id: string; code: string; name: string }>;
   formasPagamento: Array<{ id: string; codigo: string; nome: string }>;
   filiais?: Array<{ id: string; name: string; type: string; avatar_url: string | null }>;

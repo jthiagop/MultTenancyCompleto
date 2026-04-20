@@ -5,10 +5,15 @@ import { z } from 'zod';
 import {
   ArrowLeftRight,
   BookOpen,
+  Building2,
   Check,
   ChevronsUpDown,
   CircleDollarSign,
+  FolderTree,
+  Globe,
+  Hash,
   Loader2,
+  Plus,
   Tag,
   TrendingDown,
   TrendingUp,
@@ -28,6 +33,9 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
 import {
   Command,
   CommandEmpty,
@@ -57,23 +65,31 @@ export interface PlanoContaOption {
 // ── Schema ─────────────────────────────────────────────────────────────────────
 
 const categoriaSchema = z.object({
+  codigo:           z.string().max(50, 'Máximo de 50 caracteres.').optional().or(z.literal('')),
   description:      z.string().min(1, 'O nome é obrigatório.').max(255, 'Nome muito longo.'),
   category:         z.string().max(255).optional().or(z.literal('')),
   type:             z.enum(TIPO_VALUES, { error: 'Selecione o tipo de movimento.' }),
   is_active:        z.boolean(),
   conta_debito_id:  z.number().nullable(),
   conta_credito_id: z.number().nullable(),
+  /**
+   * Ids das companies ligadas à categoria no pivot.
+   * Vazio = categoria global (visível em todas as empresas do tenant).
+   */
+  company_ids:      z.array(z.number()),
 });
 
 type CategoriaFormValues = z.infer<typeof categoriaSchema>;
 
 const DEFAULTS: CategoriaFormValues = {
+  codigo:           '',
   description:      '',
   category:         '',
   type:             'entrada',
   is_active:        true,
   conta_debito_id:  null,
   conta_credito_id: null,
+  company_ids:      [],
 };
 
 // ── Config visual dos tipos ────────────────────────────────────────────────────
@@ -239,6 +255,280 @@ function ContaCombobox({
   );
 }
 
+// ── Subcomponente: Combobox de Agrupador (com criação livre) ──────────────────
+
+function AgrupadorCombobox({
+  value,
+  onChange,
+  agrupadores,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  agrupadores: string[];
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const normalizedSearch = search.trim();
+
+  const filtered = useMemo(() => {
+    const q = normalizedSearch.toLowerCase();
+    if (!q) return agrupadores;
+    return agrupadores.filter((a) => a.toLowerCase().includes(q));
+  }, [agrupadores, normalizedSearch]);
+
+  const exactMatch = useMemo(
+    () =>
+      normalizedSearch.length > 0 &&
+      agrupadores.some((a) => a.toLowerCase() === normalizedSearch.toLowerCase()),
+    [agrupadores, normalizedSearch],
+  );
+
+  const commit = (next: string) => {
+    onChange(next);
+    setOpen(false);
+    setSearch('');
+  };
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          role="combobox"
+          aria-expanded={open}
+          className={cn(
+            'w-full justify-between h-9 text-sm font-normal',
+            !value && 'text-muted-foreground',
+          )}
+        >
+          <span className="truncate">
+            {value || 'Selecione ou digite um agrupador…'}
+          </span>
+          <ChevronsUpDown className="ml-2 size-3.5 shrink-0 opacity-50" />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-[--radix-popover-trigger-width] min-w-[320px] p-0 z-[70]" align="start">
+        <Command shouldFilter={false}>
+          <CommandInput
+            placeholder="Buscar ou criar novo agrupador…"
+            value={search}
+            onValueChange={setSearch}
+          />
+          <CommandList>
+            <CommandEmpty>
+              {normalizedSearch ? (
+                <span className="text-xs">
+                  Pressione <kbd className="px-1 py-0.5 rounded border bg-muted">Enter</kbd> ou clique abaixo para criar.
+                </span>
+              ) : (
+                <span className="text-xs">Nenhum agrupador cadastrado ainda.</span>
+              )}
+            </CommandEmpty>
+
+            {value && (
+              <CommandGroup heading="Atual">
+                <CommandItem
+                  value="__clear__"
+                  onSelect={() => commit('')}
+                  className="text-muted-foreground italic text-xs"
+                >
+                  <X className="size-3 mr-2 shrink-0" />
+                  Limpar seleção
+                </CommandItem>
+              </CommandGroup>
+            )}
+
+            {normalizedSearch && !exactMatch && (
+              <CommandGroup heading="Criar novo">
+                <CommandItem
+                  value={`__create__:${normalizedSearch}`}
+                  onSelect={() => commit(normalizedSearch)}
+                  className="text-emerald-700 dark:text-emerald-400"
+                >
+                  <Plus className="size-3.5 mr-2 shrink-0" />
+                  Criar agrupador <span className="font-semibold ms-1">&quot;{normalizedSearch}&quot;</span>
+                </CommandItem>
+              </CommandGroup>
+            )}
+
+            {filtered.length > 0 && (
+              <CommandGroup heading={`Cadastrados (${agrupadores.length})`}>
+                {filtered.map((agrup) => (
+                  <CommandItem
+                    key={agrup}
+                    value={agrup}
+                    onSelect={() => commit(agrup)}
+                    className="flex items-center gap-2"
+                  >
+                    <Check
+                      className={cn(
+                        'size-3.5 shrink-0',
+                        value.toLowerCase() === agrup.toLowerCase() ? 'opacity-100' : 'opacity-0',
+                      )}
+                    />
+                    <span className="truncate">{agrup}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            )}
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ── Subcomponente: Disponibilidade (switches por company + atalhos) ──────────
+
+type CompanyForPicker = {
+  id: number;
+  name: string;
+  avatar_url?: string | null;
+  type?: string | null;
+  parent_id?: number | null;
+};
+
+function DisponibilidadePicker({
+  companies,
+  activeCompanyId,
+  value,
+  onChange,
+}: {
+  companies: CompanyForPicker[];
+  activeCompanyId: number | null;
+  value: number[];
+  onChange: (next: number[]) => void;
+}) {
+  const selectedSet = useMemo(() => new Set(value), [value]);
+
+  const matrizIds = useMemo(
+    () => companies.filter((c) => !c.parent_id).map((c) => c.id),
+    [companies],
+  );
+
+  const activeCompany = companies.find((c) => c.id === activeCompanyId) ?? null;
+  const matrizId = activeCompany
+    ? (activeCompany.parent_id ?? activeCompany.id)
+    : matrizIds[0] ?? null;
+  const matrizAndFilialIds = useMemo(() => {
+    if (!matrizId) return [] as number[];
+    return companies
+      .filter((c) => c.id === matrizId || c.parent_id === matrizId)
+      .map((c) => c.id);
+  }, [companies, matrizId]);
+
+  const toggle = (id: number, checked: boolean) => {
+    const next = new Set(value);
+    if (checked) next.add(id);
+    else next.delete(id);
+    onChange(Array.from(next).sort((a, b) => a - b));
+  };
+
+  const applyPreset = (ids: number[]) => onChange([...ids].sort((a, b) => a - b));
+  const clear = () => onChange([]);
+
+  const isGlobal = value.length === 0;
+
+  return (
+    <div className="space-y-3">
+      <div className="flex flex-wrap gap-2">
+        <Button
+          type="button"
+          variant={isGlobal ? 'primary' : 'outline'}
+          size="sm"
+          className="h-7 text-xs"
+          onClick={clear}
+        >
+          <Globe className="size-3.5" />
+          Global (todas)
+        </Button>
+        {matrizAndFilialIds.length > 0 && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => applyPreset(matrizAndFilialIds)}
+          >
+            <Building2 className="size-3.5" />
+            Matriz + filiais
+          </Button>
+        )}
+        {activeCompany && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 text-xs"
+            onClick={() => applyPreset([activeCompany.id])}
+          >
+            Apenas esta
+          </Button>
+        )}
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="h-7 text-xs"
+          onClick={() => applyPreset(companies.map((c) => c.id))}
+        >
+          Todas as empresas
+        </Button>
+      </div>
+
+      {isGlobal && (
+        <p className="text-xs text-emerald-700 dark:text-emerald-400">
+          <Globe className="mr-1 inline size-3" />
+          Sem nenhuma selecionada = categoria <strong>global</strong> (visível em todas as empresas do tenant).
+        </p>
+      )}
+
+      <div className="rounded-md border divide-y max-h-60 overflow-y-auto">
+        {companies.length === 0 ? (
+          <p className="p-3 text-xs text-muted-foreground">Nenhuma empresa disponível.</p>
+        ) : (
+          companies.map((c) => {
+            const checked = selectedSet.has(c.id);
+            const isMatriz = !c.parent_id;
+            return (
+              <label
+                key={c.id}
+                className="flex items-center gap-2.5 px-3 py-2 cursor-pointer hover:bg-accent/50"
+              >
+                <Avatar className="size-6 shrink-0">
+                  <AvatarImage src={c.avatar_url ?? undefined} alt={c.name} />
+                  <AvatarFallback className="text-[10px]">
+                    {c.name.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="flex-1 truncate text-sm">{c.name}</span>
+                <Badge
+                  variant="outline"
+                  className={cn(
+                    'h-5 px-1.5 text-[10px]',
+                    isMatriz
+                      ? 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-300'
+                      : 'bg-slate-50 text-slate-600 dark:bg-slate-900/40 dark:text-slate-300',
+                  )}
+                >
+                  {isMatriz ? 'Matriz' : 'Filial'}
+                </Badge>
+                <Switch
+                  checked={checked}
+                  onCheckedChange={(v) => toggle(c.id, v)}
+                  onClick={(e) => e.stopPropagation()}
+                />
+              </label>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ── Props ──────────────────────────────────────────────────────────────────────
 
 export interface CategoriaFormSheetProps {
@@ -246,6 +536,7 @@ export interface CategoriaFormSheetProps {
   onOpenChange: (open: boolean) => void;
   editingId?: number | null;
   planoContasList: PlanoContaOption[];
+  agrupadoresList?: string[];
   onSuccess: () => void;
 }
 
@@ -256,9 +547,10 @@ export function CategoriaFormSheet({
   onOpenChange,
   editingId,
   planoContasList,
+  agrupadoresList = [],
   onSuccess,
 }: CategoriaFormSheetProps) {
-  const { csrfToken } = useAppData();
+  const { csrfToken, companies, companyId } = useAppData();
   const isEditing = !!editingId;
   const [loadingData, setLoadingData] = useState(false);
 
@@ -304,18 +596,26 @@ export function CategoriaFormSheet({
           const d = json.categoria;
           if (!d?.id) throw new Error('Dados inválidos.');
           form.reset({
+            codigo:           d.codigo ?? '',
             description:      d.description ?? '',
             category:         d.category ?? '',
             type:             TIPO_VALUES.includes(d.type) ? d.type : 'entrada',
             is_active:        d.is_active ?? true,
             conta_debito_id:  d.conta_debito_id ?? null,
             conta_credito_id: d.conta_credito_id ?? null,
+            company_ids:      Array.isArray(d.company_ids)
+              ? d.company_ids.map((v: string | number) => Number(v)).filter(Number.isFinite)
+              : [],
           });
         })
         .catch(() => notify.error('Erro', 'Não foi possível carregar os dados da categoria.'))
         .finally(() => setLoadingData(false));
     } else {
-      form.reset(DEFAULTS);
+      // Novo registro: default "apenas esta empresa" se houver uma ativa.
+      form.reset({
+        ...DEFAULTS,
+        company_ids: companyId ? [companyId] : [],
+      });
     }
   }, [open, editingId]);
 
@@ -326,12 +626,16 @@ export function CategoriaFormSheet({
 
     try {
       const payload = {
+        codigo:           data.codigo?.trim() || null,
         description:      data.description.trim(),
         category:         data.category?.trim() || null,
         type:             data.type,
         is_active:        data.is_active,
         conta_debito_id:  data.conta_debito_id,
         conta_credito_id: data.conta_credito_id,
+        // Envio explícito do array — backend usa $request->has('company_ids')
+        // para decidir se deve tocar no pivot.
+        company_ids:      data.company_ids ?? [],
       };
 
       const url    = isEditing ? `/contabilidade/categorias/${editingId}` : '/contabilidade/categorias';
@@ -416,43 +720,75 @@ export function CategoriaFormSheet({
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="pt-4 space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="description"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-xs">
-                                Nome da Categoria <span className="text-destructive">*</span>
-                              </FormLabel>
-                              <FormControl>
-                                <Input
-                                  {...field}
-                                  placeholder="Ex: Energia Elétrica, Oferta Dominical…"
-                                  autoFocus
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                        <div className="grid grid-cols-1 sm:grid-cols-[160px_1fr] gap-3">
+                          <FormField
+                            control={form.control}
+                            name="codigo"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs flex items-center gap-1">
+                                  <Hash className="size-3 text-muted-foreground" />
+                                  Código{' '}
+                                  <span className="text-muted-foreground font-normal">(opcional)</span>
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    value={field.value ?? ''}
+                                    placeholder="Ex: 1.01"
+                                    maxLength={50}
+                                    className="font-mono text-sm"
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+
+                          <FormField
+                            control={form.control}
+                            name="description"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel className="text-xs">
+                                  Nome da Categoria <span className="text-destructive">*</span>
+                                </FormLabel>
+                                <FormControl>
+                                  <Input
+                                    {...field}
+                                    placeholder="Ex: Energia Elétrica, Oferta Dominical…"
+                                    autoFocus
+                                  />
+                                </FormControl>
+                                <FormMessage />
+                              </FormItem>
+                            )}
+                          />
+                        </div>
+
+                        <p className="text-xs text-muted-foreground -mt-2">
+                          O código é informado por você e serve como identificador interno (único por empresa quando preenchido).
+                        </p>
 
                         <FormField
                           control={form.control}
                           name="category"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="text-xs">
+                              <FormLabel className="text-xs flex items-center gap-1">
+                                <FolderTree className="size-3 text-muted-foreground" />
                                 Agrupador{' '}
                                 <span className="text-muted-foreground font-normal">(opcional)</span>
                               </FormLabel>
                               <FormControl>
-                                <Input
-                                  {...field}
-                                  placeholder="Ex: Administrativo, Utilidades, Coletas…"
+                                <AgrupadorCombobox
+                                  value={field.value ?? ''}
+                                  onChange={field.onChange}
+                                  agrupadores={agrupadoresList}
                                 />
                               </FormControl>
                               <p className="text-xs text-muted-foreground">
-                                Usado para agrupar categorias semelhantes nos relatórios.
+                                Escolha um agrupador já cadastrado ou digite para criar um novo. Usado para agrupar categorias semelhantes nos relatórios.
                               </p>
                               <FormMessage />
                             </FormItem>
@@ -599,6 +935,44 @@ export function CategoriaFormSheet({
                             </div>
                           </div>
                         )}
+                      </CardContent>
+                    </Card>
+
+                    {/* ── Seção 4: Disponibilidade (pivot N:N) ─────────────── */}
+                    <Card className="rounded-md">
+                      <CardHeader className="min-h-9.5 bg-accent/50 py-2">
+                        <CardTitle className="text-2sm flex items-center gap-1.5">
+                          <Building2 className="size-3.5 text-muted-foreground" />
+                          Disponibilidade
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-4">
+                        <FormField
+                          control={form.control}
+                          name="company_ids"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <DisponibilidadePicker
+                                  companies={companies.map((c) => ({
+                                    id: c.id,
+                                    name: c.name,
+                                    avatar_url: c.avatar_url,
+                                    type: c.type,
+                                    parent_id: c.parent_id,
+                                  }))}
+                                  activeCompanyId={companyId}
+                                  value={field.value}
+                                  onChange={field.onChange}
+                                />
+                              </FormControl>
+                              <p className="mt-2 text-xs text-muted-foreground">
+                                Selecione em quais empresas esta categoria aparecerá. Matriz selecionada é herdada por suas filiais automaticamente.
+                              </p>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
                       </CardContent>
                     </Card>
 

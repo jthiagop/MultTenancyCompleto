@@ -64,8 +64,9 @@ class LancamentosPadraoTemplateExport
         ];
         $sheet->getStyle('A1:E1')->applyFromArray($headerStyle);
         
-        // Busca os lançamentos
-        $lancamentos = LancamentoPadrao::all();
+        // Busca os lançamentos visíveis para a company alvo do export
+        // (globais do tenant + próprios + herdados da matriz).
+        $lancamentos = LancamentoPadrao::forActiveCompany($this->companyId ? (int) $this->companyId : null)->get();
         
         // Dados
         $row = 2;

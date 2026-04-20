@@ -499,7 +499,7 @@ class EntidadeFinanceiraController extends Controller
 
         // 5. Carrega dados auxiliares usando os scopes.
         $centrosAtivos = CostCenter::forActiveCompany()->get();
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
         $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
 
         // 6. Calcula percentual de conciliação via DB (sem carregar transações na memória).
@@ -597,7 +597,7 @@ class EntidadeFinanceiraController extends Controller
 
         // 5. Carrega dados auxiliares usando os scopes.
         $centrosAtivos = CostCenter::forActiveCompany()->get();
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
 
         // 6. Cálculos de percentual e agrupamento por dia (sobre dados filtrados).
         $totalTransacoes = $transacoesFiltradas->count();
@@ -675,7 +675,7 @@ class EntidadeFinanceiraController extends Controller
             // ✅ Dados auxiliares com cache (melhora performance)
             // Nota: Removido cache por incompatibilidade com tenancy em drivers file/database
             $centrosAtivos = CostCenter::forActiveCompany()->get();
-            $lps = LancamentoPadrao::all();
+            $lps = LancamentoPadrao::forActiveCompany()->get();
             $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
             $fornecedores = Parceiro::forActiveCompany()->orderBy('nome')->get();
 

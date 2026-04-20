@@ -100,9 +100,10 @@ class FinanceiroFormDataController extends Controller
         }
 
         // Categorias (lançamentos padrão) — lancamento_padraos.type: entrada | saida | ambos (migração 2025_11_24_140039)
-        $categoriasBase = fn () => LancamentoPadrao::where(function ($q) use ($companyId) {
-            $q->where('company_id', $companyId)->orWhereNull('company_id');
-        });
+        // Visibilidade por company é resolvida via trait BelongsToCompanyHierarchy
+        // (pivot lancamento_padrao_company + herança matriz -> filiais).
+        $categoriasBase = fn () => LancamentoPadrao::forActiveCompany($companyId)
+            ->with('companies:id');
 
         try {
             $q = $categoriasBase();
@@ -113,7 +114,7 @@ class FinanceiroFormDataController extends Controller
             } else {
                 $q->whereIn('type', ['saida', 'ambos']);
             }
-            $categorias = $q->orderBy('description')->get(['id', 'description', 'type']);
+            $categoriasRaw = $q->orderBy('description')->get(['id', 'codigo', 'description', 'type']);
         } catch (QueryException $e) {
             // Banco sem ENUM/value 'ambos' ou outro SQL legado (migração ainda não aplicada no tenant)
             $q = $categoriasBase();
@@ -124,8 +125,19 @@ class FinanceiroFormDataController extends Controller
             } else {
                 $q->where('type', 'saida');
             }
-            $categorias = $q->orderBy('description')->get(['id', 'description', 'type']);
+            $categoriasRaw = $q->orderBy('description')->get(['id', 'codigo', 'description', 'type']);
         }
+
+        $categorias = $categoriasRaw->map(function ($lp) use ($companyId) {
+            return [
+                'id'          => (string) $lp->id,
+                'codigo'      => $lp->codigo ?? null,
+                'description' => $lp->description,
+                'type'        => $lp->type,
+                'scope'       => $lp->classificacaoParaCompany($companyId),
+                'company_ids' => $lp->companies->pluck('id')->map(fn ($v) => (string) $v)->values()->all(),
+            ];
+        });
 
         // Centros de custo ativos
         $centrosCusto = collect();

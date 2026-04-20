@@ -37,10 +37,10 @@ class ReactBancoLancamentoDomusTest extends TestCase
             'company_id' => $this->company->id,
             'tipo' => 'banco',
         ]);
-        $this->categoriaSaida = LancamentoPadrao::factory()->create([
-            'company_id' => $this->company->id,
-            'tipo' => 'saida',
-        ]);
+        $this->categoriaSaida = LancamentoPadrao::factory()
+            ->saida()
+            ->forCompany($this->company)
+            ->create();
     }
 
     public function test_store_lancamento_com_domus_documento_id_marca_lancado_e_cria_anexo(): void

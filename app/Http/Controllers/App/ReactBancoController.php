@@ -1795,13 +1795,17 @@ class ReactBancoController extends Controller
             ->values()
             ->all();
 
-        $lps = LancamentoPadrao::query()
+        $lps = LancamentoPadrao::forActiveCompany()
+            ->with('companies:id')
             ->orderBy('description')
-            ->get(['id', 'description', 'type'])
+            ->get(['id', 'codigo', 'description', 'type'])
             ->map(fn ($lp) => [
                 'id'          => (int) $lp->id,
+                'codigo'      => $lp->codigo,
                 'description' => (string) $lp->description,
                 'type'        => $scalarEnum($lp->type),
+                'scope'       => $lp->classificacaoParaCompany(),
+                'company_ids' => $lp->companies->pluck('id')->map(fn ($v) => (int) $v)->values()->all(),
             ])
             ->values()
             ->all();
@@ -1862,7 +1866,9 @@ class ReactBancoController extends Controller
             ->values()
             ->all();
 
-        $depositoId = LancamentoPadrao::where('description', 'Deposito Bancário')->value('id');
+        $depositoId = LancamentoPadrao::forActiveCompany()
+            ->where('description', 'Deposito Bancário')
+            ->value('id');
 
         return [
             'centros'                       => $centros,

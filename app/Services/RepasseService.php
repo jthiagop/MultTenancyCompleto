@@ -152,8 +152,9 @@ class RepasseService
             $repasse->load('itens');
 
             // Buscar/criar LP de repasse na matriz
-            $lpSaida = LancamentoPadrao::firstOrCreate(
-                ['company_id' => $companyOrigemId, 'description' => 'Repasse Enviado'],
+            $lpSaida = LancamentoPadrao::firstOrCreateForCompany(
+                (int) $companyOrigemId,
+                ['description' => 'Repasse Enviado'],
                 ['type' => 'saida', 'category' => 'Repasse', 'user_id' => $user->id]
             );
 
@@ -206,8 +207,9 @@ class RepasseService
             foreach ($repasse->itens as $item) {
                 $nomeDestino = Company::find($item->company_destino_id)?->name ?? 'Filial';
 
-                $lpEntrada = LancamentoPadrao::firstOrCreate(
-                    ['company_id' => $item->company_destino_id, 'description' => 'Repasse Recebido'],
+                $lpEntrada = LancamentoPadrao::firstOrCreateForCompany(
+                    (int) $item->company_destino_id,
+                    ['description' => 'Repasse Recebido'],
                     ['type' => 'entrada', 'category' => 'Repasse', 'user_id' => $user->id]
                 );
 

@@ -64,8 +64,14 @@ export interface ConciliacaoFormCentro {
 
 export interface ConciliacaoFormLP {
   id: number;
+  /** Código opcional configurado pelo admin; quando presente substitui `#id` no UI. */
+  codigo?: string | null;
   description: string;
   type: string;
+  /** Visibilidade sob a ótica da company ativa (pivot N:N). */
+  scope?: 'global' | 'own' | 'inherited' | 'other';
+  /** Ids das companies ligadas à categoria — útil para tooltip/debug. */
+  company_ids?: number[];
 }
 
 export interface ConciliacaoFormFormaPagamento {

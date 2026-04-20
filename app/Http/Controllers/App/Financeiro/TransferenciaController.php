@@ -44,12 +44,14 @@ class TransferenciaController extends Controller
             ->findOrFail($validated['entidade_destino_id']);
 
         // Buscar ou criar LPs de transferência automaticamente
-        $lpSaida = LancamentoPadrao::firstOrCreate(
-            ['company_id' => $companyId, 'description' => 'Transferência de Saída'],
+        $lpSaida = LancamentoPadrao::firstOrCreateForCompany(
+            (int) $companyId,
+            ['description' => 'Transferência de Saída'],
             ['type' => 'saida', 'user_id' => Auth::id()]
         );
-        $lpEntrada = LancamentoPadrao::firstOrCreate(
-            ['company_id' => $companyId, 'description' => 'Transferência de Entrada'],
+        $lpEntrada = LancamentoPadrao::firstOrCreateForCompany(
+            (int) $companyId,
+            ['description' => 'Transferência de Entrada'],
             ['type' => 'entrada', 'user_id' => Auth::id()]
         );
 
@@ -237,12 +239,14 @@ class TransferenciaController extends Controller
         $entidadeDestino = EntidadeFinanceira::where('company_id', $companyId)
             ->findOrFail($validated['entidade_destino_id']);
 
-        $lpSaida = LancamentoPadrao::firstOrCreate(
-            ['company_id' => $companyId, 'description' => 'Transferência de Saída'],
+        $lpSaida = LancamentoPadrao::firstOrCreateForCompany(
+            (int) $companyId,
+            ['description' => 'Transferência de Saída'],
             ['type' => 'saida', 'user_id' => Auth::id()]
         );
-        $lpEntrada = LancamentoPadrao::firstOrCreate(
-            ['company_id' => $companyId, 'description' => 'Transferência de Entrada'],
+        $lpEntrada = LancamentoPadrao::firstOrCreateForCompany(
+            (int) $companyId,
+            ['description' => 'Transferência de Entrada'],
             ['type' => 'entrada', 'user_id' => Auth::id()]
         );
 

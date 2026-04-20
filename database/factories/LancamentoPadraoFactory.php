@@ -31,7 +31,6 @@ class LancamentoPadraoFactory extends Factory
             'type' => fake()->randomElement(['entrada', 'saida']),
             'description' => fake()->sentence(3),
             'category' => fake()->randomElement($categories),
-            'company_id' => Company::factory(),
         ];
     }
 
@@ -53,5 +52,29 @@ class LancamentoPadraoFactory extends Factory
         return $this->state(fn (array $attributes) => [
             'type' => 'saida',
         ]);
+    }
+
+    /**
+     * Vincula a categoria a companies específicas via pivot (após criação).
+     *
+     * @param  array<int|\App\Models\Company>  $companies
+     */
+    public function forCompanies(array $companies): static
+    {
+        return $this->afterCreating(function (LancamentoPadrao $lp) use ($companies) {
+            $ids = array_map(
+                fn ($c) => $c instanceof Company ? $c->id : (int) $c,
+                $companies,
+            );
+            $lp->companies()->sync($ids);
+        });
+    }
+
+    /**
+     * Atalho: categoria restrita a uma única company.
+     */
+    public function forCompany(Company|int $company): static
+    {
+        return $this->forCompanies([$company]);
     }
 }

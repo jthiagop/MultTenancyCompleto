@@ -90,8 +90,9 @@ class RateioService
         $nomeFilial = Company::find($filialId)?->name ?? "Filial #{$filialId}";
 
         // ── Passo 1: Saída na Filial ─────────────────────────────────────────
-        $lpPagar = LancamentoPadrao::firstOrCreate(
-            ['company_id' => $filialId, 'description' => 'Ressarcimento para a Matriz'],
+        $lpPagar = LancamentoPadrao::firstOrCreateForCompany(
+            (int) $filialId,
+            ['description' => 'Ressarcimento para a Matriz'],
             ['type' => 'saida', 'category' => 'Rateio', 'user_id' => $user?->id]
         );
 
@@ -116,8 +117,9 @@ class RateioService
         ]);
 
         // ── Passo 2: Entrada pendente na Matriz (reembolso esperado) ─────────
-        $lpReceber = LancamentoPadrao::firstOrCreate(
-            ['company_id' => $companyDonaId, 'description' => 'Reembolso de Rateio de Filiais'],
+        $lpReceber = LancamentoPadrao::firstOrCreateForCompany(
+            (int) $companyDonaId,
+            ['description' => 'Reembolso de Rateio de Filiais'],
             ['type' => 'entrada', 'category' => 'Rateio', 'user_id' => $user?->id]
         );
 

@@ -54,7 +54,8 @@ class StoreTransacaoFinanceiraRequest extends FormRequest
     {
                 // Busca na tabela lancamento_padraos o registro cujo description é 'Deposito Bancário'
         // e pega apenas o campo 'id'.
-        $lancamentoPadraoDepositoId = LancamentoPadrao::where('description', 'Deposito Bancário')
+        $lancamentoPadraoDepositoId = LancamentoPadrao::forActiveCompany()
+            ->where('description', 'Deposito Bancário')
             ->value('id');
 
             //dd($_REQUEST);

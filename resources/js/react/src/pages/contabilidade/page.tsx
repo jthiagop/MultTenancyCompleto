@@ -47,6 +47,7 @@ import type { PlanoContaOption } from './components/categoria-form-sheet';
 
 interface CategoriaRow {
   id: number;
+  codigo: string | null;
   descricao: string;
   tipo: string;
   categoria: string;
@@ -55,6 +56,12 @@ interface CategoriaRow {
   contaCredito: string;
   conta_debito_id: number | null;
   conta_credito_id: number | null;
+  /** Visibilidade sob a ótica da company ativa (pivot N:N). */
+  scope?: 'global' | 'own' | 'inherited' | 'other';
+  /** Ids das companies ligadas à categoria. */
+  company_ids: number[];
+  /** Resumo das companies ligadas, para render na coluna Disponibilidade. */
+  companies: Array<{ id: number; name: string; type?: string; avatar?: string | null }>;
 }
 
 interface PlanoContaRow {
@@ -323,6 +330,7 @@ export function ContabilidadePage() {
       const json = (await res.json()) as {
         data?: Array<{
           id: number;
+          codigo?: string | null;
           descricao: string;
           tipo: string;
           categoria: string;
@@ -331,12 +339,16 @@ export function ContabilidadePage() {
           contaCredito: string;
           conta_debito_id?: number | null;
           conta_credito_id?: number | null;
+          scope?: 'global' | 'own' | 'inherited' | 'other';
+          company_ids?: number[];
+          companies?: Array<{ id: number; name: string; type?: string; avatar?: string | null }>;
         }>;
       };
       setCategorias(
         Array.isArray(json.data)
           ? json.data.map((item) => ({
               id: Number(item.id ?? 0),
+              codigo: item.codigo ?? null,
               descricao: stripHtml(item.descricao),
               tipo: stripHtml(item.tipo),
               categoria: stripHtml(item.categoria),
@@ -345,6 +357,11 @@ export function ContabilidadePage() {
               contaCredito: stripHtml(item.contaCredito),
               conta_debito_id: item.conta_debito_id ?? null,
               conta_credito_id: item.conta_credito_id ?? null,
+              scope: item.scope,
+              company_ids: Array.isArray(item.company_ids)
+                ? item.company_ids.map((v) => Number(v)).filter(Number.isFinite)
+                : [],
+              companies: Array.isArray(item.companies) ? item.companies : [],
             }))
           : [],
       );
@@ -415,6 +432,17 @@ export function ContabilidadePage() {
     () => !loadingPlanoContas && !planoContasError && planoContas.length === 0,
     [loadingPlanoContas, planoContas, planoContasError],
   );
+
+  const agrupadoresList = useMemo(() => {
+    const set = new Set<string>();
+    for (const c of categorias) {
+      const value = (c.categoria ?? '').trim();
+      if (value) set.add(value);
+    }
+    return Array.from(set).sort((a, b) =>
+      a.localeCompare(b, 'pt-BR', { sensitivity: 'base' }),
+    );
+  }, [categorias]);
 
   const filteredCategorias = useMemo(() => {
     let result = categorias;
@@ -564,6 +592,269 @@ export function ContabilidadePage() {
     win.print();
   }, [filteredPlanoContas, activeCompany]);
 
+  const handleExportCategoriasPDF = useCallback(() => {
+    const win = window.open('', '_blank');
+    if (!win) return;
+
+    const escapeHtml = (str: string): string =>
+      str.replace(/[&<>"']/g, (m) =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m] ?? m),
+      );
+
+    const now = new Date().toLocaleString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+    });
+
+    const companyName = activeCompany?.name ?? '';
+    const razaoSocial = activeCompany?.razao_social ?? '';
+    const cnpj = activeCompany?.cnpj ?? '';
+    const email = activeCompany?.email ?? '';
+    const addr = activeCompany?.address;
+    const addressParts: string[] = [];
+    if (addr) {
+      if (addr.rua) addressParts.push(addr.rua);
+      if (addr.numero) addressParts.push(`, ${addr.numero}`);
+      if (addr.bairro) addressParts.push(` - ${addr.bairro}`);
+      if (addr.cidade) addressParts.push(` / ${addr.cidade}`);
+      if (addr.uf) addressParts.push(` - ${addr.uf}`);
+      if (addr.cep) addressParts.push(` - CEP: ${addr.cep}`);
+    }
+    const addressLine = addressParts.join('');
+
+    const logoHtml = activeCompany?.avatar_url
+      ? `<img src="${escapeHtml(activeCompany.avatar_url)}" alt="Logo">`
+      : `<div style="width:80px;height:80px;border-radius:50%;background:#1e293b;color:#fff;display:inline-flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;">${escapeHtml((companyName || 'E').charAt(0).toUpperCase())}</div>`;
+
+    const tipoColors: Record<string, string> = {
+      entrada: '#059669',
+      saida: '#dc2626',
+      ambos: '#2563eb',
+      transferencia: '#7c3aed',
+      somente_contabil: '#d97706',
+    };
+
+    const totalCategorias = filteredCategorias.length;
+    const totalAtivas = filteredCategorias.filter((c) => c.is_active).length;
+    const totalInativas = totalCategorias - totalAtivas;
+    const porTipo = filteredCategorias.reduce<Record<string, number>>((acc, c) => {
+      const key = normalizeTipo(c.tipo);
+      acc[key] = (acc[key] ?? 0) + 1;
+      return acc;
+    }, {});
+
+    const rows = filteredCategorias
+      .map((cat, idx) => {
+        const tipoKey = normalizeTipo(cat.tipo);
+        const tipoLabel = TIPO_CATEGORIA_BADGE[tipoKey]?.label ?? cat.tipo;
+        const tipoColor = tipoColors[tipoKey] ?? '#475569';
+        return `
+        <tr>
+          <td class="text-center">${idx + 1}</td>
+          <td>${escapeHtml(cat.descricao || '-')}</td>
+          <td>${escapeHtml(cat.categoria || '-')}</td>
+          <td style="color:${tipoColor};font-weight:600">${escapeHtml(tipoLabel)}</td>
+          <td class="mono">${escapeHtml(cat.contaDebito || '\u2014')}</td>
+          <td class="mono">${escapeHtml(cat.contaCredito || '\u2014')}</td>
+          <td class="text-center">${
+            cat.is_active
+              ? '<span class="badge badge-active">Ativa</span>'
+              : '<span class="badge badge-inactive">Inativa</span>'
+          }</td>
+        </tr>`;
+      })
+      .join('');
+
+    const resumoTipoRows = Object.entries(porTipo)
+      .sort((a, b) => b[1] - a[1])
+      .map(([key, qtd]) => {
+        const label = TIPO_CATEGORIA_BADGE[key]?.label ?? key;
+        const color = tipoColors[key] ?? '#475569';
+        return `
+        <tr>
+          <td style="color:${color};font-weight:600">${escapeHtml(label)}</td>
+          <td class="text-center">${qtd}</td>
+          <td class="text-center" style="color:#64748b">${
+            totalCategorias > 0 ? ((qtd / totalCategorias) * 100).toFixed(1) : '0.0'
+          }%</td>
+        </tr>`;
+      })
+      .join('');
+
+    const filterBadges: string[] = [];
+    if (categoriasSearch.trim()) {
+      filterBadges.push(`Busca: "${escapeHtml(categoriasSearch.trim())}"`);
+    }
+    if (categoriasFilterTipo) {
+      const label = TIPO_CATEGORIA_BADGE[categoriasFilterTipo]?.label ?? categoriasFilterTipo;
+      filterBadges.push(`Tipo: ${escapeHtml(label)}`);
+    }
+    if (categoriasFilterStatus === 'active') {
+      filterBadges.push('Status: Ativas');
+    } else if (categoriasFilterStatus === 'inactive') {
+      filterBadges.push('Status: Inativas');
+    }
+
+    win.document.write(`<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <title>Rela\u00e7\u00e3o de Categorias</title>
+  <style>
+    @page { size: A4 portrait; margin: 8mm 8mm 18mm 8mm; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Arial, sans-serif; font-size: 0.75rem; color: #212529; }
+
+    /* Cabe\u00e7alho — mesmo esquema do boletim_pdf.blade.php */
+    .header-container { border-top: 1px solid #000; border-bottom: 1px solid #000; padding: 15px 0; margin-bottom: 20px; }
+    .header-content { display: table; width: 100%; table-layout: fixed; }
+    .header-logo { display: table-cell; width: 100px; vertical-align: middle; text-align: center; }
+    .header-logo img { max-width: 100px; max-height: 100px; }
+    .header-text { display: table-cell; text-align: center; vertical-align: middle; padding: 0 15px; }
+    .header-text h4 { font-weight: bold; text-transform: uppercase; margin: 0; font-size: 1rem; line-height: 1.3; }
+    .header-text h5 { margin: 5px 0; padding: 0; font-weight: normal; font-size: 0.875rem; }
+    .header-text small { display: block; font-size: 0.65rem; line-height: 1.5; margin-top: 3px; color: #333; }
+
+    /* T\u00edtulo do relat\u00f3rio */
+    .report-title { font-weight: bold; text-align: center; font-size: 0.9rem; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .report-meta { text-align: center; font-size: 0.65rem; color: #6c757d; margin-bottom: 6px; }
+    .filter-pills { text-align: center; margin-bottom: 14px; }
+    .filter-pills span { display: inline-block; margin: 0 2px; padding: 2px 8px; border: 1px solid #cbd5e1; border-radius: 999px; font-size: 0.6rem; color: #475569; background: #f8fafc; }
+
+    /* Resumo rapido */
+    .summary { display: table; width: 100%; border-collapse: collapse; margin: 10px 0 18px; table-layout: fixed; }
+    .summary-cell { display: table-cell; width: 25%; text-align: center; padding: 10px 6px; border: 1px solid #dee2e6; background: #f8fafc; }
+    .summary-cell .num { font-size: 1.1rem; font-weight: bold; color: #1e293b; display: block; line-height: 1.1; }
+    .summary-cell .lbl { font-size: 0.6rem; color: #64748b; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-top: 3px; }
+
+    /* Tabelas */
+    table { width: 100%; border-collapse: collapse; page-break-inside: auto; margin-bottom: 10px; }
+    tr { page-break-inside: avoid; page-break-after: auto; }
+    thead { display: table-header-group; }
+    tfoot { display: table-footer-group; }
+    th { background-color: #1e293b; color: #fff; font-size: 0.62rem; font-weight: bold; text-transform: uppercase; letter-spacing: 0.04em; padding: 6px 8px; text-align: left; border: 1px solid #0f172a; }
+    td { padding: 5px 8px; border: 1px solid #dee2e6; vertical-align: middle; }
+    tr:nth-child(even) td { background-color: #f8fafc; }
+    .text-center { text-align: center; }
+    .text-end { text-align: right; }
+    .mono { font-family: 'Courier New', monospace; font-size: 0.65rem; color: #475569; }
+
+    /* Badges */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.6rem; font-weight: 600; border: 1px solid; white-space: nowrap; }
+    .badge-active { background: #d1fae5; color: #065f46; border-color: #6ee7b7; }
+    .badge-inactive { background: #fee2e2; color: #991b1b; border-color: #fca5a5; }
+
+    .section-title { font-weight: bold; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; margin: 18px 0 6px; color: #1e293b; }
+
+    /* Rodap\u00e9 fixo — mesmo esquema do boletim_pdf.blade.php */
+    .footer-container { position: fixed; bottom: 0; left: 0; right: 0; padding: 4px 8mm; border-top: 1px solid #dee2e6; font-size: 0.6rem; color: #6c757d; display: flex; justify-content: space-between; background: #fff; }
+
+    @media print { body { padding: 0; } }
+  </style>
+</head>
+<body>
+  <div class="header-container">
+    <div class="header-content">
+      <div class="header-logo">${logoHtml}</div>
+      <div class="header-text">
+        <h4>${escapeHtml(companyName)}</h4>
+        ${razaoSocial ? `<h5>${escapeHtml(razaoSocial)}</h5>` : ''}
+        ${cnpj ? `<small>CNPJ: ${escapeHtml(cnpj)}</small>` : ''}
+        ${addressLine ? `<small>${escapeHtml(addressLine)}</small>` : ''}
+        ${email ? `<small>E-mail: ${escapeHtml(email)}</small>` : ''}
+      </div>
+      <div class="header-logo">${logoHtml}</div>
+    </div>
+  </div>
+
+  <p class="report-title">Rela\u00e7\u00e3o de Categorias</p>
+  <p class="report-meta">${totalCategorias} categoria${totalCategorias !== 1 ? 's' : ''} ${filterBadges.length ? '(filtrada' + (totalCategorias !== 1 ? 's' : '') + ')' : 'no total'}</p>
+  ${
+    filterBadges.length > 0
+      ? `<div class="filter-pills">${filterBadges.map((b) => `<span>${b}</span>`).join('')}</div>`
+      : ''
+  }
+
+  <div class="summary">
+    <div class="summary-cell">
+      <span class="num">${totalCategorias}</span>
+      <span class="lbl">Total</span>
+    </div>
+    <div class="summary-cell">
+      <span class="num" style="color:#059669">${totalAtivas}</span>
+      <span class="lbl">Ativas</span>
+    </div>
+    <div class="summary-cell">
+      <span class="num" style="color:#dc2626">${totalInativas}</span>
+      <span class="lbl">Inativas</span>
+    </div>
+    <div class="summary-cell">
+      <span class="num">${Object.keys(porTipo).length}</span>
+      <span class="lbl">Tipos distintos</span>
+    </div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th style="width: 4%" class="text-center">#</th>
+        <th style="width: 27%">Descri\u00e7\u00e3o</th>
+        <th style="width: 15%">Agrupador</th>
+        <th style="width: 14%">Tipo</th>
+        <th style="width: 17%">Conta D\u00e9bito</th>
+        <th style="width: 17%">Conta Cr\u00e9dito</th>
+        <th style="width: 6%" class="text-center">Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${
+        rows ||
+        '<tr><td colspan="7" class="text-center" style="color:#64748b;padding:18px">Nenhuma categoria encontrada com os filtros atuais.</td></tr>'
+      }
+    </tbody>
+  </table>
+
+  ${
+    Object.keys(porTipo).length > 0
+      ? `
+    <h6 class="section-title">Resumo por Tipo</h6>
+    <table style="width: 60%">
+      <thead>
+        <tr>
+          <th style="width: 50%">Tipo</th>
+          <th class="text-center" style="width: 25%">Quantidade</th>
+          <th class="text-center" style="width: 25%">% do Total</th>
+        </tr>
+      </thead>
+      <tbody>${resumoTipoRows}</tbody>
+    </table>
+  `
+      : ''
+  }
+
+  <div class="footer-container">
+    <span>Gerado em: ${now}</span>
+    <span>Sistema Dominus &mdash; www.dominus.eco.br</span>
+  </div>
+</body>
+</html>`);
+
+    win.document.close();
+    win.focus();
+    // Aguarda o DOM ficar pronto antes de chamar print (imagens, layout).
+    setTimeout(() => win.print(), 250);
+  }, [
+    filteredCategorias,
+    activeCompany,
+    categoriasSearch,
+    categoriasFilterTipo,
+    categoriasFilterStatus,
+  ]);
+
   const handleDeleteCategoria = useCallback(async (id: number) => {
     if (!window.confirm('Deseja realmente excluir esta categoria?')) return;
     try {
@@ -680,6 +971,46 @@ export function ContabilidadePage() {
           ),
         enableSorting: true,
         size: 220,
+        meta: { skeleton: tableCellSkeleton() },
+      },
+      {
+        id: 'disponibilidade',
+        header: ({ column }) => <DataGridColumnHeader title="Disponibilidade" column={column} />,
+        accessorFn: (row) => (row.scope === 'global' ? 'Global' : row.companies.map((c) => c.name).join(', ')),
+        cell: ({ row }) => {
+          const companies = row.original.companies;
+          if (row.original.scope === 'global' || companies.length === 0) {
+            return (
+              <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full border font-medium bg-slate-50 text-slate-600 border-slate-200 dark:bg-slate-900/40 dark:text-slate-300 dark:border-slate-700">
+                <span className="size-1.5 rounded-full bg-slate-500" />
+                Global
+              </span>
+            );
+          }
+          const top = companies.slice(0, 3);
+          const extra = companies.length - top.length;
+          return (
+            <span
+              className="inline-flex items-center gap-1"
+              title={companies.map((c) => c.name).join(', ')}
+            >
+              {top.map((c) => (
+                <span
+                  key={c.id}
+                  className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border bg-muted/50 text-muted-foreground font-medium max-w-[120px] truncate"
+                  title={c.name}
+                >
+                  {c.name}
+                </span>
+              ))}
+              {extra > 0 && (
+                <span className="text-[10px] text-muted-foreground font-medium">+{extra}</span>
+              )}
+            </span>
+          );
+        },
+        enableSorting: false,
+        size: 200,
         meta: { skeleton: tableCellSkeleton() },
       },
       {
@@ -938,6 +1269,15 @@ export function ContabilidadePage() {
             >
               <PlusCircle className="size-4" />
               Nova Categoria
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleExportCategoriasPDF}
+              disabled={filteredCategorias.length === 0}
+            >
+              <FileDown className="size-4" />
+              Exportar PDF
             </Button>
           </ToolbarActions>
         )}
@@ -1232,6 +1572,7 @@ export function ContabilidadePage() {
         }}
         editingId={editingCategoria}
         planoContasList={planoContas as PlanoContaOption[]}
+        agrupadoresList={agrupadoresList}
         onSuccess={reloadCategorias}
       />
     </div>

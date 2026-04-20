@@ -71,7 +71,7 @@ class BancoController extends Controller
         $entidadesBanco = Banco::getEntidadesBanco();
 
 
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
         $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
         $parceiros = Parceiro::forActiveCompany()->orderBy('nome')->get();
 
@@ -149,7 +149,7 @@ class BancoController extends Controller
         $perPage = (int) $request->input('per_page', 50); // Aumentado de 25 para 50
         $perPage = max(5, min($perPage, 200)); // limites úteis
 
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
         $formasPagamento = FormasPagamento::where('ativo', true)->orderBy('nome')->get();
         $parceiros = Parceiro::forActiveCompany()->orderBy('nome')->get();
 
@@ -1750,7 +1750,7 @@ class BancoController extends Controller
     public function create()
     {
         $company = User::getCompanyName();
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
 
 
         return view('app.financeiro.banco.create', [
@@ -2780,7 +2780,7 @@ class BancoController extends Controller
             ->findOrFail($id);
 
         // Garantir que apenas dados da mesma empresa sejam carregados
-        $lps = LancamentoPadrao::all();
+        $lps = LancamentoPadrao::forActiveCompany()->get();
         $entidadesBanco = Banco::getEntidadesBanco();
         $centrosAtivos = CostCenter::where('company_id', $companyId)->get();
 

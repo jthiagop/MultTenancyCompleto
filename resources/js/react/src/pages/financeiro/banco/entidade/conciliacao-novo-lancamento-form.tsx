@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/combobox';
 import { Badge } from '@/components/ui/badge';
 import { SuggestionStar } from '@/components/ui/suggestion-star';
+import { CategoriaRow } from '../components/categoria-row';
 import { cn } from '@/lib/utils';
 import { notify } from '@/lib/notify';
 import { useSugestao, buildInitialSug, type SugestaoState } from '@/hooks/useSugestao';
@@ -354,10 +355,21 @@ export function ConciliacaoNovoLancamentoForm({
                   <ComboboxInput showTrigger={false} placeholder="Buscar lançamento…" />
                   <ComboboxEmpty>Nenhum lançamento encontrado.</ComboboxEmpty>
                   <ComboboxList itemsType={lpsFiltered}>
-                    {(lp) => {
-                      const idx = lpsFiltered.findIndex((x) => x.id === lp.id);
-                      return <ComboboxItem value={lp}>{idx + 1}. {lp.description}</ComboboxItem>;
-                    }}
+                    {(lp) => (
+                      <ComboboxItem value={lp}>
+                        <CategoriaRow
+                          categoria={{
+                            id: lp.id,
+                            codigo: lp.codigo,
+                            description: lp.description,
+                            type: lp.type,
+                            scope: lp.scope,
+                            company_ids: lp.company_ids,
+                          }}
+                          className="w-full"
+                        />
+                      </ComboboxItem>
+                    )}
                   </ComboboxList>
                 </ComboboxContent>
               </Combobox>
