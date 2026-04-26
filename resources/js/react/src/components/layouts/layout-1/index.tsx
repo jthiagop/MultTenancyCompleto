@@ -8,7 +8,6 @@ export function Layout1() {
       <Helmet>
         <title>Dominus Eclesial</title>
       </Helmet>
-
       <LayoutProvider>
         <Main />
       </LayoutProvider>

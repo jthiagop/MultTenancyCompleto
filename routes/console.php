@@ -40,10 +40,19 @@ Schedule::command('pdf:clean-expired --days=5')
     ->daily()
     ->withoutOverlapping();
 
-// Limpar notificações expiradas diariamente (remove registros do banco de dados)
+// Limpar notificações expiradas diariamente (remove registros do banco de dados).
+// Pós-Onda 7 lê de meta (JSON nativo) com fallback para data legacy.
 Schedule::command('notifications:clean-expired')
     ->daily()
     ->withoutOverlapping();
+
+// Purga registros antigos da tabela `notifications_log` (auditoria de envios
+// externos — WhatsApp, etc.). Default: 90 dias. Roda semanalmente para evitar
+// custo diário desnecessário sobre tabela tipicamente grande.
+Schedule::command('notifications:purge-old-logs --days=90')
+    ->weeklyOn(0, '03:30') // domingo 03:30
+    ->withoutOverlapping()
+    ->runInBackground();
 
 // Auditoria de saldos financeiros: detecta e corrige divergências entre saldo_atual (cache)
 // e a soma real das movimentações. Roda diariamente às 02:00 e registra no laravel.log.

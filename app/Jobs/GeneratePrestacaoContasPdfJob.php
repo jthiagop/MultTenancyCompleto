@@ -281,6 +281,46 @@ class GeneratePrestacaoContasPdfJob implements ShouldQueue
         }
     }
 
+    public function failed(\Throwable $exception): void
+    {
+        try {
+            if ($this->tenantId) {
+                $tenant = \App\Models\Tenant::find($this->tenantId);
+                if ($tenant && ! tenancy()->initialized) {
+                    tenancy()->initialize($tenant);
+                }
+            }
+
+            $pdfGen = PdfGeneration::find($this->pdfGenerationId);
+            if ($pdfGen && $pdfGen->status !== 'failed') {
+                $pdfGen->update([
+                    'status'        => 'failed',
+                    'error_message' => $exception->getMessage(),
+                    'completed_at'  => now(),
+                ]);
+            }
+
+            $user = User::find($this->userId);
+            if ($user) {
+                $user->notify(new RelatorioErroNotification(
+                    "Prestação de Contas - {$this->dataInicial} a {$this->dataFinal}",
+                    $exception->getMessage(),
+                    $this->companyId
+                ));
+            }
+        } catch (\Throwable $e) {
+            Log::error('[GeneratePrestacaoContasPdfJob::failed] Falha ao registrar erro', [
+                'pdf_id' => $this->pdfGenerationId,
+                'error'  => $e->getMessage(),
+            ]);
+        }
+
+        Log::error('[GeneratePrestacaoContasPdfJob] Job falhou definitivamente', [
+            'pdf_id' => $this->pdfGenerationId,
+            'error'  => $exception->getMessage(),
+        ]);
+    }
+
     /**
      * Parse data flexível — aceita d/m/Y ou Y-m-d
      */

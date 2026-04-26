@@ -275,18 +275,43 @@ class RepasseService
 
     /**
      * Notifica os usuários das filiais destino sobre o repasse criado.
+     *
+     * - Eager loading evita N+1 (1 query por item × 1 query por users).
+     * - Filtra apenas usuários com permissão `financeiro.index` para que o
+     *   repasse não vaze para perfis administrativos genéricos.
+     * - Deduplicação por user_id em caso de o usuário pertencer a múltiplas filiais.
      */
     protected function notificarFiliais(Repasse $repasse): void
     {
         try {
-            $nomeMatriz = $repasse->companyOrigem->name ?? 'Matriz';
+            $repasse->loadMissing(['companyOrigem', 'itens.companyDestino.users']);
+
+            $nomeMatriz     = $repasse->companyOrigem->name ?? 'Matriz';
             $valorFormatado = number_format((float) $repasse->valor_total, 2, ',', '.');
 
+            $notification = new RepasseCriadoNotification($repasse, $nomeMatriz, $valorFormatado);
+
+            $usuariosNotificados = [];
+
             foreach ($repasse->itens as $item) {
-                $usuarios = $item->companyDestino?->users ?? collect();
+                $companyDestino = $item->companyDestino;
+                if (! $companyDestino) {
+                    continue;
+                }
+
+                $usuarios = $companyDestino->users ?? collect();
 
                 foreach ($usuarios as $usuario) {
-                    $usuario->notify(new RepasseCriadoNotification($repasse, $nomeMatriz, $valorFormatado));
+                    if (isset($usuariosNotificados[$usuario->id])) {
+                        continue;
+                    }
+
+                    if (! $usuario->can('financeiro.index')) {
+                        continue;
+                    }
+
+                    $usuario->notify(clone $notification);
+                    $usuariosNotificados[$usuario->id] = true;
                 }
             }
         } catch (\Throwable $e) {

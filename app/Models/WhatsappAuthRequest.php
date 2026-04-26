@@ -6,8 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class WhatsappAuthRequest extends Model
 {
-    // Forçar uso do banco central
-    protected $connection = 'mysql';
+    /**
+     * Resolve dinamicamente a conexão central declarada em
+     * config('tenancy.database.central_connection'). Evita o nome
+     * hardcoded 'mysql' que quebrava quando o tenant inicializava
+     * sua conexão como conexão padrão.
+     */
+    public function getConnectionName()
+    {
+        return config('tenancy.database.central_connection')
+            ?? parent::getConnectionName();
+    }
 
     // Tempo de expiração do código em minutos
     const EXPIRATION_MINUTES = 10;
@@ -21,8 +30,20 @@ class WhatsappAuthRequest extends Model
         'access_token',
         'user_id',
         'company_id',
+        'kind',
+        'contact_label',
         'status',
     ];
+
+    /**
+     * Tipos válidos do vínculo (coluna `kind`).
+     *
+     *  - user            → WhatsApp pessoal do usuário (fluxo histórico).
+     *  - company_contact → número avulso do "Grupo WhatsApp" cadastrado pela
+     *    empresa (sem User dono — `user_id` fica NULL).
+     */
+    public const KIND_USER            = 'user';
+    public const KIND_COMPANY_CONTACT = 'company_contact';
 
     /**
      * Verifica se o código de verificação expirou
@@ -112,5 +133,29 @@ class WhatsappAuthRequest extends Model
     public function tenant()
     {
         return $this->belongsTo(\App\Models\Tenant::class, 'tenant_id', 'id');
+    }
+
+    /**
+     * Filtra pelo tipo de vínculo (user vs. company_contact).
+     */
+    public function scopeKind($query, string $kind)
+    {
+        return $query->where('kind', $kind);
+    }
+
+    /**
+     * Apenas vínculos de WhatsApp pessoal de usuários.
+     */
+    public function scopeUsers($query)
+    {
+        return $query->where('kind', self::KIND_USER);
+    }
+
+    /**
+     * Apenas contatos do "Grupo WhatsApp" da empresa.
+     */
+    public function scopeCompanyContacts($query)
+    {
+        return $query->where('kind', self::KIND_COMPANY_CONTACT);
     }
 }

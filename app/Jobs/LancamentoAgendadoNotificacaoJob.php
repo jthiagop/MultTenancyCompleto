@@ -113,4 +113,18 @@ class LancamentoAgendadoNotificacaoJob implements ShouldQueue
             throw $e; // re-lança para permitir retry automático da queue
         }
     }
+
+    /**
+     * Chamado quando o job esgota tries. Garante observabilidade em failed_jobs
+     * + log estruturado para auditoria — antes ficava silencioso.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        Log::error('[LancamentoAgendadoNotificacaoJob] Job falhou após todas as tentativas', [
+            'transacao_id' => $this->transacaoId,
+            'company_id'   => $this->companyId,
+            'tenant_id'    => $this->tenantId,
+            'error'        => $exception->getMessage(),
+        ]);
+    }
 }

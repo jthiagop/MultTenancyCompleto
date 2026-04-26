@@ -3,9 +3,14 @@
 namespace App\Http\Controllers\App;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\App\SecretaryController;
 use App\Models\Address;
 use App\Models\Company;
+use App\Models\FormationStage;
 use App\Models\Module;
+use App\Models\Province;
+use App\Models\ReligiousMember;
+use App\Models\ReligiousRole;
 use App\Models\User;
 use App\Services\PermissionService;
 use Carbon\Carbon;
@@ -656,6 +661,138 @@ class ReactCadastrosController extends Controller
         }
 
         return response()->json(['modules' => $modules]);
+    }
+
+    /**
+     * GET /api/secretary/membros
+     * Lista paginada de membros religiosos para o React, com busca, ordenação e filtro de função.
+     */
+    public function membros(Request $request): JsonResponse
+    {
+        $query = ReligiousMember::with([
+            'province',
+            'role',
+            'currentStage',
+            'currentFormationPeriod.company',
+        ])->where('is_active', true);
+
+        // Filtro por role_slug (aba ativa)
+        if ($roleSlug = $request->input('role_slug')) {
+            $query->whereHas('role', fn ($q) => $q->where('slug', $roleSlug));
+        }
+
+        // Filtro votos simples (profissão temporária, sem perpétua)
+        if ($request->input('profession') === 'temporaria') {
+            $query->whereNotNull('temporary_profession_date')
+                  ->whereNull('perpetual_profession_date');
+        }
+
+        // Busca textual
+        if ($search = trim((string) $request->input('search', ''))) {
+            $query->where('name', 'like', "%{$search}%");
+        }
+
+        // Ordenação
+        $sortBy  = $request->input('sort_by', 'name');
+        $sortDir = $request->input('sort_dir', 'asc') === 'desc' ? 'desc' : 'asc';
+        $allowed = ['name', 'created_at', 'birth_date', 'priestly_ordination_date',
+                    'diaconal_ordination_date', 'temporary_profession_date'];
+        if (! in_array($sortBy, $allowed, true)) {
+            $sortBy = 'name';
+        }
+        $query->orderBy($sortBy, $sortDir);
+
+        $perPage   = min((int) $request->input('per_page', 25), 100);
+        $paginated = $query->paginate($perPage);
+
+        $data = $paginated->getCollection()->map(function (ReligiousMember $member) {
+            // Avatar
+            $avatarUrl = null;
+            if ($member->avatar) {
+                $path = ltrim($member->avatar, '/');
+                if (str_starts_with($path, 'public/')) {
+                    $path = substr($path, strlen('public/'));
+                }
+                $avatarUrl = '/file/' . $path;
+            }
+
+            // Data-chave baseada na função
+            $dataChave = null;
+            if ($member->role) {
+                $dataChave = match ($member->role->slug) {
+                    'presbitero' => $member->priestly_ordination_date?->format('d/m/Y'),
+                    'diacono'    => $member->diaconal_ordination_date?->format('d/m/Y'),
+                    'irmao'      => ($member->perpetual_profession_date ?? $member->temporary_profession_date)
+                                       ?->format('d/m/Y'),
+                    default      => null,
+                };
+            }
+
+            return [
+                'id'               => $member->id,
+                'name'             => $member->name,
+                'avatar_url'       => $avatarUrl,
+                'province'         => $member->province?->name,
+                'role'             => $member->role ? [
+                    'name' => $member->role->name,
+                    'slug' => $member->role->slug,
+                ] : null,
+                'current_stage'    => $member->currentStage ? [
+                    'id'   => $member->currentStage->id,
+                    'name' => $member->currentStage->name,
+                ] : null,
+                'current_location' => $member->currentFormationPeriod?->company?->name,
+                'data_chave'       => $dataChave,
+                'is_active'        => (bool) $member->is_active,
+            ];
+        });
+
+        // Stats para as abas (sempre sobre toda a base ativa)
+        $baseQuery = ReligiousMember::where('is_active', true);
+        $stats = [
+            'todos'         => (clone $baseQuery)->count(),
+            'presbiteros'   => (clone $baseQuery)->whereHas('role', fn ($q) => $q->where('slug', 'presbitero'))->count(),
+            'diaconos'      => (clone $baseQuery)->whereHas('role', fn ($q) => $q->where('slug', 'diacono'))->count(),
+            'irmaos'        => (clone $baseQuery)->whereHas('role', fn ($q) => $q->where('slug', 'irmao'))->count(),
+            'votos_simples' => (clone $baseQuery)
+                                ->whereNotNull('temporary_profession_date')
+                                ->whereNull('perpetual_profession_date')
+                                ->count(),
+        ];
+
+        return response()->json([
+            'data'         => $data,
+            'total'        => $paginated->total(),
+            'per_page'     => $paginated->perPage(),
+            'current_page' => $paginated->currentPage(),
+            'last_page'    => $paginated->lastPage(),
+            'stats'        => $stats,
+        ]);
+    }
+
+    /**
+     * Dados de lookup para o formulário de cadastro de membro da Secretaria.
+     * Retorna etapas de formação, organismos e funções religiosas.
+     */
+    public function secretaryFormData(): JsonResponse
+    {
+        $formationStages = FormationStage::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'slug', 'sort_order']);
+
+        $companies = Company::where('status', 'active')
+            ->orderBy('name')
+            ->get(['id', 'name']);
+
+        $religiousRoles = ReligiousRole::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['id', 'name', 'slug']);
+
+        return response()->json([
+            'formation_stages' => $formationStages,
+            'companies'        => $companies,
+            'religious_roles'  => $religiousRoles,
+        ]);
     }
 
     /**

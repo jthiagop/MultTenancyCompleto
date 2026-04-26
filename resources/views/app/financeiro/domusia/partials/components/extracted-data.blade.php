@@ -216,7 +216,7 @@
 
                         // Tooltip do toggle
                         this.closest('[data-bs-toggle="tooltip"]')?.setAttribute(
-                            'title', 
+                            'title',
                             isEntrada ? 'Alternar: Receita → Despesa' : 'Alternar: Despesa → Receita'
                         );
 

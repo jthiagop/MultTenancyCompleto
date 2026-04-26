@@ -290,16 +290,26 @@ Route::middleware([
 
         // =====================================================================
         // NOTIFICAÇÕES - Sistema de notificações do usuário
+        //
+        // Throttle separado para reads vs writes:
+        //  - Reads: 120/min (polling do React acontece a cada 30s; deixa folga
+        //    para múltiplas abas e refresh manual).
+        //  - Writes: 30/min (mark-as-read, delete) — proteção contra abuso.
         // =====================================================================
         Route::prefix('notifications')->name('notifications.')->group(function () {
-            Route::get('/', [NotificationController::class, 'index'])->name('index');
-            Route::get('/all', [NotificationController::class, 'all'])->name('all');
-            Route::get('/page', [NotificationController::class, 'page'])->name('page');
-            Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
-            Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
-            Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
-            Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
-            Route::delete('/clear/read', [NotificationController::class, 'destroyRead'])->name('destroy-read');
+            Route::middleware('throttle:120,1')->group(function () {
+                Route::get('/', [NotificationController::class, 'index'])->name('index');
+                Route::get('/all', [NotificationController::class, 'all'])->name('all');
+                Route::get('/page', [NotificationController::class, 'page'])->name('page');
+                Route::get('/unread-count', [NotificationController::class, 'unreadCount'])->name('unread-count');
+            });
+
+            Route::middleware('throttle:30,1')->group(function () {
+                Route::post('/{id}/read', [NotificationController::class, 'markAsRead'])->name('mark-read');
+                Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead'])->name('mark-all-read');
+                Route::delete('/{id}', [NotificationController::class, 'destroy'])->name('destroy');
+                Route::delete('/clear/read', [NotificationController::class, 'destroyRead'])->name('destroy-read');
+            });
         });
 
         Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
@@ -348,6 +358,15 @@ Route::middleware([
             Route::post('/api/cadastros/usuarios', [UserController::class, 'store'])->name('react.cadastros.usuarios.store');
             Route::put('/api/cadastros/usuarios/{user}', [UserController::class, 'update'])->name('react.cadastros.usuarios.update');
             Route::post('/api/cadastros/usuarios/{user}/reset-password', [UserController::class, 'resetPassword'])->name('react.cadastros.usuarios.reset-password');
+        });
+
+        // API React de secretaria/membros religiosos
+        Route::middleware(['can:secretary.index'])->group(function () {
+            Route::get('/api/secretary/membros', [ReactCadastrosController::class, 'membros'])->name('react.secretary.membros');
+            Route::get('/api/secretary/form-data', [ReactCadastrosController::class, 'secretaryFormData'])->name('react.secretary.form-data');
+            Route::get('/api/secretary/membros/{member}', [SecretaryController::class, 'edit'])->name('react.secretary.membro.show');
+            Route::post('/api/secretary/membros', [SecretaryController::class, 'store'])->name('react.secretary.membros.store');
+            Route::post('/api/secretary/membros/{member}', [SecretaryController::class, 'update'])->name('react.secretary.membros.update');
         });
 
         // Rotas acessíveis para administradores (admin e global)
@@ -501,6 +520,7 @@ Route::middleware([
             Route::post('/app/financeiro/banco/lancamento', [ReactBancoController::class, 'store'])->name('react.banco.lancamento.store');
             Route::get('/app/financeiro/banco/lancamento/{id}', [ReactBancoController::class, 'show'])->name('react.banco.lancamento.show');
             Route::put('/app/financeiro/banco/lancamento/{id}', [ReactBancoController::class, 'update'])->name('react.banco.lancamento.update');
+            Route::patch('/app/financeiro/banco/lancamento/{id}/quick-update', [ReactBancoController::class, 'quickUpdate'])->name('react.banco.lancamento.quick-update');
             Route::post('/app/financeiro/banco/lancamento/{id}/pagamento', [ReactBancoController::class, 'registrarPagamento'])->name('react.banco.lancamento.pagamento');
             Route::delete('/app/financeiro/banco/lancamento/anexo/{anexoId}', [ReactBancoController::class, 'destroyAnexo'])->name('react.banco.lancamento.anexo.destroy');
             Route::get('/banco/summary', [BancoController::class, 'getSummary'])->name('banco.summary');
@@ -545,6 +565,9 @@ Route::middleware([
                 Route::delete('/{id}', [\App\Http\Controllers\App\DomusiaController::class, 'destroy'])
                     ->where('id', '[0-9]+')
                     ->name('domusia.destroy');
+                Route::post('/{id}/anexar-lancamento', [\App\Http\Controllers\App\DomusiaController::class, 'attachToLancamento'])
+                    ->where('id', '[0-9]+')
+                    ->name('domusia.attach-lancamento');
             });
 
             // Rota para Domus IA com suporte a tabs (Visualização)
@@ -598,6 +621,12 @@ Route::middleware([
                 Route::delete('/{id}', [App\Http\Controllers\WhatsAppIntegrationController::class, 'excluirIntegracao'])->name('integracoes.excluir');
                 Route::get('/whatsapp/horario', [App\Http\Controllers\WhatsAppIntegrationController::class, 'buscarHorarioNotificacao'])->name('integracoes.buscar-horario');
                 Route::post('/whatsapp/horario', [App\Http\Controllers\WhatsAppIntegrationController::class, 'configurarHorarioNotificacao'])->name('integracoes.configurar-horario');
+
+                // Grupo WhatsApp (kind=company_contact) — múltiplos números por empresa.
+                Route::post('/whatsapp-grupo/qrcode', [App\Http\Controllers\WhatsAppIntegrationController::class, 'getGrupoQRCode'])->name('integracoes.grupo.qrcode');
+                Route::get('/whatsapp-grupo/status/{code}', [App\Http\Controllers\WhatsAppIntegrationController::class, 'checkGrupoStatus'])->name('integracoes.grupo.status');
+                Route::get('/whatsapp-grupo', [App\Http\Controllers\WhatsAppIntegrationController::class, 'listarContatosGrupo'])->name('integracoes.grupo.listar');
+                Route::delete('/whatsapp-grupo/{id}', [App\Http\Controllers\WhatsAppIntegrationController::class, 'excluirContatoGrupo'])->name('integracoes.grupo.excluir');
             });
 
             Route::resource('anexos', AnexoController::class);
@@ -752,7 +781,8 @@ Route::middleware([
 
                 Route::post('/filter', [PrestacaoDeContaController::class, 'generateReport']);
 
-                Route::resource('fieis', FielController::class)->middleware('can:fieis.index');
+                // index → SPA React em /app/fieis (nome da rota: fieis.index)
+                Route::resource('fieis', FielController::class)->except(['index'])->middleware('can:fieis.index');
                 Route::get('fieis/charts/data', [FielController::class, 'getChartData'])->name('fieis.charts.data')->middleware('can:fieis.index');
                 Route::post('fieis/relatorio/pdf', [FielController::class, 'relatorioPdf'])->name('fieis.relatorio.pdf')->middleware('can:fieis.index');
 
@@ -869,6 +899,11 @@ Route::middleware([
                 Route::get('/patrimonios/imprimir', [PatrimonioController::class, 'imprimirPDF'])->name('patrimonio.imprimir');
             });
         });
+
+        // Cadastro de fiéis — página inicial no painel React (substitui o index Blade em /relatorios/fieis)
+        Route::get('/app/fieis', [ReactAppController::class, 'index'])
+            ->middleware('can:fieis.index')
+            ->name('fieis.index');
 
         // Painel React (Metronic) — wildcard DEVE ficar por último para não engolir rotas Blade
         Route::get('/app/{any?}', [ReactAppController::class, 'index'])

@@ -51,26 +51,83 @@ class LancamentoAgendadoNotification extends Notification implements WhatsappNot
         ]);
     }
 
+    /**
+     * Mapeamento das 4 variáveis do template `lancamento_agendado_aviso`
+     * registrado e aprovado na Meta:
+     *
+     *   Body do template (UTILITY, pt_BR):
+     *
+     *     Olá! Você tem um {{1}} agendado que vence hoje:
+     *
+     *     *Valor:* R$ {{2}}
+     *     *Descrição:* _{{3}}_
+     *     *Vencimento:* {{4}}
+     *
+     *     Acesse o sistema para confirmar a baixa do lançamento.
+     *
+     * Argumentos:
+     *   {{1}} = "pagamento" | "recebimento" (lowercase, casa com a frase do body)
+     *   {{2}} = valor sem o "R$" (a Meta valida que variáveis não tenham
+     *          símbolos especiais que poluam o aprovador)
+     *   {{3}} = descrição do lançamento
+     *   {{4}} = data dd/mm/YYYY
+     *
+     * @return array<string,mixed>
+     */
+    public function toWhatsappTemplate(object $notifiable): array
+    {
+        $isEntrada = $this->tipo === 'entrada';
+        $tipoVar   = $isEntrada ? 'recebimento' : 'pagamento';
+        $valorVar  = number_format($this->valor, 2, ',', '.');
+        $vencVar   = \Carbon\Carbon::parse($this->vencimento)->format('d/m/Y');
+
+        return [
+            'name'     => config('services.meta.whatsapp_templates.lancamento_agendado', 'lancamento_agendado_aviso'),
+            'language' => config('services.meta.whatsapp_template_language', 'pt_BR'),
+            'components' => [
+                [
+                    'type'       => 'body',
+                    'parameters' => [
+                        ['type' => 'text', 'text' => $tipoVar],
+                        ['type' => 'text', 'text' => $valorVar],
+                        ['type' => 'text', 'text' => $this->descricao],
+                        ['type' => 'text', 'text' => $vencVar],
+                    ],
+                ],
+            ],
+        ];
+    }
+
     public function toArray(object $notifiable): array
     {
         $isEntrada = $this->tipo === 'entrada';
         $valorFmt  = 'R$ ' . number_format($this->valor, 2, ',', '.');
         $tipoLabel = $isEntrada ? 'recebimento' : 'pagamento';
 
+        $venc = \Carbon\Carbon::parse($this->vencimento);
+
         return [
-            'icon'         => 'ki-calendar-tick',
-            'color'        => $isEntrada ? 'success' : 'warning',
-            'title'        => 'Lançamento Agendado — Vence Hoje',
-            'message'      => "O {$tipoLabel} agendado de {$valorFmt} '{$this->descricao}' vence hoje.",
-            'action_url'   => null,
-            'target'       => '_self',
-            'tipo'         => 'lancamento_agendado',
-            'categoria'    => 'financeiro',
-            'sub_tipo'     => $isEntrada ? 'receita' : 'despesa',
-            'acao'         => 'vencimento',
-            'transacao_id' => $this->transacaoId,
-            'company_id'   => $this->companyId,
-            'triggered_by' => $this->triggeredBy,
+            'icon'                => 'ki-calendar-tick',
+            'color'               => $isEntrada ? 'success' : 'warning',
+            'title'               => 'Lançamento Agendado — Vence Hoje',
+            // Mensagem em formato curto: o front extrai a descrição entre aspas
+            // para mostrar no card visual e o resto vai como contexto.
+            'message'             => "'{$this->descricao}' ({$valorFmt}) vence hoje.",
+            'action_url'          => null,
+            'target'              => '_self',
+            'tipo'                => 'lancamento_agendado',
+            'categoria'           => 'financeiro',
+            'sub_tipo'            => $isEntrada ? 'receita' : 'despesa',
+            'acao'                => 'vencimento',
+            // urgência permite ao front aplicar o calendário amarelo (item-10)
+            'urgencia'            => 'hoje',
+            // valor + datas alimentam o card de calendário do front
+            'valor'               => $this->valor,
+            'data_vencimento'     => $venc->format('d/m/Y'),
+            'data_vencimento_iso' => $venc->format('Y-m-d'),
+            'transacao_id'        => $this->transacaoId,
+            'company_id'          => $this->companyId,
+            'triggered_by'        => $this->triggeredBy,
         ];
     }
 }

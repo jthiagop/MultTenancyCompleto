@@ -9,6 +9,7 @@ use App\Notifications\ContaVencendoNotification;
 use App\Services\NotificacaoFinanceiraService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -54,6 +55,23 @@ class NotificarContasVencendo extends Command
                 // Cache de horário configurado por company_id
                 $horaCache    = [];
                 $horaAtual    = Carbon::now()->format('H'); // "08", "09", etc.
+
+                // Pré-carrega TODAS as notificações de contas vencendo já enviadas hoje
+                // em uma única consulta. Antes, fazíamos um exists() por (transacao×urgencia×user)
+                // — cenário N+1 que escalava a 1500+ queries por execução.
+                $jaNotificados = DB::table('notifications')
+                    ->where('type', ContaVencendoNotification::class)
+                    ->whereDate('created_at', $hoje)
+                    ->select(
+                        'notifiable_id',
+                        DB::raw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.transacao_id')) as transacao_id"),
+                        DB::raw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.urgencia')) as urgencia"),
+                    )
+                    ->get()
+                    ->mapWithKeys(fn ($row) => [
+                        "{$row->notifiable_id}|{$row->transacao_id}|{$row->urgencia}" => true,
+                    ])
+                    ->all();
 
                 foreach ($transacoes as $transacao) {
                     $vencimento = Carbon::parse(
@@ -104,21 +122,15 @@ class NotificarContasVencendo extends Command
                     );
 
                     foreach ($usuarios as $user) {
-                        // Deduplicação: uma notificação por (transação + urgência + usuário) por dia
-                        $jaNotificado = $user->notifications()
-                            ->whereDate('created_at', $hoje)
-                            ->where(function ($q) use ($transacao, $urgencia) {
-                                $q->whereJsonContains('data->transacao_id', $transacao->id)
-                                  ->whereJsonContains('data->urgencia', $urgencia);
-                            })
-                            ->exists();
-
-                        if ($jaNotificado) {
+                        // Deduplicação O(1) com base na pré-carga acima
+                        $key = "{$user->id}|{$transacao->id}|{$urgencia}";
+                        if (isset($jaNotificados[$key])) {
                             continue;
                         }
 
                         try {
                             $user->notify(clone $notification);
+                            $jaNotificados[$key] = true; // evita duplicar nas próximas iterações desta execução
                             $totalTenant++;
                         } catch (\Exception $e) {
                             Log::warning('[NotificarContasVencendo] Erro ao notificar', [

@@ -32,48 +32,61 @@ class NotificationResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $data = $this->resource->data;
-        $tipo = $data['tipo'] ?? 'geral';
+        // Fonte canônica: meta (JSON nativo após Onda 2). Fallback para data
+        // (TEXT legado) quando o registro ainda não foi backfilled.
+        $meta = $this->resolveMeta();
+        $data = $this->resource->data ?? [];
+        if (! is_array($data)) {
+            $decoded = is_string($data) ? json_decode($data, true) : null;
+            $data = is_array($decoded) ? $decoded : [];
+        }
+        $payload = array_merge($data, $meta);
+
+        $tipo = $payload['tipo'] ?? 'geral';
         $iconInfo = self::ICON_MAP[$tipo] ?? self::ICON_DEFAULT;
-        $categoria = $data['categoria'] ?? ($iconInfo['categoria'] ?? 'geral');
+        $categoria = $payload['categoria'] ?? ($iconInfo['categoria'] ?? 'geral');
 
-        // Triggered by — resolve user name/avatar
-        $triggeredBy = $this->resolveTriggeredBy($data['triggered_by'] ?? null);
+        $triggeredBy = $this->resolveTriggeredBy($payload['triggered_by'] ?? null);
 
-        // Expiração
-        $expiresAt = $data['expires_at'] ?? null;
+        $expiresAt = $payload['expires_at'] ?? null;
         $expirationInfo = $this->calculateExpiration($expiresAt);
+
+        // Prefere colunas físicas quando presentes (sem JSON_EXTRACT no front).
+        $title   = $this->resource->title   ?? $payload['title']   ?? 'Notificação';
+        $message = $this->resource->message ?? $payload['message'] ?? '';
 
         return [
             'id'              => $this->resource->id,
-            'icon'            => $data['icon'] ?? $iconInfo['icon'],
-            'color'           => $data['color'] ?? $iconInfo['color'],
-            'title'           => $data['title'] ?? 'Notificação',
-            'message'         => $data['message'] ?? '',
-            'action_url'      => $data['action_url'] ?? null,
-            'target'          => $data['target'] ?? '_self',
+            'icon'            => $payload['icon'] ?? $iconInfo['icon'],
+            'color'           => $payload['color'] ?? $iconInfo['color'],
+            'title'           => $title,
+            'message'         => $message,
+            'action_url'      => $payload['action_url'] ?? null,
+            'target'          => $payload['target'] ?? '_self',
             'tipo'            => $tipo,
             'categoria'       => $categoria,
+            'channel'         => $this->resource->channel ?? 'app',
 
             // Metadados do arquivo
-            'file_type'       => $data['file_type'] ?? null,
-            'file_size'       => $data['file_size'] ?? null,
+            'file_type'       => $payload['file_type'] ?? null,
+            'file_size'       => $payload['file_size'] ?? null,
             'expires_at'      => $expiresAt,
             'expires_in'      => $expirationInfo['text'],
             'expires_percent' => $expirationInfo['percent'],
 
             // Metadados financeiros (conta vencendo / lançamento / rateio)
-            'urgencia'             => $data['urgencia'] ?? null,
-            'sub_tipo'             => $data['sub_tipo'] ?? null,
-            'acao'                 => $data['acao'] ?? null,
-            'transacao_id'         => $data['transacao_id'] ?? null,
-            'data_vencimento'      => $data['data_vencimento'] ?? null,
-            'data_vencimento_iso'  => $data['data_vencimento_iso'] ?? null,
-            'valor'                => isset($data['valor']) ? (float) $data['valor'] : null,
-            'nome_matriz'          => $data['nome_matriz'] ?? null,
+            'urgencia'             => $payload['urgencia'] ?? null,
+            'sub_tipo'             => $payload['sub_tipo'] ?? null,
+            'acao'                 => $payload['acao'] ?? null,
+            'transacao_id'         => $payload['transacao_id'] ?? null,
+            'data_vencimento'      => $payload['data_vencimento'] ?? null,
+            'data_vencimento_iso'  => $payload['data_vencimento_iso'] ?? null,
+            'valor'                => isset($payload['valor']) ? (float) $payload['valor'] : null,
+            'nome_matriz'          => $payload['nome_matriz'] ?? null,
 
             // Estado
             'read_at'         => $this->resource->read_at?->toISOString(),
+            'sent_at'         => isset($this->resource->sent_at) ? $this->resource->sent_at?->toISOString() : null,
             'created_at'      => $this->resource->created_at->diffForHumans(),
             'created_at_iso'  => $this->resource->created_at->toISOString(),
 
@@ -83,10 +96,27 @@ class NotificationResource extends JsonResource
     }
 
     /**
-     * Resolve informações do usuário remetente (quem disparou a ação).
-     *
-     * Cache por requisição: evita N queries quando várias notificações
-     * foram disparadas pelo mesmo usuário.
+     * Resolve o array `meta` lidando com colunas físicas, casts e legado.
+     */
+    private function resolveMeta(): array
+    {
+        $meta = $this->resource->meta ?? null;
+
+        if (is_array($meta)) {
+            return $meta;
+        }
+
+        if (is_string($meta) && $meta !== '') {
+            $decoded = json_decode($meta, true);
+            return is_array($decoded) ? $decoded : [];
+        }
+
+        return [];
+    }
+
+    /**
+     * Cache por request armazenado em container (evita "static" que vaza
+     * entre requests no octane/swoole/long-running workers).
      */
     private function resolveTriggeredBy(?int $userId): ?array
     {
@@ -94,20 +124,79 @@ class NotificationResource extends JsonResource
             return null;
         }
 
-        /** @var array<int, array{name: string, avatar: string|null}|null> $cache */
-        static $cache = [];
+        $cache = app('notification.triggered_by_cache', []);
 
-        if (array_key_exists($userId, $cache)) {
-            return $cache[$userId];
+        if (! ($cache instanceof \ArrayAccess) && ! is_array($cache)) {
+            $cache = [];
         }
 
+        if (isset($cache[$userId])) {
+            return $cache[$userId] ?: null;
+        }
+
+        // Permite que o controller pré-popule o cache via NotificationResource::primeTriggeredByCache().
+        // Caso a notificação tenha vindo isolada, fazemos a busca pontual.
         $user = \App\Models\User::find($userId);
+        $resolved = $user ? ['name' => $user->name, 'avatar' => $user->avatar_url] : null;
 
-        $cache[$userId] = $user
-            ? ['name' => $user->name, 'avatar' => $user->avatar_url]
-            : null;
+        if (is_array($cache)) {
+            $cache[$userId] = $resolved;
+            app()->instance('notification.triggered_by_cache', $cache);
+        }
 
-        return $cache[$userId];
+        return $resolved;
+    }
+
+    /**
+     * Pré-popula o cache de triggered_by com uma única query batch a partir
+     * de uma lista de notificações. Chamado pelo NotificationController
+     * antes de transformar a coleção em JSON.
+     *
+     * @param iterable<\Illuminate\Notifications\DatabaseNotification> $notifications
+     */
+    public static function primeTriggeredByCache(iterable $notifications): void
+    {
+        $userIds = [];
+        foreach ($notifications as $n) {
+            // Fonte canônica: meta (após Onda 2). Fallback para data legado.
+            $meta = $n->meta ?? null;
+            if (is_string($meta)) {
+                $decoded = json_decode($meta, true);
+                $meta = is_array($decoded) ? $decoded : null;
+            }
+            if (! is_array($meta)) {
+                $meta = [];
+            }
+
+            $data = $n->data ?? [];
+            if (! is_array($data)) {
+                $decoded = is_string($data) ? json_decode($data, true) : null;
+                $data = is_array($decoded) ? $decoded : [];
+            }
+
+            $uid = $meta['triggered_by'] ?? $data['triggered_by'] ?? null;
+            if ($uid) {
+                $userIds[(int) $uid] = true;
+            }
+        }
+
+        if (empty($userIds)) {
+            app()->instance('notification.triggered_by_cache', []);
+            return;
+        }
+
+        // `avatar` é necessário para o accessor `avatar_url` resolver o path
+        // físico da foto via /file/. Sem ele a foto do remetente nunca aparece
+        // no front (caía só no fallback de iniciais).
+        $users = \App\Models\User::whereIn('id', array_keys($userIds))
+            ->get(['id', 'name', 'email', 'avatar']);
+
+        $cache = [];
+        foreach ($users as $user) {
+            $cache[$user->id] = ['name' => $user->name, 'avatar' => $user->avatar_url];
+        }
+
+        app()->instance('notification.triggered_by_cache', $cache);
     }
 
     /**

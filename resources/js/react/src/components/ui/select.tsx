@@ -4,7 +4,7 @@ import * as React from 'react';
 import { isValidElement, ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { cva, VariantProps } from 'class-variance-authority';
-import { Check, ChevronDown, ChevronUp } from 'lucide-react';
+import { Check, ChevronDown, ChevronUp, Search } from 'lucide-react';
 import { Select as SelectPrimitive } from 'radix-ui';
 
 // Create a Context for `indicatorPosition` and `indicator` control
@@ -14,20 +14,72 @@ const SelectContext = React.createContext<{
   indicator: ReactNode;
 }>({ indicatorPosition: 'left', indicator: null, indicatorVisibility: true });
 
+// Contexto opt-in para o modo `searchable`. Mantido SEPARADO do contexto
+// existente para que componentes que não habilitam busca nem cheguem a ler
+// `searchTerm` (zero impacto nos usos atuais do Select pelo app inteiro).
+interface SelectSearchContextValue {
+  enabled: boolean;
+  term: string;
+  setTerm: (v: string) => void;
+  placeholder: string;
+}
+const SelectSearchContext = React.createContext<SelectSearchContextValue>({
+  enabled: false,
+  term: '',
+  setTerm: () => {},
+  placeholder: 'Buscar...',
+});
+
+// Helper: extrai texto puro de qualquer ReactNode para permitir filtrar
+// itens cujo `children` não é uma string (ex.: <SelectItem><Icon/> Texto</SelectItem>).
+function extractText(node: ReactNode): string {
+  if (node == null || typeof node === 'boolean') return '';
+  if (typeof node === 'string' || typeof node === 'number') return String(node);
+  if (Array.isArray(node)) return node.map(extractText).join(' ');
+  if (isValidElement(node)) {
+    const children = (node.props as { children?: ReactNode })?.children;
+    return extractText(children);
+  }
+  return '';
+}
+
 // Root Component
 const Select = ({
   indicatorPosition = 'left',
   indicatorVisibility = true,
   indicator,
+  searchable = false,
+  searchPlaceholder = 'Buscar...',
+  onOpenChange,
   ...props
 }: {
   indicatorPosition?: 'left' | 'right';
   indicatorVisibility?: boolean;
   indicator?: ReactNode;
+  /** Quando true, o dropdown exibe um campo de busca no topo que filtra os SelectItem. */
+  searchable?: boolean;
+  /** Placeholder do input de busca (somente quando `searchable`). */
+  searchPlaceholder?: string;
 } & React.ComponentProps<typeof SelectPrimitive.Root>) => {
+  const [term, setTerm] = React.useState('');
+
+  // Reset da busca toda vez que o dropdown fecha — evita "lembrar" filtro
+  // antigo na próxima abertura. Mantém o callback do consumidor intacto.
+  const handleOpenChange = React.useCallback(
+    (open: boolean) => {
+      if (!open) setTerm('');
+      onOpenChange?.(open);
+    },
+    [onOpenChange],
+  );
+
   return (
     <SelectContext.Provider value={{ indicatorPosition, indicatorVisibility, indicator }}>
-      <SelectPrimitive.Root {...props} />
+      <SelectSearchContext.Provider
+        value={{ enabled: searchable, term, setTerm, placeholder: searchPlaceholder }}
+      >
+        <SelectPrimitive.Root onOpenChange={handleOpenChange} {...props} />
+      </SelectSearchContext.Provider>
     </SelectContext.Provider>
   );
 };
@@ -113,8 +165,28 @@ function SelectContent({
   className,
   children,
   position = 'popper',
+  onOpenAutoFocus,
   ...props
 }: React.ComponentProps<typeof SelectPrimitive.Content>) {
+  const search = React.useContext(SelectSearchContext);
+  const inputRef = React.useRef<HTMLInputElement | null>(null);
+
+  // Quando o modo `searchable` está ligado, queremos focar o campo de busca
+  // ao abrir e impedir que o Radix Select faça o auto-focus em algum item
+  // (que tiraria o foco do input antes do usuário começar a digitar).
+  const handleOpenAutoFocus = React.useCallback(
+    (e: Event) => {
+      onOpenAutoFocus?.(e as unknown as Parameters<NonNullable<typeof onOpenAutoFocus>>[0]);
+      if (search.enabled) {
+        e.preventDefault();
+        // Foco no input acontece via autoFocus do <input/>, mas garantimos via ref
+        // como fallback caso o autoFocus seja perdido por algum portal.
+        requestAnimationFrame(() => inputRef.current?.focus());
+      }
+    },
+    [onOpenAutoFocus, search.enabled],
+  );
+
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
@@ -126,8 +198,39 @@ function SelectContent({
           className,
         )}
         position={position}
+        onOpenAutoFocus={handleOpenAutoFocus}
         {...props}
       >
+        {search.enabled && (
+          <div
+            className="flex items-center gap-2 border-b border-border px-2.5 py-1.5"
+            // Evita que cliques no input dispatchem seleção de itens do Radix.
+            onPointerDown={(e) => e.stopPropagation()}
+            onMouseDown={(e) => e.stopPropagation()}
+          >
+            <Search className="size-3.5 text-muted-foreground shrink-0" />
+            <input
+              ref={inputRef}
+              type="text"
+              autoFocus
+              autoComplete="off"
+              spellCheck={false}
+              value={search.term}
+              placeholder={search.placeholder}
+              onChange={(e) => search.setTerm(e.target.value)}
+              // Bloqueia o typeahead nativo do Radix (que captura teclas para
+              // navegar entre itens) e evita que setas/Enter fechem o popover
+              // enquanto o foco está no input — o usuário fecha clicando num
+              // item ou usando Esc.
+              onKeyDown={(e) => {
+                if (e.key === 'Escape') return; // deixa o Radix fechar
+                e.stopPropagation();
+              }}
+              className="h-7 w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+            />
+          </div>
+        )}
+
         <SelectScrollUpButton />
         <SelectPrimitive.Viewport
           className={cn(
@@ -154,8 +257,25 @@ function SelectLabel({ className, ...props }: React.ComponentProps<typeof Select
   );
 }
 
-function SelectItem({ className, children, ...props }: React.ComponentProps<typeof SelectPrimitive.Item>) {
+interface SelectItemProps extends React.ComponentProps<typeof SelectPrimitive.Item> {
+  /**
+   * Texto opcional usado pelo modo `searchable` para filtrar quando
+   * `children` não é uma string simples (ex.: contém ícones ou badges).
+   * Se omitido, o filtro extrai o texto recursivamente de `children`.
+   */
+  searchValue?: string;
+}
+
+function SelectItem({ className, children, searchValue, ...props }: SelectItemProps) {
   const { indicatorPosition, indicatorVisibility, indicator } = React.useContext(SelectContext);
+  const search = React.useContext(SelectSearchContext);
+
+  if (search.enabled && search.term) {
+    const haystack = (searchValue ?? extractText(children)).toLowerCase();
+    if (haystack && !haystack.includes(search.term.toLowerCase())) {
+      return null;
+    }
+  }
 
   return (
     <SelectPrimitive.Item

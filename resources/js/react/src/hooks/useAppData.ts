@@ -90,6 +90,10 @@ interface AppData {
   canFinanceiroIndex?: boolean;
   /** Spatie can('notafiscal.index') — exibe item Nota Fiscal no menu Financeiro. */
   canNotafiscalIndex?: boolean;
+  /** Spatie can('secretary.index') — acesso à página de Secretaria no React. */
+  canSecretaryIndex?: boolean;
+  /** Spatie can('fieis.index') — acesso à página de Cadastro de Fiéis no React. */
+  canFieisIndex?: boolean;
 }
 
 declare global {
@@ -119,6 +123,8 @@ export function useAppData(): AppData {
       canContabilidadeIndex: false,
       canFinanceiroIndex: false,
       canNotafiscalIndex: false,
+      canSecretaryIndex: false,
+      canFieisIndex: false,
     };
   }
 

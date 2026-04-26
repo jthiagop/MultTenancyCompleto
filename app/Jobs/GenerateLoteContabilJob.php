@@ -160,4 +160,44 @@ class GenerateLoteContabilJob implements ShouldQueue
             throw $e;
         }
     }
+
+    public function failed(\Throwable $exception): void
+    {
+        try {
+            if ($this->tenantId) {
+                $tenant = \App\Models\Tenant::find($this->tenantId);
+                if ($tenant && ! tenancy()->initialized) {
+                    tenancy()->initialize($tenant);
+                }
+            }
+
+            $pdfGen = PdfGeneration::find($this->pdfGenerationId);
+            if ($pdfGen && $pdfGen->status !== 'failed') {
+                $pdfGen->update([
+                    'status'        => 'failed',
+                    'error_message' => $exception->getMessage(),
+                    'completed_at'  => now(),
+                ]);
+            }
+
+            $user = User::find($this->userId);
+            if ($user) {
+                $user->notify(new RelatorioErroNotification(
+                    'Contabilidade ' . strtoupper($this->formato) . " - {$this->dataInicial} a {$this->dataFinal}",
+                    $exception->getMessage(),
+                    $this->companyId
+                ));
+            }
+        } catch (\Throwable $e) {
+            Log::error('[GenerateLoteContabilJob::failed] Falha ao registrar erro', [
+                'pdf_id' => $this->pdfGenerationId,
+                'error'  => $e->getMessage(),
+            ]);
+        }
+
+        Log::error('[GenerateLoteContabilJob] Job falhou definitivamente', [
+            'pdf_id' => $this->pdfGenerationId,
+            'error'  => $exception->getMessage(),
+        ]);
+    }
 }

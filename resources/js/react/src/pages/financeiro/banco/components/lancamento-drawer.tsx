@@ -46,7 +46,6 @@ import {
 import {
   Sheet,
   SheetBody,
-  SheetClose,
   SheetContent,
   SheetFooter,
   SheetHeader,
@@ -381,8 +380,11 @@ function LancamentoInfoCard({
               popoverModal={false}
               options={data.categorias.map((c) => ({
                 value: String(c.id),
-                label: c.description,
+                label: c.codigo ? `${c.codigo} — ${c.description}` : c.description,
                 badges: categoriaBadges(c),
+                // Permite buscar pelo id, pelo código (com e sem hífen/espaço)
+                // e pelo nome simultaneamente — cmdk faz match em qualquer um.
+                searchKeywords: [c.id, c.codigo, c.description].filter(Boolean).join(' '),
               }))}
               value={form.categoria}
               onValueChange={(v) => {
@@ -390,6 +392,7 @@ function LancamentoInfoCard({
                 setField('categoria', v);
               }}
               placeholder="Selecione uma categoria..."
+              searchPlaceholder="Buscar por ID, código ou nome..."
               disabled={loading}
               suggestionStar={
                 <SuggestionStar
@@ -791,55 +794,71 @@ function LancamentoCondicaoCard({
               <FieldError error={fieldErrors.vencimento} />
             </div>
 
-            {/* Pago/Recebido + Agendado (oculto quando repetir ativo) */}
+            {/*
+              Pago/Recebido + Agendado (oculto quando repetir ativo).
+              Agendado e Recebido/Pago são MUTUAMENTE EXCLUSIVOS:
+              - Se "Agendado" estiver ativo, o lançamento ainda será pago no futuro,
+                então não faz sentido marcá-lo como já pago/recebido → switch some.
+              - A recíproca também é tratada (ativar um desliga o outro automaticamente).
+            */}
             {showPagamento && (
               <>
-                <div className="col-span-3 flex items-end pb-1">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      size="lg"
-                      checked={form.recebidoPago}
-                      onCheckedChange={(v) => setField('recebidoPago', v)}
-                      id="switch-recebido-pago"
-                    />
-                    <Label htmlFor="switch-recebido-pago" className="text-xs cursor-pointer">
-                      {isReceita ? 'Marcar como Recebido' : 'Marcar como Pago'}
-                    </Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button type="button" className="text-muted-foreground hover:text-foreground shrink-0" aria-label="Sobre marcar como pago/recebido">
-                          <Info className="size-3.5" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-[240px] text-center">
-                        {isReceita
-                          ? 'Marca este lançamento como já recebido. A data de recebimento será registrada com base na previsão de pagamento.'
-                          : 'Marca este lançamento como já pago. A data de pagamento será registrada com base na previsão de pagamento.'}
-                      </TooltipContent>
-                    </Tooltip>
+                {!form.agendado && (
+                  <div className="col-span-3 flex items-end pb-1">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        size="lg"
+                        checked={form.recebidoPago}
+                        onCheckedChange={(v) => {
+                          setField('recebidoPago', v);
+                          if (v) setField('agendado', false);
+                        }}
+                        id="switch-recebido-pago"
+                      />
+                      <Label htmlFor="switch-recebido-pago" className="text-xs cursor-pointer">
+                        {isReceita ? 'Marcar como Recebido' : 'Marcar como Pago'}
+                      </Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button type="button" className="text-muted-foreground hover:text-foreground shrink-0" aria-label="Sobre marcar como pago/recebido">
+                            <Info className="size-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-[240px] text-center">
+                          {isReceita
+                            ? 'Marca este lançamento como já recebido. A data de recebimento será registrada com base na previsão de pagamento.'
+                            : 'Marca este lançamento como já pago. A data de pagamento será registrada com base na previsão de pagamento.'}
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </div>
-                </div>
-                <div className="col-span-3 flex items-end pb-1">
-                  <div className="flex items-center gap-2">
-                    <Switch
-                      size="lg"
-                      checked={form.agendado}
-                      onCheckedChange={(v) => setField('agendado', v)}
-                      id="switch-agendado"
-                    />
-                    <Label htmlFor="switch-agendado" className="text-xs cursor-pointer">Agendado</Label>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button type="button" className="text-muted-foreground hover:text-foreground shrink-0" aria-label="Sobre agendado">
-                          <Info className="size-3.5" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="max-w-[240px] text-center">
-                        Indica que o {isReceita ? 'recebimento' : 'pagamento'} será realizado automaticamente na data de vencimento. Quando ativado, uma notificação será enviada via WhatsApp no dia do vencimento.
-                      </TooltipContent>
-                    </Tooltip>
+                )}
+                {!form.recebidoPago && (
+                  <div className="col-span-3 flex items-end pb-1">
+                    <div className="flex items-center gap-2">
+                      <Switch
+                        size="lg"
+                        checked={form.agendado}
+                        onCheckedChange={(v) => {
+                          setField('agendado', v);
+                          if (v) setField('recebidoPago', false);
+                        }}
+                        id="switch-agendado"
+                      />
+                      <Label htmlFor="switch-agendado" className="text-xs cursor-pointer">Agendado</Label>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <button type="button" className="text-muted-foreground hover:text-foreground shrink-0" aria-label="Sobre agendado">
+                            <Info className="size-3.5" />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="max-w-[240px] text-center">
+                          Indica que o {isReceita ? 'recebimento' : 'pagamento'} será realizado automaticamente na data de vencimento. Quando ativado, uma notificação será enviada via WhatsApp no dia do vencimento.
+                        </TooltipContent>
+                      </Tooltip>
+                    </div>
                   </div>
-                </div>
+                )}
               </>
             )}
           </div>
@@ -1229,7 +1248,13 @@ function LancamentoRateioCard({
     [data.centrosCusto],
   );
   const catOptions = useMemo(
-    () => (data.categorias ?? []).map((c) => ({ value: String(c.id), label: c.description })),
+    () =>
+      (data.categorias ?? []).map((c) => ({
+        value: String(c.id),
+        label: c.codigo ? `${c.codigo} — ${c.description}` : c.description,
+        // Permite buscar pelo id, código e nome simultaneamente.
+        searchKeywords: [c.id, c.codigo, c.description].filter(Boolean).join(' '),
+      })),
     [data.categorias],
   );
 
@@ -1379,6 +1404,7 @@ function LancamentoRateioCard({
                 value={rateio.lancamento_padrao_id}
                 onValueChange={(v) => setRateioField(index, 'lancamento_padrao_id', v)}
                 placeholder="Selecione..."
+                searchPlaceholder="Buscar por ID, código ou nome..."
               />
             </div>
             <div className="col-span-1">
@@ -1715,6 +1741,7 @@ export function LancamentoDrawer({ open, tipo, onClose, onSaved, editId, prefill
     setParcelaField, setParcelaValor,
     existingAnexos,
     deleteExistingAnexo,
+    isDirty,
   } = useLancamentoForm({
     open,
     tipo,
@@ -1725,6 +1752,7 @@ export function LancamentoDrawer({ open, tipo, onClose, onSaved, editId, prefill
     onSaved,
     onClose,
     stagedAnexosRef,
+    stagedAnexosCount: stagedAnexos.length,
     onClearStagedAnexos: () => setStagedAnexos([]),
   });
   const [rateioAtivo, setRateioAtivo] = useState(false);
@@ -1738,6 +1766,47 @@ export function LancamentoDrawer({ open, tipo, onClose, onSaved, editId, prefill
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmType, setConfirmType] = useState<'parcelas' | 'recorrencia'>('parcelas');
   const [pendingSaveMode, setPendingSaveMode] = useState<'close' | 'clear' | 'clone'>('close');
+
+  /**
+   * Confirmação de descarte ao fechar o drawer com alterações não salvas.
+   * Cobre: botão X, botão Cancelar, tecla Esc e clique fora (overlay).
+   */
+  const [confirmCloseOpen, setConfirmCloseOpen] = useState(false);
+
+  // Limpa estados locais ao fechar — evita rateio "fantasma" e diálogos remanescentes
+  // ao reabrir o drawer para um novo lançamento.
+  useEffect(() => {
+    if (!open) {
+      setRateioAtivo(false);
+      setGerarNasFiliais(true);
+      setExtraParceiros([]);
+      setConfirmOpen(false);
+      setConfirmCloseOpen(false);
+    }
+  }, [open]);
+
+  /**
+   * Decide se pode fechar direto ou se precisa confirmar (form sujo).
+   * Bloqueia o fechamento durante um save em andamento.
+   */
+  const requestClose = useCallback(() => {
+    if (saving) {
+      // Aguarda salvar terminar — evita inconsistência (toast de sucesso após drawer fechado).
+      notify.warning('Aguarde…', 'O lançamento está sendo salvo.');
+      return;
+    }
+    if (isDirty) {
+      setConfirmCloseOpen(true);
+      return;
+    }
+    onClose();
+  }, [saving, isDirty, onClose]);
+
+  const confirmDiscardAndClose = useCallback(() => {
+    setConfirmCloseOpen(false);
+    setStagedAnexos([]);
+    onClose();
+  }, [onClose]);
 
   function requestSave(mode: 'close' | 'clear' | 'clone') {
     if (isEdit && parcelasCardVisivel) {
@@ -1834,28 +1903,41 @@ export function LancamentoDrawer({ open, tipo, onClose, onSaved, editId, prefill
     return base;
   }, [parceirosForSelect, form.fornecedor, form.novoParceiroNome]);
 
-  // Atalho Ctrl+S / Clg+S
+  // Atalho Ctrl+S / Cmd+S — passa pelo requestSave para herdar a confirmação de
+  // substituição de parcelas / atualização de recorrência (em modo edição).
   useEffect(() => {
     if (!open) return;
     function onKeyDown(e: KeyboardEvent) {
       if ((e.metaKey || e.ctrlKey) && e.key === 's') {
         e.preventDefault();
-        handleSave('close');
+        if (saveDisabledReason) return;
+        requestSave('close');
       }
     }
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [open, handleSave]);
+  }, [open, saveDisabledReason]);
 
   return (
     <>
-      <Sheet open={open} onOpenChange={(v) => !v && onClose()}>
+      <Sheet open={open} onOpenChange={(v) => !v && requestClose()}>
         <SheetContent
           side="right"
           close={false}
           className="sm:max-w-none inset-3 start-auto w-auto rounded-xl border p-0 gap-0 flex flex-col"
           style={{ width: 'calc(100vw - 1.5rem)' }}
           aria-describedby={undefined}
+          onEscapeKeyDown={(e) => {
+            // Esc passa por requestClose (pode disparar dialog de descarte).
+            e.preventDefault();
+            requestClose();
+          }}
+          onPointerDownOutside={(e) => {
+            // Clique fora também passa por requestClose.
+            e.preventDefault();
+            requestClose();
+          }}
+          onInteractOutside={(e) => e.preventDefault()}
         >
           <SheetHeader className="flex flex-row items-center justify-between px-5 py-3.5 border-b border-border shrink-0 space-y-0">
             <div className="flex items-center gap-2">
@@ -1864,12 +1946,21 @@ export function LancamentoDrawer({ open, tipo, onClose, onSaved, editId, prefill
                 {tipo ? (isEdit ? TITULO_EDIT[tipo] : TITULO[tipo]) : ''}
               </SheetTitle>
               {loadingEdit && <Loader2 className="size-4 animate-spin text-muted-foreground" />}
+              {isDirty && !saving && (
+                <span className="text-[10px] font-medium text-amber-600 bg-amber-50 dark:bg-amber-950/40 px-1.5 py-0.5 rounded-full border border-amber-200 dark:border-amber-900">
+                  Alterações não salvas
+                </span>
+              )}
             </div>
-            <SheetClose asChild>
-              <Button variant="ghost" size="icon" onClick={onClose} aria-label="Fechar" className="size-8">
-                <X className="size-4" />
-              </Button>
-            </SheetClose>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={requestClose}
+              aria-label="Fechar"
+              className="size-8"
+            >
+              <X className="size-4" />
+            </Button>
           </SheetHeader>
 
           <SheetBody className="p-0 flex-1 overflow-hidden bg-muted">
@@ -1961,7 +2052,7 @@ export function LancamentoDrawer({ open, tipo, onClose, onSaved, editId, prefill
           </SheetBody>
 
           <SheetFooter className="flex-row justify-between border-t border-border px-5 py-3.5 shrink-0 gap-2 sm:space-x-0">
-            <Button variant="ghost" onClick={onClose} disabled={saving}>
+            <Button variant="ghost" onClick={requestClose} disabled={saving}>
               Cancelar
             </Button>
             {isEdit ? (
@@ -2048,6 +2139,29 @@ export function LancamentoDrawer({ open, tipo, onClose, onSaved, editId, prefill
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ── Confirmação de descarte ao fechar com alterações não salvas ───── */}
+      <AlertDialog open={confirmCloseOpen} onOpenChange={setConfirmCloseOpen}>
+        <AlertDialogContent className="max-w-md">
+          <AlertDialogHeader>
+            <AlertDialogTitle>Descartar alterações?</AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2">
+              <span className="block">
+                Você tem <strong>alterações não salvas</strong> neste lançamento.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Continuar editando</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-white"
+              onClick={confirmDiscardAndClose}
+            >
+              Descartar e fechar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <ParceiroQuickCreateSheet
         open={parceiroSheetOpen}

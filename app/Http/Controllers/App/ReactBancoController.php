@@ -628,6 +628,73 @@ class ReactBancoController extends Controller
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // PATCH /app/financeiro/banco/lancamento/{id}/quick-update
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Atualização parcial usada pelos diálogos de edição rápida no
+     * PagamentoSheet (Pencil ao lado de cada campo do "Informações do
+     * lançamento"). Aceita um subconjunto de campos seguros — cada um é
+     * validado individualmente; envie só o que precisa alterar.
+     *
+     *   descricao             string, max 255
+     *   lancamento_padrao_id  int|null  — null limpa categoria
+     *   cost_center_id        int|null  — null limpa centro de custo
+     *   parceiro_id           int|null  — null limpa fornecedor/cliente
+     *   data_competencia      Y-m-d
+     *   data_vencimento       Y-m-d|null
+     *   numero_documento      string|null, max 100
+     *
+     * O endpoint atualiza diretamente a transação alvo (sem propagar para
+     * irmãs do parcelamento) — é responsabilidade da UI deixar isso claro
+     * para o usuário se necessário.
+     */
+    public function quickUpdate(Request $request, int $id): \Illuminate\Http\JsonResponse
+    {
+        $companyId = session('active_company_id');
+        if (! $companyId) {
+            return response()->json(['success' => false, 'message' => 'Sessão inválida.'], 401);
+        }
+
+        $transacao = TransacaoFinanceira::where('company_id', $companyId)->findOrFail($id);
+
+        $validator = Validator::make($request->all(), [
+            'descricao'            => 'sometimes|nullable|string|max:255',
+            'lancamento_padrao_id' => 'sometimes|nullable|integer',
+            'cost_center_id'       => 'sometimes|nullable|integer',
+            'parceiro_id'          => 'sometimes|nullable|integer',
+            'data_competencia'     => 'sometimes|required|date_format:Y-m-d',
+            'data_vencimento'      => 'sometimes|nullable|date_format:Y-m-d',
+            'numero_documento'     => 'sometimes|nullable|string|max:100',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dados inválidos.',
+                'errors'  => $validator->errors(),
+            ], 422);
+        }
+
+        $data = $validator->validated();
+
+        if (empty($data)) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Nenhum campo enviado para atualização.',
+            ], 422);
+        }
+
+        $transacao->fill($data);
+        $transacao->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Lançamento atualizado.',
+        ]);
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // GET /app/financeiro/banco/transacoes
     // ─────────────────────────────────────────────────────────────────────────
 

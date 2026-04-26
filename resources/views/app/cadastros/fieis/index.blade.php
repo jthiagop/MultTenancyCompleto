@@ -185,6 +185,18 @@
                     <!--end::Graficos-->
                 </div>
                 <!--end::Container-->
+
+                <div class="app-container container-fluid mb-5">
+                    <div class="d-flex justify-content-end">
+                        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#kt_modal_new_ticket">
+                            <span class="svg-icon svg-icon-2">
+                                <i class="fa-solid fa-user-plus"></i> Cadastro de fiel
+                            </span>
+                        </button>
+                    </div>
+                </div>
+
                 <!--charts -->
                 <div class="app-container container-fluid">
                     <div class="row g-5 g-xl-8 mb-5 mb-xl-10">

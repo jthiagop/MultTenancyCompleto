@@ -78,12 +78,56 @@ async function deleteJson(url: string): Promise<void> {
   });
 }
 
+const LAST_SEEN_KEY = 'dominus.notifications.last_seen_at';
+
+function getLastSeenAt(): number {
+  try {
+    const raw = localStorage.getItem(LAST_SEEN_KEY);
+    return raw ? Number(raw) || 0 : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function setLastSeenAt(ts: number): void {
+  try {
+    localStorage.setItem(LAST_SEEN_KEY, String(ts));
+  } catch {
+    /* localStorage indisponível — ignora */
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Echo (broadcast) — opcional. Quando window.Echo estiver presente (Reverb /
+// Pusher), assinamos `private-tenant.{tenantId}.user.{userId}.notifications`
+// e ao receber `notification.count.changed` fazemos um reload imediato.
+// Sem Echo, o polling continua funcionando como fallback.
+// ---------------------------------------------------------------------------
+interface EchoLike {
+  private(channel: string): {
+    listen(event: string, cb: (e: unknown) => void): unknown;
+    stopListening(event: string): unknown;
+  };
+  leave(channel: string): unknown;
+}
+
+declare global {
+  interface Window {
+    Echo?: EchoLike;
+  }
+}
+
+function getMeta(name: string): string | null {
+  if (typeof document === 'undefined') return null;
+  return document.querySelector<HTMLMetaElement>(`meta[name="${name}"]`)?.content ?? null;
+}
+
 export function useNotifications(pollIntervalMs = 30_000) {
   const [notifications, setNotifications] = useState<INotification[]>([]);
   const [unreadCount, setUnreadCount]     = useState(0);
   const [loading, setLoading]             = useState(false);
-  const abortRef   = useRef<AbortController | null>(null);
-  const knownIds   = useRef<Set<string>>(new Set());
+  const abortRef    = useRef<AbortController | null>(null);
+  const knownIds    = useRef<Set<string>>(new Set());
   const isFirstLoad = useRef(true);
 
   const load = useCallback(async () => {
@@ -95,17 +139,38 @@ export function useNotifications(pollIntervalMs = 30_000) {
       const res = await fetchJson<ApiResponse>('/notifications/all?filter=all&page=1', ctrl.signal);
       const incoming: INotification[] = Array.isArray(res.notifications) ? res.notifications : [];
 
-      // Na primeira carga apenas popula o conjunto de IDs conhecidos — sem toast
       if (isFirstLoad.current) {
+        // Primeiro carregamento (também após reload da página): apenas registra
+        // os IDs e usa a marca de tempo persistida para decidir se algo é novo.
+        // Sem essa proteção todo F5 disparava 5–10 toasts de novo.
         isFirstLoad.current = false;
-        incoming.forEach((n) => knownIds.current.add(n.id));
+        const lastSeen = getLastSeenAt();
+        const novasDesdeLastSeen: INotification[] = [];
+
+        for (const n of incoming) {
+          knownIds.current.add(n.id);
+          const created = new Date(n.created_at_iso).getTime();
+          if (created > lastSeen) {
+            novasDesdeLastSeen.push(n);
+          }
+        }
+
+        // Se houver notificações criadas após o último timestamp visto e a página
+        // está visível, mostra um toast resumido — mas apenas um, agrupado.
+        if (novasDesdeLastSeen.length > 0 && !document.hidden) {
+          const total = novasDesdeLastSeen.length;
+          if (total === 1) {
+            const n = novasDesdeLastSeen[0];
+            notify.info(n.title, n.message || undefined, { duration: 6000 });
+          } else {
+            notify.info(`${total} novas notificações`, undefined, { duration: 6000 });
+          }
+        }
       } else {
-        // Polls seguintes: detecta IDs ainda não vistos e exibe toast por notificação
+        // Polls seguintes: detecta IDs ainda não vistos nesta sessão.
         const novas = incoming.filter((n) => !knownIds.current.has(n.id));
         novas.forEach((n) => knownIds.current.add(n.id));
 
-        // Se chegou um relatório gerado, descarta os toasts de loading de PDF
-        // e exibe toast rico com ícone de arquivo + botão "Abrir"
         const relatorios = novas.filter((n) => n.tipo === 'relatorio_gerado');
         const outras     = novas.filter((n) => n.tipo !== 'relatorio_gerado');
 
@@ -136,6 +201,16 @@ export function useNotifications(pollIntervalMs = 30_000) {
 
       setNotifications(incoming);
       setUnreadCount(res.unread_count ?? 0);
+
+      // Atualiza o marker apenas com a notificação MAIS NOVA recebida no payload —
+      // assim, mesmo após reload, só haverá toast para algo de fato novo.
+      if (incoming.length > 0) {
+        const newest = incoming.reduce((acc, n) => {
+          const t = new Date(n.created_at_iso).getTime();
+          return t > acc ? t : acc;
+        }, 0);
+        if (newest > 0) setLastSeenAt(newest);
+      }
     } catch (e: unknown) {
       if (e instanceof Error && e.name !== 'AbortError') console.error('[useNotifications]', e);
     } finally {
@@ -143,21 +218,84 @@ export function useNotifications(pollIntervalMs = 30_000) {
     }
   }, []);
 
-  // Carrega ao montar e a cada intervalo
+  // Polling: pausa quando a aba não está visível e retoma na visibilidade.
+  // Quando broadcast (Echo) está disponível o polling roda mais espaçado
+  // — ele vira só um "safety net", já que o real-time avisa as mudanças.
   useEffect(() => {
+    let intervalId: number | null = null;
+    let channelName: string | null = null;
+    const echo = typeof window !== 'undefined' ? window.Echo : undefined;
+    const tenantId = getMeta('tenant-id');
+    const userId   = getMeta('user-id');
+    const hasRealtime = Boolean(echo && tenantId && userId);
+    const effectivePollMs = hasRealtime ? Math.max(pollIntervalMs, 120_000) : pollIntervalMs;
+
+    const start = () => {
+      if (intervalId !== null) return;
+      intervalId = window.setInterval(() => {
+        if (!document.hidden) void load();
+      }, effectivePollMs);
+    };
+
+    const stop = () => {
+      if (intervalId !== null) {
+        clearInterval(intervalId);
+        intervalId = null;
+      }
+    };
+
+    const onVisibility = () => {
+      if (document.hidden) {
+        stop();
+      } else {
+        // Ao voltar a aba, faz um load imediato e religa o polling
+        void load();
+        start();
+      }
+    };
+
     void load();
-    const id = setInterval(() => void load(), pollIntervalMs);
+    if (!document.hidden) start();
+    document.addEventListener('visibilitychange', onVisibility);
+
+    if (hasRealtime && echo && tenantId && userId) {
+      channelName = `tenant.${tenantId}.user.${userId}.notifications`;
+      try {
+        echo.private(channelName).listen('.notification.count.changed', () => {
+          // Em vez de mexer no estado com base no payload (que pode estar
+          // dessincronizado com a paginação local), recarregamos a lista
+          // — barato e mantém a UI 100% consistente.
+          if (!document.hidden) void load();
+        });
+      } catch {
+        // Sem broadcast disponível em runtime — segue só com polling.
+        channelName = null;
+      }
+    }
+
     return () => {
-      clearInterval(id);
+      stop();
+      document.removeEventListener('visibilitychange', onVisibility);
       abortRef.current?.abort();
+      if (channelName && echo) {
+        try {
+          echo.private(channelName).stopListening('.notification.count.changed');
+          echo.leave(channelName);
+        } catch {
+          /* ignore */
+        }
+      }
     };
   }, [load, pollIntervalMs]);
 
   const markAsRead = useCallback(async (id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n)),
-    );
-    setUnreadCount((c) => Math.max(0, c - 1));
+    setNotifications((prev) => {
+      const target = prev.find((n) => n.id === id);
+      if (target && !target.read_at) {
+        setUnreadCount((c) => Math.max(0, c - 1));
+      }
+      return prev.map((n) => (n.id === id ? { ...n, read_at: new Date().toISOString() } : n));
+    });
     await postJson(`/notifications/${id}/read`);
   }, []);
 
@@ -170,8 +308,15 @@ export function useNotifications(pollIntervalMs = 30_000) {
   }, [load]);
 
   const remove = useCallback(async (id: string) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-    setUnreadCount((c) => Math.max(0, c - 1));
+    setNotifications((prev) => {
+      const target = prev.find((n) => n.id === id);
+      // Decrementa contador apenas se a notificação removida estava NÃO LIDA.
+      // Antes, deletar uma notificação já lida zerava o badge incorretamente.
+      if (target && !target.read_at) {
+        setUnreadCount((c) => Math.max(0, c - 1));
+      }
+      return prev.filter((n) => n.id !== id);
+    });
     await deleteJson(`/notifications/${id}`);
   }, []);
 

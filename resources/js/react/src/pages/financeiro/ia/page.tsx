@@ -17,8 +17,10 @@ import {
   ExtractedData,
   type DadosExtraidos,
   type CreateLancamentoPayload,
+  type SearchLancamentoPayload,
 } from './components/extracted-data';
 import { IntegracoesTab } from './components/integracoes-tab';
+import { LancamentoSearchSheet } from './components/lancamento-search-sheet';
 import {
   LancamentoDrawer,
   type TipoLancamento,
@@ -41,6 +43,10 @@ export function DominusIAPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTipo, setDrawerTipo] = useState<TipoLancamento | null>(null);
   const [drawerPrefill, setDrawerPrefill] = useState<LancamentoPrefill | null>(null);
+
+  // Sheet de busca de lançamento (anexar documento a lançamento existente)
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchPayload, setSearchPayload] = useState<SearchLancamentoPayload | null>(null);
 
   const fetchDocumentDetails = useCallback(async (docId: number) => {
     setExtractedLoading(true);
@@ -88,6 +94,25 @@ export function DominusIAPage() {
     setRefreshKey((k) => k + 1);
   }, []);
 
+  // Quando o real-time (broadcast OU polling) sinaliza que um documento
+  // terminou de processar, atualiza a UI sem o usuário precisar clicar.
+  const handleRealtimeUpdate = useCallback(
+    (payload?: { documento_id: number; status: string }) => {
+      if (!payload) return;
+      if (selectedDoc && payload.documento_id === selectedDoc.id && payload.status === 'processado') {
+        fetchDocumentDetails(payload.documento_id);
+      }
+    },
+    [selectedDoc, fetchDocumentDetails],
+  );
+
+  // tenantId pode ser exposto pelo Blade via <meta name="tenant-id">.
+  // Se ausente, o hook opera apenas em modo polling.
+  const tenantId = useMemo(() => {
+    if (typeof document === 'undefined') return null;
+    return document.querySelector<HTMLMetaElement>('meta[name="tenant-id"]')?.content ?? null;
+  }, []);
+
   const handleCreateLancamento = useCallback((payload: CreateLancamentoPayload) => {
     setDrawerTipo(payload.tipo === 'receita' ? 'receita' : 'despesa');
     setDrawerPrefill({
@@ -112,6 +137,18 @@ export function DominusIAPage() {
     setDrawerOpen(false);
     setDrawerTipo(null);
     setDrawerPrefill(null);
+  }, []);
+
+  const handleSearchLancamento = useCallback((payload: SearchLancamentoPayload) => {
+    setSearchPayload(payload);
+    setSearchOpen(true);
+  }, []);
+
+  const handleSearchAttached = useCallback(() => {
+    // Após anexar com sucesso, recarrega lista e fecha visualização do doc atual.
+    setRefreshKey((k) => k + 1);
+    setSelectedDoc(null);
+    setExtractedData(null);
   }, []);
 
   const documentPreview = useMemo<LancamentoDocumentPreview | null>(() => {
@@ -178,6 +215,8 @@ export function DominusIAPage() {
                 filterType={filterType}
                 selectedId={selectedDoc?.id ?? null}
                 onSelect={handleDocumentSelect}
+                tenantId={tenantId}
+                onDocumentProcessed={handleRealtimeUpdate}
               />
             </div>
 
@@ -189,6 +228,7 @@ export function DominusIAPage() {
                   data={extractedData ?? {}}
                   loading={extractedLoading}
                   onCreateLancamento={handleCreateLancamento}
+                  onSearchLancamento={handleSearchLancamento}
                 />
               )}
             </div>
@@ -214,6 +254,16 @@ export function DominusIAPage() {
             setExtractedData(null);
           }
         }}
+      />
+
+      <LancamentoSearchSheet
+        open={searchOpen}
+        onOpenChange={setSearchOpen}
+        documentoId={selectedDoc?.id ?? null}
+        documentoValor={searchPayload?.valor ?? 0}
+        documentoDescricao={searchPayload?.descricao ?? null}
+        tipoSugerido={searchPayload?.tipo}
+        onAttached={handleSearchAttached}
       />
     </div>
   );

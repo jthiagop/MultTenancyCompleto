@@ -175,8 +175,16 @@ html {
   100% { transform: scaleX(0.15) translateX(500%); }
 }
 
-/* Barra base para toasts com duração finita */
-[data-sonner-toast]::after {
+/* Barra base — renderizada APENAS no toast frontal (data-front="true").
+   Quando o usuário passa o mouse sobre o toaster a pilha expande; sem
+   esse filtro, a barra dos toasts atrás aparece sobreposta ao toast da
+   frente, parecendo uma "barra em cima".
+
+   Não usamos `overflow: hidden` no toast porque o `closeButton` do Sonner
+   é posicionado fora do retângulo (translate negativo) — recortar o
+   contêiner esconderia o X. Em vez disso, arredondamos a própria barra
+   para acompanhar os cantos inferiores do toast. */
+[data-sonner-toast][data-front='true']::after {
   content: '';
   position: absolute;
   bottom: 0;
@@ -189,23 +197,24 @@ html {
   transform-origin: left;
   animation: toast-progress var(--toast-duration, 6000ms) linear forwards;
   animation-play-state: running;
+  pointer-events: none;
+  z-index: 1;
 }
 
-/* Hover pausa a animação */
-[data-sonner-toast]:hover::after {
+/* Hover pausa a animação (só no toast frontal). */
+[data-sonner-toast][data-front='true']:hover::after {
   animation-play-state: paused;
 }
 
-/* Loading: animação indeterminada contínua (sem countdown) */
-[data-sonner-toast][data-type='loading']::after {
+/* Loading: animação indeterminada contínua (sem countdown). */
+[data-sonner-toast][data-front='true'][data-type='loading']::after {
   background: var(--color-blue-500);
   opacity: 0.55;
-  transform-origin: left;
   animation: toast-progress-indeterminate 1.4s ease-in-out infinite;
 }
 
-/* Cores por tipo */
-[data-sonner-toast][data-type='success']::after { background: var(--color-green-500);  opacity: 0.5; }
-[data-sonner-toast][data-type='error']::after   { background: var(--color-red-500);    opacity: 0.5; }
-[data-sonner-toast][data-type='warning']::after { background: var(--color-amber-500);  opacity: 0.5; }
-[data-sonner-toast][data-type='info']::after    { background: var(--color-blue-500);   opacity: 0.5; }
+/* Cores por tipo. */
+[data-sonner-toast][data-front='true'][data-type='success']::after { background: var(--color-green-500); opacity: 0.5; }
+[data-sonner-toast][data-front='true'][data-type='error']::after   { background: var(--color-red-500);   opacity: 0.5; }
+[data-sonner-toast][data-front='true'][data-type='warning']::after { background: var(--color-amber-500); opacity: 0.5; }
+[data-sonner-toast][data-front='true'][data-type='info']::after    { background: var(--color-blue-500);  opacity: 0.5; }

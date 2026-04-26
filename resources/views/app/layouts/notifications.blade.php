@@ -1,5 +1,17 @@
 {{-- ============================================================= --}}
 {{-- SISTEMA DE NOTIFICAÇÕES — Alpine.js + Drawer com dados reais --}}
+{{--                                                                 --}}
+{{-- DEPRECATED (Onda 6 do refactor de notificações):                --}}
+{{--                                                                 --}}
+{{-- Este partial é o dropdown LEGACY usado pelas páginas Blade.     --}}
+{{-- Em rotas servidas pelo React (react-app.blade.php) NÃO é        --}}
+{{-- incluído — o React renderiza o próprio NotificationsSheet em    --}}
+{{-- resources/js/react/src/components/layouts/layout-1/shared/      --}}
+{{-- topbar/notifications-sheet.tsx, alimentado por useNotifications --}}
+{{-- (real-time via Echo + polling).                                 --}}
+{{--                                                                 --}}
+{{-- Quando a última página Blade (navigation.blade.php) for         --}}
+{{-- migrada para React, este arquivo deve ser excluído.             --}}
 {{-- ============================================================= --}}
 <style>[x-cloak] { display: none !important; }</style>
 

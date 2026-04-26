@@ -70,6 +70,31 @@ class User extends Authenticatable
         return $this->belongsTo(TenantFilial::class);
     }
 
+    /**
+     * Sobrescreve o relacionamento padr?o do trait Notifiable para usar
+     * o model customizado AppNotification ? que sincroniza colunas
+     * f?sicas (company_id, title, message, channel, meta, sent_at)
+     * automaticamente no creating().
+     */
+    public function notifications()
+    {
+        return $this->morphMany(\App\Models\AppNotification::class, 'notifiable')->latest();
+    }
+
+    /**
+     * Mant?m o contrato do trait Notifiable (readNotifications/unreadNotifications)
+     * apontando para o model customizado.
+     */
+    public function readNotifications()
+    {
+        return $this->notifications()->whereNotNull('read_at');
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->notifications()->whereNull('read_at');
+    }
+
     public function posts()
     {
         return $this->hasMany(Post::class);

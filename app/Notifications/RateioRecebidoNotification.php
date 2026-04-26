@@ -43,6 +43,47 @@ class RateioRecebidoNotification extends Notification implements WhatsappNotifia
         ]);
     }
 
+    /**
+     * Mapeamento das 3 variáveis do template `rateio_recebido_aviso`
+     * registrado e aprovado na Meta:
+     *
+     *   Body do template (UTILITY, pt_BR):
+     *
+     *     Você recebeu um rateio na sua filial:
+     *
+     *     *De:* {{1}}
+     *     *Valor:* R$ {{2}}
+     *     *Descrição:* _{{3}}_
+     *
+     *     Acesse o sistema para verificar em Contas a Pagar.
+     *
+     * Argumentos:
+     *   {{1}} = nome da matriz que originou o rateio
+     *   {{2}} = valor sem o "R$"
+     *   {{3}} = descrição do rateio
+     *
+     * @return array<string,mixed>
+     */
+    public function toWhatsappTemplate(object $notifiable): array
+    {
+        $valorVar = number_format($this->valor, 2, ',', '.');
+
+        return [
+            'name'     => config('services.meta.whatsapp_templates.rateio_recebido', 'rateio_recebido_aviso'),
+            'language' => config('services.meta.whatsapp_template_language', 'pt_BR'),
+            'components' => [
+                [
+                    'type'       => 'body',
+                    'parameters' => [
+                        ['type' => 'text', 'text' => $this->nomeMatriz],
+                        ['type' => 'text', 'text' => $valorVar],
+                        ['type' => 'text', 'text' => $this->descricao],
+                    ],
+                ],
+            ],
+        ];
+    }
+
     public function toArray(object $notifiable): array
     {
         $valorFmt = 'R$ ' . number_format($this->valor, 2, ',', '.');

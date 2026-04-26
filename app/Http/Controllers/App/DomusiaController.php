@@ -5,9 +5,13 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Services\Ai\DocumentExtractorService;
 use App\Services\DocumentViewerService;
+use App\Services\DomusDocumentoLancamentoService;
+use App\Services\TransacaoFinanceiraService;
 use App\Exceptions\Ai\DocumentExtractionException;
 use App\Models\DomusDocumento;
+use App\Models\Financeiro\TransacaoFinanceira;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Auth;
@@ -382,6 +386,235 @@ class DomusiaController extends Controller
                 'message' => 'Erro ao servir arquivo',
             ], 500);
         }
+    }
+
+    /**
+     * Anexa um DomusDocumento a um ou mais lançamentos financeiros já existentes.
+     *
+     * Endpoint usado pelo botão "Buscar Lançamento" no Dominus IA. Suporta três
+     * modos de operação que cobrem os cenários de divergência entre o valor do
+     * documento e o(s) lançamento(s):
+     *
+     *  - modo=anexar             → apenas anexa o arquivo como comprovante em N
+     *                               lançamentos (não toca em valor/situação).
+     *  - modo=baixar_total       → anexa em 1 lançamento e dá baixa total via
+     *                               registrarPagamento (cria Movimentacao).
+     *  - modo=pagamento_parcial  → anexa em 1 lançamento e registra pagamento
+     *                               parcial via transacao_fracionamentos
+     *                               (situação: PAGO_PARCIAL).
+     *
+     * Em todos os modos:
+     *  - O documento muda de status para LANCADO.
+     *  - O arquivo é registrado como anexo (modulos_anexos) da(s) transação(ões),
+     *    herdando classificação por tipo (NF-e → nota_fiscal, BOLETO → boleto, …).
+     *  - Escopo de tenant/empresa garantido pelos services para evitar IDOR.
+     *
+     * POST /financeiro/domusia/{id}/anexar-lancamento
+     * Body:
+     *  {
+     *    transacao_ids: int[]                       (preferencial)
+     *    transacao_id: int                          (compatibilidade — 1 item)
+     *    modo: "anexar"|"baixar_total"|"pagamento_parcial"  (default: "anexar")
+     *    valor_pago?: number                        (obrig. em pagamento_parcial)
+     *    data_pagamento?: Y-m-d                     (default: hoje)
+     *    forma_pagamento?: string
+     *    conta_pagamento?: string
+     *    conta_pagamento_id?: int                   (resolve nome de Entidade)
+     *    juros?: number, multa?: number, desconto?: number
+     *  }
+     */
+    public function attachToLancamento(
+        int $id,
+        Request $request,
+        DomusDocumentoLancamentoService $service,
+        TransacaoFinanceiraService $transacaoService
+    ) {
+        try {
+            $validated = $request->validate([
+                'transacao_ids'      => 'sometimes|array|min:1',
+                'transacao_ids.*'    => 'integer|min:1',
+                'transacao_id'       => 'sometimes|integer|min:1',
+                'modo'               => 'sometimes|string|in:anexar,baixar_total,pagamento_parcial',
+                'valor_pago'         => 'nullable|numeric|gt:0',
+                'data_pagamento'     => 'nullable|date',
+                'forma_pagamento'    => 'nullable|string|max:100',
+                'conta_pagamento'    => 'nullable|string|max:100',
+                'conta_pagamento_id' => 'nullable|integer',
+                'juros'              => 'nullable|numeric|min:0',
+                'multa'              => 'nullable|numeric|min:0',
+                'desconto'           => 'nullable|numeric|min:0',
+            ]);
+
+            $modo = $validated['modo'] ?? 'anexar';
+
+            // Normaliza IDs: aceita transacao_ids[] ou transacao_id avulso (legado).
+            $ids = (array) ($validated['transacao_ids'] ?? []);
+            if (empty($ids) && !empty($validated['transacao_id'])) {
+                $ids = [(int) $validated['transacao_id']];
+            }
+            $ids = array_values(array_unique(array_map('intval', $ids)));
+
+            if (empty($ids)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Informe ao menos um lançamento.',
+                ], 422);
+            }
+
+            // Pagamento parcial exige exatamente 1 lançamento (precisa de valor_pago).
+            // Baixa total aceita N lançamentos: cada um quita pelo seu próprio
+            // valor restante (rateio implícito quando a soma bate com o documento).
+            if ($modo === 'pagamento_parcial' && count($ids) !== 1) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Pagamento parcial só pode ser registrado em um lançamento por vez.',
+                ], 422);
+            }
+
+            $companyId = session('active_company_id');
+            if (!$companyId) {
+                return response()->json(['success' => false, 'message' => 'Sessão inválida.'], 401);
+            }
+
+            $domusDoc = $service->findForActiveCompany($id);
+            if (!$domusDoc) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Documento não encontrado.',
+                ], 404);
+            }
+
+            $transacoes = TransacaoFinanceira::where('company_id', $companyId)
+                ->whereIn('id', $ids)
+                ->get();
+
+            if ($transacoes->count() !== count($ids)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Um ou mais lançamentos não foram encontrados nesta empresa.',
+                ], 404);
+            }
+
+            // Resolve nome da conta a partir do id da entidade financeira (se enviado).
+            $contaNomeResolvida = $validated['conta_pagamento'] ?? null;
+            if (!$contaNomeResolvida && !empty($validated['conta_pagamento_id'])) {
+                $entidade = \App\Models\EntidadeFinanceira::find((int) $validated['conta_pagamento_id']);
+                if ($entidade) {
+                    $contaNomeResolvida = $entidade->nome
+                        ?? trim(($entidade->agencia ?? '') . ' - ' . ($entidade->conta ?? ''));
+                }
+            }
+
+            // Validação prévia de valor_pago para modo parcial (evita iniciar
+            // a transação de DB e ter rollback caro).
+            if ($modo === 'pagamento_parcial') {
+                if (empty($validated['valor_pago'])) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Informe o valor a registrar como pagamento parcial.',
+                    ], 422);
+                }
+                /** @var TransacaoFinanceira $transacao */
+                $transacao = $transacoes->first();
+                $valorRestante = $this->calcularValorRestante($transacao);
+                if ((float) $validated['valor_pago'] > $valorRestante + 0.01) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'O valor informado (R$ '
+                            . number_format((float) $validated['valor_pago'], 2, ',', '.')
+                            . ') excede o saldo em aberto (R$ '
+                            . number_format($valorRestante, 2, ',', '.')
+                            . ').',
+                    ], 422);
+                }
+            }
+
+            DB::transaction(function () use ($transacoes, $domusDoc, $service, $transacaoService, $modo, $validated, $contaNomeResolvida) {
+                /** @var TransacaoFinanceira $transacao */
+                foreach ($transacoes as $transacao) {
+                    if (in_array($modo, ['baixar_total', 'pagamento_parcial'], true)) {
+                        $valorPago = $modo === 'baixar_total'
+                            ? $this->calcularValorRestante($transacao)
+                            : (float) $validated['valor_pago'];
+
+                        $transacaoService->registrarPagamento($transacao, [
+                            'valor_pago'      => $valorPago,
+                            'data_pagamento'  => $validated['data_pagamento'] ?? Carbon::today()->format('Y-m-d'),
+                            'juros'           => (float) ($validated['juros']    ?? 0),
+                            'multa'           => (float) ($validated['multa']    ?? 0),
+                            'desconto'        => (float) ($validated['desconto'] ?? 0),
+                            'forma_pagamento' => $validated['forma_pagamento']  ?? '',
+                            'conta_pagamento' => $contaNomeResolvida           ?? '',
+                        ]);
+
+                        $transacao->refresh();
+                    }
+
+                    $service->markLancadoAndAttachAnexo($domusDoc, $transacao);
+                }
+            });
+
+            return response()->json([
+                'success'            => true,
+                'message'            => $this->mensagemSucessoAnexo($modo, count($transacoes)),
+                'modo'               => $modo,
+                'domus_documento_id' => $domusDoc->id,
+                'transacao_ids'      => $ids,
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Dados inválidos.',
+                'errors'  => $e->errors(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Erro ao anexar documento a lançamento', [
+                'documento_id' => $id,
+                'request'      => $request->only([
+                    'transacao_id', 'transacao_ids', 'modo',
+                    'valor_pago', 'data_pagamento',
+                ]),
+                'error'        => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao anexar documento ao lançamento.',
+            ], 500);
+        }
+    }
+
+    /**
+     * Saldo em aberto da transação considerando fracionamentos (em_aberto)
+     * ou, se não houver, a diferença entre valor e valor_pago.
+     */
+    private function calcularValorRestante(TransacaoFinanceira $transacao): float
+    {
+        $transacao->load('fracionamentos');
+        if ($transacao->fracionamentos && $transacao->fracionamentos->isNotEmpty()) {
+            $emAberto = $transacao->fracionamentos->firstWhere('tipo', 'em_aberto');
+            if ($emAberto) {
+                return (float) $emAberto->valor;
+            }
+        }
+
+        return max(0, (float) $transacao->valor - (float) ($transacao->valor_pago ?? 0));
+    }
+
+    /**
+     * Mensagem amigável de retorno por modo + quantidade de lançamentos.
+     */
+    private function mensagemSucessoAnexo(string $modo, int $qtd): string
+    {
+        return match ($modo) {
+            'baixar_total'      => $qtd > 1
+                ? "Documento anexado e {$qtd} lançamentos baixados com sucesso."
+                : 'Documento anexado e lançamento baixado com sucesso.',
+            'pagamento_parcial' => 'Documento anexado e pagamento parcial registrado com sucesso.',
+            default             => $qtd > 1
+                ? "Documento anexado a {$qtd} lançamentos com sucesso."
+                : 'Documento anexado ao lançamento com sucesso.',
+        };
     }
 
     /**

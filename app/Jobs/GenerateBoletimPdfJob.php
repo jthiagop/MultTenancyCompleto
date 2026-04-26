@@ -339,4 +339,49 @@ class GenerateBoletimPdfJob implements ShouldQueue
             throw $e; // Re-throw para retry
         }
     }
+
+    /**
+     * Hook final: notifica o usuário e marca o PdfGeneration como failed
+     * mesmo nos cenários em que o try/catch acima não foi alcançado
+     * (ex: timeout do worker, OOM, exceções durante a inicialização do tenant).
+     */
+    public function failed(\Throwable $exception): void
+    {
+        try {
+            if ($this->tenantId) {
+                $tenant = \App\Models\Tenant::find($this->tenantId);
+                if ($tenant && ! tenancy()->initialized) {
+                    tenancy()->initialize($tenant);
+                }
+            }
+
+            $pdfGen = PdfGeneration::find($this->pdfGenerationId);
+            if ($pdfGen && $pdfGen->status !== 'failed') {
+                $pdfGen->update([
+                    'status'        => 'failed',
+                    'error_message' => $exception->getMessage(),
+                    'completed_at'  => now(),
+                ]);
+            }
+
+            $user = User::find($this->userId);
+            if ($user) {
+                $user->notify(new RelatorioErroNotification(
+                    "Boletim Financeiro - {$this->dataInicial} a {$this->dataFinal}",
+                    $exception->getMessage(),
+                    $this->companyId
+                ));
+            }
+        } catch (\Throwable $e) {
+            Log::error('[GenerateBoletimPdfJob::failed] Falha ao registrar erro', [
+                'pdf_id' => $this->pdfGenerationId,
+                'error'  => $e->getMessage(),
+            ]);
+        }
+
+        Log::error('[GenerateBoletimPdfJob] Job falhou definitivamente', [
+            'pdf_id' => $this->pdfGenerationId,
+            'error'  => $exception->getMessage(),
+        ]);
+    }
 }

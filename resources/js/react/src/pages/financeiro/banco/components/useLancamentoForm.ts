@@ -2,6 +2,7 @@ import {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useReducer,
   useRef,
   useState,
@@ -80,6 +81,7 @@ type FormAction =
   | { type: 'SET_FIELD'; field: keyof LancamentoFormState; value: LancamentoFormState[keyof LancamentoFormState] }
   | { type: 'LOAD'; payload: Partial<LancamentoFormState> }
   | { type: 'RESET' }
+  | { type: 'CLONE_RESET' }
   | { type: 'ADD_RATEIO' }
   | { type: 'REMOVE_RATEIO'; index: number }
   | { type: 'SET_RATEIO_FIELD'; index: number; field: keyof RateioItem; value: string }
@@ -150,7 +152,29 @@ function formReducer(state: LancamentoFormState, action: FormAction): Lancamento
     case 'LOAD':
       return { ...state, ...action.payload };
     case 'RESET':
-      return { ...INITIAL_STATE };
+      return { ...INITIAL_STATE, dataCompetencia: todayIso(), vencimento: todayIso(), previsaoPagamento: todayIso() };
+    case 'CLONE_RESET':
+      // Preserva metadados de "contexto" (parceiro, entidade, categoria, forma, centro de custo, recorrência, parcelamento)
+      // e zera campos transacionais para evitar duplicar acidentalmente o mesmo lançamento.
+      return {
+        ...state,
+        valor: '',
+        numeroDocumento: '',
+        historico: '',
+        juros: '',
+        multa: '',
+        desconto: '',
+        recebidoPago: false,
+        agendado: false,
+        rateios: [],
+        parcelasLinhas: [],
+        domusDocumentoId: undefined,
+        novoParceiroNome: state.fornecedor === '__novo__' ? state.novoParceiroNome : '',
+        novoParceiroCnpj: state.fornecedor === '__novo__' ? state.novoParceiroCnpj : '',
+        dataCompetencia: todayIso(),
+        vencimento: todayIso(),
+        previsaoPagamento: todayIso(),
+      };
     case 'ADD_RATEIO':
       return {
         ...state,
@@ -357,7 +381,57 @@ interface UseLancamentoFormOptions {
   onClose: () => void;
   /** Anexos pendentes (arquivos) lidos no momento do save — evita closure obsoleta nos diálogos. */
   stagedAnexosRef?: MutableRefObject<LancamentoStagedAnexo[]>;
+  /** Quantidade de anexos staged (reativa) — usada para detectar `isDirty`. */
+  stagedAnexosCount?: number;
   onClearStagedAnexos?: () => void;
+}
+
+/**
+ * Compara estado atual do form com o snapshot pristine (initial OU pós-LOAD em edição).
+ * Considera arrays/primitivos rasos — basta para detectar "tem alteração não salva?".
+ */
+function isFormDirty(current: LancamentoFormState, pristine: LancamentoFormState): boolean {
+  // Strings/booleans/numbers
+  const flatKeys: Array<keyof LancamentoFormState> = [
+    'fornecedor', 'dataCompetencia', 'descricao', 'valor', 'entidade', 'categoria',
+    'centroCusto', 'formaPagamento', 'numeroDocumento', 'parcelamento', 'vencimento',
+    'repetir', 'recebidoPago', 'agendado', 'historico',
+    'configuracaoRecorrencia', 'diaCobranca', 'recorrenciaIntervalo',
+    'recorrenciaFrequencia', 'recorrenciaOcorrencias',
+    'previsaoPagamento', 'juros', 'multa', 'desconto', 'parcelasIntervaloDias',
+    'novoParceiroNome', 'novoParceiroCnpj',
+  ];
+  for (const k of flatKeys) {
+    if (current[k] !== pristine[k]) return true;
+  }
+  if ((current.domusDocumentoId ?? null) !== (pristine.domusDocumentoId ?? null)) return true;
+  if (current.rateios.length !== pristine.rateios.length) return true;
+  if (current.parcelasLinhas.length !== pristine.parcelasLinhas.length) return true;
+  // Comparação rasa de cada item (suficiente para detectar edições)
+  for (let i = 0; i < current.rateios.length; i++) {
+    const a = current.rateios[i];
+    const b = pristine.rateios[i];
+    if (
+      a.filial_id !== b.filial_id ||
+      a.centro_custo_id !== b.centro_custo_id ||
+      a.lancamento_padrao_id !== b.lancamento_padrao_id ||
+      a.percentual !== b.percentual ||
+      a.valor !== b.valor
+    ) return true;
+  }
+  for (let i = 0; i < current.parcelasLinhas.length; i++) {
+    const a = current.parcelasLinhas[i];
+    const b = pristine.parcelasLinhas[i];
+    if (
+      a.vencimento !== b.vencimento ||
+      a.valor !== b.valor ||
+      a.percentual !== b.percentual ||
+      a.contaPagamentoId !== b.contaPagamentoId ||
+      a.descricao !== b.descricao ||
+      a.agendado !== b.agendado
+    ) return true;
+  }
+  return false;
 }
 
 /** Monta campos do lançamento no formato multipart esperado pelo Laravel (StoreTransacaoFinanceiraRequest). */
@@ -443,6 +517,7 @@ export function useLancamentoForm({
   onSaved,
   onClose,
   stagedAnexosRef,
+  stagedAnexosCount = 0,
   onClearStagedAnexos,
 }: UseLancamentoFormOptions) {
   const isEdit = !!editId;
@@ -456,6 +531,14 @@ export function useLancamentoForm({
   const loadingEditRef = useRef(false);
   const formRef = useRef(form);
   formRef.current = form;
+
+  /**
+   * Snapshot "limpo" usado para detectar `isDirty`.
+   * - Modo criação: INITIAL_STATE (com datas de hoje normalizadas).
+   * - Modo edição: snapshot do form logo após o LOAD da API.
+   * - Após `clone`: snapshot do form após CLONE_RESET.
+   */
+  const pristineFormRef = useRef<LancamentoFormState>(INITIAL_STATE);
 
   const [existingAnexos, setExistingAnexos] = useState<LancamentoExistingAnexo[]>([]);
 
@@ -542,6 +625,13 @@ export function useLancamentoForm({
   const resetFormBase = useCallback(() => {
     dispatch({ type: 'RESET' });
     setFieldErrorsRaw({});
+    // Após reset, considerar form limpo como pristine
+    pristineFormRef.current = {
+      ...INITIAL_STATE,
+      dataCompetencia: todayIso(),
+      vencimento: todayIso(),
+      previsaoPagamento: todayIso(),
+    };
   }, []);
 
   // ── Sugestões da IA ────────────────────────────────────────────────────
@@ -585,6 +675,14 @@ export function useLancamentoForm({
     const { parceiroDocumento: _doc, parceiroNomeIa: _nome, ...rest } = prefill;
     dispatch({ type: 'RESET' });
     dispatch({ type: 'LOAD', payload: rest });
+    // Pristine = form pós-prefill (assim "isDirty" só dispara se o usuário mexer depois da IA)
+    pristineFormRef.current = {
+      ...INITIAL_STATE,
+      dataCompetencia: todayIso(),
+      vencimento: todayIso(),
+      previsaoPagamento: todayIso(),
+      ...rest,
+    } as LancamentoFormState;
   }, [open, editId, prefill]);
 
   // Match automático de fornecedor/cliente por CNPJ/CPF (igual `matchFornecedorByCNPJ` no drawer Domus Blade)
@@ -618,8 +716,13 @@ export function useLancamentoForm({
   }, [open, editId, tipo, prefill?.parceiroDocumento, prefill?.parceiroNomeIa, parceirosForMatch, setField]);
 
   useEffect(() => {
-    if (!open) setExistingAnexos([]);
-  }, [open]);
+    if (!open) {
+      // Limpa form, anexos existentes e erros para evitar "fantasmas" na próxima abertura.
+      // Importante: resetFormBase atualiza pristineFormRef também.
+      resetFormBase();
+      setExistingAnexos([]);
+    }
+  }, [open, resetFormBase]);
 
   // Carrega dados ao abrir em modo edição
   useEffect(() => {
@@ -656,54 +759,58 @@ export function useLancamentoForm({
             }))
           : [];
 
-        dispatch({
-          type: 'LOAD',
-          payload: {
-            descricao: d.descricao ?? '',
-            dataCompetencia: d.data_competencia ?? '',
-            vencimento: d.data_vencimento ?? '',
-            entidade: d.entidade_id ?? '',
-            fornecedor: d.parceiro_id ?? '',
-            categoria: d.lancamento_padrao_id ?? '',
-            centroCusto: d.cost_center_id ?? '',
-            formaPagamento: d.tipo_documento ?? '',
-            numeroDocumento: d.numero_documento ?? '',
-            historico: d.historico_complementar ?? '',
-            recebidoPago: d.recebido_pago ?? false,
-            agendado: !!d.agendado,
-            valor: d.valor
-              ? Number(d.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+        const loadedPayload: Partial<LancamentoFormState> = {
+          descricao: d.descricao ?? '',
+          dataCompetencia: d.data_competencia ?? '',
+          vencimento: d.data_vencimento ?? '',
+          entidade: d.entidade_id ?? '',
+          fornecedor: d.parceiro_id ?? '',
+          categoria: d.lancamento_padrao_id ?? '',
+          centroCusto: d.cost_center_id ?? '',
+          formaPagamento: d.tipo_documento ?? '',
+          numeroDocumento: d.numero_documento ?? '',
+          historico: d.historico_complementar ?? '',
+          recebidoPago: d.recebido_pago ?? false,
+          agendado: !!d.agendado,
+          valor: d.valor
+            ? Number(d.valor).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+            : '',
+          juros:
+            d.juros != null && !Number.isNaN(Number(d.juros)) && Number(d.juros) !== 0
+              ? Number(d.juros).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
               : '',
-            juros:
-              d.juros != null && !Number.isNaN(Number(d.juros)) && Number(d.juros) !== 0
-                ? Number(d.juros).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                : '',
-            multa:
-              d.multa != null && !Number.isNaN(Number(d.multa)) && Number(d.multa) !== 0
-                ? Number(d.multa).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                : '',
-            desconto:
-              d.desconto != null && !Number.isNaN(Number(d.desconto)) && Number(d.desconto) !== 0
-                ? Number(d.desconto).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
-                : '',
-            previsaoPagamento: d.data_vencimento ?? d.previsao_pagamento ?? '',
-            // Parcelamento
-            parcelamento: d.parcelamento ?? 'avista',
-            ...(parcelasLinhas.length > 0 ? { parcelasLinhas } : {}),
-            // Recorrência
-            ...(d.recorrencia ? (() => {
-              const vencDay = d.data_vencimento ? String(new Date(d.data_vencimento + 'T12:00:00').getDate()) : '1';
-              return {
-                repetir: true,
-                configuracaoRecorrencia: d.recorrencia.id ?? '',
-                diaCobranca: vencDay,
-                recorrenciaIntervalo: String(d.recorrencia.intervalo_repeticao ?? 1),
-                recorrenciaFrequencia: d.recorrencia.frequencia ?? 'mensal',
-                recorrenciaOcorrencias: String(d.recorrencia.total_ocorrencias ?? 12),
-              };
-            })() : {}),
-          },
-        });
+          multa:
+            d.multa != null && !Number.isNaN(Number(d.multa)) && Number(d.multa) !== 0
+              ? Number(d.multa).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+              : '',
+          desconto:
+            d.desconto != null && !Number.isNaN(Number(d.desconto)) && Number(d.desconto) !== 0
+              ? Number(d.desconto).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+              : '',
+          previsaoPagamento: d.data_vencimento ?? d.previsao_pagamento ?? '',
+          parcelamento: d.parcelamento ?? 'avista',
+          ...(parcelasLinhas.length > 0 ? { parcelasLinhas } : {}),
+          ...(d.recorrencia ? (() => {
+            const vencDay = d.data_vencimento ? String(new Date(d.data_vencimento + 'T12:00:00').getDate()) : '1';
+            return {
+              repetir: true,
+              configuracaoRecorrencia: d.recorrencia.id ?? '',
+              diaCobranca: vencDay,
+              recorrenciaIntervalo: String(d.recorrencia.intervalo_repeticao ?? 1),
+              recorrenciaFrequencia: d.recorrencia.frequencia ?? 'mensal',
+              recorrenciaOcorrencias: String(d.recorrencia.total_ocorrencias ?? 12),
+            };
+          })() : {}),
+        };
+
+        dispatch({ type: 'LOAD', payload: loadedPayload });
+
+        // Pristine pós-edição: usado para detectar alterações não salvas no modo edit.
+        pristineFormRef.current = {
+          ...INITIAL_STATE,
+          ...loadedPayload,
+        } as LancamentoFormState;
+
         setExistingAnexos(parseLancamentoExistingAnexosApi(d.anexos));
       })
       .catch(() => notify.error('Não foi possível carregar o lançamento', 'Verifique sua conexão e tente novamente.'))
@@ -956,7 +1063,13 @@ export function useLancamentoForm({
       onClearStagedAnexos?.();
 
       if (mode === 'clone') {
-        // Mantém dados no form, só limpa o valor para o próximo lançamento
+        // Mantém metadados de contexto (parceiro, entidade, categoria, forma, recorrência…)
+        // e zera valor, nº doc, histórico, encargos, parcelas, anexos pendentes — evita
+        // que o usuário lance acidentalmente o mesmo valor duas vezes.
+        dispatch({ type: 'CLONE_RESET' });
+        setFieldErrorsRaw({});
+        // Pristine = estado pós-clone (a partir daqui só fica "dirty" se mexer)
+        pristineFormRef.current = formReducer(formRef.current, { type: 'CLONE_RESET' });
       } else {
         resetForm();
       }
@@ -969,6 +1082,15 @@ export function useLancamentoForm({
     }
   }
 
+  /**
+   * Indica se há alterações não salvas em relação ao snapshot pristine
+   * (initial em criação, ou pós-LOAD em edição). Inclui anexos pendentes.
+   */
+  const isDirty = useMemo(
+    () => isFormDirty(form, pristineFormRef.current) || stagedAnexosCount > 0,
+    [form, stagedAnexosCount],
+  );
+
   return {
     form,
     setField,
@@ -978,6 +1100,7 @@ export function useLancamentoForm({
     isEdit,
     handleSave,
     resetForm,
+    isDirty,
     showRecebidoPago: form.parcelamento === 'avista' || form.parcelamento === '1x',
     sugState,
     confiancaCampos,

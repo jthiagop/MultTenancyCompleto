@@ -96,6 +96,22 @@ class ProcessWhatsAppWebhook implements ShouldQueue
     }
 
     /**
+     * Hook executado quando o job esgota suas tries.
+     *
+     * Sem este método o job antes silenciosamente "morria" no failed_jobs sem
+     * deixar pista clara de qual webhook causou o problema. Aqui registramos
+     * tenant + payload-hash para auditoria.
+     */
+    public function failed(\Throwable $exception): void
+    {
+        Log::critical('[ProcessWhatsAppWebhook] Falha definitiva ao processar webhook', [
+            'tenant_id'    => $this->tenantId,
+            'payload_hash' => substr(hash('sha256', json_encode($this->payload ?? [])), 0, 16),
+            'error'        => $exception->getMessage(),
+        ]);
+    }
+
+    /**
      * Processar mensagem recebida com deduplicação
      */
     private function processIncomingMessage($message, $value)

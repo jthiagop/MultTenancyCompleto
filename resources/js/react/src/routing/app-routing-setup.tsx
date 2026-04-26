@@ -13,6 +13,8 @@ import { UsuariosPage } from '@/pages/cadastros/usuarios/page';
 import { OrganismosPage } from '@/pages/cadastros/organismos/page';
 import { FraternidadePage } from '@/pages/fraternidade/page';
 import { LoginCustomizationPage } from '@/pages/confs/login/page';
+import { SecretariaPage } from '@/pages/secretaria/page';
+import { FieisPage } from '@/pages/fieis/page';
 
 export function AppRoutingSetup() {
   return (
@@ -36,6 +38,12 @@ export function AppRoutingSetup() {
 
         {/* Fraternidade */}
         <Route path="/fraternidade" element={<FraternidadePage />} />
+
+        {/* Secretaria */}
+        <Route path="/secretary" element={<SecretariaPage />} />
+
+        {/* Cadastro de fiéis (rota nomeada no Laravel: fieis.index) */}
+        <Route path="/fieis" element={<FieisPage />} />
 
         {/* Módulo Cemitério */}
         <Route path="/cemiterio" element={<CemiterioPage />} />

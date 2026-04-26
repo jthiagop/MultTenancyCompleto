@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { ChevronsUpDown } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
+import { Badge, badgeVariants } from '@/components/ui/badge';
+import type { VariantProps } from 'class-variance-authority';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -23,7 +24,13 @@ export interface SearchSelectOption {
   /** URL da imagem exibida à esquerda (ex.: logo do banco) */
   icon?: string | null;
   /** Badges exibidos abaixo do label (ex.: tipo de conta) */
-  badges?: Array<{ label: string; variant?: 'default' | 'secondary' | 'destructive' | 'outline'; className?: string }>;
+  badges?: Array<{ label: string; variant?: VariantProps<typeof badgeVariants>['variant']; className?: string }>;
+  /**
+   * Texto invisível somado ao termo de busca (cmdk). Útil para permitir
+   * filtrar por campos que não aparecem na UI — ex.: id ou código de
+   * uma categoria. Pode conter múltiplos tokens separados por espaço.
+   */
+  searchKeywords?: string;
 }
 
 export function SearchSelect({
@@ -127,7 +134,7 @@ export function SearchSelect({
                   {options.map((opt) => (
                     <CommandItem
                       key={opt.value}
-                      value={`${opt.label} ${opt.hint ?? ''}`.trim()}
+                      value={`${opt.label} ${opt.hint ?? ''} ${opt.searchKeywords ?? ''}`.trim()}
                       onSelect={() => {
                         onValueChange(opt.value);
                         setOpen(false);

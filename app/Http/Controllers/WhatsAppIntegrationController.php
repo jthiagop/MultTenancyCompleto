@@ -13,6 +13,7 @@ use SimpleSoftwareIO\QrCode\Facades\QrCode;
 use App\Models\WhatsappAuthRequest;
 use App\Models\User;
 use App\Models\Integracao;
+use App\Models\Tenant;
 use Stancl\Tenancy\Facades\Tenancy;
 
 class WhatsAppIntegrationController extends Controller
@@ -219,12 +220,15 @@ class WhatsAppIntegrationController extends Controller
                 return response()->json(['success' => false, 'error' => 'Invalid structure'], 400);
             }
 
-            // Verificar se é apenas um webhook de status (sem mensagens para processar)
-            // Webhooks de status (sent, delivered, read) não precisam processamento de tenant
+            // Webhook de status (sent / delivered / read / failed):
+            // não há mensagem de usuário para processar, mas precisamos
+            // atualizar `notifications_log` para refletir o estado real
+            // de entrega na Meta. Sem isso, mensagens "aceitas" pela
+            // Meta (com wamid) mas que falharam por janela de 24h ficam
+            // marcadas como `sent` no nosso banco e o admin não sabe que
+            // o usuário nunca recebeu.
             if ($this->isStatusOnlyWebhook($data)) {
-                Log::debug('Webhook de status recebido (não requer processamento)', [
-                    'tipo' => 'status_only'
-                ]);
+                $this->handleStatusUpdates($data);
                 return response()->json(['success' => true], 200);
             }
 
@@ -481,13 +485,28 @@ class WhatsAppIntegrationController extends Controller
                     return;
                 }
 
+                $isCompanyContact = $authRequest->kind === WhatsappAuthRequest::KIND_COMPANY_CONTACT;
+
                 // Verificar se este número já está vinculado a outro usuário/tenant
-                // Ignorar registros inativos (integração excluída) para permitir re-vinculação
-                $existingBinding = WhatsappAuthRequest::where('wa_id', $from)
+                // Ignorar registros inativos (integração excluída) para permitir re-vinculação.
+                //
+                // Regra de duplicidade:
+                //  - Vínculo do tipo 'user': bloqueado se o número já estiver vinculado a
+                //    QUALQUER outro registro ativo (user OU company_contact).
+                //  - Vínculo do tipo 'company_contact': bloqueado APENAS se o número já
+                //    estiver vinculado como 'user'. É permitido o mesmo número estar em
+                //    múltiplos company_contact de empresas/tenants diferentes (ex.: o
+                //    tesoureiro recebe avisos de duas paróquias).
+                $duplicateQuery = WhatsappAuthRequest::where('wa_id', $from)
                     ->whereNotNull('wa_id')
                     ->where('id', '!=', $authRequest->id)
-                    ->where('status', 'active')
-                    ->first();
+                    ->where('status', 'active');
+
+                if ($isCompanyContact) {
+                    $duplicateQuery->where('kind', WhatsappAuthRequest::KIND_USER);
+                }
+
+                $existingBinding = $duplicateQuery->first();
 
                 if ($existingBinding) {
                     Log::warning("⚠️ Número já vinculado a outro usuário/tenant (Controller)", [
@@ -495,15 +514,44 @@ class WhatsAppIntegrationController extends Controller
                         'existing_auth_id' => $existingBinding->id,
                         'existing_tenant_id' => $existingBinding->tenant_id,
                         'existing_user_id' => $existingBinding->user_id,
+                        'existing_kind' => $existingBinding->kind,
                         'new_auth_id' => $authRequest->id,
                         'new_tenant_id' => $authRequest->tenant_id,
-                        'new_user_id' => $authRequest->user_id,
+                        'new_kind' => $authRequest->kind,
                     ]);
 
                     $this->sendTextMessage($from,
                         "⚠️ Este número de WhatsApp já está vinculado a outro usuário no Sistema Dominus.\n\n" .
                         "Cada número só pode ser vinculado a um único usuário.\n\n" .
                         "Se você deseja trocar a vinculação, peça ao administrador para desvincular o número anterior no painel do sistema."
+                    );
+                    $this->markMessageAsRead($messageId);
+                    return;
+                }
+
+                // Atalho para Grupo WhatsApp (company_contact): não há User dono;
+                // só atualiza wa_id+status no central e responde com mensagem
+                // simples de confirmação. Não inicializa o tenant nem mexe em
+                // users.whatsapp_number.
+                if ($isCompanyContact) {
+                    $statusAntigo = $authRequest->status;
+                    $authRequest->wa_id  = $from;
+                    $authRequest->status = 'active';
+                    $authRequest->save();
+
+                    Log::info('[Grupo WhatsApp] Contato vinculado via webhook', [
+                        'auth_request_id' => $authRequest->id,
+                        'tenant_id'       => $authRequest->tenant_id,
+                        'company_id'      => $authRequest->company_id,
+                        'contact_label'   => $authRequest->contact_label,
+                        'wa_id'           => $from,
+                        'status_antes'    => $statusAntigo,
+                    ]);
+
+                    $rotulo = $authRequest->contact_label ?: 'Grupo WhatsApp';
+                    $this->sendTextMessage($from,
+                        "✅ Número adicionado ao *{$rotulo}* da empresa no Sistema Dominus.\n\n" .
+                        "A partir de agora você passará a receber, neste WhatsApp, as notificações financeiras (lançamentos vencendo, rateios, etc.) da empresa."
                     );
                     $this->markMessageAsRead($messageId);
                     return;
@@ -1193,6 +1241,212 @@ class WhatsAppIntegrationController extends Controller
         ]);
     }
 
+    // ============================================================
+    // Grupo WhatsApp (kind = company_contact)
+    // ------------------------------------------------------------
+    // Cadastro de números avulsos vinculados à EMPRESA (sem User dono)
+    // que recebem em paralelo as notificações financeiras.
+    //
+    // Reaproveita 100% do fluxo de UUID/wa.me/webhook do User: a única
+    // diferença é a coluna `kind` no whatsapp_auth_requests e o handler
+    // do webhook que NÃO escreve em users.whatsapp_number quando o
+    // vínculo é do tipo `company_contact` (ver handleTextMessage).
+    // ============================================================
+
+    /**
+     * Gera QR Code para vincular um número ao "Grupo WhatsApp" da empresa
+     * ativa. Espera body { nome: string }.
+     */
+    public function getGrupoQRCode(Request $request)
+    {
+        try {
+            $user = Auth::user();
+            if (! $user) {
+                return response()->json(['success' => false, 'error' => 'Usuário não autenticado'], 401);
+            }
+
+            $companyId = session('active_company_id');
+            if (! $companyId) {
+                return response()->json(['success' => false, 'error' => 'Empresa ativa não identificada na sessão.'], 422);
+            }
+
+            $validated = $request->validate([
+                'nome' => ['required', 'string', 'min:2', 'max:120'],
+            ]);
+            $contactLabel = trim($validated['nome']);
+
+            $tenantId = tenancy()->tenant->id;
+
+            // Sempre cria um novo registro pendente — diferente do User, que
+            // mantém um registro único por (tenant_id, user_id). Aqui vários
+            // contatos coexistem por (tenant_id, company_id).
+            $authRequest = new WhatsappAuthRequest();
+            $authRequest->verification_code = Str::uuid()->toString();
+            $authRequest->tenant_id         = $tenantId;
+            $authRequest->user_id           = null;
+            $authRequest->company_id        = $companyId;
+            $authRequest->kind              = WhatsappAuthRequest::KIND_COMPANY_CONTACT;
+            $authRequest->contact_label     = $contactLabel;
+            $authRequest->phone_number_id   = $this->phoneNumberId;
+            $authRequest->access_token      = $this->accessToken;
+            $authRequest->status            = 'pending';
+            $authRequest->save();
+
+            $mensagem    = "Olá Dominus, meu código de vinculação é: {$authRequest->verification_code}";
+            $linkWhatsApp = "https://wa.me/{$this->systemNumber}?text=" . urlencode($mensagem);
+            $qrCodeSvg    = QrCode::size(250)->generate($linkWhatsApp);
+            $qrCodeBase64 = 'data:image/svg+xml;base64,' . base64_encode($qrCodeSvg);
+
+            return response()->json([
+                'success' => true,
+                'base64'  => $qrCodeBase64,
+                'code'    => $authRequest->verification_code,
+                'link'    => $linkWhatsApp,
+                'message' => 'Escaneie o QR Code ou clique no link para iniciar a conversa no WhatsApp',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $ve) {
+            return response()->json([
+                'success' => false,
+                'error'   => $ve->validator->errors()->first(),
+            ], 422);
+        } catch (\Exception $e) {
+            Log::error('Erro ao gerar QR Code do Grupo WhatsApp: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Polling do status de vinculação do contato do grupo. Filtro por
+     * kind=company_contact para evitar reaproveitar UUID com o fluxo do User.
+     */
+    public function checkGrupoStatus($code)
+    {
+        try {
+            if (! $code) {
+                return response()->json(['success' => false, 'status' => 'unknown']);
+            }
+
+            $authRequest = WhatsappAuthRequest::on(config('tenancy.database.central_connection'))
+                ->where('verification_code', $code)
+                ->where('kind', WhatsappAuthRequest::KIND_COMPANY_CONTACT)
+                ->first();
+
+            if (! $authRequest) {
+                return response()->json(['success' => false, 'status' => 'not_found']);
+            }
+
+            if ($authRequest->status === 'active') {
+                return response()->json([
+                    'success' => true,
+                    'status'  => 'active',
+                    'wa_id'   => $authRequest->wa_id,
+                    'message' => 'Contato vinculado ao Grupo WhatsApp.',
+                ]);
+            }
+
+            if ($authRequest->isExpired()) {
+                return response()->json(['success' => false, 'status' => 'expired']);
+            }
+
+            return response()->json(['success' => true, 'status' => 'pending']);
+        } catch (\Exception $e) {
+            Log::error('Erro ao verificar status do Grupo WhatsApp: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Lista os contatos do "Grupo WhatsApp" da empresa ativa.
+     * Inclui pendentes (ainda não escanearam) para feedback no front.
+     */
+    public function listarContatosGrupo()
+    {
+        try {
+            $user = Auth::user();
+            if (! $user) {
+                return response()->json(['success' => false, 'error' => 'Usuário não autenticado'], 401);
+            }
+
+            $tenantId  = tenant('id');
+            $companyId = session('active_company_id');
+
+            if (! $companyId) {
+                return response()->json(['success' => true, 'data' => []]);
+            }
+
+            $contatos = WhatsappAuthRequest::on(config('tenancy.database.central_connection'))
+                ->where('tenant_id', $tenantId)
+                ->where('company_id', $companyId)
+                ->where('kind', WhatsappAuthRequest::KIND_COMPANY_CONTACT)
+                ->whereIn('status', ['active', 'pending'])
+                ->orderByDesc('id')
+                ->get(['id', 'contact_label', 'wa_id', 'status', 'created_at', 'updated_at'])
+                ->map(fn (WhatsappAuthRequest $c) => [
+                    'id'            => $c->id,
+                    'contact_label' => $c->contact_label,
+                    'wa_id'         => $c->wa_id,
+                    'status'        => $c->status,
+                    'created_at'    => $c->created_at,
+                    'updated_at'    => $c->updated_at,
+                ]);
+
+            return response()->json(['success' => true, 'data' => $contatos]);
+        } catch (\Exception $e) {
+            Log::error('Erro ao listar contatos do Grupo WhatsApp: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * Inativa um contato do Grupo WhatsApp (mantém o registro para auditoria).
+     * Limpa wa_id e access_token por segurança e libera o número para outro vínculo.
+     */
+    public function excluirContatoGrupo($id)
+    {
+        try {
+            $user = Auth::user();
+            if (! $user) {
+                return response()->json(['success' => false, 'error' => 'Usuário não autenticado'], 401);
+            }
+
+            $tenantId  = tenant('id');
+            $companyId = session('active_company_id');
+
+            $authRequest = WhatsappAuthRequest::on(config('tenancy.database.central_connection'))
+                ->where('id', (int) $id)
+                ->where('tenant_id', $tenantId)
+                ->where('company_id', $companyId)
+                ->where('kind', WhatsappAuthRequest::KIND_COMPANY_CONTACT)
+                ->first();
+
+            if (! $authRequest) {
+                return response()->json(['success' => false, 'error' => 'Contato não encontrado.'], 404);
+            }
+
+            $waIdAntes  = $authRequest->wa_id;
+            $statusAntes = $authRequest->status;
+
+            $authRequest->status       = 'inactive';
+            $authRequest->wa_id        = null;
+            $authRequest->access_token = null;
+            $authRequest->save();
+
+            Log::info('[Grupo WhatsApp] Contato inativado', [
+                'auth_request_id' => $authRequest->id,
+                'tenant_id'       => $tenantId,
+                'company_id'      => $companyId,
+                'wa_id_antes'     => $waIdAntes,
+                'status_antes'    => $statusAntes,
+                'inativado_por'   => $user->id,
+            ]);
+
+            return response()->json(['success' => true, 'message' => 'Contato removido do grupo.']);
+        } catch (\Exception $e) {
+            Log::error('Erro ao excluir contato do Grupo WhatsApp: ' . $e->getMessage());
+            return response()->json(['success' => false, 'error' => $e->getMessage()], 500);
+        }
+    }
+
     /**
      * Extrair wamid (WhatsApp Message ID) do payload
      *
@@ -1278,6 +1532,240 @@ class WhatsAppIntegrationController extends Controller
         }
 
         return false;
+    }
+
+    /**
+     * Processa um webhook de status (sent/delivered/read/failed) da Meta e
+     * atualiza o histórico de envios em `notifications_log` (tabela tenant)
+     * pelo wamid (provider_id).
+     *
+     * Por que isso importa:
+     *  - A Meta WhatsApp Business API aceita o request (200 + wamid) mesmo
+     *    quando a mensagem NÃO será entregue (ex.: fora da janela de 24h
+     *    para texto livre — erro 131047 "Re-engagement message"). Sem
+     *    processar este webhook, o sistema marca como `sent` e nunca
+     *    descobre que o usuário não recebeu.
+     *  - O webhook de status pode trazer múltiplos eventos para o mesmo
+     *    wamid (sent → delivered → read). Cada um atualiza um campo
+     *    diferente em `meta`, mas só "regrediremos" o `status` se vier
+     *    `failed` (a Meta sempre escala: sent < delivered < read).
+     */
+    private function handleStatusUpdates(array $data): void
+    {
+        // Etapa 1 — extrair lista achatada de updates do payload Meta.
+        $updates = [];
+        $phoneNumberId = null;
+
+        foreach ($data['entry'] ?? [] as $entry) {
+            foreach ($entry['changes'] ?? [] as $change) {
+                $value = $change['value'] ?? [];
+                $phoneNumberId = $phoneNumberId
+                    ?: ($value['metadata']['phone_number_id'] ?? null);
+
+                foreach ($value['statuses'] ?? [] as $status) {
+                    $updates[] = $status;
+                }
+            }
+        }
+
+        if (empty($updates)) {
+            return;
+        }
+
+        // Etapa 2 — resolver tenant pelo phone_number_id da própria
+        // mensagem. Em SaaS multi-tenant todos compartilham o mesmo
+        // phone_number_id, então o "tenant correto" é descoberto pelo
+        // wamid (cada wamid só existe no notifications_log de UM tenant).
+        // Estratégia: tenta resolver pelo phone_number_id; se não der,
+        // varre os tenants ativos procurando o wamid.
+        $tenant = $phoneNumberId
+            ? $this->resolveTenantByPhoneNumberId($phoneNumberId)
+            : null;
+
+        foreach ($updates as $status) {
+            $wamid     = $status['id'] ?? null;
+            $statusStr = $status['status'] ?? null;
+
+            if (! $wamid || ! $statusStr) {
+                continue;
+            }
+
+            $resolvedTenant = $tenant ?: $this->resolveTenantByWamid($wamid);
+
+            if (! $resolvedTenant) {
+                Log::warning('[WhatsApp Status] Não foi possível identificar o tenant para o wamid', [
+                    'wamid'  => $wamid,
+                    'status' => $statusStr,
+                ]);
+                continue;
+            }
+
+            $this->applyStatusUpdate($resolvedTenant, $wamid, $status);
+        }
+    }
+
+    /**
+     * Atualiza notifications_log do tenant para um único evento de status.
+     *
+     * @param  Tenant  $tenant
+     * @param  string  $wamid
+     * @param  array   $status   Payload bruto da Meta (id/status/timestamp/errors/recipient_id…)
+     */
+    private function applyStatusUpdate(Tenant $tenant, string $wamid, array $status): void
+    {
+        $statusStr = $status['status'] ?? 'unknown';
+        $timestamp = isset($status['timestamp']) ? (int) $status['timestamp'] : null;
+        $eventAt   = $timestamp ? \Carbon\Carbon::createFromTimestamp($timestamp)->toIso8601String() : null;
+
+        // Determina como reagir a cada status:
+        //  - failed: força status final + grava erro humano-legível.
+        //  - delivered/read: marca timestamp em `meta` mas só promove o
+        //    `status` se já não estiver em estado superior.
+        //  - sent: idempotente; se vier após delivered/read, ignora.
+        $tenant->run(function () use ($wamid, $status, $statusStr, $eventAt) {
+            $row = DB::table('notifications_log')
+                ->where('provider_id', $wamid)
+                ->where('channel', 'whatsapp')
+                ->orderByDesc('id')
+                ->first();
+
+            if (! $row) {
+                Log::info('[WhatsApp Status] Sem registro local para o wamid (provavelmente limpado ou enviado por outro processo)', [
+                    'wamid'  => $wamid,
+                    'status' => $statusStr,
+                ]);
+                return;
+            }
+
+            $existingMeta = [];
+            if (! empty($row->meta)) {
+                $decoded = json_decode($row->meta, true);
+                if (is_array($decoded)) {
+                    $existingMeta = $decoded;
+                }
+            }
+
+            $update = ['updated_at' => now()];
+            $errorReason = null;
+
+            switch ($statusStr) {
+                case 'sent':
+                    // Já registramos `sent` no momento do envio. Só
+                    // anotamos o timestamp da confirmação da Meta.
+                    if ($eventAt) {
+                        $existingMeta['sent_at'] = $eventAt;
+                    }
+                    break;
+
+                case 'delivered':
+                    if ($eventAt) {
+                        $existingMeta['delivered_at'] = $eventAt;
+                    }
+                    if (! in_array($row->status, ['failed', 'read', 'delivered'], true)) {
+                        $update['status'] = 'delivered';
+                    }
+                    break;
+
+                case 'read':
+                    if ($eventAt) {
+                        $existingMeta['read_at'] = $eventAt;
+                    }
+                    if (! in_array($row->status, ['failed', 'read'], true)) {
+                        $update['status'] = 'read';
+                    }
+                    break;
+
+                case 'failed':
+                    $errors = $status['errors'] ?? [];
+                    $first  = $errors[0] ?? [];
+                    $code   = $first['code']  ?? null;
+                    $title  = $first['title'] ?? null;
+                    $detail = $first['error_data']['details'] ?? ($first['message'] ?? null);
+
+                    $errorReason = trim(implode(' — ', array_filter([
+                        $code !== null ? "[{$code}]" : null,
+                        $title,
+                        $detail,
+                    ])));
+
+                    $existingMeta['failed_at']     = $eventAt;
+                    $existingMeta['failed_code']   = $code;
+                    $existingMeta['failed_title']  = $title;
+                    $existingMeta['failed_detail'] = $detail;
+
+                    $update['status'] = 'failed';
+                    $update['error']  = mb_substr($errorReason ?: 'Falha sem motivo informado pela Meta.', 0, 2000);
+                    break;
+
+                default:
+                    $existingMeta["status_{$statusStr}_at"] = $eventAt;
+            }
+
+            $update['meta'] = json_encode($existingMeta, JSON_UNESCAPED_UNICODE);
+
+            DB::table('notifications_log')
+                ->where('id', $row->id)
+                ->update($update);
+
+            // Log visível no laravel.log para o admin acompanhar a
+            // entrega real (vs. apenas "aceito pela Meta").
+            $logContext = [
+                'wamid'           => $wamid,
+                'status'          => $statusStr,
+                'user_id'         => $row->user_id,
+                'company_id'      => $row->company_id,
+                'notification_id' => $row->notification_id,
+                'recipient'       => $status['recipient_id'] ?? null,
+                'event_at'        => $eventAt,
+            ];
+
+            if ($statusStr === 'failed') {
+                $logContext['reason'] = $errorReason;
+                Log::warning('[WhatsApp Status] FALHA na entrega (Meta rejeitou após aceitar wamid)', $logContext);
+            } else {
+                Log::info("[WhatsApp Status] {$statusStr}", $logContext);
+            }
+        });
+    }
+
+    /**
+     * Fallback usado quando o phone_number_id do payload não resolve o
+     * tenant. Em SaaS multi-tenant é comum o phone_number_id ser
+     * compartilhado, então localizamos o wamid por força bruta varrendo
+     * os tenants ativos. O custo é aceitável porque eventos de status
+     * são esparsos e a busca usa o índice em `provider_id`.
+     */
+    private function resolveTenantByWamid(string $wamid)
+    {
+        $cacheKey = "wamid_tenant:{$wamid}";
+
+        if ($cached = cache()->get($cacheKey)) {
+            $hit = Tenant::find($cached);
+            if ($hit) {
+                return $hit;
+            }
+        }
+
+        $tenants = Tenant::all();
+
+        foreach ($tenants as $tenant) {
+            $found = $tenant->run(function () use ($wamid) {
+                if (! Schema::hasTable('notifications_log')) {
+                    return false;
+                }
+                return DB::table('notifications_log')
+                    ->where('provider_id', $wamid)
+                    ->where('channel', 'whatsapp')
+                    ->exists();
+            });
+
+            if ($found) {
+                cache()->put($cacheKey, $tenant->id, now()->addHour());
+                return $tenant;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -1526,10 +2014,17 @@ class WhatsAppIntegrationController extends Controller
      */
     private function validateWebhookSignature(Request $request)
     {
-        // Se não tiver APP_SECRET configurado, pular validação (não recomendado em produção)
+        // Sem APP_SECRET configurado: em produção isso é uma falha grave.
+        // Em ambientes não-produção (local/staging) permitimos passar para
+        // facilitar testes com ngrok, mas SEMPRE logando como erro.
         if (!$this->appSecret) {
-            Log::warning('META_APP_SECRET não configurado. Validação de assinatura desabilitada.');
-            return true; // Permitir continuar, mas logar aviso
+            if (app()->environment('production')) {
+                Log::error('META_APP_SECRET ausente em produção — webhook REJEITADO por segurança.');
+                return false;
+            }
+
+            Log::warning('META_APP_SECRET não configurado. Validação de assinatura desabilitada (ambiente não-produção).');
+            return true;
         }
 
         $signature = $request->header('X-Hub-Signature-256');

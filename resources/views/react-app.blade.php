@@ -4,6 +4,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="csrf-token" content="{{ csrf_token() }}" />
+    @auth
+        @if (function_exists('tenant') && tenant())
+            <meta name="tenant-id" content="{{ tenant()->id }}" />
+        @endif
+        <meta name="user-id" content="{{ auth()->id() }}" />
+    @endauth
     <title>{{ config('app.name', 'Dominus') }} — Dashboard</title>
     <link rel="icon" href="{{ global_asset('tenancy/assets/media/app/mini-logo.svg') }}" type="image/svg+xml" />
 

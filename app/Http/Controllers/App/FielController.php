@@ -214,7 +214,7 @@ class FielController extends Controller
                         }
                     }
                 }],
-                'sexo' => 'required|in:M,F,Outro',
+                'sexo' => 'nullable|in:M,F,Outro',
                 'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             ]);
 
@@ -255,7 +255,7 @@ class FielController extends Controller
                 'cpf' => $request->cpf,
                 'rg' => $request->rg,
                 'data_nascimento' => $dataNascimento,
-                'sexo' => $request->sexo,
+                'sexo' => $request->input('sexo', 'M'),
                 'notifications' => json_encode($request->input('notifications', [])),
                 'status' => $request->status ?? 'Ativo',
                 'created_by' => auth()->user()->id,

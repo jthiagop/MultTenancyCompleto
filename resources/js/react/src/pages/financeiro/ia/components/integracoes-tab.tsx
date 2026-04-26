@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { Fragment, useCallback, useEffect, useState } from 'react';
 import {
   MessageCircle,
   FileText,
@@ -7,8 +7,11 @@ import {
   Settings,
   Loader2,
   ChevronDown,
+  ChevronRight,
   UsersRound,
   Clock,
+  Plus,
+  Hourglass,
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -54,6 +57,7 @@ import {
 } from '@/components/ui/select';
 import { notify } from '@/lib/notify';
 import { WhatsappIntegracaoSheet } from './whatsapp-integracao-sheet';
+import { WhatsappGrupoSheet } from './whatsapp-grupo-sheet';
 
 /** Linhas retornadas pela API (tipos persistidos no tenant). */
 interface IntegracaoApi {
@@ -88,6 +92,15 @@ const TIPO_CONFIG: Record<DisplayTipo, { icon: React.ElementType; color: string;
   email: { icon: Mail, color: 'text-blue-500', label: 'E-mail' },
   grupo_whatsapp: { icon: UsersRound, color: 'text-green-600', label: 'Grupo WhatsApp' },
 };
+
+/** Contato individual do "Grupo WhatsApp" (whatsapp_auth_requests kind='company_contact'). */
+interface GrupoContatoApi {
+  id: number;
+  contact_label: string | null;
+  wa_id: string | null;
+  status: 'pending' | 'active';
+  created_at?: string;
+}
 
 /** Garante id numérico vindo da API (JSON às vezes entrega string). */
 function coerceIntegracaoId(id: unknown): number {
@@ -173,6 +186,27 @@ export function IntegracoesTab() {
   const [horarioSelecionado, setHorarioSelecionado] = useState('08:00');
   const [horarioSaving, setHorarioSaving] = useState(false);
 
+  // Grupo WhatsApp (kind='company_contact') — múltiplos números por empresa.
+  const [grupoSheetOpen, setGrupoSheetOpen] = useState(false);
+  const [grupoContatos, setGrupoContatos] = useState<GrupoContatoApi[]>([]);
+  const [grupoExpandido, setGrupoExpandido] = useState(false);
+  const [grupoDeleteTarget, setGrupoDeleteTarget] = useState<GrupoContatoApi | null>(null);
+  const [grupoDeleteInProgress, setGrupoDeleteInProgress] = useState(false);
+
+  const loadContatosGrupo = useCallback(async () => {
+    try {
+      const res = await fetch('/integracoes/whatsapp-grupo', { headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = (await res.json()) as { success?: boolean; data?: GrupoContatoApi[] };
+      if (data.success && Array.isArray(data.data)) {
+        setGrupoContatos(data.data);
+      }
+    } catch {
+      // Silencioso: a aba ainda funciona, e a linha "Grupo WhatsApp" cai para o estado vazio.
+      setGrupoContatos([]);
+    }
+  }, []);
+
   const loadIntegracoes = useCallback(async () => {
     setLoading(true);
     setLoadError(false);
@@ -203,11 +237,49 @@ export function IntegracoesTab() {
 
   useEffect(() => {
     void loadIntegracoes();
-  }, [loadIntegracoes]);
+    void loadContatosGrupo();
+  }, [loadIntegracoes, loadContatosGrupo]);
 
   const openWhatsappSetup = useCallback(() => {
     setWhatsappSheetOpen(true);
   }, []);
+
+  const openGrupoSetup = useCallback(() => {
+    setGrupoSheetOpen(true);
+  }, []);
+
+  const handleGrupoSuccess = useCallback(() => {
+    void loadContatosGrupo();
+    setGrupoExpandido(true);
+  }, [loadContatosGrupo]);
+
+  const executeDeleteGrupoContato = useCallback(async () => {
+    if (!grupoDeleteTarget) return;
+    setGrupoDeleteInProgress(true);
+    try {
+      const csrfEl = document.querySelector<HTMLMetaElement>('meta[name="csrf-token"]');
+      const res = await fetch(`/integracoes/whatsapp-grupo/${grupoDeleteTarget.id}`, {
+        method: 'DELETE',
+        headers: {
+          'X-CSRF-TOKEN': csrfEl?.content ?? '',
+          Accept: 'application/json',
+          'X-Requested-With': 'XMLHttpRequest',
+        },
+      });
+      const data = (await res.json()) as { success?: boolean; error?: string };
+      if (res.ok && data.success) {
+        notify.success('Grupo WhatsApp', 'Contato removido.');
+        setGrupoDeleteTarget(null);
+        await loadContatosGrupo();
+      } else {
+        notify.error('Erro', data.error ?? 'Erro ao remover contato.');
+      }
+    } catch {
+      notify.error('Grupo WhatsApp', 'Erro ao remover contato.');
+    } finally {
+      setGrupoDeleteInProgress(false);
+    }
+  }, [grupoDeleteTarget, loadContatosGrupo]);
 
   const handleConfigure = useCallback(
     (integ: IntegracaoRow) => {
@@ -313,11 +385,7 @@ export function IntegracoesTab() {
             >
               E-mail
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onSelect={() => notify.info('Integrações', 'Grupo WhatsApp em breve.')}
-            >
-              Grupo WhatsApp
-            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={openGrupoSetup}>Grupo WhatsApp</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -349,6 +417,118 @@ export function IntegracoesTab() {
               {rows.map((integ) => {
                 const cfg = TIPO_CONFIG[integ.tipo];
                 const Icon = cfg.icon;
+
+                if (integ.tipo === 'grupo_whatsapp') {
+                  // Linha sintética: nunca há registro em `integracoes_api`. O
+                  // estado/quantidade vem de `grupoContatos` (whatsapp_auth_requests).
+                  const ativos = grupoContatos.filter((c) => c.status === 'active');
+                  const pendentes = grupoContatos.filter((c) => c.status === 'pending');
+                  const totalAtivos = ativos.length;
+                  const totalPendentes = pendentes.length;
+                  const grupoStatus: DisplayStatus =
+                    totalAtivos > 0 ? 'configurado' : totalPendentes > 0 ? 'pendente' : 'nao_configurado';
+
+                  return (
+                    <Fragment key={String(integ.id)}>
+                      <TableRow>
+                        <TableCell>
+                          <span className="flex items-center gap-2 font-medium">
+                            {totalAtivos + totalPendentes > 0 ? (
+                              <button
+                                type="button"
+                                onClick={() => setGrupoExpandido((s) => !s)}
+                                className="rounded hover:bg-muted/60 p-0.5 -ml-0.5"
+                                aria-label={grupoExpandido ? 'Recolher contatos' : 'Expandir contatos'}
+                              >
+                                {grupoExpandido ? (
+                                  <ChevronDown className="size-3.5" />
+                                ) : (
+                                  <ChevronRight className="size-3.5" />
+                                )}
+                              </button>
+                            ) : (
+                              <span className="inline-block size-3.5 -ml-0.5" aria-hidden />
+                            )}
+                            <Icon className={`size-4 ${cfg.color}`} />
+                            {cfg.label}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <SituationBadge status={grupoStatus} />
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">
+                          {totalAtivos === 0 && totalPendentes === 0 ? (
+                            <span>—</span>
+                          ) : (
+                            <div className="flex flex-wrap items-center gap-2 text-xs">
+                              <span className="font-medium text-foreground">
+                                {totalAtivos} {totalAtivos === 1 ? 'contato' : 'contatos'}
+                              </span>
+                              {totalPendentes > 0 ? (
+                                <span className="text-muted-foreground">
+                                  · <Hourglass className="inline size-3 mr-0.5" />
+                                  {totalPendentes} pendente{totalPendentes > 1 ? 's' : ''}
+                                </span>
+                              ) : null}
+                            </div>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-muted-foreground">Empresa ativa</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end items-center gap-1 flex-wrap">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="gap-1.5 h-7 text-xs"
+                              onClick={openGrupoSetup}
+                            >
+                              <Plus className="size-3" />
+                              Adicionar contato
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+
+                      {grupoExpandido && (totalAtivos + totalPendentes > 0) ? (
+                        grupoContatos.map((contato) => (
+                          <TableRow key={`grupo-contato-${contato.id}`} className="bg-muted/30">
+                            <TableCell className="pl-12 text-sm">
+                              <span className="text-muted-foreground">↳</span>{' '}
+                              <span className="font-medium">{contato.contact_label ?? 'Contato'}</span>
+                            </TableCell>
+                            <TableCell>
+                              <SituationBadge
+                                status={contato.status === 'active' ? 'configurado' : 'pendente'}
+                              />
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-xs">
+                              {contato.wa_id ? (
+                                <span className="font-mono">{contato.wa_id}</span>
+                              ) : (
+                                <span className="italic">aguardando QR…</span>
+                              )}
+                            </TableCell>
+                            <TableCell className="text-muted-foreground text-xs">—</TableCell>
+                            <TableCell className="text-right">
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                className="size-7 shrink-0 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                                aria-label="Remover contato do grupo"
+                                title="Remover contato do grupo"
+                                onClick={() => setGrupoDeleteTarget(contato)}
+                              >
+                                <Trash2 className="size-3.5" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : null}
+                    </Fragment>
+                  );
+                }
+
                 return (
                   <TableRow key={String(integ.id)}>
                     <TableCell>
@@ -512,6 +692,57 @@ export function IntegracoesTab() {
         onOpenChange={setWhatsappSheetOpen}
         onSuccess={() => void loadIntegracoes()}
       />
+
+      <WhatsappGrupoSheet
+        open={grupoSheetOpen}
+        onOpenChange={setGrupoSheetOpen}
+        onSuccess={handleGrupoSuccess}
+      />
+
+      <AlertDialog
+        open={grupoDeleteTarget !== null}
+        onOpenChange={(open) => {
+          if (!open && !grupoDeleteInProgress) setGrupoDeleteTarget(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover contato do Grupo WhatsApp?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja remover{' '}
+              <span className="font-medium text-foreground">
+                {grupoDeleteTarget?.contact_label ?? 'este contato'}
+              </span>
+              {grupoDeleteTarget?.wa_id ? (
+                <>
+                  {' '}(<span className="font-mono">{grupoDeleteTarget.wa_id}</span>)
+                </>
+              ) : null}
+              ? A pessoa não receberá mais notificações financeiras nesta empresa.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={grupoDeleteInProgress}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-white"
+              disabled={grupoDeleteInProgress}
+              onClick={(e) => {
+                e.preventDefault();
+                void executeDeleteGrupoContato();
+              }}
+            >
+              {grupoDeleteInProgress ? (
+                <>
+                  <Loader2 className="size-4 animate-spin inline-block mr-2 align-middle" />
+                  Removendo…
+                </>
+              ) : (
+                'Remover'
+              )}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 }

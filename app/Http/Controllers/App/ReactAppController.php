@@ -101,6 +101,8 @@ class ReactAppController extends Controller
             'canContabilidadeIndex' => $user->can('contabilidade.index'),
             'canFinanceiroIndex'    => $user->can('financeiro.index'),
             'canNotafiscalIndex'    => $user->can('notafiscal.index'),
+            'canSecretaryIndex'     => $user->can('secretary.index'),
+            'canFieisIndex'         => $user->can('fieis.index'),
         ];
 
         return view('react-app', compact('appData'));

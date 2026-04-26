@@ -13,6 +13,10 @@ import {
 } from '@/components/ui/item';
 import { cn } from '@/lib/utils';
 import { notify } from '@/lib/notify';
+import {
+  useDomusIaRealtime,
+  type DocumentoProcessadoPayload,
+} from '../hooks/use-domus-ia-realtime';
 
 export interface DomusDocument {
   id: number;
@@ -34,14 +38,31 @@ interface DocumentListProps {
   filterType: string;
   selectedId: number | null;
   onSelect: (doc: DomusDocument) => void;
+  /**
+   * Tenant atual — usado pelo Echo para assinar o canal privado
+   * `tenant.{tenantId}.domus-ia`. Sem isso, o hook opera só em polling.
+   */
+  tenantId?: string | null;
+  /**
+   * Disparado quando o documento atualmente selecionado conclui o
+   * processamento (sucesso ou erro), para que a página possa recarregar
+   * os dados extraídos automaticamente.
+   */
+  onDocumentProcessed?: (payload: DocumentoProcessadoPayload) => void;
 }
 
-export function DocumentList({ refreshKey, filterType, selectedId, onSelect }: DocumentListProps) {
+export function DocumentList({
+  refreshKey,
+  filterType,
+  selectedId,
+  onSelect,
+  tenantId,
+  onDocumentProcessed,
+}: DocumentListProps) {
   const [docs, setDocs] = useState<DomusDocument[]>([]);
   const [loading, setLoading] = useState(true);
 
   const loadDocs = useCallback(async () => {
-    setLoading(true);
     try {
       const res = await fetch('/financeiro/domusia/list', {
         headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
@@ -57,6 +78,7 @@ export function DocumentList({ refreshKey, filterType, selectedId, onSelect }: D
   }, []);
 
   useEffect(() => {
+    setLoading(true);
     loadDocs();
   }, [loadDocs, refreshKey]);
 
@@ -64,6 +86,25 @@ export function DocumentList({ refreshKey, filterType, selectedId, onSelect }: D
     () => (filterType ? docs.filter((d) => d.tipo_documento === filterType) : docs),
     [docs, filterType],
   );
+
+  // Real-time: prefere broadcast (Echo) quando disponível; cai em
+  // polling adaptativo apenas enquanto houver documentos pendentes.
+  const hasPending = useMemo(
+    () => docs.some((d) => d.status !== 'processado' && d.status !== 'erro'),
+    [docs],
+  );
+
+  useDomusIaRealtime({
+    tenantId,
+    pollIntervalMs: 5000,
+    shouldPoll: () => hasPending,
+    onUpdate: (payload) => {
+      void loadDocs();
+      if (payload && onDocumentProcessed) {
+        onDocumentProcessed(payload);
+      }
+    },
+  });
 
   if (loading) {
     return (

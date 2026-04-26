@@ -2,6 +2,7 @@
 
 namespace App\Services\Ai;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use App\Exceptions\Ai\DocumentExtractionException;
@@ -21,7 +22,23 @@ class DocumentExtractorService
     // Configurações de conversão de PDF para imagem
     private const PDF_CONVERSION_DPI = 200; // DPI otimizado para OCR (balanço entre qualidade e tamanho)
     private const MAX_PDF_PAGES = 5; // Limite de páginas para evitar custo excessivo de tokens
-    private const PDF_IMAGE_FORMAT = 'png'; // PNG mantém melhor qualidade de texto
+
+    /**
+     * Formato de imagem para conversão de PDF.
+     * JPEG é ~3-5× menor que PNG no payload base64 e a OpenAI Vision cobra
+     * tokens com base nas dimensões da imagem (não no formato), então o
+     * formato menor reduz latência de rede sem perda mensurável de OCR.
+     */
+    private const PDF_IMAGE_FORMAT = 'jpeg';
+    private const PDF_IMAGE_MIME = 'image/jpeg';
+    private const PDF_IMAGE_QUALITY = 90; // Qualidade alta o bastante para OCR de texto
+
+    /**
+     * TTL do cache do system prompt dinâmico (segundos).
+     * 5 min é curto o suficiente para refletir alterações em formas de
+     * pagamento / lançamentos padrão sem martelar o banco a cada documento.
+     */
+    private const PROMPT_CACHE_TTL = 300;
 
     /**
      * ID da empresa ativa (para filtrar lançamentos padrão)
@@ -78,11 +95,12 @@ class DocumentExtractorService
                 ]);
 
                 // Construir array de conteúdo com todas as páginas
-                foreach ($imagePages as $index => $imageBase64) {
+                $pdfMime = self::PDF_IMAGE_MIME;
+                foreach ($imagePages as $imageBase64) {
                     $fileContents[] = [
                         'type' => 'image_url',
                         'image_url' => [
-                            'url' => "data:image/png;base64,{$imageBase64}",
+                            'url' => "data:{$pdfMime};base64,{$imageBase64}",
                         ],
                     ];
                 }
@@ -141,7 +159,7 @@ class DocumentExtractorService
                         'json_schema' => [
                             'name' => 'document_extraction',
                             'strict' => true,
-                            'schema' => $this->getResponseSchema(),
+                            'schema' => self::getResponseSchema(),
                         ],
                     ],
                     'temperature' => 0.0, // Zero criatividade, máxima precisão
@@ -495,6 +513,10 @@ class DocumentExtractorService
             // DPI mais alto = melhor qualidade de OCR, mas arquivo maior
             $imagick->setResolution(self::PDF_CONVERSION_DPI, self::PDF_CONVERSION_DPI);
 
+            // Respeitar a CropBox do PDF (área visível) em vez da MediaBox
+            // — evita renderizar margens/bleed indesejados.
+            $imagick->setOption('pdf:use-cropbox', '1');
+
             // Ler PDF da memória
             $imagick->readImageBlob($pdfBinary);
 
@@ -528,13 +550,15 @@ class DocumentExtractorService
                 }
 
                 try {
-                    // Configurar formato de saída
+                    // Achatar a página contra fundo branco — evita que PDFs com
+                    // transparência fiquem com fundo preto ao virar JPEG.
+                    $page->setImageBackgroundColor('white');
+                    $page->setImageAlphaChannel(Imagick::ALPHACHANNEL_REMOVE);
+                    $page->mergeImageLayers(Imagick::LAYERMETHOD_FLATTEN);
+
+                    // Formato e qualidade de saída
                     $page->setImageFormat(self::PDF_IMAGE_FORMAT);
-
-                    // Qualidade de compressão (85 é um bom balanço)
-                    $page->setImageCompressionQuality(85);
-
-                    // Converter para RGB (necessário para PNG)
+                    $page->setImageCompressionQuality(self::PDF_IMAGE_QUALITY);
                     $page->setImageColorspace(Imagick::COLORSPACE_SRGB);
 
                     // Obter imagem como blob e converter para base64
@@ -683,12 +707,15 @@ class DocumentExtractorService
     }
 
     /**
-
-     * Retorna o JSON Schema para Structured Outputs
+     * Retorna o JSON Schema para Structured Outputs.
      *
-     * @return array
+     * Público e estático para que ferramentas externas (como o comando
+     * `domus:dump-extraction-schema`) possam derivar tipos do mesmo
+     * contrato — garantindo paridade entre back-end e front-end.
+     *
+     * @return array<string, mixed>
      */
-    private function getResponseSchema(): array
+    public static function getResponseSchema(): array
     {
         return [
             'type' => 'object',
@@ -927,12 +954,65 @@ class DocumentExtractorService
     }
 
     /**
-     * Retorna o prompt do sistema para a IA com REGRAS DE NEGÓCIO BRASILEIRAS
-     * Dinâmico: injeta formas de pagamento e lançamentos padrão do banco
-     *
-     * @return string
+     * Retorna o prompt do sistema cacheado por tenant + empresa.
+     * As listas dinâmicas (formas de pagamento, lançamentos padrão) só
+     * mudam quando o usuário cadastra/edita esses recursos — fora isso o
+     * prompt é estável e idêntico para todas as extrações da mesma empresa.
      */
     private function getSystemPrompt(): string
+    {
+        $cacheKey = $this->promptCacheKey();
+
+        try {
+            $prompt = Cache::remember($cacheKey, self::PROMPT_CACHE_TTL, fn () => $this->buildSystemPrompt());
+            return is_string($prompt) ? $prompt : $this->buildSystemPrompt();
+        } catch (\Throwable $e) {
+            // Falha de cache não pode quebrar a extração — fallback para
+            // construção sob demanda.
+            Log::warning('Falha ao acessar cache do system prompt; usando construção direta', [
+                'cache_key' => $cacheKey,
+                'error' => $e->getMessage(),
+            ]);
+            return $this->buildSystemPrompt();
+        }
+    }
+
+    /**
+     * Gera a chave de cache do prompt incluindo o tenant atual (quando
+     * aplicável) e a empresa, evitando vazamento entre tenants/empresas.
+     */
+    private function promptCacheKey(): string
+    {
+        $tenantId = 'central';
+        try {
+            $tenantId = function_exists('tenant') && tenant() ? (string) tenant()->id : 'central';
+        } catch (\Throwable $e) {
+            // Sem contexto de tenant — usa 'central' mesmo
+        }
+
+        return sprintf('domus.ai.system_prompt.%s.%s', $tenantId, $this->companyId ?? 'no_company');
+    }
+
+    /**
+     * Invalida o cache do prompt para o tenant/empresa correntes.
+     * Deve ser chamado por observers de FormasPagamento / LancamentoPadrao
+     * quando esses recursos são criados, atualizados ou removidos.
+     */
+    public function invalidatePromptCache(): void
+    {
+        try {
+            Cache::forget($this->promptCacheKey());
+        } catch (\Throwable $e) {
+            Log::warning('Falha ao invalidar cache do system prompt', [
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Constrói o prompt do sistema do zero — chamado pelo cache miss.
+     */
+    private function buildSystemPrompt(): string
     {
         $basePrompt = <<<'PROMPT'
 Você é um especialista contábil brasileiro, com experiência em Contabilidade Eclesial e Gestão de Paróquias e Conventos.

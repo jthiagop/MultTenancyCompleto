@@ -5,7 +5,6 @@ import {
   CheckCheck,
   Download,
   ExternalLink,
-  FileText,
   GitFork,
   Loader2,
   MoreHorizontal,
@@ -40,6 +39,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications, INotification } from '@/hooks/useNotifications';
+import { toAbsoluteUrl } from '@/lib/helpers';
 import { cn } from '@/lib/utils';
 
 // ── Mapa de classes por cor ───────────────────────────────────────────────────
@@ -52,7 +52,7 @@ const colorClass: Record<string, string> = {
   secondary: 'bg-muted text-muted-foreground',
 };
 
-// classes do calendário por urgência / tipo
+// classes do calendário por urgência / tipo (padrão item-10)
 const urgenciaCalendar: Record<string, { header: string; text: string; border: string }> = {
   atrasado: {
     header: 'bg-destructive/10 border-b border-b-destructive/20',
@@ -79,23 +79,127 @@ const urgenciaCalendar: Record<string, { header: string; text: string; border: s
     text:   'text-blue-500',
     border: 'border-blue-500/30',
   },
+  receita: {
+    header: 'bg-success/10 border-b border-b-success/20',
+    text:   'text-success',
+    border: 'border-success/30',
+  },
+  despesa: {
+    header: 'bg-destructive/10 border-b border-b-destructive/20',
+    text:   'text-destructive',
+    border: 'border-destructive/30',
+  },
 };
 
-// Nomes dos meses em português abreviados
 const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
-// ── Card de data (estilo item-10) ─────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers de formatação
+// ─────────────────────────────────────────────────────────────────────────────
+
+function fmtCurrency(value: number | null | undefined): string | null {
+  if (value == null || Number.isNaN(value)) return null;
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+  }).format(value);
+}
+
+/** Extrai a descrição entre aspas simples na mensagem (usada por várias notificações). */
+function extractDescription(message?: string | null): string | null {
+  if (!message) return null;
+  const m = message.match(/'([^']+)'/);
+  return m ? m[1] : null;
+}
+
+/**
+ * Mapa de extensão/tipo → ícone em /media/file-types/.
+ * Se o tipo não estiver mapeado, cai em "text.svg" como fallback genérico.
+ */
+const FILE_TYPE_ICONS: Record<string, string> = {
+  PDF:  'pdf.svg',
+  OFX:  'text.svg',
+  XLS:  'excel.svg',
+  XLSX: 'excel.svg',
+  CSV:  'excel.svg',
+  DOC:  'doc.svg',
+  DOCX: 'doc.svg',
+  TXT:  'text.svg',
+  ZIP:  'iso.svg',
+  XML:  'text.svg',
+  JSON: 'js.svg',
+};
+
+function fileTypeIcon(fileType?: string | null): string {
+  if (!fileType) return toAbsoluteUrl('/media/file-types/text.svg');
+  const key = String(fileType).trim().toUpperCase();
+  return toAbsoluteUrl(`/media/file-types/${FILE_TYPE_ICONS[key] ?? 'text.svg'}`);
+}
+
+/**
+ * Frase curta (sem valor / descrição) que vai LOGO após o nome do remetente,
+ * no padrão item-10 (ex.: "Nova Hawthorne sent you an meeting invation").
+ *
+ * O card visual abaixo do header é responsável por mostrar o conteúdo
+ * (descrição, valor, data). Por isso o header NUNCA repete esses dados.
+ */
+function buildAcaoTexto(n: INotification): string {
+  const tipo = n.tipo;
+
+  // Frases CURTAS (espelhando item-10: "sent you an meeting invation").
+  // O card visual abaixo do header já mostra urgência, data e valor,
+  // portanto não repetimos esses dados na frase de ação.
+  if (tipo === 'conta_vencendo') {
+    switch (n.urgencia) {
+      case 'atrasado': return 'tem uma conta atrasada';
+      case 'hoje':     return 'tem conta vencendo hoje';
+      case 'amanha':   return 'tem conta vencendo amanhã';
+      case 'semana':   return 'tem conta a vencer';
+      default:         return 'tem conta a vencer';
+    }
+  }
+
+  if (tipo === 'lancamento_agendado') {
+    return n.sub_tipo === 'receita'
+      ? 'agendou um recebimento'
+      : 'agendou um pagamento';
+  }
+
+  if (tipo === 'lancamento_financeiro') {
+    const isReceita = n.sub_tipo === 'receita';
+    switch (n.acao) {
+      case 'criado':      return isReceita ? 'lançou uma receita' : 'lançou uma despesa';
+      case 'atualizado':  return isReceita ? 'atualizou uma receita' : 'atualizou uma despesa';
+      case 'pago':        return 'registrou um pagamento';
+      case 'recebido':    return 'registrou um recebimento';
+      default:            return 'movimentou o financeiro';
+    }
+  }
+
+  if (tipo === 'rateio_recebido')  return 'lançou um rateio';
+  if (tipo === 'repasse_criado')   return 'criou um repasse';
+  if (tipo === 'relatorio_gerado') return 'gerou um relatório';
+  if (tipo === 'aviso_sistema')    return 'enviou um aviso';
+
+  // Fallback: usa o título da notificação, em minúsculas.
+  return (n.title || 'enviou uma notificação').toLowerCase();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Subcomponentes
+// ─────────────────────────────────────────────────────────────────────────────
+
 function DateCard({
   dateIso,
-  urgencia,
+  variant,
 }: {
   dateIso: string;
-  urgencia: 'atrasado' | 'hoje' | 'amanha' | 'semana' | 'rateio';
+  variant: keyof typeof urgenciaCalendar;
 }) {
   const d = new Date(dateIso + 'T00:00:00');
   const mes = MESES[d.getMonth()];
   const dia = String(d.getDate()).padStart(2, '0');
-  const cal = urgenciaCalendar[urgencia] ?? urgenciaCalendar.semana;
+  const cal = urgenciaCalendar[variant] ?? urgenciaCalendar.semana;
 
   return (
     <div className={cn('border rounded-lg shrink-0', cal.border)}>
@@ -111,12 +215,7 @@ function DateCard({
   );
 }
 
-// ── Avatar do remetente ──────────────────────────────────────────────────────
-function SenderAvatar({
-  triggeredBy,
-}: {
-  triggeredBy?: INotification['triggered_by'];
-}) {
+function SenderAvatar({ triggeredBy }: { triggeredBy?: INotification['triggered_by'] }) {
   const initials = triggeredBy?.name
     ? triggeredBy.name.split(' ').slice(0, 2).map((w) => w[0]).join('').toUpperCase()
     : '?';
@@ -126,20 +225,25 @@ function SenderAvatar({
       {triggeredBy?.avatar && (
         <AvatarImage src={triggeredBy.avatar} alt={triggeredBy.name} />
       )}
-      <AvatarFallback className="text-xs font-semibold">
-        {initials}
-      </AvatarFallback>
+      <AvatarFallback className="text-xs font-semibold">{initials}</AvatarFallback>
     </Avatar>
   );
 }
 
-// ── Card interno: calendário + descrição + valor ──────────────────────────────
-function FinanceiroCardInner({ n }: { n: INotification }) {
-  const urgencia     = (n.urgencia ?? 'semana') as 'atrasado' | 'hoje' | 'amanha' | 'semana';
-  const subTipoColor = n.sub_tipo === 'receita' ? 'text-success' : 'text-destructive';
-  const valorFmt     = n.valor != null
-    ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n.valor)
-    : null;
+// ─── Card: conta vencendo / lançamento agendado (padrão item-10) ─────────────
+function ContaVencendoCard({ n }: { n: INotification }) {
+  // `lancamento_agendado` é sempre "hoje" mesmo quando o backend antigo não
+  // setava o campo `urgencia`. Preserva o comportamento esperado do item-10.
+  const urgenciaResolved = (n.urgencia
+    ?? (n.tipo === 'lancamento_agendado' ? 'hoje' : 'semana')) as keyof typeof urgenciaCalendar;
+
+  const subTipoTone = n.sub_tipo === 'receita' ? 'text-success' : 'text-destructive';
+  const valorFmt    = fmtCurrency(n.valor);
+  const descricao   = extractDescription(n.message) ?? n.title;
+
+  // Fallback do calendário para hoje quando o payload não trouxer a data.
+  // Mantém o card sempre coerente com o padrão item-10.
+  const dateIso = n.data_vencimento_iso ?? new Date().toISOString().slice(0, 10);
 
   const urgenciaLabel: Record<string, string> = {
     atrasado: 'Em atraso',
@@ -148,29 +252,35 @@ function FinanceiroCardInner({ n }: { n: INotification }) {
     semana:   'Vence em breve',
   };
 
+  const urgenciaBadge: Record<string, string> = {
+    atrasado: 'danger',
+    hoje:     'warning',
+    amanha:   'info',
+    semana:   'info',
+  };
+
   return (
     <Card className="shadow-none p-2.5 rounded-lg bg-muted/70">
       <div className="flex items-center gap-2.5">
-        {n.data_vencimento_iso && (
-          <DateCard dateIso={n.data_vencimento_iso} urgencia={urgencia} />
-        )}
+        <DateCard dateIso={dateIso} variant={urgenciaResolved} />
         <div className="flex flex-col gap-1 min-w-0 flex-1">
-          <span className="text-xs font-medium text-foreground truncate">
-            {n.message.replace(/^'([^']+)'.*/, '$1')}
+          <span className="text-xs font-medium text-foreground truncate" title={descricao}>
+            {descricao}
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             {valorFmt && (
-              <span className={cn('text-xs font-semibold', subTipoColor)}>
+              <span className={cn('text-xs font-semibold', subTipoTone)}>
+                {n.sub_tipo === 'receita' ? '+ ' : '- '}
                 {valorFmt}
               </span>
             )}
             <span
               className={cn(
                 'text-[10px] font-semibold px-1.5 py-0.5 rounded-full border',
-                colorClass[urgencia === 'atrasado' ? 'danger' : urgencia === 'hoje' ? 'warning' : 'info'],
+                colorClass[urgenciaBadge[urgenciaResolved] ?? 'info'],
               )}
             >
-              {urgenciaLabel[urgencia]}
+              {urgenciaLabel[urgenciaResolved] ?? 'A vencer'}
             </span>
           </div>
         </div>
@@ -179,33 +289,73 @@ function FinanceiroCardInner({ n }: { n: INotification }) {
   );
 }
 
-// ── Card de rateio intercompany (data em azul, padrão item-10) ───────────────
-function RateioCardInner({ n }: { n: INotification }) {
-  const valorFmt = n.valor != null
-    ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n.valor)
-    : null;
+// ─── Card: lançamento criado / atualizado / pago / recebido ──────────────────
+function LancamentoCard({ n }: { n: INotification }) {
+  const isReceita = n.sub_tipo === 'receita';
+  const valorFmt  = fmtCurrency(n.valor);
+  const descricao = extractDescription(n.message) ?? n.title;
 
-  // Extrai só a descrição entre aspas simples, se houver
-  const descricao = n.message.match(/'([^']+)'/)?.[1] ?? n.message;
-
-  // Fallback para hoje se não vier data de vencimento
   const dateIso = n.data_vencimento_iso ?? new Date().toISOString().slice(0, 10);
+  const variant: keyof typeof urgenciaCalendar = isReceita ? 'receita' : 'despesa';
+
+  const acaoLabel: Record<string, string> = {
+    criado:     'Criado',
+    atualizado: 'Atualizado',
+    pago:       'Pago',
+    recebido:   'Recebido',
+    vencimento: 'Vencimento',
+  };
 
   return (
     <Card className="shadow-none p-2.5 rounded-lg bg-muted/70">
       <div className="flex items-center gap-2.5">
-        {/* Widget mês/dia em azul — mesmo padrão do item-10 */}
-        <DateCard dateIso={dateIso} urgencia="rateio" />
+        <DateCard dateIso={dateIso} variant={variant} />
+        <div className="flex flex-col gap-1 min-w-0 flex-1">
+          <span className="text-xs font-medium text-foreground truncate" title={descricao}>
+            {descricao}
+          </span>
+          <div className="flex items-center gap-2 flex-wrap">
+            {valorFmt && (
+              <span className={cn('text-xs font-semibold', isReceita ? 'text-success' : 'text-destructive')}>
+                {isReceita ? '+ ' : '- '}
+                {valorFmt}
+              </span>
+            )}
+            {n.acao && (
+              <span
+                className={cn(
+                  'text-[10px] font-semibold px-1.5 py-0.5 rounded-full border',
+                  colorClass[isReceita ? 'success' : 'danger'],
+                )}
+              >
+                {acaoLabel[n.acao] ?? n.acao}
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+    </Card>
+  );
+}
 
+// ─── Card: rateio intercompany ───────────────────────────────────────────────
+function RateioCard({ n }: { n: INotification }) {
+  const valorFmt  = fmtCurrency(n.valor);
+  const descricao = extractDescription(n.message) ?? n.title;
+  const dateIso   = n.data_vencimento_iso ?? new Date().toISOString().slice(0, 10);
+
+  return (
+    <Card className="shadow-none p-2.5 rounded-lg bg-muted/70">
+      <div className="flex items-center gap-2.5">
+        <DateCard dateIso={dateIso} variant="rateio" />
         <div className="flex flex-col gap-1.5 min-w-0 flex-1">
-          {/* Ícone de rateio antes do título */}
-          <span className="flex items-center gap-1.5 text-xs font-medium text-foreground truncate">
+          <span className="flex items-center gap-1.5 text-xs font-medium text-foreground truncate" title={descricao}>
             <GitFork className="size-3 shrink-0 text-blue-500" />
             {descricao}
           </span>
           <div className="flex items-center gap-2 flex-wrap">
             {valorFmt && (
-              <span className="text-xs font-semibold text-destructive">{valorFmt}</span>
+              <span className="text-xs font-semibold text-destructive">- {valorFmt}</span>
             )}
             {n.nome_matriz && (
               <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full border bg-blue-500/10 text-blue-600 border-blue-500/20 dark:text-blue-400">
@@ -219,38 +369,49 @@ function RateioCardInner({ n }: { n: INotification }) {
   );
 }
 
-// ── Card de relatório gerado (PDF com link de download) ─────────────────────
-function RelatorioCardInner({ n }: { n: INotification }) {
+// ─── Card: relatório / arquivo de download (padrão item-8) ───────────────────
+function RelatorioCard({ n }: { n: INotification }) {
+  const iconSrc = fileTypeIcon(n.file_type);
+  const fileLabel = n.file_type ? n.file_type.toUpperCase() : 'Arquivo';
+
   return (
-    <Card className="shadow-none flex items-center flex-row gap-2.5 p-2.5 rounded-lg bg-muted/70">
-      <div className="flex items-center justify-center size-9 shrink-0 rounded bg-red-100 dark:bg-red-950/40">
-        <FileText className="size-5 text-red-500" />
-      </div>
-      <div className="flex flex-col gap-0.5 grow min-w-0">
-        <span className="text-xs font-medium text-foreground truncate" title={n.title}>
-          {n.title.length > 45 ? n.title.slice(0, 45) + '…' : n.title}
-        </span>
-        <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
-          {n.file_type && (
-            <span className="font-medium uppercase">{n.file_type}</span>
-          )}
-          {n.file_size && (
-            <>
-              <span className="size-1 rounded-full bg-muted-foreground/30" />
-              <span>{n.file_size}</span>
-            </>
-          )}
-          {n.expires_in && (
-            <>
-              <span className="size-1 rounded-full bg-muted-foreground/30" />
-              <span>Expira em {n.expires_in}</span>
-            </>
-          )}
+    <Card className="shadow-none flex items-center justify-between flex-row gap-1.5 p-2.5 rounded-lg bg-muted/70">
+      <div className="flex items-center gap-2 min-w-0 flex-1">
+        <img src={iconSrc} className="h-7 shrink-0" alt={fileLabel} />
+        <div className="flex flex-col min-w-0">
+          <span className="font-medium text-secondary-foreground text-xs truncate" title={n.title}>
+            {n.title}
+          </span>
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            <span className="font-medium uppercase">{fileLabel}</span>
+            {n.file_size && (
+              <>
+                <span className="size-1 rounded-full bg-muted-foreground/30" />
+                <span>{n.file_size}</span>
+              </>
+            )}
+            {n.expires_in && (
+              <>
+                <span className="size-1 rounded-full bg-muted-foreground/30" />
+                <span>Expira em {n.expires_in}</span>
+              </>
+            )}
+          </div>
         </div>
       </div>
       {n.action_url && (
-        <a href={n.action_url} target="_blank" rel="noopener noreferrer">
-          <Button size="sm" variant="outline" className="gap-1 h-7 text-xs shrink-0 border-blue-200 bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-400 dark:hover:bg-blue-900/50">
+        <a
+          href={n.action_url}
+          target={n.target ?? '_blank'}
+          rel="noopener noreferrer"
+          className="shrink-0"
+          aria-label="Baixar arquivo"
+        >
+          <Button
+            size="sm"
+            variant="outline"
+            className="gap-1 h-7 text-xs border-primary/30 bg-primary/5 text-primary hover:bg-primary/10"
+          >
             <Download className="size-3" />
             Baixar
           </Button>
@@ -260,7 +421,21 @@ function RelatorioCardInner({ n }: { n: INotification }) {
   );
 }
 
-// ── Item de notificação (padrão item-10) ──────────────────────────────────────
+// ─── Card: aviso de sistema (texto simples) ──────────────────────────────────
+function AvisoCard({ n }: { n: INotification }) {
+  return (
+    <Card className="shadow-none p-2.5 rounded-lg bg-muted/70">
+      <p className="text-xs text-secondary-foreground leading-relaxed line-clamp-3">
+        {n.message}
+      </p>
+    </Card>
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Item de notificação (padrão item-10)
+// ─────────────────────────────────────────────────────────────────────────────
+
 function NotificationItem({
   n,
   onRead,
@@ -272,54 +447,54 @@ function NotificationItem({
 }) {
   const navigate          = useNavigate();
   const isUnread          = !n.read_at;
-  const isContaVencendo   = n.tipo === 'conta_vencendo';
-  const isRateioRecebido  = n.tipo === 'rateio_recebido';
-  const isRelatorioGerado = n.tipo === 'relatorio_gerado';
-  const podePagar         = (isContaVencendo || isRateioRecebido || n.acao === 'criado' || n.acao === 'atualizado')
-    && n.transacao_id != null
-    && !isRelatorioGerado;
+  const isContaVencendo   = n.tipo === 'conta_vencendo' || n.tipo === 'lancamento_agendado';
+  const isLancamento      = n.tipo === 'lancamento_financeiro';
+  const isRateio          = n.tipo === 'rateio_recebido';
+  const isRelatorio       = n.tipo === 'relatorio_gerado';
+  const isAviso           = n.tipo === 'aviso_sistema';
+
+  const senderName = n.triggered_by?.name
+    ?? (isRateio ? (n.nome_matriz ?? 'Matriz') : 'Sistema');
+  const acaoTexto  = buildAcaoTexto(n);
+
+  const podePagar = (isContaVencendo || isRateio || (isLancamento && (n.acao === 'criado' || n.acao === 'atualizado')))
+    && n.transacao_id != null;
 
   const pagamentoUrl = n.transacao_id
     ? `/financeiro?pagamento=${n.transacao_id}`
     : '/financeiro';
 
-  // Texto de ação inline com o nome do remetente
-  const valorInline = n.valor != null
-    ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n.valor)
-    : null;
-
-  const acaoTexto = isContaVencendo
-    ? n.title.toLowerCase()
-    : isRateioRecebido
-      ? `lançou um rateio de ${valorInline ?? 'valor não informado'} para esta unidade`
-      : n.message.replace(/^'[^']+'[^,]*,?\s*/, '').replace(/\.$/, '').toLowerCase();
-
-  const senderName = n.triggered_by?.name ?? (isRateioRecebido ? (n.nome_matriz ?? 'Matriz') : 'Sistema');
+  const categoriaLabel = n.categoria === 'financeiro'
+    ? 'Financeiro'
+    : n.categoria === 'sistema'
+      ? 'Sistema'
+      : 'Geral';
 
   return (
     <div
-      className="flex gap-2.5 px-5 py-4 relative group/item transition-colors"
+      className={cn(
+        'flex gap-2.5 px-5 py-4 relative group/item transition-colors',
+        isUnread && 'bg-primary/5 hover:bg-primary/10',
+      )}
     >
       {/* Dot de não lido */}
       {isUnread && (
         <span className="absolute top-4 end-4 size-1.5 rounded-full bg-primary" />
       )}
 
-      {/* Avatar do remetente */}
       <SenderAvatar triggeredBy={n.triggered_by} />
 
-      {/* Coluna principal */}
       <div className="flex flex-col gap-2.5 grow min-w-0">
-
-        {/* Linha 1: Nome · ação · tempo · menu */}
+        {/* Linha 1: Nome · ação curta · menu */}
         <div className="flex flex-col gap-0.5">
           <div className="flex items-start justify-between gap-1">
-            <p className="text-sm leading-snug">
+            {/* text-balance distribui melhor em quebras inevitáveis (nomes longos);
+                pe-1 garante respiro entre o texto e o botão de menu (•••). */}
+            <p className="text-sm leading-snug pe-1 text-balance">
               <span className="font-semibold text-mono">{senderName}</span>
               {' '}
               <span className="text-secondary-foreground">{acaoTexto}</span>
             </p>
-            {/* Dropdown de ações */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button
@@ -349,28 +524,24 @@ function NotificationItem({
             </DropdownMenu>
           </div>
 
-          {/* Tempo · categoria */}
           <span className="flex items-center text-xs text-muted-foreground">
             {n.created_at}
             <span className="rounded-full size-1 bg-muted-foreground/30 mx-1.5" />
-            {n.categoria === 'financeiro' ? 'Financeiro' : 'Sistema'}
+            {categoriaLabel}
           </span>
         </div>
 
-        {/* Card interno: vencimento, rateio, relatório ou mensagem genérica */}
-        {isContaVencendo ? (
-          <FinanceiroCardInner n={n} />
-        ) : isRateioRecebido ? (
-          <RateioCardInner n={n} />
-        ) : isRelatorioGerado ? (
-          <RelatorioCardInner n={n} />
-        ) : (
-          <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
-            {n.message}
-          </p>
+        {/* Card interno por tipo (padrão item-10 / item-8) */}
+        {isContaVencendo  && <ContaVencendoCard n={n} />}
+        {isLancamento     && <LancamentoCard    n={n} />}
+        {isRateio         && <RateioCard        n={n} />}
+        {isRelatorio      && <RelatorioCard     n={n} />}
+        {isAviso          && <AvisoCard         n={n} />}
+        {!isContaVencendo && !isLancamento && !isRateio && !isRelatorio && !isAviso && (
+          <AvisoCard n={n} />
         )}
 
-        {/* Botões de ação no rodapé */}
+        {/* Botão de ação no rodapé do item (financeiro com transação) */}
         {podePagar && (
           <div className="flex gap-2">
             <SheetClose asChild>
@@ -381,7 +552,7 @@ function NotificationItem({
                 onClick={() => navigate(pagamentoUrl)}
               >
                 <ExternalLink className="size-3" />
-                Informar pagamento
+                {n.sub_tipo === 'receita' ? 'Informar recebimento' : 'Informar pagamento'}
               </Button>
             </SheetClose>
           </div>
@@ -391,7 +562,10 @@ function NotificationItem({
   );
 }
 
-// ── Lista ─────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Lista
+// ─────────────────────────────────────────────────────────────────────────────
+
 function NotificationList({
   items,
   onRead,
@@ -421,7 +595,10 @@ function NotificationList({
   );
 }
 
-// ── Sheet principal ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Sheet principal
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
   const {
     notifications,
@@ -459,7 +636,10 @@ export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
           )}
         </span>
       </SheetTrigger>
-      <SheetContent className="gap-0 sm:w-[500px] inset-5 start-auto h-auto rounded-lg p-0 sm:max-w-none **:data-[slot=sheet-close]:top-4.5 **:data-[slot=sheet-close]:end-5" aria-describedby={undefined}>
+      <SheetContent
+        className="gap-0 sm:w-[500px] inset-5 start-auto h-auto rounded-lg p-0 sm:max-w-none **:data-[slot=sheet-close]:top-4.5 **:data-[slot=sheet-close]:end-5"
+        aria-describedby={undefined}
+      >
         <SheetHeader className="mb-0 border-b border-border">
           <div className="flex items-center justify-between px-5 py-3.5">
             <div className="flex items-center gap-2">
@@ -470,7 +650,6 @@ export function NotificationsSheet({ trigger }: { trigger: ReactNode }) {
                 </Badge>
               )}
             </div>
-
           </div>
         </SheetHeader>
 

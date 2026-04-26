@@ -13,11 +13,11 @@ const Toaster = ({ ...props }: ToasterProps) => {
   return (
     <Sonner
       theme={theme as ToasterProps['theme']}
-      position="bottom-right"
+      position="top-center"
       richColors
       closeButton
       duration={6000}
-      offset={{ bottom: 'max(0.75rem, env(safe-area-inset-bottom))', right: '1rem' }}
+      offset={{ top: 'max(0.75rem, env(safe-area-inset-top))' }}
       className="group toaster"
       // z-index acima do overlay do Sheet/Dialog (z-50 = 50 no Tailwind).
       // pointer-events: all garante interatividade mesmo quando Radix bloqueia o body.

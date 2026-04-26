@@ -71,19 +71,34 @@ class CleanExpiredNotifications extends Command
 
     /**
      * Remove notificações cujo expires_at já passou.
+     *
+     * Pós-Onda 2 a fonte canônica de `expires_at` é a coluna física `meta`
+     * (JSON nativo). Para registros legados ainda não cobertos pelo backfill,
+     * caímos em `data` via COALESCE — o índice em `type` torna o JSON_EXTRACT
+     * suportável, e o backfill remove esse fallback.
+     *
+     * Para evitar table lock em tenants grandes deletamos em batches.
      */
     private function cleanExpiredNotifications(int $toleranceDays): int
     {
-        $cutoffDate = Carbon::now()->subDays($toleranceDays);
-        
-        // Notificações expiradas têm expires_at definido no campo JSON 'data'
-        // Formato: data->expires_at é ISO 8601 string
-        $deleted = DB::table('notifications')
-            ->whereNotNull('data')
-            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.expires_at')) IS NOT NULL")
-            ->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.expires_at')) < ?", [$cutoffDate->toISOString()])
-            ->delete();
+        $cutoffIso = Carbon::now()->subDays($toleranceDays)->toIso8601String();
 
-        return $deleted;
+        $totalDeleted = 0;
+        $batchSize    = 1000;
+
+        do {
+            $deleted = DB::table('notifications')
+                ->whereRaw(
+                    "JSON_UNQUOTE(JSON_EXTRACT(COALESCE(meta, data), '$.expires_at')) IS NOT NULL"
+                    . " AND JSON_UNQUOTE(JSON_EXTRACT(COALESCE(meta, data), '$.expires_at')) < ?",
+                    [$cutoffIso]
+                )
+                ->limit($batchSize)
+                ->delete();
+
+            $totalDeleted += $deleted;
+        } while ($deleted >= $batchSize);
+
+        return $totalDeleted;
     }
 }

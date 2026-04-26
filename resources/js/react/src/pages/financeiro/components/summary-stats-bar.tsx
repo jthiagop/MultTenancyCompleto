@@ -21,7 +21,9 @@ const formatCurrency = (value: number) =>
 
 export function SummaryStatsBar({ stats, activeKey, onTabClick }: SummaryStatsBarProps) {
   return (
-    <div className="flex w-full border-b border-border">
+    // bg-muted/40: mesma tonalidade do <thead> das tabelas (data-grid-table.tsx)
+    // — mantém continuidade visual com o header das tabelas logo abaixo.
+    <div className="flex w-full border-b border-border bg-muted/40">
       {stats.map((stat, index) => {
         const isActive = activeKey === stat.statKey;
         return (
@@ -32,7 +34,9 @@ export function SummaryStatsBar({ stats, activeKey, onTabClick }: SummaryStatsBa
             className={cn(
               'flex-1 flex flex-col items-center justify-center py-4 px-3 relative transition-colors focus-visible:outline-none',
               index < stats.length - 1 && 'border-r border-border',
-              isActive ? 'bg-muted/30' : 'hover:bg-muted/20 cursor-pointer',
+              // Ativo: clareia para o tom do conteúdo (efeito "aba elevada");
+              // hover (inativo): escurece um pouco em relação ao fundo.
+              isActive ? 'bg-background' : 'hover:bg-muted/70 cursor-pointer',
             )}
           >
             {isActive && (

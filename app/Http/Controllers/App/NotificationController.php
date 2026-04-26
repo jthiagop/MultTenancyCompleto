@@ -11,15 +11,18 @@ use Illuminate\Support\Facades\Auth;
 class NotificationController extends Controller
 {
     /**
-     * Aplica o filtro de company_id à query de notificações.
-     * Centraliza a lógica que antes estava duplicada em 5 métodos.
+     * Filtra por company_id usando a coluna física (após backfill).
+     *
+     * Mantém `orWhereNull` apenas para registros antigos cujo backfill
+     * ainda não foi executado — após `notifications:backfill-columns`,
+     * todos terão valor e o fallback fica inerte.
      */
     private function applyCompanyFilter($query, ?int $companyId)
     {
         if ($companyId) {
             $query->where(function ($q) use ($companyId) {
-                $q->whereJsonContains('data->company_id', $companyId)
-                  ->orWhereNull('data->company_id');
+                $q->where('company_id', $companyId)
+                  ->orWhereNull('company_id');
             });
         }
 
@@ -27,24 +30,21 @@ class NotificationController extends Controller
     }
 
     /**
-     * Filtra notificações cujo expires_at já passou.
-     * Notificações expiradas são removidas da listagem.
+     * Filtra notificações cujo expires_at já passou (lê do meta JSON nativo,
+     * com fallback para `data` legado).
      */
     private function excludeExpiredNotifications($query)
     {
-        $now = Carbon::now()->toISOString();
+        $now = Carbon::now()->toIso8601String();
 
-        // whereNull('data->expires_at') não captura chaves ausentes no JSON em MySQL.
-        // Usamos JSON_EXTRACT diretamente: retorna NULL tanto para chave ausente quanto para JSON null.
         return $query->where(function ($q) use ($now) {
-            $q->whereRaw("JSON_EXTRACT(data, '$.expires_at') IS NULL")
-              ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(data, '$.expires_at')) >= ?", [$now]);
+            $q->whereRaw("JSON_UNQUOTE(JSON_EXTRACT(COALESCE(meta, data), '$.expires_at')) IS NULL")
+              ->orWhereRaw("JSON_UNQUOTE(JSON_EXTRACT(COALESCE(meta, data), '$.expires_at')) >= ?", [$now]);
         });
     }
 
     /**
-     * Retorna a contagem de não lidas filtrada por empresa.
-     * Exclui notificações expiradas da contagem.
+     * Conta não-lidas com os mesmos filtros aplicados.
      */
     private function getUnreadCount(?int $companyId): int
     {
@@ -54,11 +54,6 @@ class NotificationController extends Controller
         return $query->count();
     }
 
-    /**
-     * Retorna as notificações do usuário logado.
-     * Usa NotificationResource para transformação padronizada.
-     * Exclui notificações expiradas.
-     */
     public function index(Request $request)
     {
         $user = Auth::user();
@@ -68,6 +63,8 @@ class NotificationController extends Controller
         $query = $this->excludeExpiredNotifications($query);
         $notifications = $query->latest()->take(20)->get();
 
+        NotificationResource::primeTriggeredByCache($notifications);
+
         return response()->json([
             'success' => true,
             'notifications' => NotificationResource::collection($notifications),
@@ -75,10 +72,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
-     * Retorna apenas a contagem de notificações não lidas.
-     * Chave padronizada: unread_count (consistente com index).
-     */
     public function unreadCount()
     {
         $companyId = session('active_company_id');
@@ -89,19 +82,20 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
-     * Marca uma notificação como lida.
-     */
     public function markAsRead(Request $request, $id)
     {
-        $notification = Auth::user()->notifications()->where('id', $id)->first();
+        $notification = \App\Models\AppNotification::find($id);
 
-        if (!$notification) {
+        if (! $notification) {
             return response()->json([
                 'success' => false,
                 'message' => 'Notificação não encontrada',
             ], 404);
         }
+
+        // Centraliza autorização na NotificationPolicy::update — bloqueia
+        // qualquer tentativa de marcar notificação alheia como lida.
+        $this->authorize('update', $notification);
 
         $notification->markAsRead();
 
@@ -111,9 +105,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
-     * Marca todas as notificações como lidas.
-     */
     public function markAllAsRead()
     {
         $companyId = session('active_company_id');
@@ -126,19 +117,18 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
-     * Remove uma notificação.
-     */
     public function destroy($id)
     {
-        $notification = Auth::user()->notifications()->where('id', $id)->first();
+        $notification = \App\Models\AppNotification::find($id);
 
-        if (!$notification) {
+        if (! $notification) {
             return response()->json([
                 'success' => false,
                 'message' => 'Notificação não encontrada',
             ], 404);
         }
+
+        $this->authorize('delete', $notification);
 
         $notification->delete();
 
@@ -148,9 +138,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
-     * Remove todas as notificações lidas.
-     */
     public function destroyRead()
     {
         $companyId = session('active_company_id');
@@ -163,11 +150,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
-     * Retorna todas as notificações paginadas (JSON para o drawer).
-     * Suporta filtro por status: all, unread, read.
-     * Exclui notificações expiradas.
-     */
     public function all(Request $request)
     {
         $companyId = session('active_company_id');
@@ -186,9 +168,10 @@ class NotificationController extends Controller
         $query = $this->excludeExpiredNotifications($query);
         $paginated = $query->latest()->paginate(20, ['*'], 'page', $page);
 
+        NotificationResource::primeTriggeredByCache($paginated->items());
+
         return response()->json([
             'success'       => true,
-            // Passa ->items() para garantir array plano (não o objeto paginado com data/links/meta)
             'notifications' => NotificationResource::collection($paginated->items()),
             'unread_count'  => $this->getUnreadCount($companyId),
             'pagination'    => [
@@ -200,10 +183,6 @@ class NotificationController extends Controller
         ]);
     }
 
-    /**
-     * Exibe a página completa de notificações.
-     * Exclui notificações expiradas.
-     */
     public function page(Request $request)
     {
         $companyId = session('active_company_id');
