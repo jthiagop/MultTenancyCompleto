@@ -20,6 +20,10 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (! Schema::hasTable('banks')) {
+            return;
+        }
+
         // Atualiza todos os registros que têm o prefixo completo
         DB::table('banks')
             ->where('logo_path', 'LIKE', self::LOGO_PREFIX . '%')
@@ -40,6 +44,10 @@ return new class extends Migration
      */
     public function down(): void
     {
+        if (! Schema::hasTable('banks')) {
+            return;
+        }
+
         // Restaura o prefixo completo para registros que são apenas slugs
         DB::table('banks')
             ->whereNotNull('logo_path')
