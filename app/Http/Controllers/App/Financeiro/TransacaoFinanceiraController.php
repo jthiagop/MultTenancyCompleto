@@ -475,53 +475,12 @@ class TransacaoFinanceiraController extends Controller
                 }
 
                 // ── A2) Transação atual É um filho de rateio ──────────────────────────
+                // Regra: um rateio filho NUNCA pode excluir o registro pai nem os
+                // irmãos. Operações sobre o pai/irmãos só podem ser disparadas a
+                // partir do próprio pai (bloco A acima). Aqui o filho exclui
+                // apenas a si mesmo, ignorando qualquer rateio_scope vindo do
+                // cliente (defesa em profundidade contra payload manipulado).
                 if ($transacaoFinanceira->rateio_origem_id !== null) {
-                    $parentId = $transacaoFinanceira->rateio_origem_id;
-                    $parent   = TransacaoFinanceira::find($parentId);
-
-                    if ($parent) {
-                        if ($rateioScope === 'parent_only') {
-                            // Desvincula todos os filhos (tornam-se independentes) e deleta o pai
-                            $parent->rateioFilhos()->update(['rateio_origem_id' => null]);
-                            $this->deleteSingle($parent);
-
-                            return response()->json([
-                                'success' => true,
-                                'message' => 'Registro pai excluído. Os registros filhos tornaram-se independentes.',
-                            ]);
-                        }
-
-                        if ($rateioScope === 'all') {
-                            // Deleta o pai + todos os filhos em aberto (incluindo o atual)
-                            $parent->rateioFilhos()
-                                ->whereNotIn('situacao', ['pago', 'recebido'])
-                                ->get()
-                                ->each(fn ($f) => $this->deleteSingle($f));
-                            $parent->rateioFilhos()->update(['rateio_origem_id' => null]);
-                            $this->deleteSingle($parent);
-
-                            return response()->json([
-                                'success' => true,
-                                'message' => 'Registro pai e filhos excluídos com sucesso! Os já pagos/recebidos foram mantidos.',
-                            ]);
-                        }
-
-                        if ($rateioScope === 'children_only') {
-                            // Deleta todos os filhos em aberto (incluindo o atual), mantém o pai
-                            $parent->rateioFilhos()
-                                ->whereNotIn('situacao', ['pago', 'recebido'])
-                                ->get()
-                                ->each(fn ($f) => $this->deleteSingle($f));
-                            $parent->rateioFilhos()->update(['rateio_origem_id' => null]);
-
-                            return response()->json([
-                                'success' => true,
-                                'message' => 'Registros filhos excluídos com sucesso! O lançamento da matriz foi mantido.',
-                            ]);
-                        }
-                    }
-
-                    // Fallback (pai não encontrado): exclui apenas o filho atual
                     $this->deleteSingle($transacaoFinanceira);
 
                     return response()->json([

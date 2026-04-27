@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { AlertTriangleIcon, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -9,6 +9,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { type ITransacao } from '@/hooks/useTransacoes';
+import { AlertDescription } from '@/components/ui/alert';
 
 // ── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -115,10 +116,13 @@ export function DeleteTransacaoDialog({
     </div>
   ) : null;
 
-  const isRateio = is_rateio_origem || is_rateio_filho;
+  // Apenas o pai do rateio pode escolher entre os 3 escopos. Filhos só podem
+  // excluir a si mesmos — nunca o pai ou os irmãos.
+  const isRateioOrigem = is_rateio_origem;
+  const isRateioFilhoPuro = is_rateio_filho && !is_rateio_origem;
 
-  // ── Seção de rateio intercompany ────────────────────────────────────────────
-  const rateioSection = isRateio ? (
+  // ── Seção de rateio intercompany (somente para o registro pai) ──────────────
+  const rateioSection = isRateioOrigem ? (
     <div className="space-y-3">
       <p className="text-sm font-medium text-foreground">
         Lançamentos intercompany (filiais)
@@ -181,8 +185,22 @@ export function DeleteTransacaoDialog({
     </div>
   ) : null;
 
+  // ── Aviso para filho de rateio ──────────────────────────────────────────────
+  const filhoNotice = isRateioFilhoPuro ? (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 dark:border-amber-900/50 dark:bg-amber-950/20">
+      <p className="text-xs leading-relaxed text-amber-800 dark:text-amber-300">
+      <AlertTriangleIcon className="size-4 mr-2" />
+      <AlertDescription>
+
+        Este lançamento veio de um <strong>rateio da matriz</strong>. Apenas este registro
+        será excluído.
+        </AlertDescription>
+      </p>
+    </div>
+  ) : null;
+
   // ── Botão de confirmação ────────────────────────────────────────────────────
-  const confirmLabel = isRateio && rateioScope === 'children_only'
+  const confirmLabel = isRateioOrigem && rateioScope === 'children_only'
     ? 'Excluir apenas os filhos'
     : !hasScope
       ? 'Excluir lançamento'
@@ -217,6 +235,7 @@ export function DeleteTransacaoDialog({
         <div className="space-y-5 pt-1">
           {scopeSection}
           {rateioSection}
+          {filhoNotice}
 
           <div className="flex justify-end gap-2 pt-1">
             <Button
