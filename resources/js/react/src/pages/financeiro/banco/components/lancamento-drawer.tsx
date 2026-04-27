@@ -3,6 +3,7 @@ import { notify } from '@/lib/notify';
 import { useFormSelectData, type ParceiroOption } from '@/hooks/useFormSelectData';
 import { useAppData } from '@/hooks/useAppData';
 import { ParceiroQuickCreateSheet } from './parceiro-quick-create-sheet';
+import { CentroCustoQuickCreateSheet, type CentroCustoCreatedPayload } from './centro-custo-quick-create-sheet';
 import { entidadeBadges } from './entidade-badges';
 import { categoriaBadges } from './categoria-badges';
 import {
@@ -251,11 +252,15 @@ function LancamentoInfoCard({
   form, setField, fieldErrors, data, loading, tipo,
   parceiroOptions,
   onAddParceiro,
+  ccOptions,
+  onAddCentroCusto,
   sugState, confiancaCampos, markManualEdit,
   rateioAtivo, onRateioChange,
 }: CardProps & SugProps & {
   parceiroOptions: SearchSelectOption[];
   onAddParceiro: () => void;
+  ccOptions: SearchSelectOption[];
+  onAddCentroCusto: () => void;
   rateioAtivo: boolean;
   onRateioChange: (v: boolean) => void;
 }) {
@@ -408,16 +413,20 @@ function LancamentoInfoCard({
 
           <div className="col-span-3 flex flex-col gap-2" data-field="cost_center_id">
             <Label className="text-xs">Centro de Custo</Label>
-            <SearchSelect
-              popoverModal={false}
-              options={data.centrosCusto.map((c) => ({ value: String(c.id), label: `${c.code} – ${c.name}` }))}
+            <SearchSelectButton popoverModal={false}
+              options={ccOptions}
               value={form.centroCusto}
               onValueChange={(v) => {
                 markManualEdit('cost_center_id');
                 setField('centroCusto', v);
               }}
               placeholder="Selecione um centro..."
+              emptyListMessage="Nenhum centro cadastrado. Use o botão abaixo para adicionar."
               disabled={loading}
+              replaceApplyButton={{
+                label: '+ Novo Centro de Custo',
+                onClick: ({ close }) => { close(); onAddCentroCusto(); },
+              }}
               suggestionStar={
                 <SuggestionStar
                   currentValue={form.centroCusto}
@@ -1722,6 +1731,9 @@ export function LancamentoDrawer({ open, tipo, onClose, onSaved, editId, prefill
   const [parceiroSheetOpen, setParceiroSheetOpen] = useState(false);
   const [extraParceiros, setExtraParceiros] = useState<ParceiroOption[]>([]);
 
+  const [centroCustoSheetOpen, setCentroCustoSheetOpen] = useState(false);
+  const [extraCentrosCusto, setExtraCentrosCusto] = useState<CentroCustoCreatedPayload[]>([]);
+
   const parceirosForSelect = useMemo(() => {
     const wantNatureza = tipo === 'receita' ? 'cliente' : 'fornecedor';
     const map = new Map<string, ParceiroOption>();
@@ -1731,6 +1743,17 @@ export function LancamentoDrawer({ open, tipo, onClose, onSaved, editId, prefill
     }
     return Array.from(map.values());
   }, [data.parceiros, extraParceiros, tipo]);
+
+  const ccOptionsForInfoCard = useMemo(() => {
+    const map = new Map<string, SearchSelectOption>();
+    for (const c of data.centrosCusto ?? []) {
+      map.set(String(c.id), { value: String(c.id), label: `${c.code} – ${c.name}` });
+    }
+    for (const c of extraCentrosCusto) {
+      map.set(c.id, { value: c.id, label: `${c.code} – ${c.name}` });
+    }
+    return Array.from(map.values());
+  }, [data.centrosCusto, extraCentrosCusto]);
 
   const {
     form, setField, fieldErrors,
@@ -1983,6 +2006,8 @@ export function LancamentoDrawer({ open, tipo, onClose, onSaved, editId, prefill
                       tipo={tipo}
                       parceiroOptions={parceiroSearchOptions}
                       onAddParceiro={() => setParceiroSheetOpen(true)}
+                      ccOptions={ccOptionsForInfoCard}
+                      onAddCentroCusto={() => setCentroCustoSheetOpen(true)}
                       sugState={sugState}
                       confiancaCampos={confiancaCampos}
                       markManualEdit={markManualEdit}
@@ -2170,6 +2195,15 @@ export function LancamentoDrawer({ open, tipo, onClose, onSaved, editId, prefill
         onCreated={(p) => {
           setExtraParceiros((prev) => [...prev, { id: p.id, nome: p.nome, natureza: p.natureza }]);
           setField('fornecedor', p.id);
+        }}
+      />
+
+      <CentroCustoQuickCreateSheet
+        open={centroCustoSheetOpen}
+        onOpenChange={setCentroCustoSheetOpen}
+        onCreated={(c) => {
+          setExtraCentrosCusto((prev) => [...prev, c]);
+          setField('centroCusto', c.id);
         }}
       />
     </>
