@@ -260,8 +260,6 @@ export function ExtratoTable({
             searchPlaceholder="Buscar no extrato..."
             loading={loading}
             refetch={refetch}
-            headingRowClassName="flex-wrap"
-
             afterSearch={<TransacaoAdvancedFiltersTrigger />}
             extraBeforeToolbar={<TransacaoAdvancedFiltersChipsSection />}
           />

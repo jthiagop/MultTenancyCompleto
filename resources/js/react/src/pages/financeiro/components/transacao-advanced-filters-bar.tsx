@@ -522,15 +522,24 @@ export function TransacaoAdvancedFiltersChipsSection() {
     return (
         <div className="flex flex-col gap-1.5 min-w-0 w-full">
             <span className="text-xs font-medium text-muted-foreground">Mais filtros selecionados</span>
-            <div className="flex flex-wrap items-center gap-2">
-                {active.map((k) => (
-                    <Popover key={k} open={editing === k} onOpenChange={(o) => setEditing(o ? k : null)}>
-                        <div
-                            className={cn(
-                                'inline-flex max-w-full items-center gap-1 rounded-md border py-1 ps-2.5 pe-1 text-xs',
-                                financeiroToolbarSoftBlueChipClass,
-                            )}
-                        >
+            {/*
+              Chips com scroll horizontal: em telas pequenas mantém todos os
+              filtros ativos em uma única linha (igual à tabela e às tabs do
+              SummaryStatsBar) em vez de empilhar verticalmente. flex-nowrap
+              + min-w-fit força o conteúdo a manter o tamanho natural; o
+              overflow-x-auto do pai expõe scroll quando não cabe. -mx-4 px-4
+              estende o trilho de scroll até as bordas do CardHeader.
+            */}
+            <div className="-mx-4 px-4 overflow-x-auto">
+                <div className="flex min-w-fit flex-nowrap items-center gap-2">
+                    {active.map((k) => (
+                        <Popover key={k} open={editing === k} onOpenChange={(o) => setEditing(o ? k : null)}>
+                            <div
+                                className={cn(
+                                    'inline-flex shrink-0 max-w-[260px] items-center gap-1 rounded-md border py-1 ps-2.5 pe-1 text-xs',
+                                    financeiroToolbarSoftBlueChipClass,
+                                )}
+                            >
                             <PopoverTrigger asChild>
                                 <button
                                     type="button"
@@ -728,19 +737,20 @@ export function TransacaoAdvancedFiltersChipsSection() {
                         </PopoverContent>
                     </Popover>
                 ))}
-                <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                        financeiroToolbarSoftBlueClass,
-                        'h-10 min-w-44 gap-2 px-4 text-blue-700 hover:text-destructive dark:text-blue-200 dark:hover:text-destructive',
-                    )}
-                    onClick={clearAll}
-                >
-                    <Trash2 className="size-3.5" />
-                    Limpar filtros
-                </Button>
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className={cn(
+                            financeiroToolbarSoftBlueClass,
+                            'h-10 shrink-0 min-w-44 gap-2 px-4 text-blue-700 hover:text-destructive dark:text-blue-200 dark:hover:text-destructive',
+                        )}
+                        onClick={clearAll}
+                    >
+                        <Trash2 className="size-3.5" />
+                        Limpar filtros
+                    </Button>
+                </div>
             </div>
         </div>
     );
