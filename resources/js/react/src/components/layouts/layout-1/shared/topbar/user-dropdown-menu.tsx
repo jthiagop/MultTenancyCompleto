@@ -31,11 +31,32 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { Label } from 'react-aria-components';
 import { useLayout } from '@/components/layouts/layout-1/components/context';
+import {
+  useSessionExpired,
+  type SessionExpiredReason,
+} from '@/providers/session-expired-provider';
 
-/** POST em /app/logout (rota dedicada React), aguarda JSON e navega para /login (rota canônica). */
-async function submitLaravelLogout(logoutUrl: string, csrfToken: string) {
+/**
+ * Faz POST em `/app/logout` (rota dedicada React) e navega para `/login`.
+ *
+ * Caminhos:
+ * - Sucesso (2xx) ou erro genérico (≠ 401/419) → redireciona manualmente
+ *   para `/login`, mantendo o UX de "clicou em Sair → vai para o login".
+ * - 401/419 → o interceptor global do `SessionExpiredProvider` já dispara
+ *   `markExpired` automaticamente; aqui apenas evitamos o `window.location.href`
+ *   imediato para deixar o dialog (com countdown e botão "Tentar novamente")
+ *   conduzir o fluxo, evitando race entre redirect manual e dialog.
+ * - Erro de rede (offline, DNS, etc.) → chama `markExpired('manual')` como
+ *   fallback explícito; assim o usuário sempre recebe feedback ao invés de
+ *   ficar com o botão clicado e nada acontecendo.
+ */
+async function submitLaravelLogout(
+  logoutUrl: string,
+  csrfToken: string,
+  markExpired: (reason?: SessionExpiredReason) => void,
+) {
   try {
-    await fetch(logoutUrl, {
+    const res = await fetch(logoutUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -44,16 +65,24 @@ async function submitLaravelLogout(logoutUrl: string, csrfToken: string) {
       },
       credentials: 'same-origin',
     });
-  } finally {
-    // Rota canônica 'login' (routes/tenant-auth.php) — renderiza a tela de login React.
-    window.location.href = '/login';
+    if (res.status === 401 || res.status === 419) {
+      // Interceptor global já cuidou — não duplicar o redirect.
+      return;
+    }
+  } catch {
+    // Erro de rede: dispara o dialog como sinal explícito ao usuário.
+    markExpired('manual');
+    return;
   }
+  // Rota canônica 'login' (routes/tenant-auth.php) — renderiza a tela de login React.
+  window.location.href = '/login';
 }
 
 export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
   const { theme, setTheme } = useTheme();
   const { sidebarTheme, setSidebarTheme } = useLayout();
   const { user, csrfToken, logoutUrl, companyId, companies, hasAdminRole, hasGlobalRole } = useAppData();
+  const { markExpired } = useSessionExpired();
   const canManageLogin = Boolean(hasAdminRole || hasGlobalRole);
   const [switching, setSwitching] = useState<number | null>(null);
 
@@ -272,7 +301,7 @@ export function UserDropdownMenu({ trigger }: { trigger: ReactNode }) {
             className="w-full"
             onClick={() => {
               if (csrfToken && logoutUrl) {
-                submitLaravelLogout(logoutUrl, csrfToken);
+                submitLaravelLogout(logoutUrl, csrfToken, markExpired);
               }
             }}
           >

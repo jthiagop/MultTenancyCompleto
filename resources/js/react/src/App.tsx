@@ -47,7 +47,7 @@ export function App() {
         <LoadingBarContainer>
           <BrowserRouter basename={basename}>
             <Toaster />
-            <SessionExpiredProvider>
+            <SessionExpiredProvider enabled={!isAuthShell}>
               {isAuthShell ? <AuthAppRouting /> : <AppRouting />}
             </SessionExpiredProvider>
           </BrowserRouter>
