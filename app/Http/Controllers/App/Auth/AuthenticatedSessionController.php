@@ -105,16 +105,24 @@ class AuthenticatedSessionController extends Controller
                 ]);
             }
 
+            // ATENÇÃO: ler `url.intended` ANTES de regenerar a sessão.
+            // `regenerate()` mantém os dados (`migrate`/`flash`), mas a chave
+            // `url.intended` é tratada como flash em algumas versões/contextos
+            // — então pull antes evita race com a regeneração.
+            $intendedRaw = (string) $request->session()->pull('url.intended', '');
+
             $request->session()->regenerate();
+
+            $intended = self::sanitizeIntendedPath($intendedRaw) ?? '/app/dashboard';
 
             if ($isReactWeb) {
                 return response()->json([
                     'success'  => true,
-                    'redirect' => '/app/dashboard',
+                    'redirect' => $intended,
                 ]);
             }
 
-            return redirect()->intended('/app/dashboard');
+            return redirect($intended);
 
         } catch (\Illuminate\Validation\ValidationException $e) {
             if ($isMobile || $isReactWeb) {
@@ -168,5 +176,41 @@ class AuthenticatedSessionController extends Controller
         $request->session()->regenerateToken();
 
         return response()->json(['success' => true]);
+    }
+
+    /**
+     * Sanitiza o path consumido de `url.intended` antes de devolvê-lo ao
+     * cliente ou usá-lo num `redirect()`. Aceita apenas paths relativos
+     * dentro do painel (`/app/*`); rejeita URLs absolutas de outros hosts,
+     * protocol-relative, esquemas perigosos, CRLF e paths fora do painel
+     * (que causariam loop no /login).
+     *
+     * Espelhado em {@see App\Http\Controllers\App\ReactAuthController::sanitizeIntendedPath()}.
+     */
+    private static function sanitizeIntendedPath(string $raw): ?string
+    {
+        $raw = trim($raw);
+        if ($raw === '' || strlen($raw) > 2048) {
+            return null;
+        }
+
+        // `url.intended` historicamente pode guardar URL absoluta (via url())
+        // dependendo de quem populou. Aceitamos absoluta apenas se a host
+        // bater com a do request — extraímos só o path nesse caso.
+        if (preg_match('#^https?://#i', $raw)) {
+            $parts = parse_url($raw);
+            if (! is_array($parts) || empty($parts['host']) || $parts['host'] !== request()->getHost()) {
+                return null;
+            }
+            $raw = ($parts['path'] ?? '/') . (isset($parts['query']) ? '?' . $parts['query'] : '');
+        }
+
+        if (! str_starts_with($raw, '/'))     return null;
+        if (str_starts_with($raw, '//'))      return null;
+        if (str_contains($raw, "\n"))         return null;
+        if (str_contains($raw, "\r"))         return null;
+        if (! str_starts_with($raw, '/app/')) return null;
+
+        return $raw;
     }
 }
