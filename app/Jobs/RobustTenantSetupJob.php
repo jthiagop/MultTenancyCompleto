@@ -223,9 +223,14 @@ class RobustTenantSetupJob implements ShouldQueue
         // Verificar se já existe um usuário
         if (User::count() === 0) {
             Log::info("Criando usuário principal...");
-            
+
+            // Pessoa ≠ empresa: prefere `user_name` (informado no cadastro
+            // do tenant); cai em `name` para compatibilidade com tenants
+            // antigos onde só havia um campo.
+            $userName = trim((string) ($this->tenant->user_name ?? '')) ?: $this->tenant->name;
+
             $user = User::create([
-                'name' => $this->tenant->name,
+                'name' => $userName,
                 'email' => $this->tenant->email,
                 'password' => $this->tenant->password,
                 'avatar' => '1253525',
@@ -250,7 +255,9 @@ class RobustTenantSetupJob implements ShouldQueue
         // Verificar se já existe uma empresa
         if (Company::count() === 0) {
             Log::info("Criando empresa principal...");
-            
+
+            // `name` do tenant representa o nome da organização (Company),
+            // não da pessoa.
             $company = Company::create([
                 'name' => $this->tenant->name,
                 'type' => 'matriz',

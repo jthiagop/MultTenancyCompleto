@@ -19,6 +19,10 @@ class Tenant extends BaseTenant implements TenantWithDatabase, Auditable
         'email',
         'password',
         'app_access_code',
+        // `user_name` não tem coluna física: o Stancl VirtualColumn salva
+        // tudo que não está em getCustomColumns() no JSON `data`. Inclui
+        // aqui só para liberar o mass-assignment no Tenant::create().
+        'user_name',
     ];
 
     public static function getCustomColumns(): array
@@ -28,7 +32,7 @@ class Tenant extends BaseTenant implements TenantWithDatabase, Auditable
             'name',
             'email',
             'password',
-            'app_access_code'
+            'app_access_code',
         ];
     }
 

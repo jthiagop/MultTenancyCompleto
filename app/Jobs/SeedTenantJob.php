@@ -29,15 +29,21 @@ class SeedTenantJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $this->tenant->run(function () {
+        // Resolvido fora do tenant->run() para não depender do contexto.
+        // Se `user_name` não foi informado no cadastro do tenant, usamos
+        // o `name` (compatibilidade retroativa com tenants antigos).
+        $userName    = trim((string) ($this->tenant->user_name ?? '')) ?: $this->tenant->name;
+        $companyName = $this->tenant->name;
+
+        $this->tenant->run(function () use ($userName, $companyName) {
 
             // Verificar se o usuário já existe antes de criar
             $user = User::where('email', $this->tenant->email)->first();
-            
+
             if (!$user) {
                 // Criar o usuário apenas se não existir
                 $user = User::create([
-                    'name' => $this->tenant->name,
+                    'name' => $userName,
                     'email' => $this->tenant->email,
                     'password' => $this->tenant->password,
                     'avatar' => '1253525'
@@ -58,12 +64,12 @@ class SeedTenantJob implements ShouldQueue
             }
 
             // Verificar se já existe uma empresa antes de criar
-            $company = Company::where('name', $this->tenant->name)->first();
-            
+            $company = Company::where('name', $companyName)->first();
+
             if (!$company) {
                 // Criar a empresa apenas se não existir
                 $company = Company::create([
-                    'name' => $this->tenant->name, // ou qualquer outro nome desejado
+                    'name' => $companyName,
                     'type' => 'matriz', // ou 'filial', conforme necessário
                     'parent_id' => null, // ou defina o ID da matriz se for uma filial
                     'status' => 'active', // ou qualquer outro status padrão desejado

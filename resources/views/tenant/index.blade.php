@@ -1,797 +1,515 @@
 <x-app-layout>
+    {{-- ==========================================================
+         TELA DE GESTÃO DE TENANTS (banco central)
+         Reescrita 2026-05-03:
+           - Removido HTML legado de "Customers" do template Metronic
+             (modal de export, filtro Mastercard/Visa, atributos type=
+             duplicados, :value pseudo-componente que não funcionava).
+           - Submissão do formulário agora via fetch + JSON; controller
+             responde 201/422/500 com mensagens claras.
+           - Loading visível, validação inline, redirect só após sucesso.
+           - Listagem com avatar gerado, contador, ações (deletar/copiar
+             código mobile) e empty state.
+         O controller (App\Http\Controllers\TenantController) trata o
+         pipeline de criação de DB + migrations atomicamente: se algo
+         falhar, o tenant órfão é removido automaticamente.
+       ========================================================== --}}
 
-    <!--begin::Content-->
     <div id="kt_app_content" class="app-content flex-column-fluid">
-        <!--begin::Content container-->
         <div id="kt_app_content_container" class="app-container container-xxl">
             @include('components.toolbar')
-            <!--begin::Card-->
-            <div class="card">
-                <!--begin::Card header-->
-                <div class="card-header border-0 pt-6">
-                    <!--begin::Card title-->
-                    <div class="card-title">
-                        <!--begin::Search-->
-                        <div class="d-flex align-items-center position-relative my-1">
-                            <!--begin::Svg Icon | path: icons/duotune/general/gen021.svg-->
-                            <span class="svg-icon svg-icon-1 position-absolute ms-6">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                    xmlns="http://www.w3.org/2000/svg">
-                                    <rect opacity="0.5" x="17.0365" y="15.1223" width="8.15546" height="2"
-                                        rx="1" transform="rotate(45 17.0365 15.1223)" fill="currentColor" />
-                                    <path
-                                        d="M11 19C6.55556 19 3 15.4444 3 11C3 6.55556 6.55556 3 11 3C15.4444 3 19 6.55556 19 11C19 15.4444 15.4444 19 11 19ZM11 5C7.53333 5 5 7.53333 5 11C5 14.4667 7.53333 17 11 17C14.4667 17 17 14.4667 17 11C17 7.53333 14.4667 5 11 5Z"
-                                        fill="currentColor" />
-                                </svg>
-                            </span>
-                            <!--end::Svg Icon-->
-                            <input type="text" data-kt-customer-table-filter="search"
-                                class="form-control form-control-solid w-250px ps-15" placeholder="Search Customers" />
-                        </div>
-                        <!--end::Search-->
+
+            {{-- Flash messages globais --}}
+            @if (session('success'))
+                <div class="alert alert-success d-flex align-items-center mb-5">
+                    <i class="fas fa-check-circle me-3 fs-3 text-success"></i>
+                    <div class="flex-grow-1">{{ session('success') }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+            @if (session('error'))
+                <div class="alert alert-danger d-flex align-items-center mb-5">
+                    <i class="fas fa-exclamation-triangle me-3 fs-3 text-danger"></i>
+                    <div class="flex-grow-1">{{ session('error') }}</div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            @endif
+
+            <div class="card shadow-sm">
+                {{-- Header --}}
+                <div class="card-header border-0 pt-6 align-items-center">
+                    <div class="card-title d-flex flex-column">
+                        <h2 class="fw-bold mb-1">Tenants</h2>
+                        <span class="text-muted fs-7">
+                            {{ count($tenants) }} {{ count($tenants) === 1 ? 'tenant cadastrado' : 'tenants cadastrados' }}
+                        </span>
                     </div>
-                    <!--begin::Card title-->
-                    <!--begin::Card toolbar-->
+
                     <div class="card-toolbar">
-                        <!--begin::Toolbar-->
-                        <div class="d-flex justify-content-end" data-kt-customer-table-toolbar="base">
-                            <!--begin::Filter-->
-                            <button type="button" class="btn btn-light-primary me-3" data-kt-menu-trigger="click"
-                                data-kt-menu-placement="bottom-end">
-                                <!--begin::Svg Icon | path: icons/duotune/general/gen031.svg-->
-                                <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <path
-                                            d="M19.0759 3H4.72777C3.95892 3 3.47768 3.83148 3.86067 4.49814L8.56967 12.6949C9.17923 13.7559 9.5 14.9582 9.5 16.1819V19.5072C9.5 20.2189 10.2223 20.7028 10.8805 20.432L13.8805 19.1977C14.2553 19.0435 14.5 18.6783 14.5 18.273V13.8372C14.5 12.8089 14.8171 11.8056 15.408 10.964L19.8943 4.57465C20.3596 3.912 19.8856 3 19.0759 3Z"
-                                            fill="currentColor" />
-                                    </svg>
-                                </span>
-                                <!--end::Svg Icon-->Filter</button>
-                            <!--begin::Menu 1-->
-                            <div class="menu menu-sub menu-sub-dropdown w-300px w-md-325px" data-kt-menu="true"
-                                id="kt-toolbar-filter">
-                                <!--begin::Header-->
-                                <div class="px-7 py-5">
-                                    <div class="fs-4 text-dark fw-bold">Filter Options</div>
+                        <div class="position-relative me-3">
+                            <i class="fas fa-search position-absolute top-50 translate-middle-y ms-3 text-muted"></i>
+                            <input type="text" id="tenant_search"
+                                class="form-control form-control-solid w-250px ps-10"
+                                placeholder="Buscar por nome, e-mail ou domínio…" />
+                        </div>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal"
+                            data-bs-target="#kt_modal_add_tenant">
+                            <i class="fas fa-plus me-2"></i>Novo Tenant
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Tabela --}}
+                <div class="card-body pt-3">
+                    @if (count($tenants) === 0)
+                        <div class="text-center py-15">
+                            <div class="symbol symbol-150px mx-auto mb-7">
+                                <div class="symbol-label bg-light-primary">
+                                    <i class="fas fa-building text-primary fs-2x"></i>
                                 </div>
-                                <!--end::Header-->
-                                <!--begin::Separator-->
-                                <div class="separator border-gray-200"></div>
-                                <!--end::Separator-->
-                                <!--begin::Content-->
-                                <div class="px-7 py-5">
-                                    <!--begin::Input group-->
-                                    <div class="mb-10">
-                                        <!--begin::Label-->
-                                        <label class="form-label fs-5 fw-semibold mb-3">Month:</label>
-                                        <!--end::Label-->
-                                        <!--begin::Input-->
-                                        <select class="form-select form-select-solid fw-bold" data-kt-select2="true"
-                                            data-placeholder="Select option" data-allow-clear="true"
-                                            data-kt-customer-table-filter="month"
-                                            data-dropdown-parent="#kt-toolbar-filter">
-                                            <option></option>
-                                            <option value="aug">August</option>
-                                            <option value="sep">September</option>
-                                            <option value="oct">October</option>
-                                            <option value="nov">November</option>
-                                            <option value="dec">December</option>
-                                        </select>
-                                        <!--end::Input-->
-                                    </div>
-                                    <!--end::Input group-->
-                                    <!--begin::Input group-->
-                                    <div class="mb-10">
-                                        <!--begin::Label-->
-                                        <label class="form-label fs-5 fw-semibold mb-3">Payment Type:</label>
-                                        <!--end::Label-->
-                                        <!--begin::Options-->
-                                        <div class="d-flex flex-column flex-wrap fw-semibold"
-                                            data-kt-customer-table-filter="payment_type">
-                                            <!--begin::Option-->
-                                            <label
-                                                class="form-check form-check-sm form-check-custom form-check-solid mb-3 me-5">
-                                                <input class="form-check-input" type="radio" name="payment_type"
-                                                    value="all" checked="checked" />
-                                                <span class="form-check-label text-gray-600">All</span>
-                                            </label>
-                                            <!--end::Option-->
-                                            <!--begin::Option-->
-                                            <label
-                                                class="form-check form-check-sm form-check-custom form-check-solid mb-3 me-5">
-                                                <input class="form-check-input" type="radio" name="payment_type"
-                                                    value="visa" />
-                                                <span class="form-check-label text-gray-600">Visa</span>
-                                            </label>
-                                            <!--end::Option-->
-                                            <!--begin::Option-->
-                                            <label
-                                                class="form-check form-check-sm form-check-custom form-check-solid mb-3">
-                                                <input class="form-check-input" type="radio" name="payment_type"
-                                                    value="mastercard" />
-                                                <span class="form-check-label text-gray-600">Mastercard</span>
-                                            </label>
-                                            <!--end::Option-->
-                                            <!--begin::Option-->
-                                            <label class="form-check form-check-sm form-check-custom form-check-solid">
-                                                <input class="form-check-input" type="radio" name="payment_type"
-                                                    value="american_express" />
-                                                <span class="form-check-label text-gray-600">American Express</span>
-                                            </label>
-                                            <!--end::Option-->
-                                        </div>
-                                        <!--end::Options-->
-                                    </div>
-                                    <!--end::Input group-->
-                                    <!--begin::Actions-->
-                                    <div class="d-flex justify-content-end">
-                                        <button type="reset" class="btn btn-light btn-active-light-primary me-2"
-                                            data-kt-menu-dismiss="true"
-                                            data-kt-customer-table-filter="reset">Reset</button>
-                                        <button type="submit" class="btn btn-primary" data-kt-menu-dismiss="true"
-                                            data-kt-customer-table-filter="filter">Apply</button>
-                                    </div>
-                                    <!--end::Actions-->
-                                </div>
-                                <!--end::Content-->
                             </div>
-                            <!--end::Menu 1-->
-                            <!--end::Filter-->
-                            <!--begin::Export-->
-                            <button type="button" class="btn btn-light-primary me-3" data-bs-toggle="modal"
-                                data-bs-target="#kt_customers_export_modal">
-                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr078.svg-->
-                                <span class="svg-icon svg-icon-2">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <rect opacity="0.3" x="12.75" y="4.25" width="12" height="2"
-                                            rx="1" transform="rotate(90 12.75 4.25)" fill="currentColor" />
-                                        <path
-                                            d="M12.0573 6.11875L13.5203 7.87435C13.9121 8.34457 14.6232 8.37683 15.056 7.94401C15.4457 7.5543 15.4641 6.92836 15.0979 6.51643L12.4974 3.59084C12.0996 3.14332 11.4004 3.14332 11.0026 3.59084L8.40206 6.51643C8.0359 6.92836 8.0543 7.5543 8.44401 7.94401C8.87683 8.37683 9.58785 8.34458 9.9797 7.87435L11.4427 6.11875C11.6026 5.92684 11.8974 5.92684 12.0573 6.11875Z"
-                                            fill="currentColor" />
-                                        <path opacity="0.3"
-                                            d="M18.75 8.25H17.75C17.1977 8.25 16.75 8.69772 16.75 9.25C16.75 9.80228 17.1977 10.25 17.75 10.25C18.3023 10.25 18.75 10.6977 18.75 11.25V18.25C18.75 18.8023 18.3023 19.25 17.75 19.25H5.75C5.19772 19.25 4.75 18.8023 4.75 18.25V11.25C4.75 10.6977 5.19771 10.25 5.75 10.25C6.30229 10.25 6.75 9.80228 6.75 9.25C6.75 8.69772 6.30229 8.25 5.75 8.25H4.75C3.64543 8.25 2.75 9.14543 2.75 10.25V19.25C2.75 20.3546 3.64543 21.25 4.75 21.25H18.75C19.8546 21.25 20.75 20.3546 20.75 19.25V10.25C20.75 9.14543 19.8546 8.25 18.75 8.25Z"
-                                            fill="currentColor" />
-                                    </svg>
-                                </span>
-                                <!--end::Svg Icon-->Export</button>
-                            <!--end::Export-->
-                            <!--begin::Add customer-->
+                            <h3 class="fw-bold mb-3">Nenhum tenant cadastrado</h3>
+                            <p class="text-muted mb-7">Crie o primeiro tenant para começar.</p>
                             <button type="button" class="btn btn-primary" data-bs-toggle="modal"
-                                data-bs-target="#kt_modal_add_customer">Add Customer</button>
-                            <!--end::Add customer-->
-                        </div>
-                        <!--end::Toolbar-->
-                        <!--begin::Group actions-->
-                        <div class="d-flex justify-content-end align-items-center d-none"
-                            data-kt-customer-table-toolbar="selected">
-                            <div class="fw-bold me-5">
-                                <span class="me-2" data-kt-customer-table-select="selected_count"></span>Selected
-                            </div>
-                            <button type="button" class="btn btn-danger"
-                                data-kt-customer-table-select="delete_selected">Delete Selected</button>
-                        </div>
-                        <!--end::Group actions-->
-                    </div>
-                    <!--end::Card toolbar-->
-                </div>
-                <!--end::Card header-->
-                <!--begin::Card body-->
-                <div class="card-body pt-0">
-                    <!--begin::Table-->
-                    <table class="table align-middle table-row-dashed fs-6 gy-5" id="kt_customers_table">
-                        <!--begin::Table head-->
-                        <thead>
-                            <!--begin::Table row-->
-                            <tr class="text-start text-gray-400 fw-bold fs-7 text-uppercase gs-0">
-                                <th class="w-10px pe-2">
-                                    <div class="form-check form-check-sm form-check-custom form-check-solid me-3">
-                                        <input class="form-check-input" type="checkbox" data-kt-check="true"
-                                            data-kt-check-target="#kt_customers_table .form-check-input"
-                                            value="1" />
-                                    </div>
-                                </th>
-                                <th class="min-w-125px">Nome</th>
-                                <th class="min-w-125px">E-Mail</th>
-                                <th class="min-w-125px">Dominio</th>
-                                <th class="min-w-125px">Identificado</th>
-                                <th class="min-w-125px">Data Criação</th>
-                                <th class="text-end min-w-70px">Ações</th>
-                            </tr>
-                            <!--end::Table row-->
-                        </thead>
-                        <!--end::Table head-->
-                        <!--begin::Table body-->
-                        <tbody class="fw-semibold text-gray-600">
-                            @foreach ($tenants as $tenant)
-                                <tr>
-                                    <!--begin::Checkbox-->
-                                    <td>
-                                        <div class="form-check form-check-sm form-check-custom form-check-solid">
-                                            <input class="form-check-input" type="checkbox" value="1" />
-                                        </div>
-                                    </td>
-                                    <!--end::Checkbox-->
-                                    <!--begin::Name=-->
-                                    <td>
-                                        <a href="
-                                            @foreach ($tenant->domains as $domain)
-                                            {{ $domain->domain }}
-                                            @endforeach"
-                                            class="text-gray-800 text-hover-primary mb-1">
-                                            {{ $tenant->name }}</a>
-                                    </td>
-                                    <!--end::Name=-->
-                                    <!--begin::Email=-->
-                                    <td>
-                                        <a href="#"
-                                            class="text-gray-600 text-hover-primary mb-1">{{ $tenant->email }}</a>
-                                    </td>
-                                    <!--end::Email=-->
-
-                                    <!--begin::Payment method=-->
-                                    <td data-filter="mastercard">
-                                        <img src="/tenancy/assets/media/svg/card-logos/mastercard.svg" class="w-35px me-3"
-                                            alt="" />
-                                            @foreach ($tenant->domains as $domain)
-                                            {{ $domain->domain }} {{ $loop->last ? '' : ',' }}
-                                            @endforeach
-                                    </td>
-                                    <td>{{ $tenant->id }}</td>
-                                    <!--end::Payment method=-->
-                                    <!--begin::Date=-->
-                                    <td>{{ $tenant->created_at }}</td>
-                                    <!--end::Date=-->
-                                    <!--begin::Action=-->
-                                    <td class="text-end">
-                                        <a href="#" class="btn btn-sm btn-light btn-active-light-primary"
-                                            data-kt-menu-trigger="click" data-kt-menu-placement="bottom-end">Actions
-                                            <!--begin::Svg Icon | path: icons/duotune/arrows/arr072.svg-->
-                                            <span class="svg-icon svg-icon-5 m-0">
-                                                <svg width="24" height="24" viewBox="0 0 24 24"
-                                                    fill="none" xmlns="http://www.w3.org/2000/svg">
-                                                    <path
-                                                        d="M11.4343 12.7344L7.25 8.55005C6.83579 8.13583 6.16421 8.13584 5.75 8.55005C5.33579 8.96426 5.33579 9.63583 5.75 10.05L11.2929 15.5929C11.6834 15.9835 12.3166 15.9835 12.7071 15.5929L18.25 10.05C18.6642 9.63584 18.6642 8.96426 18.25 8.55005C17.8358 8.13584 17.1642 8.13584 16.75 8.55005L12.5657 12.7344C12.2533 13.0468 11.7467 13.0468 11.4343 12.7344Z"
-                                                        fill="currentColor" />
-                                                </svg>
-                                            </span>
-                                            <!--end::Svg Icon--></a>
-                                        <!--begin::Menu-->
-                                        <div class="menu menu-sub menu-sub-dropdown menu-column menu-rounded menu-gray-600 menu-state-bg-light-primary fw-semibold fs-7 w-125px py-4"
-                                            data-kt-menu="true">
-                                            <!--begin::Menu item-->
-                                            <div class="menu-item px-3">
-                                                <a href="../../demo1/dist/apps/customers/view.html"
-                                                    class="menu-link px-3">View</a>
-                                            </div>
-                                            <!--end::Menu item-->
-                                            <!--begin::Menu item-->
-                                            <div class="menu-item px-3">
-                                                <a href="#" class="menu-link px-3" onclick="openAppCodeModal({{ $tenant->id }}); return false;">
-                                                    Gerar ID para APP
-                                                    <i class="fas fa-exclamation-circle ms-2 fs-7"
-                                                        data-bs-toggle="tooltip"
-                                                        title="Gera um código único para acesso via aplicativo mobile"></i>
-                                                </a>
-                                            </div>
-                                            <!--end::Menu item-->
-                                            <!--begin::Menu item-->
-                                            <div class="menu-item px-3">
-                                                <a href="#" class="menu-link px-3"
-                                                    data-kt-customer-table-filter="delete_row">Delete</a>
-                                            </div>
-                                            <!--end::Menu item-->
-                                        </div>
-                                        <!--end::Menu-->
-                                    </td>
-                                    <!--end::Action=-->
-                                </tr>
-                            @endforeach
-                        </tbody>
-                        <!--end::Table body-->
-                    </table>
-                    <!--end::Table-->
-                </div>
-                <!--end::Card body-->
-            </div>
-            <!--end::Card-->
-            <!--begin::Modals-->
-            <!--begin::Modal - Customers - Add-->
-            <div class="modal fade" id="kt_modal_add_customer" tabindex="-1" aria-hidden="true">
-                <!--begin::Modal dialog-->
-                <div class="modal-dialog modal-dialog-centered mw-650px">
-                    <!--begin::Modal content-->
-                    <div class="modal-content">
-                        <!--begin::Form-->
-                        <form class="form" method="POST" action="{{ route('tenants.store') }}"
-                            id="kt_modal_add_customer_form">
-                            @csrf
-                            <!--begin::Modal header-->
-                            <div class="modal-header" id="kt_modal_add_customer_header">
-                                <!--begin::Modal title-->
-                                <h2 class="fw-bold">Add Tenancy</h2>
-                                <!--end::Modal title-->
-                                <!--begin::Close-->
-                                <div id="kt_modal_add_customer_close"
-                                    class="btn btn-icon btn-sm btn-active-icon-primary">
-                                    <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-                                    <span class="svg-icon svg-icon-1">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                            xmlns="http://www.w3.org/2000/svg">
-                                            <rect opacity="0.5" x="6" y="17.3137" width="16" height="2"
-                                                rx="1" transform="rotate(-45 6 17.3137)"
-                                                fill="currentColor" />
-                                            <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                                transform="rotate(45 7.41422 6)" fill="currentColor" />
-                                        </svg>
-                                    </span>
-                                    <!--end::Svg Icon-->
-                                </div>
-                                <!--end::Close-->
-                            </div>
-                            <!--end::Modal header-->
-                            <!--begin::Modal body-->
-                            <div class="modal-body py-10 px-lg-17">
-                                <!--begin::Scroll-->
-                                <div class="scroll-y me-n7 pe-7" id="kt_modal_add_customer_scroll"
-                                    data-kt-scroll="true" data-kt-scroll-activate="{default: false, lg: true}"
-                                    data-kt-scroll-max-height="auto"
-                                    data-kt-scroll-dependencies="#kt_modal_add_customer_header"
-                                    data-kt-scroll-wrappers="#kt_modal_add_customer_scroll"
-                                    data-kt-scroll-offset="300px">
-                                    <!--begin::Input group-->
-                                    <div class="fv-row mb-7">
-                                        <!--begin::Label-->
-                                        <label class="required fs-6 fw-semibold mb-2">Nome</label>
-                                        <!--end::Label-->
-                                        <!--begin::Input-->
-                                        <input type="text" class="form-control form-control-solid" id="name"
-                                            type="text" name="name" :value="old('name')" required autofocus
-                                            autocomplete="name" />
-                                        <x-input-error :messages="$errors->get('name')" class="mt-2" />
-                                        <!--end::Input-->
-                                    </div>
-                                    <!--end::Input group-->
-                                    <!--begin::Input group-->
-                                    <div class="fv-row mb-7">
-                                        <!--begin::Label-->
-                                        <label class="fs-6 fw-semibold mb-2">
-                                            <span class="required">E-mail</span>
-                                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                                title="Email address must be active"></i>
-                                        </label>
-                                        <!--end::Label-->
-                                        <!--begin::Input-->
-                                        <input type="email" class="form-control form-control-solid" id="email"
-                                            type="email" name="email" :value="old('email')" required
-                                            autocomplete="username" />
-                                        <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                                        <!--end::Input-->
-                                    </div>
-                                    <!--end::Input group-->
-                                    <!--begin::Input group-->
-                                    <div class="fv-row mb-7">
-                                        <!--begin::Label-->
-                                        <label class="fs-6 fw-semibold mb-2">Nome do Domínio</label>
-                                        <!--end::Label-->
-                                        <!--begin::Input-->
-                                        <input type="text" class="form-control form-control-solid"
-                                            id="domain_name" type="text" name="domain_name"
-                                            :value="old('domain_name')" required autofocus
-                                            autocomplete="domain_name" />
-                                        <x-input-error :messages="$errors->get('domain_name')" class="mt-2" />
-                                        <!--end::Input-->
-                                    </div>
-
-                                    <!--begin::Input group-->
-                                    <div class="fv-row mb-7">
-                                        <!--begin::Label-->
-                                        <label class="fs-6 fw-semibold mb-2">
-                                            <span class="required">Senha</span>
-                                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                                title="Email address must be active"></i>
-                                        </label>
-                                        <!--end::Label-->
-                                        <!--begin::Input-->
-                                        <input type="password" class="form-control form-control-solid" id="password" type="password" name="password" required
-                                        autocomplete="new-password" />
-                                        <x-input-error :messages="$errors->get('password')" class="mt-2" />
-                                        <!--end::Input-->
-                                    </div>
-                                    <!--end::Input group-->
-                                    <!--begin::Input group-->
-                                    <div class="fv-row mb-7">
-                                        <!--begin::Label-->
-                                        <label class="fs-6 fw-semibold mb-2">
-                                            <span class="required">Confirme a Senha</span>
-                                            <i class="fas fa-exclamation-circle ms-1 fs-7" data-bs-toggle="tooltip"
-                                                title="Email address must be active"></i>
-                                        </label>
-                                        <!--end::Label-->
-                                        <!--begin::Input-->
-                                        <input type="password" class="form-control form-control-solid" id="password_confirmation" type="password"
-                                        name="password_confirmation" required autocomplete="new-password" />
-                                        <x-input-error :messages="$errors->get('password_confirmation')" class="mt-2" />
-                                        <!--end::Input-->
-                                    </div>
-                                    <!--end::Input group-->
-
-                                    <!--end::Billing form-->
-                                </div>
-                                <!--end::Scroll-->
-                            </div>
-                            <!--end::Modal body-->
-                            <!--begin::Modal footer-->
-                            <div class="modal-footer flex-center">
-                                <!--begin::Button-->
-                                <button type="reset" id="kt_modal_add_customer_cancel"
-                                    class="btn btn-light me-3">Sair</button>
-                                <!--end::Button-->
-                                <!--begin::Button-->
-                                <button type="submit" class="btn btn-primary">
-                                    <span class="indicator-label">Salvar</span>
-                                    <span class="indicator-progress">Aguarde...
-                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                                </button>
-                                <!--end::Button-->
-                            </div>
-                            <!--end::Modal footer-->
-                        </form>
-                        <!--end::Form-->
-                    </div>
-                </div>
-            </div>
-            <!--end::Modal - Customers - Add-->
-            <!--begin::Modal - Adjust Balance-->
-            <div class="modal fade" id="kt_customers_export_modal" tabindex="-1" aria-hidden="true">
-                <!--begin::Modal dialog-->
-                <div class="modal-dialog modal-dialog-centered mw-650px">
-                    <!--begin::Modal content-->
-                    <div class="modal-content">
-                        <!--begin::Modal header-->
-                        <div class="modal-header">
-                            <!--begin::Modal title-->
-                            <h2 class="fw-bold">Export Customers</h2>
-                            <!--end::Modal title-->
-                            <!--begin::Close-->
-                            <div id="kt_customers_export_close" class="btn btn-icon btn-sm btn-active-icon-primary">
-                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-                                <span class="svg-icon svg-icon-1">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                        xmlns="http://www.w3.org/2000/svg">
-                                        <rect opacity="0.5" x="6" y="17.3137" width="16" height="2"
-                                            rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
-                                        <rect x="7.41422" y="6" width="16" height="2" rx="1"
-                                            transform="rotate(45 7.41422 6)" fill="currentColor" />
-                                    </svg>
-                                </span>
-                                <!--end::Svg Icon-->
-                            </div>
-                            <!--end::Close-->
-                        </div>
-                        <!--end::Modal header-->
-                        <!--begin::Modal body-->
-                        <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
-                            <!--begin::Form-->
-                            <form id="kt_customers_export_form" class="form" action="#">
-                                <!--begin::Input group-->
-                                <div class="fv-row mb-10">
-                                    <!--begin::Label-->
-                                    <label class="fs-5 fw-semibold form-label mb-5">Select Export Format:</label>
-                                    <!--end::Label-->
-                                    <!--begin::Input-->
-                                    <select data-control="select2" data-placeholder="Select a format"
-                                        data-hide-search="true" name="format" class="form-select form-select-solid">
-                                        <option value="excell">Excel</option>
-                                        <option value="pdf">PDF</option>
-                                        <option value="cvs">CVS</option>
-                                        <option value="zip">ZIP</option>
-                                    </select>
-                                    <!--end::Input-->
-                                </div>
-                                <!--end::Input group-->
-                                <!--begin::Input group-->
-                                <div class="fv-row mb-10">
-                                    <!--begin::Label-->
-                                    <label class="fs-5 fw-semibold form-label mb-5">Select Date Range:</label>
-                                    <!--end::Label-->
-                                    <!--begin::Input-->
-                                    <input class="form-control form-control-solid" placeholder="Pick a date"
-                                        name="date" />
-                                    <!--end::Input-->
-                                </div>
-                                <!--end::Input group-->
-                                <!--begin::Row-->
-                                <div class="row fv-row mb-15">
-                                    <!--begin::Label-->
-                                    <label class="fs-5 fw-semibold form-label mb-5">Payment Type:</label>
-                                    <!--end::Label-->
-                                    <!--begin::Radio group-->
-                                    <div class="d-flex flex-column">
-                                        <!--begin::Radio button-->
-                                        <label
-                                            class="form-check form-check-custom form-check-sm form-check-solid mb-3">
-                                            <input class="form-check-input" type="checkbox" value="1"
-                                                checked="checked" name="payment_type" />
-                                            <span class="form-check-label text-gray-600 fw-semibold">All</span>
-                                        </label>
-                                        <!--end::Radio button-->
-                                        <!--begin::Radio button-->
-                                        <label
-                                            class="form-check form-check-custom form-check-sm form-check-solid mb-3">
-                                            <input class="form-check-input" type="checkbox" value="2"
-                                                checked="checked" name="payment_type" />
-                                            <span class="form-check-label text-gray-600 fw-semibold">Visa</span>
-                                        </label>
-                                        <!--end::Radio button-->
-                                        <!--begin::Radio button-->
-                                        <label
-                                            class="form-check form-check-custom form-check-sm form-check-solid mb-3">
-                                            <input class="form-check-input" type="checkbox" value="3"
-                                                name="payment_type" />
-                                            <span class="form-check-label text-gray-600 fw-semibold">Mastercard</span>
-                                        </label>
-                                        <!--end::Radio button-->
-                                        <!--begin::Radio button-->
-                                        <label class="form-check form-check-custom form-check-sm form-check-solid">
-                                            <input class="form-check-input" type="checkbox" value="4"
-                                                name="payment_type" />
-                                            <span class="form-check-label text-gray-600 fw-semibold">American
-                                                Express</span>
-                                        </label>
-                                        <!--end::Radio button-->
-                                    </div>
-                                    <!--end::Input group-->
-                                </div>
-                                <!--end::Row-->
-                                <!--begin::Actions-->
-                                <div class="text-center">
-                                    <button type="reset" id="kt_customers_export_cancel"
-                                        class="btn btn-light me-3">Sair</button>
-                                    <button type="submit" class="btn btn-primary">
-                                        <span class="indicator-label">Salvar</span>
-                                        <span class="indicator-progress">Por favor, aguarde...
-                                            <span
-                                                class="spinner-border spinner-border-sm align-middle ms-2"></span></span>
-                                    </button>
-                                </div>
-                                <!--end::Actions-->
-                            </form>
-                            <!--end::Form-->
-                        </div>
-                        <!--end::Modal body-->
-                    </div>
-                    <!--end::Modal content-->
-                </div>
-                <!--end::Modal dialog-->
-            </div>
-            <!--end::Modal - New Card-->
-            <!--begin::Modal - App Access Code-->
-            <div class="modal fade" id="kt_modal_app_code" tabindex="-1" aria-hidden="true">
-                <!--begin::Modal dialog-->
-                <div class="modal-dialog modal-dialog-centered mw-500px">
-                    <!--begin::Modal content-->
-                    <div class="modal-content">
-                        <!--begin::Modal header-->
-                        <div class="modal-header" id="kt_modal_app_code_header">
-                            <!--begin::Modal title-->
-                            <h2 class="fw-bold">Código de Acesso Mobile</h2>
-                            <!--end::Modal title-->
-                            <!--begin::Close-->
-                            <div id="kt_modal_app_code_close" class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal">
-                                <!--begin::Svg Icon | path: icons/duotune/arrows/arr061.svg-->
-                                <span class="svg-icon svg-icon-1">
-                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <rect opacity="0.5" x="6" y="17.3137" width="16" height="2" rx="1" transform="rotate(-45 6 17.3137)" fill="currentColor" />
-                                        <rect x="7.41422" y="6" width="16" height="2" rx="1" transform="rotate(45 7.41422 6)" fill="currentColor" />
-                                    </svg>
-                                </span>
-                                <!--end::Svg Icon-->
-                            </div>
-                            <!--end::Close-->
-                        </div>
-                        <!--end::Modal header-->
-                        <!--begin::Modal body-->
-                        <div class="modal-body scroll-y mx-5 mx-xl-15 my-7">
-                            <!--begin::Form-->
-                            <div class="text-center">
-                                <p class="text-gray-600 mb-5">Use este código para acessar o aplicativo mobile:</p>
-                                <div class="mb-5">
-                                    <span id="display_app_code" class="fs-2 fw-bold text-primary d-inline-block">---</span>
-                                </div>
-                                <p class="text-muted fs-7">Copie o código e compartilhe com os usuários do aplicativo</p>
-                            </div>
-                            <!--end::Form-->
-                        </div>
-                        <!--end::Modal body-->
-                        <!--begin::Modal footer-->
-                        <div class="modal-footer flex-center">
-                            <!--begin::Button-->
-                            <button type="button" id="btn_copy_code" class="btn btn-primary me-3">
-                                <span class="indicator-label">
-                                    <!--begin::Svg Icon | path: icons/duotune/files/fil005.svg-->
-                                    <span class="svg-icon svg-icon-3 me-2">
-                                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                            <path opacity="0.3" d="M19 22H5C4.4 22 4 21.6 4 21V3C4 2.4 4.4 2 5 2H14L20 8V21C20 21.6 19.6 22 19 22Z" fill="currentColor"/>
-                                            <path d="M15 8H20L14 2V7C14 7.6 14.4 8 15 8Z" fill="currentColor"/>
-                                        </svg>
-                                    </span>
-                                    <!--end::Svg Icon-->
-                                    Copiar Código
-                                </span>
-                                <span class="indicator-progress">Copiando...
-                                    <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
-                                </span>
+                                data-bs-target="#kt_modal_add_tenant">
+                                <i class="fas fa-plus me-2"></i>Criar Tenant
                             </button>
-                            <!--end::Button-->
-                            <!--begin::Button-->
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Fechar</button>
-                            <!--end::Button-->
                         </div>
-                        <!--end::Modal footer-->
-                    </div>
-                    <!--end::Modal content-->
+                    @else
+                        <div class="table-responsive">
+                            <table class="table align-middle table-row-dashed fs-6 gy-4 mb-0" id="kt_tenants_table">
+                                <thead>
+                                    <tr class="text-start text-muted fw-bold fs-7 text-uppercase gs-0">
+                                        <th class="min-w-200px">Tenant</th>
+                                        <th class="min-w-200px">E-mail</th>
+                                        <th class="min-w-150px">Domínio</th>
+                                        <th class="min-w-100px">ID</th>
+                                        <th class="min-w-150px">Criado em</th>
+                                        <th class="text-end min-w-100px">Ações</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="fw-semibold text-gray-700">
+                                    @foreach ($tenants as $tenant)
+                                        <tr data-tenant-id="{{ $tenant->id }}"
+                                            data-search-blob="{{ strtolower($tenant->name . ' ' . $tenant->email . ' ' . $tenant->domains->pluck('domain')->implode(' ')) }}">
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="symbol symbol-40px me-3">
+                                                        <div class="symbol-label bg-light-primary text-primary fw-bold fs-6">
+                                                            {{ strtoupper(mb_substr($tenant->name, 0, 2)) }}
+                                                        </div>
+                                                    </div>
+                                                    <div class="d-flex flex-column">
+                                                        <span class="text-gray-900 fw-bold mb-0">{{ $tenant->name }}</span>
+                                                        @if ($tenant->app_access_code)
+                                                            <span class="text-muted fs-8">App: {{ $tenant->app_access_code }}</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <a href="mailto:{{ $tenant->email }}" class="text-gray-700 text-hover-primary">
+                                                    {{ $tenant->email }}
+                                                </a>
+                                            </td>
+                                            <td>
+                                                @forelse ($tenant->domains as $domain)
+                                                    <a href="//{{ $domain->domain }}" target="_blank" rel="noopener"
+                                                        class="badge badge-light-success me-1">
+                                                        <i class="fas fa-external-link-alt me-1 fs-9"></i>{{ $domain->domain }}
+                                                    </a>
+                                                @empty
+                                                    <span class="badge badge-light-warning">
+                                                        <i class="fas fa-exclamation-triangle me-1 fs-9"></i>Sem domínio
+                                                    </span>
+                                                @endforelse
+                                            </td>
+                                            <td>
+                                                <code class="text-muted fs-8" title="{{ $tenant->id }}">
+                                                    {{ Str::limit($tenant->id, 8, '…') }}
+                                                </code>
+                                            </td>
+                                            <td>
+                                                <span class="text-gray-700">{{ $tenant->created_at?->format('d/m/Y H:i') ?? '—' }}</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <div class="d-flex justify-content-end gap-1">
+                                                    <button type="button" class="btn btn-icon btn-sm btn-light-primary"
+                                                        title="Gerar código mobile"
+                                                        onclick="openAppCodeModal('{{ $tenant->id }}')">
+                                                        <i class="fas fa-mobile-alt"></i>
+                                                    </button>
+                                                    <button type="button" class="btn btn-icon btn-sm btn-light-danger"
+                                                        title="Remover tenant"
+                                                        onclick="deleteTenant('{{ $tenant->id }}', '{{ addslashes($tenant->name) }}')">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
                 </div>
-                <!--end::Modal dialog-->
             </div>
-            <!--end::Modal - App Access Code-->
-            <!--end::Modals-->
+
+            {{-- ==================================================
+                 Modal: Novo Tenant (submit via fetch + JSON)
+               ================================================== --}}
+            <div class="modal fade" id="kt_modal_add_tenant" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered mw-650px">
+                    <div class="modal-content">
+                        <form id="kt_modal_add_tenant_form" novalidate>
+                            @csrf
+                            <div class="modal-header">
+                                <h2 class="fw-bold mb-0">Novo Tenant</h2>
+                                <button type="button" class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal" aria-label="Fechar">
+                                    <i class="fas fa-times fs-2"></i>
+                                </button>
+                            </div>
+
+                            <div class="modal-body py-8 px-lg-10">
+                                {{-- Banner de erro genérico --}}
+                                <div id="form_global_error" class="alert alert-danger d-none mb-5" role="alert"></div>
+
+                                {{-- Seção 1: organização --}}
+                                <div class="separator separator-content my-5">
+                                    <span class="text-muted fs-7 fw-semibold text-uppercase">Organização</span>
+                                </div>
+
+                                <div class="mb-6">
+                                    <label class="required form-label fw-semibold">Nome da empresa</label>
+                                    <input type="text" class="form-control form-control-solid"
+                                        name="name" required autocomplete="organization"
+                                        placeholder="Ex.: Província Nossa Senhora da Penha" />
+                                    <div class="form-text">Será o nome da organização (Company) dentro do tenant.</div>
+                                    <div class="invalid-feedback" data-field-error="name"></div>
+                                </div>
+
+                                {{-- Seção 2: administrador --}}
+                                <div class="separator separator-content my-5">
+                                    <span class="text-muted fs-7 fw-semibold text-uppercase">Administrador inicial</span>
+                                </div>
+
+                                <div class="mb-6">
+                                    <label class="required form-label fw-semibold">Nome do administrador</label>
+                                    <input type="text" class="form-control form-control-solid"
+                                        name="user_name" required autocomplete="name"
+                                        placeholder="Ex.: João da Silva" />
+                                    <div class="form-text">Nome da pessoa que receberá o primeiro acesso.</div>
+                                    <div class="invalid-feedback" data-field-error="user_name"></div>
+                                </div>
+
+                                <div class="mb-6">
+                                    <label class="required form-label fw-semibold">E-mail do administrador</label>
+                                    <input type="email" class="form-control form-control-solid"
+                                        name="email" required autocomplete="email"
+                                        placeholder="admin@dominio.com.br" />
+                                    <div class="form-text">Será o login do primeiro usuário.</div>
+                                    <div class="invalid-feedback" data-field-error="email"></div>
+                                </div>
+
+                                {{-- Domínio --}}
+                                <div class="mb-6">
+                                    <label class="required form-label fw-semibold">Subdomínio</label>
+                                    <div class="input-group input-group-solid">
+                                        <input type="text" class="form-control form-control-solid"
+                                            name="domain_name" id="domain_name_input" required
+                                            autocomplete="off" placeholder="recife"
+                                            pattern="^[a-z0-9]([a-z0-9-]*[a-z0-9])?$" minlength="3" maxlength="63"
+                                            inputmode="url" />
+                                        <span class="input-group-text">.{{ config('app.domain') }}</span>
+                                    </div>
+                                    <div class="form-text">
+                                        Apenas letras minúsculas, números e hifens (3 a 63 caracteres).
+                                    </div>
+                                    <div class="invalid-feedback" data-field-error="domain_name"></div>
+                                </div>
+
+                                {{-- Seção 3: credenciais --}}
+                                <div class="separator separator-content my-5">
+                                    <span class="text-muted fs-7 fw-semibold text-uppercase">Senha de acesso</span>
+                                </div>
+
+                                <div class="mb-6">
+                                    <label class="required form-label fw-semibold">Senha</label>
+                                    <input type="password" class="form-control form-control-solid"
+                                        name="password" required autocomplete="new-password" minlength="8" />
+                                    <div class="invalid-feedback" data-field-error="password"></div>
+                                </div>
+
+                                {{-- Confirmar senha --}}
+                                <div class="mb-2">
+                                    <label class="required form-label fw-semibold">Confirmar senha</label>
+                                    <input type="password" class="form-control form-control-solid"
+                                        name="password_confirmation" required autocomplete="new-password" />
+                                    <div class="invalid-feedback" data-field-error="password_confirmation"></div>
+                                </div>
+                            </div>
+
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancelar</button>
+                                <button type="submit" class="btn btn-primary" id="kt_modal_add_tenant_submit">
+                                    <span class="indicator-label">Criar Tenant</span>
+                                    <span class="indicator-progress">
+                                        Criando…
+                                        <span class="spinner-border spinner-border-sm align-middle ms-2"></span>
+                                    </span>
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            {{-- ==================================================
+                 Modal: Código de acesso mobile
+               ================================================== --}}
+            <div class="modal fade" id="kt_modal_app_code" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered mw-500px">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h2 class="fw-bold mb-0">Código de acesso mobile</h2>
+                            <button type="button" class="btn btn-icon btn-sm btn-active-icon-primary" data-bs-dismiss="modal" aria-label="Fechar">
+                                <i class="fas fa-times fs-2"></i>
+                            </button>
+                        </div>
+                        <div class="modal-body text-center py-8">
+                            <p class="text-muted mb-4">Use este código no aplicativo mobile:</p>
+                            <div class="bg-light-primary rounded py-5 mb-4">
+                                <span id="display_app_code" class="fs-1 fw-bold text-primary tracking-wider">---</span>
+                            </div>
+                            <p class="text-muted fs-7">Compartilhe com os usuários autorizados.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Fechar</button>
+                            <button type="button" class="btn btn-primary" id="btn_copy_code">
+                                <i class="fas fa-copy me-2"></i>
+                                <span class="btn-copy-label">Copiar código</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <!--end::Content container-->
     </div>
-    <!--end::Content-->
-
-
 </x-app-layout>
-<!--begin::Vendors Javascript(used for this page only)-->
-<!--end::Vendors Javascript-->
 
-<!--begin::Custom Javascript(used for this page only)-->
-<script src="/tenancy/assets/js/custom/apps/customers/list/export.js"></script>
-<script src="/tenancy/assets/js/custom/apps/customers/list/list.js"></script>
-<script src="/tenancy/assets/js/custom/apps/customers/add.js"></script>
-<script src="/tenancy/assets/js/custom/apps/chat/chat.js"></script>
-<script src="/tenancy/assets/js/custom/utilities/modals/upgrade-plan.js"></script>
-<script src="/tenancy/assets/js/custom/utilities/modals/create-campaign.js"></script>
-<script src="/tenancy/assets/js/custom/utilities/modals/users-search.js"></script>
-
-<!--begin::Script para Modal de Código de Acesso Mobile-->
 <script>
-    let currentAppCode = '';
+(function () {
+    'use strict';
 
-    /**
-     * Abre o modal e gera o código de acesso mobile
-     */
-    function openAppCodeModal(tenantId) {
-        // Abrir o modal
-        const modalElement = document.getElementById('kt_modal_app_code');
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
+    // ── Helpers ──────────────────────────────────────────────────────────
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
 
-        // Mostrar loading
-        const displayCode = document.getElementById('display_app_code');
-        displayCode.textContent = 'Gerando...';
-        displayCode.classList.remove('text-primary');
-        displayCode.classList.add('text-muted');
+    function clearFieldErrors(form) {
+        form.querySelectorAll('[data-field-error]').forEach((el) => {
+            el.textContent = '';
+            const input = form.querySelector(`[name="${el.dataset.fieldError}"]`);
+            input?.classList.remove('is-invalid');
+        });
+        form.querySelector('#form_global_error')?.classList.add('d-none');
+    }
 
-        // Desabilitar botão de copiar
-        const btnCopy = document.getElementById('btn_copy_code');
-        btnCopy.disabled = true;
-        btnCopy.querySelector('.indicator-label').classList.add('d-none');
-        btnCopy.querySelector('.indicator-progress').classList.remove('d-none');
+    function setFieldError(form, field, message) {
+        const slot = form.querySelector(`[data-field-error="${field}"]`);
+        const input = form.querySelector(`[name="${field}"]`);
+        if (slot) slot.textContent = Array.isArray(message) ? message[0] : message;
+        if (input) input.classList.add('is-invalid');
+    }
 
-        // Fazer requisição AJAX
-        fetch(`/tenants/${tenantId}/generate-code`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
-            },
-            body: JSON.stringify({})
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Erro ao gerar código');
-            }
-            return response.json();
-        })
-        .then(data => {
-            // Atualizar código no modal
-            currentAppCode = data.code;
-            displayCode.textContent = data.code;
-            displayCode.classList.remove('text-muted');
-            displayCode.classList.add('text-primary');
+    function setGlobalError(form, message) {
+        const banner = form.querySelector('#form_global_error');
+        if (!banner) return;
+        banner.textContent = message;
+        banner.classList.remove('d-none');
+    }
 
-            // Habilitar botão de copiar
-            btnCopy.disabled = false;
-            btnCopy.querySelector('.indicator-label').classList.remove('d-none');
-            btnCopy.querySelector('.indicator-progress').classList.add('d-none');
-        })
-        .catch(error => {
-            console.error('Erro:', error);
-            displayCode.textContent = 'Erro ao gerar código';
-            displayCode.classList.remove('text-primary');
-            displayCode.classList.add('text-danger');
+    function setLoading(button, loading) {
+        if (!button) return;
+        button.disabled = loading;
+        button.dataset.ktIndicator = loading ? 'on' : '';
+    }
 
-            // Habilitar botão de copiar (mesmo com erro)
-            btnCopy.disabled = false;
-            btnCopy.querySelector('.indicator-label').classList.remove('d-none');
-            btnCopy.querySelector('.indicator-progress').classList.add('d-none');
+    // ── Busca client-side simples ────────────────────────────────────────
+    const searchInput = document.getElementById('tenant_search');
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const q = e.target.value.trim().toLowerCase();
+            document.querySelectorAll('#kt_tenants_table tbody tr').forEach((row) => {
+                const blob = row.dataset.searchBlob || '';
+                row.style.display = !q || blob.includes(q) ? '' : 'none';
+            });
         });
     }
 
-    // Configurar botão de copiar código
-    document.addEventListener('DOMContentLoaded', function() {
-        const btnCopy = document.getElementById('btn_copy_code');
-        if (btnCopy) {
-            btnCopy.addEventListener('click', function() {
-                if (!currentAppCode) {
+    // ── Auto-normalização do subdomínio ──────────────────────────────────
+    const domainInput = document.getElementById('domain_name_input');
+    if (domainInput) {
+        domainInput.addEventListener('input', (e) => {
+            const before = e.target.value;
+            const after = before.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            if (before !== after) {
+                const pos = e.target.selectionStart;
+                e.target.value = after;
+                e.target.setSelectionRange(pos - (before.length - after.length), pos - (before.length - after.length));
+            }
+        });
+    }
+
+    // ── Submit do form de novo tenant ────────────────────────────────────
+    const form = document.getElementById('kt_modal_add_tenant_form');
+    const submitBtn = document.getElementById('kt_modal_add_tenant_submit');
+
+    if (form) {
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearFieldErrors(form);
+            setLoading(submitBtn, true);
+
+            try {
+                const formData = new FormData(form);
+                const res = await fetch('{{ route('tenants.store') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: formData,
+                });
+
+                const data = await res.json().catch(() => ({}));
+
+                if (res.status === 422 && data.errors) {
+                    // Validação Laravel (objeto { campo: ['mensagem'] })
+                    Object.entries(data.errors).forEach(([field, msgs]) => setFieldError(form, field, msgs));
                     return;
                 }
 
-                // Tentar usar Clipboard API
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(currentAppCode).then(function() {
-                        // Feedback visual
-                        const originalText = btnCopy.querySelector('.indicator-label').innerHTML;
-                        btnCopy.querySelector('.indicator-label').innerHTML = '<i class="fas fa-check me-2"></i>Código Copiado!';
-                        btnCopy.classList.remove('btn-primary');
-                        btnCopy.classList.add('btn-success');
-
-                        setTimeout(function() {
-                            btnCopy.querySelector('.indicator-label').innerHTML = originalText;
-                            btnCopy.classList.remove('btn-success');
-                            btnCopy.classList.add('btn-primary');
-                        }, 2000);
-                    }).catch(function(err) {
-                        console.error('Erro ao copiar:', err);
-                        fallbackCopyTextToClipboard(currentAppCode);
-                    });
-                } else {
-                    // Fallback para navegadores mais antigos
-                    fallbackCopyTextToClipboard(currentAppCode);
+                if (!res.ok || data.success === false) {
+                    setGlobalError(form, data.message || 'Não foi possível criar o tenant.');
+                    return;
                 }
-            });
-        }
-    });
 
-    /**
-     * Fallback para copiar texto (navegadores antigos)
-     */
-    function fallbackCopyTextToClipboard(text) {
-        const textArea = document.createElement('textarea');
-        textArea.value = text;
-        textArea.style.top = '0';
-        textArea.style.left = '0';
-        textArea.style.position = 'fixed';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
+                // Sucesso — recarrega a lista
+                window.location.href = '{{ route('tenants.index') }}';
+            } catch (err) {
+                console.error(err);
+                setGlobalError(form, 'Erro de rede. Verifique sua conexão e tente novamente.');
+            } finally {
+                setLoading(submitBtn, false);
+            }
+        });
+    }
+
+    // ── Deletar tenant ───────────────────────────────────────────────────
+    window.deleteTenant = async function (tenantId, tenantName) {
+        if (!confirm(`Remover o tenant "${tenantName}" e seu banco de dados?\n\nEsta ação é IRREVERSÍVEL.`)) {
+            return;
+        }
 
         try {
-            const successful = document.execCommand('copy');
-            if (successful) {
-                const btnCopy = document.getElementById('btn_copy_code');
-                const originalText = btnCopy.querySelector('.indicator-label').innerHTML;
-                btnCopy.querySelector('.indicator-label').innerHTML = '<i class="fas fa-check me-2"></i>Código Copiado!';
-                btnCopy.classList.remove('btn-primary');
-                btnCopy.classList.add('btn-success');
+            const res = await fetch(`/tenants/${tenantId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+            });
 
-                setTimeout(function() {
-                    btnCopy.querySelector('.indicator-label').innerHTML = originalText;
-                    btnCopy.classList.remove('btn-success');
-                    btnCopy.classList.add('btn-primary');
-                }, 2000);
+            const data = await res.json().catch(() => ({}));
+            if (res.ok && data.success) {
+                document.querySelector(`tr[data-tenant-id="${tenantId}"]`)?.remove();
+                // Se ficou vazio, recarrega para mostrar empty-state
+                if (!document.querySelector('#kt_tenants_table tbody tr')) {
+                    window.location.reload();
+                }
             } else {
-                alert('Não foi possível copiar o código. Por favor, copie manualmente: ' + text);
+                alert(data.message || 'Erro ao remover tenant.');
             }
         } catch (err) {
-            console.error('Erro ao copiar:', err);
-            alert('Não foi possível copiar o código. Por favor, copie manualmente: ' + text);
+            console.error(err);
+            alert('Erro de rede ao remover tenant.');
         }
+    };
 
-        document.body.removeChild(textArea);
-    }
+    // ── Modal: código de acesso mobile ──────────────────────────────────
+    let currentAppCode = '';
+
+    window.openAppCodeModal = async function (tenantId) {
+        const modalEl = document.getElementById('kt_modal_app_code');
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        const display = document.getElementById('display_app_code');
+        const copyBtn = document.getElementById('btn_copy_code');
+
+        display.textContent = 'Gerando…';
+        display.classList.remove('text-primary', 'text-danger');
+        display.classList.add('text-muted');
+        copyBtn.disabled = true;
+        currentAppCode = '';
+        modal.show();
+
+        try {
+            const res = await fetch(`/tenants/${tenantId}/generate-code`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken,
+                },
+                body: '{}',
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Erro ao gerar código');
+
+            currentAppCode = data.code;
+            display.textContent = data.code;
+            display.classList.remove('text-muted');
+            display.classList.add('text-primary');
+            copyBtn.disabled = false;
+        } catch (err) {
+            display.textContent = 'Erro';
+            display.classList.remove('text-muted');
+            display.classList.add('text-danger');
+            console.error(err);
+        }
+    };
+
+    document.getElementById('btn_copy_code')?.addEventListener('click', async () => {
+        if (!currentAppCode) return;
+        const btn = document.getElementById('btn_copy_code');
+        const label = btn.querySelector('.btn-copy-label');
+        const originalLabel = label.textContent;
+
+        try {
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(currentAppCode);
+            } else {
+                // Fallback execCommand
+                const ta = document.createElement('textarea');
+                ta.value = currentAppCode;
+                ta.style.position = 'fixed';
+                ta.style.opacity = '0';
+                document.body.appendChild(ta);
+                ta.select();
+                document.execCommand('copy');
+                document.body.removeChild(ta);
+            }
+            label.textContent = 'Copiado!';
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-success');
+            setTimeout(() => {
+                label.textContent = originalLabel;
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-primary');
+            }, 1800);
+        } catch (err) {
+            alert('Não foi possível copiar. Código: ' + currentAppCode);
+        }
+    });
+})();
 </script>
-<!--end::Script para Modal de Código de Acesso Mobile-->
