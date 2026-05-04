@@ -34,6 +34,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Popover as PopoverPrimitive } from 'radix-ui';
 import { Input } from '@/components/ui/input';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
@@ -344,7 +345,8 @@ export function TransacaoAdvancedFiltersScope({
                 default:
                     break;
             }
-            setEditing(k);
+            // Defere para que o chip seja montado antes do popover abrir e ancorar.
+            requestAnimationFrame(() => setEditing(k));
         },
         [onChange, value],
     );
@@ -562,9 +564,12 @@ export function TransacaoAdvancedFiltersChipsSection() {
                                 <X className="size-3.5" />
                             </Button>
                         </div>
+                        <PopoverPrimitive.Portal>
                         <PopoverContent
-                            className="flex max-h-[min(480px,85vh)] w-[min(100vw-2rem,380px)] max-w-[min(100vw-2rem,380px)] flex-col overflow-hidden border-blue-100/80 p-0 dark:border-blue-900/50"
+                            className="z-60 flex max-h-[min(480px,85vh)] w-[min(100vw-2rem,380px)] max-w-[min(100vw-2rem,380px)] flex-col overflow-hidden border-blue-100/80 p-0 dark:border-blue-900/50"
                             align="start"
+                            sideOffset={6}
+                            collisionPadding={16}
                         >
                             {k === 'categoria' && (
                                 <>
@@ -735,6 +740,7 @@ export function TransacaoAdvancedFiltersChipsSection() {
                                 </div>
                             )}
                         </PopoverContent>
+                        </PopoverPrimitive.Portal>
                     </Popover>
                 ))}
                     <Button

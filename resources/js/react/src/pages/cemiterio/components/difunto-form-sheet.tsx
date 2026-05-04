@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardToolbar } from '@/compone
 import { Input } from '@/components/ui/input';
 import { MaskedInput } from '@/components/common/masked-input';
 import { Label } from '@/components/ui/label';
+import { AddressCard, AddressValue } from '@/components/common/address-card';
 import { Textarea } from '@/components/ui/textarea';
 import { DatePicker } from '@/components/ui/date-picker';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -53,11 +54,6 @@ const EMPTY_RESPONSAVEL: Omit<ResponsavelEntry, 'id'> = {
   uf: '',
 };
 
-const BR_UF = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA',
-  'MT', 'MS', 'MG', 'PA', 'PB', 'PR', 'PE', 'PI', 'RJ', 'RN',
-  'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
-] as const;
 
 interface ResponsavelFormSheetProps {
   open: boolean;
@@ -69,7 +65,6 @@ interface ResponsavelFormSheetProps {
 function ResponsavelFormSheet({ open, onOpenChange, editingItem, onSave }: ResponsavelFormSheetProps) {
   const isEditing = !!editingItem;
   const [form, setForm] = useState<Omit<ResponsavelEntry, 'id'>>(EMPTY_RESPONSAVEL);
-  const [consultandoCep, setConsultandoCep] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -86,36 +81,17 @@ function ResponsavelFormSheet({ open, onOpenChange, editingItem, onSave }: Respo
     setForm((prev) => ({ ...prev, [field]: value }));
   }
 
-  async function consultarCep(cepValue: string) {
-    const cepLimpo = cepValue.replace(/\D/g, '');
-    if (cepLimpo.length !== 8) return;
-    setConsultandoCep(true);
-    try {
-      const res = await fetch(`https://viacep.com.br/ws/${cepLimpo}/json/`);
-      if (!res.ok) {
-        notify.error('Erro na consulta', 'Não foi possível consultar o CEP. Verifique sua conexão.');
-        return;
-      }
-      const data = (await res.json()) as {
-        logradouro?: string;
-        bairro?: string;
-        localidade?: string;
-        uf?: string;
-        erro?: boolean;
-      };
-      if (data.erro) {
-        notify.warning('CEP não encontrado', 'O CEP informado não existe. Verifique e tente novamente.');
-        return;
-      }
-      if (data.logradouro) setR('logradouro', data.logradouro);
-      if (data.bairro) setR('bairro', data.bairro);
-      if (data.localidade) setR('cidade', data.localidade);
-      if (data.uf) setR('uf', data.uf);
-    } catch {
-      notify.error('Erro na consulta', 'Não foi possível consultar o CEP. Verifique sua conexão.');
-    } finally {
-      setConsultandoCep(false);
-    }
+  const addressValue: AddressValue = {
+    cep: form.cep,
+    logradouro: form.logradouro,
+    numero: form.numero,
+    bairro: form.bairro,
+    cidade: form.cidade,
+    uf: form.uf,
+  };
+
+  function handleAddressChange(addr: AddressValue) {
+    setForm((prev) => ({ ...prev, ...addr }));
   }
 
   function handleSave(e: React.FormEvent) {
@@ -183,82 +159,7 @@ function ResponsavelFormSheet({ open, onOpenChange, editingItem, onSave }: Respo
                   </CardContent>
                 </Card>
 
-                <Card className="rounded-md">
-                  <CardHeader className="min-h-9.5 bg-accent/50 py-2">
-                    <CardTitle className="text-2sm flex items-center gap-1.5">
-                      <MapPin className="size-3.5 text-muted-foreground" />
-                      Endereço
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="pt-4">
-                    <div className="grid grid-cols-12 gap-3">
-                      <div className="col-span-12 sm:col-span-5 space-y-2">
-                        <Label className="text-xs">CEP</Label>
-                        <div className="flex gap-2 items-center">
-                          <MaskedInput
-                            maskType="cep"
-                            value={form.cep}
-                            onMaskedChange={(v) => { setR('cep', v); void consultarCep(v); }}
-                            placeholder="00000-000"
-                          />
-                          {consultandoCep && (
-                            <Loader2 className="size-4 animate-spin shrink-0 text-muted-foreground" />
-                          )}
-                        </div>
-                      </div>
-                      <div className="col-span-12 sm:col-span-7 space-y-2">
-                        <Label className="text-xs">Logradouro</Label>
-                        <Input
-                          value={form.logradouro}
-                          onChange={(e) => setR('logradouro', e.target.value)}
-                          placeholder="Rua, Av., etc."
-                        />
-                      </div>
-                      <div className="col-span-12 sm:col-span-3 space-y-2">
-                        <Label className="text-xs">Número</Label>
-                        <Input
-                          value={form.numero}
-                          onChange={(e) => setR('numero', e.target.value)}
-                          placeholder="Nº"
-                        />
-                      </div>
-                      <div className="col-span-12 sm:col-span-4 space-y-2">
-                        <Label className="text-xs">Bairro</Label>
-                        <Input
-                          value={form.bairro}
-                          onChange={(e) => setR('bairro', e.target.value)}
-                          placeholder="Bairro"
-                        />
-                      </div>
-                      <div className="col-span-12 sm:col-span-3 space-y-2">
-                        <Label className="text-xs">Cidade</Label>
-                        <Input
-                          value={form.cidade}
-                          onChange={(e) => setR('cidade', e.target.value)}
-                          placeholder="Cidade"
-                        />
-                      </div>
-                      <div className="col-span-12 sm:col-span-2 space-y-2">
-                        <Label className="text-xs">UF</Label>
-                        <select
-                          value={form.uf}
-                          onChange={(e) => setR('uf', e.target.value)}
-                          className={cn(
-                            'flex w-full bg-background border border-input rounded-md shadow-xs shadow-black/5',
-                            'h-8.5 px-3 text-2sm text-foreground',
-                            'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30 focus-visible:border-ring',
-                            !form.uf && 'text-muted-foreground/80',
-                          )}
-                        >
-                          <option value="">UF</option>
-                          {BR_UF.map((uf) => (
-                            <option key={uf} value={uf}>{uf}</option>
-                          ))}
-                        </select>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <AddressCard value={addressValue} onChange={handleAddressChange} />
 
               </div>
             </ScrollArea>

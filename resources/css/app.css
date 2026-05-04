@@ -111,3 +111,16 @@ html, body {
 .dark .channel-stats-bg {
     background-image: url('/metronic/assets/media/images/2600x1600/bg-3-dark.png');
 }
+
+/* ============================================================
+   PRINT
+   ----------------------------------------------------------------
+   Não há mais utilitários globais de impressão aqui. A carteirinha
+   (única tela do app que precisa imprimir hoje) usa um iframe oculto
+   que carrega o PDF gerado pelo servidor (Browsershot) — assim a
+   impressão fica isolada e não depende de @media print do app.
+
+   Se algum relatório futuro precisar imprimir via window.print(),
+   adicione regras específicas (preferencialmente em CSS escopado
+   ao componente, não global).
+   ============================================================ */

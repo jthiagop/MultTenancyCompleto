@@ -8,22 +8,18 @@ import {
   SheetTitle,
 } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardToolbar } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input, InputGroup } from '@/components/ui/input';
 import { MaskedInput } from '@/components/common/masked-input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { useAppData } from '@/hooks/useAppData';
 import { cn } from '@/lib/utils';
-import { Loader2, Minus, Plus, Search } from 'lucide-react';
+import { Loader2, Search } from 'lucide-react';
 import { notify } from '@/lib/notify';
+import { AddressCard, AddressValue, EMPTY_ADDRESS } from '@/components/common/address-card';
 
-const BR_UF = [
-  'AC', 'AL', 'AP', 'AM', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MT', 'MS', 'MG', 'PA', 'PB', 'PR',
-  'PE', 'PI', 'RJ', 'RN', 'RS', 'RO', 'RR', 'SC', 'SP', 'SE', 'TO',
-] as const;
 
 export interface ParceiroCreatedPayload {
   id: string;
@@ -79,15 +75,9 @@ export function ParceiroQuickCreateSheet({
   const [email, setEmail] = useState('');
   const [chkFornecedor, setChkFornecedor] = useState(context === 'despesa');
   const [chkCliente, setChkCliente] = useState(context === 'receita');
-  const [cep, setCep] = useState('');
-  const [address1, setAddress1] = useState('');
-  const [city, setCity] = useState('');
-  const [bairro, setBairro] = useState('');
-  const [numero, setNumero] = useState('');
-  const [uf, setUf] = useState('');
+  const [address, setAddress] = useState<AddressValue>(EMPTY_ADDRESS);
   const [submitting, setSubmitting] = useState(false);
   const [consultandoCnpj, setConsultandoCnpj] = useState(false);
-  const [addrOpen, setAddrOpen] = useState(true);
 
   useEffect(() => {
     if (!open) return;
@@ -100,13 +90,7 @@ export function ParceiroQuickCreateSheet({
     setEmail('');
     setChkFornecedor(context === 'despesa');
     setChkCliente(context === 'receita');
-    setCep('');
-    setAddress1('');
-    setCity('');
-    setBairro('');
-    setNumero('');
-    setUf('');
-    setAddrOpen(true);
+    setAddress(EMPTY_ADDRESS);
   }, [open, context]);
 
   const title = context === 'receita' ? 'Novo Cliente' : 'Novo Fornecedor';
@@ -147,12 +131,15 @@ export function ParceiroQuickCreateSheet({
       };
       if (data.razao_social)  setNomeFantasia(data.razao_social);
       if (data.nome_fantasia) setNomeCompleto(data.nome_fantasia);
-      if (data.logradouro)    setAddress1(data.logradouro);
-      if (data.municipio)     setCity(data.municipio);
-      if (data.bairro)        setBairro(data.bairro);
-      if (data.numero)        setNumero(data.numero);
-      if (data.uf)            setUf(data.uf);
-      if (data.cep)           setCep(data.cep.replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2'));
+      setAddress((prev) => ({
+        ...prev,
+        logradouro: data.logradouro ?? prev.logradouro,
+        cidade: data.municipio ?? prev.cidade,
+        bairro: data.bairro ?? prev.bairro,
+        numero: data.numero ?? prev.numero,
+        uf: data.uf ?? prev.uf,
+        cep: data.cep ? data.cep.replace(/\D/g, '').replace(/^(\d{5})(\d{3})$/, '$1-$2') : prev.cep,
+      }));
       if (data.ddd_telefone_1) setTelefone(data.ddd_telefone_1.trim());
       if (data.email)         setEmail(data.email.toLowerCase());
       notify.success('Dados importados!', 'Campos preenchidos automaticamente a partir da Receita Federal.');
@@ -208,13 +195,13 @@ export function ParceiroQuickCreateSheet({
       payload.cnpj = cnpj.trim();
     }
 
-    if (cep || address1 || city) {
-      payload.cep = cep || null;
-      payload.address1 = address1 || null;
-      payload.city = city || null;
-      payload.bairro = bairro || null;
-      payload.numero = numero || null;
-      payload.country = uf || null;
+    if (address.cep || address.logradouro || address.cidade) {
+      payload.cep = address.cep || null;
+      payload.address1 = address.logradouro || null;
+      payload.city = address.cidade || null;
+      payload.bairro = address.bairro || null;
+      payload.numero = address.numero || null;
+      payload.country = address.uf || null;
     }
 
       if (!csrfToken) {
@@ -425,76 +412,13 @@ export function ParceiroQuickCreateSheet({
                   </CardContent>
                 </Card>
 
-                <Collapsible open={addrOpen} onOpenChange={setAddrOpen}>
-                  <Card className="rounded-md">
-                    <CardHeader className="min-h-[38px] bg-accent/50 py-2">
-                      <CardTitle className="text-2sm">Endereço</CardTitle>
-                      <CardToolbar>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="dim" mode="icon" size="sm" type="button">
-                            {addrOpen ? <Minus className="size-4" /> : <Plus className="size-4" />}
-                          </Button>
-                        </CollapsibleTrigger>
-                      </CardToolbar>
-                    </CardHeader>
-                    <CollapsibleContent>
-                      <CardContent className="pt-4">
-                        <div className="space-y-2">
-                          <Label className="text-xs">Logradouro</Label>
-                          <Input
-                            value={address1}
-                            onChange={(e) => setAddress1(e.target.value)}
-                            placeholder="Rua, avenida…"
-                          />
-                        </div>
-                        <div className="grid grid-cols-12 gap-3 mt-4">
-                          <div className="col-span-12 sm:col-span-4 space-y-2">
-                            <Label className="text-xs">CEP</Label>
-                            <MaskedInput
-                              maskType="cep"
-                              value={cep}
-                              onMaskedChange={setCep}
-                              placeholder="00000-000"
-                            />
-                          </div>
-                          <div className="col-span-12 sm:col-span-8 space-y-2">
-                            <Label className="text-xs">Cidade</Label>
-                            <Input value={city} onChange={(e) => setCity(e.target.value)} />
-                          </div>
-                        </div>
-                        <div className="grid grid-cols-12 gap-3 mt-4">
-                          <div className="col-span-12 sm:col-span-8 space-y-2">
-                            <Label className="text-xs">Bairro</Label>
-                            <Input value={bairro} onChange={(e) => setBairro(e.target.value)} />
-                          </div>
-                          <div className="col-span-12 sm:col-span-4 space-y-2">
-                            <Label className="text-xs">Número</Label>
-                            <Input value={numero} onChange={(e) => setNumero(e.target.value)} />
-                          </div>
-                        </div>
-                        <div className="space-y-2 mt-4">
-                          <Label className="text-xs">UF</Label>
-                          <select
-                            value={uf}
-                            onChange={(e) => setUf(e.target.value)}
-                            className={cn(
-                              'flex w-full bg-background border border-input rounded-md shadow-xs shadow-black/5',
-                              'h-8.5 px-3 text-[0.8125rem] text-foreground',
-                              'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/30 focus-visible:border-ring',
-                              'disabled:cursor-not-allowed disabled:opacity-60',
-                              !uf && 'text-muted-foreground/80',
-                            )}
-                          >
-                            <option value="" disabled>Selecione</option>
-                            {BR_UF.map((u) => (
-                              <option key={u} value={u}>{u}</option>
-                            ))}
-                          </select>
-                        </div>
-                      </CardContent>
-                    </CollapsibleContent>
-                  </Card>
-                </Collapsible>
+                <AddressCard
+                  value={address}
+                  onChange={setAddress}
+                  collapsible
+                  defaultOpen
+                  disabled={submitting}
+                />
               </div>
             </ScrollArea>
           </SheetBody>
