@@ -13,13 +13,15 @@ export interface FielAvatarInputProps {
   onChange: (file: File | null) => void;
   disabled?: boolean;
   className?: string;
+  /** URL do avatar já existente (modo edição). Sobreposto pelo `value` quando um arquivo novo é selecionado. */
+  existingUrl?: string | null;
 }
 
 /**
  * Avatar circular (~150px) — upload de arquivo ou captura via webcam,
  * alinhado ao modal Blade `cadastro_fiel`.
  */
-export function FielAvatarInput({ value, onChange, disabled, className }: FielAvatarInputProps) {
+export function FielAvatarInput({ value, onChange, disabled, className, existingUrl }: FielAvatarInputProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -143,7 +145,7 @@ export function FielAvatarInput({ value, onChange, disabled, className }: FielAv
   }
 
   const showVideo = webcamActive;
-  const displaySrc = showVideo ? undefined : previewUrl || BLANK_AVATAR;
+  const displaySrc = showVideo ? undefined : previewUrl || existingUrl || BLANK_AVATAR;
 
   return (
     <div className={cn('flex flex-col items-center gap-2', className)}>

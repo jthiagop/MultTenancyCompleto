@@ -18,21 +18,65 @@ class BrowsershotHelper
     }
     
     /**
-     * Configura o caminho do Chrome em uma instância existente do Browsershot
+     * Configura o caminho do Chrome em uma instância existente do Browsershot.
+     *
+     * Aplica conjuntos de argumentos diferentes por SO: o conjunto agressivo
+     * usado em produção (Linux) trava o handshake do DevTools no macOS local,
+     * onde o sandbox e a infra de memória do Chrome se comportam de forma
+     * diferente.
      */
     public static function configureChromePath(Browsershot $browsershot): Browsershot
     {
         $chromePath = self::getChromePath();
-        
-        // Configurar caminho do Chrome
+
         $browsershot->setChromePath($chromePath);
-        
-        // Argumentos otimizados para estabilidade em servidores Linux
-        // NOTA: Removidos --single-process e --no-zygote que causavam "Target closed"
-        $browsershot->setOption('args', [
+
+        $browsershot->setOption('args', self::getChromeArgs());
+
+        // Timeout do Browsershot. PHP deve ser configurado com limite MAIOR
+        // que este valor para que a exceção de timeout consiga ser tratada
+        // em vez de o PHP abortar a request inteira.
+        $browsershot->timeout(60);
+
+        // Para HTML totalmente inline (sem fontes/imagens externas) o evento
+        // "load" dispara assim que o parser conclui. Já "networkidle0" pode
+        // travar indefinidamente quando --disable-background-networking está
+        // ativo (Linux) ou quando há service workers persistentes.
+        $browsershot->setOption('waitUntil', 'load');
+
+        return $browsershot;
+    }
+
+    /**
+     * Retorna o conjunto de argumentos do Chromium adequado ao SO atual.
+     *
+     * Linux (produção): conjunto agressivo otimizado para containers e
+     * servidores compartilhados sem GPU.
+     * macOS / Windows (dev): conjunto mínimo — flags Linux como
+     * --no-sandbox e --disable-features=site-per-process causam deadlock
+     * no handshake do DevTools.
+     *
+     * @return list<string>
+     */
+    public static function getChromeArgs(): array
+    {
+        if (PHP_OS_FAMILY === 'Darwin' || PHP_OS_FAMILY === 'Windows') {
+            return [
+                '--headless=new',
+                '--disable-gpu',
+                '--no-first-run',
+                '--no-default-browser-check',
+                '--disable-extensions',
+                '--disable-background-networking',
+                '--disable-sync',
+                '--disable-translate',
+            ];
+        }
+
+        return [
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',          // Usar /tmp em vez de /dev/shm
+            '--disable-dev-shm-usage',
             '--disable-gpu',
             '--disable-software-rasterizer',
             '--disable-extensions',
@@ -41,25 +85,14 @@ class BrowsershotHelper
             '--disable-translate',
             '--no-first-run',
             '--disable-default-apps',
-            '--disable-hang-monitor',           // Evita detecção falsa de travamento
+            '--disable-hang-monitor',
             '--disable-popup-blocking',
             '--disable-prompt-on-repost',
             '--disable-client-side-phishing-detection',
             '--disable-component-update',
-            '--disable-ipc-flooding-protection', // Evita throttling de IPC
-            '--disable-features=TranslateUI',
-            '--disable-features=site-per-process', // Reduz processos
-            '--memory-pressure-off',            // Desativa liberação agressiva de memória
-            '--max_old_space_size=4096',        // Aumenta memória do V8
-        ]);
-        
-        // Aumentar timeout para PDFs complexos
-        $browsershot->timeout(180); // 3 minutos
-        
-        // Estratégia de carregamento - usar networkidle0 para garantir carregamento completo
-        $browsershot->setOption('waitUntil', 'networkidle0');
-        
-        return $browsershot;
+            '--disable-ipc-flooding-protection',
+            '--disable-features=TranslateUI,site-per-process',
+        ];
     }
     
     /**

@@ -7,13 +7,17 @@ use App\Models\Fiel;
 use App\Models\Address;
 use App\Models\FielContact;
 use App\Models\FielComplementaryData;
+use App\Helpers\BrowsershotHelper;
 use App\Models\FielTithe;
 use App\Models\User;
+use App\Services\Fieis\CarteirinhaFielService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Spatie\Browsershot\Browsershot;
 
 
 class FielController extends Controller
@@ -155,6 +159,199 @@ class FielController extends Controller
     }
 
     /**
+     * GET /api/fieis
+     * Listagem paginada para o painel React.
+     *
+     * Suporta: search, sort_by/sort_dir, page/per_page, status, sexo, dizimista.
+     * Retorna formato `{ data, total, per_page, current_page, last_page }`.
+     */
+    public function apiList(Request $request)
+    {
+        $companyId = session('active_company_id');
+
+        if (! $companyId) {
+            return response()->json([
+                'data' => [], 'total' => 0, 'per_page' => 20, 'current_page' => 1, 'last_page' => 1,
+            ]);
+        }
+
+        $query = Fiel::with(['contacts', 'addresses', 'tithe'])
+            ->where('company_id', $companyId);
+
+        if ($search = trim((string) $request->input('search'))) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nome_completo', 'like', "%{$search}%")
+                  ->orWhere('cpf', 'like', "%{$search}%")
+                  ->orWhere('rg', 'like', "%{$search}%")
+                  ->orWhereHas('contacts', fn ($c) => $c->where('valor', 'like', "%{$search}%"));
+            });
+        }
+
+        if ($status = $request->input('status')) {
+            $query->where('status', $status);
+        }
+
+        // Sexo — tratado no bloco de filtros avançados abaixo (suporta valor único e lista CSV)
+
+        if ($request->filled('dizimista')) {
+            $isDizimista = filter_var($request->input('dizimista'), FILTER_VALIDATE_BOOLEAN);
+            if ($isDizimista) {
+                $query->whereHas('tithe', fn ($q) => $q->where('dizimista', true));
+            } else {
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('tithe')
+                      ->orWhereHas('tithe', fn ($sub) => $sub->where('dizimista', false));
+                });
+            }
+        }
+
+        // ── Filtros avançados ──────────────────────────────────────────────────
+
+        // Faixa de idade (calculada via data_nascimento)
+        if ($request->filled('idade_min')) {
+            $minAge = (int) $request->input('idade_min');
+            $maxDate = \Carbon\Carbon::now()->subYears($minAge)->format('Y-m-d');
+            $query->where('data_nascimento', '<=', $maxDate);
+        }
+        if ($request->filled('idade_max')) {
+            $maxAge = (int) $request->input('idade_max');
+            $minDate = \Carbon\Carbon::now()->subYears($maxAge + 1)->addDay()->format('Y-m-d');
+            $query->where('data_nascimento', '>=', $minDate);
+        }
+
+        // Cidade (via endereço vinculado)
+        if ($cidade = trim((string) $request->input('cidade'))) {
+            $query->whereHas('addresses', fn ($q) => $q->where('cidade', 'like', "%{$cidade}%"));
+        }
+
+        // Estado civil (múltiplo, via dados complementares)
+        if ($request->filled('estado_civil')) {
+            $estadosCivis = array_filter(array_map('trim', explode(',', $request->input('estado_civil'))));
+            if (! empty($estadosCivis)) {
+                $query->whereHas('complementaryData', fn ($q) => $q->whereIn('estado_civil', $estadosCivis));
+            }
+        }
+
+        // Situação (múltipla — complementa o filtro de status da aba)
+        if ($request->filled('situacao')) {
+            $situacoes = array_filter(array_map('trim', explode(',', $request->input('situacao'))));
+            if (! empty($situacoes)) {
+                $query->whereIn('status', $situacoes);
+            }
+        }
+
+        // Faixa de data de nascimento
+        if ($nascimentoDe = $request->input('nascimento_de')) {
+            $query->where('data_nascimento', '>=', $nascimentoDe);
+        }
+        if ($nascimentoAte = $request->input('nascimento_ate')) {
+            $query->where('data_nascimento', '<=', $nascimentoAte);
+        }
+
+        // Sexo múltiplo (sobrepõe o filtro simples da aba quando vier como lista CSV)
+        if ($request->filled('sexo')) {
+            $sexoRaw = $request->input('sexo');
+            if (str_contains($sexoRaw, ',')) {
+                $sexos = array_filter(array_map('trim', explode(',', $sexoRaw)));
+                if (! empty($sexos)) {
+                    $query->whereIn('sexo', $sexos);
+                }
+            } else {
+                // filtro simples da aba (valor único)
+                $query->where('sexo', $sexoRaw);
+            }
+        }
+
+        $sortBy  = $request->input('sort_by', 'nome_completo');
+        $sortDir = $request->input('sort_dir', 'asc') === 'desc' ? 'desc' : 'asc';
+        $allowedSort = ['nome_completo', 'data_nascimento', 'cpf', 'sexo', 'status', 'created_at'];
+        if (! in_array($sortBy, $allowedSort, true)) {
+            $sortBy = 'nome_completo';
+        }
+        $query->orderBy($sortBy, $sortDir);
+
+        $perPage = min(max((int) $request->input('per_page', 20), 5), 100);
+        $paginated = $query->paginate($perPage);
+
+        $data = $paginated->getCollection()->map(function (Fiel $fiel) {
+            // Avatar
+            $avatarUrl = null;
+            if ($fiel->avatar) {
+                try {
+                    $avatarUrl = route('file', ['path' => $fiel->avatar]);
+                } catch (\Throwable) {
+                    $avatarUrl = Storage::disk('public')->url($fiel->avatar);
+                }
+            }
+
+            // Contatos: telefone (telefone ou whatsapp) + email
+            $telefoneContact = $fiel->contacts->first(fn ($c) => in_array($c->tipo, ['telefone', 'whatsapp', 'telefone_secundario'], true));
+            $emailContact = $fiel->contacts->first(fn ($c) => $c->tipo === 'email');
+
+            // Endereço principal — cidade/uf
+            $enderecoPrincipal = $fiel->addresses->first(fn ($a) => ($a->pivot->tipo ?? null) === 'principal')
+                ?? $fiel->addresses->first();
+            $cidadeUf = null;
+            if ($enderecoPrincipal) {
+                $cidadeUf = trim(implode(' / ', array_filter([$enderecoPrincipal->cidade, $enderecoPrincipal->uf])));
+            }
+
+            return [
+                'id'                       => $fiel->id,
+                'nome_completo'            => $fiel->nome_completo,
+                'avatar_url'               => $avatarUrl,
+                'sexo'                     => $fiel->sexo,
+                'cpf'                      => $fiel->cpf,
+                'rg'                       => $fiel->rg,
+                'data_nascimento'          => $fiel->data_nascimento?->format('Y-m-d'),
+                'data_nascimento_formatted'=> $fiel->data_nascimento?->format('d/m/Y'),
+                'idade'                    => $fiel->data_nascimento ? (int) $fiel->data_nascimento->age : null,
+                'telefone'                 => $telefoneContact?->valor,
+                'telefone_is_whatsapp'     => $telefoneContact?->tipo === 'whatsapp',
+                'email'                    => $emailContact?->valor,
+                'cidade_uf'                => $cidadeUf ?: null,
+                'dizimista'                => (bool) ($fiel->tithe?->dizimista ?? false),
+                'codigo_dizimista'         => $fiel->tithe?->codigo,
+                'status'                   => $fiel->status ?? 'Ativo',
+                'created_at_formatted'     => $fiel->created_at?->translatedFormat('d/m/Y'),
+            ];
+        });
+
+        // ── Stats globais (sem os filtros ativos, exceto search) ──────────────
+        // Serve para as abas do FieisStatsBar no frontend.
+        $statsBase = Fiel::where('company_id', $companyId);
+        if ($search) {
+            $statsBase->where(function ($q) use ($search) {
+                $q->where('nome_completo', 'like', "%{$search}%")
+                  ->orWhere('cpf', 'like', "%{$search}%")
+                  ->orWhere('rg', 'like', "%{$search}%")
+                  ->orWhereHas('contacts', fn ($c) => $c->where('valor', 'like', "%{$search}%"));
+            });
+        }
+
+        $total      = (clone $statsBase)->count();
+        $masculino  = (clone $statsBase)->where('sexo', 'M')->count();
+        $feminino   = (clone $statsBase)->where('sexo', 'F')->count();
+        $dizimista  = (clone $statsBase)->whereHas('tithe', fn ($q) => $q->where('dizimista', true))->count();
+        $ativos     = (clone $statsBase)->where('status', 'Ativo')->count();
+
+        return response()->json([
+            'data'         => $data,
+            'total'        => $paginated->total(),
+            'per_page'     => $paginated->perPage(),
+            'current_page' => $paginated->currentPage(),
+            'last_page'    => $paginated->lastPage(),
+            'stats' => [
+                'total'     => $total,
+                'masculino' => $masculino,
+                'feminino'  => $feminino,
+                'dizimista' => $dizimista,
+                'ativos'    => $ativos,
+            ],
+        ]);
+    }
+
+    /**
      * API specific index for Mobile App
      */
     public function apiIndex(Request $request)
@@ -192,30 +389,58 @@ class FielController extends Controller
 
     /**
      * Store a newly created resource in storage.
+     *
+     * Aceita o formato moderno do React (phones[] com is_whatsapp, codigo_dizimista,
+     * observacoes, status enum) e mantém compatibilidade com o formato Blade legado
+     * (telefone, telefone_secundario, profissao).
      */
     public function store(Request $request)
     {
         try {
+            $companyId = session('active_company_id');
+
+            // Quando `require_cpf=1` (fluxo de quick-create do drawer de Dízimo),
+            // o CPF passa a ser obrigatório e a regra de unicidade é restrita à
+            // company ativa para evitar colisão entre tenants.
+            $requireCpf = $request->boolean('require_cpf');
+
+            $cpfRule = $requireCpf
+                ? ['required', 'string', 'max:14',
+                   'unique:fieis,cpf,NULL,id,company_id,' . (int) $companyId]
+                : ['nullable', 'string', 'max:14',
+                   'unique:fieis,cpf,NULL,id,company_id,' . (int) $companyId];
+
             // Validação dos dados
             $validator = Validator::make($request->all(), [
                 'nome_completo' => 'required|string|max:255',
-                'cpf' => 'nullable|string|max:14|unique:fieis,cpf',
+                'cpf' => $cpfRule,
                 'rg' => 'nullable|string|max:20',
                 'data_nascimento' => ['nullable', function ($attribute, $value, $fail) {
                     if ($value) {
-                        // Tentar parsear no formato brasileiro d/m/Y
-                        $date = \Carbon\Carbon::createFromFormat('d/m/Y', $value);
-                        if (!$date || $date->format('d/m/Y') !== $value) {
-                            // Tentar formato padrão Y-m-d
-                            $date = \Carbon\Carbon::parse($value);
-                            if (!$date) {
-                                $fail('A data de nascimento deve estar no formato dd/mm/aaaa.');
-                            }
+                        $iso = preg_match('/^\d{4}-\d{2}-\d{2}$/', $value);
+                        $br = preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $value);
+                        if (! $iso && ! $br) {
+                            $fail('A data de nascimento deve estar no formato dd/mm/aaaa.');
                         }
                     }
                 }],
                 'sexo' => 'nullable|in:M,F,Outro',
                 'avatar' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'email' => 'nullable|email|max:255',
+                'status' => 'nullable|in:Ativo,Inativo,Falecido,Mudou-se',
+                'phones' => 'nullable|array|max:5',
+                'phones.*.numero' => 'nullable|string|max:25',
+                'phones.*.is_whatsapp' => 'nullable',
+                'codigo_dizimista' => 'nullable|string|max:50',
+                'observacoes'      => 'nullable|string|max:2000',
+                'estado_civil'     => 'nullable|string|max:50',
+                'profissao'        => 'nullable|string|max:150',
+                'nacionalidade'    => 'nullable|string|max:100',
+                'natural'          => 'nullable|string|max:150',
+                'uf_natural'       => 'nullable|string|max:2',
+                'titulo_eleitor'   => 'nullable|string|max:20',
+                'zona'             => 'nullable|string|max:10',
+                'secao'            => 'nullable|string|max:10',
             ]);
 
             if ($validator->fails()) {
@@ -228,24 +453,18 @@ class FielController extends Controller
 
             DB::beginTransaction();
 
-            // Obter o ID da empresa do usuário autenticado
-            $companyId = session('active_company_id');
-
-            // Processar data de nascimento (aceita formato brasileiro d/m/Y)
+            // Processar data de nascimento (aceita formato brasileiro d/m/Y e ISO)
             $dataNascimento = null;
             if ($request->data_nascimento) {
                 try {
-                    // Tentar formato brasileiro primeiro (d/m/Y)
                     if (preg_match('/^\d{2}\/\d{2}\/\d{4}$/', $request->data_nascimento)) {
                         $dataNascimento = \Carbon\Carbon::createFromFormat('d/m/Y', $request->data_nascimento)->format('Y-m-d');
                     } else {
-                        // Tentar formato padrão (Y-m-d)
                         $dataNascimento = \Carbon\Carbon::parse($request->data_nascimento)->format('Y-m-d');
                     }
                 } catch (\Exception $e) {
-                    // Se falhar, tentar parse genérico
                     $dataNascimento = \Carbon\Carbon::parse($request->data_nascimento)->format('Y-m-d');
-            }
+                }
             }
 
             // Dados básicos do fiel
@@ -257,7 +476,7 @@ class FielController extends Controller
                 'data_nascimento' => $dataNascimento,
                 'sexo' => $request->input('sexo', 'M'),
                 'notifications' => json_encode($request->input('notifications', [])),
-                'status' => $request->status ?? 'Ativo',
+                'status' => $request->input('status', 'Ativo'),
                 'created_by' => auth()->user()->id,
                 'updated_by' => auth()->user()->id,
                 'created_by_name' => auth()->user()->name,
@@ -273,64 +492,41 @@ class FielController extends Controller
             // Criar o fiel
             $fiel = Fiel::create($fielData);
 
-            // Salvar contatos (telefones e email)
-            if ($request->telefone) {
-                FielContact::create([
-                    'fiel_id' => $fiel->id,
-                    'tipo' => 'telefone',
-                    'valor' => $request->telefone,
-                    'principal' => true,
-                ]);
+            // ── Contatos ────────────────────────────────────────────────
+            // Formato moderno: phones[] com is_whatsapp. Cada item vira:
+            //   - 1 contato `telefone` (ou `whatsapp` quando flag ligada)
+            // Formato legado: telefone / telefone_secundario (ainda aceito).
+            $this->saveFielContacts($fiel, $request);
+
+            // Salvar dados complementares (todos os campos do modelo)
+            $complementarFields = [
+                'profissao', 'estado_civil', 'nacionalidade',
+                'natural', 'uf_natural', 'titulo_eleitor', 'zona', 'secao', 'observacoes',
+            ];
+            $hasComplementary = collect($complementarFields)->some(fn ($f) => $request->filled($f));
+            if ($hasComplementary) {
+                $complementarData = ['fiel_id' => $fiel->id];
+                foreach ($complementarFields as $field) {
+                    $complementarData[$field] = $request->input($field) ?: null;
+                }
+                FielComplementaryData::create($complementarData);
             }
 
-            if ($request->telefone_secundario) {
-                FielContact::create([
-                    'fiel_id' => $fiel->id,
-                    'tipo' => 'telefone_secundario',
-                    'valor' => $request->telefone_secundario,
-                    'principal' => false,
-                ]);
-            }
+            // Salvar endereço (aceita `endereco`/`logradouro`, `estado`/`uf` e `numero`)
+            $this->saveFielAddress($fiel, $request, $companyId);
 
-            if ($request->email) {
-                FielContact::create([
-                    'fiel_id' => $fiel->id,
-                    'tipo' => 'email',
-                    'valor' => $request->email,
-                    'principal' => true,
-                ]);
-            }
-
-            // Salvar dados complementares
-            if ($request->profissao || $request->estado_civil) {
-                FielComplementaryData::create([
-                    'fiel_id' => $fiel->id,
-                    'profissao' => $request->profissao,
-                    'estado_civil' => $request->estado_civil,
-                ]);
-            }
-
-            // Salvar endereço
-            if ($request->cep || $request->endereco || $request->bairro || $request->cidade || $request->estado) {
-                $address = Address::create([
-                    'company_id' => $companyId,
-                    'cep' => $request->cep,
-                    'rua' => $request->endereco,
-                    'bairro' => $request->bairro,
-                    'cidade' => $request->cidade,
-                    'uf' => $request->estado,
-                ]);
-
-                // Relacionar endereço com o fiel
-                $fiel->addresses()->attach($address->id, ['tipo' => 'principal']);
-            }
-
-            // Salvar dados de dízimo
+            // Salvar dados de dízimo (gera código D-XXXX automaticamente quando não informado)
             if ($request->has('dizimista') && $request->boolean('dizimista')) {
-                FielTithe::create([
-                    'fiel_id' => $fiel->id,
+                $tithe = FielTithe::create([
+                    'fiel_id'   => $fiel->id,
                     'dizimista' => true,
                 ]);
+
+                app(CarteirinhaFielService::class)->ensureCodigo(
+                    $tithe,
+                    $request->input('codigo_dizimista'),
+                    $companyId,
+                );
             }
 
             DB::commit();
@@ -355,6 +551,112 @@ class FielController extends Controller
                 'message' => 'Ocorreu um erro ao cadastrar o fiel: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Persiste contatos do fiel a partir do request.
+     *
+     * Suporta dois formatos:
+     *  1. Moderno (React): `phones[]` com `numero` + `is_whatsapp`.
+     *  2. Legado (Blade): `telefone` (principal), `telefone_secundario`.
+     *
+     * Quando `phones[]` está presente, ele é a fonte de verdade — os campos
+     * legados são ignorados para evitar duplicidade. O e-mail (`email`) é
+     * sempre tratado de forma independente.
+     *
+     * @param  bool  $replaceExisting  Se true, remove antes telefone/whatsapp/secundário/e-mail
+     *                                deste fiel (usado em atualização via React). Evita duplicatas.
+     */
+    protected function saveFielContacts(Fiel $fiel, Request $request, bool $replaceExisting = false): void
+    {
+        if ($replaceExisting) {
+            $fiel->contacts()
+                ->whereIn('tipo', ['telefone', 'whatsapp', 'telefone_secundario', 'email'])
+                ->delete();
+        }
+
+        $phones = $request->input('phones');
+
+        if (is_array($phones) && ! empty($phones)) {
+            $first = true;
+            foreach ($phones as $phone) {
+                $numero = trim((string) ($phone['numero'] ?? ''));
+                if ($numero === '') {
+                    continue;
+                }
+                $isWhats = filter_var($phone['is_whatsapp'] ?? false, FILTER_VALIDATE_BOOLEAN);
+                FielContact::create([
+                    'fiel_id'   => $fiel->id,
+                    'tipo'      => $isWhats ? 'whatsapp' : 'telefone',
+                    'valor'     => $numero,
+                    'principal' => $first,
+                ]);
+                $first = false;
+            }
+        } else {
+            // Legado: telefone / telefone_secundario
+            if ($request->filled('telefone')) {
+                FielContact::create([
+                    'fiel_id'   => $fiel->id,
+                    'tipo'      => 'telefone',
+                    'valor'     => $request->input('telefone'),
+                    'principal' => true,
+                ]);
+            }
+            if ($request->filled('telefone_secundario')) {
+                FielContact::create([
+                    'fiel_id'   => $fiel->id,
+                    'tipo'      => 'telefone_secundario',
+                    'valor'     => $request->input('telefone_secundario'),
+                    'principal' => false,
+                ]);
+            }
+        }
+
+        if ($request->filled('email')) {
+            FielContact::create([
+                'fiel_id'   => $fiel->id,
+                'tipo'      => 'email',
+                'valor'     => $request->input('email'),
+                'principal' => true,
+            ]);
+        }
+    }
+
+    /**
+     * Persiste o endereço principal do fiel, aceitando aliases moderno/legado.
+     *  - logradouro|endereco → Address.rua
+     *  - uf|estado           → Address.uf
+     *  - numero              → Address.numero (se a coluna existir)
+     */
+    protected function saveFielAddress(Fiel $fiel, Request $request, $companyId): void
+    {
+        $rua    = $request->input('endereco') ?? $request->input('logradouro');
+        $uf     = $request->input('estado') ?? $request->input('uf');
+        $cep    = $request->input('cep');
+        $bairro = $request->input('bairro');
+        $cidade = $request->input('cidade');
+        $numero = $request->input('numero');
+
+        if (! ($cep || $rua || $bairro || $cidade || $uf || $numero)) {
+            return;
+        }
+
+        $payload = [
+            'company_id' => $companyId,
+            'cep'        => $cep,
+            'rua'        => $rua,
+            'bairro'     => $bairro,
+            'cidade'     => $cidade,
+            'uf'         => $uf,
+        ];
+
+        if ($numero && \Illuminate\Support\Facades\Schema::hasColumn('addresses', 'numero')) {
+            $payload['numero'] = $numero;
+        }
+
+        $address = Address::create($payload);
+        $fiel->addresses()->attach($address->id, ['tipo' => 'principal']);
     }
 
 
@@ -622,6 +924,541 @@ class FielController extends Controller
     public function destroy(Fiel $fiel)
     {
         //
+    }
+
+    /**
+     * Retorna os dados de um fiel para o formulário React.
+     */
+    public function showReact(Request $request, $id)
+    {
+        try {
+            $companyId = session('active_company_id');
+
+            $fiel = Fiel::with(['contacts', 'addresses', 'complementaryData', 'tithe'])
+                ->where('company_id', $companyId)
+                ->findOrFail($id);
+
+            $avatarUrl = null;
+            if ($fiel->avatar) {
+                try {
+                    $avatarUrl = route('file', ['path' => $fiel->avatar]);
+                } catch (\Exception $e) {
+                    $avatarUrl = Storage::disk('public')->url($fiel->avatar);
+                }
+            }
+
+            // Monta array de phones com is_whatsapp (ordem estável: principal primeiro, depois id)
+            $phoneRows = $fiel->contacts
+                ->filter(fn ($c) => in_array($c->tipo, ['telefone', 'whatsapp', 'telefone_secundario'], true))
+                ->values();
+
+            $phones = $phoneRows
+                ->sort(function ($a, $b) {
+                    $pa = (int) (bool) ($a->principal ?? false);
+                    $pb = (int) (bool) ($b->principal ?? false);
+                    if ($pa !== $pb) {
+                        return $pb <=> $pa;
+                    }
+
+                    return ($a->id ?? 0) <=> ($b->id ?? 0);
+                })
+                ->map(function ($c) {
+                    return [
+                        'numero'        => $c->valor,
+                        'is_whatsapp'   => $c->tipo === 'whatsapp',
+                    ];
+                })
+                ->values()
+                ->toArray();
+
+            if (empty($phones)) {
+                $phones = [['numero' => '', 'is_whatsapp' => true]];
+            }
+
+            $email = $fiel->contacts->where('tipo', 'email')->first()->valor ?? '';
+
+            $comp = $fiel->complementaryData;
+            $tithe = $fiel->tithe;
+
+            // Endereço principal
+            $address = ['cep' => '', 'logradouro' => '', 'numero' => '', 'bairro' => '', 'cidade' => '', 'uf' => ''];
+            $enderecoPrincipal = $fiel->addresses->first();
+            if ($enderecoPrincipal) {
+                $address = [
+                    'cep'       => $enderecoPrincipal->cep ?? '',
+                    'logradouro' => $enderecoPrincipal->rua ?? '',
+                    'numero'    => $enderecoPrincipal->pivot->numero ?? ($enderecoPrincipal->numero ?? ''),
+                    'bairro'    => $enderecoPrincipal->bairro ?? '',
+                    'cidade'    => $enderecoPrincipal->cidade ?? '',
+                    'uf'        => $enderecoPrincipal->uf ?? '',
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id'               => $fiel->id,
+                    'nome_completo'    => $fiel->nome_completo,
+                    'data_nascimento'  => $fiel->data_nascimento ? $fiel->data_nascimento->format('Y-m-d') : '',
+                    'cpf'              => $fiel->cpf ?? '',
+                    'rg'               => $fiel->rg ?? '',
+                    'sexo'             => $fiel->sexo,
+                    'status'           => $fiel->status ?? 'Ativo',
+                    'avatar_url'       => $avatarUrl,
+                    'phones'           => $phones,
+                    'email'            => $email,
+                    'profissao'        => $comp->profissao ?? '',
+                    'estado_civil'     => $comp->estado_civil ?? '',
+                    'nacionalidade'    => $comp->nacionalidade ?? '',
+                    'natural'          => $comp->natural ?? '',
+                    'uf_natural'       => $comp->uf_natural ?? '',
+                    'titulo_eleitor'   => $comp->titulo_eleitor ?? '',
+                    'zona'             => $comp->zona ?? '',
+                    'secao'            => $comp->secao ?? '',
+                    'observacoes'      => $comp->observacoes ?? '',
+                    'dizimista'        => $tithe ? (bool) $tithe->dizimista : false,
+                    'codigo_dizimista' => $tithe->codigo ?? '',
+                    'address'          => $address,
+                ],
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Fiel não encontrado.'], 404);
+        } catch (\Throwable $e) {
+            \Log::error('showReact Fiel: ' . $e->getMessage());
+            return response()->json(['message' => 'Erro ao carregar dados do fiel.'], 500);
+        }
+    }
+
+    /**
+     * Atualiza um fiel via React (sessão web), aceitando todos os campos do novo formulário.
+     */
+    public function updateReact(Request $request, $id)
+    {
+        try {
+            $companyId = session('active_company_id');
+
+            $fiel = Fiel::where('company_id', $companyId)->findOrFail($id);
+
+            $validator = Validator::make($request->all(), [
+                'nome_completo'    => 'required|string|max:255',
+                'cpf'              => 'nullable|string|max:14|unique:fieis,cpf,' . $fiel->id,
+                'rg'               => 'nullable|string|max:20',
+                'data_nascimento'  => 'nullable|string',
+                'sexo'             => 'nullable|in:M,F,Outro',
+                'avatar'           => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+                'status'           => 'nullable|in:Ativo,Inativo,Falecido,Mudou-se',
+                'email'            => 'nullable|email|max:255',
+                'phones'           => 'nullable|array|max:3',
+                'phones.*.numero'  => 'nullable|string|max:20',
+                'phones.*.is_whatsapp' => 'nullable|boolean',
+                'estado_civil'     => 'nullable|string|max:100',
+                'profissao'        => 'nullable|string|max:150',
+                'nacionalidade'    => 'nullable|string|max:100',
+                'natural'          => 'nullable|string|max:150',
+                'uf_natural'       => 'nullable|string|max:2',
+                'titulo_eleitor'   => 'nullable|string|max:20',
+                'zona'             => 'nullable|string|max:10',
+                'secao'            => 'nullable|string|max:10',
+                'observacoes'      => 'nullable|string|max:2000',
+                'dizimista'        => 'nullable|boolean',
+                'codigo_dizimista' => 'nullable|string|max:50',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Erro de validação',
+                    'errors'  => $validator->errors(),
+                ], 422);
+            }
+
+            DB::transaction(function () use ($request, $fiel, $companyId) {
+                // ── Dados básicos ──────────────────────────────────────────
+                $dataNascimento = null;
+                if ($request->data_nascimento) {
+                    try {
+                        $dataNascimento = \Carbon\Carbon::parse($request->data_nascimento)->format('Y-m-d');
+                    } catch (\Exception $e) {}
+                }
+
+                $fiel->nome_completo   = $request->nome_completo;
+                $fiel->cpf             = $request->cpf ?: null;
+                $fiel->rg              = $request->rg ?: null;
+                $fiel->data_nascimento = $dataNascimento;
+                $fiel->sexo            = $request->sexo;
+                $fiel->status          = $request->status ?? $fiel->status;
+
+                if ($request->hasFile('avatar')) {
+                    if ($fiel->avatar) {
+                        Storage::disk('public')->delete($fiel->avatar);
+                    }
+                    $fiel->avatar = $request->file('avatar')->store('avatars', 'public');
+                }
+
+                $fiel->save();
+
+                // ── Contatos (substitui conjunto anterior — evita duplicar linhas a cada save) ──
+                $this->saveFielContacts($fiel, $request, true);
+
+                // ── Endereço ───────────────────────────────────────────────
+                $this->saveFielAddress($fiel, $request, $companyId);
+
+                // ── Complementar ───────────────────────────────────────────
+                $comp = $fiel->complementaryData;
+                $complementarData = [
+                    'profissao'      => $request->input('profissao') ?: null,
+                    'estado_civil'   => $request->input('estado_civil') ?: null,
+                    'nacionalidade'  => $request->input('nacionalidade') ?: null,
+                    'natural'        => $request->input('natural') ?: null,
+                    'uf_natural'     => $request->input('uf_natural') ?: null,
+                    'titulo_eleitor' => $request->input('titulo_eleitor') ?: null,
+                    'zona'           => $request->input('zona') ?: null,
+                    'secao'          => $request->input('secao') ?: null,
+                    'observacoes'    => $request->input('observacoes') ?: null,
+                ];
+                if ($comp) {
+                    $comp->fill($complementarData)->save();
+                } else {
+                    FielComplementaryData::create(array_merge(['fiel_id' => $fiel->id], $complementarData));
+                }
+
+                // ── Dízimo ─────────────────────────────────────────────────
+                $isDizimista = $request->boolean('dizimista');
+                $tithe = $fiel->tithe;
+
+                if (! $tithe && $isDizimista) {
+                    $tithe = FielTithe::create([
+                        'fiel_id'   => $fiel->id,
+                        'dizimista' => true,
+                    ]);
+                } elseif ($tithe) {
+                    $tithe->dizimista = $isDizimista;
+                    $tithe->save();
+                }
+
+                // Gera/atualiza o código de dizimista somente quando ativo
+                if ($tithe && $isDizimista) {
+                    app(CarteirinhaFielService::class)->ensureCodigo(
+                        $tithe,
+                        $request->input('codigo_dizimista'),
+                        $companyId,
+                    );
+                }
+            });
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Fiel atualizado com sucesso!',
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Fiel não encontrado.'], 404);
+        } catch (\Throwable $e) {
+            \Log::error('updateReact Fiel: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao atualizar o fiel: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Retorna os dados da carteirinha (SVG do QR + Code128) para preview no React.
+     * GET /api/cadastros/fieis/{id}/carteirinha
+     */
+    public function carteirinhaData(Request $request, $id, CarteirinhaFielService $carteirinha)
+    {
+        $companyId = session('active_company_id');
+        Log::info('[carteirinha] carteirinhaData iniciado', [
+            'fiel_id'    => $id,
+            'company_id' => $companyId,
+            'user_id'    => Auth::id(),
+        ]);
+
+        try {
+            $fiel = Fiel::with(['tithe', 'company'])
+                ->where('company_id', $companyId)
+                ->findOrFail($id);
+
+            if (! $fiel->tithe || ! $fiel->tithe->dizimista) {
+                Log::warning('[carteirinha] carteirinhaData — fiel não é dizimista ou sem registro em fiel_tithe', [
+                    'fiel_id'     => $fiel->id,
+                    'company_id'  => $companyId,
+                    'tem_tithe'   => (bool) $fiel->tithe,
+                    'tithe_id'    => $fiel->tithe?->id,
+                    'dizimista'   => $fiel->tithe?->dizimista,
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Este fiel não está marcado como dizimista.',
+                ], 404);
+            }
+
+            Log::debug('[carteirinha] carteirinhaData — ensureCodigo', [
+                'fiel_id'       => $fiel->id,
+                'tithe_id'      => $fiel->tithe->id,
+                'codigo_atual'  => $fiel->tithe->codigo,
+            ]);
+
+            $codigo = $carteirinha->ensureCodigo($fiel->tithe, $fiel->tithe->codigo, (int) $companyId);
+
+            // QR payload — enviado ao frontend para gerar o QR code client-side
+            // (biblioteca JS qrcode). Os SVGs do QR e barcode não são mais gerados
+            // aqui: o frontend usa qrcode + bwip-js para produzir imagens PNG e
+            // gerar o PDF com @react-pdf/renderer, sem depender do Browsershot.
+            $payload = $carteirinha->payloadQr($fiel, $codigo);
+
+            Log::info('[carteirinha] carteirinhaData concluído', [
+                'fiel_id'   => $fiel->id,
+                'codigo'    => $codigo,
+                'qr_payload'=> $payload,
+            ]);
+
+            $companyAvatar = $fiel->company->avatar ?? null;
+
+            return response()->json([
+                'success' => true,
+                'data'    => [
+                    'codigo'     => $codigo,
+                    'qr_payload' => $payload,
+                    'fiel' => [
+                        'id'            => $fiel->id,
+                        'nome_completo' => $fiel->nome_completo,
+                        'avatar_url'    => $fiel->avatar
+                            ? Storage::disk('public')->url($fiel->avatar)
+                            : null,
+                    ],
+                    'company' => [
+                        'nome'     => $fiel->company->nome ?? ($fiel->company->name ?? null),
+                        'logo_url' => $companyAvatar
+                            ? Storage::disk('public')->url($companyAvatar)
+                            : null,
+                    ],
+                ],
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            Log::warning('[carteirinha] carteirinhaData — fiel não encontrado', [
+                'fiel_id'    => $id,
+                'company_id' => $companyId,
+            ]);
+
+            return response()->json(['success' => false, 'message' => 'Fiel não encontrado.'], 404);
+        } catch (\Throwable $e) {
+            Log::error('[carteirinha] carteirinhaData falhou', [
+                'fiel_id'    => $id,
+                'company_id' => $companyId,
+                'exception'  => $e::class,
+                'message'    => $e->getMessage(),
+                'file'       => $e->getFile(),
+                'line'       => $e->getLine(),
+                'trace'      => $e->getTraceAsString(),
+            ]);
+
+            return response()->json(['success' => false, 'message' => 'Erro ao gerar carteirinha.'], 500);
+        }
+    }
+
+    /**
+     * Gera um PDF em lote com várias carteirinhas para impressão duplex em
+     * massa.
+     *
+     * Layout: A4 retrato, grade 2x2 (4 cartões A6 por página).
+     *
+     * Para alinhar a impressão duplex, alternamos páginas:
+     *   página N (ímpar) — frente dos próximos 4 fiéis (offsets 0..3)
+     *   página N+1 (par) — verso dos mesmos 4 fiéis (mesmas posições)
+     *
+     * Assim, ao imprimir frente/verso, os versos caem nas costas certas
+     * dos cartões.
+     *
+     * GET /relatorios/fieis/carteirinhas/pdf?ids=1,2,3,...
+     */
+    public function carteirinhasLotePdf(Request $request, CarteirinhaFielService $carteirinha)
+    {
+        // Lote pode ser pesado: várias gerações de SVG + pipeline Browsershot.
+        @set_time_limit(180);
+        @ini_set('max_execution_time', '180');
+
+        $companyId = session('active_company_id');
+        $idsParam  = (string) $request->query('ids', '');
+        $ids = collect(explode(',', $idsParam))
+            ->map(fn ($v) => (int) trim($v))
+            ->filter(fn ($v) => $v > 0)
+            ->unique()
+            ->values()
+            ->all();
+
+        Log::info('[carteirinha] carteirinhasLotePdf iniciado', [
+            'company_id'   => $companyId,
+            'ids_count'    => count($ids),
+            'user_id'      => Auth::id(),
+        ]);
+
+        if (empty($ids)) {
+            abort(422, 'Informe ao menos um fiel.');
+        }
+
+        // Limite de segurança para evitar timeout / memória descontrolada.
+        if (count($ids) > 60) {
+            abort(422, 'Selecione no máximo 60 fiéis por lote.');
+        }
+
+        try {
+            $fieis = Fiel::with(['tithe', 'company'])
+                ->where('company_id', $companyId)
+                ->whereIn('id', $ids)
+                ->whereHas('tithe', fn ($q) => $q->where('dizimista', true))
+                ->orderBy('nome_completo')
+                ->get();
+
+            if ($fieis->isEmpty()) {
+                Log::warning('[carteirinha] carteirinhasLotePdf — nenhum fiel dizimista encontrado', [
+                    'company_id' => $companyId,
+                    'ids'        => $ids,
+                ]);
+                abort(404, 'Nenhum fiel dizimista encontrado para os IDs informados.');
+            }
+
+            $companyAvatar  = optional($fieis->first()->company)->avatar;
+            $organismo = $fieis->first()->company->nome
+                ?? ($fieis->first()->company->name ?? '—');
+
+            // Converte um storage path (disco 'public') para uma data URL base64
+            // inline, evitando qualquer requisição HTTP durante a renderização
+            // pelo Browsershot (que carrega o HTML via file://).
+            $toDataUrl = static function (?string $storagePath): ?string {
+                if (!$storagePath) {
+                    return null;
+                }
+                try {
+                    $disk     = Storage::disk('public');
+                    $contents = $disk->get($storagePath);
+                    if (!$contents) {
+                        return null;
+                    }
+                    $mime = $disk->mimeType($storagePath) ?: 'image/jpeg';
+                    return 'data:' . $mime . ';base64,' . base64_encode($contents);
+                } catch (\Throwable) {
+                    return null;
+                }
+            };
+
+            $companyLogoDataUrl = $toDataUrl($companyAvatar);
+
+            // Para cada fiel: garante código, gera QR e barcode.
+            $cards = [];
+            foreach ($fieis as $fiel) {
+                $codigo = $carteirinha->ensureCodigo(
+                    $fiel->tithe,
+                    $fiel->tithe->codigo,
+                    (int) $companyId
+                );
+                $payload = $carteirinha->payloadQr($fiel, $codigo);
+                $cards[] = [
+                    'fiel'          => $fiel,
+                    'codigo'        => $codigo,
+                    'qrSvg'         => $carteirinha->qrCodeSvg($payload, 160, 1),
+                    'barSvg'        => $carteirinha->code128Svg($codigo, 280, 50, true),
+                    'avatarDataUrl' => $toDataUrl($fiel->avatar),
+                ];
+            }
+
+            $html = view('app.fieis.carteirinhas-lote-pdf', [
+                'cards'              => $cards,
+                'organismo'          => $organismo,
+                'companyLogoDataUrl' => $companyLogoDataUrl,
+                'ano'                => (int) date('Y'),
+            ])->render();
+
+            Log::info('[carteirinha] carteirinhasLotePdf — HTML renderizado', [
+                'cards_count' => count($cards),
+                'html_bytes'  => strlen($html),
+            ]);
+
+            $tmpPath = tempnam(sys_get_temp_dir(), 'carteirinhas-lote-') . '.pdf';
+            $t0 = microtime(true);
+
+            try {
+                BrowsershotHelper::configureChromePath(
+                    Browsershot::html($html)
+                        ->format('A4')
+                        ->margins(8, 8, 8, 8)
+                        ->showBackground()
+                        ->emulateMedia('screen')
+                )->timeout(120)->save($tmpPath);
+            } catch (\Throwable $pdfEx) {
+                @unlink($tmpPath);
+                Log::error('[carteirinha] carteirinhasLotePdf — Browsershot falhou', [
+                    'company_id' => $companyId,
+                    'cards'      => count($cards),
+                    'seconds'    => round(microtime(true) - $t0, 2),
+                    'exception'  => $pdfEx::class,
+                    'message'    => $pdfEx->getMessage(),
+                ]);
+                throw $pdfEx;
+            }
+
+            $pdf = @file_get_contents($tmpPath);
+            @unlink($tmpPath);
+
+            if ($pdf === false || $pdf === '') {
+                abort(500, 'Falha ao ler o PDF gerado.');
+            }
+
+            Log::info('[carteirinha] carteirinhasLotePdf — PDF gerado', [
+                'cards'     => count($cards),
+                'pdf_bytes' => strlen($pdf),
+                'seconds'   => round(microtime(true) - $t0, 2),
+            ]);
+
+            $filename = 'carteirinhas-lote-' . count($cards) . '.pdf';
+
+            return response($pdf, 200, [
+                'Content-Type'        => 'application/pdf',
+                'Content-Disposition' => 'inline; filename="' . $filename . '"',
+            ]);
+        } catch (\Throwable $e) {
+            Log::error('[carteirinha] carteirinhasLotePdf falhou', [
+                'company_id' => $companyId,
+                'ids'        => $ids,
+                'exception'  => $e::class,
+                'message'    => $e->getMessage(),
+                'file'       => $e->getFile(),
+                'line'       => $e->getLine(),
+            ]);
+
+            if ($e instanceof \Symfony\Component\HttpKernel\Exception\HttpException) {
+                throw $e;
+            }
+            abort(500, 'Erro ao gerar o PDF em lote: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Exclui um fiel via React (sessão web). Isola por company_id da sessão.
+     */
+    public function destroyReact(Request $request, $id)
+    {
+        try {
+            $companyId = session('active_company_id');
+
+            $fiel = Fiel::where('company_id', $companyId)->findOrFail($id);
+
+            \DB::transaction(function () use ($fiel) {
+                $fiel->addresses()->delete();
+                $fiel->contacts()->delete();
+                $fiel->tithe()->delete();
+                $fiel->complementaryData()->delete();
+                $fiel->delete();
+            });
+
+            return response()->json(['message' => 'Fiel excluído com sucesso.'], 200);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+            return response()->json(['message' => 'Fiel não encontrado.'], 404);
+        } catch (\Throwable $e) {
+            \Log::error('destroyReact Fiel: ' . $e->getMessage());
+            return response()->json(['message' => 'Erro ao excluir o fiel.'], 500);
+        }
     }
 
     /**

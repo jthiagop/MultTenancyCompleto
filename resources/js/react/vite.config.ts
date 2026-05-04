@@ -176,5 +176,25 @@ export default defineConfig(({ mode }) => {
       manifest: true,
       chunkSizeWarningLimit: 3000,
     },
+    optimizeDeps: {
+      // @react-pdf/renderer v4 usa imports dinâmicos internos (WASM, fontes)
+      // que o pré-bundle do Vite resolve de forma incorreta, causando 404 em
+      // paths relativos como "pdf". Excluindo, o Vite serve os módulos ESM
+      // diretamente de node_modules sem interferir na resolução interna.
+      exclude: ['@react-pdf/renderer'],
+      // Sub-dependências CJS de @react-pdf/renderer que o Vite não consegue
+      // transformar automaticamente quando o pai está excluído. Listá-las
+      // em include força o pré-bundle delas individualmente (CJS → ESM),
+      // eliminando o erro "does not provide an export named 'default'".
+      include: [
+        'base64-js',
+        'buffer',
+        'png-js',
+        'jpeg-js',
+        'linebreak',
+        // CJS usado pela cadeia de @react-pdf/fontkit / subsetting
+        'unicode-trie',
+      ],
+    },
   };
 });
