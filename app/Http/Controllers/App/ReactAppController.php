@@ -9,6 +9,7 @@ use App\Models\Financeiro\CostCenter;
 use App\Models\FormasPagamento;
 use App\Models\LancamentoPadrao;
 use App\Models\HorarioMissa;
+use App\Models\Module;
 use App\Models\Parceiro;
 use App\Services\ModuleService;
 use Illuminate\Http\Request;
@@ -103,9 +104,44 @@ class ReactAppController extends Controller
             'canNotafiscalIndex'    => $user->can('notafiscal.index'),
             'canSecretaryIndex'     => $user->can('secretary.index'),
             'canFieisIndex'         => $user->can('fieis.index'),
+            'canDizimosIndex'       => self::userCanAccessModuleKey($user, 'dizimos'),
+            'canDizimosCreate'      => self::userCanModuleAction($user, 'dizimos', 'create'),
+            'canDizimosEdit'        => self::userCanModuleAction($user, 'dizimos', 'edit'),
+            'canDizimosDelete'      => self::userCanModuleAction($user, 'dizimos', 'delete'),
         ];
 
         return view('react-app', compact('appData'));
+    }
+
+    /**
+     * Alinha com Module::userHasPermission (ex.: role global vê o módulo no dashboard
+     * mesmo sem permissão Spatie explícita).
+     */
+    private static function userCanAccessModuleKey(\App\Models\User $user, string $moduleKey): bool
+    {
+        if ($user->hasRole('global') || $user->hasRole('admin') || $user->hasRole('admin_user')) {
+            return true;
+        }
+
+        $module = Module::query()->where('key', $moduleKey)->first();
+
+        if ($module) {
+            return $module->userHasPermission($user);
+        }
+
+        return $user->can("{$moduleKey}.index");
+    }
+
+    /**
+     * Permissão granular por ação dentro de um módulo (create/edit/delete/...).
+     * Mantém o mesmo bypass de roles administrativas usado em userCanAccessModuleKey.
+     */
+    private static function userCanModuleAction(\App\Models\User $user, string $moduleKey, string $action): bool
+    {
+        if ($user->hasRole('global') || $user->hasRole('admin') || $user->hasRole('admin_user')) {
+            return true;
+        }
+        return $user->can("{$moduleKey}.{$action}");
     }
 
     private static function resolveRouteUrl(string $routeName): ?string

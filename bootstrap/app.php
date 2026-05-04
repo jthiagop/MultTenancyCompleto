@@ -382,6 +382,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'require.password.change' => \App\Http\Middleware\RequirePasswordChange::class,
             'check.user.active' => \App\Http\Middleware\CheckUserActive::class,
             'initialize.tenancy.for.webhook' => \App\Http\Middleware\InitializeTenancyForWebhook::class,
+            'module.access' => \App\Http\Middleware\EnsureModuleAccess::class,
         ]);
 
         // Adicione o middleware ao grupo 'web' aqui

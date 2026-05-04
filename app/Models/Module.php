@@ -76,8 +76,10 @@ class Module extends Model
      */
     public function userHasPermission($user): bool
     {
-        // Super usuários com role 'global' têm acesso a todos os módulos
-        if ($user->hasRole('global')) {
+        // Roles de gestão principal: mesmo critério do TenantDatabaseSeeder (admin/global
+        // recebem todas as permissões; admin_user recebe todos os módulos exceto company).
+        // Sem bypass aqui, permissões novas ou cache Spatie desatualizado bloqueavam o módulo.
+        if ($user->hasRole('global') || $user->hasRole('admin') || $user->hasRole('admin_user')) {
             return true;
         }
 

@@ -94,6 +94,14 @@ interface AppData {
   canSecretaryIndex?: boolean;
   /** Spatie can('fieis.index') — acesso à página de Cadastro de Fiéis no React. */
   canFieisIndex?: boolean;
+  /** Spatie can('dizimos.index') — acesso à página Dízimo e Doações no React. */
+  canDizimosIndex?: boolean;
+  /** Spatie can('dizimos.create') — habilita botão "Novo lançamento". */
+  canDizimosCreate?: boolean;
+  /** Spatie can('dizimos.edit') — habilita ação "Editar" na tabela e no drawer. */
+  canDizimosEdit?: boolean;
+  /** Spatie can('dizimos.delete') — habilita ação "Excluir" na tabela. */
+  canDizimosDelete?: boolean;
 }
 
 declare global {
@@ -125,6 +133,10 @@ export function useAppData(): AppData {
       canNotafiscalIndex: false,
       canSecretaryIndex: false,
       canFieisIndex: false,
+      canDizimosIndex: false,
+      canDizimosCreate: false,
+      canDizimosEdit: false,
+      canDizimosDelete: false,
     };
   }
 
