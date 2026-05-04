@@ -360,6 +360,26 @@ Route::middleware([
             Route::post('/api/cadastros/usuarios/{user}/reset-password', [UserController::class, 'resetPassword'])->name('react.cadastros.usuarios.reset-password');
         });
 
+        // API React de fiéis — sessão web (NÃO usar /api/fieis: conflita com tenant-api.php + Sanctum)
+        Route::middleware(['can:fieis.index'])->group(function () {
+            Route::get('/api/cadastros/fieis', [FielController::class, 'apiList'])->name('react.cadastros.fieis');
+            Route::get('/api/cadastros/fieis/{id}', [FielController::class, 'showReact'])->name('react.cadastros.fieis.show');
+            Route::get('/api/cadastros/fieis/{id}/carteirinha', [FielController::class, 'carteirinhaData'])->name('react.cadastros.fieis.carteirinha');
+            Route::post('/api/cadastros/fieis/{id}', [FielController::class, 'updateReact'])->name('react.cadastros.fieis.update');
+            Route::delete('/api/cadastros/fieis/{id}', [FielController::class, 'destroyReact'])->name('react.cadastros.fieis.destroy');
+        });
+
+        // API React de Dízimo e Doações — sessão web; protegida por permissão dizimos.index
+        // (mesma regra usada para a página /app/dizimos via middleware module.access).
+        Route::middleware(['module.access:dizimos'])->group(function () {
+            Route::get('/api/cadastros/dizimos',                [DizimoController::class, 'apiList'])->name('react.cadastros.dizimos');
+            Route::post('/api/cadastros/dizimos',               [DizimoController::class, 'apiStore'])->name('react.cadastros.dizimos.store');
+            Route::get('/api/cadastros/dizimos/lookup-codigo',  [DizimoController::class, 'apiLookupCodigo'])->name('react.cadastros.dizimos.lookup-codigo');
+            Route::get('/api/cadastros/dizimos/{id}',           [DizimoController::class, 'apiShow'])->name('react.cadastros.dizimos.show');
+            Route::post('/api/cadastros/dizimos/{id}',          [DizimoController::class, 'apiUpdate'])->name('react.cadastros.dizimos.update');
+            Route::delete('/api/cadastros/dizimos/{id}',        [DizimoController::class, 'apiDestroy'])->name('react.cadastros.dizimos.destroy');
+        });
+
         // API React de secretaria/membros religiosos
         Route::middleware(['can:secretary.index'])->group(function () {
             Route::get('/api/secretary/membros', [ReactCadastrosController::class, 'membros'])->name('react.secretary.membros');
@@ -784,9 +804,13 @@ Route::middleware([
                 // index → SPA React em /app/fieis (nome da rota: fieis.index)
                 Route::resource('fieis', FielController::class)->except(['index'])->middleware('can:fieis.index');
                 Route::get('fieis/charts/data', [FielController::class, 'getChartData'])->name('fieis.charts.data')->middleware('can:fieis.index');
+                // fieis.carteirinha.pdf removido: PDF individual é gerado client-side
+                // com @react-pdf/renderer no frontend (sem Browsershot no servidor).
+                Route::get('fieis/carteirinhas/pdf', [FielController::class, 'carteirinhasLotePdf'])->name('fieis.carteirinhas.lote.pdf')->middleware('can:fieis.index');
                 Route::post('fieis/relatorio/pdf', [FielController::class, 'relatorioPdf'])->name('fieis.relatorio.pdf')->middleware('can:fieis.index');
 
-                Route::resource('dizimos', DizimoController::class)->middleware('can:dizimos.index');
+                // index → SPA React em /app/dizimos (nome da rota: dizimos.index)
+                Route::resource('dizimos', DizimoController::class)->except(['index'])->middleware('can:dizimos.index');
 
                 // Secretary (Membros Religiosos)
                 Route::prefix('secretary')->name('secretary.')->middleware('can:secretary.index')->group(function () {
@@ -904,6 +928,11 @@ Route::middleware([
         Route::get('/app/fieis', [ReactAppController::class, 'index'])
             ->middleware('can:fieis.index')
             ->name('fieis.index');
+
+        // Dízimo e Doações — página inicial no painel React (substitui o index Blade em /relatorios/dizimos)
+        Route::get('/app/dizimos', [ReactAppController::class, 'index'])
+            ->middleware('module.access:dizimos')
+            ->name('dizimos.index');
 
         // Painel React (Metronic) — wildcard DEVE ficar por último para não engolir rotas Blade
         Route::get('/app/{any?}', [ReactAppController::class, 'index'])
