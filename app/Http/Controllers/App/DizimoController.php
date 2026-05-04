@@ -8,6 +8,7 @@ use App\Models\Fiel;
 use App\Models\EntidadeFinanceira;
 use App\Models\Movimentacao;
 use App\Models\Financeiro\TransacaoFinanceira;
+use App\Services\Dizimo\DizimoFinanceiroService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -555,6 +556,328 @@ class DizimoController extends Controller
         $dizimo->update([
             'movimentacao_id' => $movimentacao->id,
             'integrado_financeiro' => true,
+        ]);
+    }
+
+    // =====================================================================
+    // API JSON usada pelo SPA React (/app/dizimos)
+    //
+    // Endpoints registrados em routes/tenant.php sob o middleware
+    // `can:dizimos.index` (bloco do React). Os métodos Blade (index/store/
+    // update/destroy/edit/create/show) acima permanecem para retro-compat.
+    // =====================================================================
+
+    /**
+     * Lista paginada para a DataGrid React.
+     * Aceita: search, fiel_id, tipo, data_inicio, data_fim, sort_by, sort_dir, page, per_page.
+     */
+    public function apiList(Request $request)
+    {
+        $companyId = session('active_company_id');
+
+        if (! $companyId) {
+            return response()->json([
+                'data' => [], 'total' => 0, 'per_page' => 20, 'current_page' => 1, 'last_page' => 1,
+            ]);
+        }
+
+        $query = Dizimo::with(['fiel:id,nome_completo,avatar', 'entidadeFinanceira:id,nome,tipo'])
+            ->where('company_id', $companyId);
+
+        if ($search = trim((string) $request->input('search'))) {
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('fiel', fn ($f) => $f->where('nome_completo', 'like', "%{$search}%"))
+                  ->orWhere('observacoes', 'like', "%{$search}%");
+            });
+        }
+
+        if ($request->filled('fiel_id')) {
+            $query->where('fiel_id', (int) $request->input('fiel_id'));
+        }
+
+        if ($request->filled('tipo')) {
+            $tipos = array_filter(array_map('trim', explode(',', (string) $request->input('tipo'))));
+            if (! empty($tipos)) {
+                $query->whereIn('tipo', $tipos);
+            }
+        }
+
+        if ($dataInicio = $request->input('data_inicio')) {
+            $query->whereDate('data_pagamento', '>=', $dataInicio);
+        }
+        if ($dataFim = $request->input('data_fim')) {
+            $query->whereDate('data_pagamento', '<=', $dataFim);
+        }
+
+        if ($request->filled('forma_pagamento')) {
+            $query->where('forma_pagamento', $request->input('forma_pagamento'));
+        }
+
+        if ($request->filled('integrado')) {
+            $query->where('integrado_financeiro', filter_var($request->input('integrado'), FILTER_VALIDATE_BOOLEAN));
+        }
+
+        // Sort whitelisted
+        $sortBy  = $request->input('sort_by', 'data_pagamento');
+        $sortDir = strtolower((string) $request->input('sort_dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+        $allowed = ['data_pagamento', 'valor', 'tipo', 'forma_pagamento', 'created_at', 'id'];
+        if (! in_array($sortBy, $allowed, true)) {
+            $sortBy = 'data_pagamento';
+        }
+        $query->orderBy($sortBy, $sortDir);
+
+        $perPage = max(1, min(100, (int) $request->input('per_page', 20)));
+        $page    = max(1, (int) $request->input('page', 1));
+        $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+
+        // Stats globais (independem dos filtros de busca/paginação) — só do period filtrado.
+        $statsQuery = Dizimo::where('company_id', $companyId);
+        if ($dataInicio = $request->input('data_inicio')) $statsQuery->whereDate('data_pagamento', '>=', $dataInicio);
+        if ($dataFim    = $request->input('data_fim'))    $statsQuery->whereDate('data_pagamento', '<=', $dataFim);
+
+        $totalGeral = (float) $statsQuery->clone()->sum('valor');
+        $totalDizimo = (float) $statsQuery->clone()->where('tipo', 'Dízimo')->sum('valor');
+        $totalDoacao = (float) $statsQuery->clone()->where('tipo', 'Doação')->sum('valor');
+        $totalOferta = (float) $statsQuery->clone()->where('tipo', 'Oferta')->sum('valor');
+
+        $items = $paginator->getCollection()->map(fn (Dizimo $d) => [
+            'id'                    => $d->id,
+            'tipo'                  => $d->tipo,
+            'valor'                 => (float) $d->valor,
+            'valor_formatado'       => 'R$ ' . number_format((float) $d->valor, 2, ',', '.'),
+            'data_pagamento'        => $d->data_pagamento?->format('Y-m-d'),
+            'data_pagamento_formatada' => $d->data_pagamento?->format('d/m/Y'),
+            'forma_pagamento'       => $d->forma_pagamento,
+            'observacoes'           => $d->observacoes,
+            'integrado_financeiro'  => (bool) $d->integrado_financeiro,
+            'movimentacao_id'       => $d->movimentacao_id,
+            'fiel'                  => $d->fiel ? [
+                'id'            => $d->fiel->id,
+                'nome_completo' => $d->fiel->nome_completo,
+                'avatar_url'    => $d->fiel->avatar
+                    ? '/file/' . ltrim(preg_replace('#^public/#', '', $d->fiel->avatar), '/')
+                    : null,
+            ] : null,
+            'entidade_financeira'   => $d->entidadeFinanceira ? [
+                'id'   => $d->entidadeFinanceira->id,
+                'nome' => $d->entidadeFinanceira->nome,
+                'tipo' => $d->entidadeFinanceira->tipo,
+            ] : null,
+            'entidade_financeira_id' => $d->entidade_financeira_id,
+        ])->values();
+
+        return response()->json([
+            'data'         => $items,
+            'total'        => $paginator->total(),
+            'per_page'     => $paginator->perPage(),
+            'current_page' => $paginator->currentPage(),
+            'last_page'    => $paginator->lastPage(),
+            'stats' => [
+                'total'    => $totalGeral,
+                'dizimo'   => $totalDizimo,
+                'doacao'   => $totalDoacao,
+                'oferta'   => $totalOferta,
+            ],
+        ]);
+    }
+
+    /**
+     * Cria um (ou N — quando período) Dizimos via Service centralizado.
+     * Retorna a coleção criada.
+     */
+    public function apiStore(Request $request, DizimoFinanceiroService $service)
+    {
+        $companyId = session('active_company_id');
+        if (! $companyId) {
+            return response()->json(['success' => false, 'message' => 'Empresa ativa não encontrada.'], 422);
+        }
+
+        $rules = [
+            'tipo'                   => ['required', 'in:' . implode(',', DizimoFinanceiroService::TIPOS_VALIDOS)],
+            'fiel_id'                => ['required', 'integer', 'exists:fieis,id'],
+            'data_pagamento'         => ['required', 'date'],
+            'valor'                  => ['required', 'numeric', 'min:0.01'],
+            'forma_pagamento'        => ['required', 'in:' . implode(',', DizimoFinanceiroService::FORMAS_PAGAMENTO)],
+            'entidade_financeira_id' => ['nullable', 'integer', 'exists:entidades_financeiras,id'],
+            'observacoes'            => ['nullable', 'string', 'max:1000'],
+            'integrar_financeiro'    => ['sometimes', 'boolean'],
+
+            'periodo'                => ['sometimes', 'boolean'],
+            'mes_inicio'             => ['nullable', 'string', 'regex:/^\d{2}\/\d{4}$/'],
+            'mes_fim'                => ['nullable', 'string', 'regex:/^\d{2}\/\d{4}$/'],
+
+            'oferta_adicional'        => ['sometimes', 'boolean'],
+            'oferta_adicional_valor'  => ['nullable', 'numeric', 'min:0'],
+            'oferta_adicional_ref'    => ['nullable', 'string', 'max:255'],
+        ];
+
+        $data = $request->validate($rules);
+        $data['integrar_financeiro'] = (bool) ($data['integrar_financeiro'] ?? false);
+        $data['periodo']             = (bool) ($data['periodo'] ?? false);
+        $data['oferta_adicional']    = (bool) ($data['oferta_adicional'] ?? false);
+
+        if ($data['periodo'] && (empty($data['mes_inicio']) || empty($data['mes_fim']))) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Mês inicial e final são obrigatórios quando o período está habilitado.',
+                'errors'  => ['mes_inicio' => ['Informe o mês inicial.'], 'mes_fim' => ['Informe o mês final.']],
+            ], 422);
+        }
+
+        if ($data['integrar_financeiro'] && empty($data['entidade_financeira_id'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Conta/Caixa é obrigatória para integrar ao financeiro.',
+                'errors'  => ['entidade_financeira_id' => ['Selecione uma conta/caixa.']],
+            ], 422);
+        }
+
+        try {
+            $criados = $service->criar($data, Auth::id(), (int) $companyId);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lançamento(s) registrado(s) com sucesso.',
+                'count'   => $criados->count(),
+                'ids'     => $criados->pluck('id')->all(),
+            ], 201);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao registrar lançamento: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Detalhes de um Dizimo para edição via React.
+     */
+    public function apiShow($id)
+    {
+        $companyId = session('active_company_id');
+        $dizimo = Dizimo::with(['fiel:id,nome_completo,avatar', 'entidadeFinanceira:id,nome,tipo'])
+            ->where('company_id', $companyId)
+            ->findOrFail($id);
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id'                     => $dizimo->id,
+                'tipo'                   => $dizimo->tipo,
+                'valor'                  => (float) $dizimo->valor,
+                'data_pagamento'         => $dizimo->data_pagamento?->format('Y-m-d'),
+                'forma_pagamento'        => $dizimo->forma_pagamento,
+                'entidade_financeira_id' => $dizimo->entidade_financeira_id,
+                'observacoes'            => $dizimo->observacoes,
+                'integrado_financeiro'   => (bool) $dizimo->integrado_financeiro,
+                'fiel' => $dizimo->fiel ? [
+                    'id'            => $dizimo->fiel->id,
+                    'nome_completo' => $dizimo->fiel->nome_completo,
+                    'avatar_url'    => $dizimo->fiel->avatar
+                        ? '/file/' . ltrim(preg_replace('#^public/#', '', $dizimo->fiel->avatar), '/')
+                        : null,
+                ] : null,
+            ],
+        ]);
+    }
+
+    /**
+     * Atualiza um Dizimo (sem suporte a período aqui — período só na criação).
+     * Aceita POST com `_method=PUT/PATCH` (igual ao Fieis) ou PUT direto.
+     */
+    public function apiUpdate(Request $request, $id, DizimoFinanceiroService $service)
+    {
+        $companyId = session('active_company_id');
+        $dizimo = Dizimo::where('company_id', $companyId)->findOrFail($id);
+
+        $rules = [
+            'tipo'                   => ['required', 'in:' . implode(',', DizimoFinanceiroService::TIPOS_VALIDOS)],
+            'fiel_id'                => ['required', 'integer', 'exists:fieis,id'],
+            'data_pagamento'         => ['required', 'date'],
+            'valor'                  => ['required', 'numeric', 'min:0.01'],
+            'forma_pagamento'        => ['required', 'in:' . implode(',', DizimoFinanceiroService::FORMAS_PAGAMENTO)],
+            'entidade_financeira_id' => ['nullable', 'integer', 'exists:entidades_financeiras,id'],
+            'observacoes'            => ['nullable', 'string', 'max:1000'],
+            'integrar_financeiro'    => ['sometimes', 'boolean'],
+        ];
+
+        $data = $request->validate($rules);
+        $data['integrar_financeiro'] = (bool) ($data['integrar_financeiro'] ?? false);
+
+        if ($data['integrar_financeiro'] && empty($data['entidade_financeira_id'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Conta/Caixa é obrigatória para integrar ao financeiro.',
+                'errors'  => ['entidade_financeira_id' => ['Selecione uma conta/caixa.']],
+            ], 422);
+        }
+
+        try {
+            $atualizado = $service->atualizar($dizimo, $data, Auth::id());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Lançamento atualizado com sucesso.',
+                'id'      => $atualizado->id,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao atualizar lançamento: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function apiDestroy($id, DizimoFinanceiroService $service)
+    {
+        $companyId = session('active_company_id');
+        $dizimo = Dizimo::where('company_id', $companyId)->findOrFail($id);
+
+        try {
+            $service->excluir($dizimo);
+            return response()->json(['success' => true, 'message' => 'Lançamento excluído.']);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erro ao excluir: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Busca o fiel pelo código de dizimista (ex.: D-0123) na company ativa.
+     * Retorna { fiel, comunidade, codigo, dizimista }.
+     */
+    public function apiLookupCodigo(Request $request)
+    {
+        $companyId = session('active_company_id');
+        $codigo = trim((string) $request->input('codigo', ''));
+
+        if ($codigo === '') {
+            return response()->json(['success' => false, 'message' => 'Informe o código do carnê.'], 422);
+        }
+
+        $fiel = Fiel::with(['tithe', 'company:id,name'])
+            ->where('company_id', $companyId)
+            ->whereHas('tithe', fn ($q) => $q->where('codigo', $codigo))
+            ->first();
+
+        if (! $fiel) {
+            return response()->json(['success' => false, 'message' => 'Carnê não encontrado.'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'fiel' => [
+                'id'            => $fiel->id,
+                'nome_completo' => $fiel->nome_completo,
+                'avatar_url'    => $fiel->avatar
+                    ? '/file/' . ltrim(preg_replace('#^public/#', '', $fiel->avatar), '/')
+                    : null,
+            ],
+            'comunidade' => $fiel->company?->name,
+            'codigo'     => $codigo,
+            'dizimista'  => (bool) ($fiel->tithe?->dizimista ?? false),
         ]);
     }
 }

@@ -15,6 +15,7 @@ import { FraternidadePage } from '@/pages/fraternidade/page';
 import { LoginCustomizationPage } from '@/pages/confs/login/page';
 import { SecretariaPage } from '@/pages/secretaria/page';
 import { FieisPage } from '@/pages/fieis/page';
+import { DizimosPage } from '@/pages/dizimos/page';
 
 export function AppRoutingSetup() {
   return (
@@ -44,6 +45,9 @@ export function AppRoutingSetup() {
 
         {/* Cadastro de fiéis (rota nomeada no Laravel: fieis.index) */}
         <Route path="/fieis" element={<FieisPage />} />
+
+        {/* Dízimo e Doações (rota nomeada no Laravel: dizimos.index) */}
+        <Route path="/dizimos" element={<DizimosPage />} />
 
         {/* Módulo Cemitério */}
         <Route path="/cemiterio" element={<CemiterioPage />} />
