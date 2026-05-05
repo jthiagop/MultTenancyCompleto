@@ -133,6 +133,7 @@ class DizimoFinanceiroService
                 'valor'                  => $dados['valor'],
                 'data_pagamento'         => $dados['data_pagamento'],
                 'forma_pagamento'        => $dados['forma_pagamento'],
+                'numero_documento'       => $this->normalizarNumeroDocumento($dados['numero_documento'] ?? null),
                 'entidade_financeira_id' => $dados['entidade_financeira_id'] ?? null,
                 'observacoes'            => $dados['observacoes'] ?? null,
                 'updated_by'             => $userId,
@@ -188,6 +189,7 @@ class DizimoFinanceiroService
             'valor'                  => $dados['valor'],
             'data_pagamento'         => $dados['data_pagamento'],
             'forma_pagamento'        => $dados['forma_pagamento'],
+            'numero_documento'       => $this->normalizarNumeroDocumento($dados['numero_documento'] ?? null),
             'entidade_financeira_id' => $dados['entidade_financeira_id'] ?? null,
             'observacoes'            => $dados['observacoes'] ?? null,
             'created_by'             => $userId,
@@ -289,7 +291,11 @@ class DizimoFinanceiroService
             'valor'                  => $dizimo->valor,
             'descricao'              => $descricao,
             'tipo_documento'         => $dizimo->tipo,
-            'numero_documento'       => 'DZ-' . $dizimo->id,
+            // Conciliação bancária: o `checknum` do extrato OFX é comparado
+            // contra `transacoes_financeiras.numero_documento`. Quando o
+            // usuário informa um identificador (cheque, TID PIX, doc) usamos
+            // ele; senão, mantemos o fallback `DZ-{id}` para auditoria.
+            'numero_documento'       => $dizimo->numero_documento ?: 'DZ-' . $dizimo->id,
             'origem'                 => 'Dízimo/Doação',
             'historico_complementar' => $historicoComplementar,
             'updated_by'             => $userId,
@@ -389,6 +395,22 @@ class DizimoFinanceiroService
             return null;
         }
         return Carbon::create($ano, $mes, 1);
+    }
+
+    /**
+     * Normaliza o `numero_documento` informado pelo usuário: trim,
+     * uppercase e limita 50 chars. Retorna `null` quando vazio.
+     */
+    private function normalizarNumeroDocumento(?string $valor): ?string
+    {
+        if ($valor === null) {
+            return null;
+        }
+        $clean = trim($valor);
+        if ($clean === '') {
+            return null;
+        }
+        return mb_substr(mb_strtoupper($clean), 0, 50);
     }
 
     private function labelRecebimento(string $tipo): string

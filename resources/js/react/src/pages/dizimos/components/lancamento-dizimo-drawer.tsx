@@ -2,10 +2,12 @@ import { type RefObject, useCallback, useEffect, useMemo, useRef, useState } fro
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { ChevronUp, Eraser, Loader2, Plus, Save, UserPlus } from 'lucide-react';
+import { ChevronUp, CalendarRange, Eraser, Landmark, Loader2, MessageSquareText, Plus, Save, Tags, UserPlus, Users, Wallet, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ButtonGroup } from '@/components/ui/button-group';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/date-picker';
+import { MonthYearPicker } from '@/components/ui/month-year-picker';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,6 +71,23 @@ const FORMA_TO_ENTIDADE_TIPOS: Record<FormaPagamento, Array<'caixa' | 'banco'> |
   Outro: null,
 };
 
+function onlyDigitsFielQuery(s: string): string {
+  return s.replace(/\D/g, '');
+}
+
+/**
+ * Código de carteirinha/carnê (D-XXXX ou só o número, até 6 dígitos).
+ * CPF (11 dígitos com ou sem máscara) não entra aqui — usa a busca textual na API.
+ */
+function isCodigoCarnetPattern(v: string): boolean {
+  const t = v.trim();
+  if (!t) return false;
+  if (onlyDigitsFielQuery(t).length === 11) return false;
+  if (/^D[-\s]?\d/i.test(t)) return true;
+  if (/^\d+$/.test(t)) return t.length <= 6;
+  return false;
+}
+
 // ── Schema ─────────────────────────────────────────────────────────────────
 
 const mesAnoRegex = /^(\d{2})\/(\d{4})$/;
@@ -104,6 +123,13 @@ const schema = z
     ]),
     entidade_financeira_id: z.number().int().positive().nullable(),
     integrar_financeiro: z.boolean(),
+
+    /**
+     * Identificador externo do recebimento (cheque, TID PIX, comprovante,
+     * etc.). Usado pela conciliação bancária — comparado com o `checknum`
+     * do extrato OFX no `ConciliacaoMatchingService`.
+     */
+    numero_documento: z.string().max(50, 'Máx. 50 caracteres.').nullable().optional(),
 
     observacoes: z.string().max(1000).nullable().optional(),
   })
@@ -189,6 +215,7 @@ const FORM_DEFAULTS: DizimoFormValues = {
   forma_pagamento: 'Dinheiro',
   entidade_financeira_id: null,
   integrar_financeiro: true,
+  numero_documento: null,
   observacoes: null,
 };
 
@@ -233,10 +260,8 @@ export function LancamentoDizimoDrawer({
   const [cadastroFielOpen, setCadastroFielOpen] = useState(false);
 
   // ── Identificação do fiel — busca unificada ──────────────────────────────
-  // Campo único que aceita: código D-XXXX (lookup por carnê) ou nome/CPF
-  // (busca por texto). A detecção é automática: se o valor começa com uma
-  // letra ou com dígito único (padrão D-XXXX), tentamos lookup; caso
-  // contrário fazemos busca de texto.
+  // Um campo: nome, CPF (com ou sem máscara), código da carteirinha/carnê (D-XXXX
+  // ou só o número curto). CPF de 11 dígitos nunca é tratado como código de carnê.
 
   const [fielQuery, setFielQuery] = useState('');
   const [fielSelecionado, setFielSelecionado] = useState<{
@@ -246,51 +271,37 @@ export function LancamentoDizimoDrawer({
     comunidade: string | null;
   } | null>(null);
 
-  // Detecta se o input parece um código de carnê (D-XXXX ou só dígitos <= 6 chars)
-  const isCodigoPattern = (v: string) => /^[A-Za-z][-\s]?\d/i.test(v.trim()) || /^\d{1,6}$/.test(v.trim());
+  // Detecta se o input parece código de carnê/carteirinha (não CPF).
+  const searchTermForList = useMemo(() => {
+    const t = fielQuery.trim();
+    if (t.length < 2) return '';
+    if (onlyDigitsFielQuery(t).length === 11) return fielQuery;
+    if (/^D[-\s]?\d/i.test(t)) return fielQuery;
+    if (!isCodigoCarnetPattern(fielQuery)) return fielQuery;
+    return '';
+  }, [fielQuery]);
 
-  // Busca por nome/CPF apenas quando não parece código
-  const searchTerm = isCodigoPattern(fielQuery) ? '' : fielQuery;
-  const { options: fielMatches, loading: searchingFieis } = useFielSearch(searchTerm);
+  const { options: fielMatches, loading: searchingFieis } = useFielSearch(searchTermForList);
   const { lookup: lookupCarne, loading: lookingUp, error: lookupError } = useLookupCarne();
 
-  const fielOptions = useMemo<SearchSelectOption[]>(() => {
-    const merged = new Map<string, FielSearchResult>();
-    fielMatches.forEach((f) => merged.set(String(f.id), f));
-    if (fielSelecionado && !merged.has(String(fielSelecionado.id))) {
-      merged.set(String(fielSelecionado.id), {
-        id: fielSelecionado.id,
-        nome_completo: fielSelecionado.nome,
-        avatar_url: fielSelecionado.avatar_url,
-        codigo_dizimista: null,
-        cidade_uf: fielSelecionado.comunidade,
-      });
-    }
-    return Array.from(merged.values()).map((f) => ({
-      value: String(f.id),
-      label: f.nome_completo,
-      icon: f.avatar_url,
-      hint: [f.codigo_dizimista, f.cidade_uf].filter(Boolean).join(' · ') || undefined,
-    }));
-  }, [fielMatches, fielSelecionado]);
 
-  /** Dispara lookup de carnê ou notifica que o termo é muito curto. */
+  /** Dispara lookup de carnê/código da carteirinha (variantes tratadas no backend). */
   async function handleFielSearch() {
     const q = fielQuery.trim();
-    if (!q) return;
-
-    if (isCodigoPattern(q)) {
-      // Normaliza: se digitou só números, prefixar com D-
-      const codigo = /^\d+$/.test(q) ? `D-${q.padStart(4, '0')}` : q.toUpperCase();
-      const result = await lookupCarne(codigo);
-      if (!result) {
-        notify.error('Carnê não encontrado', `Nenhum fiel com código "${codigo}".`);
-        return;
-      }
-      selecionarFiel(result.fiel.id, result.fiel.nome_completo, result.fiel.avatar_url, result.comunidade ?? null);
-      notify.success('Fiel encontrado', result.fiel.nome_completo);
+    if (!q || !isCodigoCarnetPattern(q)) return;
+    // Normaliza: se digitou só números, prefixar com D-
+    const codigo = /^\d+$/.test(q) ? `D-${q.padStart(4, '0')}` : q.toUpperCase();
+    const result = await lookupCarne(codigo);
+    if (!result) {
+      notify.error(
+        'Código não encontrado',
+        'Não encontramos esse código de carteirinha/carnê. Confira o número ou busque por nome ou CPF na lista.',
+      );
+      return;
     }
-    // Se não é código, o SearchSelect abaixo já mostra os resultados em tempo real
+    selecionarFiel(result.fiel.id, result.fiel.nome_completo, result.fiel.avatar_url, result.comunidade ?? null);
+    setFielQuery('');
+    notify.success('Fiel encontrado', result.fiel.nome_completo);
   }
 
   function selecionarFiel(id: number, nome: string, avatar_url: string | null, comunidade: string | null) {
@@ -299,10 +310,11 @@ export function LancamentoDizimoDrawer({
     setFielSelecionado({ id, nome, avatar_url, comunidade });
   }
 
-  function handleSelectFielFromSearch(value: string) {
-    const fiel = fielMatches.find((f) => String(f.id) === value);
-    if (!fiel) return;
-    selecionarFiel(fiel.id, fiel.nome_completo, fiel.avatar_url, fiel.cidade_uf ?? null);
+  function limparFiel() {
+    setFielSelecionado(null);
+    form.setValue('fiel_id', 0, { shouldValidate: false });
+    form.setValue('comunidade', null);
+    setFielQuery('');
   }
 
   // ── Entidades financeiras filtradas por forma de pagamento ───────────────
@@ -371,6 +383,7 @@ export function LancamentoDizimoDrawer({
           forma_pagamento: (d.forma_pagamento as FormaPagamento) ?? 'Dinheiro',
           entidade_financeira_id: (d.entidade_financeira_id as number | null) ?? null,
           integrar_financeiro: Boolean(d.integrado_financeiro),
+          numero_documento: (d.numero_documento as string | null) ?? null,
           observacoes: (d.observacoes as string | null) ?? null,
         });
         if (fiel) {
@@ -418,6 +431,9 @@ export function LancamentoDizimoDrawer({
       fd.append('forma_pagamento', values.forma_pagamento);
       if (values.entidade_financeira_id) {
         fd.append('entidade_financeira_id', String(values.entidade_financeira_id));
+      }
+      if (values.numero_documento?.trim()) {
+        fd.append('numero_documento', values.numero_documento.trim());
       }
       if (values.observacoes?.trim()) fd.append('observacoes', values.observacoes.trim());
       fd.append('integrar_financeiro', values.integrar_financeiro ? '1' : '0');
@@ -530,7 +546,7 @@ export function LancamentoDizimoDrawer({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right" className="w-full sm:max-w-xl flex flex-col p-0 gap-0">
+      <SheetContent side="right" className="gap-0 p-0 sm:max-w-4xl">
         <SheetHeader className="border-b px-6 py-4">
           <SheetTitle>{isEditing ? 'Editar lançamento' : 'Novo lançamento'}</SheetTitle>
           <p className="text-xs text-muted-foreground">
@@ -542,130 +558,204 @@ export function LancamentoDizimoDrawer({
 
         <Form {...form}>
           <form ref={formRef} onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0">
-            <SheetBody className="flex-1 min-h-0 p-0">
-              <ScrollArea className="h-full px-6 py-4">
-                <div className="space-y-6">
-                  {/* 1. Tipo do lançamento */}
-                  <section className="space-y-2">
-                    <Label>Tipo do lançamento</Label>
-                    {renderTipoButtons()}
-                  </section>
+            <SheetBody className="flex-1 min-h-0 p-0 bg-muted">
+              <ScrollArea className="h-full">
+                <div className="p-5 space-y-4">
+                  {/* ── Card 1: Tipo do lançamento ───────────────────────── */}
+                  <Card className="rounded-xl">
+                    <CardHeader className="min-h-12 bg-accent/50 py-2">
+                      <CardTitle className="text-2sm flex items-center gap-1.5">
+                        <Tags className="size-3.5 text-muted-foreground" />
+                        Tipo do lançamento
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4 space-y-3">
+                      {renderTipoButtons()}
+                    </CardContent>
+                  </Card>
 
-                  {/* 2. Identificação do fiel */}
-                  <section className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <Label>Fiel</Label>
-                      <Button
-                        type="button"
-                        size="sm"
-                        variant="ghost"
-                        className="h-7 px-2 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 dark:hover:bg-emerald-950/30"
-                        onClick={() => setCadastroFielOpen(true)}
-                      >
-                        <UserPlus className="size-3.5 mr-1" />
-                        Novo fiel
-                      </Button>
-                    </div>
-
-                    {/* Busca unificada: aceita código D-XXXX/barras ou nome/CPF */}
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Input
-                          value={fielQuery}
-                          onChange={(e) => setFielQuery(e.target.value)}
-                          placeholder="Nome, CPF ou código do carnê (D-0001)…"
-                          onKeyDown={(e) => {
-                            if (e.key === 'Enter') {
-                              e.preventDefault();
-                              handleFielSearch();
-                            }
-                          }}
-                          className="pr-8"
-                        />
-                        {(searchingFieis || lookingUp) && (
-                          <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 animate-spin text-muted-foreground" />
-                        )}
-                      </div>
-                      {isCodigoPattern(fielQuery) && (
+                  {/* ── Card 2: Fiel ─────────────────────────────────────── */}
+                  <Card className="rounded-xl">
+                    <CardHeader className="min-h-12 bg-accent/50 py-2">
+                      <div className="flex w-full items-center justify-between gap-3">
+                        <CardTitle className="text-2sm flex min-w-0 flex-1 items-center gap-1.5">
+                          <Users className="size-3.5 shrink-0 text-muted-foreground" />
+                          <span className="label-required">Fiel</span>
+                        </CardTitle>
                         <Button
                           type="button"
-                          variant="outline"
-                          onClick={handleFielSearch}
-                          disabled={lookingUp || !fielQuery.trim()}
+                          size="sm"
+                          className="h-7 shrink-0 border-0 bg-green-600 px-2.5 text-xs font-medium text-white shadow-none hover:bg-green-700 focus-visible:ring-green-600/40 dark:bg-green-700 dark:hover:bg-green-600"
+                          onClick={() => setCadastroFielOpen(true)}
                         >
-                          {lookingUp ? <Loader2 className="size-4 animate-spin" /> : <Plus className="size-4" />}
-                          Buscar
+                          <UserPlus className="size-3.5 mr-1" />
+                          Novo fiel
                         </Button>
-                      )}
-                    </div>
-
-                    {lookupError && !lookingUp && (
-                      <p className="text-xs text-destructive">{lookupError}</p>
-                    )}
-
-                    {/* Lista de resultados por nome — só aparece quando não é código */}
-                    {!isCodigoPattern(fielQuery) && fielQuery.trim().length >= 2 && (
-                      <SearchSelect
-                        options={fielOptions}
-                        value={watchFielId ? String(watchFielId) : ''}
-                        onValueChange={handleSelectFielFromSearch}
-                        placeholder={searchingFieis ? 'Buscando...' : 'Selecione o fiel'}
-                        searchPlaceholder="Filtrar resultados..."
-                        emptyListMessage={
-                          searchingFieis ? 'Buscando...' : 'Nenhum fiel encontrado.'
-                        }
-                        popoverModal={false}
-                      />
-                    )}
-
-                    {fielSelecionado && (
-                      <div className="flex items-center gap-3 rounded-md border bg-muted/40 p-2">
-                        <div className="size-9 rounded-full bg-muted overflow-hidden shrink-0">
-                          {fielSelecionado.avatar_url ? (
-                            <img
-                              src={fielSelecionado.avatar_url}
-                              alt={fielSelecionado.nome}
-                              className="size-full object-cover"
-                            />
-                          ) : (
-                            <span className="flex size-full items-center justify-center text-xs font-semibold uppercase text-muted-foreground">
-                              {fielSelecionado.nome.charAt(0)}
-                            </span>
-                          )}
+                      </div>
+                    </CardHeader>
+                    <CardContent className="pt-4 space-y-3">
+                      {fielSelecionado ? (
+                        /* ── Fiel selecionado ── */
+                        <div className="flex items-center gap-3 rounded-xl border bg-muted/40 p-2">
+                          <div className="size-9 rounded-full bg-muted overflow-hidden shrink-0">
+                            {fielSelecionado.avatar_url ? (
+                              <img
+                                src={fielSelecionado.avatar_url}
+                                alt={fielSelecionado.nome}
+                                className="size-full object-cover"
+                              />
+                            ) : (
+                              <span className="flex size-full items-center justify-center text-xs font-semibold uppercase text-muted-foreground">
+                                {fielSelecionado.nome.charAt(0)}
+                              </span>
+                            )}
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <p className="truncate text-sm font-medium">{fielSelecionado.nome}</p>
+                            {fielSelecionado.comunidade && (
+                              <p className="truncate text-xs text-muted-foreground">
+                                {fielSelecionado.comunidade}
+                              </p>
+                            )}
+                          </div>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            className="size-7 shrink-0 text-muted-foreground hover:text-destructive"
+                            onClick={limparFiel}
+                            aria-label="Trocar fiel"
+                          >
+                            <X className="size-3.5" />
+                          </Button>
                         </div>
-                        <div className="min-w-0">
-                          <p className="truncate text-sm font-medium">{fielSelecionado.nome}</p>
-                          {fielSelecionado.comunidade && (
-                            <p className="truncate text-xs text-muted-foreground">
-                              {fielSelecionado.comunidade}
+                      ) : (
+                        /* ── Combobox de busca ── */
+                        <div className="relative">
+                          <Input
+                            value={fielQuery}
+                            onChange={(e) => setFielQuery(e.target.value)}
+                            placeholder="Nome, CPF ou código da carteirinha (D-0001)…"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') {
+                                e.preventDefault();
+                                if (isCodigoCarnetPattern(fielQuery)) handleFielSearch();
+                              }
+                            }}
+                            className="pr-8"
+                            autoComplete="off"
+                          />
+                          {(searchingFieis || lookingUp) && (
+                            <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 size-3.5 animate-spin text-muted-foreground" />
+                          )}
+
+                          {/* Dropdown de resultados por nome/CPF */}
+                          {searchTermForList.trim().length >= 2 && (
+                            <div className="absolute top-full left-0 right-0 z-50 mt-1 rounded-md border bg-popover shadow-md overflow-hidden">
+                              {searchingFieis ? (
+                                <div className="flex items-center gap-2 px-3 py-3 text-sm text-muted-foreground">
+                                  <Loader2 className="size-3.5 animate-spin" /> Buscando...
+                                </div>
+                              ) : fielMatches.length === 0 ? (
+                                <p className="px-3 py-3 text-sm text-muted-foreground text-center">Nenhum fiel encontrado.</p>
+                              ) : (
+                                <div className="max-h-52 overflow-y-auto">
+                                  {fielMatches.map((f) => (
+                                    <button
+                                      key={f.id}
+                                      type="button"
+                                      className="flex w-full items-center gap-2.5 px-3 py-2 text-sm hover:bg-accent text-left"
+                                      onMouseDown={(e) => {
+                                        e.preventDefault();
+                                        selecionarFiel(f.id, f.nome_completo, f.avatar_url, f.cidade_uf ?? null);
+                                        setFielQuery('');
+                                      }}
+                                    >
+                                      <div className="size-7 shrink-0 rounded-full bg-muted overflow-hidden flex items-center justify-center">
+                                        {f.avatar_url ? (
+                                          <img src={f.avatar_url} alt={f.nome_completo} className="size-full object-cover" />
+                                        ) : (
+                                          <span className="text-[10px] font-semibold uppercase text-muted-foreground">
+                                            {f.nome_completo.charAt(0)}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="truncate font-medium">{f.nome_completo}</p>
+                                        {(f.codigo_dizimista || f.cidade_uf) && (
+                                          <p className="truncate text-xs text-muted-foreground">
+                                            {[f.codigo_dizimista, f.cidade_uf].filter(Boolean).join(' · ')}
+                                          </p>
+                                        )}
+                                      </div>
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Dica para lookup por código de carnê */}
+                          {isCodigoCarnetPattern(fielQuery) && fielQuery.trim().length > 0 && (
+                            <p className="mt-1.5 text-xs text-muted-foreground">
+                              {/^D[-\s]?\d/i.test(fielQuery.trim()) ? (
+                                <>
+                                  Pressione <kbd className="rounded border px-1 text-[10px]">Enter</kbd> para
+                                  buscar pelo código ou selecione o fiel na lista abaixo.
+                                </>
+                              ) : (
+                                <>
+                                  Pressione <kbd className="rounded border px-1 text-[10px]">Enter</kbd> ou{' '}
+                                  <button
+                                    type="button"
+                                    className="underline underline-offset-2"
+                                    onClick={handleFielSearch}
+                                    disabled={lookingUp}
+                                  >
+                                    clique aqui
+                                  </button>{' '}
+                                  para buscar pelo número do carnê.
+                                </>
+                              )}
                             </p>
                           )}
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {form.formState.errors.fiel_id && (
-                      <p className="text-xs text-destructive">{form.formState.errors.fiel_id.message}</p>
-                    )}
-                  </section>
+                      {lookupError && !lookingUp && (
+                        <p className="text-xs text-destructive">{lookupError}</p>
+                      )}
 
-                  {/* 3. Período (apenas no cadastro) */}
+                      {form.formState.errors.fiel_id && (
+                        <p className="text-xs text-destructive">{form.formState.errors.fiel_id.message}</p>
+                      )}
+                    </CardContent>
+                  </Card>
+
+                  {/* ── Card 3: Período (carnê) — apenas novo ───────────── */}
                   {!isEditing && (
-                    <section className="space-y-3">
+                    <Card className="rounded-xl">
+                      <CardHeader className="min-h-10.5 bg-accent/50 py-2">
+                        <CardTitle className="text-2sm flex items-center gap-1.5">
+                          <CalendarRange className="size-4.5 text-muted-foreground" />
+                          Período (carnê)
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="pt-4 space-y-3">
                       <FormField
                         control={form.control}
                         name="periodo"
                         render={({ field }) => (
-                          <FormItem className="flex items-center justify-between rounded-md border bg-accent/20 px-3 py-2">
-                            <div>
-                              <Label className="text-sm font-medium">Período (carnê)</Label>
-                              <p className="text-xs text-muted-foreground mt-0.5">
-                                Gera um lançamento por mês entre o início e o fim informados.
-                              </p>
-                            </div>
-                            <FormControl>
+                          <FormItem className="flex flex-row items-start gap-3 rounded-xl border bg-accent/20 px-3 py-2">
+                            <FormControl className="shrink-0 pt-0.5">
                               <Switch checked={field.value} onCheckedChange={field.onChange} />
                             </FormControl>
+                            <div className="min-w-0 flex-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                              <Label className="text-sm font-medium leading-none">Período (carnê)</Label>
+                              <span className="text-xs text-muted-foreground leading-snug">
+                                Gera um lançamento por mês entre o início e o fim informados.
+                              </span>
+                            </div>
                           </FormItem>
                         )}
                       />
@@ -679,11 +769,11 @@ export function LancamentoDizimoDrawer({
                               <FormItem>
                                 <FormLabel>Primeiro mês/ano</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="MM/AAAA"
-                                    maxLength={7}
+                                  <MonthYearPicker
                                     value={field.value ?? ''}
-                                    onChange={(e) => field.onChange(formatMesAno(e.target.value))}
+                                    onChange={field.onChange}
+                                    onBlur={field.onBlur}
+                                    invalid={!!form.formState.errors.mes_inicio}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -697,11 +787,11 @@ export function LancamentoDizimoDrawer({
                               <FormItem>
                                 <FormLabel>Último mês/ano</FormLabel>
                                 <FormControl>
-                                  <Input
-                                    placeholder="MM/AAAA"
-                                    maxLength={7}
+                                  <MonthYearPicker
                                     value={field.value ?? ''}
-                                    onChange={(e) => field.onChange(formatMesAno(e.target.value))}
+                                    onChange={field.onChange}
+                                    onBlur={field.onBlur}
+                                    invalid={!!form.formState.errors.mes_fim}
                                   />
                                 </FormControl>
                                 <FormMessage />
@@ -710,18 +800,26 @@ export function LancamentoDizimoDrawer({
                           />
                         </div>
                       )}
-                    </section>
+                      </CardContent>
+                    </Card>
                   )}
 
-                  {/* 4. Pagamento */}
-                  <section className="space-y-3">
+                  {/* ── Card 4: Valores ──────────────────────────────────── */}
+                  <Card className="rounded-xl">
+                    <CardHeader className="min-h-12 bg-accent/50 py-2">
+                      <CardTitle className="text-2sm flex items-center gap-1.5">
+                        <Wallet className="size-3.5 text-muted-foreground" />
+                        Valores e data
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4 space-y-3">
                     <div className="grid grid-cols-2 gap-3">
                       <FormField
                         control={form.control}
                         name="data_pagamento"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Data da Oferta</FormLabel>
+                            <FormLabel className="label-required">Data da Oferta</FormLabel>
                             <FormControl>
                               <DatePicker
                                 value={field.value}
@@ -738,22 +836,27 @@ export function LancamentoDizimoDrawer({
                         name="valor"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Valor</FormLabel>
+                            <FormLabel className="label-required">Valor</FormLabel>
                             <FormControl>
-                              <CurrencyInput
-                                value={
-                                  field.value > 0
-                                    ? (field.value * 100)
-                                        .toString()
-                                        .padStart(3, '0')
-                                        .replace(/(\d+)(\d{2})$/, '$1,$2')
-                                    : ''
-                                }
-                                onUnmaskedChange={(cents) =>
-                                  field.onChange(Number(cents) / 100)
-                                }
-                                placeholder="0,00"
-                              />
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium pointer-events-none select-none">
+                                  R$
+                                </span>
+                                <CurrencyInput
+                                  className="pl-8"
+                                  value={
+                                    field.value > 0
+                                      ? field.value.toLocaleString('pt-BR', {
+                                          minimumFractionDigits: 2,
+                                          maximumFractionDigits: 2,
+                                        })
+                                      : ''
+                                  }
+                                  onUnmaskedChange={(cents) =>
+                                    field.onChange(Number(cents) / 100)
+                                  }
+                                />
+                              </div>
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -767,16 +870,16 @@ export function LancamentoDizimoDrawer({
                           control={form.control}
                           name="oferta_adicional"
                           render={({ field }) => (
-                            <FormItem className="flex items-center justify-between rounded-md border bg-accent/20 px-3 py-2">
-                              <div>
-                                <Label className="text-sm font-medium">Oferta adicional</Label>
-                                <p className="text-xs text-muted-foreground mt-0.5">
-                                  Cria um registro extra do tipo "Oferta" para o mesmo fiel/data.
-                                </p>
-                              </div>
-                              <FormControl>
+                            <FormItem className="flex flex-row items-start gap-3 rounded-xl border bg-accent/20 px-3 py-2">
+                              <FormControl className="shrink-0 pt-0.5">
                                 <Switch checked={field.value} onCheckedChange={field.onChange} />
                               </FormControl>
+                              <div className="min-w-0 flex-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                                <Label className="text-sm font-medium leading-none">Oferta adicional</Label>
+                                <span className="text-xs text-muted-foreground leading-snug">
+                                  Cria um registro extra do tipo &quot;Oferta&quot; para o mesmo fiel/data.
+                                </span>
+                              </div>
                             </FormItem>
                           )}
                         />
@@ -790,20 +893,25 @@ export function LancamentoDizimoDrawer({
                                 <FormItem>
                                   <FormLabel>Valor da oferta</FormLabel>
                                   <FormControl>
-                                    <CurrencyInput
-                                      value={
-                                        field.value && field.value > 0
-                                          ? (field.value * 100)
-                                              .toString()
-                                              .padStart(3, '0')
-                                              .replace(/(\d+)(\d{2})$/, '$1,$2')
-                                          : ''
-                                      }
-                                      onUnmaskedChange={(cents) =>
-                                        field.onChange(cents ? Number(cents) / 100 : null)
-                                      }
-                                      placeholder="0,00"
-                                    />
+                                    <div className="relative">
+                                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs text-muted-foreground font-medium pointer-events-none select-none">
+                                        R$
+                                      </span>
+                                      <CurrencyInput
+                                        className="pl-8"
+                                        value={
+                                          field.value && field.value > 0
+                                            ? field.value.toLocaleString('pt-BR', {
+                                                minimumFractionDigits: 2,
+                                                maximumFractionDigits: 2,
+                                              })
+                                            : ''
+                                        }
+                                        onUnmaskedChange={(cents) =>
+                                          field.onChange(cents ? Number(cents) / 100 : null)
+                                        }
+                                      />
+                                    </div>
                                   </FormControl>
                                   <FormMessage />
                                 </FormItem>
@@ -828,19 +936,27 @@ export function LancamentoDizimoDrawer({
                             />
                           </div>
                         )}
-                      </>
-                    )}
-                  </section>
+                        </>
+                      )}
+                    </CardContent>
+                  </Card>
 
-                  {/* 5. Financeiro */}
-                  <section className="space-y-3">
-                    <div className="grid grid-cols-1 gap-3">
+                  {/* ── Card 5: Recebimento e integração ───────────────── */}
+                  <Card className="rounded-xl">
+                    <CardHeader className="min-h-12 bg-accent/50 py-2">
+                      <CardTitle className="text-2sm flex items-center gap-1.5">
+                        <Landmark className="size-3.5 text-muted-foreground" />
+                        Recebimento e integração
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4 space-y-3">
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                       <FormField
                         control={form.control}
                         name="forma_pagamento"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Forma de recebimento</FormLabel>
+                            <FormLabel className="label-required">Forma de recebimento</FormLabel>
                             <Select value={field.value} onValueChange={field.onChange}>
                               <FormControl>
                                 <SelectTrigger>
@@ -862,27 +978,24 @@ export function LancamentoDizimoDrawer({
 
                       <FormField
                         control={form.control}
-                        name="entidade_financeira_id"
+                        name="numero_documento"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>
-                              Conta / Caixa{watchIntegrar ? ' *' : ''}
+                            <FormLabel className="flex items-center gap-1.5">
+                              Nº documento
+                              <span className="text-[11px] font-normal text-muted-foreground">
+                                (auxilia conciliação)
+                              </span>
                             </FormLabel>
-                            <SearchSelect
-                              options={entidadeOptions}
-                              value={field.value ? String(field.value) : ''}
-                              onValueChange={(v) =>
-                                field.onChange(v ? Number(v) : null)
-                              }
-                              placeholder={
-                                entidadeOptions.length === 0
-                                  ? 'Nenhuma conta compatível'
-                                  : 'Selecione conta/caixa'
-                              }
-                              searchPlaceholder="Buscar conta..."
-                              popoverModal={false}
-                              emptyListMessage="Nenhuma conta cadastrada."
-                            />
+                            <FormControl>
+                              <Input
+                                value={field.value ?? ''}
+                                onChange={(e) => field.onChange(e.target.value || null)}
+                                onBlur={field.onBlur}
+                                maxLength={50}
+                                placeholder={numeroDocumentoPlaceholder(watchForma)}
+                              />
+                            </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
@@ -891,41 +1004,82 @@ export function LancamentoDizimoDrawer({
 
                     <FormField
                       control={form.control}
-                      name="integrar_financeiro"
+                      name="entidade_financeira_id"
                       render={({ field }) => (
-                        <FormItem className="flex items-center justify-between rounded-md border bg-accent/20 px-3 py-2">
-                          <div>
-                            <Label className="text-sm font-medium">Integrar ao financeiro</Label>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              Quando marcado, cria a movimentação na conta selecionada e atualiza o saldo.
-                            </p>
-                          </div>
-                          <FormControl>
-                            <Switch checked={field.value} onCheckedChange={field.onChange} />
-                          </FormControl>
+                        <FormItem>
+                          <FormLabel className={watchIntegrar ? 'label-required' : ''}>
+                            Conta / Caixa
+                          </FormLabel>
+                          <SearchSelect
+                            options={entidadeOptions}
+                            value={field.value ? String(field.value) : ''}
+                            onValueChange={(v) =>
+                              field.onChange(v ? Number(v) : null)
+                            }
+                            placeholder={
+                              entidadeOptions.length === 0
+                                ? 'Nenhuma conta compatível'
+                                : 'Selecione conta/caixa'
+                            }
+                            searchPlaceholder="Buscar conta..."
+                            popoverModal={false}
+                            emptyListMessage="Nenhuma conta cadastrada."
+                          />
+                          <FormMessage />
                         </FormItem>
                       )}
                     />
 
                     <FormField
                       control={form.control}
+                      name="integrar_financeiro"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start gap-3 rounded-xl border bg-accent/20 px-3 py-2">
+                          <FormControl className="shrink-0 pt-0.5">
+                            <Switch checked={field.value} onCheckedChange={field.onChange} />
+                          </FormControl>
+                          <div className="min-w-0 flex-1 flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
+                            <Label className="text-sm font-medium leading-none">Integrar ao financeiro</Label>
+                            <span className="text-xs text-muted-foreground leading-snug">
+                              Quando marcado, cria a movimentação na conta selecionada e atualiza o saldo.
+                            </span>
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+
+                    </CardContent>
+                  </Card>
+
+                  {/* ── Card 6: Observações ──────────────────────────────── */}
+                  <Card className="rounded-xl">
+                    <CardHeader className="min-h-12 bg-accent/50 py-2">
+                      <CardTitle className="text-2sm flex items-center gap-1.5">
+                        <MessageSquareText className="size-3.5 text-muted-foreground" />
+                        Observações
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-4">
+                    <FormField
+                      control={form.control}
                       name="observacoes"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Observações</FormLabel>
+                          <FormLabel className="sr-only">Observações</FormLabel>
                           <FormControl>
                             <Textarea
                               rows={3}
                               value={field.value ?? ''}
                               onChange={(e) => field.onChange(e.target.value || null)}
-                              placeholder="Opcional"
+                              placeholder="Opcional — notas internas sobre o lançamento"
                             />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </section>
+                    </CardContent>
+                  </Card>
                 </div>
               </ScrollArea>
             </SheetBody>
@@ -980,6 +1134,28 @@ export function LancamentoDizimoDrawer({
 }
 
 // ── SplitSaveButton ────────────────────────────────────────────────────────
+
+/**
+ * Sugere um placeholder por forma de pagamento — guia o usuário a digitar
+ * o identificador correto que costuma vir no extrato OFX (`checknum`).
+ */
+function numeroDocumentoPlaceholder(forma: FormaPagamento | undefined): string {
+  switch (forma) {
+    case 'Cheque':
+      return 'Nº do cheque';
+    case 'PIX':
+      return 'TID / endToEndId';
+    case 'Cartão de Débito':
+    case 'Cartão de Crédito':
+      return 'NSU / autorização';
+    case 'Transferência':
+      return 'Nº da transferência';
+    case 'Dinheiro':
+      return 'Nº do recibo (opcional)';
+    default:
+      return 'Identificador (opcional)';
+  }
+}
 
 function SplitSaveButton({
   saving,
@@ -1038,13 +1214,4 @@ function SplitSaveButton({
       </DropdownMenu>
     </ButtonGroup>
   );
-}
-
-// ── Helpers ────────────────────────────────────────────────────────────────
-
-/** Aplica máscara progressiva MM/AAAA enquanto o usuário digita. */
-function formatMesAno(raw: string): string {
-  const digits = raw.replace(/\D/g, '').slice(0, 6);
-  if (digits.length <= 2) return digits;
-  return `${digits.slice(0, 2)}/${digits.slice(2)}`;
 }

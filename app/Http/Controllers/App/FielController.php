@@ -179,11 +179,18 @@ class FielController extends Controller
             ->where('company_id', $companyId);
 
         if ($search = trim((string) $request->input('search'))) {
-            $query->where(function ($q) use ($search) {
+            $digitsOnly = preg_replace('/\D/', '', $search);
+            $query->where(function ($q) use ($search, $digitsOnly) {
                 $q->where('nome_completo', 'like', "%{$search}%")
                   ->orWhere('cpf', 'like', "%{$search}%")
                   ->orWhere('rg', 'like', "%{$search}%")
                   ->orWhereHas('contacts', fn ($c) => $c->where('valor', 'like', "%{$search}%"));
+
+                if ($digitsOnly !== '' && strlen($digitsOnly) >= 3) {
+                    $q->orWhere('cpf', 'like', '%' . $digitsOnly . '%');
+                }
+
+                $q->orWhereHas('tithe', fn ($t) => $t->where('codigo', 'like', '%' . $search . '%'));
             });
         }
 
@@ -321,11 +328,16 @@ class FielController extends Controller
         // Serve para as abas do FieisStatsBar no frontend.
         $statsBase = Fiel::where('company_id', $companyId);
         if ($search) {
-            $statsBase->where(function ($q) use ($search) {
+            $digitsOnly = preg_replace('/\D/', '', $search);
+            $statsBase->where(function ($q) use ($search, $digitsOnly) {
                 $q->where('nome_completo', 'like', "%{$search}%")
                   ->orWhere('cpf', 'like', "%{$search}%")
                   ->orWhere('rg', 'like', "%{$search}%")
                   ->orWhereHas('contacts', fn ($c) => $c->where('valor', 'like', "%{$search}%"));
+                if ($digitsOnly !== '' && strlen($digitsOnly) >= 3) {
+                    $q->orWhere('cpf', 'like', '%' . $digitsOnly . '%');
+                }
+                $q->orWhereHas('tithe', fn ($t) => $t->where('codigo', 'like', '%' . $search . '%'));
             });
         }
 

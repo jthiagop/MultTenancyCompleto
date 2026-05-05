@@ -609,6 +609,13 @@ class DizimoController extends Controller
             $query->whereDate('data_pagamento', '<=', $dataFim);
         }
 
+        if ($request->filled('valor_min')) {
+            $query->where('valor', '>=', (float) $request->input('valor_min'));
+        }
+        if ($request->filled('valor_max')) {
+            $query->where('valor', '<=', (float) $request->input('valor_max'));
+        }
+
         if ($request->filled('forma_pagamento')) {
             $query->where('forma_pagamento', $request->input('forma_pagamento'));
         }
@@ -648,6 +655,7 @@ class DizimoController extends Controller
             'data_pagamento'        => $d->data_pagamento?->format('Y-m-d'),
             'data_pagamento_formatada' => $d->data_pagamento?->format('d/m/Y'),
             'forma_pagamento'       => $d->forma_pagamento,
+            'numero_documento'      => $d->numero_documento,
             'observacoes'           => $d->observacoes,
             'integrado_financeiro'  => (bool) $d->integrado_financeiro,
             'movimentacao_id'       => $d->movimentacao_id,
@@ -692,13 +700,18 @@ class DizimoController extends Controller
             return response()->json(['success' => false, 'message' => 'Empresa ativa não encontrada.'], 422);
         }
 
+        $integrar = filter_var($request->input('integrar_financeiro', false), FILTER_VALIDATE_BOOLEAN);
+
         $rules = [
             'tipo'                   => ['required', 'in:' . implode(',', DizimoFinanceiroService::TIPOS_VALIDOS)],
             'fiel_id'                => ['required', 'integer', 'exists:fieis,id'],
             'data_pagamento'         => ['required', 'date'],
             'valor'                  => ['required', 'numeric', 'min:0.01'],
             'forma_pagamento'        => ['required', 'in:' . implode(',', DizimoFinanceiroService::FORMAS_PAGAMENTO)],
-            'entidade_financeira_id' => ['nullable', 'integer', 'exists:entidades_financeiras,id'],
+            'numero_documento'       => ['nullable', 'string', 'max:50'],
+            'entidade_financeira_id' => $integrar
+                ? ['required', 'integer', 'exists:entidades_financeiras,id']
+                : ['nullable', 'integer', 'exists:entidades_financeiras,id'],
             'observacoes'            => ['nullable', 'string', 'max:1000'],
             'integrar_financeiro'    => ['sometimes', 'boolean'],
 
@@ -721,14 +734,6 @@ class DizimoController extends Controller
                 'success' => false,
                 'message' => 'Mês inicial e final são obrigatórios quando o período está habilitado.',
                 'errors'  => ['mes_inicio' => ['Informe o mês inicial.'], 'mes_fim' => ['Informe o mês final.']],
-            ], 422);
-        }
-
-        if ($data['integrar_financeiro'] && empty($data['entidade_financeira_id'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Conta/Caixa é obrigatória para integrar ao financeiro.',
-                'errors'  => ['entidade_financeira_id' => ['Selecione uma conta/caixa.']],
             ], 422);
         }
 
@@ -767,6 +772,7 @@ class DizimoController extends Controller
                 'valor'                  => (float) $dizimo->valor,
                 'data_pagamento'         => $dizimo->data_pagamento?->format('Y-m-d'),
                 'forma_pagamento'        => $dizimo->forma_pagamento,
+                'numero_documento'       => $dizimo->numero_documento,
                 'entidade_financeira_id' => $dizimo->entidade_financeira_id,
                 'observacoes'            => $dizimo->observacoes,
                 'integrado_financeiro'   => (bool) $dizimo->integrado_financeiro,
@@ -790,27 +796,24 @@ class DizimoController extends Controller
         $companyId = session('active_company_id');
         $dizimo = Dizimo::where('company_id', $companyId)->findOrFail($id);
 
+        $integrar = filter_var($request->input('integrar_financeiro', false), FILTER_VALIDATE_BOOLEAN);
+
         $rules = [
             'tipo'                   => ['required', 'in:' . implode(',', DizimoFinanceiroService::TIPOS_VALIDOS)],
             'fiel_id'                => ['required', 'integer', 'exists:fieis,id'],
             'data_pagamento'         => ['required', 'date'],
             'valor'                  => ['required', 'numeric', 'min:0.01'],
             'forma_pagamento'        => ['required', 'in:' . implode(',', DizimoFinanceiroService::FORMAS_PAGAMENTO)],
-            'entidade_financeira_id' => ['nullable', 'integer', 'exists:entidades_financeiras,id'],
+            'numero_documento'       => ['nullable', 'string', 'max:50'],
+            'entidade_financeira_id' => $integrar
+                ? ['required', 'integer', 'exists:entidades_financeiras,id']
+                : ['nullable', 'integer', 'exists:entidades_financeiras,id'],
             'observacoes'            => ['nullable', 'string', 'max:1000'],
             'integrar_financeiro'    => ['sometimes', 'boolean'],
         ];
 
         $data = $request->validate($rules);
         $data['integrar_financeiro'] = (bool) ($data['integrar_financeiro'] ?? false);
-
-        if ($data['integrar_financeiro'] && empty($data['entidade_financeira_id'])) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Conta/Caixa é obrigatória para integrar ao financeiro.',
-                'errors'  => ['entidade_financeira_id' => ['Selecione uma conta/caixa.']],
-            ], 422);
-        }
 
         try {
             $atualizado = $service->atualizar($dizimo, $data, Auth::id());
@@ -857,14 +860,18 @@ class DizimoController extends Controller
             return response()->json(['success' => false, 'message' => 'Informe o código do carnê.'], 422);
         }
 
+        $variants = $this->dizimoCodigoLookupVariants($codigo);
+
         $fiel = Fiel::with(['tithe', 'company:id,name'])
             ->where('company_id', $companyId)
-            ->whereHas('tithe', fn ($q) => $q->where('codigo', $codigo))
+            ->whereHas('tithe', fn ($q) => $q->whereIn('codigo', $variants))
             ->first();
 
         if (! $fiel) {
             return response()->json(['success' => false, 'message' => 'Carnê não encontrado.'], 404);
         }
+
+        $codigoResolvido = $fiel->tithe?->codigo ?? $codigo;
 
         return response()->json([
             'success' => true,
@@ -876,9 +883,39 @@ class DizimoController extends Controller
                     : null,
             ],
             'comunidade' => $fiel->company?->name,
-            'codigo'     => $codigo,
+            'codigo'     => $codigoResolvido,
             'dizimista'  => (bool) ($fiel->tithe?->dizimista ?? false),
         ]);
+    }
+
+    /**
+     * Gera variantes do código de dizimista/carteirinha para tolerar zeros à esquerda,
+     * falta do prefixo D- e registros legados no banco.
+     *
+     * @return list<string>
+     */
+    private function dizimoCodigoLookupVariants(string $raw): array
+    {
+        $s = strtoupper(trim($raw));
+        $out = array_values(array_unique(array_filter([$raw, $s], fn ($v) => $v !== '')));
+
+        if (preg_match('/^D-?\s*(\d+)$/i', $s, $m)) {
+            $n = (int) $m[1];
+            for ($pad = 1; $pad <= 6; $pad++) {
+                $out[] = 'D-' . str_pad((string) $n, $pad, '0', STR_PAD_LEFT);
+            }
+            $out[] = (string) $n;
+            $out[] = str_pad((string) $n, 4, '0', STR_PAD_LEFT);
+        } elseif (preg_match('/^\d+$/', $s)) {
+            $n = (int) $s;
+            for ($pad = 1; $pad <= 6; $pad++) {
+                $out[] = 'D-' . str_pad((string) $n, $pad, '0', STR_PAD_LEFT);
+            }
+            $out[] = (string) $n;
+            $out[] = str_pad((string) $n, 4, '0', STR_PAD_LEFT);
+        }
+
+        return array_values(array_unique(array_filter($out, fn ($v) => $v !== '')));
     }
 }
 

@@ -9,19 +9,20 @@ import {
   RowSelectionState,
   SortingState,
   useReactTable,
+  VisibilityState,
 } from '@tanstack/react-table';
 import {
   CalendarDays,
+  ChevronDown,
   Coins,
   CreditCard,
   EllipsisVertical,
   HeartHandshake,
   Loader2,
   Pencil,
-  RefreshCw,
-  Search,
   Trash2,
   UserRound,
+  Users,
   Wallet,
   X,
 } from 'lucide-react';
@@ -31,9 +32,7 @@ import { Input } from '@/components/ui/input';
 import {
   Card,
   CardFooter,
-  CardHeader,
   CardTable,
-  CardToolbar,
 } from '@/components/ui/card';
 import {
   DropdownMenu,
@@ -42,13 +41,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { DataGrid } from '@/components/ui/data-grid';
 import { DataGridColumnHeader } from '@/components/ui/data-grid-column-header';
 import { DataGridPagination } from '@/components/ui/data-grid-pagination';
@@ -57,9 +51,15 @@ import {
   DataGridTableRowSelect,
   DataGridTableRowSelectAll,
 } from '@/components/ui/data-grid-table';
-import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
-import { DatePicker } from '@/components/ui/date-picker';
+import { defaultPeriod, type PeriodValue } from '@/components/ui/period-picker';
+import { SummaryStatsBar } from '@/pages/financeiro/components/summary-stats-bar';
+import { FinanceiroTransacaoTableCardHeader } from '@/pages/financeiro/components/financeiro-transacao-table-card-header';
+import {
+  financeiroToolbarSoftBlueClass,
+  financeiroToolbarSoftBlueInputClass,
+} from '@/lib/financeiro-toolbar-accent';
 import { useDizimos, HttpError, type DizimoTipo, type IDizimo } from '@/hooks/useDizimos';
+import { useFielSearch } from '@/pages/dizimos/components/use-fiel-search';
 import { cn } from '@/lib/utils';
 
 // ── Mapeamentos visuais ─────────────────────────────────────────────────────
@@ -70,14 +70,6 @@ const TIPO_VARIANT: Record<DizimoTipo, 'success' | 'info' | 'warning' | 'seconda
   Oferta: 'warning',
   Outro: 'secondary',
 };
-
-const TIPO_FILTER_OPTIONS: Array<{ value: 'todos' | DizimoTipo; label: string }> = [
-  { value: 'todos', label: 'Todos os tipos' },
-  { value: 'Dízimo', label: 'Dízimo' },
-  { value: 'Doação', label: 'Doação' },
-  { value: 'Oferta', label: 'Oferta' },
-  { value: 'Outro', label: 'Outro' },
-];
 
 // ── Célula: avatar + nome ────────────────────────────────────────────────────
 
@@ -105,6 +97,217 @@ function FielCell({ fiel }: { fiel: IDizimo['fiel'] }) {
   );
 }
 
+// ── FielFilterPopover ────────────────────────────────────────────────────────
+
+function FielFilterPopover({
+  fielId,
+  fielNome,
+  onSelect,
+  onClear,
+}: {
+  fielId: number | null;
+  fielNome: string;
+  onSelect: (id: number, nome: string) => void;
+  onClear: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const { options, loading } = useFielSearch(query);
+
+  const handleSelect = (id: number, nome: string) => {
+    onSelect(id, nome);
+    setOpen(false);
+    setQuery('');
+  };
+
+  return (
+    <Popover open={open} onOpenChange={(v) => { setOpen(v); if (!v) setQuery(''); }}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={cn('h-10 shrink-0 gap-1.5 rounded-md px-3 text-sm', financeiroToolbarSoftBlueClass)}
+        >
+          <Users className="size-3.5 shrink-0" />
+          {fielId ? (
+            <span className="max-w-[120px] truncate">{fielNome}</span>
+          ) : (
+            'Fiel'
+          )}
+          {fielId ? (
+            <span
+              role="button"
+              className="ml-0.5 opacity-60 hover:opacity-100"
+              onClick={(e) => { e.stopPropagation(); onClear(); }}
+              aria-label="Limpar filtro de fiel"
+            >
+              <X className="size-3" />
+            </span>
+          ) : (
+            <ChevronDown className="size-3 opacity-50" />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 p-2" align="start">
+        <div className="relative mb-2">
+          <Input
+            placeholder="Buscar fiel..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className={cn(financeiroToolbarSoftBlueInputClass, 'h-9 ps-3')}
+            autoFocus
+          />
+        </div>
+        {loading && (
+          <div className="flex items-center gap-2 px-2 py-4 text-sm text-muted-foreground">
+            <Loader2 className="size-4 animate-spin" /> Buscando...
+          </div>
+        )}
+        {!loading && query.length >= 2 && options.length === 0 && (
+          <p className="px-2 py-4 text-sm text-muted-foreground text-center">Nenhum fiel encontrado.</p>
+        )}
+        {!loading && query.length < 2 && (
+          <p className="px-2 py-2 text-xs text-muted-foreground">
+            Digite ao menos 2 caracteres para buscar.
+          </p>
+        )}
+        <div className="max-h-52 overflow-y-auto">
+          {options.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm hover:bg-accent text-left"
+              onClick={() => handleSelect(f.id, f.nome_completo)}
+            >
+              <div className="size-7 shrink-0 rounded-full bg-muted overflow-hidden flex items-center justify-center">
+                {f.avatar_url ? (
+                  <img src={f.avatar_url} alt={f.nome_completo} className="size-full object-cover" />
+                ) : (
+                  <span className="text-[10px] font-semibold uppercase text-muted-foreground">
+                    {f.nome_completo.charAt(0)}
+                  </span>
+                )}
+              </div>
+              <span className="truncate">{f.nome_completo}</span>
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+// ── ValorRangePopover ────────────────────────────────────────────────────────
+
+function ValorRangePopover({
+  valorMin,
+  valorMax,
+  onApply,
+  onClear,
+}: {
+  valorMin: string;
+  valorMax: string;
+  onApply: (min: string, max: string) => void;
+  onClear: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [localMin, setLocalMin] = useState(valorMin);
+  const [localMax, setLocalMax] = useState(valorMax);
+  const hasFilter = !!valorMin || !!valorMax;
+
+  useEffect(() => {
+    if (open) {
+      setLocalMin(valorMin);
+      setLocalMax(valorMax);
+    }
+  }, [open, valorMin, valorMax]);
+
+  const label = hasFilter
+    ? valorMin && valorMax
+      ? `R$ ${valorMin} – ${valorMax}`
+      : valorMin
+        ? `≥ R$ ${valorMin}`
+        : `≤ R$ ${valorMax}`
+    : 'Valor';
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className={cn('h-10 shrink-0 gap-1.5 rounded-md px-3 text-sm', financeiroToolbarSoftBlueClass)}
+        >
+          <Coins className="size-3.5 shrink-0" />
+          <span className={cn('truncate', hasFilter ? 'max-w-[120px]' : '')}>{label}</span>
+          {hasFilter ? (
+            <span
+              role="button"
+              className="ml-0.5 opacity-60 hover:opacity-100"
+              onClick={(e) => { e.stopPropagation(); onClear(); }}
+              aria-label="Limpar filtro de valor"
+            >
+              <X className="size-3" />
+            </span>
+          ) : (
+            <ChevronDown className="size-3 opacity-50" />
+          )}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-56 p-3" align="start">
+        <p className="text-xs font-medium text-muted-foreground mb-3">Filtrar por valor (R$)</p>
+        <div className="space-y-2">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Mínimo</label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0,00"
+              value={localMin}
+              onChange={(e) => setLocalMin(e.target.value)}
+              className={cn(financeiroToolbarSoftBlueInputClass, 'h-9')}
+            />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">Máximo</label>
+            <Input
+              type="number"
+              min="0"
+              step="0.01"
+              placeholder="0,00"
+              value={localMax}
+              onChange={(e) => setLocalMax(e.target.value)}
+              className={cn(financeiroToolbarSoftBlueInputClass, 'h-9')}
+            />
+          </div>
+          <div className="flex gap-2 pt-1">
+            <Button
+              type="button"
+              size="sm"
+              className="flex-1 h-8"
+              onClick={() => { onApply(localMin, localMax); setOpen(false); }}
+            >
+              Aplicar
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8"
+              onClick={() => { onClear(); setOpen(false); }}
+            >
+              Limpar
+            </Button>
+          </div>
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
 // ── Componente principal ────────────────────────────────────────────────────
 
 export interface DizimosTableProps {
@@ -123,13 +326,21 @@ export function DizimosTable({
   canDelete = true,
 }: DizimosTableProps) {
   const navigate = useNavigate();
+
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 20 });
   const [sorting, setSorting] = useState<SortingState>([{ id: 'data_pagamento', desc: true }]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+
   const [searchQuery, setSearchQuery] = useState('');
-  const [tipoFilter, setTipoFilter] = useState<'todos' | DizimoTipo>('todos');
-  const [dataInicio, setDataInicio] = useState<string>('');
-  const [dataFim, setDataFim] = useState<string>('');
+  const [activeStatKey, setActiveStatKey] = useState<string>('total');
+  const [period, setPeriod] = useState<PeriodValue>(defaultPeriod);
+
+  // Filtros extras
+  const [fielId, setFielId] = useState<number | null>(null);
+  const [fielNome, setFielNome] = useState('');
+  const [valorMin, setValorMin] = useState('');
+  const [valorMax, setValorMax] = useState('');
 
   const sortCol = sorting[0];
 
@@ -139,9 +350,12 @@ export function DizimosTable({
     perPage: pagination.pageSize,
     sortBy: sortCol?.id,
     sortDir: sortCol?.desc ? 'desc' : 'asc',
-    tipo: tipoFilter === 'todos' ? undefined : [tipoFilter],
-    dataInicio: dataInicio || undefined,
-    dataFim: dataFim || undefined,
+    tipo: activeStatKey !== 'total' ? [activeStatKey as DizimoTipo] : undefined,
+    dataInicio: period.startDate,
+    dataFim: period.endDate,
+    fielId: fielId ?? undefined,
+    valorMin: valorMin ? parseFloat(valorMin) : undefined,
+    valorMax: valorMax ? parseFloat(valorMax) : undefined,
   });
 
   useEffect(() => {
@@ -154,6 +368,34 @@ export function DizimosTable({
       navigate('/dashboard', { replace: true });
     }
   }, [error, navigate]);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  const handleFielSelect = useCallback((id: number, nome: string) => {
+    setFielId(id);
+    setFielNome(nome);
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, []);
+
+  const handleFielClear = useCallback(() => {
+    setFielId(null);
+    setFielNome('');
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, []);
+
+  const handleValorApply = useCallback((min: string, max: string) => {
+    setValorMin(min);
+    setValorMax(max);
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, []);
+
+  const handleValorClear = useCallback(() => {
+    setValorMin('');
+    setValorMax('');
+    setPagination((p) => ({ ...p, pageIndex: 0 }));
+  }, []);
+
+  // ── Colunas ────────────────────────────────────────────────────────────────
 
   const columns = useMemo<ColumnDef<IDizimo>[]>(
     () => [
@@ -238,11 +480,24 @@ export function DizimosTable({
             icon={<CreditCard className="size-3.5 shrink-0 opacity-60" aria-hidden />}
           />
         ),
-        cell: ({ row }) => (
-          <span className="text-sm">{row.original.forma_pagamento ?? '—'}</span>
-        ),
+        cell: ({ row }) => {
+          const doc = row.original.numero_documento;
+          return (
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <span className="truncate text-sm">{row.original.forma_pagamento ?? '—'}</span>
+              {doc && (
+                <span
+                  className="truncate text-[10px] uppercase tracking-wide text-muted-foreground"
+                  title={`Documento: ${doc}`}
+                >
+                  Doc.&nbsp;{doc}
+                </span>
+              )}
+            </div>
+          );
+        },
         enableSorting: true,
-        size: 150,
+        size: 170,
       },
       {
         id: 'entidade',
@@ -330,10 +585,11 @@ export function DizimosTable({
     data,
     pageCount: meta.last_page,
     getRowId: (row) => String(row.id),
-    state: { pagination, sorting, rowSelection },
+    state: { pagination, sorting, rowSelection, columnVisibility },
     columnResizeMode: 'onChange',
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
+    onColumnVisibilityChange: setColumnVisibility,
     enableRowSelection: true,
     onRowSelectionChange: setRowSelection,
     getCoreRowModel: getCoreRowModel(),
@@ -343,135 +599,60 @@ export function DizimosTable({
     manualSorting: true,
   });
 
-  const handleClearSearch = useCallback(() => {
-    setSearchQuery('');
-    setPagination((p) => ({ ...p, pageIndex: 0 }));
-  }, []);
-
-  const handleClearDates = useCallback(() => {
-    setDataInicio('');
-    setDataFim('');
-    setPagination((p) => ({ ...p, pageIndex: 0 }));
-  }, []);
-
-  const fmt = (n: number) =>
-    n.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-
   return (
     <DataGrid
       table={table}
       recordCount={meta.total}
-      tableLayout={{ columnsPinnable: true, columnsMovable: false, columnsVisibility: false, cellBorder: true, width: 'auto' }}
+      tableLayout={{ columnsPinnable: true, columnsMovable: true, columnsVisibility: true, cellBorder: true, width: 'auto' }}
     >
       <Card>
-        {/* Resumo de totais (do período filtrado) */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-border border-b">
-          <StatCell label="Total" value={fmt(stats.total)} accent="text-foreground" />
-          <StatCell label="Dízimo" value={fmt(stats.dizimo)} accent="text-emerald-600" />
-          <StatCell label="Doação" value={fmt(stats.doacao)} accent="text-sky-600" />
-          <StatCell label="Oferta" value={fmt(stats.oferta)} accent="text-amber-600" />
-        </div>
+        {/* ── Tabs de totais por tipo ─────────────────────────────────────── */}
+        <SummaryStatsBar
+          activeKey={activeStatKey}
+          onTabClick={(key) => {
+            setActiveStatKey(key);
+            setPagination((p) => ({ ...p, pageIndex: 0 }));
+          }}
+          stats={[
+            { statKey: 'Dízimo', label: 'Dízimo (R$)',  value: stats.dizimo,  colorClass: 'text-emerald-600', accentColor: '#059669' },
+            { statKey: 'Doação', label: 'Doação (R$)',  value: stats.doacao,  colorClass: 'text-sky-600',     accentColor: '#0284c7' },
+            { statKey: 'Oferta', label: 'Oferta (R$)',  value: stats.oferta,  colorClass: 'text-amber-600',   accentColor: '#d97706' },
+            { statKey: 'total',  label: 'Total (R$)',   value: stats.total,   colorClass: 'text-blue-600',    accentColor: '#2563eb' },
+          ]}
+        />
 
-        <CardHeader className="flex flex-col gap-3 py-4 min-h-0">
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Busca */}
-            <div className="relative shrink-0 w-60 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-              <Input
-                className="ps-9 pe-9 h-9"
-                placeholder="Buscar por fiel ou observação..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setPagination((p) => ({ ...p, pageIndex: 0 }));
-                }}
+        {/* ── Cabeçalho: período + busca + filtros extras + toolbar ───────── */}
+        <FinanceiroTransacaoTableCardHeader
+          period={period}
+          onPeriodChange={(v) => {
+            setPeriod(v);
+            setPagination((p) => ({ ...p, pageIndex: 0 }));
+          }}
+          searchQuery={searchQuery}
+          onSearchChange={(q) => {
+            setSearchQuery(q);
+            setPagination((p) => ({ ...p, pageIndex: 0 }));
+          }}
+          searchPlaceholder="Buscar por fiel ou observação..."
+          loading={loading}
+          refetch={refetch}
+          afterSearch={
+            <>
+              <FielFilterPopover
+                fielId={fielId}
+                fielNome={fielNome}
+                onSelect={handleFielSelect}
+                onClear={handleFielClear}
               />
-              {searchQuery && (
-                <button
-                  type="button"
-                  onClick={handleClearSearch}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                  aria-label="Limpar busca"
-                >
-                  <X className="size-3.5" />
-                </button>
-              )}
-            </div>
-
-            {/* Tipo */}
-            <Select
-              value={tipoFilter}
-              onValueChange={(v) => {
-                setTipoFilter(v as 'todos' | DizimoTipo);
-                setPagination((p) => ({ ...p, pageIndex: 0 }));
-              }}
-            >
-              <SelectTrigger className="h-9 w-44">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {TIPO_FILTER_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            {/* Datas */}
-            <div className="flex items-center gap-2">
-              <DatePicker
-                value={dataInicio}
-                onChange={(iso) => {
-                  setDataInicio(iso);
-                  setPagination((p) => ({ ...p, pageIndex: 0 }));
-                }}
-                placeholder="Data inicial"
-                size="sm"
+              <ValorRangePopover
+                valorMin={valorMin}
+                valorMax={valorMax}
+                onApply={handleValorApply}
+                onClear={handleValorClear}
               />
-              <span className="text-xs text-muted-foreground">até</span>
-              <DatePicker
-                value={dataFim}
-                onChange={(iso) => {
-                  setDataFim(iso);
-                  setPagination((p) => ({ ...p, pageIndex: 0 }));
-                }}
-                placeholder="Data final"
-                size="sm"
-              />
-              {(dataInicio || dataFim) && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  type="button"
-                  onClick={handleClearDates}
-                  className="h-9 px-2"
-                  aria-label="Limpar datas"
-                >
-                  <X className="size-3.5" />
-                </Button>
-              )}
-            </div>
-
-            <CardToolbar className="ms-auto">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-9 min-w-9 px-3"
-                type="button"
-                onClick={refetch}
-                disabled={loading}
-                aria-label="Atualizar"
-              >
-                {loading ? (
-                  <Loader2 className="size-4 animate-spin" />
-                ) : (
-                  <RefreshCw className="size-4" />
-                )}
-              </Button>
-            </CardToolbar>
-          </div>
-        </CardHeader>
+            </>
+          }
+        />
 
         {error && !(error instanceof HttpError && error.status === 403) && (
           <div className="px-4 py-2 text-sm text-destructive bg-destructive/10">
@@ -490,24 +671,5 @@ export function DizimosTable({
         </CardFooter>
       </Card>
     </DataGrid>
-  );
-}
-
-// ── Subcomponentes ──────────────────────────────────────────────────────────
-
-function StatCell({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: string;
-  accent?: string;
-}) {
-  return (
-    <div className="bg-card px-4 py-3 flex flex-col gap-0.5">
-      <span className="text-xs uppercase tracking-wide text-muted-foreground">{label}</span>
-      <span className={cn('text-base font-semibold tabular-nums', accent)}>{value}</span>
-    </div>
   );
 }

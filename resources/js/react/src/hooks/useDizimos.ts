@@ -24,6 +24,7 @@ export interface IDizimo {
   data_pagamento: string | null;
   data_pagamento_formatada: string | null;
   forma_pagamento: string | null;
+  numero_documento: string | null;
   observacoes: string | null;
   integrado_financeiro: boolean;
   movimentacao_id: number | null;
@@ -52,6 +53,8 @@ export interface DizimosFilters {
   tipo?: DizimoTipo[];
   dataInicio?: string;
   dataFim?: string;
+  valorMin?: number;
+  valorMax?: number;
   formaPagamento?: string;
   integrado?: boolean | null;
 }
@@ -101,6 +104,8 @@ export function useDizimos(params: UseDizimosParams = {}) {
     if (params.tipo?.length) qp.set('tipo', params.tipo.join(','));
     if (params.dataInicio) qp.set('data_inicio', params.dataInicio);
     if (params.dataFim) qp.set('data_fim', params.dataFim);
+    if (params.valorMin !== undefined) qp.set('valor_min', String(params.valorMin));
+    if (params.valorMax !== undefined) qp.set('valor_max', String(params.valorMax));
     if (params.formaPagamento) qp.set('forma_pagamento', params.formaPagamento);
     if (typeof params.integrado === 'boolean') {
       qp.set('integrado', params.integrado ? '1' : '0');
@@ -156,6 +161,8 @@ export function useDizimos(params: UseDizimosParams = {}) {
     params.tipo?.join(','),
     params.dataInicio,
     params.dataFim,
+    params.valorMin,
+    params.valorMax,
     params.formaPagamento,
     params.integrado,
   ]);

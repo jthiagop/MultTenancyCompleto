@@ -110,9 +110,7 @@ export function DeleteDizimoDialog({
               </p>
               {integrado && (
                 <p className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-200">
-                  Este lançamento está integrado ao financeiro. Ao excluí-lo, a
-                  movimentação e a transação financeira correspondentes também
-                  serão removidas, e o saldo da conta será ajustado automaticamente.
+                  Este lançamento está integrado ao financeiro. Ao excluí-lo, o saldo da conta será ajustado automaticamente.
                 </p>
               )}
               <p>Esta ação <strong>não pode ser desfeita</strong>.</p>

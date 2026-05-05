@@ -19,6 +19,7 @@ class Dizimo extends Model
         'valor',
         'data_pagamento',
         'forma_pagamento',
+        'numero_documento',
         'entidade_financeira_id',
         'movimentacao_id',
         'observacoes',

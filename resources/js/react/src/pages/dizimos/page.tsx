@@ -92,9 +92,6 @@ export function DizimosPage() {
       <Toolbar>
         <ToolbarHeading>
           <ToolbarPageTitle>Dízimo e Doações</ToolbarPageTitle>
-          <ToolbarDescription>
-            Registre dízimos, doações e ofertas — com integração ao financeiro.
-          </ToolbarDescription>
           <Breadcrumb>
             <BreadcrumbList>
               <BreadcrumbItem>
