@@ -14,7 +14,7 @@ jobs:
     steps:
       # ── 1. Conecta na VPS via SSH e executa o deploy.sh ──────────────────
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.0.3
+        uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
