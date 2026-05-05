@@ -183,15 +183,10 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: (id) => {
-            // @react-pdf/renderer e toda a sua cadeia em chunk separado
-            // (são os maiores contribuintes: fontkit, brotli, png-js, etc.)
-            if (id.includes('@react-pdf') || id.includes('fontkit') || id.includes('brotli')
-              || id.includes('png-js') || id.includes('jpeg-js') || id.includes('linebreak')
-              || id.includes('unicode-trie') || id.includes('unicode-properties')
-              || id.includes('base64-js') || id.includes('restructure')
-              || id.includes('dfa') || id.includes('tiny-inflate')) {
-              return 'vendor-pdf';
-            }
+            // Não isolar @react-pdf (+ fontkit, brotli, etc.) em chunk próprio:
+            // em Vite/Rollup isso pode gerar ordem de inicialização errada entre chunks
+            // e o runtime falha com "Cannot access '…' before initialization" no minificado.
+            // A cadeia do PDF fica no chunk `vendor` genérico abaixo.
             // recharts + d3 em chunk próprio (gráficos)
             if (id.includes('recharts') || id.includes('d3-') || id.includes('victory-')) {
               return 'vendor-charts';
