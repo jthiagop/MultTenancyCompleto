@@ -1,5 +1,6 @@
 import * as React from 'react';
 import { CSSProperties, Fragment, ReactNode } from 'react';
+import { Inbox } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useDataGrid } from '@/components/ui/data-grid';
 import { Cell, Column, flexRender, Header, HeaderGroup, Row } from '@tanstack/react-table';
@@ -353,8 +354,18 @@ function DataGridTableEmpty() {
 
   return (
     <tr>
-      <td colSpan={totalColumns} className="text-center text-muted-foreground py-6">
-        {props.emptyMessage || 'No data available'}
+      <td colSpan={totalColumns} className="text-center text-muted-foreground py-10 px-4">
+        <div className="flex flex-col items-center gap-4">
+          <div
+            className="  dark:bg-muted/40 dark:text-muted-foreground/70"
+            aria-hidden
+          >
+            <Inbox className="size-14 sm:size-16 shrink-0" strokeWidth={1.15} />
+          </div>
+          <p className="max-w-sm text-sm font-medium text-muted-foreground leading-snug">
+            {props.emptyMessage || 'Nenhum resultado encontrado'}
+          </p>
+        </div>
       </td>
     </tr>
   );
