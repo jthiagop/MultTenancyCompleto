@@ -17,22 +17,19 @@ return Application::configure(basePath: dirname(__DIR__))
         using: function () {
             $centralDomains = config('tenancy.central_domains');
 
-            // Rota global nomeada — registrada UMA VEZ antes do loop de domínios centrais
-            // para evitar "Another route has already been assigned name [termos]" no route:cache.
-            Route::middleware('web')->get('/termos', function () {
-                return view('legal.termos-privacidade');
-            })->name('termos');
-            
+            // Rotas centrais (web.php) registradas UMA VEZ, sem restrição de domínio.
+            // Anteriormente eram carregadas dentro do foreach, o que duplicava todos os
+            // nomes de rota quando havia 2+ domínios centrais — quebrando o route:cache.
+            // As rotas de tenant já são protegidas por PreventAccessFromCentralDomains,
+            // portanto não é necessário usar ->domain() aqui.
+            Route::middleware('web')->group(base_path('routes/web.php'));
+
             // Rota de webhook WhatsApp - deve funcionar em qualquer domínio (ngrok, localhost, etc)
-            // Registrada ANTES do loop de domínios para funcionar globalmente
             Route::withoutMiddleware([\Stancl\Tenancy\Middleware\PreventAccessFromCentralDomains::class])
                 ->match(['get', 'post'], '/webhooks/meta/whatsapp', [App\Http\Controllers\WhatsAppIntegrationController::class, 'webhook'])
                 ->name('whatsapp.webhook');
 
             foreach ($centralDomains as $domain) {
-                Route::middleware('web')
-                    ->domain($domain)
-                    ->group(base_path('routes/web.php'));
 
             // Endpoint central para buscar tenant por código de acesso mobile
             Route::middleware(['api'])
