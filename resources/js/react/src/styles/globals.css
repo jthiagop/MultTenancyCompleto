@@ -157,6 +157,15 @@ html {
   @apply w-full mx-auto px-4 lg:px-5;
 }
 
+/** Campo obrigatório — adicione a classe "label-required" num label para exibir o * vermelho **/
+@utility label-required {
+  &::after {
+    content: ' *';
+    color: var(--destructive);
+    margin-left: 0.1rem;
+  }
+}
+
 /* Metronic Configs */
 @import './config.metronic.css';
 

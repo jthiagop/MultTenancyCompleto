@@ -444,12 +444,7 @@ export function CadastroFielSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="right"
-        close={false}
-        className="flex max-h-[calc(100vh-1.5rem)] w-full max-w-lg flex-col gap-0 rounded-xl border p-0 sm:max-w-3xl inset-y-3 end-3"
-        aria-describedby={undefined}
-      >
+      <SheetContent side="right" close={false} className="gap-0 p-0" aria-describedby={undefined}>
         <SheetHeader className="flex flex-row items-center justify-between px-5 py-3.5 border-b border-border shrink-0 space-y-0">
           <div className="flex items-center gap-2">
             <Users className="size-5 text-primary" aria-hidden />
