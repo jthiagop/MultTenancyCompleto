@@ -162,9 +162,8 @@ Route::middleware([
     // Rotas de perfil de usuário
     Route::prefix('/app/profile')->group(function () {
         Route::get('/', [ProfileController::class, 'edit'])->name('profile.edit');
-        Route::patch('/', [ProfileController::class, 'update'])->name('profile.update');
-        Route::delete('/', [ProfileController::class, 'destroy'])->name('profile.destroy');
         Route::match(['put', 'patch'], '/', [ProfileController::class, 'update'])->name('profile.update');
+        Route::delete('/', [ProfileController::class, 'destroy'])->name('profile.destroy');
     });
 
     // Rota específica para avatars
@@ -265,7 +264,7 @@ Route::middleware([
 
         // Rota que fornecerá os dados em formato JSON para a DataTable
         // Usaremos POST para enviar os filtros de forma mais robusta
-        Route::post('/reports/financial-data', [ReportController::class, 'getFinancialDataServerSide'])->name('reports.financial.data');
+        Route::post('/reports/financial-data', [ReportController::class, 'getFinancialDataServerSide'])->name('reports.financial.server-side');
 
         // Rotas acessíveis apenas para administradores globais
         Route::middleware(['role:global'])->group(function () {
@@ -313,7 +312,6 @@ Route::middleware([
         });
 
         Route::get('/company/edit', [CompanyController::class, 'edit'])->name('company.edit');
-        Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
         Route::put('/company', [CompanyController::class, 'update'])->name('company.update');
         Route::post('/company/consultar-cnpj', [CompanyController::class, 'consultarCNPJ'])->name('company.consultar-cnpj');
 
@@ -910,10 +908,7 @@ Route::middleware([
                 // Rota que fornecerá os dados em formato JSON para a DataTable
                 Route::get('/reports/financial-data', [ReportController::class, 'getFinancialData'])->name('reports.financial.data');
 
-                // NOVA ROTA: Fornece os dados brutos para a análise da IA
-                Route::post('/reports/gemini-analysis', [ReportController::class, 'getDataForGeminiAnalysis'])->name('reports.gemini.analysis');
-
-                // NOVA ROTA: Fornece os dados brutos para a análise da IA
+                // Fornece os dados brutos para a análise da IA
                 Route::post('/reports/gemini-analysis', [ReportController::class, 'getDataForGeminiAnalysis'])->name('reports.gemini.analysis');
 
 

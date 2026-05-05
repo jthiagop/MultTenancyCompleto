@@ -89,7 +89,7 @@
                     <!--begin::Container-->
                     <div class="container-xxl" id="kt_content_container">
                         <div class="terms-container">
-                            <a href="{{ route('login') }}" class="back-link">
+                            <a href="{{ route('central.login') }}" class="back-link">
                                 <i class="fa-solid fa-arrow-left me-2"></i>Voltar ao Login
                             </a>
 

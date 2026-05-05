@@ -15,12 +15,12 @@ Route::get('/termos', function () {
 
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified'])->name('central.dashboard');
 
 Route::middleware('auth')->group(function () {
-    Route::get('/app/profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/app/profile', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/app/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    Route::get('/app/profile', [ProfileController::class, 'edit'])->name('central.profile.edit');
+    Route::patch('/app/profile', [ProfileController::class, 'update'])->name('central.profile.update');
+    Route::delete('/app/profile', [ProfileController::class, 'destroy'])->name('central.profile.destroy');
 
     // Rotas de teste do Flasher (apenas ambiente local)
     if (app()->environment('local')) {
@@ -53,4 +53,7 @@ Route::middleware('auth')->group(function () {
 // Webhook WhatsApp (Meta) - Rota movida para bootstrap/app.php para funcionar em qualquer domínio
 // A rota está registrada globalmente para funcionar com ngrok/localhost/etc
 
-require __DIR__.'/auth.php';
+// Rotas de autenticação central (prefixo central.* — evita colisão com tenant-auth)
+Route::name('central.')->group(function () {
+    require __DIR__.'/auth.php';
+});

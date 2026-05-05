@@ -61,7 +61,7 @@
                 <!--begin::Content-->
                 <div class="d-flex flex-column flex-center p-6 p-lg-10 w-100">
                     <!--begin::Logo-->
-                    <a href="{{ route('dashboard') }}" class="mb-0 mb-lg-20">
+                    <a href="{{ route('central.dashboard') }}" class="mb-0 mb-lg-20">
                         <img alt="Logo" src="{{ url('tenancy/assets/media/app/default-logo-dark.svg') }}" class="h-40px h-lg-50px" style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.5));" />
                     </a>
                     <!--end::Logo-->
@@ -114,7 +114,7 @@
                     <!--begin::Wrapper-->
                     <div class="w-lg-500px">
                         <!--begin::Form-->
-                        <form method="POST" action="{{ route('login') }}">
+                        <form method="POST" action="{{ route('central.login') }}">
                             @csrf <!--begin::Heading-->
                             <div class="text-center mb-11">
                                 <!--begin::Title-->

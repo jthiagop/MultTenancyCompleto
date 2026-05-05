@@ -82,7 +82,7 @@
                             <h4 class="text-sm font-semibold text-foreground mb-0.5">🚀 Nova Interface V2</h4>
                             <p class="text-xs text-secondary-foreground mb-0">Você está testando a nova versão moderna do Dominus com Metronic v9.3.2</p>
                         </div>
-                        <a href="{{ route('dashboard') }}" class="kt-btn kt-btn-sm kt-btn-outline kt-btn-mono shrink-0">
+                        <a href="{{ route('central.dashboard') }}" class="kt-btn kt-btn-sm kt-btn-outline kt-btn-mono shrink-0">
                             <i class="ki-filled ki-left text-xs me-1"></i>
                             Voltar para V1
                         </a>

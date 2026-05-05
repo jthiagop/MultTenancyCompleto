@@ -12,7 +12,7 @@
         <ol class="breadcrumb breadcrumb-dot text-muted fs-8 fw-semibold my-0 pt-2 pt-lg-2">
             <!--begin::Item - Home-->
             <li class="breadcrumb-item">
-                <a href="{{ route('dashboard') }}" class="text-muted text-hover-primary">Home</a>
+                <a href="{{ route('central.dashboard') }}" class="text-muted text-hover-primary">Home</a>
             </li>
             <!--end::Item-->
 

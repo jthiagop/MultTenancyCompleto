@@ -36,7 +36,7 @@
                                     <!--end::Menu separator-->
                                     <!--begin::Menu item-->
                                     <div class="menu-item px-5">
-                                        <a href="{{ route('profile.edit') }}" class="menu-link px-5"> Meu Perfil</a>
+                                        <a href="{{ route('central.profile.edit') }}" class="menu-link px-5"> Meu Perfil</a>
                                     </div>
                                     <!--end::Menu item-->
                                     <!--begin::Menu item-->
@@ -194,10 +194,10 @@
                                     <!--end::Menu item-->
                                     <!--begin::Menu item-->
                                     <div class="menu-item px-5">
-                                        <form method="POST" action="{{ route('logout') }}">
+                                        <form method="POST" action="{{ route('central.logout') }}">
                                             @csrf
 
-                                            <x-dropdown-link :href="route('logout')"
+                                            <x-dropdown-link :href="route('central.logout')"
                                                 onclick="event.preventDefault();
                                                                 this.closest('form').submit();">
                                                 {{ __('Sair') }}
