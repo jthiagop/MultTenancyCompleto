@@ -29,152 +29,128 @@ return Application::configure(basePath: dirname(__DIR__))
                 ->match(['get', 'post'], '/webhooks/meta/whatsapp', [App\Http\Controllers\WhatsAppIntegrationController::class, 'webhook'])
                 ->name('whatsapp.webhook');
 
-            foreach ($centralDomains as $domain) {
+            // Endpoint central para buscar tenant por código de acesso mobile.
+            // Registrado UMA VEZ fora do foreach para evitar nomes duplicados no route:cache.
+            Route::middleware(['api'])->post('/api/tenant/by-code', function () {
+                $accessCode = request()->input('code');
+                $serverIP   = request()->input('server_ip');
 
-            // Endpoint central para buscar tenant por código de acesso mobile
-            Route::middleware(['api'])
-                ->domain($domain)
-                ->post('/api/tenant/by-code', function () {
-                    $accessCode = request()->input('code');
-                    $serverIP = request()->input('server_ip'); // IP do servidor (opcional, para desenvolvimento)
-
-                    if (!$accessCode) {
-                        return response()->json([
-                            'status' => 'error',
-                            'message' => 'Parâmetro "code" é obrigatório'
-                        ], 400);
-                    }
-
-                    \Log::info('Buscando tenant por código de acesso: ' . $accessCode . ($serverIP ? ' (IP: ' . $serverIP . ')' : ''));
-
-                    try {
-                        // Buscar tenant pelo código de acesso no banco central
-                        $tenant = Tenant::where('app_access_code', $accessCode)->first();
-
-                        if ($tenant) {
-                            $domainObj = $tenant->domains->first();
-                            $domainName = $domainObj->domain ?? null;
-
-                            // Se foi fornecido IP do servidor, usar ele
-                            if ($serverIP) {
-                                $baseURL = 'http://' . $serverIP . ':8001';
-                            } else {
-                                // Detectar se a requisição veio de um IP (mobile app)
-                                $requestHost = request()->getHost();
-                                $requestIP = request()->ip();
-                                $isIPRequest = filter_var($requestHost, FILTER_VALIDATE_IP) !== false;
-
-                                // Se a requisição veio de um IP, usar o IP na URL base
-                                if ($isIPRequest || filter_var($requestIP, FILTER_VALIDATE_IP)) {
-                                    $detectedIP = $isIPRequest ? $requestHost : $requestIP;
-                                    $baseURL = 'http://' . $detectedIP . ':8001';
-                                } else {
-                                    // Requisição web normal, usar o domínio completo
-                                    $baseURL = 'http://' . $domainName;
-                                    if (str_contains($domainName, 'localhost') || str_contains($domainName, '127.0.0.1')) {
-                                        $baseURL .= ':8001';
-                                    }
-                                }
-                            }
-
-                            return response()->json([
-                                'status' => 'ok',
-                                'tenant' => $tenant->id,
-                                'domain' => $domainName,
-                                'base_url' => $baseURL,
-                                'tenant_name' => $tenant->name,
-                                'message' => 'Tenant encontrado'
-                            ]);
-                        }
-                    } catch (\Exception $e) {
-                        \Log::error('Erro ao buscar tenant por código: ' . $e->getMessage());
-                    }
-
+                if (!$accessCode) {
                     return response()->json([
-                        'status' => 'error',
-                        'message' => 'Código de acesso inválido ou tenant não encontrado'
-                    ], 404);
-                })->name('api.tenant.by-code');
+                        'status'  => 'error',
+                        'message' => 'Parâmetro "code" é obrigatório'
+                    ], 400);
+                }
 
-            // Endpoint central para verificar tenant (funciona em qualquer domínio central)
-            Route::middleware(['api'])
-                ->domain($domain)
-                ->post('/api/tenant/verify', function () {
-                        $requestedDomain = request()->input('domain');
+                \Log::info('Buscando tenant por código: ' . $accessCode);
 
-                        if (!$requestedDomain) {
-                            return response()->json([
-                                'status' => 'error',
-                                'message' => 'Parâmetro "domain" é obrigatório'
-                            ], 400);
-                        }
+                try {
+                    $tenant = \App\Models\Tenant::where('app_access_code', $accessCode)->first();
 
-                        \Log::info('Verificando tenant via endpoint central - Domain: ' . $requestedDomain);
+                    if ($tenant) {
+                        $domainObj  = $tenant->domains->first();
+                        $domainName = $domainObj->domain ?? null;
+                        $requestHost = request()->getHost();
+                        $requestIP   = request()->ip();
+                        $isIPRequest = filter_var($requestHost, FILTER_VALIDATE_IP) !== false;
 
-                        try {
-                            // Buscar por qualquer domínio que comece com o subdomínio
-                            $tenant = Tenant::whereHas('domains', function ($query) use ($requestedDomain) {
-                                $query->where('domain', 'LIKE', $requestedDomain . '.%')
-                                      ->orWhere('domain', $requestedDomain);
-                            })->first();
-
-                            // Se ainda não encontrou, buscar todos os domínios
-                            if (!$tenant) {
-                                $allDomains = \App\Models\Domain::where('domain', 'LIKE', $requestedDomain . '.%')
-                                    ->orWhere('domain', $requestedDomain)
-                                    ->get();
-
-                                foreach ($allDomains as $domainObj) {
-                                    $domainParts = explode('.', $domainObj->domain);
-                                    if (isset($domainParts[0]) && $domainParts[0] === $requestedDomain) {
-                                        $tenant = Tenant::find($domainObj->tenant_id);
-                                        if ($tenant) {
-                                            break;
-                                        }
-                                    }
-                                }
+                        if ($serverIP) {
+                            $baseURL = 'http://' . $serverIP . ':8001';
+                        } elseif ($isIPRequest || filter_var($requestIP, FILTER_VALIDATE_IP)) {
+                            $ip      = $isIPRequest ? $requestHost : $requestIP;
+                            $baseURL = 'http://' . $ip . ':8001';
+                        } else {
+                            $baseURL = 'http://' . $domainName;
+                            if (str_contains($domainName, 'localhost') || str_contains($domainName, '127.0.0.1')) {
+                                $baseURL .= ':8001';
                             }
-
-                            if ($tenant) {
-                                $domainObj = $tenant->domains->first();
-                                $domain = $domainObj->domain ?? ($requestedDomain . '.localhost');
-
-                                // Detectar se a requisição veio de um IP (mobile app)
-                                $requestHost = request()->getHost();
-                                $requestIP = request()->ip();
-                                $isIPRequest = filter_var($requestHost, FILTER_VALIDATE_IP) !== false;
-
-                                // Se a requisição veio de um IP, usar o IP na URL base
-                                if ($isIPRequest || filter_var($requestIP, FILTER_VALIDATE_IP)) {
-                                    $serverIP = $isIPRequest ? $requestHost : $requestIP;
-                                    // Usar apenas o IP e porta, sem subdomínio (o app vai passar o domínio como header)
-                                    $baseURL = 'http://' . $serverIP . ':8001';
-                                } else {
-                                    // Requisição web normal, usar o domínio completo
-                                    $baseURL = 'http://' . $domain;
-                                    if (str_contains($domain, 'localhost') || str_contains($domain, '127.0.0.1')) {
-                                        $baseURL .= ':8001';
-                                    }
-                                }
-
-                                return response()->json([
-                                    'status' => 'ok',
-                                    'tenant' => $tenant->id,
-                                    'domain' => $domain,
-                                    'base_url' => $baseURL,
-                                    'message' => 'Tenant encontrado e disponível'
-                                ]);
-                            }
-                        } catch (\Exception $e) {
-                            \Log::error('Erro ao verificar tenant via endpoint central: ' . $e->getMessage());
                         }
 
                         return response()->json([
-                            'status' => 'error',
-                            'message' => 'Tenant não encontrado'
-                        ], 404);
-                    })->name('api.tenant.verify.central');
-            }
+                            'status'      => 'ok',
+                            'tenant'      => $tenant->id,
+                            'domain'      => $domainName,
+                            'base_url'    => $baseURL,
+                            'tenant_name' => $tenant->name,
+                            'message'     => 'Tenant encontrado'
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Erro ao buscar tenant por código: ' . $e->getMessage());
+                }
+
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Código de acesso inválido ou tenant não encontrado'
+                ], 404);
+            })->name('api.tenant.by-code');
+
+            // Endpoint central para verificar tenant por domínio.
+            // Registrado UMA VEZ fora do foreach para evitar nomes duplicados no route:cache.
+            Route::middleware(['api'])->post('/api/tenant/verify-central', function () {
+                $requestedDomain = request()->input('domain');
+
+                if (!$requestedDomain) {
+                    return response()->json([
+                        'status'  => 'error',
+                        'message' => 'Parâmetro "domain" é obrigatório'
+                    ], 400);
+                }
+
+                \Log::info('Verificando tenant central - Domain: ' . $requestedDomain);
+
+                try {
+                    $tenant = \App\Models\Tenant::whereHas('domains', function ($q) use ($requestedDomain) {
+                        $q->where('domain', 'LIKE', $requestedDomain . '.%')
+                          ->orWhere('domain', $requestedDomain);
+                    })->first();
+
+                    if (!$tenant) {
+                        $allDomains = \App\Models\Domain::where('domain', 'LIKE', $requestedDomain . '.%')
+                            ->orWhere('domain', $requestedDomain)->get();
+                        foreach ($allDomains as $dObj) {
+                            $parts = explode('.', $dObj->domain);
+                            if (isset($parts[0]) && $parts[0] === $requestedDomain) {
+                                $tenant = \App\Models\Tenant::find($dObj->tenant_id);
+                                if ($tenant) break;
+                            }
+                        }
+                    }
+
+                    if ($tenant) {
+                        $dObj    = $tenant->domains->first();
+                        $resolved = $dObj->domain ?? ($requestedDomain . '.localhost');
+                        $requestHost = request()->getHost();
+                        $requestIP   = request()->ip();
+                        $isIPRequest = filter_var($requestHost, FILTER_VALIDATE_IP) !== false;
+
+                        if ($isIPRequest || filter_var($requestIP, FILTER_VALIDATE_IP)) {
+                            $srv     = $isIPRequest ? $requestHost : $requestIP;
+                            $baseURL = 'http://' . $srv . ':8001';
+                        } else {
+                            $baseURL = 'http://' . $resolved;
+                            if (str_contains($resolved, 'localhost') || str_contains($resolved, '127.0.0.1')) {
+                                $baseURL .= ':8001';
+                            }
+                        }
+
+                        return response()->json([
+                            'status'   => 'ok',
+                            'tenant'   => $tenant->id,
+                            'domain'   => $resolved,
+                            'base_url' => $baseURL,
+                            'message'  => 'Tenant encontrado e disponível'
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    \Log::error('Erro ao verificar tenant central: ' . $e->getMessage());
+                }
+
+                return response()->json([
+                    'status'  => 'error',
+                    'message' => 'Tenant não encontrado'
+                ], 404);
+            })->name('api.tenant.verify.central');
 
             Route::middleware('web')->middleware('tenant.filesystems')->group(base_path('routes/tenant.php'));
 
