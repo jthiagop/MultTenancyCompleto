@@ -180,28 +180,9 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: true,
       manifest: true,
       chunkSizeWarningLimit: 3000,
-      rollupOptions: {
-        output: {
-          manualChunks: (id) => {
-            // Não isolar @react-pdf (+ fontkit, brotli, etc.) em chunk próprio:
-            // em Vite/Rollup isso pode gerar ordem de inicialização errada entre chunks
-            // e o runtime falha com "Cannot access '…' before initialization" no minificado.
-            // A cadeia do PDF fica no chunk `vendor` genérico abaixo.
-            // recharts + d3 em chunk próprio (gráficos)
-            if (id.includes('recharts') || id.includes('d3-') || id.includes('victory-')) {
-              return 'vendor-charts';
-            }
-            // React core
-            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
-              return 'vendor-react';
-            }
-            // Demais node_modules → vendor genérico
-            if (id.includes('node_modules')) {
-              return 'vendor';
-            }
-          },
-        },
-      },
+      // Sem manualChunks: o split artificial (vendor-react vs vendor) gerava
+      // dependência circular entre chunks (cada um importava o outro), levando a
+      // "Cannot read properties of undefined (reading 'createContext')".
     },
     optimizeDeps: {
       // @react-pdf/renderer e toda a sua cadeia CJS (fontkit, brotli, png-js…)
