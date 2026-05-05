@@ -88,6 +88,16 @@ const ACTION_STYLES: Record<string, string> = {
   gray:   'bg-muted text-muted-foreground border-border',
 };
 
+function normalizePermIds(raw: unknown): number[] {
+  if (!Array.isArray(raw)) return [];
+  const out: number[] = [];
+  for (const x of raw) {
+    const n = typeof x === 'number' ? x : Number.parseInt(String(x), 10);
+    if (Number.isFinite(n)) out.push(n);
+  }
+  return out;
+}
+
 export interface UsuarioFormSheetProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -159,6 +169,8 @@ export function UsuarioFormSheet({ open, onOpenChange, onSaved, editingId }: Usu
   const [permModules, setPermModules] = useState<IPermissionModule[]>([]);
   const [loadingPerms, setLoadingPerms] = useState(false);
   const [selectedPermIds, setSelectedPermIds] = useState<number[]>([]);
+  /** Permissões herdadas apenas do cargo (Spatie); não somem com sync — só exibimos e distinguimos no UI */
+  const [rolePermissionIds, setRolePermissionIds] = useState<number[]>([]);
   const [openModules, setOpenModules] = useState<Set<string>>(new Set());
 
   const avatarInputRef = useRef<HTMLInputElement>(null);
@@ -193,7 +205,14 @@ export function UsuarioFormSheet({ open, onOpenChange, onSaved, editingId }: Usu
     })
       .then((r) => r.json())
       .then((json) => {
-        const mods: IPermissionModule[] = json.modules ?? [];
+        const modsRaw: IPermissionModule[] = json.modules ?? [];
+        const mods: IPermissionModule[] = modsRaw.map((m) => ({
+          ...m,
+          permissions: m.permissions.map((p) => ({
+            ...p,
+            id: typeof p.id === 'number' ? p.id : Number.parseInt(String(p.id), 10),
+          })),
+        }));
         setPermModules(mods);
         // Abre o primeiro módulo por padrão
         if (mods.length > 0) setOpenModules(new Set([mods[0].key]));
@@ -228,8 +247,9 @@ export function UsuarioFormSheet({ open, onOpenChange, onSaved, editingId }: Usu
           const hasRealAvatar = d.avatar_url && !d.avatar_url.includes('blank');
           setAvatarPreview(hasRealAvatar ? d.avatar_url : '');
           setAvatarFile(null);
-          setSelectedCompanyIds(Array.isArray(d.company_ids) ? d.company_ids : []);
-          setSelectedPermIds(Array.isArray(d.permission_ids) ? d.permission_ids : []);
+          setSelectedCompanyIds(Array.isArray(d.company_ids) ? d.company_ids.map((x: unknown) => Number(x)) : []);
+          setSelectedPermIds(normalizePermIds(d.permission_ids));
+          setRolePermissionIds(normalizePermIds(d.role_permission_ids));
         })
         .catch(() => notify.error('Erro', 'Não foi possível carregar os dados do usuário.'))
         .finally(() => setLoadingData(false));
@@ -239,6 +259,7 @@ export function UsuarioFormSheet({ open, onOpenChange, onSaved, editingId }: Usu
       setAvatarFile(null);
       setSelectedCompanyIds([]);
       setSelectedPermIds([]);
+      setRolePermissionIds([]);
     }
   }, [open, editingId]);
 
@@ -597,14 +618,25 @@ export function UsuarioFormSheet({ open, onOpenChange, onSaved, editingId }: Usu
                   {/* Permissões por Módulo */}
                   <Card className="rounded-md">
                     <CardHeader className="min-h-9.5 bg-accent/50 py-2">
-                      <CardTitle className="text-2sm flex items-center gap-1.5">
-                        <ShieldCheck className="size-3.5 text-muted-foreground" />
-                        Permissões por Módulo
-                        {selectedPermIds.length > 0 && (
-                          <span className="ms-1.5 text-xs font-normal text-muted-foreground">
-                            ({selectedPermIds.length} selecionada{selectedPermIds.length !== 1 ? 's' : ''})
-                          </span>
-                        )}
+                      <CardTitle className="text-2sm flex flex-col gap-1 items-start">
+                        <span className="flex items-center gap-1.5">
+                          <ShieldCheck className="size-3.5 text-muted-foreground" />
+                          Permissões por Módulo
+                          {selectedPermIds.length > 0 && (
+                            <span className="ms-1.5 text-xs font-normal text-muted-foreground">
+                              ({selectedPermIds.length} direta{selectedPermIds.length !== 1 ? 's' : ''})
+                            </span>
+                          )}
+                          {rolePermissionIds.length > 0 && (
+                            <span className="text-xs font-normal text-muted-foreground">
+                              · {rolePermissionIds.length} via cargo
+                            </span>
+                          )}
+                        </span>
+                        <span className="text-xs font-normal text-muted-foreground">
+                          Marcações via <strong className="font-medium">cargo</strong> permanecem enquanto o usuário tiver esse perfil; abaixo altera só permissões{' '}
+                          <strong className="font-medium">diretas</strong> (gravadas ao salvar).
+                        </span>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="pt-0 px-0">
@@ -620,9 +652,11 @@ export function UsuarioFormSheet({ open, onOpenChange, onSaved, editingId }: Usu
                         <div>
                           {permModules.map((mod, idx) => {
                             const isOpen = openModules.has(mod.key);
-                            const selectedInModule = mod.permissions.filter((p) => selectedPermIds.includes(p.id));
-                            const allSelected = selectedInModule.length === mod.permissions.length;
-                            const someSelected = selectedInModule.length > 0 && !allSelected;
+                            const effectiveInModule = mod.permissions.filter(
+                              (p) => selectedPermIds.includes(p.id) || rolePermissionIds.includes(p.id),
+                            );
+                            const allSelected = effectiveInModule.length === mod.permissions.length;
+                            const someSelected = effectiveInModule.length > 0 && !allSelected;
 
                             function toggleModule() {
                               setOpenModules((prev) => {
@@ -673,7 +707,7 @@ export function UsuarioFormSheet({ open, onOpenChange, onSaved, editingId }: Usu
                                       !someSelected && !allSelected && 'bg-muted text-muted-foreground',
                                     )}
                                   >
-                                    {selectedInModule.length}/{mod.permissions.length}
+                                    {effectiveInModule.length}/{mod.permissions.length}
                                   </span>
                                   {/* Toggle Todos */}
                                   <button
@@ -695,32 +729,48 @@ export function UsuarioFormSheet({ open, onOpenChange, onSaved, editingId }: Usu
                                   <div className="px-5 pb-4 pt-1">
                                     <div className="grid grid-cols-3 gap-2">
                                       {mod.permissions.map((perm) => {
-                                        const checked = selectedPermIds.includes(perm.id);
+                                        const hasDirect = selectedPermIds.includes(perm.id);
+                                        const hasRole = rolePermissionIds.includes(perm.id);
+                                        const effChecked = hasDirect || hasRole;
+                                        const chipStyle = ACTION_STYLES[perm.color] ?? ACTION_STYLES.gray;
                                         return (
                                           <button
                                             key={perm.id}
                                             type="button"
-                                            onClick={() =>
-                                              setSelectedPermIds((prev) =>
-                                                checked
-                                                  ? prev.filter((id) => id !== perm.id)
-                                                  : [...prev, perm.id],
-                                              )
+                                            title={
+                                              hasRole && !hasDirect
+                                                ? 'Permissão herdada do cargo; para remover, ajuste o perfil do usuário ou clique para conceder também como direta.'
+                                                : undefined
                                             }
+                                            onClick={() => {
+                                              setSelectedPermIds((prev) => {
+                                                if (prev.includes(perm.id)) {
+                                                  return prev.filter((id) => id !== perm.id);
+                                                }
+                                                return [...prev, perm.id];
+                                              });
+                                            }}
                                             className={cn(
-                                              'flex items-center gap-1.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors text-left',
-                                              checked
-                                                ? ACTION_STYLES[perm.color]
+                                              'flex flex-col items-stretch gap-0.5 rounded-md border px-2.5 py-1.5 text-xs font-medium transition-colors text-left',
+                                              effChecked
+                                                ? chipStyle
                                                 : 'border-border bg-background text-muted-foreground hover:bg-accent hover:text-foreground',
                                             )}
                                           >
-                                            <span
-                                              className={cn(
-                                                'size-1.5 rounded-full shrink-0',
-                                                checked ? 'bg-current' : 'bg-muted-foreground/40',
-                                              )}
-                                            />
-                                            {perm.action_label}
+                                            <span className="flex items-center gap-1.5 min-w-0">
+                                              <span
+                                                className={cn(
+                                                  'size-1.5 rounded-full shrink-0',
+                                                  effChecked ? 'bg-current' : 'bg-muted-foreground/40',
+                                                )}
+                                              />
+                                              <span className="truncate">{perm.action_label}</span>
+                                            </span>
+                                            {hasRole && (
+                                              <span className="text-[10px] font-normal opacity-80 truncate">
+                                                {hasDirect ? 'cargo + direta' : 'só cargo'}
+                                              </span>
+                                            )}
                                           </button>
                                         );
                                       })}

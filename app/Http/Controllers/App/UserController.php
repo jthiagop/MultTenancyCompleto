@@ -391,7 +391,7 @@ class UserController extends Controller
             'avatar'                => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
             'password'              => ['nullable', 'confirmed', Rules\Password::defaults()],
             'permissions'           => 'nullable|array',
-            'permissions.*'         => 'integer|exists:permissions,id',
+            'permissions.*'         => 'numeric|exists:permissions,id',
             'filiais'               => 'nullable|array',
             'must_change_password'  => 'nullable|boolean',
             'active'                => 'nullable|boolean',
@@ -428,7 +428,11 @@ class UserController extends Controller
                 unset($validateData['password_confirmation']);
             }
 
-            $user->update($validateData);
+            // Não passar chaves de relacionamento / arrays extras ao mass assignment
+            $userData = $validateData;
+            unset($userData['permissions'], $userData['filiais'], $userData['password_confirmation']);
+
+            $user->update($userData);
 
             // Campos sensíveis setados explicitamente (bypassa fillable)
             if ($mustChangePasswordInput !== null) {
@@ -443,7 +447,10 @@ class UserController extends Controller
 
             // Sincronizar permissões se presentes ou se sync_permissions sinalizado
             if ($request->has('permissions') || $request->boolean('sync_permissions')) {
-                $validPermissions = Permission::whereIn('id', $request->input('permissions', []))->pluck('id')->toArray();
+                $raw = $request->input('permissions', []);
+                $raw = is_array($raw) ? $raw : [];
+                $ids = array_values(array_unique(array_map('intval', $raw)));
+                $validPermissions = Permission::whereIn('id', $ids)->pluck('id')->toArray();
                 $user->syncPermissions($validPermissions);
             }
             // Se nenhum sinal enviado, manter permissões existentes

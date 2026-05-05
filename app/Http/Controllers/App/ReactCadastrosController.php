@@ -599,6 +599,12 @@ class ReactCadastrosController extends Controller
     {
         $user->load('companies', 'permissions', 'roles.permissions');
 
+        // permissões diretas = o que syncPermissions() altera no banco
+        // via role = herdadas do cargo (só leitura neste formulário; desmarcar no UI
+        // não remove se ainda existirem no role — evitava parecer "não salva")
+        $directIds = $user->getDirectPermissions()->pluck('id')->values();
+        $roleIds   = $user->getPermissionsViaRoles()->pluck('id')->unique()->values();
+
         return response()->json([
             'id'                    => $user->id,
             'name'                  => $user->name,
@@ -607,7 +613,8 @@ class ReactCadastrosController extends Controller
             'active'                => (bool) $user->active,
             'force_password_change' => (bool) $user->must_change_password,
             'company_ids'           => $user->companies->pluck('id')->values(),
-            'permission_ids'        => $user->getAllPermissions()->pluck('id')->values(),
+            'permission_ids'        => $directIds,
+            'role_permission_ids'   => $roleIds,
         ]);
     }
 
