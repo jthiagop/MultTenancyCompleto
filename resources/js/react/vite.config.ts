@@ -163,6 +163,11 @@ export default defineConfig(({ mode }) => {
       port: 5174,
       strictPort: true,
       host: true,
+      // Força os chunks dinâmicos (incluindo os do @react-pdf/renderer) a usar
+      // a URL do Vite dev server como origem. Sem isso, imports dinâmicos
+      // gerados pelo pre-bundler usam "/" como base e o browser os requisita
+      // contra o servidor Laravel (recife.localhost:8000/pdf → 404).
+      origin: devServerUrl,
       proxy: proxyConfig,
     },
     resolve: {
@@ -175,26 +180,40 @@ export default defineConfig(({ mode }) => {
       emptyOutDir: true,
       manifest: true,
       chunkSizeWarningLimit: 3000,
+      rollupOptions: {
+        output: {
+          manualChunks: (id) => {
+            // @react-pdf/renderer e toda a sua cadeia em chunk separado
+            // (são os maiores contribuintes: fontkit, brotli, png-js, etc.)
+            if (id.includes('@react-pdf') || id.includes('fontkit') || id.includes('brotli')
+              || id.includes('png-js') || id.includes('jpeg-js') || id.includes('linebreak')
+              || id.includes('unicode-trie') || id.includes('unicode-properties')
+              || id.includes('base64-js') || id.includes('restructure')
+              || id.includes('dfa') || id.includes('tiny-inflate')) {
+              return 'vendor-pdf';
+            }
+            // recharts + d3 em chunk próprio (gráficos)
+            if (id.includes('recharts') || id.includes('d3-') || id.includes('victory-')) {
+              return 'vendor-charts';
+            }
+            // React core
+            if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/')) {
+              return 'vendor-react';
+            }
+            // Demais node_modules → vendor genérico
+            if (id.includes('node_modules')) {
+              return 'vendor';
+            }
+          },
+        },
+      },
     },
     optimizeDeps: {
-      // @react-pdf/renderer v4 usa imports dinâmicos internos (WASM, fontes)
-      // que o pré-bundle do Vite resolve de forma incorreta, causando 404 em
-      // paths relativos como "pdf". Excluindo, o Vite serve os módulos ESM
-      // diretamente de node_modules sem interferir na resolução interna.
-      exclude: ['@react-pdf/renderer'],
-      // Sub-dependências CJS de @react-pdf/renderer que o Vite não consegue
-      // transformar automaticamente quando o pai está excluído. Listá-las
-      // em include força o pré-bundle delas individualmente (CJS → ESM),
-      // eliminando o erro "does not provide an export named 'default'".
-      include: [
-        'base64-js',
-        'buffer',
-        'png-js',
-        'jpeg-js',
-        'linebreak',
-        // CJS usado pela cadeia de @react-pdf/fontkit / subsetting
-        'unicode-trie',
-      ],
+      // @react-pdf/renderer e toda a sua cadeia CJS (fontkit, brotli, png-js…)
+      // são pré-bundlados normalmente pelo Vite (esbuild converte CJS → ESM).
+      // server.origin garante que os chunks dinâmicos gerados usem a URL
+      // do Vite dev server como base, evitando o GET /pdf → 404 no Laravel.
+      include: ['@react-pdf/renderer'],
     },
   };
 });
