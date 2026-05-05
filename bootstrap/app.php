@@ -16,6 +16,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
         using: function () {
             $centralDomains = config('tenancy.central_domains');
+
+            // Rota global nomeada — registrada UMA VEZ antes do loop de domínios centrais
+            // para evitar "Another route has already been assigned name [termos]" no route:cache.
+            Route::middleware('web')->get('/termos', function () {
+                return view('legal.termos-privacidade');
+            })->name('termos');
             
             // Rota de webhook WhatsApp - deve funcionar em qualquer domínio (ngrok, localhost, etc)
             // Registrada ANTES do loop de domínios para funcionar globalmente

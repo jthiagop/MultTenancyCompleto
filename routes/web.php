@@ -9,9 +9,11 @@ Route::get('/', function () {
 });
 
 // Rota para Termos de Uso e Política de Privacidade
+// Nome registrado uma única vez em bootstrap/app.php (antes do foreach de domínios centrais)
+// para evitar duplicidade quando há múltiplos domínios centrais e route:cache.
 Route::get('/termos', function () {
     return view('legal.termos-privacidade');
-})->name('termos');
+});
 
 Route::get('/dashboard', function () {
     return view('dashboard');
